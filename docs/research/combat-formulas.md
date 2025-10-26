@@ -192,6 +192,39 @@ HitChance = (2 + (-5) + 29) × 5% = 26 × 5% = 130%  // Capped at 95%
 - Most hits cap at 95% (always 5% miss chance)
 - Negative AC makes enemies very hard to hit at low levels
 
+### Monster Hit Chance vs Characters
+
+**Source**: Data Driven Gamer, Zimlab Game Calculations
+
+```
+MonsterHitChance% = (MonsterLevel + CharacterAC) × 5%
+
+// Clamped to 5%-95% range
+FinalChance% = max(5, min(95, MonsterHitChance%))
+```
+
+**Examples**:
+
+**Level 5 Orc vs AC 4 Fighter**:
+```
+HitChance = (5 + 4) × 5% = 9 × 5% = 45%
+```
+
+**Level 10 Dragon vs AC -2 Fighter (plate + shield)**:
+```
+HitChance = (10 + (-2)) × 5% = 8 × 5% = 40%
+```
+
+**Level 3 Kobold vs AC 8 Mage**:
+```
+HitChance = (3 + 8) × 5% = 11 × 5% = 55%
+```
+
+**Notes**:
+- Simpler formula than player attacks (no HPCALCMD)
+- Lower AC significantly reduces monster hit chance
+- High-level monsters with low AC targets still need reasonable AC for defense
+
 ---
 
 ## Damage Calculation
@@ -225,6 +258,30 @@ UnarmedDamage = (1d4 + 1d4) + STR_Modifier
 
 // Average: ~5 + STR before considering ninja level bonuses
 ```
+
+### Damage Modifiers by Target State
+
+**Source**: How to Make an RPG (decompiled code analysis)
+
+**Asleep or Held Targets**:
+```
+FinalDamage = WeaponDamage × 2
+
+// Targets that are asleep or held take DOUBLE damage
+```
+
+**Monster Type Effectiveness**:
+```
+// Weapons effective against monster type
+FinalDamage = WeaponDamage × 2
+
+// Example: Silver weapons vs undead, blessed weapons vs demons
+```
+
+**Notes**:
+- Sleep/hold status makes targets extremely vulnerable
+- Combines with other damage bonuses (STR, critical hits)
+- Strategic use of sleep spells (KATINO) then melee attacks
 
 ---
 
@@ -537,6 +594,23 @@ Level 10 ashes: 5,000 gold
 
 **Stacking**: Multiple buffs stack (can get extremely low AC)
 
+**Combat Actions**:
+
+**Parrying** (Source: Data Driven Gamer)
+```
+// When character chooses to parry/defend
+TemporaryAC = BaseAC - 2
+
+// AC reduction applies only for that combat round
+// Character cannot attack when parrying
+```
+
+**Notes**:
+- Parrying is a defensive action (trade attack for better defense)
+- Reduces AC by 2 for one round
+- Does NOT stack with multiple MAPORFIC (max one MAPORFIC effect)
+- Useful when low on HP and need to survive
+
 ---
 
 ## Experience and Leveling
@@ -698,6 +772,96 @@ Minimum HP gain: 1 (can't go below)
 
 ---
 
+## Saving Throws and Resistances
+
+### Saving Throw Formula
+
+**Source**: Data Driven Gamer (reverse-engineered source code)
+
+```
+SavingThrowChance% = (Level ÷ 5 + Luck ÷ 6 - ClassBonus - RaceBonus) × 5%
+
+// Clamped to 5%-95% range
+FinalChance% = max(5, min(95, SavingThrowChance%))
+```
+
+**Class Bonuses** (lower is better):
+- Fighter, Samurai, Lord: Lower bonus (better saves)
+- Mage, Priest, Bishop: Medium bonus
+- Thief, Ninja: Higher bonus (worse saves)
+
+**Race Bonuses** (exact values need research):
+- Dwarf: Bonus vs poison/magic
+- Elf: Bonus vs charm
+- Human/Gnome/Hobbit: Standard
+
+**Example Calculations**:
+
+**Level 10 Fighter, Luck 12**:
+```
+Base = (10 ÷ 5 + 12 ÷ 6) = 2 + 2 = 4
+// Assuming ClassBonus = 0, RaceBonus = 0
+SavingThrow = 4 × 5% = 20%
+```
+
+**Level 15 Bishop, Luck 18**:
+```
+Base = (15 ÷ 5 + 18 ÷ 6) = 3 + 3 = 6
+// Assuming ClassBonus = 1, RaceBonus = 0
+SavingThrow = (6 - 1) × 5% = 5 × 5% = 25%
+```
+
+### Resistance Mechanics
+
+**Source**: Zimlab Game Calculations
+
+**Base Resistance Formula**:
+```
+TotalResistance% = BaseResistance + LevelBonus + LuckBonus
+
+// Level bonus: Add 5% for every 5 character levels
+LevelBonus = floor(Level / 5) × 5%
+
+// Luck bonus
+LuckBonus:
+  Luck 6: +5%
+  Luck 12: +10%
+  Luck 18: +15%
+
+// Maximum resistance: 95% (always 5% chance of effect)
+FinalResistance% = min(95, TotalResistance%)
+```
+
+**Base Resistance by Class/Race**:
+- Varies by specific effect type (poison, magic, breath, etc.)
+- Dwarves: Higher poison resistance
+- Elves: Higher charm/sleep resistance
+- Exact base values need research
+
+**Examples**:
+
+**Level 20 Dwarf with Luck 12, Base Poison Resistance 25%**:
+```
+LevelBonus = floor(20 / 5) × 5% = 4 × 5% = 20%
+LuckBonus = 10% (Luck 12)
+TotalResistance = 25% + 20% + 10% = 55%
+```
+
+**Level 10 Elf with Luck 18, Base Sleep Resistance 30%**:
+```
+LevelBonus = floor(10 / 5) × 5% = 2 × 5% = 10%
+LuckBonus = 15% (Luck 18)
+TotalResistance = 30% + 10% + 15% = 55%
+```
+
+**Notes**:
+- Higher level characters resist status effects better
+- Luck is valuable defensive stat
+- Can never achieve 100% resistance (95% cap)
+- Different resistance types for different effects (poison, magic, breath, etc.)
+
+---
+
 ## Status Effects
 
 ### Poison
@@ -789,17 +953,32 @@ MonstersPerGroup = varies by monster type
 ## Formulas Needing More Research
 
 1. **Exact spell point calculation** (ValueA/ValueB system)
-2. **Precise trap disarm rates**
+2. **Precise trap disarm rates** (See trap-mechanics-validation.md for partial formulas)
 3. **Exact flee success formula**
 4. **Encounter rate per tile**
 5. **Surprise round mechanics**
 6. **Exact resurrection VIM/age penalties**
 7. **Critical hit damage multiplier** (if any)
-8. **Exact XP tables per class**
+8. ~~**Exact XP tables per class**~~ ✅ **ADDED** (6 of 8 classes documented)
 9. **HP gain random factors**
 10. **Equipment stat bonuses**
+11. **Class/Race bonuses for saving throws** (partial formula documented, exact bonuses needed)
+12. **Base resistance values by class/race** (formula documented, base values needed)
 
 ---
 
-**Last Updated**: 2025-10-25
-**Next Review**: After extracting additional mechanics data
+## Recently Added Formulas (2025-10-26)
+
+From Perplexity research validation:
+
+✅ **Monster Hit Chance vs Characters**: `(Monster Level + Character AC) × 5%`
+✅ **Saving Throws**: `(Level ÷ 5 + Luck ÷ 6 - ClassBonus - RaceBonus) × 5%`
+✅ **Resistances**: Base + (Level ÷ 5) × 5% + Luck bonuses, max 95%
+✅ **Parrying**: -2 AC for one round (defensive action)
+✅ **Damage Doubling**: Sleep/held targets and type-effective weapons deal 2× damage
+
+---
+
+**Last Updated**: 2025-10-26 (Added 5 formulas from Perplexity research)
+**Previous Update**: 2025-10-25 (Initial documentation)
+**Next Review**: Source #10 (How to Make an RPG) for decompiled code verification
