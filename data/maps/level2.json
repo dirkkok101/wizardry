@@ -1,0 +1,235 @@
+{
+  "levels": [
+    {
+      "level": 2,
+      "name": "Level 2",
+      "size": {
+        "width": 20,
+        "height": 20
+      },
+      "startPosition": {
+        "x": 12,
+        "y": 7,
+        "facing": "north"
+      },
+      "edgeWrapping": true,
+      "tiles": [
+        {
+          "x": 12,
+          "y": 7,
+          "type": "stairs_up",
+          "destination": {
+            "level": 1,
+            "x": 0,
+            "y": 19
+          },
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 15,
+          "type": "stairs_down",
+          "destination": {
+            "level": 3,
+            "x": 0,
+            "y": 0
+          },
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 10,
+          "y": 8,
+          "type": "elevator",
+          "destinations": [
+            {
+              "level": 1,
+              "x": 10,
+              "y": 8
+            },
+            {
+              "level": 2,
+              "x": 10,
+              "y": 8
+            },
+            {
+              "level": 3,
+              "x": 10,
+              "y": 8
+            },
+            {
+              "level": 4,
+              "x": 10,
+              "y": 8
+            }
+          ],
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 18,
+          "type": "searchable",
+          "message": "A STONE STATUE OF A BEAR STANDS HERE",
+          "promptSearch": true,
+          "item": "bear_statue",
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 4,
+          "type": "searchable",
+          "message": "A JADE STATUE OF A FROG SITS ON A PEDESTAL",
+          "promptSearch": true,
+          "item": "frog_statue",
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 4,
+          "y": 16,
+          "type": "searchable",
+          "message": "A GOLDEN KEY LIES ON THE FLOOR",
+          "promptSearch": true,
+          "item": "gold_key",
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 8,
+          "y": 12,
+          "type": "locked_tile",
+          "requiresKey": "silver_key",
+          "direction": "north",
+          "message": "A SILVER GATE BLOCKS THE PASSAGE",
+          "walls": {
+            "north": "locked_door",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 7,
+          "type": "locked_tile",
+          "requiresKey": "bronze_key",
+          "direction": "north",
+          "message": "A BRONZE GATE BLOCKS THE PASSAGE",
+          "walls": {
+            "north": "locked_door",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 4,
+          "y": 11,
+          "type": "sliding_wall",
+          "requiresItem": "bear_statue",
+          "direction": "east",
+          "message": "A LARGE SLIDING WALL WITH A BEAR IMAGE BLOCKS THE WAY",
+          "walls": {
+            "north": "wall",
+            "east": "locked_door",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 4,
+          "y": 12,
+          "type": "sliding_wall",
+          "requiresItem": "frog_statue",
+          "direction": "east",
+          "message": "A LARGE SLIDING WALL WITH A FROG IMAGE BLOCKS THE WAY",
+          "walls": {
+            "north": "wall",
+            "east": "locked_door",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 12,
+          "y": 11,
+          "type": "pit",
+          "damage": "1d8",
+          "message": "YOU FALL INTO A PIT!",
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 11,
+          "type": "message",
+          "message": "THE ANSWER IS NOT HERE",
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 14,
+          "y": 11,
+          "type": "message",
+          "message": "NOR IS IT HERE",
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 15,
+          "y": 11,
+          "type": "message",
+          "message": "IT IS ELSEWHERE",
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        }
+      ],
+      "encounterRate": 0.12,
+      "encounterTable": "level_2_monsters",
+      "notes": "Level 2 map with special features: stairs, elevator, quest items (Bear Statue, Frog Statue, Gold Key), locked gates (Bronze/Silver Key requirements, statue doors), pit trap, and message tiles. Complete corridor and room wall data to be added."
+    }
+  ]
+}

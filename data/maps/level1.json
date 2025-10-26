@@ -486,7 +486,11 @@
             "east": "door",
             "south": "open",
             "west": "wall"
-          }
+          },
+          "type": "searchable",
+          "message": "A STATUE OF A MONSTER WITH THE BODY OF A CHICKEN AND THE HEAD OF A CAT. THE STATUE IS MADE OF BRONZE",
+          "promptSearch": true,
+          "item": "bronze_key"
         },
         {
           "x": 14,
@@ -617,9 +621,13 @@
             "south": "open",
             "west": "door"
           },
-          "type": "fixed_encounter",
-          "encounterId": "encounter_i",
-          "repeatable": true
+          "type": "teleporter",
+          "destination": {
+            "level": 1,
+            "x": 15,
+            "y": 4
+          },
+          "isOneWay": false
         },
         {
           "x": 14,
@@ -762,7 +770,12 @@
             "east": "door",
             "south": "open",
             "west": "wall"
-          }
+          },
+          "type": "fixed_encounter",
+          "encounterId": "murphys_ghosts",
+          "repeatable": true,
+          "cannotFlee": true,
+          "message": "A gem-encrusted statue glows with a golden light"
         },
         {
           "x": 14,
@@ -1225,6 +1238,23 @@
           }
         },
         {
+          "x": 5,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          },
+          "type": "teleporter",
+          "destination": {
+            "level": 1,
+            "x": 15,
+            "y": 4
+          },
+          "isOneWay": false
+        },
+        {
           "x": 10,
           "y": 9,
           "walls": {
@@ -1621,6 +1651,18 @@
           }
         },
         {
+          "x": 9,
+          "y": 12,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          },
+          "type": "darkness_zone_start",
+          "message": "AREA OUT OF BOUNDS! Cloaked in eternal darkness"
+        },
+        {
           "x": 11,
           "y": 12,
           "walls": {
@@ -2508,7 +2550,11 @@
             "east": "open",
             "south": "open",
             "west": "wall"
-          }
+          },
+          "type": "searchable",
+          "message": "A SILVER STATUE OF A BOAR. WITH HORNS AND LONG FANGS",
+          "promptSearch": true,
+          "item": "silver_key"
         },
         {
           "x": 14,
@@ -2649,6 +2695,19 @@
             "south": "open",
             "west": "open"
           }
+        },
+        {
+          "x": 9,
+          "y": 19,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          },
+          "type": "message",
+          "message": "You see a wizard. He chants 'MAPIRO MAHAMA DIROMAT!!'",
+          "effect": "return_to_castle"
         },
         {
           "x": 10,
