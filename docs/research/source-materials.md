@@ -272,11 +272,11 @@
 
 ### 35. Strategy Wiki - Trebor's Castle
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Trebor's_castle
-- **Status**: ✅ **VALIDATED** - Class requirements and mechanics extracted
+- **Status**: ✅ **COMPREHENSIVELY VALIDATED** - Classes, town services, and mechanics
 - **Priority**: High
-- **Contains**: Character creation, class requirements, class change mechanics
-- **Reference**: `/docs/research/class-reference.md`, `/docs/research/validation-log.md`
-- **Validated**: 2025-10-26
+- **Contains**: Character creation, class requirements, class change mechanics, Inn costs, Temple services, Boltac's shop, Training Grounds
+- **Reference**: `/docs/research/class-reference.md`, `/docs/research/combat-formulas.md`, `/docs/research/validation-log.md`
+- **Validated**: 2025-10-26 (Session 1 - Classes, Session 8 - Town services)
 - **Note**: Found discrepancy with Bishop alignment restriction (needs further verification)
 
 ### 36. Reddit - Ideal Starting Party
@@ -322,9 +322,11 @@
 
 ### 41. Zimlab - Wizardry 1 FAQ
 - **URL**: https://www.zimlab.com/wizardry/recovered/wizardrygame/pages/w1/wiz1faq.htm
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **LIMITED DATA** - Basic FAQ only (v1.1)
 - **Priority**: High
-- **Contains**: Comprehensive FAQ, death/resurrection
+- **Contains**: Basic spell descriptions (DI, KADORTO) but no detailed mechanics
+- **Validated**: 2025-10-26
+- **Note**: FAQ lacks formulas, success rates, or cost mechanics. Source #35 provides more comprehensive town/temple data.
 
 ### 42. CRPG Addict - Death Discussion
 - **URL**: http://crpgaddict.blogspot.com/2010/02/in-my-introductory-post-speaking-about.html

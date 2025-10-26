@@ -437,15 +437,75 @@ Failure: Character lost forever (permanent deletion)
 
 ### Temple Resurrection Costs
 ```
-DeadCost = 100 × Level
+DeadCost = 200 × Level
 AshesCost = 500 × Level
+ParalysisCure = 100 × Level
 
 // Examples:
-Level 5 dead: 500 gold
+Level 5 dead: 1,000 gold
 Level 5 ashes: 2,500 gold
-Level 10 dead: 1,000 gold
+Level 5 paralysis: 500 gold
+Level 10 dead: 2,000 gold
 Level 10 ashes: 5,000 gold
 ```
+
+**Success Factors** (from Source #35):
+- **Vitality**: Higher VIT = better resurrection chance
+- **Age**: Lower age = better resurrection chance
+- "The higher the vitality, and the lower the age, the better the chances are that the character will be successfully restored."
+
+**Resurrection Outcomes**:
+- **Success from Dead**: Character restored with 1 HP (requires additional healing)
+- **Success from Ashes**: Character restored with full HP
+- **Failure from Dead**: Character turns to ashes
+- **Failure from Ashes**: Character lost forever (permanent)
+
+---
+
+## Town Services & Costs
+
+### Inn Room Costs
+
+**Source**: Strategy Wiki - Trebor's Castle
+
+| Room Type | HP Restored/Stay | Cost (gold) |
+|-----------|------------------|-------------|
+| Stables | 0 | Free |
+| Barracks | 1 | 10 |
+| Double Occupancy | 3 | 50 |
+| Private | 7 | 200 |
+| Royal Suite | 10 | 500 |
+
+**Inn Mechanics**:
+- Characters rest until fully healed OR gold runs out
+- Party can pool gold to pay for one character's room
+- Each rest cycle ages characters slightly (~0.1 years)
+- Spell points fully restored
+- Vitality (VIM) decreases slightly per rest (~0.05)
+
+### Boltac's Trading Post
+
+**Buying**: Items available in rotating inventory
+**Selling**: Boltac pays 50% of shop price
+
+**Restrictions**:
+- Won't buy cursed items (must UNCURSE first)
+- Won't buy unidentified items (must IDENTIFY first)
+- Boltac never sells cursed items (only found in dungeon)
+
+### Training Grounds
+
+**Level-Up Process**:
+1. Gain required XP for next level
+2. Visit Training Grounds
+3. Attributes may increase or decrease (random)
+4. HP increases by at least 1 (class HD + VIT modifier)
+5. Spell casters may learn new spells
+
+**Stat Changes**:
+- Generally increase
+- Possible to decrease (rare)
+- Higher level = better chance of increases
 
 ---
 

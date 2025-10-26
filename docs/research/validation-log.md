@@ -346,6 +346,67 @@
 
 ---
 
+### Session 8: Town/Temple Mechanics Validation (2025-10-26)
+
+#### Source #35: Strategy Wiki - Trebor's Castle (Task 9 - Town Focus)
+- **URL:** https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Trebor's_castle
+- **Status:** ✅ Validated (Town services)
+- **Target Files:** combat-formulas.md
+- **Findings:**
+  - **NEW DATA - Inn Costs**: Complete cost table for all room types (Stables to Royal Suite)
+  - **NEW DATA - Temple Costs**: Exact formulas (Paralysis 100×level, Dead 200×level, Ashes 500×level)
+  - **CONFIRMED**: Resurrection success tied to VIT and age
+  - **CONFIRMED**: Boltac pays 50% of shop price when selling
+  - **NEW DATA - Inn Mechanics**: HP recovery per room type, gold pooling, rest-until-healed behavior
+  - **NEW DATA - Resurrection HP**: Dead→1 HP, Ashes→Full HP
+  - **NEW DATA - Training Grounds**: Level-up stat change mechanics
+- **Actions:**
+  - Added complete Inn cost table to combat-formulas.md
+  - Updated temple resurrection costs (corrected Dead cost from 100× to 200×)
+  - Added Boltac's trading mechanics
+  - Added Training Grounds level-up mechanics
+  - Documented resurrection success factors
+
+#### Source #41: Zimlab - Wizardry 1 FAQ (Task 9)
+- **URL:** https://www.zimlab.com/wizardry/recovered/wizardrygame/pages/w1/wiz1faq.htm
+- **Status:** ⚠️ **LIMITED DATA** - Basic spell info only
+- **Target Files:** N/A (insufficient detail)
+- **Findings:**
+  - **BASIC INFO**: DI resurrects with 1 HP, doesn't always work
+  - **BASIC INFO**: KADORTO restores dead to life with full HP
+  - **NO FORMULAS**: No success rates, VIT/age mechanics, or cost formulas
+  - **NO MECHANICS**: No detailed resurrection system documentation
+  - **FAQ LIMITATION**: This is FAQ v1.1, very basic reference
+- **Actions:**
+  - Mark source #41 as limited scope
+  - Primary data comes from Source #35 (more comprehensive)
+
+#### Town/Temple Validation Summary
+
+**Data Extracted:**
+- Inn costs: 5 room types (0 to 500 gold) ✅
+- Temple costs: 3 services with formulas ✅
+- Resurrection mechanics: Success factors documented ✅
+- Boltac's shop: 50% sell price confirmed ✅
+- Training Grounds: Level-up process documented ✅
+
+**Data Gaps Remaining:**
+- Exact resurrection success formula (percentage calculation)
+- Aging increase amount on failed resurrection
+- Death by old age threshold
+- Temple healing/cure poison costs
+- Tavern rumor system
+
+**Corrected Data:**
+- Temple Dead resurrection: 100× → 200× level (corrected from earlier docs)
+
+**Assessment:**
+- Town service costs fully documented ✅
+- Basic mechanics captured ✅
+- Advanced formulas remain research gap ⚠️
+
+---
+
 ## Discrepancies Found
 
 ### 1. Bishop Alignment Restriction (UNRESOLVED)
