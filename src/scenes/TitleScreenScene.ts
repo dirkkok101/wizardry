@@ -98,29 +98,35 @@ export class TitleScreenScene implements Scene {
   }
 
   /**
+   * Convert screen coordinates to canvas coordinates
+   */
+  private screenToCanvasCoordinates(e: MouseEvent): { x: number, y: number } {
+    const rect = this.canvas.getBoundingClientRect()
+    const scaleX = this.canvas.width / rect.width
+    const scaleY = this.canvas.height / rect.height
+
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    }
+  }
+
+  /**
    * Set up mouse tracking for hover effects
    */
   private setupMouseTracking(): void {
     // Store handlers as class properties for cleanup
     this.mouseMoveHandler = (e: MouseEvent) => {
-      const rect = this.canvas.getBoundingClientRect()
-      const scaleX = this.canvas.width / rect.width
-      const scaleY = this.canvas.height / rect.height
-
-      this.mouseX = (e.clientX - rect.left) * scaleX
-      this.mouseY = (e.clientY - rect.top) * scaleY
+      const coords = this.screenToCanvasCoordinates(e)
+      this.mouseX = coords.x
+      this.mouseY = coords.y
     }
 
     this.mouseClickHandler = (e: MouseEvent) => {
-      const rect = this.canvas.getBoundingClientRect()
-      const scaleX = this.canvas.width / rect.width
-      const scaleY = this.canvas.height / rect.height
-
-      const x = (e.clientX - rect.left) * scaleX
-      const y = (e.clientY - rect.top) * scaleY
+      const coords = this.screenToCanvasCoordinates(e)
 
       // Check if click is on button
-      if (this.isPointInButton(x, y) && !this.button.disabled) {
+      if (this.isPointInButton(coords.x, coords.y) && !this.button.disabled) {
         this.handleStart()
       }
     }

@@ -163,10 +163,20 @@ async function goBack(options: TransitionOptions = {}): Promise<void> {
 function onSceneEnter(
   sceneType: SceneType,
   handler: SceneEnterHandler
-): void {
+): () => void {
   const handlers = enterHandlers.get(sceneType) || []
   handlers.push(handler)
   enterHandlers.set(sceneType, handlers)
+
+  // Return unsubscribe function
+  return () => {
+    const currentHandlers = enterHandlers.get(sceneType) || []
+    const index = currentHandlers.indexOf(handler)
+    if (index > -1) {
+      currentHandlers.splice(index, 1)
+      enterHandlers.set(sceneType, currentHandlers)
+    }
+  }
 }
 
 /**
@@ -175,10 +185,20 @@ function onSceneEnter(
 function onSceneExit(
   sceneType: SceneType,
   handler: SceneExitHandler
-): void {
+): () => void {
   const handlers = exitHandlers.get(sceneType) || []
   handlers.push(handler)
   exitHandlers.set(sceneType, handlers)
+
+  // Return unsubscribe function
+  return () => {
+    const currentHandlers = exitHandlers.get(sceneType) || []
+    const index = currentHandlers.indexOf(handler)
+    if (index > -1) {
+      currentHandlers.splice(index, 1)
+      exitHandlers.set(sceneType, currentHandlers)
+    }
+  }
 }
 
 /**

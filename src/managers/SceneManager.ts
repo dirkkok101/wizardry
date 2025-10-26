@@ -40,7 +40,7 @@ export class SceneManager {
     const sceneTypes = [SceneType.TITLE_SCREEN, SceneType.CASTLE_MENU, SceneType.CAMP]
 
     sceneTypes.forEach(sceneType => {
-      SceneNavigationService.onSceneEnter(sceneType, (data) => {
+      const unsubscribe = SceneNavigationService.onSceneEnter(sceneType, (data) => {
         // Only transition if not already on this scene
         if (this.currentScene?.type !== sceneType) {
           this.transitionToScene(sceneType, data).catch(error => {
@@ -48,6 +48,7 @@ export class SceneManager {
           })
         }
       })
+      this.unsubscribeEnterHandlers.push(unsubscribe)
     })
   }
 
