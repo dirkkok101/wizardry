@@ -1,0 +1,10 @@
+{
+  "id": "badialma_5",
+  "name": "BADIALMA",
+  "level": 5,
+  "type": "utility",
+  "target": "all_enemies",
+  "effect": "dispel",
+  "description": "Remove all enemy buffs",
+  "castableIn": ["combat"]
+}

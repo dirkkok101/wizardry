@@ -1,0 +1,12 @@
+{
+  "id": "badialma",
+  "name": "BADIALMA",
+  "level": 4,
+  "type": "offensive",
+  "target": "all_enemies",
+  "damage": "4d8",
+  "damageType": "holy",
+  "effectiveAgainst": ["undead"],
+  "description": "4d8 damage to all undead",
+  "castableIn": ["combat"]
+}

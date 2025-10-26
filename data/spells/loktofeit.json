@@ -1,0 +1,11 @@
+{
+  "id": "loktofeit",
+  "name": "LOKTOFEIT",
+  "level": 5,
+  "type": "utility",
+  "target": "party",
+  "effect": "recall",
+  "successFormula": "level * 2%",
+  "description": "Teleport party to castle entrance (level * 2% success)",
+  "castableIn": ["dungeon"]
+}

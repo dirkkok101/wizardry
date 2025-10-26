@@ -1,0 +1,11 @@
+{
+  "id": "lorto",
+  "name": "LORTO",
+  "level": 6,
+  "type": "offensive",
+  "target": "enemy_group",
+  "damage": "massive",
+  "damageType": "physical",
+  "description": "Massive damage",
+  "castableIn": ["combat"]
+}

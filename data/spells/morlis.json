@@ -1,0 +1,10 @@
+{
+  "id": "morlis",
+  "name": "MORLIS",
+  "level": 4,
+  "type": "debuff",
+  "target": "enemy_group",
+  "effect": "paralyze",
+  "description": "Paralyze enemy group",
+  "castableIn": ["combat"]
+}

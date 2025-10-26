@@ -1,0 +1,10 @@
+{
+  "id": "latumapic",
+  "name": "LATUMAPIC",
+  "level": 3,
+  "type": "utility",
+  "target": "enemy_group",
+  "effect": "identify_foe",
+  "description": "Shows enemy stats and abilities",
+  "castableIn": ["combat"]
+}

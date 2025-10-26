@@ -334,6 +334,7 @@
         "type": "utility",
         "target": "chest",
         "effect": "identify_trap",
+        "successRate": 0.95,
         "description": "Identify trap type",
         "castableIn": ["dungeon"]
       },
@@ -722,7 +723,19 @@
 
 See [Spell Reference](../research/spell-reference.md) for complete validated spell list.
 
-All 65+ spells cross-referenced against original Wizardry 1 sources.
+All 56 spells cross-referenced against original Wizardry 1 sources (23 Mage + 33 Priest).
+
+## File Organization
+
+**Individual Spell Files**: Each spell is stored as a separate JSON file in `data/spells/`
+- **Naming Convention**: `{spell-id}.json` (e.g., `dumapic.json`, `halito.json`, `di.json`)
+- **Benefits**:
+  - Easy to reference by filename
+  - Load spells individually as needed
+  - Simple to version control and diff
+  - Clear separation of concerns
+
+**Example File Path**: `data/spells/halito.json`
 
 ## Notes
 
@@ -731,3 +744,4 @@ All 65+ spells cross-referenced against original Wizardry 1 sources.
 - MALOR is dangerous: wrong coordinates = teleport into rock = instant party death
 - LOKTOFEIT has very low success rate (level × 2%, max 14% at level 7)
 - DI vs KADORTO: DI is safer (90% success, body → ashes on fail) but requires body not ashes
+- CALFO has 95% success rate for trap identification

@@ -1,0 +1,10 @@
+{
+  "id": "katino",
+  "name": "KATINO",
+  "level": 1,
+  "type": "debuff",
+  "target": "enemy_group",
+  "effect": "sleep",
+  "description": "Sleep enemy group",
+  "castableIn": ["combat"]
+}

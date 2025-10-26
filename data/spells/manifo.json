@@ -1,0 +1,10 @@
+{
+  "id": "manifo",
+  "name": "MANIFO",
+  "level": 2,
+  "type": "debuff",
+  "target": "enemy_group",
+  "effect": "silence",
+  "description": "Silence enemy group (no spells)",
+  "castableIn": ["combat"]
+}
