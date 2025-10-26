@@ -9,6 +9,7 @@ import { AssetLoadingService } from '../../services/AssetLoadingService'
 import { InputService } from '../../services/InputService'
 import { SaveService } from '../../services/SaveService'
 import { StartGameCommand } from './commands/StartGameCommand'
+import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
 import { COLORS, BUTTON_SIZES, ANIMATION } from '../../ui/theme'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
@@ -267,38 +268,27 @@ export class TitleScreenScene implements Scene {
   private drawButton(ctx: CanvasRenderingContext2D): void {
     const { x, y, width, height, text, disabled, hovered } = this.button
 
-    // Draw semi-transparent button background
+    // Map button state to ButtonRenderer state
+    let state: 'normal' | 'hover' | 'disabled'
     if (disabled) {
-      ctx.fillStyle = COLORS.BUTTON_DISABLED_BG
+      state = 'disabled'
     } else if (hovered) {
-      ctx.fillStyle = COLORS.BUTTON_HOVER_BG
+      state = 'hover'
     } else {
-      ctx.fillStyle = COLORS.BUTTON_NORMAL_BG
-    }
-    ctx.fillRect(x, y, width, height)
-
-    // Draw button border
-    const borderColor = disabled ? COLORS.BUTTON_BORDER_DISABLED : this.mode === 'READY' ? COLORS.BUTTON_BORDER_READY : COLORS.BUTTON_BORDER_DISABLED
-    ctx.strokeStyle = borderColor
-    ctx.lineWidth = 3
-    ctx.strokeRect(x, y, width, height)
-
-    // Draw pulse effect when ready
-    if (this.mode === 'READY' && !disabled) {
-      const pulseAlpha = ANIMATION.PULSE.BASE_ALPHA + ANIMATION.PULSE.ALPHA_VARIATION * Math.sin(this.pulseTime / ANIMATION.PULSE.PERIOD)
-      const pulseSize = ANIMATION.PULSE.BASE_SIZE + ANIMATION.PULSE.SIZE_VARIATION * Math.sin(this.pulseTime / ANIMATION.PULSE.PERIOD)
-
-      ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`
-      ctx.lineWidth = 2
-      ctx.strokeRect(x - pulseSize/2, y - pulseSize/2, width + pulseSize, height + pulseSize)
+      state = 'normal'
     }
 
-    // Draw button text
-    ctx.fillStyle = disabled ? COLORS.TEXT_DISABLED : COLORS.TEXT_PRIMARY
-    ctx.font = 'bold 28px monospace'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(text, x + width / 2, y + height / 2)
+    // Render button using ButtonRenderer
+    ButtonRenderer.renderButton(ctx, {
+      x,
+      y,
+      width,
+      height,
+      text,
+      state,
+      showPulse: this.mode === 'READY' && !disabled,
+      pulseTime: this.pulseTime
+    })
   }
 
   /**
