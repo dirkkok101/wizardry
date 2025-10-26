@@ -7,6 +7,11 @@
 **Validated**: 2025-10-25
 **Status**: ✅ Confirmed from authoritative sources
 
+**Validation Attempt**: 2025-10-26
+- Source #32 (Faster Thoughts - Damage Mechanics): ❌ Not applicable (covers Wizardry Variants Daphne, not Wizardry 1)
+- Source #31 (Strategy Wiki - Enemies): ⚠️ Provides monster stats only, no combat formulas
+- Note: Combat formulas in this document remain validated from original sources only
+
 ---
 
 ## Character Creation Formulas

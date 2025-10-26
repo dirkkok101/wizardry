@@ -3,9 +3,9 @@
 **Purpose**: Comprehensive catalog of all authoritative sources for Wizardry: Proving Grounds of the Mad Overlord.
 
 **Total Sources**: 60 URLs organized by category
-**Sources Used/Validated**: 16 sources ✅
-**Sources Not Applicable**: 4 sources ❌ (wrong game/platform)
-**Remaining Sources**: 40 sources ⬜
+**Sources Used/Validated**: 17 sources ✅
+**Sources Not Applicable**: 5 sources ❌ (wrong game/platform)
+**Remaining Sources**: 38 sources ⬜
 
 **Status Legend**:
 - ✅ = Extracted/Validated and documented
@@ -220,15 +220,20 @@
 
 ### 31. Strategy Wiki - Enemies
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Enemies
-- **Status**: ⬜ Not reviewed
+- **Status**: ✅ **VALIDATED** - Enemy database with dice notation HP values
 - **Priority**: High
-- **Contains**: Enemy database
+- **Contains**: Complete enemy database with AC, HP (dice), damage, XP, abilities
+- **Reference**: `/docs/research/monster-reference.md`, `/docs/research/validation-log.md`
+- **Validated**: 2025-10-26
+- **Note**: Provides monster stats only, no combat formulas. Found discrepancies in Werdna HP and boss XP values requiring further investigation
 
 ### 32. Faster Thoughts - Damage Mechanics
 - **URL**: https://wizardry.fasterthoughts.io/mechanics/damage-mechanics/
 - **Status**: ❌ **NOT APPLICABLE** - Wrong game (same site as #11, #59, #60)
 - **Priority**: N/A
-- **Contains**: Combat damage formulas for modern Wizardry variants, NOT Wizardry 1
+- **Contains**: Combat damage formulas for Wizardry Variants Daphne, NOT Wizardry 1
+- **Validated**: 2025-10-26
+- **Note**: Contains modern mechanics (passive skills, type advantages, sure hit multipliers, defense penetration) that don't exist in original 1981 game
 
 ---
 
@@ -605,11 +610,15 @@
 
 ---
 
-**Progress**: 16/60 sources used (27%), 4 sources identified as not applicable
+**Progress**: 17/60 sources used (28%), 5 sources identified as not applicable
 **Documentation**: 7 reference documents created (3,682+ lines)
 **Validation**: Active validation phase in progress
 
-**Last Updated**: 2025-10-26 (Validation Session 1)
+**Last Updated**: 2025-10-26 (Validation Session 2)
 **Next Review**: Continue validation sessions with remaining high-priority sources
 
-**Status**: ✅ Core research complete, validation phase in progress, one discrepancy found (Bishop alignment)
+**Status**: ✅ Core research complete, validation phase in progress
+**Discrepancies Found**:
+- Bishop alignment restriction (unresolved)
+- Werdna HP values (critical - requires investigation)
+- Boss XP values (multiple discrepancies requiring cross-reference)
