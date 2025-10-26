@@ -308,7 +308,7 @@ enum DeathState {
 - **Bishop**: INT ≥ 12, PIE ≥ 12 (casts both mage + priest spells, can identify items)
 - **Samurai**: STR ≥ 15, VIT ≥ 14, INT ≥ 11, PIE ≥ 10, AGI ≥ 10, not evil
 - **Lord**: STR ≥ 15, VIT ≥ 15, INT ≥ 12, PIE ≥ 12, AGI ≥ 14, LUC ≥ 15, must be good
-- **Ninja**: STR ≥ 17, INT ≥ 17, PIE ≥ 17, AGI ≥ 17, must be evil
+- **Ninja**: STR ≥ 17, VIT ≥ 17, INT ≥ 17, PIE ≥ 17, AGI ≥ 17, LUC ≥ 17, must be evil
 
 ### 5.2 Character Creation Flow
 
@@ -321,9 +321,9 @@ Choose from: Human, Elf, Dwarf, Gnome, Hobbit
 Each race has **fixed base stats**:
 - Human: STR 8, INT 8, PIE 5, VIT 8, AGI 8, LUC 9
 - Elf: STR 7, INT 10, PIE 10, VIT 6, AGI 9, LUC 6
-- Dwarf: STR 10, INT 7, PIE 10, VIT 10, AGI 6, LUC 6
+- Dwarf: STR 10, INT 7, PIE 10, VIT 10, AGI 5, LUC 6
 - Gnome: STR 7, INT 7, PIE 10, VIT 8, AGI 10, LUC 7
-- Hobbit: STR 5, INT 7, PIE 7, VIT 6, AGI 10, LUC 12
+- Hobbit: STR 5, INT 7, PIE 7, VIT 6, AGI 10, LUC 15
 
 **Step 3: Bonus Point Roll**
 Roll for bonus point pool: 7-29 points
