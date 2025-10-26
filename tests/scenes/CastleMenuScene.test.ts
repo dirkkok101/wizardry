@@ -45,19 +45,43 @@ describe('CastleMenuScene', () => {
       expect(scene['inputManager']).toBeDefined()
     })
 
-    it('should have 5 menu items', async () => {
+    it('should have 5 buttons', async () => {
       await scene.init(canvas, ctx)
-      expect(scene['menuItems'].length).toBe(5)
+      expect(scene['buttons'].length).toBe(5)
     })
 
-    it('should have all required menu options', async () => {
+    it('should have all required navigation keys', async () => {
       await scene.init(canvas, ctx)
-      const keys = scene['menuItems'].map(item => item.key)
+      const keys = scene['buttons'].map(btn => btn.key)
       expect(keys).toContain('g')
       expect(keys).toContain('t')
       expect(keys).toContain('b')
       expect(keys).toContain('a')
       expect(keys).toContain('e')
+    })
+
+    it('should use abbreviated button labels', async () => {
+      await scene.init(canvas, ctx)
+      const labels = scene['buttons'].map(btn => btn.text)
+      expect(labels).toEqual(['(G)TAVERN', '(T)EMPLE', '(B)SHOP', '(A)INN', '(E)DGE'])
+    })
+
+    it('should position buttons horizontally at bottom', async () => {
+      await scene.init(canvas, ctx)
+      const buttons = scene['buttons']
+
+      // All buttons at same Y position
+      const buttonY = buttons[0].y
+      buttons.forEach(btn => expect(btn.y).toBe(buttonY))
+
+      // Buttons should be near bottom (within 100px of canvas height)
+      expect(buttonY).toBeGreaterThan(canvas.height - 100)
+
+      // Buttons spaced 20px apart
+      for (let i = 0; i < buttons.length - 1; i++) {
+        const spacing = buttons[i + 1].x - (buttons[i].x + buttons[i].width)
+        expect(spacing).toBe(20)
+      }
     })
   })
 
@@ -78,7 +102,7 @@ describe('CastleMenuScene', () => {
       scene.update(16)
 
       // Should have updated hover states based on mouse position
-      expect(scene['menuItems'].some(item => item.hovered !== undefined)).toBe(true)
+      expect(scene['buttons'].some(btn => btn.hovered !== undefined)).toBe(true)
     })
   })
 
