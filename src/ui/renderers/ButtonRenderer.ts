@@ -3,6 +3,7 @@
  */
 
 import { COLORS, ANIMATION, TYPOGRAPHY } from '../theme'
+import { ButtonState } from '../../types/ButtonState'
 
 export interface ButtonRenderOptions {
   x: number
@@ -57,5 +58,23 @@ export const ButtonRenderer = {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(text, x + width / 2, y + height / 2)
+  },
+
+  /**
+   * Check if a point (x, y) is inside a button's bounds
+   */
+  isPointInButton(x: number, y: number, button: ButtonState): boolean {
+    return x >= button.x &&
+           x <= button.x + button.width &&
+           y >= button.y &&
+           y <= button.y + button.height
+  },
+
+  /**
+   * Find the first button that contains the given point
+   * Returns undefined if no button is found
+   */
+  findButtonAtPoint(x: number, y: number, buttons: ButtonState[]): ButtonState | undefined {
+    return buttons.find(button => this.isPointInButton(x, y, button))
   }
 }

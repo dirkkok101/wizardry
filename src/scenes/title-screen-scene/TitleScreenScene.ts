@@ -10,9 +10,12 @@ import { InputService } from '../../services/InputService'
 import { SaveService } from '../../services/SaveService'
 import { StartGameCommand } from './commands/StartGameCommand'
 import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
+import { ImageRenderer } from '../../ui/renderers/ImageRenderer'
 import { COLORS, BUTTON_SIZES, ANIMATION } from '../../ui/theme'
 import { SceneInputManager } from '../../ui/managers/InputManager'
 import { ButtonState } from '../../types/ButtonState'
+import { ButtonStateHelpers } from '../../ui/utils/ButtonStateHelpers'
+import { LayoutHelpers } from '../../ui/utils/LayoutHelpers'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
 
@@ -47,8 +50,14 @@ export class TitleScreenScene implements Scene {
     this.canvas = canvas
 
     // Center button both horizontally and vertically
-    this.button.x = (canvas.width - this.button.width) / 2
-    this.button.y = (canvas.height - this.button.height) / 2
+    const pos = LayoutHelpers.centerRectangle(
+      canvas.width,
+      canvas.height,
+      this.button.width,
+      this.button.height
+    )
+    this.button.x = pos.x
+    this.button.y = pos.y
 
     // Set up input handlers
     this.setupInputHandlers()
@@ -102,21 +111,12 @@ export class TitleScreenScene implements Scene {
     })
 
     this.inputManager.onMouseClick(this.canvas, (x, y) => {
-      if (this.isPointInButton(x, y) && !this.button.disabled) {
+      if (ButtonRenderer.isPointInButton(x, y, this.button) && !this.button.disabled) {
         this.handleStart()
       }
     })
   }
 
-  /**
-   * Check if point is inside button bounds
-   */
-  private isPointInButton(x: number, y: number): boolean {
-    return x >= this.button.x &&
-           x <= this.button.x + this.button.width &&
-           y >= this.button.y &&
-           y <= this.button.y + this.button.height
-  }
 
   /**
    * Handle start button click/press
@@ -156,7 +156,7 @@ export class TitleScreenScene implements Scene {
     this.pulseTime += deltaTime
 
     // Update button hover state
-    this.button.hovered = this.isPointInButton(this.mouseX, this.mouseY) && !this.button.disabled
+    ButtonStateHelpers.updateHoverState(this.button, this.mouseX, this.mouseY)
   }
 
   /**
@@ -182,39 +182,13 @@ export class TitleScreenScene implements Scene {
   private drawTitleBitmap(ctx: CanvasRenderingContext2D): void {
     if (!this.titleBitmap) return
 
-    // Scale to fit entire image within canvas while maintaining aspect ratio (contain behavior)
-    const canvasAspect = this.canvas.width / this.canvas.height
-    const imageAspect = this.titleBitmap.width / this.titleBitmap.height
-
-    let width: number
-    let height: number
-    let x: number
-    let y: number
-
-    if (imageAspect > canvasAspect) {
-      // Image is wider than canvas - fit to width
-      width = this.canvas.width
-      height = width / imageAspect
-      x = 0
-      y = (this.canvas.height - height) / 2
-    } else {
-      // Image is taller than canvas - fit to height
-      height = this.canvas.height
-      width = height * imageAspect
-      x = (this.canvas.width - width) / 2
-      y = 0
-    }
-
-    // Use nearest-neighbor scaling for pixel art
-    ctx.imageSmoothingEnabled = false
-
-    ctx.drawImage(
-      this.titleBitmap,
-      x,
-      y,
-      width,
-      height
-    )
+    ImageRenderer.renderBackgroundImage(ctx, {
+      image: this.titleBitmap,
+      canvasWidth: this.canvas.width,
+      canvasHeight: this.canvas.height,
+      fit: 'contain',
+      pixelArt: true
+    })
   }
 
   /**

@@ -8,6 +8,7 @@ import { SceneTransitionData } from '../../services/SceneNavigationService'
 import { SceneInputManager } from '../../ui/managers/InputManager'
 import { ButtonState } from '../../types/ButtonState'
 import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
+import { ImageRenderer } from '../../ui/renderers/ImageRenderer'
 import { COLORS, BUTTON_SIZES } from '../../ui/theme'
 import { AssetLoadingService } from '../../services/AssetLoadingService'
 import { NavigateToTavernCommand } from './commands/NavigateToTavernCommand'
@@ -15,6 +16,9 @@ import { NavigateToTempleCommand } from './commands/NavigateToTempleCommand'
 import { NavigateToShopCommand } from './commands/NavigateToShopCommand'
 import { NavigateToInnCommand } from './commands/NavigateToInnCommand'
 import { NavigateToEdgeOfTownCommand } from './commands/NavigateToEdgeOfTownCommand'
+import { ButtonStateHelpers } from '../../ui/utils/ButtonStateHelpers'
+import { LayoutHelpers } from '../../ui/utils/LayoutHelpers'
+import { MenuSceneHelpers } from '../../ui/utils/MenuSceneHelpers'
 
 type CastleMenuMode = 'READY' | 'TRANSITIONING'
 
@@ -40,28 +44,19 @@ export class CastleMenuScene implements Scene {
     this.canvas = canvas
     this.inputManager = new SceneInputManager()
 
-    // Calculate responsive button layout
-    const BUTTON_SPACING = 20
-    const BUTTON_HEIGHT = BUTTON_SIZES.SMALL.height // 40
-    const BOTTOM_MARGIN = 40
-    const SIDE_MARGIN = 20
-    const NUM_BUTTONS = 5
-
-    // Calculate button width to fill available canvas width
-    // Available width = canvas width - (2 side margins + 4 spacings between 5 buttons)
-    const availableWidth = canvas.width - (SIDE_MARGIN * 2) - (BUTTON_SPACING * (NUM_BUTTONS - 1))
-    const buttonWidth = Math.floor(availableWidth / NUM_BUTTONS)
-
-    const startX = SIDE_MARGIN
-    const buttonY = canvas.height - BOTTOM_MARGIN - BUTTON_HEIGHT
-
-    // Position each button with calculated width
-    this.buttons.forEach((button, index) => {
-      button.x = startX + (index * (buttonWidth + BUTTON_SPACING))
-      button.y = buttonY
-      button.width = buttonWidth
-      button.height = BUTTON_HEIGHT
+    // Calculate responsive button layout using LayoutHelpers
+    const layouts = LayoutHelpers.calculateHorizontalButtonLayout({
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+      buttonCount: this.buttons.length,
+      buttonHeight: BUTTON_SIZES.SMALL.height,
+      bottomMargin: 40,
+      sideMargin: 20,
+      spacing: 20
     })
+
+    // Apply calculated layouts to buttons
+    ButtonStateHelpers.applyLayout(this.buttons, layouts)
 
     // Load background image
     try {
@@ -70,17 +65,24 @@ export class CastleMenuScene implements Scene {
       console.error('Failed to load castle menu background:', error)
     }
 
-    // Register keyboard shortcuts
-    this.buttons.forEach(button => {
-      this.inputManager.onKeyPress(button.key, () => this.handleNavigation(button.key))
-    })
+    // Register button keyboard handlers using MenuSceneHelpers
+    MenuSceneHelpers.registerButtonHandlers(
+      this.inputManager,
+      this.buttons,
+      (key) => this.handleNavigation(key)
+    )
 
-    // Register mouse handlers
-    this.inputManager.onMouseMove(canvas, (x, y) => {
-      this.mouseX = x
-      this.mouseY = y
-    })
-    this.inputManager.onMouseClick(canvas, (x, y) => this.handleMouseClick(x, y))
+    // Register mouse handlers using MenuSceneHelpers
+    MenuSceneHelpers.registerMouseHandlers(
+      this.inputManager,
+      canvas,
+      this.buttons,
+      (x, y) => {
+        this.mouseX = x
+        this.mouseY = y
+      },
+      (button) => this.handleNavigation(button.key)
+    )
   }
 
   enter(_data?: SceneTransitionData): void {
@@ -89,16 +91,7 @@ export class CastleMenuScene implements Scene {
 
   update(_deltaTime: number): void {
     // Update hover states based on mouse position
-    this.buttons.forEach(button => {
-      button.hovered = this.isPointInButton(this.mouseX, this.mouseY, button)
-    })
-  }
-
-  private isPointInButton(x: number, y: number, button: ButtonState): boolean {
-    return x >= button.x &&
-           x <= button.x + button.width &&
-           y >= button.y &&
-           y <= button.y + button.height
+    ButtonStateHelpers.updateHoverState(this.buttons, this.mouseX, this.mouseY)
   }
 
   render(ctx: CanvasRenderingContext2D): void {
@@ -134,39 +127,13 @@ export class CastleMenuScene implements Scene {
   private drawBackground(ctx: CanvasRenderingContext2D): void {
     if (!this.backgroundImage) return
 
-    // Scale to fit entire image within canvas while maintaining aspect ratio (contain behavior)
-    const canvasAspect = this.canvas.width / this.canvas.height
-    const imageAspect = this.backgroundImage.width / this.backgroundImage.height
-
-    let width: number
-    let height: number
-    let x: number
-    let y: number
-
-    if (imageAspect > canvasAspect) {
-      // Image is wider than canvas - fit to width
-      width = this.canvas.width
-      height = width / imageAspect
-      x = 0
-      y = (this.canvas.height - height) / 2
-    } else {
-      // Image is taller than canvas - fit to height
-      height = this.canvas.height
-      width = height * imageAspect
-      x = (this.canvas.width - width) / 2
-      y = 0
-    }
-
-    // Use nearest-neighbor scaling for pixel art
-    ctx.imageSmoothingEnabled = false
-
-    ctx.drawImage(
-      this.backgroundImage,
-      x,
-      y,
-      width,
-      height
-    )
+    ImageRenderer.renderBackgroundImage(ctx, {
+      image: this.backgroundImage,
+      canvasWidth: this.canvas.width,
+      canvasHeight: this.canvas.height,
+      fit: 'contain',
+      pixelArt: true
+    })
   }
 
   private async handleNavigation(key: string): Promise<void> {
@@ -195,15 +162,6 @@ export class CastleMenuScene implements Scene {
     }
   }
 
-  private handleMouseClick(x: number, y: number): void {
-    const clickedButton = this.buttons.find(btn =>
-      this.isPointInButton(x, y, btn) && !btn.disabled
-    )
-
-    if (clickedButton) {
-      this.handleNavigation(clickedButton.key)
-    }
-  }
 
   destroy(): void {
     this.inputManager?.destroy()

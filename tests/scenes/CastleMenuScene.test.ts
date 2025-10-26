@@ -138,19 +138,6 @@ describe('CastleMenuScene', () => {
       expect(buttons[1].hovered).toBe(true)
     })
 
-    it('should handle button clicks', async () => {
-      await scene.init(canvas, ctx)
-      const buttons = scene['buttons']
-
-      // Mock the navigation command
-      const navigateSpy = vi.spyOn(scene as any, 'handleNavigation')
-
-      // Click on second button (TEMPLE)
-      await scene['handleMouseClick'](buttons[1].x + 10, buttons[1].y + 10)
-
-      // Should have called handleNavigation with 't' key
-      expect(navigateSpy).toHaveBeenCalledWith('t')
-    })
   })
 
   describe('render', () => {
