@@ -1,0 +1,12 @@
+{
+  "id": "staff_2",
+  "name": "Staff +2",
+  "category": "weapon",
+  "weaponType": "staff",
+  "damage": { "dice": "3d3", "min": 3, "max": 6 },
+  "enhancement": 2,
+  "cost": 2500,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

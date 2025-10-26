@@ -1,0 +1,16 @@
+{
+  "id": "potion_latumofis",
+  "name": "Potion of Neutralization",
+  "category": "consumable",
+  "consumableType": "potion",
+  "cost": 300,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "singleUse": true,
+  "depletionChance": 100,
+  "transformsTo": "broken_item",
+  "effect": {
+    "type": "cast_spell",
+    "spellId": "latumofis"
+  }
+}

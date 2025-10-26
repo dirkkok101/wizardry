@@ -33,6 +33,8 @@
       "cost": 1000000,
       "usableBy": ["samurai"],
       "cursed": false,
+      "depletionChance": 50,
+      "transformsTo": null,
       "special": {
         "invoke": "str_bonus",
         "invokeEffect": { "stat": "str", "bonus": 1 }
@@ -48,6 +50,8 @@
       "cost": 3000,
       "usableBy": ["mage", "bishop"],
       "cursed": false,
+      "depletionChance": 25,
+      "transformsTo": "broken_item",
       "special": {
         "invoke": "cast_spell",
         "spellId": "mogref"
@@ -165,6 +169,8 @@
       "cost": 25000,
       "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
       "cursed": false,
+      "depletionChance": 100,
+      "transformsTo": "helm",
       "special": {
         "invoke": "cast_spell",
         "spellId": "malor"
@@ -244,6 +250,8 @@
       "cost": 500,
       "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
       "singleUse": true,
+      "depletionChance": 100,
+      "transformsTo": "broken_item",
       "effect": {
         "type": "heal",
         "healing": "1d8"
@@ -299,6 +307,16 @@
         "protections": ["all"],
         "partyHealing": true
       }
+    },
+    {
+      "id": "broken_item",
+      "name": "Broken Item",
+      "category": "special",
+      "specialType": "broken",
+      "cost": 0,
+      "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+      "cursed": false,
+      "special": null
     }
   ]
 }
@@ -401,7 +419,22 @@
 - `"good"`, `"neutral"`, `"evil"`
 
 **effectiveAgainst**: `array` - Enemy types item is effective against
-- `["dragon"]`, `["werebeast"]`, `["undead"]`, etc.
+- Grants 50% chance enemy attack silently fails (protection)
+- Grants 2x damage bonus when attacking protected enemy type
+- Examples: `["dragon"]`, `["werebeast"]`, `["undead"]`, `["mage"]`
+- Provided by specialty weapons (Dragon Slayer, Were Slayer, Mage Masher, etc.)
+
+**depletionChance**: `number` - Probability (0-100) item breaks/transforms when invoked
+- `0`: Never depletes (default for most items)
+- `25`: 25% chance (Staff of Mogref when cast)
+- `50`: 50% chance (Murasama Blade STR invoke, Lord's Garb party heal)
+- `100`: Always depletes (Thieves Dagger class change, Diadem becomes Helm, all consumables)
+
+**transformsTo**: `string` - Item ID this transforms into when depleted
+- `null`: Item is destroyed/removed (Thieves Dagger)
+- `"helm"`: Becomes basic helm (Diadem of Malor after MALOR cast)
+- `"broken_item"`: Becomes broken/useless item (failed scrolls, consumed potions)
+- Only applies when depletion occurs
 
 ## Special Properties
 
@@ -534,6 +567,18 @@ Cursed items:
 
 **Identification Cost**: Varies by item value (typically 10% of item cost)
 
+## File Organization
+
+**Individual Item Files**: Each item is stored as a separate JSON file in `data/items/`
+- **Naming Convention**: `{item-id}.json` (e.g., `dagger.json`, `murasama_blade.json`, `werdna_amulet.json`)
+- **Benefits**:
+  - Easy to reference by filename
+  - Load items individually as needed
+  - Simple to version control and diff
+  - Clear separation of concerns
+
+**Example File Path**: `data/items/murasama_blade.json`
+
 ## Validation
 
 See [Equipment Reference](../research/equipment-reference.md) for complete validated item list.
@@ -551,3 +596,4 @@ All 80+ items cross-referenced against original Wizardry 1 sources.
 - **Legendary Items**: 3 legendary items (Murasama, Lords Garb, Werdna's Amulet)
 - **Consumables**: Single-use potions and scrolls (all classes can use)
 - **Special Items**: Keys and quest items (Bronze Key, Silver Key, Gold Key, Blue Ribbon)
+- **Broken Item**: Result of depleted/consumed items (no effect, minimal value)

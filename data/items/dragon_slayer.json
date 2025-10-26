@@ -1,0 +1,13 @@
+{
+  "id": "dragon_slayer",
+  "name": "Dragon Slayer",
+  "category": "weapon",
+  "weaponType": "sword",
+  "damage": { "dice": "2d6", "min": 2, "max": 11 },
+  "enhancement": 0,
+  "cost": 10000,
+  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "effectiveAgainst": ["dragon"],
+  "special": null
+}

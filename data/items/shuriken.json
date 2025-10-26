@@ -1,0 +1,17 @@
+{
+  "id": "shuriken",
+  "name": "Shuriken",
+  "category": "weapon",
+  "weaponType": "shuriken",
+  "damage": { "dice": "11d6", "min": 11, "max": 16 },
+  "enhancement": 0,
+  "cost": 50000,
+  "usableBy": ["ninja"],
+  "alignmentRequired": "evil",
+  "cursed": false,
+  "special": {
+    "protections": ["poison", "drain"],
+    "invoke": "hp_bonus",
+    "invokeEffect": { "stat": "hp", "bonus": 1 }
+  }
+}

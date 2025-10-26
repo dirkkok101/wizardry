@@ -1,0 +1,11 @@
+{
+  "id": "copper_gloves",
+  "name": "Copper Gloves",
+  "category": "gauntlets",
+  "ac": 1,
+  "enhancement": 0,
+  "cost": 6000,
+  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

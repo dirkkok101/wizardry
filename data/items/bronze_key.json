@@ -1,0 +1,10 @@
+{
+  "id": "bronze_key",
+  "name": "Bronze Key",
+  "category": "special",
+  "specialType": "key",
+  "cost": 0,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "purpose": "level_2_access"
+}

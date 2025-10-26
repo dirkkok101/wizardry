@@ -1,0 +1,16 @@
+{
+  "id": "scroll_dilto",
+  "name": "Scroll/Dilto",
+  "category": "consumable",
+  "consumableType": "scroll",
+  "cost": 2500,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "singleUse": true,
+  "depletionChance": 100,
+  "transformsTo": "broken_item",
+  "effect": {
+    "type": "cast_spell",
+    "spellId": "dilto"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "jeweled_amulet",
+  "name": "Jeweled Amulet",
+  "category": "accessory",
+  "accessoryType": "amulet",
+  "cost": 5000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": {
+    "invoke": "cast_spell",
+    "spellId": "dumapic"
+  }
+}

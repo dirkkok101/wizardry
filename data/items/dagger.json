@@ -1,0 +1,12 @@
+{
+  "id": "dagger",
+  "name": "Dagger",
+  "category": "weapon",
+  "weaponType": "dagger",
+  "damage": { "dice": "1d4", "min": 1, "max": 4 },
+  "enhancement": 0,
+  "cost": 5,
+  "usableBy": ["fighter", "mage", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

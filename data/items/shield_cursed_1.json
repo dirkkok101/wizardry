@@ -1,0 +1,11 @@
+{
+  "id": "shield_cursed_1",
+  "name": "Shield -1",
+  "category": "shield",
+  "ac": -1,
+  "enhancement": -1,
+  "cost": 1500,
+  "usableBy": ["fighter", "priest", "thief", "samurai", "lord", "ninja"],
+  "cursed": true,
+  "special": null
+}

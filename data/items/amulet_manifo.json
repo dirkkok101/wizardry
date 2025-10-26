@@ -1,0 +1,13 @@
+{
+  "id": "amulet_manifo",
+  "name": "Amulet/Manifo",
+  "category": "accessory",
+  "accessoryType": "amulet",
+  "cost": 15000,
+  "usableBy": ["priest"],
+  "cursed": false,
+  "special": {
+    "invoke": "cast_spell",
+    "spellId": "manifo"
+  }
+}

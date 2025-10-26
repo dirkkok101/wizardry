@@ -1,0 +1,12 @@
+{
+  "id": "chain_cursed_1",
+  "name": "Chain -1",
+  "category": "armor",
+  "armorType": "body",
+  "ac": 2,
+  "enhancement": -1,
+  "cost": 1500,
+  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "cursed": true,
+  "special": null
+}

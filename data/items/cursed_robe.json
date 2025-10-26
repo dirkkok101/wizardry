@@ -1,0 +1,12 @@
+{
+  "id": "cursed_robe",
+  "name": "Cursed Robe",
+  "category": "armor",
+  "armorType": "body",
+  "ac": -2,
+  "enhancement": 0,
+  "cost": 8000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": true,
+  "special": null
+}

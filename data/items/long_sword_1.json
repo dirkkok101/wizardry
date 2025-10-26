@@ -1,0 +1,12 @@
+{
+  "id": "long_sword_1",
+  "name": "Long Sword +1",
+  "category": "weapon",
+  "weaponType": "sword",
+  "damage": { "dice": "2d5", "min": 2, "max": 9 },
+  "enhancement": 1,
+  "cost": 10000,
+  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

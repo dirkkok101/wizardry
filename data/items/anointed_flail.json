@@ -1,0 +1,12 @@
+{
+  "id": "anointed_flail",
+  "name": "Anointed Flail",
+  "category": "weapon",
+  "weaponType": "flail",
+  "damage": { "dice": "1d7", "min": 1, "max": 7 },
+  "enhancement": 0,
+  "cost": 150,
+  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

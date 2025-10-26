@@ -1,0 +1,13 @@
+{
+  "id": "amulet_makanito",
+  "name": "Amulet/Makanito",
+  "category": "accessory",
+  "accessoryType": "amulet",
+  "cost": 20000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": {
+    "invoke": "cast_spell",
+    "spellId": "makanito"
+  }
+}

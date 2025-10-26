@@ -1,0 +1,12 @@
+{
+  "id": "ring_pro_undead",
+  "name": "Ring Pro Undead",
+  "category": "accessory",
+  "accessoryType": "ring",
+  "cost": 500000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": {
+    "protection": "undead"
+  }
+}
