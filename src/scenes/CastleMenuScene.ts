@@ -1,0 +1,73 @@
+/**
+ * CastleMenuScene - Placeholder for Castle Menu
+ */
+
+import { Scene, SceneTransitionData } from './Scene'
+import { SceneType } from '../types/SceneType'
+
+export class CastleMenuScene implements Scene {
+  readonly type = SceneType.CASTLE_MENU
+
+  private canvas!: HTMLCanvasElement
+  private pulseTime = 0
+
+  /**
+   * Initialize the scene
+   */
+  async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
+    this.canvas = canvas
+  }
+
+  /**
+   * Called when scene becomes active
+   */
+  enter(data?: SceneTransitionData): void {
+    console.log('Entered Castle Menu scene', data)
+    this.pulseTime = 0
+  }
+
+  /**
+   * Update scene state
+   */
+  update(deltaTime: number): void {
+    this.pulseTime += deltaTime
+  }
+
+  /**
+   * Render the scene
+   */
+  render(ctx: CanvasRenderingContext2D): void {
+    // Clear screen
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    // Draw title
+    ctx.fillStyle = '#fff'
+    ctx.font = '32px monospace'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('CASTLE MENU', this.canvas.width / 2, this.canvas.height / 2 - 60)
+
+    // Draw "Coming Soon" with pulse effect
+    const pulseAlpha = 0.5 + 0.5 * Math.sin(this.pulseTime / 800)
+    ctx.fillStyle = `rgba(170, 170, 170, ${pulseAlpha})`
+    ctx.font = '24px monospace'
+    ctx.fillText('Coming Soon', this.canvas.width / 2, this.canvas.height / 2 + 20)
+
+    // Draw footer
+    ctx.fillStyle = '#666'
+    ctx.font = '16px monospace'
+    ctx.fillText(
+      'This scene will be implemented in a future task',
+      this.canvas.width / 2,
+      this.canvas.height - 80
+    )
+  }
+
+  /**
+   * Clean up resources
+   */
+  destroy(): void {
+    // No resources to clean up yet
+  }
+}

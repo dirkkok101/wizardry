@@ -44,6 +44,10 @@ export class TitleScreenScene implements Scene {
   private mouseY = 0
   private pulseTime = 0
 
+  // Event handlers stored as class properties for proper cleanup
+  private mouseMoveHandler?: (e: MouseEvent) => void
+  private mouseClickHandler?: (e: MouseEvent) => void
+
   /**
    * Initialize the scene
    */
@@ -97,16 +101,17 @@ export class TitleScreenScene implements Scene {
    * Set up mouse tracking for hover effects
    */
   private setupMouseTracking(): void {
-    this.canvas.addEventListener('mousemove', (e) => {
+    // Store handlers as class properties for cleanup
+    this.mouseMoveHandler = (e: MouseEvent) => {
       const rect = this.canvas.getBoundingClientRect()
       const scaleX = this.canvas.width / rect.width
       const scaleY = this.canvas.height / rect.height
 
       this.mouseX = (e.clientX - rect.left) * scaleX
       this.mouseY = (e.clientY - rect.top) * scaleY
-    })
+    }
 
-    this.canvas.addEventListener('click', (e) => {
+    this.mouseClickHandler = (e: MouseEvent) => {
       const rect = this.canvas.getBoundingClientRect()
       const scaleX = this.canvas.width / rect.width
       const scaleY = this.canvas.height / rect.height
@@ -118,7 +123,10 @@ export class TitleScreenScene implements Scene {
       if (this.isPointInButton(x, y) && !this.button.disabled) {
         this.handleStart()
       }
-    })
+    }
+
+    this.canvas.addEventListener('mousemove', this.mouseMoveHandler)
+    this.canvas.addEventListener('click', this.mouseClickHandler)
   }
 
   /**
@@ -305,6 +313,14 @@ export class TitleScreenScene implements Scene {
     // Unsubscribe from keyboard events
     if (this.unsubscribeKeyPress) {
       this.unsubscribeKeyPress()
+    }
+
+    // Remove mouse event listeners
+    if (this.mouseMoveHandler) {
+      this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
+    }
+    if (this.mouseClickHandler) {
+      this.canvas.removeEventListener('click', this.mouseClickHandler)
     }
   }
 }

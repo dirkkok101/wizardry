@@ -3,8 +3,8 @@
  * Main entry point
  */
 
-import { TitleScreenScene } from './scenes/TitleScreenScene'
-import { Scene } from './scenes/Scene'
+import { SceneManager } from './managers/SceneManager'
+import { SceneType } from './types/SceneType'
 
 // Initialize canvas
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
@@ -18,7 +18,7 @@ if (!ctx) {
 }
 
 // Game loop state
-let currentScene: Scene | null = null
+let sceneManager: SceneManager | null = null
 let lastFrameTime = performance.now()
 let isRunning = false
 
@@ -76,10 +76,10 @@ function gameLoop(currentTime: number) {
   const deltaTime = currentTime - lastFrameTime
   lastFrameTime = currentTime
 
-  // Update and render current scene
-  if (currentScene && ctx) {
-    currentScene.update(deltaTime)
-    currentScene.render(ctx)
+  // Update and render via SceneManager
+  if (sceneManager && ctx) {
+    sceneManager.update(deltaTime)
+    sceneManager.render(ctx)
   }
 
   // Continue loop
@@ -99,20 +99,17 @@ async function initGame() {
   // Draw initial loading screen
   drawLoadingScreen()
 
-  // Create and initialize title screen
-  const titleScreen = new TitleScreenScene()
+  // Create and initialize SceneManager
   if (!ctx) throw new Error('Canvas context is null')
-  await titleScreen.init(canvas, ctx)
-
-  // Set as current scene
-  currentScene = titleScreen
+  sceneManager = new SceneManager(canvas, ctx)
+  await sceneManager.init(SceneType.TITLE_SCREEN)
 
   // Start game loop
   isRunning = true
   lastFrameTime = performance.now()
   requestAnimationFrame(gameLoop)
 
-  console.log('Wizardry initialized - Title screen loaded')
+  console.log('Wizardry initialized - SceneManager ready')
 }
 
 // Start the game
