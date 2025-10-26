@@ -6,9 +6,9 @@ import { Scene } from '../Scene'
 import { SceneType } from '../../types/SceneType'
 import { SceneTransitionData } from '../../services/SceneNavigationService'
 import { SceneInputManager } from '../../ui/managers/InputManager'
-import { MenuRenderer, MenuItem } from '../../ui/renderers/MenuRenderer'
-import { TextRenderer } from '../../ui/renderers/TextRenderer'
-import { COLORS, TYPOGRAPHY } from '../../ui/theme'
+import { ButtonState } from '../../types/ButtonState'
+import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
+import { COLORS, BUTTON_SIZES } from '../../ui/theme'
 import { AssetLoadingService } from '../../services/AssetLoadingService'
 import { NavigateToTavernCommand } from './commands/NavigateToTavernCommand'
 import { NavigateToTempleCommand } from './commands/NavigateToTempleCommand'
@@ -28,17 +28,33 @@ export class CastleMenuScene implements Scene {
   private mouseY = 0
   private backgroundImage: HTMLImageElement | null = null
 
-  private menuItems: MenuItem[] = [
-    { key: 'g', label: "(G)ILGAMESH'S TAVERN" },
-    { key: 't', label: "(T)EMPLE OF CANT" },
-    { key: 'b', label: "(B)OLTAC'S TRADING POST" },
-    { key: 'a', label: "(A)DVENTURER'S INN" },
-    { key: 'e', label: "(E)DGE OF TOWN" }
+  private buttons: ButtonState[] = [
+    { x: 0, y: 0, width: BUTTON_SIZES.SMALL.width, height: BUTTON_SIZES.SMALL.height, text: '(G)TAVERN', key: 'g', disabled: false, hovered: false },
+    { x: 0, y: 0, width: BUTTON_SIZES.SMALL.width, height: BUTTON_SIZES.SMALL.height, text: '(T)EMPLE', key: 't', disabled: false, hovered: false },
+    { x: 0, y: 0, width: BUTTON_SIZES.SMALL.width, height: BUTTON_SIZES.SMALL.height, text: '(B)SHOP', key: 'b', disabled: false, hovered: false },
+    { x: 0, y: 0, width: BUTTON_SIZES.SMALL.width, height: BUTTON_SIZES.SMALL.height, text: '(A)INN', key: 'a', disabled: false, hovered: false },
+    { x: 0, y: 0, width: BUTTON_SIZES.SMALL.width, height: BUTTON_SIZES.SMALL.height, text: '(E)DGE', key: 'e', disabled: false, hovered: false }
   ]
 
   async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
     this.canvas = canvas
     this.inputManager = new SceneInputManager()
+
+    // Calculate button layout
+    const BUTTON_SPACING = 20
+    const BUTTON_WIDTH = BUTTON_SIZES.SMALL.width   // 150
+    const BUTTON_HEIGHT = BUTTON_SIZES.SMALL.height // 40
+    const BOTTOM_MARGIN = 40
+
+    const totalWidth = (BUTTON_WIDTH * 5) + (BUTTON_SPACING * 4)
+    const startX = (canvas.width - totalWidth) / 2
+    const buttonY = canvas.height - BOTTOM_MARGIN - BUTTON_HEIGHT
+
+    // Position each button
+    this.buttons.forEach((button, index) => {
+      button.x = startX + (index * (BUTTON_WIDTH + BUTTON_SPACING))
+      button.y = buttonY
+    })
 
     // Load background image
     try {
@@ -48,8 +64,8 @@ export class CastleMenuScene implements Scene {
     }
 
     // Register keyboard shortcuts
-    this.menuItems.forEach(item => {
-      this.inputManager.onKeyPress(item.key, () => this.handleNavigation(item.key))
+    this.buttons.forEach(button => {
+      this.inputManager.onKeyPress(button.key, () => this.handleNavigation(button.key))
     })
 
     // Register mouse handlers
@@ -65,7 +81,17 @@ export class CastleMenuScene implements Scene {
   }
 
   update(_deltaTime: number): void {
-    this.updateHoverStates()
+    // Update hover states based on mouse position
+    this.buttons.forEach(button => {
+      button.hovered = this.isPointInButton(this.mouseX, this.mouseY, button)
+    })
+  }
+
+  private isPointInButton(x: number, y: number, button: ButtonState): boolean {
+    return x >= button.x &&
+           x <= button.x + button.width &&
+           y >= button.y &&
+           y <= button.y + button.height
   }
 
   render(ctx: CanvasRenderingContext2D): void {
@@ -78,26 +104,19 @@ export class CastleMenuScene implements Scene {
       this.drawBackground(ctx)
     }
 
-    // Draw title
-    TextRenderer.renderText(ctx, {
-      text: 'CASTLE',
-      x: this.canvas.width / 2,
-      y: 80,
-      fontSize: TYPOGRAPHY.SIZES.TITLE,
-      color: COLORS.TEXT_PRIMARY,
-      align: 'center',
-      baseline: 'middle'
-    })
+    // Draw buttons (NO title text)
+    this.buttons.forEach(button => {
+      const state = button.disabled ? 'disabled' : (button.hovered ? 'hover' : 'normal')
 
-    // Draw menu
-    MenuRenderer.renderMenu(ctx, {
-      x: this.canvas.width / 2,
-      y: 200,
-      items: this.menuItems,
-      itemHeight: 50,
-      fontSize: TYPOGRAPHY.SIZES.MENU,
-      alignment: 'center',
-      showKeys: true
+      ButtonRenderer.renderButton(ctx, {
+        x: button.x,
+        y: button.y,
+        width: button.width,
+        height: button.height,
+        text: button.text,
+        state,
+        showPulse: false  // No pulse animation for menu buttons
+      })
     })
   }
 
@@ -169,40 +188,13 @@ export class CastleMenuScene implements Scene {
   }
 
   private handleMouseClick(x: number, y: number): void {
-    const clickedItem = this.getMenuItemAtPosition(x, y)
-    if (clickedItem) {
-      this.handleNavigation(clickedItem.key)
+    const clickedButton = this.buttons.find(btn =>
+      this.isPointInButton(x, y, btn) && !btn.disabled
+    )
+
+    if (clickedButton) {
+      this.handleNavigation(clickedButton.key)
     }
-  }
-
-  private updateHoverStates(): void {
-    const hoveredItem = this.getMenuItemAtPosition(this.mouseX, this.mouseY)
-
-    // NOTE: Direct mutation of MenuItem.hovered is acceptable here as MenuItems are
-    // UI-local state (not part of GameState). For GameState objects, use immutable updates.
-    this.menuItems.forEach(item => {
-      item.hovered = item === hoveredItem
-    })
-  }
-
-  private getMenuItemAtPosition(x: number, y: number): MenuItem | null {
-    const menuX = this.canvas.width / 2
-    const menuY = 200
-    const itemHeight = 50
-
-    for (let i = 0; i < this.menuItems.length; i++) {
-      const itemY = menuY + i * itemHeight
-
-      // Check if point is within item bounds (approximate based on text width)
-      if (y >= itemY - itemHeight/2 && y <= itemY + itemHeight/2) {
-        // Simple horizontal check (could be refined with text measurement)
-        if (Math.abs(x - menuX) < 200) {
-          return this.menuItems[i]
-        }
-      }
-    }
-
-    return null
   }
 
   destroy(): void {

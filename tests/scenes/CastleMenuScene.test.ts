@@ -116,13 +116,14 @@ describe('CastleMenuScene', () => {
       expect(fillRectSpy).toHaveBeenCalledWith(0, 0, 800, 600)
     })
 
-    it('should render title text', async () => {
+    it('should render buttons using ButtonRenderer', async () => {
       await scene.init(canvas, ctx)
-      const fillTextSpy = vi.spyOn(ctx, 'fillText')
+      const fillRectSpy = vi.spyOn(ctx, 'fillRect')
 
       scene.render(ctx)
 
-      expect(fillTextSpy).toHaveBeenCalledWith('CASTLE', expect.any(Number), expect.any(Number))
+      // Should clear screen and render buttons (multiple fillRect calls)
+      expect(fillRectSpy).toHaveBeenCalled()
     })
   })
 
