@@ -4,8 +4,9 @@
 
 **Total Sources**: 60 URLs organized by category
 **Sources Used/Validated**: 17 sources ✅
-**Sources Not Applicable**: 5 sources ❌ (wrong game/platform)
-**Remaining Sources**: 38 sources ⬜
+**Sources Not Applicable**: 6 sources ❌ (wrong game/platform)
+**Sources Limited/Partial**: 1 source ⚠️ (incomplete data)
+**Remaining Sources**: 36 sources ⬜
 
 **Status Legend**:
 - ✅ = Extracted/Validated and documented
@@ -100,9 +101,11 @@
 
 ### 13. Jeff Ludwig - Magic List
 - **URL**: http://jeffludwig.com/wizardry1-2-3/magiclist.php
-- **Status**: ⬜ Not reviewed
-- **Priority**: High
-- **Contains**: Complete spell lists
+- **Status**: ⚠️ **PLATFORM MISMATCH** - SNES version, not Apple II/DOS
+- **Priority**: Low (not applicable to original game)
+- **Contains**: SNES "1st Trilogy" spell lists with different names and damage values
+- **Validated**: 2025-10-26
+- **Note**: This source covers the SNES port which has different spell names (e.g., "Fire Bolt" vs "HALITO"), different damage values, and only 39 total spells vs original's 65+. Not authoritative for Apple II/DOS Wizardry 1.
 
 ### 14. Strategy Wiki - Spells ✅
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Spells
@@ -112,9 +115,11 @@
 
 ### 15. Zimlab - Spells (Recovered)
 - **URL**: https://www.zimlab.com/wizardry/recovered/jh/wizardry/spells.html
-- **Status**: ⬜ Not reviewed
-- **Priority**: High
-- **Contains**: Spell database
+- **Status**: ⚠️ **LIMITED SCOPE** - Quick reference only
+- **Priority**: Medium
+- **Contains**: Spell names, usage context, brief descriptions
+- **Validated**: 2025-10-26
+- **Note**: This is an archived quick-reference table with basic spell info (when used, what it affects, brief effect). Does NOT contain spell point costs, ValueA/ValueB mechanics, casting formulas, or resistance mechanics. Basic spell names and effects validated against spell-reference.md (match confirmed).
 
 ### 16. Wizardry Wiki - Spell List ✅
 - **URL**: https://wizardry.fandom.com/wiki/List_of_spells_in_Wizardry:_Proving_Grounds_of_the_Mad_Overlord

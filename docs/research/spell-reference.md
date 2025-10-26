@@ -1,8 +1,10 @@
 # Wizardry 1 Complete Spell List
 
-**Source**: Wizardry Wiki (wizardry.fandom.com)
-**Validated**: 2025-10-25
-**Status**: ✅ Confirmed from authoritative source
+**Primary Source**: Wizardry Wiki (wizardry.fandom.com)
+**Validation Sources**: Zimlab Spells (limited scope)
+**Last Validated**: 2025-10-26
+**Status**: ✅ Spell names and basic effects confirmed
+**Known Gaps**: ValueA/ValueB spell point mechanics not found in available sources
 
 ---
 
@@ -485,5 +487,44 @@
 
 ---
 
-**Last Updated**: 2025-10-25
-**Next Review**: After extracting spell point formulas
+## Research Notes
+
+### Spell Point Cost System
+
+**Current Understanding:**
+- Each spell costs **1 point** from its level pool
+- Characters have separate spell point pools for each spell level (1-7)
+- Pool size determined by INT (Mage) or PIE (Priest) and character level
+
+**Validation Status (2025-10-26):**
+- Sources checked: Jeff Ludwig Magic List (#13), Zimlab Spells (#15)
+- Source #13: SNES platform version (different spell system, not authoritative for Apple II/DOS)
+- Source #15: Quick reference only (no cost mechanics or formulas documented)
+- **ValueA/ValueB mechanics**: Not found in either source
+
+**Potential Explanations:**
+1. The spell point system in Wizardry 1 is indeed simple (1 point per spell)
+2. ValueA/ValueB mechanics may be from later Wizardry games (2-3)
+3. This mechanic exists but is undocumented in web sources
+
+**Further Research Needed:**
+- Check Zimlab FAQ (#41)
+- Check GameFAQs complete guide (#2)
+- Check GitHub source code analysis (#56)
+- Verify original game manual if available
+
+### Validation Summary
+
+**Spell Names & Effects**: ✅ Validated against Zimlab source #15
+- Basic spell effects confirmed (e.g., HALITO 1-8 damage, DIOS 1-8 heal)
+- All spell names match expected format
+- Target types confirmed (single/group/party)
+
+**Spell Mechanics**: ⚠️ Partial validation only
+- Damage dice notation confirmed for basic spells
+- Advanced mechanics (cost formulas, success rates, resistance) not available in sources
+
+---
+
+**Last Updated**: 2025-10-26
+**Next Review**: After checking additional sources for spell point formulas (#41, #2, #56)
