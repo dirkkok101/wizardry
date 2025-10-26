@@ -123,6 +123,8 @@ export class CastleMenuScene implements Scene {
   private updateHoverStates(): void {
     const hoveredItem = this.getMenuItemAtPosition(this.mouseX, this.mouseY)
 
+    // NOTE: Direct mutation of MenuItem.hovered is acceptable here as MenuItems are
+    // UI-local state (not part of GameState). For GameState objects, use immutable updates.
     this.menuItems.forEach(item => {
       item.hovered = item === hoveredItem
     })

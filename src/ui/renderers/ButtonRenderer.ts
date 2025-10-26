@@ -2,7 +2,7 @@
  * ButtonRenderer - Button rendering with states (normal, hover, disabled)
  */
 
-import { COLORS, ANIMATION, TYPOGRAPHY, BUTTON_SIZES } from '../theme'
+import { COLORS, ANIMATION, TYPOGRAPHY } from '../theme'
 
 export interface ButtonRenderOptions {
   x: number
