@@ -59,13 +59,40 @@
 
 ## Stat Total Comparison
 
+**Source #7 (Data Driven Gamer) & #35 (Strategy Wiki) - VALIDATED ✅**
+
 | Race | Total Base Stats | Notes |
 |------|------------------|-------|
-| Human | 46 | Balanced distribution |
+| Human | 46 | Lowest total, balanced distribution |
 | Elf | 48 | Higher total, concentrated in mental |
 | Dwarf | 48 | Higher total, concentrated in physical |
-| Gnome | 49 | Highest balanced total |
-| Hobbit | 45 | Lowest total, extreme LUC |
+| Gnome | 49 | Second highest total |
+| Hobbit | 50 | **Highest total**, extreme LUC concentration |
+
+**Note**: Source #35 confirms Hobbit has 50 total (5+7+7+6+10+15), not 45 as previously calculated. Hobbit has the highest initial attribute total of all races.
+
+---
+
+## Bonus Point Allocation System
+
+**Source**: Strategy Wiki - Trebor's Castle (#35)
+
+### Bonus Pool Generation
+- **Typical**: 10 or fewer bonus points
+- **Uncommon**: 11-19 bonus points
+- **Rare**: 20+ bonus points (computer versions)
+- **Maximum observed**: 29 points (extremely rare)
+
+### Allocation Rules
+1. **Minimum constraint**: Cannot lower any attribute below racial base value
+2. **Maximum constraint**: Cannot raise any attribute beyond 18
+3. **Complete allocation**: All bonus points must be spent before finishing
+4. **Class requirement**: At least one class must be available after allocation
+
+### Reroll Strategy
+- Elite classes require exceptional rolls (18+ points minimum)
+- Players often reroll for hours to get 20+ bonus points
+- Ninja creation requires near-maximum rolls (50+ points needed)
 
 ---
 

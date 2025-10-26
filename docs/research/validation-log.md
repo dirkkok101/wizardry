@@ -472,6 +472,52 @@
 
 ---
 
+### Session 10: Race Stats Cross-Validation (2025-10-26)
+
+#### Source #35: Strategy Wiki - Trebor's Castle (Task 11 - Character Creation)
+- **URL:** https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Trebor's_castle
+- **Status:** ✅ Validated (Race stats)
+- **Target Files:** race-stats.md
+- **Findings:**
+  - **VALIDATED**: All 5 race base stats match perfectly (Human, Elf, Dwarf, Gnome, Hobbit) ✅
+  - **CORRECTED**: Hobbit total is 50 (not 45 as previously calculated)
+  - **NEW DATA - Bonus Points**: Typical 10 or fewer, uncommon 11-19, rare 20+, max 29
+  - **NEW DATA - Allocation Rules**: Min = racial base, max = 18, must spend all points
+  - **NEW DATA - Class Requirement**: At least one class must be available after allocation
+  - **CONFIRMED**: Stat ranges (STR 5-10, INT 7-10, PIE 5-10, VIT 6-10, AGI 5-10, LUC 6-15)
+  - **CONFIRMED**: Race recommendations match (Human → Fighter/Mage, Elf → Mage/Priest, etc.)
+- **Actions:**
+  - Corrected Hobbit stat total error (45 → 50)
+  - Added complete bonus point allocation system
+  - Cross-validated all racial base stats with Source #7 (both sources match)
+  - Updated race-stats.md with allocation rules
+
+#### Race Stats Validation Matrix
+
+| Race | STR | INT | PIE | VIT | AGI | LUC | Total | Source #7 | Source #35 | Match? |
+|------|-----|-----|-----|-----|-----|-----|-------|-----------|------------|--------|
+| Human | 8 | 8 | 5 | 8 | 8 | 9 | 46 | ✅ | ✅ | ✅ |
+| Elf | 7 | 10 | 10 | 6 | 9 | 6 | 48 | ✅ | ✅ | ✅ |
+| Dwarf | 10 | 7 | 10 | 10 | 5 | 6 | 48 | ✅ | ✅ | ✅ |
+| Gnome | 7 | 7 | 10 | 8 | 10 | 7 | 49 | ✅ | ✅ | ✅ |
+| Hobbit | 5 | 7 | 7 | 6 | 10 | 15 | 50 | ✅ | ✅ | ✅ |
+
+**Validation Result**: 100% match across both sources ✅
+
+**Error Found and Corrected**:
+- Previous documentation error: Hobbit total listed as 45
+- Correct value: 50 (5+7+7+6+10+15)
+- Source #35 explicitly states Hobbit has "highest initial attribute total"
+- Error was calculation mistake, not source discrepancy
+
+**Additional Data Extracted**:
+- Bonus point distribution: 10 typical, 20+ rare, 29 max
+- Allocation constraints: racial min, 18 max, complete allocation
+- Reroll mechanics: Elite classes need 18+ points minimum
+- Class availability requirement during creation
+
+---
+
 ## Discrepancies Found
 
 ### 1. Bishop Alignment Restriction (UNRESOLVED)
