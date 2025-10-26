@@ -22,6 +22,7 @@ Wizardry 1 uses **round-based combat** with initiative-driven turn order.
 - **InitiativeService** - Initiative calculation, turn order
 - **AttackService** - Attack resolution (hit/miss, critical)
 - **DamageService** - Damage calculation, armor reduction
+- **DispellService** - Dispel undead (Turn Undead mechanic)
 - **SpellCastingService** - Combat spell resolution
 - **MonsterService** - Monster stat loading, AI behavior
 - **DeathService** - Character death handling
@@ -31,7 +32,7 @@ Wizardry 1 uses **round-based combat** with initiative-driven turn order.
 
 - **AttackCommand** - Physical attack action
 - **CastSpellCommand** - Cast spell action
-- **DefendCommand** - Defensive stance action
+- **DispellCommand** - Dispel undead (Priest/Bishop/Lord only)
 - **ParryCommand** - Parry incoming attack
 - **FleeCommand** - Attempt to flee combat
 - **UseItemCommand** - Use item in combat
@@ -453,6 +454,46 @@ function calculateSpellDamage(
 - Prevents spellcasting
 - Duration: Rest of combat
 - Rare (only certain monsters cast)
+
+### DISPELL (Turn Undead)
+
+**Class Restriction**: Priest, Bishop, Lord only
+
+**Effect**: Attempt to instantly destroy undead enemy group
+
+**Formula**:
+```
+DispellChance% = (CasterLevel - UndeadLevel) × 10
+FinalChance% = max(5, min(95, DispellChance))
+```
+
+**Examples**:
+- Level 5 Priest vs Level 3 Zombies: (5-3) × 10 = **20%**
+- Level 10 Lord vs Level 5 Ghouls: (10-5) × 10 = **50%**
+- Level 8 Priest vs Level 12 Vampire: (8-12) × 10 = -40 → **5%** (minimum)
+- Level 20 Bishop vs Level 2 Zombies: (20-2) × 10 = 180 → **95%** (maximum)
+
+**Undead Targets**:
+- **Low-Level**: Zombies (1-2), Creeping Coins (2-3)
+- **Mid-Level**: Ghouls (3-4), Gas Cloud (4-5)
+- **High-Level**: Spectres (7-8), Wraiths (8-9)
+- **Boss**: Vampire (8-10), Vampire Lord (10+)
+
+**Success**:
+- Entire undead group instantly destroyed
+- No counterattack or damage calculation
+- Combat log shows dispell success
+
+**Failure**:
+- Character's turn is wasted (no action)
+- Undead group unaffected
+- Combat continues normally
+
+**Strategic Trade-offs**:
+- ✅ **Pros**: Instant group removal, no risk, fast combat
+- ❌ **Cons**: No XP awarded, no treasure drops, fails waste turn
+- **Use When**: Party low on resources, dangerous undead (level drain), quick escape needed
+- **Avoid When**: Party needs XP/gold, low success chance (<20%), weak undead
 
 ## Fleeing
 

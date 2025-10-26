@@ -2,7 +2,7 @@
 
 **Pure function services implementing business logic.**
 
-## Service Catalog (40+ Services)
+## Service Catalog (43 Services)
 
 ### Core Services
 1. [PartyService](./PartyService.md) - Party formation, membership
@@ -22,49 +22,50 @@
 11. [InitiativeService](./InitiativeService.md) - Combat initiative
 12. [AttackService](./AttackService.md) - Attack resolution
 13. [DamageService](./DamageService.md) - Damage calculation
-14. [SpellCastingService](./SpellCastingService.md) - Spell resolution
-15. [SpellLearningService](./SpellLearningService.md) - Learn new spells
+14. [DispellService](./DispellService.md) - Dispel undead (Turn Undead)
+15. [SpellCastingService](./SpellCastingService.md) - Spell resolution
+16. [SpellLearningService](./SpellLearningService.md) - Learn new spells
 
 ### Town Services
-16. [TownService](./TownService.md) - Town state management
-17. [InnService](./InnService.md) - Rest, restore HP/spells
-18. [TempleService](./TempleService.md) - Resurrection, cure status
-19. [ShopService](./ShopService.md) - Buy/sell equipment
-20. [TrainingService](./TrainingService.md) - Roster management, level-up
+17. [TownService](./TownService.md) - Town state management
+18. [InnService](./InnService.md) - Rest, restore HP/spells
+19. [TempleService](./TempleService.md) - Resurrection, cure status
+20. [ShopService](./ShopService.md) - Buy/sell equipment
+21. [TrainingService](./TrainingService.md) - Roster management, level-up
 
 ### Dungeon & Navigation
-21. [MapService](./MapService.md) - Automap, exploration
-22. [NavigationService](./NavigationService.md) - Movement validation
-23. [EncounterService](./EncounterService.md) - Random encounters
-24. [TileService](./TileService.md) - Tile effects (teleport, spinner)
-25. [DoorService](./DoorService.md) - Door interactions
+22. [MapService](./MapService.md) - Automap, exploration
+23. [NavigationService](./NavigationService.md) - Movement validation
+24. [EncounterService](./EncounterService.md) - Random encounters
+25. [TileService](./TileService.md) - Tile effects (teleport, spinner)
+26. [DoorService](./DoorService.md) - Door interactions
 
 ### Death & Recovery
-26. [DeathService](./DeathService.md) - Character death
-27. [BodyRecoveryService](./BodyRecoveryService.md) - Body retrieval
-28. [ResurrectionService](./ResurrectionService.md) - DI/KADORTO spells
-29. [StatusEffectService](./StatusEffectService.md) - Poison, paralyze, etc.
+27. [DeathService](./DeathService.md) - Character death
+28. [BodyRecoveryService](./BodyRecoveryService.md) - Body retrieval
+29. [ResurrectionService](./ResurrectionService.md) - DI/KADORTO spells
+30. [StatusEffectService](./StatusEffectService.md) - Poison, paralyze, etc.
 
 ### Monsters & AI
-30. [MonsterService](./MonsterService.md) - Monster stat loading
-31. [MonsterAIService](./MonsterAIService.md) - Monster behavior
-32. [GroupService](./GroupService.md) - Monster group management
+31. [MonsterService](./MonsterService.md) - Monster stat loading
+32. [MonsterAIService](./MonsterAIService.md) - Monster behavior
+33. [GroupService](./GroupService.md) - Monster group management
 
 ### Rendering & UI
-33. [FirstPersonViewService](./FirstPersonViewService.md) - 3D view calc
-34. [AutomapService](./AutomapService.md) - Blueprint map rendering
-35. [VisibilityService](./VisibilityService.md) - Tile visibility
+34. [FirstPersonViewService](./FirstPersonViewService.md) - 3D view calc
+35. [AutomapService](./AutomapService.md) - Blueprint map rendering
+36. [VisibilityService](./VisibilityService.md) - Tile visibility
 
 ### Persistence & Events
-36. [EventService](./EventService.md) - Event creation
-37. [ReplayService](./ReplayService.md) - Event replay
-38. [SaveService](./SaveService.md) - IndexedDB persistence
-39. [LoadService](./LoadService.md) - Load saved games
+37. [EventService](./EventService.md) - Event creation
+38. [ReplayService](./ReplayService.md) - Event replay
+39. [SaveService](./SaveService.md) - IndexedDB persistence
+40. [LoadService](./LoadService.md) - Load saved games
 
 ### Utility Services
-40. [ValidationService](./ValidationService.md) - Data validation
-41. [FormulaService](./FormulaService.md) - Game formulas (hit chance, etc.)
-42. [RandomService](./RandomService.md) - RNG with seed support
+41. [ValidationService](./ValidationService.md) - Data validation
+42. [FormulaService](./FormulaService.md) - Game formulas (hit chance, etc.)
+43. [RandomService](./RandomService.md) - RNG with seed support
 
 ## Service Principles
 

@@ -267,6 +267,61 @@ IDChance% = (INT + PIE + Level) / 99
 
 ---
 
+## DISPELL (Turn Undead)
+
+### DISPELL Success Formula
+
+**Available to**: Priest, Bishop, Lord only
+**Target**: Undead enemy groups only
+
+```
+DispellChance% = (CasterLevel - UndeadLevel) × 10
+
+// Clamped to 5% - 95% range
+FinalChance% = max(5, min(95, DispellChance))
+```
+
+**Examples**:
+- Level 5 Priest vs Level 3 Zombies: (5-3) × 10 = 20%
+- Level 10 Lord vs Level 5 Ghouls: (10-5) × 10 = 50%
+- Level 15 Bishop vs Level 10 Wraiths: (15-10) × 10 = 50%
+- Level 8 Priest vs Level 12 Vampire: (8-12) × 10 = -40 → 5% (minimum)
+- Level 20 Bishop vs Level 2 Zombies: (20-2) × 10 = 180 → 95% (maximum)
+
+### DISPELL Effects
+
+**On Success**:
+- Entire undead group instantly removed from combat
+- No XP awarded (dispelled, not defeated)
+- No treasure dropped (bodies disintegrate)
+- Combat may end if all groups dispelled
+
+**On Failure**:
+- No effect on undead
+- Action wasted for this combat round
+
+### Undead Monster Types
+
+**Affected by DISPELL**:
+- Zombies (Level 1-2)
+- Ghouls (Level 3-4)
+- Creeping Coins (Level 2-3)
+- Gas Cloud (Level 4-5)
+- Spectres (Level 7-8)
+- Wraiths (Level 8-9)
+- Vampire (Level 8-10)
+- Vampire Lord (Level 10+)
+
+**Not Affected**: Living, demonic, or mechanical enemies
+
+**Strategic Notes**:
+- Use DISPELL when party is weak/injured
+- Skip DISPELL when farming XP/gold
+- Low success rate vs high-level undead (Vampire Lord)
+- Class-restricted (only divine classes)
+
+---
+
 ## Level-Up Stat Changes
 
 ### Stat Change Chance

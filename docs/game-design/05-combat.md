@@ -31,10 +31,35 @@
 **Target**: Varies by spell (single enemy, group, all groups, ally, party)
 **Range**: Both rows can cast spells
 
-### Defend
-**Effect**: Defensive stance, improves AC temporarily
-**Benefit**: Harder for enemies to hit
-**Duration**: Current round only
+### DISPELL (Turn Undead)
+**Effect**: Attempt to instantly destroy an undead enemy group
+**Who Can Use**: Priest, Bishop, Lord only
+**Success Rate**: Based on your level vs. undead level
+**Range**: Both rows can attempt DISPELL
+
+**How It Works**:
+```
+Success % = (Your Level - Undead Level) × 10
+Minimum = 5%, Maximum = 95%
+```
+
+**Examples**:
+- Level 5 Priest vs Level 3 Zombies: 20% chance
+- Level 10 Lord vs Level 5 Ghouls: 50% chance
+- Level 20 Bishop vs Level 2 Zombies: 95% chance (capped)
+
+**Pros**: Instantly removes entire group, no damage to party, saves time
+**Cons**: No XP or treasure, wasted turn if it fails
+
+**When to Use**:
+- Party is low on HP or spell points
+- Facing dangerous undead (level-draining Vampires, Spectres)
+- Need to escape quickly without wasting resources
+
+**When NOT to Use**:
+- Need XP for leveling up
+- Need gold or treasure
+- Success chance is very low (<20%)
 
 ### Parry
 **Effect**: Attempt to block incoming attack

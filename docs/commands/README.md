@@ -15,7 +15,7 @@
 ### Combat Commands
 7. [AttackCommand](./AttackCommand.md) - Physical attack
 8. [CastSpellCommand](./CastSpellCommand.md) - Cast spell in combat
-9. [DefendCommand](./DefendCommand.md) - Defensive stance
+9. [DispellCommand](./DispellCommand.md) - Dispel undead (Priest/Bishop/Lord only)
 10. [ParryCommand](./ParryCommand.md) - Parry incoming attack
 11. [FleeCommand](./FleeCommand.md) - Attempt to flee combat
 12. [UseItemCommand](./UseItemCommand.md) - Use item in combat
