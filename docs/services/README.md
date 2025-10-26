@@ -1,85 +1,293 @@
-# Service Layer Documentation
+# Services Documentation
 
-**Pure function services implementing business logic.**
+**Documentation for all game services and system components.**
 
-## Service Catalog (46 Services)
+## Overview
 
-### Core Services
-1. [PartyService](./PartyService.md) - Party formation, membership
-2. [CombatService](./CombatService.md) - Combat resolution
-3. [SpellService](./SpellService.md) - Spell casting, points, learning
-4. [CharacterService](./CharacterService.md) - Stats, classes, progression
-5. [DungeonService](./DungeonService.md) - Map loading, tile resolution
+This directory contains documentation for the service layer of the Wizardry remake. Services are responsible for managing game state, data loading, business logic, and coordination between different game systems.
 
-### Character & Progression
-6. [CharacterCreationService](./CharacterCreationService.md) - Creation flow
-7. [LevelingService](./LevelingService.md) - XP, level-up, stat changes
-8. [ClassChangeService](./ClassChangeService.md) - Class changing
-9. [EquipmentService](./EquipmentService.md) - Equipment management
-10. [InventoryService](./InventoryService.md) - Item management
+## Service Categories
 
-### Combat & Spells
-11. [InitiativeService](./InitiativeService.md) - Combat initiative
-12. [AttackService](./AttackService.md) - Attack resolution
-13. [DamageService](./DamageService.md) - Damage calculation
-14. [DispellService](./DispellService.md) - Dispel undead (Turn Undead)
-15. [SpellCastingService](./SpellCastingService.md) - Spell resolution
-16. [SpellLearningService](./SpellLearningService.md) - Learn new spells
+### Data Services
 
-### Town Services
-17. [TownService](./TownService.md) - Town state management
-18. [InnService](./InnService.md) - Rest, restore HP/spells
-19. [TempleService](./TempleService.md) - Resurrection, cure status
-20. [ShopService](./ShopService.md) - Buy/sell equipment
-21. [TrainingService](./TrainingService.md) - Roster management, level-up
+**[Data Loading Services](./data-services.md)** - Load and manage game data from JSON files
 
-### Dungeon & Navigation
-22. [MapService](./MapService.md) - Automap, exploration
-23. [NavigationService](./NavigationService.md) - Movement validation
-24. [EncounterService](./EncounterService.md) - Random encounters
-25. [TileService](./TileService.md) - Tile effects (teleport, spinner)
-26. [DoorService](./DoorService.md) - Door interactions, trapped doors
-27. [SearchService](./SearchService.md) - Secret door/chest discovery
-28. [TrapService](./TrapService.md) - Trap inspection, disarm mechanics
-29. [ChestService](./ChestService.md) - Chest generation, treasure distribution
+Services for loading static game data:
+- **DataLoaderService**: Base service for JSON file loading
+- **ClassDataService**: Character class data (8 classes)
+- **RaceDataService**: Race data (5 races)
+- **SpellDataService**: Spell data (56 spells)
+- **ItemDataService**: Item/equipment data (80+ items)
+- **MonsterDataService**: Monster data (96 monsters)
+- **MapDataService**: Dungeon map data (10 levels)
 
-### Death & Recovery
-30. [DeathService](./DeathService.md) - Character death
-31. [BodyRecoveryService](./BodyRecoveryService.md) - Body retrieval
-32. [ResurrectionService](./ResurrectionService.md) - DI/KADORTO spells
-33. [StatusEffectService](./StatusEffectService.md) - Poison, paralyze, etc.
+### Core System Services
 
-### Monsters & AI
-34. [MonsterService](./MonsterService.md) - Monster stat loading
-35. [MonsterAIService](./MonsterAIService.md) - Monster behavior
-36. [GroupService](./GroupService.md) - Monster group management
+**[SceneNavigationService](./SceneNavigationService.md)** - Scene lifecycle and transitions
 
-### Rendering & UI
-37. [FirstPersonViewService](./FirstPersonViewService.md) - 3D view calc
-38. [AutomapService](./AutomapService.md) - Blueprint map rendering
-39. [VisibilityService](./VisibilityService.md) - Tile visibility
+Manages navigation between game scenes with state machine pattern:
+- Scene transitions with fade effects
+- Navigation history and back stack
+- Lifecycle hooks (onEnter, onExit, onUpdate)
+- Scene validation and error handling
+- Preloading support for next scene
 
-### Persistence & Events
-40. [EventService](./EventService.md) - Event creation
-41. [ReplayService](./ReplayService.md) - Event replay
-42. [SaveService](./SaveService.md) - IndexedDB persistence
-43. [LoadService](./LoadService.md) - Load saved games
+**[AssetLoadingService](./AssetLoadingService.md)** - Progressive asset loading
 
-### Utility Services
-44. [ValidationService](./ValidationService.md) - Data validation
-45. [FormulaService](./FormulaService.md) - Game formulas (hit chance, etc.)
-46. [RandomService](./RandomService.md) - RNG with seed support
+Two-phase asset loading strategy:
+- Critical path loading (title screen bitmap)
+- Parallel loading (fonts, audio, sprites)
+- Progress tracking and callbacks
+- Error handling and retry logic
+- Asset manifest management
 
-## Service Principles
+**[InputService](./InputService.md)** - Cross-platform input handling
 
-**Pure Functions**: No side effects, deterministic
-**Single Responsibility**: Each service handles one domain
-**Testable**: Easy to test without mocks
-**Composable**: Services call other services
+Unified input abstraction for keyboard, mouse, and touch:
+- Single keystroke waiting (title screen mode)
+- Key press handlers with validation
+- Button click handlers
+- Input state management (enabled/disabled)
+- Event cleanup and memory management
 
-## Getting Started
+**[GameInitializationService](./GameInitializationService.md)** - New game creation
 
-1. Read [Creation Guide](./creation-guide.md) to create new services
-2. Read [Patterns](./patterns.md) for common patterns
-3. Read [Testing Guide](./testing-guide.md) for testing approach
-4. Check individual service docs for API reference
+Creates initial game state with default values:
+- Empty character roster
+- Starting gold (0)
+- Quest flags (all false)
+- Initial party state (empty, at castle)
+- New game detection
+
+### State Management Services
+
+**[SaveService](./SaveService.md)** - Game state persistence
+
+Serializes game state and event log to IndexedDB:
+- Save game to slots (save1-save10, autosave, quicksave)
+- Metadata management (timestamp, description, play time)
+- Compression support (50-70% size reduction)
+- Checksum generation for integrity
+- Autosave triggers (level change, party wipe, 10 min interval)
+
+**[LoadService](./LoadService.md)** - Save game loading
+
+Loads and deserializes saved games:
+- Load from save slots
+- Checksum verification (detect corruption)
+- Version migration (upgrade old saves)
+- State reconstruction from event log
+- Quickload and autosave loading
+
+**[ReplayService](./ReplayService.md)** - Event replay and time-travel
+
+Reconstructs game state from event streams:
+- Replay events to rebuild state
+- Time-travel to specific event
+- Undo/redo functionality
+- State snapshots (every 100 events)
+- State diff calculation
+
+**[EventService](./EventService.md)** - Event creation and management
+
+Event sourcing system for all state changes:
+- Create typed events (movement, combat, spell, character, level)
+- Event validation and schema
+- Event serialization/deserialization
+- Event metadata (timestamp, session ID)
+- 20+ event types defined
+
+## Service Architecture
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                   Game Application Layer                      │
+└───────────────────────────────────────────────────────────────┘
+                              │
+                              ↓
+┌───────────────────────────────────────────────────────────────┐
+│                      Service Layer                            │
+│                                                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ Data Services│  │ Core System  │  │State Mgmt    │       │
+│  │              │  │  Services    │  │  Services    │       │
+│  │ • Classes    │  │              │  │              │       │
+│  │ • Races      │  │ • Scene Nav  │  │ • Save       │       │
+│  │ • Spells     │  │ • Assets     │  │ • Load       │       │
+│  │ • Items      │  │ • Input      │  │ • Replay     │       │
+│  │ • Monsters   │  │ • Game Init  │  │ • Events     │       │
+│  │ • Maps       │  │              │  │              │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
+│                                                               │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │         Game Logic Services (Planned)            │        │
+│  │  • Character  • Combat  • Inventory  • Party     │        │
+│  └──────────────────────────────────────────────────┘        │
+└───────────────────────────────────────────────────────────────┘
+                              │
+                              ↓
+┌───────────────────────────────────────────────────────────────┐
+│                      Data & Storage Layer                     │
+│                                                               │
+│  • JSON files in data/ directory (245+ files)                 │
+│  • IndexedDB (save games, event logs)                         │
+│  • Asset files (images, audio, fonts)                         │
+└───────────────────────────────────────────────────────────────┘
+```
+
+## Design Principles
+
+### 1. Separation of Concerns
+- **Data Services**: Load and query static data
+- **Game Services**: Manage game state and logic
+- **Command Services**: Handle user actions
+
+### 2. Single Responsibility
+Each service has one clear purpose:
+- ClassDataService only handles class data
+- CombatService only handles combat logic
+- No service does multiple unrelated things
+
+### 3. Dependency Injection
+Services should receive dependencies via constructor:
+
+```typescript
+class CharacterService {
+  constructor(
+    private classService: ClassDataService,
+    private raceService: RaceDataService,
+    private itemService: ItemDataService
+  ) {}
+}
+```
+
+### 4. Type Safety
+All services use TypeScript interfaces for data and method signatures
+
+### 5. Testability
+Services should be easy to test in isolation with mocked dependencies
+
+## Service Guidelines
+
+### Initialization
+
+Services should be initialized at application startup:
+
+```typescript
+// Initialize data services
+const dataServices = await initializeDataServices();
+
+// Initialize game services with data service dependencies
+const gameServices = initializeGameServices(dataServices);
+```
+
+### Error Handling
+
+Services should throw specific error types:
+
+```typescript
+class ServiceError extends Error {
+  constructor(
+    public readonly service: string,
+    public readonly operation: string,
+    public readonly reason: string
+  ) {
+    super(`${service}.${operation} failed: ${reason}`);
+  }
+}
+```
+
+### State Management
+
+Services that manage state should:
+- Use clear state interfaces
+- Provide state change events/callbacks
+- Support state serialization for save games
+
+### Performance
+
+Services should:
+- Cache frequently accessed data
+- Lazy load large datasets
+- Use async/await for I/O operations
+- Batch operations when possible
+
+## Available Documentation
+
+### Data Services (7 services)
+- **[DataLoaderService](./data-services.md#dataloaderservice)** - Base JSON file loader
+- **[ClassDataService](./data-services.md#classdataservice)** - Character class data
+- **[RaceDataService](./data-services.md#racedataservice)** - Race data
+- **[SpellDataService](./data-services.md#spelldataservice)** - Spell data
+- **[ItemDataService](./data-services.md#itemdataservice)** - Item/equipment data
+- **[MonsterDataService](./data-services.md#monsterdataservice)** - Monster data
+- **[MapDataService](./data-services.md#mapdataservice)** - Dungeon map data
+
+### Core System Services (4 services)
+- **[SceneNavigationService](./SceneNavigationService.md)** - Scene lifecycle and transitions
+- **[AssetLoadingService](./AssetLoadingService.md)** - Progressive asset loading
+- **[InputService](./InputService.md)** - Cross-platform input handling
+- **[GameInitializationService](./GameInitializationService.md)** - New game creation
+
+### State Management Services (4 services)
+- **[SaveService](./SaveService.md)** - Game state persistence to IndexedDB
+- **[LoadService](./LoadService.md)** - Save game loading and validation
+- **[ReplayService](./ReplayService.md)** - Event replay and time-travel debugging
+- **[EventService](./EventService.md)** - Event creation and management
+
+### Planned Services
+- **Game Logic Services** - Character, combat, inventory, party, dungeon
+- **Command Services** - User action handlers (movement, combat, spell, town)
+
+## Implementation Status
+
+| Service Category | Services | Documentation | Implementation |
+|-----------------|----------|---------------|----------------|
+| Data Services | 7 | ✅ Complete | ⚠️ Planned |
+| Core System Services | 4 | ✅ Complete | ⚠️ Planned |
+| State Management Services | 4 | ✅ Complete | ⚠️ Planned |
+| Game Logic Services | 0 | ⚠️ Pending | ⚠️ Pending |
+| Command Services | 0 | ⚠️ Pending | ⚠️ Pending |
+
+**Total Documented:** 15 services
+
+## Next Steps
+
+1. **Implementation Phase** - Begin implementing the 15 documented services
+   - Start with Core System Services (scene navigation, assets, input, game init)
+   - Implement Data Services (7 loaders for JSON data)
+   - Implement State Management Services (save/load/replay/events)
+
+2. **Type Definitions** - Create TypeScript interfaces for all documented services
+
+3. **Testing** - Write comprehensive unit tests following test specifications in docs
+
+4. **Additional Documentation** - Document remaining service categories
+   - Game Logic Services (character, combat, inventory, party, dungeon)
+   - Command Services (movement, combat, spell, town commands)
+
+5. **Integration** - Wire up services to Title Screen scene for first functional implementation
+
+## Related Documentation
+
+- **[Data Format Specifications](../data-format/README.md)** - JSON file format documentation
+- **[Architecture](../architecture.md)** - Overall system architecture
+- **[Commands](../commands/README.md)** - Command pattern documentation
+- **[Title Screen Implementation Plan](../plans/title-screen-implementation-plan.md)** - First scene implementation
+- **[Title Screen Scene Spec](../ui/scenes/00-title-screen.md)** - Title screen design
+- **[Save/Load Architecture](../analysis/save-load-architecture.md)** - Event sourcing design
+
+## Contributing
+
+When documenting new services:
+
+1. Create a new markdown file in this directory
+2. Include complete interface definitions
+3. Provide usage examples
+4. Document error handling
+5. Include testing approach
+6. Update this README with links
+
+## Last Updated
+
+2025-10-26
