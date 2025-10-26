@@ -294,6 +294,58 @@
 
 ---
 
+### Session 7: Trap Mechanics Validation (2025-10-26)
+
+#### Source #45: Wizardry Wiki - Traps (Task 8)
+- **URL:** https://wizardry.fandom.com/wiki/Traps
+- **Status:** ⚠️ **STUB ARTICLE** - Minimal data
+- **Target Files:** N/A (insufficient data)
+- **Findings:**
+  - **STUB PAGE**: Article marked as stub with minimal content
+  - **BASIC INFO ONLY**: Mentions two types (dungeon traps, chest traps) but no mechanics
+  - **NO FORMULAS**: No disarm mechanics, damage formulas, or success rates
+  - **NO WIZARDRY 1 SPECIFICS**: Generic description, not game-specific
+- **Actions:**
+  - Cannot extract useful data from this source
+  - Mark source #45 as insufficient for validation
+  - Existing trap data from Source #21 (Data Driven Gamer - Treasury) remains authoritative
+
+#### Source #46: Reddit - Chest Trap Mechanics (Task 8)
+- **URL:** https://www.reddit.com/r/wizardry/comments/pvccov/chest_trap_mechanics_and_thief_to_ninja_upgrade/
+- **Status:** ⚠️ **ACCESS BLOCKED** - Reddit domain blocked by WebFetch
+- **Target Files:** N/A (unable to access)
+- **Findings:**
+  - **BLOCKED**: Cannot fetch Reddit content via WebFetch tool
+  - **ALTERNATIVE DATA**: Trap mechanics already documented from Source #21
+- **Actions:**
+  - Mark source #46 as inaccessible
+  - Existing trap data sufficient for current needs
+
+#### Trap Mechanics Current Status
+
+**Data Already Documented (from Source #21):**
+- 8 trap types identified (Trapless, Poison Needle, Gas Bomb, Type 3, Teleporter, Anti-Magic, Anti-Priest, Alarm)
+- Traps randomly assigned to chests
+- Thief/Ninja can attempt disarm
+- Thieves Dagger: 100% depletion when used for class change to Ninja
+- Basic disarm mechanics documented
+
+**Data Gaps Remaining:**
+- Exact disarm success formula (Thief level + AGI calculation)
+- Trap damage ranges per type
+- Floor-based difficulty scaling
+- Ninja vs Thief disarm success comparison
+- Trap probability distribution
+- AGI modifier impact on disarm success
+
+**Assessment:**
+- Basic trap mechanics are documented ✅
+- Advanced formulas remain research gap ⚠️
+- Sources #45 and #46 unable to fill gaps
+- May require source code analysis (#56) or other technical sources
+
+---
+
 ## Discrepancies Found
 
 ### 1. Bishop Alignment Restriction (UNRESOLVED)

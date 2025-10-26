@@ -350,15 +350,19 @@
 
 ### 45. Wizardry Wiki - Traps
 - **URL**: https://wizardry.fandom.com/wiki/Traps
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **STUB ARTICLE** - Insufficient data
 - **Priority**: High
-- **Contains**: Trap types, disarm mechanics
+- **Contains**: Minimal information (stub article, no detailed mechanics)
+- **Validated**: 2025-10-26
+- **Note**: Article lacks trap mechanics, formulas, or Wizardry 1 specifics. Trap data already obtained from Source #21.
 
 ### 46. Reddit - Chest Trap Mechanics
 - **URL**: https://www.reddit.com/r/wizardry/comments/pvccov/chest_trap_mechanics_and_thief_to_ninja_upgrade/
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **ACCESS BLOCKED** - Reddit domain not accessible
 - **Priority**: Medium
-- **Contains**: Trap mechanics, Thieves Dagger
+- **Contains**: Trap mechanics, Thieves Dagger (inaccessible)
+- **Validated**: 2025-10-26
+- **Note**: Reddit domain blocked by WebFetch. Basic trap mechanics already documented from Source #21.
 
 ### 47. Wizardry Wiki - Teleport Trap
 - **URL**: https://wizardry.fandom.com/wiki/Teleport_Trap
