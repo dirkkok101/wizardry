@@ -122,7 +122,8 @@ export class CastleMenuScene implements Scene {
         height: button.height,
         text: button.text,
         state,
-        showPulse: false  // No pulse animation for menu buttons
+        showPulse: false,  // No pulse animation for menu buttons
+        fontSize: 16  // Smaller font size for narrower responsive buttons
       })
     })
   }

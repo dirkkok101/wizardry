@@ -13,11 +13,12 @@ export interface ButtonRenderOptions {
   state: 'normal' | 'hover' | 'disabled' | 'active'
   showPulse?: boolean
   pulseTime?: number
+  fontSize?: number
 }
 
 export const ButtonRenderer = {
   renderButton(ctx: CanvasRenderingContext2D, options: ButtonRenderOptions): void {
-    const { x, y, width, height, text, state, showPulse = false, pulseTime = 0 } = options
+    const { x, y, width, height, text, state, showPulse = false, pulseTime = 0, fontSize = TYPOGRAPHY.SIZES.BUTTON } = options
 
     // Draw background
     switch (state) {
@@ -52,7 +53,7 @@ export const ButtonRenderer = {
 
     // Draw text
     ctx.fillStyle = state === 'disabled' ? COLORS.TEXT_DISABLED : COLORS.TEXT_PRIMARY
-    ctx.font = `bold ${TYPOGRAPHY.SIZES.BUTTON}px ${TYPOGRAPHY.FAMILIES.PRIMARY}`
+    ctx.font = `bold ${fontSize}px ${TYPOGRAPHY.FAMILIES.PRIMARY}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(text, x + width / 2, y + height / 2)
