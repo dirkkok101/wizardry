@@ -2,7 +2,7 @@
 
 **Pure function services implementing business logic.**
 
-## Service Catalog (43 Services)
+## Service Catalog (46 Services)
 
 ### Core Services
 1. [PartyService](./PartyService.md) - Party formation, membership
@@ -38,34 +38,37 @@
 23. [NavigationService](./NavigationService.md) - Movement validation
 24. [EncounterService](./EncounterService.md) - Random encounters
 25. [TileService](./TileService.md) - Tile effects (teleport, spinner)
-26. [DoorService](./DoorService.md) - Door interactions
+26. [DoorService](./DoorService.md) - Door interactions, trapped doors
+27. [SearchService](./SearchService.md) - Secret door/chest discovery
+28. [TrapService](./TrapService.md) - Trap inspection, disarm mechanics
+29. [ChestService](./ChestService.md) - Chest generation, treasure distribution
 
 ### Death & Recovery
-27. [DeathService](./DeathService.md) - Character death
-28. [BodyRecoveryService](./BodyRecoveryService.md) - Body retrieval
-29. [ResurrectionService](./ResurrectionService.md) - DI/KADORTO spells
-30. [StatusEffectService](./StatusEffectService.md) - Poison, paralyze, etc.
+30. [DeathService](./DeathService.md) - Character death
+31. [BodyRecoveryService](./BodyRecoveryService.md) - Body retrieval
+32. [ResurrectionService](./ResurrectionService.md) - DI/KADORTO spells
+33. [StatusEffectService](./StatusEffectService.md) - Poison, paralyze, etc.
 
 ### Monsters & AI
-31. [MonsterService](./MonsterService.md) - Monster stat loading
-32. [MonsterAIService](./MonsterAIService.md) - Monster behavior
-33. [GroupService](./GroupService.md) - Monster group management
+34. [MonsterService](./MonsterService.md) - Monster stat loading
+35. [MonsterAIService](./MonsterAIService.md) - Monster behavior
+36. [GroupService](./GroupService.md) - Monster group management
 
 ### Rendering & UI
-34. [FirstPersonViewService](./FirstPersonViewService.md) - 3D view calc
-35. [AutomapService](./AutomapService.md) - Blueprint map rendering
-36. [VisibilityService](./VisibilityService.md) - Tile visibility
+37. [FirstPersonViewService](./FirstPersonViewService.md) - 3D view calc
+38. [AutomapService](./AutomapService.md) - Blueprint map rendering
+39. [VisibilityService](./VisibilityService.md) - Tile visibility
 
 ### Persistence & Events
-37. [EventService](./EventService.md) - Event creation
-38. [ReplayService](./ReplayService.md) - Event replay
-39. [SaveService](./SaveService.md) - IndexedDB persistence
-40. [LoadService](./LoadService.md) - Load saved games
+40. [EventService](./EventService.md) - Event creation
+41. [ReplayService](./ReplayService.md) - Event replay
+42. [SaveService](./SaveService.md) - IndexedDB persistence
+43. [LoadService](./LoadService.md) - Load saved games
 
 ### Utility Services
-41. [ValidationService](./ValidationService.md) - Data validation
-42. [FormulaService](./FormulaService.md) - Game formulas (hit chance, etc.)
-43. [RandomService](./RandomService.md) - RNG with seed support
+44. [ValidationService](./ValidationService.md) - Data validation
+45. [FormulaService](./FormulaService.md) - Game formulas (hit chance, etc.)
+46. [RandomService](./RandomService.md) - RNG with seed support
 
 ## Service Principles
 

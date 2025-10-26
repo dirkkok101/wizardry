@@ -263,6 +263,121 @@ const highChance = DoorService.calculateLockPickChance(18, 3)
 // highChance = 0.75 (75% success rate)
 ```
 
+### isDoorTrapped
+
+Check if door has a trap.
+
+**Signature**:
+```typescript
+function isDoorTrapped(
+  gameState: GameState,
+  level: number,
+  position: Position
+): boolean
+```
+
+**Parameters**:
+- `gameState`: Current game state
+- `level`: Dungeon level
+- `position`: Door position
+
+**Returns**: `true` if door has trap, `false` otherwise
+
+**Example**:
+```typescript
+const trapped = DoorService.isDoorTrapped(gameState, 5, { x: 10, y: 15 })
+// trapped === true (door has trap)
+```
+
+### inspectDoorTrap
+
+Inspect door for traps (uses TrapService internally).
+
+**Signature**:
+```typescript
+function inspectDoorTrap(
+  gameState: GameState,
+  character: Character,
+  level: number,
+  position: Position
+): InspectResult
+```
+
+**Parameters**:
+- `gameState`: Current game state
+- `character`: Character inspecting
+- `level`: Dungeon level
+- `position`: Door position
+
+**Returns**: Inspect result from TrapService
+
+**Example**:
+```typescript
+const thief = { class: 'Thief', agility: 16 }
+const result = DoorService.inspectDoorTrap(gameState, thief, 5, { x: 10, y: 15 })
+// result = { success: true, trapType: 'ALARM', triggered: false }
+```
+
+### disarmDoorTrap
+
+Disarm trap on door (uses TrapService internally).
+
+**Signature**:
+```typescript
+function disarmDoorTrap(
+  gameState: GameState,
+  character: Character,
+  trapType: TrapType,
+  level: number,
+  position: Position
+): DisarmResult
+```
+
+**Parameters**:
+- `gameState`: Current game state
+- `character`: Character disarming
+- `trapType`: Type of trap to disarm
+- `level`: Dungeon level
+- `position`: Door position
+
+**Returns**: Disarm result from TrapService
+
+**Example**:
+```typescript
+const thief = { class: 'Thief', level: 5 }
+const result = DoorService.disarmDoorTrap(
+  gameState,
+  thief,
+  'ALARM',
+  5,
+  { x: 10, y: 15 }
+)
+// result = { success: true, triggered: false, wrongType: false }
+```
+
+### getDoorTrapTypes
+
+Get trap types that can appear on doors.
+
+**Signature**:
+```typescript
+function getDoorTrapTypes(): TrapType[]
+```
+
+**Returns**: Array of door trap types
+
+**Door Trap Types**:
+- `ALARM` - Most common, triggers monster encounter
+- `POISON_NEEDLE` - Uncommon, poisons character
+- `STUNNER` - Uncommon, stuns/paralyzes character
+- `TELEPORTER` - Rare, teleports party
+
+**Example**:
+```typescript
+const trapTypes = DoorService.getDoorTrapTypes()
+// ['ALARM', 'POISON_NEEDLE', 'STUNNER', 'TELEPORTER']
+```
+
 ### getDoorsInRange
 
 Get all doors within party's view range.
@@ -308,6 +423,7 @@ Uses:
 - `DungeonService` (get door data from dungeon maps)
 - `RandomService` (RNG for lock picking attempts)
 - `ValidationService` (validate positions)
+- `TrapService` (door trap inspection, disarm mechanics)
 
 ## Testing
 
@@ -334,8 +450,16 @@ See [DoorService.test.ts](../../tests/services/DoorService.test.ts)
 
 ## Related
 
-- [OpenDoorCommand](../commands/OpenDoorCommand.md) - Uses this service
-- [SearchCommand](../commands/SearchCommand.md) - Uses discoverSecretDoor
+**Services**:
+- [TrapService](./TrapService.md) - Door trap mechanics
+- [SearchService](./SearchService.md) - Secret door discovery
 - [NavigationService](./NavigationService.md) - Checks door passage
 - [DungeonService](./DungeonService.md) - Provides door data
+
+**Commands**:
+- [OpenDoorCommand](../commands/OpenDoorCommand.md) - Uses this service
+- [SearchCommand](../commands/SearchCommand.md) - Uses discoverSecretDoor
+
+**Research**:
+- [Trap Mechanics Validation](../research/trap-mechanics-validation.md) - Door trap formulas
 - [Dungeon Maps Reference](../research/dungeon-maps-reference.md) - Door locations
