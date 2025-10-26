@@ -3,10 +3,10 @@
 **Purpose**: Comprehensive catalog of all authoritative sources for Wizardry: Proving Grounds of the Mad Overlord.
 
 **Total Sources**: 60 URLs organized by category
-**Sources Used/Validated**: 18 sources ✅
+**Sources Used/Validated**: 20 sources ✅
 **Sources Not Applicable**: 6 sources ❌ (wrong game/platform)
-**Sources Limited/Partial**: 1 source ⚠️ (incomplete data)
-**Remaining Sources**: 35 sources ⬜
+**Sources Limited/Partial**: 11 sources ⚠️ (404, blocked, stubs, incomplete)
+**Remaining Sources**: 23 sources ⬜
 
 **Status Legend**:
 - ✅ = Extracted/Validated and documented
