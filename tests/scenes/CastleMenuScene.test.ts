@@ -82,6 +82,13 @@ describe('CastleMenuScene', () => {
         const spacing = buttons[i + 1].x - (buttons[i].x + buttons[i].width)
         expect(spacing).toBe(20)
       }
+
+      // First button should start with 20px margin from left
+      expect(buttons[0].x).toBe(20)
+
+      // Last button should end with 20px margin from right
+      const lastButton = buttons[buttons.length - 1]
+      expect(lastButton.x + lastButton.width).toBe(canvas.width - 20)
     })
   })
 

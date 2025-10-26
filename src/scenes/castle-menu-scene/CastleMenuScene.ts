@@ -40,20 +40,27 @@ export class CastleMenuScene implements Scene {
     this.canvas = canvas
     this.inputManager = new SceneInputManager()
 
-    // Calculate button layout
+    // Calculate responsive button layout
     const BUTTON_SPACING = 20
-    const BUTTON_WIDTH = BUTTON_SIZES.SMALL.width   // 150
     const BUTTON_HEIGHT = BUTTON_SIZES.SMALL.height // 40
     const BOTTOM_MARGIN = 40
+    const SIDE_MARGIN = 20
+    const NUM_BUTTONS = 5
 
-    const totalWidth = (BUTTON_WIDTH * 5) + (BUTTON_SPACING * 4)
-    const startX = (canvas.width - totalWidth) / 2
+    // Calculate button width to fill available canvas width
+    // Available width = canvas width - (2 side margins + 4 spacings between 5 buttons)
+    const availableWidth = canvas.width - (SIDE_MARGIN * 2) - (BUTTON_SPACING * (NUM_BUTTONS - 1))
+    const buttonWidth = Math.floor(availableWidth / NUM_BUTTONS)
+
+    const startX = SIDE_MARGIN
     const buttonY = canvas.height - BOTTOM_MARGIN - BUTTON_HEIGHT
 
-    // Position each button
+    // Position each button with calculated width
     this.buttons.forEach((button, index) => {
-      button.x = startX + (index * (BUTTON_WIDTH + BUTTON_SPACING))
+      button.x = startX + (index * (buttonWidth + BUTTON_SPACING))
       button.y = buttonY
+      button.width = buttonWidth
+      button.height = BUTTON_HEIGHT
     })
 
     // Load background image
