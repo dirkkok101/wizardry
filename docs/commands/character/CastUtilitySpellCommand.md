@@ -415,8 +415,8 @@ test('creates UTILITY_SPELL_CAST event', () => {
 ## Related
 
 - [SpellService](../services/SpellService.md) - Spell casting and management
-- [CastSpellCommand](./CastSpellCommand.md) - Combat spell casting
+- [CastSpellCommand](../combat/CastSpellCommand.md) - Combat spell casting
 - [LearnSpellCommand](./LearnSpellCommand.md) - Learn spells on level-up
-- [RestAtInnCommand](./RestAtInnCommand.md) - Restore spell points
+- [RestAtInnCommand](../inn/RestAtInnCommand.md) - Restore spell points
 - [Spell Reference](../research/spell-reference.md) - All spells documented
 - [Magic System](../game-design/09-magic-system.md) - Player guide

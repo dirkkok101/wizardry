@@ -268,7 +268,7 @@ describe('EnterDungeonCommand', () => {
 - [DungeonService](../services/DungeonService.md) - Dungeon map data
 
 **Commands**:
-- [EnterTownCommand](./EnterTownCommand.md) - Return to town
+- [EnterTownCommand](../meta/EnterTownCommand.md) - Return to town
 - [MoveForwardCommand](./MoveForwardCommand.md) - Navigate dungeon
 - [DescendStairsCommand](./DescendStairsCommand.md) - Go deeper
 

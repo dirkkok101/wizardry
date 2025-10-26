@@ -440,7 +440,7 @@ throw new InvalidTrapTypeError(
 **Commands**:
 - [InspectChestCommand](./InspectChestCommand.md) - Identify trap type
 - [OpenChestCommand](./OpenChestCommand.md) - Open after disarming
-- [CastSpellCommand](./CastSpellCommand.md) - CALFO for identification
+- [CastSpellCommand](../combat/CastSpellCommand.md) - CALFO for identification
 
 **Game Design**:
 - [Traps & Chests](../game-design/08-traps-chests.md) - Player guide

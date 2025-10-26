@@ -264,8 +264,8 @@ describe('RestAtInnCommand', () => {
 - [TownService](../services/TownService.md) - Inn access validation
 
 **Commands**:
-- [EnterTownCommand](./EnterTownCommand.md) - Enter town
-- [VisitTempleCommand](./VisitTempleCommand.md) - Temple for resurrection
+- [EnterTownCommand](../meta/EnterTownCommand.md) - Enter town
+- [VisitTempleCommand](../temple/VisitTempleCommand.md) - Temple for resurrection
 
 **Systems**:
 - [Town System](../systems/town-system.md) - Town services overview

@@ -358,7 +358,7 @@ describe('ChangeClassCommand', () => {
 
 **Related Commands**:
 - [CreateCharacterCommand](./CreateCharacterCommand.md) - Initial class selection
-- [LevelUpCharacterCommand](./LevelUpCharacterCommand.md) - Level progression
+- [LevelUpCharacterCommand](../inn/LevelUpCharacterCommand.md) - Level progression
 
 **Game Design**:
 - [Character Progression](../game-design/04-character-progression.md) - Multi-class strategies

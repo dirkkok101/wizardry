@@ -205,7 +205,7 @@ describe('DeleteCharacterCommand', () => {
 
 **Related Commands**:
 - [CreateCharacterCommand](./CreateCharacterCommand.md) - Create character
-- [RemoveFromPartyCommand](./RemoveFromPartyCommand.md) - Remove from party before deletion
+- [RemoveFromPartyCommand](../tavern/RemoveFromPartyCommand.md) - Remove from party before deletion
 
 **Game Design**:
 - [Character Management](../game-design/03-character-management.md) - Player guide

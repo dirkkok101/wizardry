@@ -297,5 +297,5 @@ test('creates ITEM_DROPPED event', () => {
 - [DungeonService](../services/DungeonService.md) - Tile and item placement
 - [EquipItemCommand](./EquipItemCommand.md) - Equip items
 - [UnequipItemCommand](./UnequipItemCommand.md) - Unequip items first
-- [SearchCommand](./SearchCommand.md) - Find dropped items on tiles
+- [SearchCommand](../dungeon/SearchCommand.md) - Find dropped items on tiles
 - [Items & Equipment](../game-design/11-items-equipment.md) - Player guide

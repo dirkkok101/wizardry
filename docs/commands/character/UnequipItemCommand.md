@@ -275,5 +275,5 @@ test('creates ITEM_UNEQUIPPED event', () => {
 - [EquipmentService](../services/EquipmentService.md) - Equipment management
 - [EquipItemCommand](./EquipItemCommand.md) - Equip items
 - [DropItemCommand](./DropItemCommand.md) - Drop items from inventory
-- [VisitTempleCommand](./VisitTempleCommand.md) - Remove curses at temple
+- [VisitTempleCommand](../temple/VisitTempleCommand.md) - Remove curses at temple
 - [Equipment Reference](../research/equipment-reference.md) - All items documented

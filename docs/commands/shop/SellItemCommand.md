@@ -263,7 +263,7 @@ describe('SellItemCommand', () => {
 **Commands**:
 - [VisitShopCommand](./VisitShopCommand.md) - Enter shop
 - [BuyItemCommand](./BuyItemCommand.md) - Purchase equipment
-- [UnequipItemCommand](./UnequipItemCommand.md) - Unequip before selling
+- [UnequipItemCommand](../character/UnequipItemCommand.md) - Unequip before selling
 
 **Research**:
 - [Equipment Reference](../research/equipment-reference.md) - Item values and cursed items

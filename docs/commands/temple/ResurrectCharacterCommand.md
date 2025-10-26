@@ -301,7 +301,7 @@ describe('ResurrectCharacterCommand', () => {
 
 **Commands**:
 - [VisitTempleCommand](./VisitTempleCommand.md) - Enter temple
-- [RestAtInnCommand](./RestAtInnCommand.md) - Inn rest (can cause death)
+- [RestAtInnCommand](../inn/RestAtInnCommand.md) - Inn rest (can cause death)
 
 **Research**:
 - [Combat Formulas](../research/combat-formulas.md) - Resurrection formulas

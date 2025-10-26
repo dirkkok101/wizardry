@@ -334,7 +334,7 @@ test('creates ITEM_IDENTIFIED event with full details', () => {
 
 - [EquipmentService](../services/EquipmentService.md) - Item identification logic
 - [CharacterService](../services/CharacterService.md) - Class ability checks
-- [EquipItemCommand](./EquipItemCommand.md) - Equip identified items safely
+- [EquipItemCommand](../character/EquipItemCommand.md) - Equip identified items safely
 - [VisitShopCommand](./VisitShopCommand.md) - Shop also identifies (for fee)
 - [Equipment Reference](../research/equipment-reference.md) - All items and properties
 - [Character Classes](../game-design/02-character-classes.md) - Bishop and Thief abilities

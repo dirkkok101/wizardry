@@ -252,6 +252,6 @@ test('creates ITEM_EQUIPPED event', () => {
 - [EquipmentService](../services/EquipmentService.md) - Equipment management
 - [UnequipItemCommand](./UnequipItemCommand.md) - Unequip items
 - [DropItemCommand](./DropItemCommand.md) - Drop items
-- [IdentifyItemCommand](./IdentifyItemCommand.md) - Identify unknown items
+- [IdentifyItemCommand](../shop/IdentifyItemCommand.md) - Identify unknown items
 - [Equipment Reference](../research/equipment-reference.md) - All items documented
 - [Items & Equipment](../game-design/11-items-equipment.md) - Player guide

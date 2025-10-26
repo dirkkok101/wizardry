@@ -289,8 +289,8 @@ describe('InspectCharacterCommand', () => {
 
 **Related Commands**:
 - [CreateCharacterCommand](./CreateCharacterCommand.md) - Create character
-- [LevelUpCharacterCommand](./LevelUpCharacterCommand.md) - Level up character
-- [EquipItemCommand](./EquipItemCommand.md) - Equip items
+- [LevelUpCharacterCommand](../inn/LevelUpCharacterCommand.md) - Level up character
+- [EquipItemCommand](../character/EquipItemCommand.md) - Equip items
 
 **Game Design**:
 - [Character Sheet UI](../game-design/ui-character-sheet.md) - Display design

@@ -324,9 +324,9 @@ describe('LevelUpCharacterCommand', () => {
 - [Spell Learning](../research/spell-reference.md) - Spell availability by level
 
 **Related Commands**:
-- [CreateCharacterCommand](./CreateCharacterCommand.md) - Start at level 1
-- [ChangeClassCommand](./ChangeClassCommand.md) - Reset to level 1
-- [LearnSpellCommand](./LearnSpellCommand.md) - Spell learning process
+- [CreateCharacterCommand](../training-grounds/CreateCharacterCommand.md) - Start at level 1
+- [ChangeClassCommand](../training-grounds/ChangeClassCommand.md) - Reset to level 1
+- [LearnSpellCommand](../character/LearnSpellCommand.md) - Spell learning process
 
 **Game Design**:
 - [Character Progression](../game-design/04-character-progression.md) - Player guide

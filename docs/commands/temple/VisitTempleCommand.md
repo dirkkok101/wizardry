@@ -202,7 +202,7 @@ describe('VisitTempleCommand', () => {
 
 **Commands**:
 - [ResurrectCharacterCommand](./ResurrectCharacterCommand.md) - Resurrect dead/ashes
-- [EnterTownCommand](./EnterTownCommand.md) - Enter town
+- [EnterTownCommand](../meta/EnterTownCommand.md) - Enter town
 
 **Systems**:
 - [Town System](../systems/town-system.md) - Town services overview

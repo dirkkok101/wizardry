@@ -236,7 +236,7 @@ describe('AscendStairsCommand', () => {
 
 **Commands**:
 - [DescendStairsCommand](./DescendStairsCommand.md) - Go down stairs
-- [EnterTownCommand](./EnterTownCommand.md) - Return to town from level 1
+- [EnterTownCommand](../meta/EnterTownCommand.md) - Return to town from level 1
 - [MoveForwardCommand](./MoveForwardCommand.md) - Navigate to stairs
 
 **Research**:

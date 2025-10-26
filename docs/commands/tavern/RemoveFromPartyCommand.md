@@ -294,7 +294,7 @@ describe('RemoveFromPartyCommand', () => {
 **Related Commands**:
 - [FormPartyCommand](./FormPartyCommand.md) - Create party
 - [AddToPartyCommand](./AddToPartyCommand.md) - Add character to party
-- [DeleteCharacterCommand](./DeleteCharacterCommand.md) - Delete character (must remove from party first)
+- [DeleteCharacterCommand](../training-grounds/DeleteCharacterCommand.md) - Delete character (must remove from party first)
 
 **Game Design**:
 - [Party System](../game-design/05-party-system.md) - Party mechanics

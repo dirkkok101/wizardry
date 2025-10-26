@@ -307,7 +307,7 @@ throw new InvalidStateError(
 **Commands**:
 - [DisarmTrapCommand](./DisarmTrapCommand.md) - Disarm after inspection
 - [OpenChestCommand](./OpenChestCommand.md) - Open chest
-- [CastSpellCommand](./CastSpellCommand.md) - Cast CALFO spell
+- [CastSpellCommand](../combat/CastSpellCommand.md) - Cast CALFO spell
 
 **Game Design**:
 - [Traps & Chests](../game-design/08-traps-chests.md) - Player guide

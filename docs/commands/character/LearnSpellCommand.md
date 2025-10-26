@@ -408,8 +408,8 @@ test('creates SPELL_LEARNED event with details', () => {
 
 - [SpellService](../services/SpellService.md) - Spell learning and management
 - [CharacterService](../services/CharacterService.md) - Character class validation
-- [LevelUpCharacterCommand](./LevelUpCharacterCommand.md) - Triggers spell learning
+- [LevelUpCharacterCommand](../inn/LevelUpCharacterCommand.md) - Triggers spell learning
 - [CastUtilitySpellCommand](./CastUtilitySpellCommand.md) - Use learned spells
-- [CastSpellCommand](./CastSpellCommand.md) - Combat spells
+- [CastSpellCommand](../combat/CastSpellCommand.md) - Combat spells
 - [Spell Reference](../research/spell-reference.md) - All spells documented
 - [Magic System](../game-design/09-magic-system.md) - Spell learning mechanics

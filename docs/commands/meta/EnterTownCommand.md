@@ -156,10 +156,10 @@ describe('EnterTownCommand', () => {
 - [TownService](../services/TownService.md) - Town mode management
 
 **Commands**:
-- [EnterDungeonCommand](./EnterDungeonCommand.md) - Return to dungeon
-- [RestAtInnCommand](./RestAtInnCommand.md) - Inn service
-- [VisitTempleCommand](./VisitTempleCommand.md) - Temple service
-- [VisitShopCommand](./VisitShopCommand.md) - Shop service
+- [EnterDungeonCommand](../dungeon/EnterDungeonCommand.md) - Return to dungeon
+- [RestAtInnCommand](../inn/RestAtInnCommand.md) - Inn service
+- [VisitTempleCommand](../temple/VisitTempleCommand.md) - Temple service
+- [VisitShopCommand](../shop/VisitShopCommand.md) - Shop service
 
 **Systems**:
 - [Town System](../systems/town-system.md) - Town services overview

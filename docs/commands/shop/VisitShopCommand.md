@@ -184,7 +184,7 @@ describe('VisitShopCommand', () => {
 **Commands**:
 - [BuyItemCommand](./BuyItemCommand.md) - Purchase equipment
 - [SellItemCommand](./SellItemCommand.md) - Sell equipment
-- [EnterTownCommand](./EnterTownCommand.md) - Enter town
+- [EnterTownCommand](../meta/EnterTownCommand.md) - Enter town
 
 **Research**:
 - [Equipment Reference](../research/equipment-reference.md) - All 80+ items

@@ -283,7 +283,7 @@ describe('BuyItemCommand', () => {
 **Commands**:
 - [VisitShopCommand](./VisitShopCommand.md) - Enter shop
 - [SellItemCommand](./SellItemCommand.md) - Sell equipment
-- [EquipItemCommand](./EquipItemCommand.md) - Equip purchased item
+- [EquipItemCommand](../character/EquipItemCommand.md) - Equip purchased item
 
 **Research**:
 - [Equipment Reference](../research/equipment-reference.md) - All 80+ items with class restrictions

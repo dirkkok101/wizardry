@@ -242,7 +242,6 @@ See [AttackCommand.test.ts](../../tests/commands/AttackCommand.test.ts)
 
 **Commands**:
 - [CastSpellCommand](./CastSpellCommand.md)
-- [DefendCommand](./DefendCommand.md)
 - [ParryCommand](./ParryCommand.md)
 - [FleeCommand](./FleeCommand.md)
 
