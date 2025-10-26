@@ -518,6 +518,62 @@
 
 ---
 
+### Session 11: High-Priority Source Extraction (2025-10-26)
+
+#### Source #8: Zimlab - Wizardry 1 Walkthrough (Task 12)
+- **URL:** https://www.zimlab.com/wizardry/walk/w1/wizardry-1-walkthrough-1.htm
+- **Status:** ❌ **404 ERROR** - Page not found
+- **Target Files:** N/A (inaccessible)
+- **Findings:**
+  - **ACCESS FAILED**: URL returns 404 error
+  - **ALTERNATIVE**: Other Zimlab sources (#12, #18, #41) already extracted
+- **Actions:**
+  - Mark source #8 as inaccessible
+  - No new data available from this source
+
+#### Source #56: GitHub - Wizardry Code (Task 12)
+- **URL:** https://github.com/snafaru/Wizardry.Code
+- **Status:** ✅ **ANALYZED** - Source code repository
+- **Target Files:** N/A (reference source)
+- **Findings:**
+  - **PROJECT TYPE**: Actual Pascal source code for Wizardry 1 Apple II v3.1 (2024 release)
+  - **PLATFORM**: Apple II UCSD Pascal 1.1
+  - **VERSION**: Proving Grounds v3.1.2 (July 2024) - Modern restoration with 100+ bug fixes
+  - **CONTENT**: Compilable source code, not a data extraction tool
+  - **NINJA MECHANICS** (from v3.1 changes):
+    - Base unarmed damage: 2d4 → 2d8 (modern balance change, NOT original)
+    - Unarmed AC bonus: 1 per 3 levels → 1 per level (modern change)
+    - Unarmed initiative: +1 per 3 levels (new mechanic)
+  - **SPELL MECHANICS** (from v3.1 changes):
+    - LOKTOFEIT success: Now "65 + character level %" (from Wizardry III, NOT original)
+    - MANIFO success: "Similar to KATINO" (balance change)
+  - **IMPORTANT NOTE**: This is a modern restoration with bug fixes and balance changes
+  - **CAUTION**: Changes documented may NOT reflect original 1981 mechanics
+- **Actions:**
+  - Mark source #56 as analyzed
+  - Note that this is modified source code (v3.1), not pure original
+  - Cannot use v3.1 changes as authoritative for original mechanics
+  - Useful reference for understanding game structure, but balance changes differ from 1981
+  - Would require comparing against original unmodified source to extract pure 1981 mechanics
+
+#### High-Priority Source Summary
+
+**Source #8 Status**: ❌ Inaccessible (404 error)
+**Source #56 Status**: ⚠️ Modern modified version (not authoritative for original mechanics)
+
+**Key Finding**: Source #56 contains actual source code but with 100+ modifications from original. Changes include:
+- Ninja damage buff (2d4 → 2d8) - balance change
+- LOKTOFEIT formula from Wizardry III - not original W1 mechanic
+- AC and initiative bonuses - modern additions
+
+**Recommendation**:
+- Use Source #56 for structural reference only
+- Do NOT use v3.1 balance changes as authoritative for 1981 Wizardry 1
+- Original unmodified source code would be needed for definitive formulas
+- Current documentation from other sources (#7, #12, #21, #31, #35) remains authoritative
+
+---
+
 ## Discrepancies Found
 
 ### 1. Bishop Alignment Restriction (UNRESOLVED)

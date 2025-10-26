@@ -67,9 +67,11 @@
 
 ### 8. Zimlab - Wizardry 1 Walkthrough
 - **URL**: https://www.zimlab.com/wizardry/walk/w1/wizardry-1-walkthrough-1.htm
-- **Status**: ⬜ Not reviewed
+- **Status**: ❌ **404 ERROR** - Page not found
 - **Priority**: High
-- **Contains**: Detailed walkthrough, strategies
+- **Contains**: Detailed walkthrough, strategies (inaccessible)
+- **Validated**: 2025-10-26
+- **Note**: URL returns 404. Other Zimlab sources (#12, #18, #41) already extracted.
 
 ### 9. TK421 - Wizardry 1 Walkthrough
 - **URL**: https://www.tk421.net/wizardry/wiz1walk.shtml
@@ -436,9 +438,11 @@
 
 ### 56. GitHub - Wizardry Code (Snafaru)
 - **URL**: https://github.com/snafaru/Wizardry.Code
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **ANALYZED** - Modern modified version (v3.1, 2024)
 - **Priority**: Medium
-- **Contains**: Source code analysis, data extraction tools
+- **Contains**: Apple II Pascal source code with 100+ bug fixes and balance changes
+- **Validated**: 2025-10-26
+- **Note**: This is Wizardry v3.1.2 (2024) with modern balance changes (Ninja 2d8 damage, LOKTOFEIT from W3, etc.). NOT authoritative for original 1981 mechanics. Useful for structure reference only.
 
 ### 57. MobyGames - Screenshots
 - **URL**: https://www.mobygames.com/game/1209/wizardry-proving-grounds-of-the-mad-overlord/screenshots/apple2/43910/
