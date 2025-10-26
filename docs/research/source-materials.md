@@ -39,9 +39,11 @@
 
 ### 4. Reddit - Quickstart Guide
 - **URL**: https://www.reddit.com/r/wizardry/comments/1hiy02x/wizardry_1_quickstart_guide_proving_grounds/
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **ACCESS BLOCKED** - Reddit domain not accessible
 - **Priority**: Medium
-- **Contains**: Community tips, beginner strategies
+- **Contains**: Community tips, beginner strategies (inaccessible)
+- **Validated**: 2025-10-26
+- **Note**: Topics covered by authoritative sources (#35 Strategy Wiki). Non-critical for research.
 
 ### 5. My Abandonware - Game Download
 - **URL**: https://www.myabandonware.com/game/wizardry-proving-grounds-of-the-mad-overlord-a
@@ -268,9 +270,11 @@
 
 ### 34. Reddit - Class Change Guide
 - **URL**: https://www.reddit.com/r/wizardry/comments/1gqatbh/wizardry_1_class_change_guide/
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **ACCESS BLOCKED** - Reddit domain not accessible
 - **Priority**: Medium
-- **Contains**: Class changing mechanics
+- **Contains**: Class changing mechanics (inaccessible)
+- **Validated**: 2025-10-26
+- **Note**: Class change mechanics fully documented from Source #35. Non-critical for research.
 
 ### 35. Strategy Wiki - Trebor's Castle
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Trebor's_castle
@@ -318,9 +322,11 @@
 
 ### 40. Reddit - Resurrection Question
 - **URL**: https://www.reddit.com/r/wizardry/comments/1g88vhk/question_about_resurrection/
-- **Status**: ⬜ Not reviewed
+- **Status**: ⚠️ **ACCESS BLOCKED** - Reddit domain not accessible
 - **Priority**: Medium
-- **Contains**: Resurrection mechanics discussion
+- **Contains**: Resurrection mechanics discussion (inaccessible)
+- **Validated**: 2025-10-26
+- **Note**: Resurrection mechanics documented from Sources #35, #41. Non-critical for research.
 
 ### 41. Zimlab - Wizardry 1 FAQ
 - **URL**: https://www.zimlab.com/wizardry/recovered/wizardrygame/pages/w1/wiz1faq.htm
