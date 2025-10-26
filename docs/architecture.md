@@ -125,6 +125,8 @@ All player actions as command objects.
 - Action queuing (combat rounds)
 - Macro support
 - Replay from event log
+- Commands don't implement game logic
+- Commands orchestrate between services (which do implement game logic)
 
 ### 2.3 Service Layer Separation
 
@@ -135,6 +137,8 @@ Pure functions, no side effects.
 - Parallel execution safe
 - Deterministic outcomes
 - State transitions explicit
+- Implements game logic
+- Orchestrated by commands
 
 ## 3. Technology Stack
 
