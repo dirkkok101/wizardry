@@ -9,14 +9,14 @@ describe('SceneNavigationService', () => {
 
   describe('transitionTo', () => {
     it('should transition to new scene', async () => {
-      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
       const currentScene = SceneNavigationService.getCurrentScene()
       expect(currentScene).toBe(SceneType.CASTLE_MENU)
     })
 
     it('should add scene to history', async () => {
-      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
       const history = SceneNavigationService.getNavigationHistory()
       expect(history).toContain(SceneType.CASTLE_MENU)
@@ -26,7 +26,7 @@ describe('SceneNavigationService', () => {
       const enterSpy = vi.fn()
       SceneNavigationService.onSceneEnter(SceneType.CASTLE_MENU, enterSpy)
 
-      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
       expect(enterSpy).toHaveBeenCalled()
     })
@@ -51,10 +51,10 @@ describe('SceneNavigationService', () => {
 
   describe('goBack', () => {
     it('should navigate to previous scene', async () => {
-      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
-      await SceneNavigationService.transitionTo(SceneType.CAMP)
+      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
+      await SceneNavigationService.transitionTo(SceneType.CAMP, { direction: 'instant' })
 
-      await SceneNavigationService.goBack()
+      await SceneNavigationService.goBack({ direction: 'instant' })
 
       const currentScene = SceneNavigationService.getCurrentScene()
       expect(currentScene).toBe(SceneType.CASTLE_MENU)
@@ -62,14 +62,14 @@ describe('SceneNavigationService', () => {
 
     it('should throw error when no history', async () => {
       await expect(
-        SceneNavigationService.goBack()
+        SceneNavigationService.goBack({ direction: 'instant' })
       ).rejects.toThrow('No history')
     })
   })
 
   describe('clearHistory', () => {
     it('should clear navigation history', async () => {
-      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+      await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
       SceneNavigationService.clearHistory()
 

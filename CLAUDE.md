@@ -135,11 +135,21 @@ describe('ServiceName', () => {
 
 **Coverage Goals**: Minimum 80% for all services and commands. 100% for critical paths (combat, spells, death/resurrection, leveling).
 
+**Performance Requirements**: Test suite must run in <2.5 seconds. Use instant transitions in tests:
+```typescript
+// ✅ Always use instant transitions in tests
+await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
+  direction: 'instant'
+})
+```
+
 **Anti-Patterns to Avoid**:
 - Do NOT mock pure functions
 - Do NOT test implementation details (test behavior)
 - Do NOT share mutable state between tests (use `beforeEach`)
 - Do NOT test multiple unrelated behaviors in one test
+- Do NOT use `setTimeout()` in tests (use `queueMicrotask()` or fake timers)
+- Do NOT forget to use `{ direction: 'instant' }` for scene transitions in tests
 
 ## Game-Specific Mechanics
 
