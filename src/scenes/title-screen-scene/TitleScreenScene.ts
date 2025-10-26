@@ -9,6 +9,7 @@ import { AssetLoadingService } from '../../services/AssetLoadingService'
 import { InputService } from '../../services/InputService'
 import { SaveService } from '../../services/SaveService'
 import { StartGameCommand } from './commands/StartGameCommand'
+import { COLORS, BUTTON_SIZES, ANIMATION } from '../../ui/theme'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
 
@@ -22,34 +23,6 @@ interface ButtonState {
   hovered: boolean
 }
 
-// UI Constants
-const BUTTON = {
-  WIDTH: 250,
-  HEIGHT: 60,
-  FONT_SIZE: 28,
-  FONT: 'bold 28px monospace',
-  BORDER_WIDTH: 3,
-  PULSE_BORDER_WIDTH: 2
-} as const
-
-const COLORS = {
-  BUTTON_DISABLED_BG: 'rgba(0, 0, 0, 0.6)',
-  BUTTON_HOVER_BG: 'rgba(40, 40, 40, 0.8)',
-  BUTTON_NORMAL_BG: 'rgba(0, 0, 0, 0.7)',
-  BUTTON_BORDER_DISABLED: 'rgba(255, 255, 255, 0.3)',
-  BUTTON_BORDER_READY: 'rgba(255, 255, 255, 0.9)',
-  BUTTON_TEXT_DISABLED: 'rgba(255, 255, 255, 0.4)',
-  BUTTON_TEXT_ENABLED: 'rgba(255, 255, 255, 1)'
-} as const
-
-const PULSE = {
-  BASE_ALPHA: 0.3,
-  ALPHA_VARIATION: 0.2,
-  BASE_SIZE: 5,
-  SIZE_VARIATION: 10,
-  PERIOD: 500
-} as const
-
 export class TitleScreenScene implements Scene {
   readonly type = SceneType.TITLE_SCREEN
 
@@ -61,8 +34,8 @@ export class TitleScreenScene implements Scene {
   private button: ButtonState = {
     x: 0,
     y: 0,
-    width: BUTTON.WIDTH,
-    height: BUTTON.HEIGHT,
+    width: BUTTON_SIZES.LARGE.width,
+    height: BUTTON_SIZES.LARGE.height,
     text: 'Loading...',
     disabled: true,
     hovered: false
@@ -307,22 +280,22 @@ export class TitleScreenScene implements Scene {
     // Draw button border
     const borderColor = disabled ? COLORS.BUTTON_BORDER_DISABLED : this.mode === 'READY' ? COLORS.BUTTON_BORDER_READY : COLORS.BUTTON_BORDER_DISABLED
     ctx.strokeStyle = borderColor
-    ctx.lineWidth = BUTTON.BORDER_WIDTH
+    ctx.lineWidth = 3
     ctx.strokeRect(x, y, width, height)
 
     // Draw pulse effect when ready
     if (this.mode === 'READY' && !disabled) {
-      const pulseAlpha = PULSE.BASE_ALPHA + PULSE.ALPHA_VARIATION * Math.sin(this.pulseTime / PULSE.PERIOD)
-      const pulseSize = PULSE.BASE_SIZE + PULSE.SIZE_VARIATION * Math.sin(this.pulseTime / PULSE.PERIOD)
+      const pulseAlpha = ANIMATION.PULSE.BASE_ALPHA + ANIMATION.PULSE.ALPHA_VARIATION * Math.sin(this.pulseTime / ANIMATION.PULSE.PERIOD)
+      const pulseSize = ANIMATION.PULSE.BASE_SIZE + ANIMATION.PULSE.SIZE_VARIATION * Math.sin(this.pulseTime / ANIMATION.PULSE.PERIOD)
 
       ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`
-      ctx.lineWidth = BUTTON.PULSE_BORDER_WIDTH
+      ctx.lineWidth = 2
       ctx.strokeRect(x - pulseSize/2, y - pulseSize/2, width + pulseSize, height + pulseSize)
     }
 
     // Draw button text
-    ctx.fillStyle = disabled ? COLORS.BUTTON_TEXT_DISABLED : COLORS.BUTTON_TEXT_ENABLED
-    ctx.font = BUTTON.FONT
+    ctx.fillStyle = disabled ? COLORS.TEXT_DISABLED : COLORS.TEXT_PRIMARY
+    ctx.font = 'bold 28px monospace'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(text, x + width / 2, y + height / 2)
