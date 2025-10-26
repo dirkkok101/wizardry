@@ -9,6 +9,9 @@ import { AssetLoadingService } from '../../services/AssetLoadingService'
 import { InputService } from '../../services/InputService'
 import { SaveService } from '../../services/SaveService'
 import { StartGameCommand } from './commands/StartGameCommand'
+import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
+import { COLORS, BUTTON_SIZES, ANIMATION } from '../../ui/theme'
+import { SceneInputManager } from '../../ui/managers/InputManager'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
 
@@ -22,34 +25,6 @@ interface ButtonState {
   hovered: boolean
 }
 
-// UI Constants
-const BUTTON = {
-  WIDTH: 250,
-  HEIGHT: 60,
-  FONT_SIZE: 28,
-  FONT: 'bold 28px monospace',
-  BORDER_WIDTH: 3,
-  PULSE_BORDER_WIDTH: 2
-} as const
-
-const COLORS = {
-  BUTTON_DISABLED_BG: 'rgba(0, 0, 0, 0.6)',
-  BUTTON_HOVER_BG: 'rgba(40, 40, 40, 0.8)',
-  BUTTON_NORMAL_BG: 'rgba(0, 0, 0, 0.7)',
-  BUTTON_BORDER_DISABLED: 'rgba(255, 255, 255, 0.3)',
-  BUTTON_BORDER_READY: 'rgba(255, 255, 255, 0.9)',
-  BUTTON_TEXT_DISABLED: 'rgba(255, 255, 255, 0.4)',
-  BUTTON_TEXT_ENABLED: 'rgba(255, 255, 255, 1)'
-} as const
-
-const PULSE = {
-  BASE_ALPHA: 0.3,
-  ALPHA_VARIATION: 0.2,
-  BASE_SIZE: 5,
-  SIZE_VARIATION: 10,
-  PERIOD: 500
-} as const
-
 export class TitleScreenScene implements Scene {
   readonly type = SceneType.TITLE_SCREEN
 
@@ -61,21 +36,17 @@ export class TitleScreenScene implements Scene {
   private button: ButtonState = {
     x: 0,
     y: 0,
-    width: BUTTON.WIDTH,
-    height: BUTTON.HEIGHT,
+    width: BUTTON_SIZES.LARGE.width,
+    height: BUTTON_SIZES.LARGE.height,
     text: 'Loading...',
     disabled: true,
     hovered: false
   }
 
-  private unsubscribeKeyPress?: () => void
+  private inputManager!: SceneInputManager
   private mouseX = 0
   private mouseY = 0
   private pulseTime = 0
-
-  // Event handlers stored as class properties for proper cleanup
-  private mouseMoveHandler?: (e: MouseEvent) => void
-  private mouseClickHandler?: (e: MouseEvent) => void
 
   /**
    * Initialize the scene
@@ -87,8 +58,8 @@ export class TitleScreenScene implements Scene {
     this.button.x = (canvas.width - this.button.width) / 2
     this.button.y = (canvas.height - this.button.height) / 2
 
-    // Set up mouse tracking
-    this.setupMouseTracking()
+    // Set up input handlers
+    this.setupInputHandlers()
 
     // Load assets
     await this.loadAssets()
@@ -112,11 +83,6 @@ export class TitleScreenScene implements Scene {
         this.mode = 'READY'
         this.button.disabled = false
         this.button.text = '(S)TART'
-
-        // Register keyboard handler
-        this.unsubscribeKeyPress = InputService.onKeyPress('s', () => {
-          this.handleStart()
-        })
       })
 
       AssetLoadingService.loadGameAssets()
@@ -127,41 +93,27 @@ export class TitleScreenScene implements Scene {
   }
 
   /**
-   * Convert screen coordinates to canvas coordinates
+   * Set up input handlers
    */
-  private screenToCanvasCoordinates(e: MouseEvent): { x: number, y: number } {
-    const rect = this.canvas.getBoundingClientRect()
-    const scaleX = this.canvas.width / rect.width
-    const scaleY = this.canvas.height / rect.height
+  private setupInputHandlers(): void {
+    this.inputManager = new SceneInputManager()
 
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
-    }
-  }
+    // Keyboard handler
+    this.inputManager.onKeyPress('s', () => {
+      this.handleStart()
+    })
 
-  /**
-   * Set up mouse tracking for hover effects
-   */
-  private setupMouseTracking(): void {
-    // Store handlers as class properties for cleanup
-    this.mouseMoveHandler = (e: MouseEvent) => {
-      const coords = this.screenToCanvasCoordinates(e)
-      this.mouseX = coords.x
-      this.mouseY = coords.y
-    }
+    // Mouse handlers
+    this.inputManager.onMouseMove(this.canvas, (x, y) => {
+      this.mouseX = x
+      this.mouseY = y
+    })
 
-    this.mouseClickHandler = (e: MouseEvent) => {
-      const coords = this.screenToCanvasCoordinates(e)
-
-      // Check if click is on button
-      if (this.isPointInButton(coords.x, coords.y) && !this.button.disabled) {
+    this.inputManager.onMouseClick(this.canvas, (x, y) => {
+      if (this.isPointInButton(x, y) && !this.button.disabled) {
         this.handleStart()
       }
-    }
-
-    this.canvas.addEventListener('mousemove', this.mouseMoveHandler)
-    this.canvas.addEventListener('click', this.mouseClickHandler)
+    })
   }
 
   /**
@@ -294,38 +246,27 @@ export class TitleScreenScene implements Scene {
   private drawButton(ctx: CanvasRenderingContext2D): void {
     const { x, y, width, height, text, disabled, hovered } = this.button
 
-    // Draw semi-transparent button background
+    // Map button state to ButtonRenderer state
+    let state: 'normal' | 'hover' | 'disabled'
     if (disabled) {
-      ctx.fillStyle = COLORS.BUTTON_DISABLED_BG
+      state = 'disabled'
     } else if (hovered) {
-      ctx.fillStyle = COLORS.BUTTON_HOVER_BG
+      state = 'hover'
     } else {
-      ctx.fillStyle = COLORS.BUTTON_NORMAL_BG
-    }
-    ctx.fillRect(x, y, width, height)
-
-    // Draw button border
-    const borderColor = disabled ? COLORS.BUTTON_BORDER_DISABLED : this.mode === 'READY' ? COLORS.BUTTON_BORDER_READY : COLORS.BUTTON_BORDER_DISABLED
-    ctx.strokeStyle = borderColor
-    ctx.lineWidth = BUTTON.BORDER_WIDTH
-    ctx.strokeRect(x, y, width, height)
-
-    // Draw pulse effect when ready
-    if (this.mode === 'READY' && !disabled) {
-      const pulseAlpha = PULSE.BASE_ALPHA + PULSE.ALPHA_VARIATION * Math.sin(this.pulseTime / PULSE.PERIOD)
-      const pulseSize = PULSE.BASE_SIZE + PULSE.SIZE_VARIATION * Math.sin(this.pulseTime / PULSE.PERIOD)
-
-      ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`
-      ctx.lineWidth = BUTTON.PULSE_BORDER_WIDTH
-      ctx.strokeRect(x - pulseSize/2, y - pulseSize/2, width + pulseSize, height + pulseSize)
+      state = 'normal'
     }
 
-    // Draw button text
-    ctx.fillStyle = disabled ? COLORS.BUTTON_TEXT_DISABLED : COLORS.BUTTON_TEXT_ENABLED
-    ctx.font = BUTTON.FONT
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(text, x + width / 2, y + height / 2)
+    // Render button using ButtonRenderer
+    ButtonRenderer.renderButton(ctx, {
+      x,
+      y,
+      width,
+      height,
+      text,
+      state,
+      showPulse: this.mode === 'READY' && !disabled,
+      pulseTime: this.pulseTime
+    })
   }
 
   /**
@@ -355,17 +296,6 @@ export class TitleScreenScene implements Scene {
    * Clean up resources
    */
   destroy(): void {
-    // Unsubscribe from keyboard events
-    if (this.unsubscribeKeyPress) {
-      this.unsubscribeKeyPress()
-    }
-
-    // Remove mouse event listeners
-    if (this.mouseMoveHandler) {
-      this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
-    }
-    if (this.mouseClickHandler) {
-      this.canvas.removeEventListener('click', this.mouseClickHandler)
-    }
+    this.inputManager.destroy()
   }
 }
