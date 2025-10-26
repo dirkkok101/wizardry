@@ -19,6 +19,20 @@
 
 ---
 
+## Quest Item Progression
+
+**Source**: Strategy Wiki Walkthrough (#52)
+
+**Floor 1**: Bronze Key + Silver Key (unlock doors on Floor 2)
+**Floor 2**: Bear Statue (opens passage on Floor 4, only 1 of 2 statues needed)
+**Floor 4**: Blue Ribbon (enables Elevator 2 access to Floors 5-9) - **CRITICAL**
+**Floors 5-9**: Progression through deep dungeon
+**Floor 10**: Werdna's Amulet (final objective)
+
+**NES Version Note**: Also requires Gold Key collection on Floor 1
+
+---
+
 ## Map Features by Type
 
 ### Standard Tiles
@@ -92,11 +106,35 @@
 ## Level 4 - Elevator Access
 
 **Key Features**:
-- **Blue Ribbon** item: Required for elevator access
-- Elevator connecting to Levels 1-4
+- **Blue Ribbon** item: Required for second elevator (to Levels 5-9)
+- Two elevators: Elevator 1 (Levels 1-4), Elevator 2 (Levels 4-9)
 - Stairs connecting to Levels 3 and 5
+- **Monster Allocation Center**: Mandatory boss encounter
+- Alarm trap for XP farming
 
-**Special Tiles**: (Data requires image map extraction)
+**Critical Locations** (Source: Strategy Wiki #53):
+- **Blue Ribbon**: E12-N14 (Monster Allocation Center reward)
+- **Elevator 1**: E10-N8 (connects Levels 1-4)
+- **Elevator 2**: E10-N0 (connects Levels 4-9, requires Blue Ribbon)
+- **Stairs Up**: E10-N18 (to Floor 3)
+- **Stairs Down**: E17-N7 (to Floor 5, behind secret doors)
+- **Sliding Wall**: E17-N12 (requires Bear Statue from Floor 2)
+
+**Special Encounters**:
+- **Monster Allocation Center** (E12-N14): Boss party (2 Lvl 7 Fighters, 2 Lvl 7 Mages, 2 High Priests, 1 High Ninja)
+  - Cannot flee from this fight
+  - Rewards: Blue Ribbon, Potion of Latumofis, Rod of Flame, Ring of Death (250k gold value, 5 damage/step curse)
+- **Alarm Trap** (E10-N15): Triggers guardians at E9-N15 and E11-N15 (repeatable for XP farming)
+- **Treasure Repository** (E8-N15): Sign says "treasure" but contains monsters
+
+**Other Locations**:
+- **Comment Room**: E10-N9 (unknown purpose)
+- **Testing Grounds Control Center**: E10-N14 (warning sign)
+
+**Map Details** (from Source #52):
+- Floor dimensions: 20×20 units
+- Start: Southwest corner facing north
+- Edge wrapping: South exit → North arrival (magical field)
 
 **Recommended Level**: 5-7
 

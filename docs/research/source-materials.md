@@ -402,15 +402,21 @@
 
 ### 52. Strategy Wiki - Walkthrough
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Walkthrough
-- **Status**: ⬜ Not reviewed
+- **Status**: ✅ **EXTRACTED** - Quest progression and dungeon structure
 - **Priority**: High
-- **Contains**: Complete walkthrough
+- **Contains**: Floor-by-floor progression, key items, quest objectives
+- **Reference**: `/docs/research/dungeon-maps-reference.md`
+- **Validated**: 2025-10-26
+- **Note**: Quest item sequence, floor dimensions, edge wrapping mechanics documented.
 
 ### 53. Strategy Wiki - Floor 4
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Floor_4
-- **Status**: ⬜ Not reviewed
+- **Status**: ✅ **EXTRACTED** - Complete Floor 4 map and encounters
 - **Priority**: Medium
-- **Contains**: Level 4 details, Blue Ribbon
+- **Contains**: Blue Ribbon location (E12-N14), elevator coordinates, boss encounter, all special rooms
+- **Reference**: `/docs/research/dungeon-maps-reference.md`
+- **Validated**: 2025-10-26
+- **Note**: Monster Allocation Center boss, XP farm location, all coordinates documented.
 
 ---
 

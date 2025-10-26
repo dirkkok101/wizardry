@@ -407,6 +407,71 @@
 
 ---
 
+### Session 9: Dungeon Maps Validation (2025-10-26)
+
+#### Source #52: Strategy Wiki - Walkthrough (Task 10)
+- **URL:** https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Walkthrough
+- **Status:** ✅ Validated
+- **Target Files:** dungeon-maps-reference.md
+- **Findings:**
+  - **NEW DATA - Quest Progression**: Complete key item sequence (Bronze/Silver Keys → Bear Statue → Blue Ribbon → Amulet)
+  - **CONFIRMED**: 20×20 floor dimensions
+  - **CONFIRMED**: Starting position (southwest corner, facing north)
+  - **NEW DATA - Edge Wrapping**: Magical field causes south exit → north arrival
+  - **NEW DATA - NES Variant**: Additional Gold Key requirement
+  - **CONFIRMED**: DUMAPIC reveals exact coordinates (east/north from southwest)
+  - **CONFIRMED**: Front row positions 1-3 (melee), back row 4-6 (spells/protected)
+- **Actions:**
+  - Added quest item progression sequence to dungeon-maps-reference.md
+  - Documented floor dimensions and edge wrapping mechanics
+  - Updated Floor 4 details with walkthrough context
+
+#### Source #53: Strategy Wiki - Floor 4 (Task 10)
+- **URL:** https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Floor_4
+- **Status:** ✅ Validated
+- **Target Files:** dungeon-maps-reference.md
+- **Findings:**
+  - **NEW DATA - Blue Ribbon Location**: E12-N14 (Monster Allocation Center)
+  - **NEW DATA - Elevator Coordinates**: E10-N8 (Elevator 1), E10-N0 (Elevator 2)
+  - **NEW DATA - Stairs**: E10-N18 (up to 3), E17-N7 (down to 5, behind secret doors)
+  - **NEW DATA - Boss Encounter**: 2 Lvl 7 Fighters, 2 Lvl 7 Mages, 2 High Priests, 1 High Ninja
+  - **NEW DATA - Rewards**: Potion of Latumofis, Rod of Flame, Ring of Death (250k gold, 5 dmg/step)
+  - **NEW DATA - XP Farm**: Alarm trap at E10-N15 (repeatable guardians at E9-N15, E11-N15)
+  - **NEW DATA - Sliding Wall**: E17-N12 (requires Bear Statue)
+  - **NEW DATA - Special Rooms**: Comment Room (E10-N9), Testing Grounds (E10-N14), Treasure Repository (E8-N15)
+- **Actions:**
+  - Completely updated Floor 4 section with all coordinates
+  - Added Monster Allocation Center boss details
+  - Documented all special encounters and rewards
+  - Added XP farming location
+
+#### Dungeon Maps Validation Summary
+
+**Floor 1 Status**:
+- Previously documented (Session 2) ✅
+- Coordinates and special tiles validated ✅
+
+**Floor 4 Status**:
+- Previously minimal (only "Blue Ribbon item") ⚠️
+- NOW COMPLETE: All major coordinates, boss, rewards ✅
+
+**Floor 10 Status**:
+- Previously documented (Session 2) ✅
+- Werdna encounter validated ✅
+
+**Floors 2-3, 5-9 Status**:
+- Structure overview exists ✅
+- Detailed coordinates pending (image extraction needed) ⚠️
+- Sufficient for design documentation ✅
+
+**Overall Assessment**:
+- Quest progression fully documented ✅
+- Critical locations (Floor 1, 4, 10) complete ✅
+- Mid-floors have structure but lack detailed coordinates ⚠️
+- Adequate for game design phase ✅
+
+---
+
 ## Discrepancies Found
 
 ### 1. Bishop Alignment Restriction (UNRESOLVED)
