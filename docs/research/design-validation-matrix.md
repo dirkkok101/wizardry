@@ -80,9 +80,14 @@
 | **Combat Mode** | Modal: Input → Initiative → Resolution | [WW] | ✅ | Confirmed flow |
 | **Actions** | Attack, Spell, Item, Defend, Parry, Run | [WW] | ✅ | Confirmed |
 | **Initiative** | random(0-9) + AGI modifier | [ZL] | ✅ | Confirmed formula |
-| **Hit Chance** | (HPCALCMD + AC + 29) × 5% | [ZL] | ✅ | Confirmed formula |
+| **Hit Chance (Player)** | (HPCALCMD + AC + 29) × 5% | [ZL] | ✅ | Confirmed formula |
+| **Hit Chance (Monster)** | (Monster Level + Character AC) × 5% | [DG][ZL] | ✅ | Added 2025-10-26 |
 | **AC System** | Lower = better (D&D 1st ed) | [WW] | ✅ | Confirmed |
+| **Parrying** | -2 AC for one round (defensive action) | [DG] | ✅ | Added 2025-10-26 |
 | **Damage** | Weapon dice + STR modifier | [ZL] | ✅ | Confirmed formula |
+| **Damage Doubling** | 2× for sleep/held targets, type-effective weapons | [RPG] | ✅ | Added 2025-10-26 |
+| **Saving Throws** | (Level÷5 + Luck÷6 - ClassBonus - RaceBonus) × 5% | [DG] | ✅ | Added 2025-10-26 |
+| **Resistances** | Base + (Level÷5)×5% + Luck bonus, max 95% | [ZL] | ✅ | Added 2025-10-26 |
 | **Monster Groups** | 1-4 groups per encounter | [WW] | ✅ | Confirmed from monster data |
 | **Target Group** | Target group, not individual | [WW] | ✅ | Confirmed mechanic |
 | **Attacks/Round** | 1 + (level/5) Fighter, 2 + (level/5) Ninja | [ZL] | ✅ | Confirmed formulas |
