@@ -2,9 +2,9 @@
  * CampScene - Placeholder for Camp (maze entry/exit)
  */
 
-import { Scene } from './Scene'
-import { SceneType } from '../types/SceneType'
-import { SceneTransitionData } from '../services/SceneNavigationService'
+import { Scene } from '../Scene'
+import { SceneType } from '../../types/SceneType'
+import { SceneTransitionData } from '../../services/SceneNavigationService'
 
 export class CampScene implements Scene {
   readonly type = SceneType.CAMP

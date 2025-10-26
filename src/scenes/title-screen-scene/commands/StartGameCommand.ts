@@ -2,11 +2,11 @@
  * StartGameCommand - Execute game start from title screen
  */
 
-import { SceneType } from '../types/SceneType'
-import { GameState } from '../types/GameState'
-import { SaveService } from '../services/SaveService'
-import { GameInitializationService } from '../services/GameInitializationService'
-import { SceneNavigationService } from '../services/SceneNavigationService'
+import { SceneType } from '../../../types/SceneType'
+import { GameState } from '../../../types/GameState'
+import { SaveService } from '../../../services/SaveService'
+import { GameInitializationService } from '../../../services/GameInitializationService'
+import { SceneNavigationService } from '../../../services/SceneNavigationService'
 
 export interface StartGameContext {
   assetsLoaded: boolean

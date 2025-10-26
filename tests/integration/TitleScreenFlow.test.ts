@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { SceneManager } from '../../src/managers/SceneManager'
-import { TitleScreenScene } from '../../src/scenes/TitleScreenScene'
+import { TitleScreenScene } from '../../src/scenes/title-screen-scene/TitleScreenScene'
 import { SceneNavigationService } from '../../src/services/SceneNavigationService'
 import { SaveService } from '../../src/services/SaveService'
 import { AssetLoadingService } from '../../src/services/AssetLoadingService'

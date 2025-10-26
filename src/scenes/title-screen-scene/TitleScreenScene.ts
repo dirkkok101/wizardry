@@ -2,13 +2,13 @@
  * TitleScreenScene - Canvas-based title screen implementation
  */
 
-import { Scene } from './Scene'
-import { SceneType } from '../types/SceneType'
-import { SceneTransitionData } from '../services/SceneNavigationService'
-import { AssetLoadingService } from '../services/AssetLoadingService'
-import { InputService } from '../services/InputService'
-import { SaveService } from '../services/SaveService'
-import { StartGameCommand } from '../commands/StartGameCommand'
+import { Scene } from '../Scene'
+import { SceneType } from '../../types/SceneType'
+import { SceneTransitionData } from '../../services/SceneNavigationService'
+import { AssetLoadingService } from '../../services/AssetLoadingService'
+import { InputService } from '../../services/InputService'
+import { SaveService } from '../../services/SaveService'
+import { StartGameCommand } from './commands/StartGameCommand'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
 

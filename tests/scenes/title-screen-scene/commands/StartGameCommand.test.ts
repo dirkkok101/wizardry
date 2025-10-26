@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { StartGameCommand } from '../../src/commands/StartGameCommand'
-import { SceneType } from '../../src/types/SceneType'
-import { SaveService } from '../../src/services/SaveService'
-import { GameInitializationService } from '../../src/services/GameInitializationService'
-import { SceneNavigationService } from '../../src/services/SceneNavigationService'
+import { StartGameCommand } from '../../../../src/scenes/title-screen-scene/commands/StartGameCommand'
+import { SceneType } from '../../../../src/types/SceneType'
+import { SaveService } from '../../../../src/services/SaveService'
+import { GameInitializationService } from '../../../../src/services/GameInitializationService'
+import { SceneNavigationService } from '../../../../src/services/SceneNavigationService'
 
 describe('StartGameCommand', () => {
   beforeEach(() => {

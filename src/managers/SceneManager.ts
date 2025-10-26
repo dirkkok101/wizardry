@@ -5,9 +5,9 @@
 import { Scene } from '../scenes/Scene'
 import { SceneType } from '../types/SceneType'
 import { SceneNavigationService, SceneTransitionData } from '../services/SceneNavigationService'
-import { TitleScreenScene } from '../scenes/TitleScreenScene'
-import { CastleMenuScene } from '../scenes/CastleMenuScene'
-import { CampScene } from '../scenes/CampScene'
+import { TitleScreenScene } from '../scenes/title-screen-scene/TitleScreenScene'
+import { CastleMenuScene } from '../scenes/castle-menu-scene/CastleMenuScene'
+import { CampScene } from '../scenes/camp-scene/CampScene'
 
 export class SceneManager {
   private canvas: HTMLCanvasElement

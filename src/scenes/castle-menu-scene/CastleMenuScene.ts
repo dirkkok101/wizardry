@@ -2,9 +2,9 @@
  * CastleMenuScene - Placeholder for Castle Menu
  */
 
-import { Scene } from './Scene'
-import { SceneType } from '../types/SceneType'
-import { SceneTransitionData } from '../services/SceneNavigationService'
+import { Scene } from '../Scene'
+import { SceneType } from '../../types/SceneType'
+import { SceneTransitionData } from '../../services/SceneNavigationService'
 
 export class CastleMenuScene implements Scene {
   readonly type = SceneType.CASTLE_MENU

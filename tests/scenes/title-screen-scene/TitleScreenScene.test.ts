@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { TitleScreenScene } from '../../src/scenes/TitleScreenScene'
-import { AssetLoadingService } from '../../src/services/AssetLoadingService'
-import { InputService } from '../../src/services/InputService'
-import { SaveService } from '../../src/services/SaveService'
-import { StartGameCommand } from '../../src/commands/StartGameCommand'
+import { TitleScreenScene } from '../../../src/scenes/title-screen-scene/TitleScreenScene'
+import { AssetLoadingService } from '../../../src/services/AssetLoadingService'
+import { InputService } from '../../../src/services/InputService'
+import { SaveService } from '../../../src/services/SaveService'
+import { StartGameCommand } from '../../../src/scenes/title-screen-scene/commands/StartGameCommand'
 
 // Mock Image for tests
 global.Image = class MockImage {
