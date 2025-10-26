@@ -290,10 +290,13 @@
 ## Experience & Leveling
 
 ### 37. Realm Millennium - XP Levels
-- **URL**: https://www.realmillenniumgroup.com/WizExpLevs.html
-- **Status**: ⬜ Not reviewed
+- **URL**: https://www.realmillenniumgroup.com/WizExpLevs.html (basic) and WizExpLevs2.html (elite)
+- **Status**: ✅ **EXTRACTED** - Complete XP tables per class
 - **Priority**: High
-- **Contains**: Complete XP tables per level
+- **Contains**: Complete XP progression tables for levels 1-13 (6 classes complete, 2 partial)
+- **Reference**: `/docs/research/combat-formulas.md`
+- **Validated**: 2025-10-26
+- **Note**: Full tables for Fighter, Thief, Mage, Priest, Bishop, Samurai. Limited data for Lord and Ninja.
 
 ### 38. Reddit - HP Raise Question
 - **URL**: https://www.reddit.com/r/wizardry/comments/1fh2hzm/proving_ground_remake_why_does_hp_only_raise_by_1/

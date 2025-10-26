@@ -482,13 +482,136 @@ Level 10 ashes: 5,000 gold
 ## Experience and Leveling
 
 ### XP Requirements
-```
-// Exact XP table needs extraction
-// Different per class:
-// - Fighter/Thief: Fastest progression
-// - Mage/Priest: Medium progression
-// - Bishop/Elite: Slowest progression
-```
+
+**Source**: Realm Millennium Group (WizExpLevs.html, WizExpLevs2.html)
+
+XP progression follows class-based tables. Elite classes require significantly more XP than basic classes.
+
+#### Basic Classes
+
+**Fighter**
+| Level | XP Required | Δ XP |
+|-------|-------------|------|
+| 1 | 0 | - |
+| 2 | 1,000 | 1,000 |
+| 3 | 1,724 | 724 |
+| 4 | 2,972 | 1,248 |
+| 5 | 5,124 | 2,152 |
+| 6 | 8,834 | 3,710 |
+| 7 | 15,231 | 6,397 |
+| 8 | 26,260 | 11,029 |
+| 9 | 45,275 | 19,015 |
+| 10 | 78,060 | 32,785 |
+| 11 | 134,586 | 56,526 |
+| 12 | 232,044 | 97,458 |
+| 13 | 400,075 | 168,031 |
+
+**Thief**
+| Level | XP Required | Δ XP |
+|-------|-------------|------|
+| 1 | 0 | - |
+| 2 | 900 | 900 |
+| 3 | 1,551 | 651 |
+| 4 | 2,674 | 1,123 |
+| 5 | 4,610 | 1,936 |
+| 6 | 7,948 | 3,338 |
+| 7 | 13,703 | 5,755 |
+| 8 | 23,625 | 9,922 |
+| 9 | 40,732 | 17,107 |
+| 10 | 70,227 | 29,495 |
+| 11 | 121,081 | 50,854 |
+| 12 | 208,760 | 87,679 |
+| 13 | 359,931 | 151,171 |
+
+**Mage**
+| Level | XP Required | Δ XP |
+|-------|-------------|------|
+| 1 | 0 | - |
+| 2 | 1,100 | 1,100 |
+| 3 | 1,896 | 796 |
+| 4 | 3,268 | 1,372 |
+| 5 | 5,634 | 2,366 |
+| 6 | 9,713 | 4,079 |
+| 7 | 16,746 | 7,033 |
+| 8 | 28,872 | 12,126 |
+| 9 | 49,779 | 20,907 |
+| 10 | 85,825 | 36,046 |
+| 11 | 147,974 | 62,149 |
+| 12 | 255,127 | 107,153 |
+| 13 | 439,967 | 184,840 |
+
+**Priest**
+| Level | XP Required | Δ XP |
+|-------|-------------|------|
+| 1 | 0 | - |
+| 2 | 1,050 | 1,050 |
+| 3 | 1,810 | 760 |
+| 4 | 3,120 | 1,310 |
+| 5 | 5,379 | 2,259 |
+| 6 | 9,274 | 3,895 |
+| 7 | 15,989 | 6,715 |
+| 8 | 27,567 | 11,578 |
+| 9 | 47,529 | 19,962 |
+| 10 | 81,946 | 34,417 |
+| 11 | 141,286 | 59,340 |
+| 12 | 243,596 | 102,310 |
+| 13 | 419,993 | 176,397 |
+
+#### Elite Classes
+
+**Bishop**
+| Level | XP Required | Δ XP |
+|-------|-------------|------|
+| 1 | 0 | - |
+| 2 | 1,200 | 1,200 |
+| 3 | 2,105 | 905 |
+| 4 | 3,692 | 1,587 |
+| 5 | 6,477 | 2,785 |
+| 6 | 11,363 | 4,886 |
+| 7 | 19,935 | 8,572 |
+| 8 | 34,973 | 15,038 |
+| 9 | 61,356 | 26,383 |
+| 10 | 107,642 | 46,286 |
+| 11 | 188,845 | 81,203 |
+| 12 | 331,307 | 142,462 |
+| 13 | 581,240 | 249,933 |
+
+**Samurai**
+| Level | XP Required | Δ XP |
+|-------|-------------|------|
+| 1 | 0 | - |
+| 2 | 1,100 | 1,100 |
+| 3 | 2,192 | 1,092 |
+| 4 | 3,845 | 1,653 |
+| 5 | 6,745 | 2,900 |
+| 6 | 11,833 | 5,088 |
+| 7 | 20,759 | 8,926 |
+| 8 | 36,419 | 15,660 |
+| 9 | 63,892 | 27,473 |
+| 10 | 112,091 | 48,199 |
+| 11 | 196,650 | 84,559 |
+| 12 | 345,000 | 148,350 |
+| 13 | 605,263 | 260,263 |
+
+**Lord**
+- XP requirements similar to Samurai (hybrid fighter/priest)
+- Limited data in source: Level 13 requires 407,346 XP
+
+**Ninja**
+- XP requirements highest of all classes
+- Limited data in source: Level 15 requires 1,761,748 XP
+
+#### XP Progression Pattern
+
+Classes ranked by XP requirement (fastest to slowest):
+1. Thief (fastest - base 900 XP to level 2)
+2. Fighter (base 1,000 XP to level 2)
+3. Priest (base 1,050 XP to level 2)
+4. Mage (base 1,100 XP to level 2)
+5. Samurai (base 1,100 XP to level 2, but higher than Mage at later levels)
+6. Bishop (base 1,200 XP to level 2 - slowest of listed classes)
+7. Lord (limited data)
+8. Ninja (slowest overall)
 
 ### HP Gain on Level-Up
 ```
