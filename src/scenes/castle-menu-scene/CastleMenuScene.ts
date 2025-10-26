@@ -86,12 +86,39 @@ export class CastleMenuScene implements Scene {
     // TODO: Implement navigation commands
   }
 
-  private handleMouseClick(_x: number, _y: number): void {
-    // TODO: Implement mouse click handling
+  private handleMouseClick(x: number, y: number): void {
+    const clickedItem = this.getMenuItemAtPosition(x, y)
+    if (clickedItem) {
+      this.handleNavigation(clickedItem.key)
+    }
   }
 
   private updateHoverStates(): void {
-    // TODO: Implement hover state updates
+    const hoveredItem = this.getMenuItemAtPosition(this.mouseX, this.mouseY)
+
+    this.menuItems.forEach(item => {
+      item.hovered = item === hoveredItem
+    })
+  }
+
+  private getMenuItemAtPosition(x: number, y: number): MenuItem | null {
+    const menuX = this.canvas.width / 2
+    const menuY = 200
+    const itemHeight = 50
+
+    for (let i = 0; i < this.menuItems.length; i++) {
+      const itemY = menuY + i * itemHeight
+
+      // Check if point is within item bounds (approximate based on text width)
+      if (y >= itemY - itemHeight/2 && y <= itemY + itemHeight/2) {
+        // Simple horizontal check (could be refined with text measurement)
+        if (Math.abs(x - menuX) < 200) {
+          return this.menuItems[i]
+        }
+      }
+    }
+
+    return null
   }
 
   destroy(): void {
