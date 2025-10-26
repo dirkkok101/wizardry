@@ -364,7 +364,157 @@
 
 ---
 
-**Last Updated**: 2025-10-25
+## Loot Generation Mechanics
+
+**Source**: Data Driven Gamer - Treasury (#21)
+
+### Two-Tier Treasure System
+
+**Reward 1 (Loose Gold)**:
+- Dropped by: Random encounters only
+- Contains: Gold only (no items)
+- Formula: Varies by monster type
+
+**Reward 2 (Treasure Chests)**:
+- Found in: Rooms with chests
+- Contains: Gold + Items (with probability rolls)
+- Traps: Random trap type assigned
+- Multiple rolls: Independent probability for each item tier
+
+### Chest Loot Probability Tables
+
+| Reward Table | Gold Formula | Min-Max Gold | Item 3-17 | Item 19-33 | Item 35-52 |
+|--------------|--------------|--------------|-----------|------------|------------|
+| 10 | [2d5]*10 | 20-100g | 10% | — | — |
+| 11 | [4d5]*10 | 40-200g | 20% | 10% | — |
+| 12 | [6d5]*10 | 60-300g | 30% | 15% | — |
+| 13 | [8d5]*10 | 80-400g | 50% | 20% | 10% |
+| 14 | [10d5]*10 | 100-500g | 75% | 30% | 15% |
+| 15 | [12d5]*10 | 120-600g | 100% | 50% | 20% |
+| 16 | [14d5]*10 | 140-700g | 100% | 75% | 30% |
+| 17 | [16d5]*10 | 160-800g | 100% | 100% | 50% |
+| 18 | [18d5]*10 | 180-900g | 100% | 100% | 75% |
+| 19 | [10d10]*[1d8]*10 | 100-8000g | 100% | 50% | 10% |
+
+**Probability Mechanics**:
+- Each item tier rolled independently
+- Can receive: Both items, one item, gold only, or combinations
+- Higher reward tables = better loot chances
+
+### Item Tier Ranges
+
+**Tier 1 (Items 3-17)**: Basic equipment
+- Example items: Basic weapons, standard armor, low-level consumables
+
+**Tier 2 (Items 19-33)**: Enhanced equipment
+- Example items: +1 weapons/armor, moderate accessories
+
+**Tier 3 (Items 35-52)**: High-tier equipment
+- Example items: +2/+3 weapons/armor, specialty items, powerful accessories
+
+### Critical Bug: Item Range Selection
+
+**Bug Description** (from Data Driven Gamer):
+> "The range values are almost certainly bugged... the minimum range to be two points higher than intended, and the maximum to be one point higher than intended."
+
+**Impact**:
+- Range 3-17 (should be 1-16): **Items 1-2 never drop**
+- Range 19-33 (should be 17-32): **Item 18 never drops**
+- Higher tiers similarly affected
+
+**Consequence**: Some items in the game database are **unobtainable** as treasure drops, despite existing in the code. They may only be available from Boltac's shop.
+
+### Trap Types
+
+Chests contain random traps from 8 types:
+1. **Trapless** - No trap
+2. **Poison Needle** - Poison damage
+3. **Gas Bomb** - Area effect
+4. **Type 3** - Unknown effect
+5. **Teleporter** - Random teleport
+6. **Anti-Magic** - Drains mage spell points
+7. **Anti-Priest** - Drains priest spell points
+8. **Alarm** - Triggers encounter
+
+**Disarming**: Thief or Ninja can attempt to disarm. Failure triggers trap.
+
+### Special Treasure Locations
+
+**Werdna's Stash (Treasure 20)**:
+- Location: Level 10 (final boss reward)
+- Contains: Single item with all protections
+- High-value unique drop
+
+**Level 7 Fighter Encounter (Treasure 21)**:
+- Location: Level 7 specific encounter
+- Guaranteed drops:
+  - Latumofis Potion (status cure)
+  - Deadly Ring (Regeneration -3, cursed)
+  - Rod of Flame (Fire protection, casts MAHALITO)
+
+### Boltac's Shop Mechanics
+
+**Inventory Behavior**:
+- Initial inventory is **persistent across saved games**
+- Same items available to all players from fresh save
+- **Never sells cursed items** (cursed items only found in dungeon)
+
+**Identification**:
+- Use Bishop or high-level character to identify before purchasing
+- Prevents buying cursed items from chest loot brought to shop
+
+### Special Item Properties
+
+**Healing Carry Bonus**:
+- Mechanic: 25% chance of healing per step and per combat round
+- Only highest-value healing item counts
+- Stacks with combat regeneration
+- Note: Deadly Ring's -3 negated by default 0 value (other healing items override)
+
+**Class Protection Mechanic**:
+- Effect: 50% chance monster attack silently fails
+- Provided by: Specialty weapons (Dragon Slayer, Were Slayer, Mage Masher, etc.)
+- Offensive bonus: 2x damage vs protected monster class
+- Examples:
+  - Dragon Slayer: Protection + 2x damage vs Dragons
+  - Were Slayer: Protection + 2x damage vs Werebeasts
+  - Mage Masher: Protection vs Mages
+
+### Inventory Management Warning
+
+**Critical Bug**:
+> "If that character's inventory is full, then the item will be discarded, and the game won't even tell you."
+
+**Impact**:
+- Players can miss treasure without notification
+- No warning message when inventory full
+- Item permanently lost
+
+**Prevention**:
+- Always maintain 1-2 empty inventory slots before opening chests
+- Drop low-value items before dungeon runs
+- Check inventory after each floor
+
+### Item Depletion Mechanics
+
+**Invokable Items**:
+- Lord's Garb: 50% depletion chance (party heal invoke)
+- Thieves Dagger: 100% depletion (becomes Ninja, item destroyed)
+- Murasama Blade: 50% depletion chance (STR+1 invoke)
+
+**Castable Items**:
+- Staff of Mogref: 25% chance becomes Broken Item
+- Diadem of Malor: 100% reverts to basic Helm after cast
+- Consumable scrolls/potions: Always become Broken Item after use
+
+**Broken Items**:
+- Result of failed cast or consumed item
+- No effect, no value
+- Must be dropped or sold (minimal gold)
+
+---
+
+**Last Updated**: 2025-10-26 (added loot generation mechanics)
 **Next Review**: After extracting shop pricing formulas
 
-**Status**: Complete equipment database with 80+ items documented
+**Status**: Complete equipment database with 80+ items + loot mechanics documented

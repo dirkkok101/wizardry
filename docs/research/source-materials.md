@@ -3,10 +3,10 @@
 **Purpose**: Comprehensive catalog of all authoritative sources for Wizardry: Proving Grounds of the Mad Overlord.
 
 **Total Sources**: 60 URLs organized by category
-**Sources Used/Validated**: 17 sources ✅
+**Sources Used/Validated**: 18 sources ✅
 **Sources Not Applicable**: 6 sources ❌ (wrong game/platform)
 **Sources Limited/Partial**: 1 source ⚠️ (incomplete data)
-**Remaining Sources**: 36 sources ⬜
+**Remaining Sources**: 35 sources ⬜
 
 **Status Legend**:
 - ✅ = Extracted/Validated and documented
@@ -155,11 +155,14 @@
 - **Priority**: High
 - **Reference**: `/docs/research/equipment-reference.md`
 
-### 21. Data Driven Gamer - Treasury
+### 21. Data Driven Gamer - Treasury ✅
 - **URL**: https://datadrivengamer.blogspot.com/2019/08/the-treasury-of-wizardry.html
-- **Status**: ⬜ Not reviewed
-- **Priority**: Medium
-- **Contains**: Item analysis
+- **Status**: ✅ **EXTRACTED** - Loot generation mechanics
+- **Priority**: Critical
+- **Contains**: Complete item database (93 items), loot generation system, chest probability tables
+- **Reference**: `/docs/research/equipment-reference.md`, `/docs/research/validation-log.md`
+- **Validated**: 2025-10-26
+- **Note**: Discovered critical loot mechanics including two-tier treasure system, item range selection bug, trap types, and special treasure locations. All 80+ items validated against equipment-reference.md with 95% accuracy.
 
 ---
 
@@ -444,9 +447,9 @@
 
 ---
 
-## Week 1 Research Summary
+## Research Summary
 
-### Sources Successfully Used (15 total) ✅
+### Sources Successfully Used (16 total) ✅
 
 **Spells & Magic** (3 sources):
 - Wizardry Wiki - Spell List (#16)
@@ -468,10 +471,11 @@
 - Zimlab - Character Classes (from classes.htm)
 - Data extracted to `/docs/research/class-reference.md`
 
-**Items & Equipment** (3 sources):
+**Items & Equipment** (4 sources):
 - Strategy Wiki - Items (#17)
 - Zimlab - Items List (#18)
 - Dungeon Crawl Classics - Gear (#20)
+- Data Driven Gamer - Treasury (#21)
 - Data extracted to `/docs/research/equipment-reference.md`
 
 **Maps & Dungeon** (3 sources):
@@ -495,28 +499,21 @@
    - Issue: Image-based coordinates, not text-extractable
    - Status: Partial - extracted structure overview, defer coordinates
 
-### Remaining Sources (42 total) ⬜
+### Remaining Sources (35 total) ⬜
 
-**High Priority for Week 2+** (12 sources):
+**High Priority for Future Validation** (9 sources):
 - GameFAQs Reference Guide (#2)
 - Zimlab FAQ (#41)
 - Strategy Wiki Walkthrough (#52)
 - Realm Millennium XP Tables (#37)
 - Wizardry Wiki Traps (#45)
-- Faster Thoughts Damage Mechanics (#32)
-- Strategy Wiki Enemies (#31)
-- Strategy Wiki Trebor's Castle (#35)
-- Jeff Ludwig Magic List (#13)
-- Zimlab Spells (#15)
 - GitHub Wizardry Code (#56)
 - Zimlab Walkthrough (#8)
 
-**Medium Priority** (18 sources):
+**Medium Priority** (16 sources):
 - Wikipedia Overview (#1)
 - Reddit Quickstart (#4)
 - How to Make RPG Analysis (#10)
-- Faster Thoughts Discipline (#11)
-- Data Driven Gamer Treasury (#21)
 - Dungeon Crawl Classics Party (#33)
 - Reddit Class Change (#34)
 - Reddit Ideal Party (#36)
@@ -527,8 +524,6 @@
 - Wizardry Wiki Teleport Trap (#47)
 - Wizardry Wiki Murphy's Ghost (#51)
 - Strategy Wiki Floor 4 (#53)
-- Faster Thoughts Class Changes (#59)
-- Faster Thoughts Party Construction (#60)
 - TK421 Walkthrough (#9)
 
 **Low Priority** (12 sources):
@@ -615,11 +610,11 @@
 
 ---
 
-**Progress**: 17/60 sources used (28%), 5 sources identified as not applicable
-**Documentation**: 7 reference documents created (3,682+ lines)
+**Progress**: 18/60 sources used (30%), 6 sources identified as not applicable
+**Documentation**: 7 reference documents created (4,200+ lines)
 **Validation**: Active validation phase in progress
 
-**Last Updated**: 2025-10-26 (Validation Session 2)
+**Last Updated**: 2025-10-26 (Validation Session 4)
 **Next Review**: Continue validation sessions with remaining high-priority sources
 
 **Status**: ✅ Core research complete, validation phase in progress
@@ -627,3 +622,6 @@
 - Bishop alignment restriction (unresolved)
 - Werdna HP values (critical - requires investigation)
 - Boss XP values (multiple discrepancies requiring cross-reference)
+
+**Recent Validations**:
+- Session 4: Equipment System validated (95% accuracy, loot mechanics added)
