@@ -209,12 +209,16 @@ export class TitleScreenScene implements Scene {
   private drawTitleBitmap(ctx: CanvasRenderingContext2D): void {
     if (!this.titleBitmap) return
 
-    // Center the image
-    const scale = 2 // Scale up for modern displays
-    const width = this.titleBitmap.width * scale
-    const height = this.titleBitmap.height * scale
+    // Scale to fit 80% of canvas width while maintaining aspect ratio
+    const maxWidth = this.canvas.width * 0.8
+    const aspectRatio = this.titleBitmap.height / this.titleBitmap.width
+    const width = maxWidth
+    const height = width * aspectRatio
+
+    // Center the image horizontally
     const x = (this.canvas.width - width) / 2
-    const y = 60
+    // Position at 10% from top
+    const y = this.canvas.height * 0.1
 
     // Use nearest-neighbor scaling for pixel art
     ctx.imageSmoothingEnabled = false
