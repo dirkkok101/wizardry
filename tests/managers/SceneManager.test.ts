@@ -9,6 +9,44 @@ import { SceneType } from '../../src/types/SceneType'
 import { AssetLoadingService } from '../../src/services/AssetLoadingService'
 import { InputService } from '../../src/services/InputService'
 
+// Mock AssetLoadingService to prevent actual asset loading in tests
+vi.mock('../../src/services/AssetLoadingService', () => ({
+  AssetLoadingService: {
+    loadTitleAssets: vi.fn().mockResolvedValue({
+      titleBitmap: { width: 640, height: 480, src: 'fake-title.png' } as HTMLImageElement,
+      fonts: []
+    }),
+    loadCastleMenuAssets: vi.fn().mockResolvedValue({
+      width: 640,
+      height: 480,
+      src: 'fake-castle-menu.png'
+    } as HTMLImageElement),
+    loadGameAssets: vi.fn().mockResolvedValue({
+      sprites: {},
+      sounds: {},
+      dataFiles: new Map()
+    }),
+    onLoadComplete: vi.fn((callback) => {
+      // Call callback immediately for instant completion in tests
+      setTimeout(callback, 0)
+      return () => {}
+    }),
+    onLoadProgress: vi.fn(() => () => {}),
+    onLoadError: vi.fn(() => () => {}),
+    clearCache: vi.fn(),
+    isAssetLoaded: vi.fn(() => false),
+    getAsset: vi.fn(() => null),
+    getLoadingProgress: vi.fn(() => 100),
+    getLoadingStats: vi.fn(() => ({
+      totalCount: 0,
+      loadedCount: 0,
+      failedCount: 0,
+      progress: 100,
+      state: 'complete' as const
+    }))
+  }
+}))
+
 // Mock Image for tests
 global.Image = class MockImage {
   src = ''
@@ -106,8 +144,10 @@ describe('SceneManager', () => {
     // Trigger transition via SceneNavigationService
     await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
-    // Should have transitioned
-    expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
+    // Wait for SceneManager to complete its async transition
+    await vi.waitFor(() => {
+      expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
+    })
   })
 
   it('should call exit on old scene during transition', async () => {
@@ -274,8 +314,10 @@ describe('SceneManager', () => {
       direction: 'instant'
     })
 
-    // New scene should be active
-    expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
+    // Wait for SceneManager to complete its async transition
+    await vi.waitFor(() => {
+      expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
+    })
   })
 
   it('should handle scenes without optional lifecycle methods', async () => {
@@ -295,10 +337,14 @@ describe('SceneManager', () => {
 
     // Transition to castle menu
     await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
-    expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
+    await vi.waitFor(() => {
+      expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
+    })
 
     // Transition to camp
     await SceneNavigationService.transitionTo(SceneType.CAMP, { direction: 'instant' })
-    expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CAMP)
+    await vi.waitFor(() => {
+      expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CAMP)
+    })
   })
 })

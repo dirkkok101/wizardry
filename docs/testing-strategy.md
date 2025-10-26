@@ -264,7 +264,10 @@ export function createPartyWithDamagedMembers(): Party {
 ## Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (single run, exits when complete)
+npm test -- --run
+
+# Run all tests (watch mode - default)
 npm test
 
 # Run specific service tests
@@ -288,6 +291,31 @@ npm test -- --testNamePattern="adds character"
 # Verbose output
 npm test -- --verbose
 ```
+
+### Cleaning Up Background Test Processes
+
+**Problem**: Running tests in watch mode (default `npm test`) can leave background Node processes running. These accumulate over time and consume system resources, slowing down future test runs.
+
+**Solution**: Always clean up background processes before running tests:
+
+```bash
+# macOS/Linux: Kill all background node processes and run tests
+killall -9 node 2>/dev/null || true && npm test -- --run
+
+# Alternative: Use pkill (works on most Unix systems)
+pkill -f "npm test" && npm test -- --run
+```
+
+**When to clean up**:
+- Before running the full test suite
+- When tests feel slow or unresponsive
+- After interrupting test runs with Ctrl+C
+- When you see many node processes in Activity Monitor/top
+
+**Prevention**:
+- Use `npm test -- --run` for single test runs (exits automatically)
+- Avoid running multiple test sessions in parallel
+- Kill watch mode with `q` key instead of Ctrl+C when possible
 
 ## Test Performance Best Practices
 

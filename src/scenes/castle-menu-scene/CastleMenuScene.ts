@@ -9,6 +9,7 @@ import { SceneInputManager } from '../../ui/managers/InputManager'
 import { MenuRenderer, MenuItem } from '../../ui/renderers/MenuRenderer'
 import { TextRenderer } from '../../ui/renderers/TextRenderer'
 import { COLORS, TYPOGRAPHY } from '../../ui/theme'
+import { AssetLoadingService } from '../../services/AssetLoadingService'
 import { NavigateToTavernCommand } from './commands/NavigateToTavernCommand'
 import { NavigateToTempleCommand } from './commands/NavigateToTempleCommand'
 import { NavigateToShopCommand } from './commands/NavigateToShopCommand'
@@ -25,6 +26,7 @@ export class CastleMenuScene implements Scene {
   private mode: CastleMenuMode = 'READY'
   private mouseX = 0
   private mouseY = 0
+  private backgroundImage: HTMLImageElement | null = null
 
   private menuItems: MenuItem[] = [
     { key: 'g', label: "(G)ILGAMESH'S TAVERN" },
@@ -37,6 +39,13 @@ export class CastleMenuScene implements Scene {
   async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
     this.canvas = canvas
     this.inputManager = new SceneInputManager()
+
+    // Load background image
+    try {
+      this.backgroundImage = await AssetLoadingService.loadCastleMenuAssets()
+    } catch (error) {
+      console.error('Failed to load castle menu background:', error)
+    }
 
     // Register keyboard shortcuts
     this.menuItems.forEach(item => {
@@ -60,9 +69,14 @@ export class CastleMenuScene implements Scene {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    // Clear screen
+    // Clear screen with background color
     ctx.fillStyle = COLORS.BACKGROUND
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    // Draw background image if loaded
+    if (this.backgroundImage) {
+      this.drawBackground(ctx)
+    }
 
     // Draw title
     TextRenderer.renderText(ctx, {
@@ -85,6 +99,47 @@ export class CastleMenuScene implements Scene {
       alignment: 'center',
       showKeys: true
     })
+  }
+
+  /**
+   * Draw the background image with proper aspect ratio scaling
+   */
+  private drawBackground(ctx: CanvasRenderingContext2D): void {
+    if (!this.backgroundImage) return
+
+    // Scale to fit entire image within canvas while maintaining aspect ratio (contain behavior)
+    const canvasAspect = this.canvas.width / this.canvas.height
+    const imageAspect = this.backgroundImage.width / this.backgroundImage.height
+
+    let width: number
+    let height: number
+    let x: number
+    let y: number
+
+    if (imageAspect > canvasAspect) {
+      // Image is wider than canvas - fit to width
+      width = this.canvas.width
+      height = width / imageAspect
+      x = 0
+      y = (this.canvas.height - height) / 2
+    } else {
+      // Image is taller than canvas - fit to height
+      height = this.canvas.height
+      width = height * imageAspect
+      x = (this.canvas.width - width) / 2
+      y = 0
+    }
+
+    // Use nearest-neighbor scaling for pixel art
+    ctx.imageSmoothingEnabled = false
+
+    ctx.drawImage(
+      this.backgroundImage,
+      x,
+      y,
+      width,
+      height
+    )
   }
 
   private async handleNavigation(key: string): Promise<void> {

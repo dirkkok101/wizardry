@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { CastleMenuScene } from '../../src/scenes/castle-menu-scene/CastleMenuScene'
 import { SceneType } from '../../src/types/SceneType'
 
+// Mock AssetLoadingService to prevent actual image loading in tests
+vi.mock('../../src/services/AssetLoadingService', () => ({
+  AssetLoadingService: {
+    loadCastleMenuAssets: vi.fn().mockResolvedValue({
+      width: 640,
+      height: 480,
+      src: 'fake-image.png'
+    } as HTMLImageElement)
+  }
+}))
+
 describe('CastleMenuScene', () => {
   let scene: CastleMenuScene
   let canvas: HTMLCanvasElement

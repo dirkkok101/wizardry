@@ -18,11 +18,14 @@ npm run build
 # Preview production build
 npm run preview
 
-# Run all tests (Vitest)
+# Run all tests (single run, exits when complete)
+npm test -- --run
+
+# Run all tests (watch mode - default, may leave background processes)
 npm test
 
-# Run tests in watch mode
-npm test -- --watch
+# Clean up background processes before running tests (recommended)
+killall -9 node 2>/dev/null || true && npm test -- --run
 
 # Run specific test file
 npm test -- PartyService
@@ -32,6 +35,9 @@ npm test -- --coverage
 
 # Run tests matching pattern
 npm test -- --testNamePattern="adds character"
+
+# Run tests in watch mode (re-run on file changes)
+npm test -- --watch
 ```
 
 ## Architecture Overview
