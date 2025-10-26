@@ -54,9 +54,9 @@ export class TitleScreenScene implements Scene {
   async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
     this.canvas = canvas
 
-    // Center button
+    // Center button horizontally, position near bottom
     this.button.x = (canvas.width - this.button.width) / 2
-    this.button.y = canvas.height * 0.65
+    this.button.y = canvas.height * 0.8
 
     // Set up mouse tracking
     this.setupMouseTracking()
@@ -188,19 +188,13 @@ export class TitleScreenScene implements Scene {
     ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
-    // Draw title bitmap if loaded
+    // Draw title bitmap if loaded (full screen)
     if (this.titleBitmap) {
       this.drawTitleBitmap(ctx)
     }
 
-    // Draw subtitle
-    this.drawSubtitle(ctx)
-
-    // Draw start button
+    // Draw start button overlay
     this.drawButton(ctx)
-
-    // Draw footer
-    this.drawFooter(ctx)
   }
 
   /**
@@ -209,25 +203,28 @@ export class TitleScreenScene implements Scene {
   private drawTitleBitmap(ctx: CanvasRenderingContext2D): void {
     if (!this.titleBitmap) return
 
-    // Calculate available space (leaving room for subtitle and button)
-    const availableHeight = this.canvas.height * 0.5 // Use 50% of height for image
-    const availableWidth = this.canvas.width * 0.9 // Use 90% of width
+    // Scale to fill the entire canvas while maintaining aspect ratio
+    const canvasAspect = this.canvas.width / this.canvas.height
+    const imageAspect = this.titleBitmap.width / this.titleBitmap.height
 
-    // Calculate scale to fit both width and height constraints
-    const aspectRatio = this.titleBitmap.width / this.titleBitmap.height
-    let width = availableWidth
-    let height = width / aspectRatio
+    let width: number
+    let height: number
+    let x: number
+    let y: number
 
-    // If height exceeds available space, scale by height instead
-    if (height > availableHeight) {
-      height = availableHeight
-      width = height * aspectRatio
+    if (imageAspect > canvasAspect) {
+      // Image is wider than canvas - fit to height
+      height = this.canvas.height
+      width = height * imageAspect
+      x = (this.canvas.width - width) / 2
+      y = 0
+    } else {
+      // Image is taller than canvas - fit to width
+      width = this.canvas.width
+      height = width / imageAspect
+      x = 0
+      y = (this.canvas.height - height) / 2
     }
-
-    // Center the image horizontally
-    const x = (this.canvas.width - width) / 2
-    // Position at 5% from top
-    const y = this.canvas.height * 0.05
 
     // Use nearest-neighbor scaling for pixel art
     ctx.imageSmoothingEnabled = false
@@ -262,35 +259,35 @@ export class TitleScreenScene implements Scene {
   private drawButton(ctx: CanvasRenderingContext2D): void {
     const { x, y, width, height, text, disabled, hovered } = this.button
 
-    // Draw button background
+    // Draw semi-transparent button background
     if (disabled) {
-      ctx.fillStyle = '#333'
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
     } else if (hovered) {
-      ctx.fillStyle = '#444'
+      ctx.fillStyle = 'rgba(40, 40, 40, 0.8)'
     } else {
-      ctx.fillStyle = '#333'
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
     }
     ctx.fillRect(x, y, width, height)
 
     // Draw button border
-    const borderColor = disabled ? '#666' : this.mode === 'READY' ? '#fff' : '#666'
+    const borderColor = disabled ? 'rgba(255, 255, 255, 0.3)' : this.mode === 'READY' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)'
     ctx.strokeStyle = borderColor
-    ctx.lineWidth = 2
+    ctx.lineWidth = 3
     ctx.strokeRect(x, y, width, height)
 
     // Draw pulse effect when ready
     if (this.mode === 'READY' && !disabled) {
-      const pulseAlpha = 0.5 + 0.3 * Math.sin(this.pulseTime / 500)
-      const pulseSize = 5 + 15 * Math.sin(this.pulseTime / 500)
+      const pulseAlpha = 0.3 + 0.2 * Math.sin(this.pulseTime / 500)
+      const pulseSize = 5 + 10 * Math.sin(this.pulseTime / 500)
 
       ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`
-      ctx.lineWidth = 3
+      ctx.lineWidth = 2
       ctx.strokeRect(x - pulseSize/2, y - pulseSize/2, width + pulseSize, height + pulseSize)
     }
 
     // Draw button text
-    ctx.fillStyle = disabled ? '#888' : '#fff'
-    ctx.font = '24px monospace'
+    ctx.fillStyle = disabled ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 1)'
+    ctx.font = 'bold 28px monospace'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(text, x + width / 2, y + height / 2)
