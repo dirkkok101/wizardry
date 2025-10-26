@@ -194,15 +194,55 @@
 **Total Items to Validate**: ~150
 
 **Status Breakdown**:
-- ✅ Validated: 71 (all corrections applied to design)
-- ⚠️ To Verify: 15
-- ⬜ Not Researched: 22
+- ✅ Validated: 95 (all corrections applied to design)
+- ⚠️ To Verify: 18
+- ⬜ Not Researched: 15
 - ❌ Incorrect: 0 (all fixed)
 - 🔄 Updated: 0 (design document corrected)
 
-**Completion**: 68% validated, 88% researched, **100% accuracy**
+**Completion**: 74% validated, 90% researched, **100% accuracy**
+
+**Sources Used**: 20/60 sources validated (33%)
+- High-priority sources: 15/20 complete (75%)
+- Medium-priority sources: 5/25 complete (20%)
+- Low-priority sources: 0/15 complete (0%)
 
 ---
+
+## Remaining Validation Gaps
+
+### High Priority
+- [ ] WERDNA HP discrepancy resolution (210-300 vs 30-120) - **CRITICAL**
+- [ ] Bishop alignment restriction (None vs "Good/Evil only") - needs third source
+- [ ] Boss monster XP values (4 bosses have ~480 XP variance)
+- [ ] Exact resurrection success formula (VIT/age calculation)
+- [ ] Complete dungeon maps floors 2-3, 5-9 (detailed coordinates)
+- [ ] Encounter rate formulas per level
+- [ ] Trap damage formulas and disarm success rates
+
+### Medium Priority
+- [ ] Exact aging rate on rest (documented as ~0.1 years)
+- [ ] Exact vim loss rate on rest (documented as ~0.05 vim)
+- [ ] Shop sell price confirmation (assumed 50%, confirmed from one source)
+- [ ] View distance in dungeon (assumed 3 tiles)
+- [ ] Spell point calculation edge cases
+- [ ] Surprise mechanics formula
+- [ ] Flee success rate formula
+- [ ] Monster AI decision patterns (documented via abilities)
+
+### Low Priority
+- [ ] Amulet exact location coordinates
+- [ ] Tavern rumor system mechanics
+- [ ] Temple healing/cure poison costs
+- [ ] Death by old age threshold mechanics
+- [ ] Class change aging amount
+- [ ] Equipment slot confirmation (assumed 6 slots)
+
+### Acceptable Gaps (Not Critical for Remake)
+- [ ] Historical context and development history
+- [ ] Platform-specific differences (NES vs Apple II vs DOS)
+- [ ] Video walkthroughs (gameplay footage, not mechanical data)
+- [ ] Community strategy guides (interpretation vs mechanics)
 
 **Research Priority** (Next Steps):
 1. ✅ ~~Extract complete spell list~~ (DONE)
@@ -211,12 +251,12 @@
 4. ✅ ~~Verify class requirements~~ (DONE)
 5. ✅ ~~Confirm resurrection rates~~ (DONE)
 6. ✅ ~~Confirm temple costs~~ (DONE)
-7. ⬜ Extract complete equipment/item list
-8. ⬜ Confirm inn costs
-9. ⬜ Extract dungeon maps (all 10 levels)
+7. ✅ ~~Extract complete equipment/item list~~ (DONE - 93 items)
+8. ✅ ~~Confirm inn costs~~ (DONE - 5 room types)
+9. ⚠️ Extract dungeon maps (Floors 1, 4, 10 complete; 2-3, 5-9 partial)
 10. ⬜ Verify encounter rates per level
-11. ⬜ Research spell point calculation details
-12. ⬜ Update design document with corrections
+11. ⚠️ Research spell point calculation details (basic system confirmed, edge cases unknown)
+12. ✅ ~~Update design document with corrections~~ (DONE - all 3 corrections applied)
 
 **Design Corrections Applied**:
 1. ✅ Dwarf base AGI: 6 → 5 (FIXED)
@@ -225,8 +265,9 @@
 
 ---
 
-**Last Updated**: 2025-10-25 (Major update: 68 items validated)
-**Next Review**: After extracting equipment/map data and updating design document
+**Last Updated**: 2025-10-26 (Validation pass complete: 95 items validated)
+**Previous Update**: 2025-10-25 (Major update: 68 items validated)
+**Next Review**: After implementing game systems and real-world testing
 
 **Reference Documents Created**:
 - `/docs/research/race-stats.md` - Complete racial base stats ✅
