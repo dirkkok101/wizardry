@@ -28,6 +28,7 @@ class MockCanvas {
     return {
       fillRect: () => {},
       clearRect: () => {},
+      strokeRect: () => {},
       fillStyle: '',
       strokeStyle: '',
       lineWidth: 1,
