@@ -57,7 +57,7 @@ const loadErrorHandlers: Array<(error: AssetLoadError) => void> = []
  */
 async function loadTitleAssets(): Promise<TitleAssets> {
   // Load title bitmap
-  const titleBitmap = await loadImage('title_bitmap', '/assets/images/title.png')
+  const titleBitmap = await loadImage('title_bitmap', '/assets/images/00 - TitleScreenImage.png')
 
   // For now, return minimal assets (fonts can be added later)
   return {
