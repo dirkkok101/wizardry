@@ -234,10 +234,15 @@
 ### Level 2 Priest Spells
 
 **CALFO** (X-Ray Vision)
-- **Effect**: Identify trap type
-- **Target**: Chest/Door
-- **Range**: Dungeon
-- **Notes**: Helps thief disarm; essential for safety
+- **Effect**: Identify trap type on chest or door
+- **Target**: Single chest or door
+- **Range**: Dungeon only (cannot cast in town)
+- **Success Rate**: 95% (very reliable)
+- **Risk**: None (cannot trigger trap during identification)
+- **Notes**: Essential for safe trap handling; alternative to Thief inspection
+- **Strategy**: Best used to confirm Thief's inspection or when no Thief available
+- **Cost**: 1 spell point (Level 2)
+- **Trap Types Detected**: POISON_NEEDLE, GAS_BOMB, CROSSBOW_BOLT, EXPLODING_BOX, STUNNER, TELEPORTER, MAGE_BLASTER, PRIEST_BLASTER, ALARM
 
 **MANIFO** (Silence)
 - **Effect**: Silence enemy group (no spells)

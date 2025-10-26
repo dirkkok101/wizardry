@@ -2,7 +2,7 @@
 
 **Command pattern implementations for all user actions.**
 
-## Command Catalog (40+ Commands)
+## Command Catalog (46 Commands)
 
 ### Navigation Commands
 1. [MoveForwardCommand](./MoveForwardCommand.md) - Move party forward
@@ -50,20 +50,25 @@
 33. [OpenDoorCommand](./OpenDoorCommand.md) - Open door
 34. [InspectCommand](./InspectCommand.md) - Inspect tile
 
+### Chest & Trap Commands
+35. [InspectChestCommand](./InspectChestCommand.md) - Inspect chest for traps
+36. [DisarmTrapCommand](./DisarmTrapCommand.md) - Disarm identified trap
+37. [OpenChestCommand](./OpenChestCommand.md) - Open chest and collect treasure
+
 ### Inventory Commands
-35. [EquipItemCommand](./EquipItemCommand.md) - Equip weapon/armor
-36. [UnequipItemCommand](./UnequipItemCommand.md) - Unequip item
-37. [DropItemCommand](./DropItemCommand.md) - Drop item
-38. [IdentifyItemCommand](./IdentifyItemCommand.md) - Identify unknown item
+38. [EquipItemCommand](./EquipItemCommand.md) - Equip weapon/armor
+39. [UnequipItemCommand](./UnequipItemCommand.md) - Unequip item
+40. [DropItemCommand](./DropItemCommand.md) - Drop item
+41. [IdentifyItemCommand](./IdentifyItemCommand.md) - Identify unknown item
 
 ### Spell Commands
-39. [CastUtilitySpellCommand](./CastUtilitySpellCommand.md) - Non-combat spell
-40. [LearnSpellCommand](./LearnSpellCommand.md) - Learn spell on level-up
+42. [CastUtilitySpellCommand](./CastUtilitySpellCommand.md) - Non-combat spell
+43. [LearnSpellCommand](./LearnSpellCommand.md) - Learn spell on level-up
 
 ### Meta Commands
-41. [SaveGameCommand](./SaveGameCommand.md) - Save game to IndexedDB
-42. [LoadGameCommand](./LoadGameCommand.md) - Load saved game
-43. [ReplayCommand](./ReplayCommand.md) - Replay event log
+44. [SaveGameCommand](./SaveGameCommand.md) - Save game to IndexedDB
+45. [LoadGameCommand](./LoadGameCommand.md) - Load saved game
+46. [ReplayCommand](./ReplayCommand.md) - Replay event log
 
 ## Command Principles
 

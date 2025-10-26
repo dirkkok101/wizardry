@@ -258,6 +258,93 @@ function useStairs(stairs: Stairs, party: Party): Position {
 }
 ```
 
+## Traps & Chests
+
+### Chest Generation
+
+**Chest Sources**:
+- **Combat Rewards**: Some monster encounters drop treasure chests
+- **Hidden Chests**: Discovered via Search action
+- **Fixed Locations**: Boss rooms, treasure rooms
+
+**Chest Tiers** (1-5):
+- Tier 1: Common (50% trapped, basic items)
+- Tier 2: Uncommon (60% trapped, +1 items)
+- Tier 3: Rare (70% trapped, +1/+2 items)
+- Tier 4: Epic (80% trapped, +2 items)
+- Tier 5: Legendary (90% trapped, +3 items, 100% item drop)
+
+### Trap Types
+
+**Chest Traps** (8 types):
+1. **POISON_NEEDLE** - 1d6 damage + poison
+2. **GAS_BOMB** - 2d6 party damage + poison
+3. **CROSSBOW_BOLT** - 2d8 damage
+4. **EXPLODING_BOX** - 3d6 party damage
+5. **STUNNER** - 1d4 damage + paralysis
+6. **TELEPORTER** - Random party teleport (can teleport into walls)
+7. **MAGE_BLASTER** - 4d6 to Mages/Bishops only
+8. **PRIEST_BLASTER** - 4d6 to Priests/Bishops/Lords only
+9. **ALARM** - Triggers monster encounter
+
+**Door Traps** (subset):
+- ALARM (most common)
+- POISON_NEEDLE
+- STUNNER
+- TELEPORTER (rare)
+
+### Trap Inspection
+
+**Inspect Chance**:
+```
+Thieves:  AGI × 6% (max 95%)
+Ninjas:   AGI × 4% (max 95%)
+Others:   AGI × 1% (max 95%)
+```
+
+**Recommended**: Thief with AGI 16+ for 95% success
+
+**CALFO Spell Alternative**:
+- Priest Level 2 spell
+- 95% trap identification
+- No trigger risk
+- Costs 1 spell point
+
+### Trap Disarming
+
+**Disarm Chance**:
+```
+Effective Level = Character Level + Bonus
+- Thieves/Ninjas: +50 bonus
+- Others: No bonus
+
+Success% = (Effective Level - Trap Difficulty) × 5
+Minimum: 5%, Maximum: 95%
+```
+
+**Key Insight**: Level 1 Thief = Level 51 Fighter in disarm ability
+
+**Retry Strategy**:
+- Failed without trigger → Correct trap type, can retry
+- Failed with trigger → Wrong trap type or critical failure
+
+### Critical: Inventory Management
+
+**⚠️ Silent Discard Bug**:
+If character opening chest has **full inventory** (8/8 items), treasure items are **discarded permanently** with **NO WARNING MESSAGE**.
+
+**Solution**: Always ensure 2-3 empty inventory slots before opening chests
+
+### Chest Opening Workflow
+
+**Recommended Sequence**:
+1. Thief inspects chest (or Priest casts CALFO)
+2. Thief disarms trap if detected
+3. **Check character inventory** - drop items if needed
+4. Fighter opens chest (high HP to tank accidental triggers)
+5. Collect gold + items
+6. Pick up dropped items
+
 ## Special Tiles
 
 ### Teleporters
