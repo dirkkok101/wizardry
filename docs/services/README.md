@@ -244,12 +244,38 @@ Services should:
 | Service Category | Services | Documentation | Implementation |
 |-----------------|----------|---------------|----------------|
 | Data Services | 7 | ✅ Complete | ⚠️ Planned |
-| Core System Services | 4 | ✅ Complete | ⚠️ Planned |
-| State Management Services | 4 | ✅ Complete | ⚠️ Planned |
+| Core System Services | 4 | ✅ Complete | ✅ Complete |
+| State Management Services | 1/4 | ✅ Complete | SaveService ✅ |
 | Game Logic Services | 0 | ⚠️ Pending | ⚠️ Pending |
 | Command Services | 0 | ⚠️ Pending | ⚠️ Pending |
 
 **Total Documented:** 15 services
+**Total Implemented:** 5 services
+
+### Implemented Services
+
+**Core System Services (4/4)** - ✅ Complete
+- ✅ **SceneNavigationService** - Scene lifecycle and transitions (`src/services/SceneNavigationService.ts:1`)
+- ✅ **AssetLoadingService** - Progressive asset loading (`src/services/AssetLoadingService.ts:1`)
+- ✅ **InputService** - Cross-platform input handling (`src/services/InputService.ts:1`)
+- ✅ **GameInitializationService** - New game creation (`src/services/GameInitializationService.ts:1`)
+
+**State Management Services (1/4)**
+- ✅ **SaveService** - Game state persistence (`src/services/SaveService.ts:1`)
+- ⚠️ **LoadService** - Planned
+- ⚠️ **ReplayService** - Planned
+- ⚠️ **EventService** - Planned
+
+**Managers (1)**
+- ✅ **SceneManager** - Scene lifecycle orchestration (`src/managers/SceneManager.ts:1`)
+
+**Scenes (3)**
+- ✅ **TitleScreenScene** - Title screen with asset loading (`src/scenes/title-screen-scene/TitleScreenScene.ts:1`)
+- ✅ **CastleMenuScene** - Castle menu placeholder (`src/scenes/castle-menu-scene/CastleMenuScene.ts:1`)
+- ✅ **CampScene** - Camp placeholder (`src/scenes/camp-scene/CampScene.ts:1`)
+
+**Scene Commands (1)**
+- ✅ **StartGameCommand** - Start game logic (new/load) (`src/scenes/title-screen-scene/commands/StartGameCommand.ts:1`)
 
 ## Next Steps
 

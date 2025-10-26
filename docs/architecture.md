@@ -1,7 +1,7 @@
 # Wizardry Remake - Technical Architecture
 
-**Version**: 1.0
-**Last Updated**: 2025-10-25
+**Version**: 1.1
+**Last Updated**: 2025-10-26
 
 ---
 
@@ -56,6 +56,53 @@
 ```
 
 See [Architecture Diagram](./diagrams/architecture-layers.md) for detailed visual.
+
+### 1.3 Code Organization: Vertical Slice by Scene
+
+**Decision**: Organize code by game scenes using vertical slice architecture, with shared infrastructure in services.
+
+**Rationale**: In a game remake, scenes ARE the features from a player's perspective. Each scene (Title Screen, Castle Menu, Training Grounds, Tavern, Maze, Combat, etc.) represents a distinct player-facing feature with its own UI, commands, and logic.
+
+**Structure**:
+```
+/src
+  /scenes
+    /title-screen-scene
+      - TitleScreenScene.ts (scene implementation)
+      /commands
+        - StartGameCommand.ts (scene-specific commands)
+      /components (future: reusable UI components)
+    /castle-menu-scene
+      - CastleMenuScene.ts
+      /commands (future: menu navigation commands)
+    /camp-scene
+      - CampScene.ts
+      /commands (future: camp commands)
+  /services (truly shared infrastructure)
+    - SceneNavigationService.ts
+    - AssetLoadingService.ts
+    - InputService.ts
+    - SaveService.ts
+    - GameInitializationService.ts
+  /managers
+    - SceneManager.ts (scene lifecycle orchestration)
+  /types
+    - SceneType.ts (scene enumeration)
+```
+
+**Benefits**:
+- **Scene-Focused Development**: All code for a scene lives together (scene class, commands, components)
+- **Clear Feature Boundaries**: Each scene folder represents a distinct game feature
+- **Easier Navigation**: Developers can find all title screen code in `/scenes/title-screen-scene`
+- **Reduced Coupling**: Commands are scoped to scenes that use them
+- **Shared Services**: Truly common infrastructure (input, assets, saves) remains in `/services`
+
+**Example - Title Screen Scene**:
+- **TitleScreenScene.ts**: Canvas rendering, animation, scene lifecycle
+- **commands/StartGameCommand.ts**: Business logic for starting game (new game vs load game)
+- Future: **components/Button.ts**: Reusable button component
+
+See [Scene Architecture](./scenes/README.md) for detailed scene implementation patterns.
 
 ## 2. Core Patterns
 
