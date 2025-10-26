@@ -12,18 +12,9 @@ import { StartGameCommand } from './commands/StartGameCommand'
 import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
 import { COLORS, BUTTON_SIZES, ANIMATION } from '../../ui/theme'
 import { SceneInputManager } from '../../ui/managers/InputManager'
+import { ButtonState } from '../../types/ButtonState'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
-
-interface ButtonState {
-  x: number
-  y: number
-  width: number
-  height: number
-  text: string
-  disabled: boolean
-  hovered: boolean
-}
 
 export class TitleScreenScene implements Scene {
   readonly type = SceneType.TITLE_SCREEN
@@ -39,6 +30,7 @@ export class TitleScreenScene implements Scene {
     width: BUTTON_SIZES.LARGE.width,
     height: BUTTON_SIZES.LARGE.height,
     text: 'Loading...',
+    key: 's',
     disabled: true,
     hovered: false
   }
