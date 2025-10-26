@@ -9,6 +9,11 @@ import { SceneInputManager } from '../../ui/managers/InputManager'
 import { MenuRenderer, MenuItem } from '../../ui/renderers/MenuRenderer'
 import { TextRenderer } from '../../ui/renderers/TextRenderer'
 import { COLORS, TYPOGRAPHY } from '../../ui/theme'
+import { NavigateToTavernCommand } from './commands/NavigateToTavernCommand'
+import { NavigateToTempleCommand } from './commands/NavigateToTempleCommand'
+import { NavigateToShopCommand } from './commands/NavigateToShopCommand'
+import { NavigateToInnCommand } from './commands/NavigateToInnCommand'
+import { NavigateToEdgeOfTownCommand } from './commands/NavigateToEdgeOfTownCommand'
 
 type CastleMenuMode = 'READY' | 'TRANSITIONING'
 
@@ -82,8 +87,30 @@ export class CastleMenuScene implements Scene {
     })
   }
 
-  private async handleNavigation(_key: string): Promise<void> {
-    // TODO: Implement navigation commands
+  private async handleNavigation(key: string): Promise<void> {
+    if (this.mode === 'TRANSITIONING') return
+
+    this.mode = 'TRANSITIONING'
+
+    const result = await this.executeNavigationCommand(key)
+
+    if (!result.success) {
+      console.error('Navigation failed:', result.error)
+      this.mode = 'READY'
+    }
+  }
+
+  private async executeNavigationCommand(key: string) {
+    const context = { mode: this.mode }
+
+    switch (key) {
+      case 'g': return NavigateToTavernCommand.execute(context)
+      case 't': return NavigateToTempleCommand.execute(context)
+      case 'b': return NavigateToShopCommand.execute(context)
+      case 'a': return NavigateToInnCommand.execute(context)
+      case 'e': return NavigateToEdgeOfTownCommand.execute(context)
+      default: return { success: false, nextScene: SceneType.CASTLE_MENU, error: 'Unknown key' }
+    }
   }
 
   private handleMouseClick(x: number, y: number): void {
