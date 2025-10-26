@@ -86,5 +86,23 @@ describe('ButtonRenderer', () => {
       expect(fillTextSpy).toHaveBeenCalled()
       expect(ctx.fillStyle).toBe(COLORS.TEXT_DISABLED)
     })
+
+    it('should render pulse effect when showPulse is true', () => {
+      const strokeRectSpy = vi.spyOn(ctx, 'strokeRect')
+
+      ButtonRenderer.renderButton(ctx, {
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 50,
+        text: 'Pulse',
+        state: 'normal',
+        showPulse: true,
+        pulseTime: 0
+      })
+
+      // Should call strokeRect twice: once for border, once for pulse
+      expect(strokeRectSpy).toHaveBeenCalledTimes(2)
+    })
   })
 })
