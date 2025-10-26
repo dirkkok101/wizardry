@@ -54,9 +54,9 @@ export class TitleScreenScene implements Scene {
   async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
     this.canvas = canvas
 
-    // Center button horizontally, position near bottom
+    // Center button both horizontally and vertically
     this.button.x = (canvas.width - this.button.width) / 2
-    this.button.y = canvas.height * 0.8
+    this.button.y = (canvas.height - this.button.height) / 2
 
     // Set up mouse tracking
     this.setupMouseTracking()
@@ -203,7 +203,7 @@ export class TitleScreenScene implements Scene {
   private drawTitleBitmap(ctx: CanvasRenderingContext2D): void {
     if (!this.titleBitmap) return
 
-    // Scale to fill the entire canvas while maintaining aspect ratio
+    // Scale to fit entire image within canvas while maintaining aspect ratio (contain behavior)
     const canvasAspect = this.canvas.width / this.canvas.height
     const imageAspect = this.titleBitmap.width / this.titleBitmap.height
 
@@ -213,17 +213,17 @@ export class TitleScreenScene implements Scene {
     let y: number
 
     if (imageAspect > canvasAspect) {
-      // Image is wider than canvas - fit to height
-      height = this.canvas.height
-      width = height * imageAspect
-      x = (this.canvas.width - width) / 2
-      y = 0
-    } else {
-      // Image is taller than canvas - fit to width
+      // Image is wider than canvas - fit to width
       width = this.canvas.width
       height = width / imageAspect
       x = 0
       y = (this.canvas.height - height) / 2
+    } else {
+      // Image is taller than canvas - fit to height
+      height = this.canvas.height
+      width = height * imageAspect
+      x = (this.canvas.width - width) / 2
+      y = 0
     }
 
     // Use nearest-neighbor scaling for pixel art
