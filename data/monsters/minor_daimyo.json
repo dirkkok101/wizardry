@@ -1,0 +1,19 @@
+{
+  "id": "minor_daimyo",
+  "name": "Minor Daimyo",
+  "level": 5,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 4, "max": 40 },
+  "ac": 2,
+  "damage": [
+    { "dice": "1d10", "min": 1, "max": 10 }
+  ],
+  "xp": 1200,
+  "type": "humanoid",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

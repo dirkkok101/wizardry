@@ -1,0 +1,21 @@
+{
+  "id": "weretiger",
+  "name": "Weretiger",
+  "level": 5,
+  "numberAppearing": { "min": 1, "max": 8 },
+  "hp": { "min": 5, "max": 40 },
+  "ac": 4,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 },
+    { "dice": "1d8", "min": 1, "max": 8 },
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 1405,
+  "type": "werebeast",
+  "class": null,
+  "specialAbilities": ["poison", "multiple_attacks", "regeneration"],
+  "resistances": [],
+  "regeneration": 2,
+  "isBoss": false,
+  "canFlee": false
+}

@@ -1,0 +1,21 @@
+{
+  "id": "gas_cloud",
+  "name": "Gas Cloud",
+  "level": 2,
+  "numberAppearing": { "min": 2, "max": 8 },
+  "hp": { "min": 2, "max": 8 },
+  "ac": 10,
+  "damage": [
+    { "dice": "1d4", "min": 1, "max": 4 }
+  ],
+  "xp": 350,
+  "type": "normal",
+  "class": "mage",
+  "spellLevels": { "mage": 2 },
+  "spells": ["dilto", "sopic"],
+  "specialAbilities": ["spellcasting", "paralyze"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

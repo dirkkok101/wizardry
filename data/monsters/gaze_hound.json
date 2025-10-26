@@ -1,0 +1,19 @@
+{
+  "id": "gaze_hound",
+  "name": "Gaze Hound",
+  "level": 6,
+  "numberAppearing": { "min": 1, "max": 5 },
+  "hp": { "min": 4, "max": 32 },
+  "ac": -1,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 1235,
+  "type": "mythical",
+  "class": null,
+  "specialAbilities": ["paralyze"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": true
+}

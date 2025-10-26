@@ -212,8 +212,12 @@
 
 **damage**: `array` - Attack damage per round
 - Each entry: `{ dice: string, min: number, max: number }`
-- Multiple entries = multiple attacks per round
+- Multiple entries = multiple attacks per round (array length determines attack count)
 - Empty array = no physical attacks (spellcaster only)
+- Examples:
+  - `[{dice: "1d8"}]` = 1 attack per round
+  - `[{dice: "3d8"}, {dice: "3d8"}]` = 2 attacks per round
+  - `[]` = 0 attacks (pure caster)
 
 **xp**: `number` - Experience points awarded for defeat
 
@@ -253,6 +257,8 @@
 **isBoss**: `boolean` - Is this a boss-tier monster?
 
 **canFlee**: `boolean` - Can monster flee from combat?
+- `true`: Monster may attempt to flee when HP is low (Rogue, Attack Dog, Ogre, etc.)
+- `false`: Monster fights to the death (most monsters, all bosses)
 
 ### Optional Fields
 
@@ -314,7 +320,8 @@
 
 **multiple_attacks**: More than 1 attack per round
 - Number of attacks = length of damage array
-- Gargoyle (4), Greater Demon (5), etc.
+- This ability tag is informational; actual attack count is determined by damage array length
+- Gargoyle (4 attacks), Greater Demon (5 attacks), etc.
 
 **summon_reinforcements**: Call additional monsters mid-combat
 - Creeping Coin?, Lesser Demon, Greater Demon, Bleeb
@@ -385,6 +392,18 @@ See [Monster Reference](../research/monster-reference.md) for complete encounter
 See [Monster Reference](../research/monster-reference.md) for complete validated monster list.
 
 All 96 monsters cross-referenced against original Wizardry 1 sources.
+
+## File Organization
+
+**Individual Monster Files**: Each monster is stored as a separate JSON file in `data/monsters/`
+- **Naming Convention**: `{monster-id}.json` (e.g., `bubbly_slime.json`, `werdna.json`)
+- **Benefits**:
+  - Easy to reference by filename
+  - Load monsters individually as needed
+  - Simple to version control and diff
+  - Clear separation of concerns
+
+**Example File Path**: `data/monsters/murphy_ghost.json`
 
 ## Notes
 

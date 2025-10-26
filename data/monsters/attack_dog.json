@@ -1,0 +1,19 @@
+{
+  "id": "attack_dog",
+  "name": "Attack Dog",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 4, "max": 32 },
+  "ac": 1,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 1120,
+  "type": "normal",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": true
+}

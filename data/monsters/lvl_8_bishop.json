@@ -1,0 +1,21 @@
+{
+  "id": "lvl_8_bishop",
+  "name": "Lvl 8 Bishop",
+  "level": 6,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 8, "max": 64 },
+  "ac": 2,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 2060,
+  "type": "humanoid",
+  "class": "bishop",
+  "spellLevels": { "mage": 4, "priest": 4 },
+  "spells": ["badi", "dalto", "lahalito"],
+  "specialAbilities": ["spellcasting"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

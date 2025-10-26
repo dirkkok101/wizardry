@@ -1,0 +1,20 @@
+{
+  "id": "shade",
+  "name": "Shade",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 6, "max": 27 },
+  "ac": 7,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 875,
+  "type": "undead",
+  "class": null,
+  "specialAbilities": ["level_drain"],
+  "levelDrain": 1,
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

@@ -1,180 +1,108 @@
-# maps.json Format
+# Wizardry Map Data Format Documentation
 
-**Map/dungeon data file specification.**
+## Overview
 
-## File Location
+This document describes the data format for representing Wizardry dungeon maps. Each level is stored as a JSON object containing tiles with explicit wall definitions for all four directions.
 
-`src/data/maps.json`
+## Coordinate System
 
-## Format
+```
+        North (Y increases)
+             ↑
+             |
+  West ←─────┼─────→ East (X increases)
+             |
+             ↓
+        South (Y=0)
+
+  (0,19) .................. (19,19)  ← Top of map (North)
+    .                          .
+    .                          .
+    .                          .
+  (0,0) .................... (19,0)  ← Bottom of map (South)
+```
+
+- **Grid Size**: 20×20 cells (coordinates 0-19)
+- **Origin**: (0, 0) is at the southwest (bottom-left) corner
+- **X-Axis**: Increases eastward (0=west, 19=east)
+- **Y-Axis**: Increases northward (0=south, 19=north)
+
+## Core Design Philosophy
+
+### Explicit Per-Tile Walls
+
+Every navigable tile in the dungeon explicitly defines all four walls. This approach:
+- ✅ **No ambiguity**: Each tile contains complete wall information
+- ✅ **Simple lookups**: Just check the tile you're standing on
+- ✅ **No shared wall confusion**: No need to check adjacent tiles
+- ✅ **Easy validation**: All information in one place
+
+**Example:**
+```json
+{
+  "x": 5,
+  "y": 10,
+  "walls": {
+    "north": "wall",
+    "east": "door",
+    "south": "open",
+    "west": "wall"
+  }
+}
+```
+
+## JSON Format
+
+### Complete Level Structure
 
 ```json
 {
   "levels": [
     {
       "level": 1,
-      "name": "Castle Entrance",
+      "name": "Level 1",
       "size": { "width": 20, "height": 20 },
       "startPosition": { "x": 0, "y": 0, "facing": "north" },
+      "edgeWrapping": true,
       "tiles": [
         {
           "x": 0,
           "y": 0,
-          "type": "stairs_up",
-          "destination": { "type": "castle" }
-        },
-        {
-          "x": 0,
-          "y": 10,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          },
           "type": "stairs_down",
-          "destination": { "level": 2, "x": 0, "y": 10 }
+          "destination": { "level": 2, "x": 0, "y": 0 }
         },
         {
-          "x": 5,
-          "y": 9,
-          "type": "teleporter",
-          "destination": { "level": 1, "x": 15, "y": 4 }
+          "x": 1,
+          "y": 0,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 10,
-          "y": 8,
-          "type": "elevator",
-          "requiresItem": "blue_ribbon",
-          "destinations": [
-            { "level": 1, "x": 10, "y": 8 },
-            { "level": 2, "x": 10, "y": 8 },
-            { "level": 3, "x": 10, "y": 8 },
-            { "level": 4, "x": 10, "y": 8 }
-          ]
-        },
-        {
-          "x": 13,
-          "y": 5,
-          "type": "fixed_encounter",
-          "encounterId": "murphy_ghosts",
-          "repeatable": true
-        },
-        {
-          "x": 9,
-          "y": 12,
-          "type": "darkness_zone_start"
-        },
-        {
-          "x": 9,
           "y": 19,
-          "type": "message",
-          "message": "You see a wizard. He gestures and you are returned to the castle.",
-          "effect": "return_to_castle"
-        },
-        {
-          "x": 13,
-          "y": 3,
-          "type": "chest",
-          "item": "bronze_key",
-          "trapped": false
-        }
-      ],
-      "walls": [
-        { "x": 0, "y": 0, "direction": "north" },
-        { "x": 0, "y": 0, "direction": "west" },
-        { "x": 1, "y": 0, "direction": "north" }
-      ],
-      "zones": [
-        {
-          "name": "Southwest Quadrant",
-          "bounds": { "xMin": 0, "yMin": 0, "xMax": 9, "yMax": 9 }
-        },
-        {
-          "name": "Darkness Zone",
-          "bounds": { "xMin": 9, "yMin": 12, "xMax": 19, "yMax": 19 },
-          "properties": ["darkness", "no_light_spells"]
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "door"
+          },
+          "type": "fixed_encounter",
+          "encounterId": "encounter_c",
+          "repeatable": true
         }
       ],
       "encounterRate": 0.10,
       "encounterTable": "level_1_monsters"
-    },
-    {
-      "level": 10,
-      "name": "Werdna's Lair",
-      "size": { "width": 20, "height": 20 },
-      "startPosition": { "x": 0, "y": 0, "facing": "north" },
-      "restrictions": [
-        "no_malor_in",
-        "no_malor_out",
-        "no_dumapic"
-      ],
-      "tiles": [
-        {
-          "x": 0,
-          "y": 0,
-          "type": "message",
-          "message": "Welcome to my castle. I await you at the end. -Werdna",
-          "latin": "Contra-dextra avenue",
-          "translation": "Don't travel right"
-        },
-        {
-          "x": 1,
-          "y": 0,
-          "type": "teleporter",
-          "destination": { "type": "castle" },
-          "description": "Warp to castle"
-        },
-        {
-          "x": 1,
-          "y": 8,
-          "type": "teleporter",
-          "destination": { "level": 10, "x": 1, "y": 18 },
-          "room": "room_1_to_2"
-        },
-        {
-          "x": 17,
-          "y": 3,
-          "type": "fixed_encounter",
-          "encounterId": "werdna_final_battle",
-          "repeatable": false,
-          "isUnique": true,
-          "isFinalBoss": true
-        },
-        {
-          "x": 17,
-          "y": 4,
-          "type": "message",
-          "message": "You have found Werdna. Prepare for battle!",
-          "pointOfNoReturn": true
-        }
-      ],
-      "rooms": [
-        {
-          "id": "room_1",
-          "guardian": { "level": 10, "x": 1, "y": 8 }
-        },
-        {
-          "id": "room_2",
-          "guardian": { "level": 10, "x": 1, "y": 18 }
-        },
-        {
-          "id": "room_3",
-          "guardian": { "level": 10, "x": 9, "y": 12 }
-        },
-        {
-          "id": "room_4",
-          "guardian": { "level": 10, "x": 10, "y": 18 }
-        },
-        {
-          "id": "room_5",
-          "guardian": { "level": 10, "x": 16, "y": 10 }
-        },
-        {
-          "id": "room_6",
-          "guardian": { "level": 10, "x": 18, "y": 13 }
-        },
-        {
-          "id": "room_7",
-          "boss": { "level": 10, "x": 17, "y": 3 }
-        }
-      ],
-      "encounterRate": 0.15,
-      "encounterTable": "level_10_monsters"
     }
   ]
 }
@@ -184,82 +112,205 @@
 
 ### Level Object
 
-**level**: `number` - Dungeon level (1-10)
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `level` | number | Yes | Dungeon level (1-10) |
+| `name` | string | Yes | Descriptive name for the level |
+| `size` | object | Yes | Grid dimensions |
+| `startPosition` | object | Yes | Where party spawns when entering level |
+| `tiles` | array | Yes | All navigable tiles with walls (see Tile Object) |
+| `encounterRate` | number | Yes | Random encounter probability per step (0.0-1.0) |
+| `encounterTable` | string | Yes | Reference to monster encounter table |
+| `zones` | array | No | Optional special zones (darkness, anti-magic, etc.) |
+| `restrictions` | array | No | Optional level-wide restrictions |
+| `edgeWrapping` | boolean | No | Enable wrap-around (off one edge → opposite side) |
 
-**name**: `string` - Level name (e.g. "Castle Entrance", "Werdna's Lair")
+### Size Object
 
-**size**: `object` - Grid dimensions
-- `width`: Number of tiles wide (always 20 for Wizardry 1)
-- `height`: Number of tiles tall (always 20 for Wizardry 1)
+```json
+{
+  "width": 20,
+  "height": 20
+}
+```
 
-**startPosition**: `object` - Where party appears when entering level
-- `x`: X coordinate
-- `y`: Y coordinate
+Always 20×20 for Wizardry 1.
+
+### Start Position Object
+
+```json
+{
+  "x": 0,
+  "y": 0,
+  "facing": "north"
+}
+```
+
+- `x`, `y`: Spawn coordinates
 - `facing`: Initial direction ("north", "south", "east", "west")
 
-**tiles**: `array` - Special tile definitions (see Tile Types below)
+## Tile Object
 
-**walls**: `array` - Wall definitions
-- `x`, `y`: Tile coordinates
-- `direction`: Wall side ("north", "south", "east", "west")
+Every navigable cell in the dungeon is represented as a tile object.
 
-**zones**: `array` - Optional zone definitions for special areas
-- `name`: Zone name
-- `bounds`: Bounding box (`xMin`, `yMin`, `xMax`, `yMax`)
-- `properties`: Special zone effects (e.g. ["darkness", "anti_magic"])
+### Basic Tile Structure
 
-**encounterRate**: `number` - Probability of encounter per step (0.0 to 1.0)
+```json
+{
+  "x": 5,
+  "y": 10,
+  "walls": {
+    "north": "wall",
+    "east": "open",
+    "south": "door",
+    "west": "wall"
+  }
+}
+```
 
-**encounterTable**: `string` - Reference to monster encounter table
+### Fields
 
-**restrictions**: `array` - Level-wide restrictions (optional)
-- `"no_malor_in"` - Cannot teleport into level
-- `"no_malor_out"` - Cannot teleport out of level
-- `"no_dumapic"` - DUMAPIC spell doesn't work
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `x` | number | Yes | X coordinate (0-19) |
+| `y` | number | Yes | Y coordinate (0-19) |
+| `walls` | object | Yes | All four walls explicitly defined |
+| `type` | string | No | Special tile type (stairs, encounter, etc.) |
 
-**rooms**: `array` - Room definitions (Level 10 only)
+### Walls Object
 
-## Tile Types
+**All four directions must be explicitly defined:**
+
+```json
+{
+  "north": "wall",
+  "east": "door",
+  "south": "open",
+  "west": "wall"
+}
+```
+
+#### Wall Type Values
+
+| Value | Description |
+|-------|-------------|
+| `"wall"` | Solid wall (impassable) |
+| `"door"` | Regular door (can be opened) |
+| `"locked_door"` | Locked door (requires key item) |
+| `"secret_door"` | Secret door (hidden, hard to detect) |
+| `"open"` | No wall (passable) |
+
+**Door Mechanics**:
+- **Regular doors** (`"door"`): Can be opened freely
+- **Locked doors** (`"locked_door"`): Require specific key items (Bronze Key, Silver Key, Gold Key)
+  - If party has the required key, passage is granted
+  - If key is missing, party is "pushed back one step"
+- **Secret doors** (`"secret_door"`): Hidden passages that don't always appear
+  - Light spells (MILWA, LOMILWA) make them more detectable
+  - May appear intermittently when looking at them
+
+#### Direction Reference
+
+```
+         north
+           ↑
+     ┌─────────┐
+     │         │
+west │  (x,y)  │ east
+     │         │
+     └─────────┘
+           ↓
+         south
+```
+
+## Special Tile Types
+
+When a tile has special properties, add a `type` field and related fields.
 
 ### Navigation Tiles
 
-**stairs_up**: Ascend to previous level or castle
+#### Stairs Up
+
 ```json
 {
-  "x": 0, "y": 0,
+  "x": 0,
+  "y": 19,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
   "type": "stairs_up",
-  "destination": { "type": "castle" }
+  "destination": {
+    "type": "castle"
+  }
 }
 ```
-- `destination.type`: "castle" or object with level/coordinates
 
-**stairs_down**: Descend to next level
+Returns player to castle.
+
+#### Stairs Down
+
 ```json
 {
-  "x": 0, "y": 10,
+  "x": 0,
+  "y": 10,
+  "walls": {
+    "north": "open",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
   "type": "stairs_down",
-  "destination": { "level": 2, "x": 0, "y": 10 }
+  "destination": {
+    "level": 2,
+    "x": 0,
+    "y": 10
+  }
 }
 ```
 
-**teleporter**: Instant transport
+Descends to next level at specified coordinates.
+
+#### Teleporter
+
 ```json
 {
-  "x": 5, "y": 9,
+  "x": 5,
+  "y": 9,
+  "walls": {
+    "north": "open",
+    "east": "open",
+    "south": "wall",
+    "west": "open"
+  },
   "type": "teleporter",
-  "destination": { "level": 1, "x": 15, "y": 4 },
+  "destination": {
+    "level": 1,
+    "x": 15,
+    "y": 4
+  },
   "isOneWay": true
 }
 ```
-- `destination`: Target coordinates
-- `isOneWay`: Optional, defaults to true
 
-**elevator**: Multi-level access (requires Blue Ribbon)
+Instant transport to another location.
+
+#### Elevator
+
+**Elevator 1 (Levels 1-4):**
 ```json
 {
-  "x": 10, "y": 8,
+  "x": 10,
+  "y": 8,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "wall",
+    "west": "wall"
+  },
   "type": "elevator",
-  "requiresItem": "blue_ribbon",
   "destinations": [
     { "level": 1, "x": 10, "y": 8 },
     { "level": 2, "x": 10, "y": 8 },
@@ -269,192 +320,354 @@
 }
 ```
 
-**chute**: Forces fall to lower level
+**Elevator 2 (Levels 4-9, requires Blue Ribbon):**
 ```json
 {
-  "x": 5, "y": 5,
-  "type": "chute",
-  "destination": { "level": 9, "x": 5, "y": 5 }
+  "x": 10,
+  "y": 0,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "wall",
+    "west": "wall"
+  },
+  "type": "elevator",
+  "requiresItem": "blue_ribbon",
+  "destinations": [
+    { "level": 4, "x": 10, "y": 0 },
+    { "level": 5, "x": 10, "y": 0 },
+    { "level": 6, "x": 10, "y": 0 },
+    { "level": 7, "x": 10, "y": 0 },
+    { "level": 8, "x": 10, "y": 0 },
+    { "level": 9, "x": 10, "y": 0 }
+  ]
 }
 ```
 
-### Special Effect Tiles
+Multi-level access points. The second elevator requires the Blue Ribbon (obtained from Monster Allocation Center on Level 4).
 
-**spinner**: Randomly changes facing direction
+#### Chute
+
 ```json
 {
-  "x": 8, "y": 15,
+  "x": 5,
+  "y": 5,
+  "walls": {
+    "north": "open",
+    "east": "open",
+    "south": "open",
+    "west": "open"
+  },
+  "type": "chute",
+  "destination": {
+    "level": 9,
+    "x": 5,
+    "y": 5
+  }
+}
+```
+
+Forces fall to lower level.
+
+#### Locked Door Tile
+
+```json
+{
+  "x": 8,
+  "y": 7,
+  "walls": {
+    "north": "locked_door",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
+  "type": "locked_tile",
+  "requiresKey": "bronze_key",
+  "direction": "north"
+}
+```
+
+Tile with a locked door that requires a specific key. When the party has the required key, they can pass through the locked door. Without the key, they are pushed back one step.
+
+#### Sliding Wall
+
+```json
+{
+  "x": 17,
+  "y": 12,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
+  "type": "sliding_wall",
+  "requiresItem": "bear_statue",
+  "direction": "east",
+  "message": "A large sliding wall with a bear image blocks the way"
+}
+```
+
+Special wall that slides open when party possesses the required item (typically the Bear Statue on Level 4). Once opened, allows passage in the specified direction.
+
+### Effect Tiles
+
+#### Spinner
+
+```json
+{
+  "x": 8,
+  "y": 15,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "wall",
+    "west": "open"
+  },
   "type": "spinner"
 }
 ```
 
-**darkness_zone_start**: Begin darkness zone (light spells ineffective)
+Randomly rotates party facing direction.
+
+#### Darkness Zone Start
+
 ```json
 {
-  "x": 9, "y": 12,
+  "x": 9,
+  "y": 12,
+  "walls": {
+    "north": "open",
+    "east": "wall",
+    "south": "wall",
+    "west": "open"
+  },
   "type": "darkness_zone_start"
 }
 ```
 
-**darkness_zone_end**: End darkness zone
+Begins area where light spells don't work.
+
+#### Darkness Zone End
+
 ```json
 {
-  "x": 19, "y": 19,
+  "x": 19,
+  "y": 19,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "open"
+  },
   "type": "darkness_zone_end"
 }
 ```
 
-**anti_magic_zone**: Spells cannot be cast
+Exits darkness zone.
+
+#### Anti-Magic Zone
+
 ```json
 {
-  "x": 5, "y": 5,
-  "type": "anti_magic_zone",
-  "bounds": { "xMin": 5, "yMin": 5, "xMax": 10, "yMax": 10 }
+  "x": 5,
+  "y": 5,
+  "walls": {
+    "north": "open",
+    "east": "open",
+    "south": "open",
+    "west": "open"
+  },
+  "type": "anti_magic_zone"
 }
 ```
+
+Area where spells cannot be cast.
 
 ### Encounter Tiles
 
-**fixed_encounter**: Specific monster at specific location
+#### Fixed Encounter
+
 ```json
 {
-  "x": 13, "y": 5,
+  "x": 10,
+  "y": 19,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "door"
+  },
   "type": "fixed_encounter",
-  "encounterId": "murphy_ghosts",
+  "encounterId": "encounter_c",
   "repeatable": true
 }
 ```
-- `encounterId`: Reference to monster ID
-- `repeatable`: Can encounter multiple times?
-- `isUnique`: Only one encounter (Werdna)
-- `isFinalBoss`: Is this the final boss?
+
+- `encounterId`: Reference to monster/encounter definition
+- `repeatable`: Can be encountered multiple times
+- `isUnique`: (Optional) Only one in entire game (e.g., Werdna)
+- `isFinalBoss`: (Optional) Final boss encounter
 
 ### Interactive Tiles
 
-**chest**: Treasure chest
+#### Chest
+
 ```json
 {
-  "x": 13, "y": 3,
+  "x": 13,
+  "y": 3,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
   "type": "chest",
   "item": "bronze_key",
   "trapped": false,
-  "trapType": null,
-  "requiresThief": false
+  "trapType": null
 }
 ```
-- `item`: Item ID (references items.json)
-- `trapped`: Is chest trapped?
-- `trapType`: Type of trap if trapped
-- `requiresThief`: Requires thief to open?
 
-**door**: Door (open, closed, locked, secret)
+**Chest Mechanics**:
+- Chests only appear after combat encounters that occur when going through a door
+- Random encounters in hallways typically only give gold (no chests)
+- Gold in chests is distributed evenly among surviving party members
+- Items are given to one random party member
+
+#### Searchable Item
+
 ```json
 {
-  "x": 5, "y": 5,
-  "type": "door",
-  "state": "locked",
-  "requiresKey": "bronze_key",
-  "isSecret": false
+  "x": 12,
+  "y": 8,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
+  "type": "searchable",
+  "message": "You see a message on the wall",
+  "promptSearch": true,
+  "item": "gold_key"
 }
 ```
-- `state`: "open", "closed", "locked"
-- `requiresKey`: Item ID of required key
-- `isSecret`: Requires search to find?
 
-**message**: Display text or trigger event
+Items found by searching after reading a message (not in combat chests). Used for quest items like keys and statues.
+
+#### Message
+
 ```json
 {
-  "x": 9, "y": 19,
+  "x": 9,
+  "y": 19,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "open",
+    "west": "wall"
+  },
   "type": "message",
-  "message": "You see a wizard.",
-  "effect": "return_to_castle",
-  "latin": "Contra-dextra avenue",
-  "translation": "Don't travel right"
+  "message": "You see a wizard. He gestures.",
+  "effect": "return_to_castle"
 }
 ```
-- `message`: Text to display
-- `effect`: Optional effect trigger
-- `latin`: Latin text (Level 10)
+
+For Level 10, can include:
+- `latin`: Latin text
 - `translation`: English translation
 - `pointOfNoReturn`: Can't turn back after this
 
-## Wall Encoding
+### No Need to Check Adjacent Tiles
 
-Walls can be encoded in two ways:
+With this format, you **never** need to check adjacent tiles. The tile you're standing on has complete information about all four walls.
 
-### Explicit Wall List
+**Example:**
+```javascript
+// Simple check - no adjacent tile lookup needed!
+function canMoveNorth(tile) {
+  return tile.walls.north !== "wall";
+}
+```
+
+## Zones (Optional)
+
+Define special areas with unique properties:
+
 ```json
 {
-  "walls": [
-    { "x": 0, "y": 0, "direction": "north" },
-    { "x": 0, "y": 0, "direction": "west" }
+  "zones": [
+    {
+      "name": "Darkness Zone",
+      "bounds": {
+        "xMin": 9,
+        "yMin": 12,
+        "xMax": 19,
+        "yMax": 19
+      },
+      "properties": ["darkness", "no_light_spells"]
+    }
   ]
 }
 ```
 
-### Grid String (Alternative)
+### Zone Properties
+
+- `darkness`: Visual range reduced
+- `anti_magic`: Cannot cast spells
+- `no_light_spells`: Only light spells blocked
+- `safe_zone`: No random encounters
+- `high_encounter`: Increased encounter rate
+
+## Level Restrictions (Optional)
+
 ```json
 {
-  "wallGrid": [
-    "####################",
-    "#..................#",
-    "#..................#",
-    "####################"
+  "restrictions": [
+    "no_malor_in",
+    "no_malor_out",
+    "no_dumapic"
   ]
 }
 ```
-- `#` = wall
-- `.` = floor
-- More compact but less flexible
 
-## Coordinate System
+- `no_malor_in`: Cannot teleport into level
+- `no_malor_out`: Cannot teleport out of level
+- `no_dumapic`: DUMAPIC spell doesn't work
 
-**Origin**: (0, 0) at southwest corner (lower-left)
+## Edge Wrapping (Wrap-Around)
 
-**X Axis**: Increases eastward (0 to 19)
+Some levels feature edge wrapping, where a magical field surrounds the maze:
 
-**Y Axis**: Increases northward (0 to 19)
+```json
+{
+  "level": 1,
+  "edgeWrapping": true,
+  ...
+}
+```
 
-**Directions**:
-- North: +Y
-- South: -Y
-- East: +X
-- West: -X
+**Mechanics**:
+- When `edgeWrapping` is `true`, moving off one edge teleports to the opposite edge
+- Example: At (19, 10) moving East → arrives at (0, 10)
+- Example: At (5, 0) moving South → arrives at (5, 19)
+- Preserves facing direction
+- All Wizardry 1 levels use edge wrapping
 
-## Zone Properties
+**Implementation Note**: The wrap-around creates a toroidal topology (doughnut-shaped space).
 
-**darkness**: Light spells ineffective (MILWA, LOMILWA don't work)
+## Encounter Configuration
 
-**anti_magic**: Cannot cast spells in zone
+```json
+{
+  "encounterRate": 0.10,
+  "encounterTable": "level_1_monsters"
+}
+```
 
-**no_light_spells**: Specific to light spells only
-
-**safe_zone**: No random encounters
-
-**high_encounter**: Increased encounter rate
-
-## Level 10 Special Structure
-
-Level 10 is unique with 7 isolated rooms connected only by teleporters.
-
-**Room Structure**:
-- Room 0: Starting area (0E, 0N)
-- Rooms 1-6: Guardian rooms with progressive warps
-- Room 7: Werdna's chamber (final boss)
-
-**Teleporter Network**:
-- Each room has progression warp (to next room)
-- Each room has reset warp (back to Room 0)
-- Must follow sequence: Room 1 → 2 → 3 → 4 → 5 → 6 → 7
-
-**Restrictions**:
-- Cannot use MALOR to enter or exit Level 10
-- DUMAPIC doesn't work (coordinates hidden)
-- Point of no return at Room 7 entrance
-
-## Encounter Tables
-
-**encounterTable** references monster groups by level:
+The `encounterTable` references a monster group definition:
 
 ```json
 {
@@ -462,49 +675,64 @@ Level 10 is unique with 7 isolated rooms connected only by teleporters.
     "level_1_monsters": [
       { "monsterId": "bubbly_slime", "weight": 20 },
       { "monsterId": "orc", "weight": 15 },
-      { "monsterId": "kobold", "weight": 15 },
-      { "monsterId": "lvl_1_mage", "weight": 5 }
+      { "monsterId": "kobold", "weight": 15 }
     ]
   }
 }
 ```
 
-- `weight`: Relative probability of encounter
-- Higher weight = more common
+## File Structure
 
-## Validation
+Recommended directory structure:
 
-See [Dungeon Maps Reference](../research/dungeon-maps-reference.md) for complete map structure.
+```
+data/
+  maps/
+    level1.json
+    level2.json
+    ...
+    level10.json
+  encounters/
+    level_1_monsters.json
+    level_2_monsters.json
+    ...
+```
 
-Map coordinates and special tiles validated against original Wizardry 1 dungeon layout.
+## Research Validation Summary
 
-## Implementation Notes
+**Validated Against**: Wizardry 1: Proving Grounds of the Mad Overlord (2025-10-26)
 
-**Map Loading**: Load entire level at once (20×20 is small enough for full load)
+**Sources**:
+- StrategyWiki Walkthrough and Floor Guides
+- The-Spoiler.com Solutions
+- Data Driven Gamer Treasure Analysis
+- Steam Community Guides
 
-**Wall Detection**: Check wall array for movement validation
+**Key Updates from Research**:
 
-**Tile Effects**: Apply automatically when party enters tile
+1. **Door Types**: Added `locked_door` and `secret_door` wall types based on key mechanics (Bronze/Silver/Gold Keys) and secret passage detection via MILWA/LOMILWA spells
 
-**Teleporter Handling**: Instant transport, no animation (original behavior)
+2. **Locked Doors**: Added `locked_tile` type with `requiresKey` field for doors that push party back without proper key
 
-**Spinner Effects**: Random direction change (0-3: N/E/S/W)
+3. **Sliding Walls**: Added `sliding_wall` type for Bear Statue-activated passages (Level 4, E17-N12)
 
-**Darkness Rendering**: Show walls/floor but not details beyond 1 tile
+4. **Edge Wrapping**: Added `edgeWrapping` level property - confirmed all Wizardry 1 levels use magical field wrap-around
 
-**Elevator Interaction**: Show menu with available floors
+5. **Elevator Configurations**: Updated examples to show both elevator systems:
+   - Elevator 1: Levels 1-4 (E10-N8)
+   - Elevator 2: Levels 4-9 (E10-N0, requires Blue Ribbon)
 
-## Data Size Estimate
+6. **Item Placement**: Added `searchable` tile type for quest items found by searching (not in combat chests). Documented that chests only appear after door-combat encounters, not random hallway encounters.
 
-- 10 levels × 20×20 tiles = 4000 tiles total
-- Special tiles: ~50-100 per level (500-1000 total)
-- Walls: ~200-300 per level (2000-3000 total)
-- Total JSON size: ~500KB-1MB (highly compressible)
+7. **Chest Mechanics**: Clarified that treasure chests appear only after combat through doors; gold is distributed evenly, items given to random party member
 
-## Notes
+**Confirmed Accurate**:
+- ✅ Coordinate system (0,0 = southwest, X=east, Y=north)
+- ✅ 20×20 grid for all levels
+- ✅ All special tile types (stairs, teleporters, spinners, chutes, darkness zones, anti-magic zones)
+- ✅ Level restrictions (no_malor_in, no_malor_out, no_dumapic)
+- ✅ Encounter mechanics (fixed, repeatable, unique)
 
-- Original Wizardry 1 maps are well-documented with complete coordinates
-- Maps are static (don't change during gameplay)
-- No procedural generation (faithful to original)
-- Level 10 is most complex with teleporter-only navigation
-- Some areas intentionally designed to disorient (spinners + darkness)
+## Complete Example
+
+See `level1.json` for a complete working example with all 270 tiles fully defined.

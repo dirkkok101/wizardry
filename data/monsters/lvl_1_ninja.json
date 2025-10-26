@@ -1,0 +1,19 @@
+{
+  "id": "lvl_1_ninja",
+  "name": "Lvl 1 Ninja",
+  "level": 1,
+  "numberAppearing": { "min": 2, "max": 8 },
+  "hp": { "min": 4, "max": 10 },
+  "ac": 5,
+  "damage": [
+    { "dice": "1d6", "min": 1, "max": 6 }
+  ],
+  "xp": 600,
+  "type": "humanoid",
+  "class": "ninja",
+  "specialAbilities": ["decapitate"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

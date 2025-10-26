@@ -1,0 +1,19 @@
+{
+  "id": "swordsman",
+  "name": "Swordsman",
+  "level": 5,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 3, "max": 30 },
+  "ac": 3,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 960,
+  "type": "humanoid",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

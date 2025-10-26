@@ -1,0 +1,19 @@
+{
+  "id": "high_ninja",
+  "name": "High Ninja",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 1 },
+  "hp": { "min": 12, "max": 48 },
+  "ac": -1,
+  "damage": [
+    { "dice": "2d8", "min": 2, "max": 16 }
+  ],
+  "xp": 1600,
+  "type": "humanoid",
+  "class": "ninja",
+  "specialAbilities": ["decapitate"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

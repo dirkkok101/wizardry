@@ -1,0 +1,24 @@
+{
+  "id": "creeping_coin",
+  "name": "Creeping Coin?",
+  "level": 2,
+  "numberAppearing": { "min": 9, "max": 9 },
+  "hp": { "min": 1, "max": 1 },
+  "ac": 4,
+  "damage": [
+    { "dice": "1d2", "min": 1, "max": 2 }
+  ],
+  "xp": 920,
+  "type": "normal",
+  "class": null,
+  "specialAbilities": ["breath_weapon", "summon_reinforcements"],
+  "breathWeapon": {
+    "type": "cold",
+    "damage": "2d6",
+    "target": "party"
+  },
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

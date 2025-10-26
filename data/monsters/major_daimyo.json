@@ -1,0 +1,21 @@
+{
+  "id": "major_daimyo",
+  "name": "Major Daimyo",
+  "level": 7,
+  "numberAppearing": { "min": 1, "max": 5 },
+  "hp": { "min": 7, "max": 84 },
+  "ac": 0,
+  "damage": [
+    { "dice": "2d10", "min": 2, "max": 20 }
+  ],
+  "xp": 2340,
+  "type": "humanoid",
+  "class": null,
+  "specialAbilities": ["magic_resistance"],
+  "resistances": [
+    { "type": "magic", "value": 50 }
+  ],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

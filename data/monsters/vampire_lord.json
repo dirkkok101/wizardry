@@ -1,0 +1,20 @@
+{
+  "id": "vampire_lord",
+  "name": "Vampire Lord",
+  "level": 10,
+  "numberAppearing": { "min": 1, "max": 1 },
+  "hp": { "min": 20, "max": 160 },
+  "ac": -5,
+  "damage": [
+    { "dice": "4d10", "min": 4, "max": 40 }
+  ],
+  "xp": 7320,
+  "type": "undead",
+  "class": null,
+  "specialAbilities": ["paralyze", "level_drain", "regeneration"],
+  "levelDrain": 4,
+  "resistances": [],
+  "regeneration": 4,
+  "isBoss": true,
+  "canFlee": false
+}

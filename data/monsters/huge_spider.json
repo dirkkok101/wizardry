@@ -1,0 +1,19 @@
+{
+  "id": "huge_spider",
+  "name": "Huge Spider",
+  "level": 2,
+  "numberAppearing": { "min": 1, "max": 8 },
+  "hp": { "min": 4, "max": 18 },
+  "ac": 6,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 600,
+  "type": "normal",
+  "class": null,
+  "specialAbilities": ["poison"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

@@ -1,0 +1,25 @@
+{
+  "id": "lesser_demon",
+  "name": "Lesser Demon",
+  "level": 7,
+  "numberAppearing": { "min": 1, "max": 1 },
+  "hp": { "min": 10, "max": 80 },
+  "ac": 4,
+  "damage": [
+    { "dice": "2d8", "min": 2, "max": 16 },
+    { "dice": "2d8", "min": 2, "max": 16 },
+    { "dice": "2d8", "min": 2, "max": 16 },
+    { "dice": "2d8", "min": 2, "max": 16 },
+    { "dice": "2d8", "min": 2, "max": 16 }
+  ],
+  "xp": 5100,
+  "type": "demon",
+  "class": "mage",
+  "spellLevels": { "mage": 4 },
+  "spells": ["dalto", "lahalito"],
+  "specialAbilities": ["multiple_attacks", "spellcasting", "summon_reinforcements"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

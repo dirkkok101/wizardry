@@ -1,0 +1,21 @@
+{
+  "id": "lvl_5_priest",
+  "name": "Lvl 5 Priest",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 5 },
+  "hp": { "min": 5, "max": 40 },
+  "ac": 4,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 1220,
+  "type": "humanoid",
+  "class": "priest",
+  "spellLevels": { "priest": 3 },
+  "spells": ["badi", "dial"],
+  "specialAbilities": ["spellcasting"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

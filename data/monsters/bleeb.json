@@ -1,0 +1,23 @@
+{
+  "id": "bleeb",
+  "name": "Bleeb",
+  "level": 10,
+  "numberAppearing": { "min": 1, "max": 8 },
+  "hp": { "min": 10, "max": 80 },
+  "ac": 0,
+  "damage": [
+    { "dice": "3d8", "min": 3, "max": 24 },
+    { "dice": "3d8", "min": 3, "max": 24 }
+  ],
+  "xp": 3300,
+  "type": "mythical",
+  "class": null,
+  "specialAbilities": ["multiple_attacks", "summon_reinforcements"],
+  "resistances": [
+    { "type": "fire", "value": 100 },
+    { "type": "cold", "value": 100 }
+  ],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

@@ -1,0 +1,19 @@
+{
+  "id": "coyote",
+  "name": "Coyote",
+  "level": 3,
+  "numberAppearing": { "min": 4, "max": 8 },
+  "hp": { "min": 4, "max": 24 },
+  "ac": 8,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 780,
+  "type": "normal",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": true
+}
