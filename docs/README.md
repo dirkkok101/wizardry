@@ -6,6 +6,7 @@
 
 - [Architecture Overview](./architecture.md) - Technical architecture & layers
 - [Getting Started](./getting-started.md) - Quick start guide
+- [User Interface Documentation](./ui/README.md) - Complete UI flow documentation (14 scenes)
 - [Game Design](./game-design/README.md) - Game mechanics & systems
 - [Services](./services/README.md) - Service layer documentation (40+ services)
 - [Commands](./commands/README.md) - Command layer documentation (40+ commands)
@@ -19,6 +20,7 @@
 docs/
 ├── README.md (you are here)
 ├── architecture.md
+├── ui/ (14 UI scenes + 4 guides)
 ├── diagrams/ (8 Mermaid diagrams)
 ├── services/ (40+ service docs)
 ├── commands/ (40+ command docs)
@@ -27,6 +29,26 @@ docs/
 ├── data-format/ (5 JSON specs)
 └── research/ (source validation & reference)
 ```
+
+## User Interface Documentation
+
+Complete UI flow documentation covering all 14 scenes with navigation maps, state management, and input handling:
+
+- **Scene Coverage**: 14/14 scenes (100% complete)
+- **Documentation Lines**: 13,250+ lines
+- **Navigation Map**: Full Mermaid state diagram showing all scene transitions
+- **UI Patterns**: 7 reusable patterns documented with examples
+- **Input Reference**: Complete keyboard shortcuts and input handling guide
+- **State Management**: Application state structure and transition rules
+
+**Key Features:**
+- ASCII mockups for every scene
+- TypeScript validation logic for all actions
+- Test scenarios for happy path and edge cases
+- Hub-and-spoke navigation design (Castle Menu as central hub)
+- Safe zone vs dungeon zone state management
+
+See [User Interface Documentation](./ui/README.md) for complete UI specifications.
 
 ## Research & Validation
 
