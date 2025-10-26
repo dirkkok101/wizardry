@@ -289,6 +289,136 @@ npm test -- --testNamePattern="adds character"
 npm test -- --verbose
 ```
 
+## Test Performance Best Practices
+
+**Goal**: Keep test suite fast (<5 seconds for full run). Fast tests = faster feedback loop.
+
+### 1. Use Instant Transitions for Scene Navigation
+
+Scene transitions have a default 300ms fade time that slows down tests. **Always use instant transitions** in tests:
+
+```typescript
+// ❌ Bad: Uses default 300ms fadeTime
+await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+
+// ✅ Good: Instant transition (no delay)
+await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
+  direction: 'instant'
+})
+```
+
+**Impact**: Each transition saves 300ms. With 20 transitions in tests, saves 6 seconds!
+
+### 2. Avoid setTimeout in Tests
+
+Never use `setTimeout()` to wait for async operations. It makes tests slow and flaky.
+
+```typescript
+// ❌ Bad: Artificial delay
+await new Promise(resolve => setTimeout(resolve, 50))
+await expect(something).toBeTruthy()
+
+// ✅ Good: Use queueMicrotask for synchronous async
+await new Promise(resolve => queueMicrotask(resolve))
+
+// ✅ Better: Use proper async/await without delays
+await someAsyncOperation()
+expect(something).toBeTruthy()
+```
+
+### 3. Mock Async Operations Synchronously
+
+Use `queueMicrotask()` instead of `setTimeout()` in mocks:
+
+```typescript
+// ❌ Bad: 10ms delay per image load
+global.Image = class MockImage {
+  constructor() {
+    setTimeout(() => this.onload?.(), 10)
+  }
+} as any
+
+// ✅ Good: Instant load
+global.Image = class MockImage {
+  constructor() {
+    queueMicrotask(() => this.onload?.())
+  }
+} as any
+```
+
+### 4. Configure Vitest to Exclude Worktrees
+
+Git worktrees can cause duplicate test execution. Configure vitest to exclude them:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.worktrees/**',  // ← Prevents duplicate test runs
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**'
+    ]
+  },
+})
+```
+
+**Without this**: Tests run twice (once for main directory, once for each worktree)
+
+### 5. Use Fake Timers for Time-Dependent Tests
+
+If you must test time-dependent behavior, use Vitest fake timers instead of real delays:
+
+```typescript
+import { vi } from 'vitest'
+
+describe('TimeDependent', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('triggers after delay', async () => {
+    const callback = vi.fn()
+    scheduleDelayedCallback(callback, 1000)
+
+    // Instantly advance time by 1000ms
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(callback).toHaveBeenCalled()
+  })
+})
+```
+
+### 6. Performance Metrics
+
+Track test performance to catch regressions:
+
+```bash
+# Run tests and check duration
+npm test
+
+# Target metrics (as of 2025-10-26):
+# ✓ Total duration: <2.5s
+# ✓ SceneManager tests: <0.5s
+# ✓ SceneNavigationService tests: <0.01s
+# ✓ Integration tests: <1s
+```
+
+If tests exceed these times, investigate for:
+- Missing `{ direction: 'instant' }` in scene transitions
+- Accidental `setTimeout()` usage
+- Duplicate test file execution (check vite.config.ts excludes)
+- Real async operations that should be mocked
+
 ## Testing Checklist
 
 Before committing:
@@ -302,6 +432,13 @@ Before committing:
 - [ ] Factory functions used for test data
 - [ ] No hard-coded test data (use factories)
 - [ ] Tests are isolated (no shared state between tests)
+
+**Performance checklist**:
+- [ ] Scene transitions use `{ direction: 'instant' }` in tests
+- [ ] No `setTimeout()` in test code (use `queueMicrotask()` or fake timers)
+- [ ] Async mocks use `queueMicrotask()` not `setTimeout()`
+- [ ] Test suite runs in <2.5 seconds
+- [ ] No duplicate test execution (check vitest excludes)
 
 ## Test Naming Conventions
 
@@ -387,6 +524,41 @@ it('updates formation array')
    it('adds member to party')
    it('moves member to front row')
    it('updates party gold')
+   ```
+
+5. **Using setTimeout in Tests (Performance Anti-Pattern)**
+   ```typescript
+   // Bad: Slow and flaky
+   it('transitions to new scene', async () => {
+     await SceneNavigationService.transitionTo(SceneType.CAMP)
+     await new Promise(resolve => setTimeout(resolve, 500)) // ← Adds 500ms!
+     expect(getCurrentScene()).toBe(SceneType.CAMP)
+   })
+
+   // Good: Fast and reliable
+   it('transitions to new scene', async () => {
+     await SceneNavigationService.transitionTo(SceneType.CAMP, {
+       direction: 'instant' // ← No delay
+     })
+     expect(getCurrentScene()).toBe(SceneType.CAMP)
+   })
+   ```
+
+6. **Forgetting to Exclude Worktrees (Performance Anti-Pattern)**
+   ```typescript
+   // Bad: Missing exclude in vite.config.ts
+   export default defineConfig({
+     test: {
+       // Missing exclude causes duplicate test runs
+     }
+   })
+
+   // Good: Properly configured
+   export default defineConfig({
+     test: {
+       exclude: ['**/.worktrees/**', /* ... */]
+     }
+   })
    ```
 
 ## Testing Complex Scenarios

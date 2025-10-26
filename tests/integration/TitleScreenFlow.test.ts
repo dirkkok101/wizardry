@@ -12,7 +12,7 @@ global.Image = class MockImage {
   src = ''
   onload: (() => void) | null = null
   constructor() {
-    setTimeout(() => this.onload?.(), 10)
+    queueMicrotask(() => this.onload?.())
   }
 } as any
 
@@ -31,7 +31,8 @@ async function waitFor(condition: () => boolean, timeout = 2000): Promise<void> 
     if (Date.now() - startTime > timeout) {
       throw new Error('Timeout waiting for condition')
     }
-    await new Promise(resolve => setTimeout(resolve, 50))
+    // Small delay to allow async operations to complete
+    await new Promise(resolve => setTimeout(resolve, 1))
   }
 }
 

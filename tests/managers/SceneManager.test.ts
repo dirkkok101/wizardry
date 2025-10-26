@@ -18,10 +18,10 @@ global.Image = class MockImage {
   onerror: (() => void) | null = null
 
   constructor() {
-    // Simulate async image loading
-    setTimeout(() => {
+    // Simulate async image loading synchronously for tests
+    queueMicrotask(() => {
       if (this.onload) this.onload()
-    }, 10)
+    })
   }
 } as any
 
@@ -104,10 +104,7 @@ describe('SceneManager', () => {
     expect(sceneManager.getCurrentSceneType()).toBe(SceneType.TITLE_SCREEN)
 
     // Trigger transition via SceneNavigationService
-    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
-
-    // Wait for transition to complete
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
     // Should have transitioned
     expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
@@ -121,10 +118,7 @@ describe('SceneManager', () => {
     oldScene.exit = exitSpy
 
     // Transition to new scene
-    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
-
-    // Wait for transition
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
     // Exit should have been called on old scene
     expect(exitSpy).toHaveBeenCalled()
@@ -137,10 +131,7 @@ describe('SceneManager', () => {
     const destroySpy = vi.spyOn(oldScene, 'destroy')
 
     // Transition to new scene
-    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
-
-    // Wait for transition
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
     // Destroy should have been called on old scene
     expect(destroySpy).toHaveBeenCalled()
@@ -163,18 +154,15 @@ describe('SceneManager', () => {
   it('should prevent double transitions', async () => {
     await sceneManager.init(SceneType.TITLE_SCREEN)
 
-    // Start first transition
-    const transition1 = SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+    // Start first transition (instant)
+    const transition1 = SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
 
     // Try to start second transition while first is in progress
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const transition2 = SceneNavigationService.transitionTo(SceneType.CAMP)
+    const transition2 = SceneNavigationService.transitionTo(SceneType.CAMP, { direction: 'instant' })
 
     await transition1
     await transition2
-
-    // Wait a bit
-    await new Promise(resolve => setTimeout(resolve, 100))
 
     // Should have warned about transition in progress
     // (Note: This depends on timing - may need adjustment)
@@ -280,28 +268,14 @@ describe('SceneManager', () => {
   it('should pass transition data to new scene', async () => {
     await sceneManager.init(SceneType.TITLE_SCREEN)
 
-    // Prepare to capture enter call
-    const enterSpy = vi.fn()
-
     // Trigger transition with data
-    const transitionPromise = SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
-      data: { isNewGame: true }
+    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
+      data: { isNewGame: true },
+      direction: 'instant'
     })
 
-    // Wait a tiny bit for scene to be created
-    await new Promise(resolve => setTimeout(resolve, 20))
-
-    // Spy on the new scene's enter method
-    const newScene = (sceneManager as any).currentScene
-    if (newScene && newScene.enter) {
-      newScene.enter = enterSpy
-    }
-
-    await transitionPromise
-    await new Promise(resolve => setTimeout(resolve, 50))
-
-    // Note: This test may need adjustment based on exact timing
-    // The enter is called before we can spy on it in this setup
+    // New scene should be active
+    expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
   })
 
   it('should handle scenes without optional lifecycle methods', async () => {
@@ -310,10 +284,8 @@ describe('SceneManager', () => {
 
     // Should not throw when transitioning
     await expect(
-      SceneNavigationService.transitionTo(SceneType.CAMP)
+      SceneNavigationService.transitionTo(SceneType.CAMP, { direction: 'instant' })
     ).resolves.not.toThrow()
-
-    await new Promise(resolve => setTimeout(resolve, 50))
   })
 
   it('should integrate with complete scene transition flow', async () => {
@@ -322,13 +294,11 @@ describe('SceneManager', () => {
     expect(sceneManager.getCurrentSceneType()).toBe(SceneType.TITLE_SCREEN)
 
     // Transition to castle menu
-    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, { direction: 'instant' })
     expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CASTLE_MENU)
 
     // Transition to camp
-    await SceneNavigationService.transitionTo(SceneType.CAMP)
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await SceneNavigationService.transitionTo(SceneType.CAMP, { direction: 'instant' })
     expect(sceneManager.getCurrentSceneType()).toBe(SceneType.CAMP)
   })
 })
