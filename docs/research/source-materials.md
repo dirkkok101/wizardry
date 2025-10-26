@@ -3,10 +3,15 @@
 **Purpose**: Comprehensive catalog of all authoritative sources for Wizardry: Proving Grounds of the Mad Overlord.
 
 **Total Sources**: 60 URLs organized by category
-**Sources Used/Validated**: 20 sources ✅
+**Sources Used/Validated**: 21 sources ✅ (including #19 retry)
 **Sources Not Applicable**: 6 sources ❌ (wrong game/platform)
-**Sources Limited/Partial**: 11 sources ⚠️ (404, blocked, stubs, incomplete)
+**Sources Limited/Partial**: 10 sources ⚠️ (blocked, stubs, incomplete, deferred)
 **Remaining Sources**: 23 sources ⬜
+
+**Retry Results (2025-10-26)**:
+- Source #19 (Wizardry Wiki Items): ⚠️ → ✅ NOW ACCESSIBLE
+- Source #24 (TK421 Maps): ⚠️ CONFIRMED IMAGE FORMAT (deferred)
+- Original Manual PDF: ✅ ALTERNATIVE FOUND (Archive.org)
 
 **Status Legend**:
 - ✅ = Extracted/Validated and documented
@@ -149,9 +154,10 @@
 
 ### 19. Wizardry Wiki - Items List
 - **URL**: https://wizardry.fandom.com/wiki/List_of_items_in_Wizardry:_Proving_Grounds_of_the_Mad_Overlord
-- **Status**: ⚠️ **404 ERROR** during Week 1
+- **Status**: ✅ **ACCESSIBLE** - Retry successful on 2025-10-26
 - **Priority**: Critical
-- **Note**: Try alternative URL or archived version
+- **Contains**: Complete weapons table with damage, costs, special properties, class restrictions
+- **Note**: Previous 404 error resolved. Site now accessible. Data already covered by Sources #17, #18, #21.
 
 ### 20. Dungeon Crawl Classics - Gear ✅
 - **URL**: https://dungeoncrawl-classics.com/wizardry-series/proving-grounds-of-the-mad-overlord/wizardry-1-gear/
@@ -186,9 +192,11 @@
 
 ### 24. TK421 - Wizardry 1 Maps
 - **URL**: https://www.tk421.net/wizardry/wiz1maps.shtml
-- **Status**: ⚠️ **IMAGE-BASED** - Coordinates not text-extractable
+- **Status**: ⚠️ **IMAGE-BASED** - Confirmed image format (GIF files)
 - **Priority**: High
-- **Note**: Requires manual extraction or image parsing
+- **Contains**: Visual dungeon maps for all 10 levels (Apple/PC version)
+- **Validated**: 2025-10-26
+- **Note**: Maps are GIF images (map1-01.gif through map1-10.gif), not text-based coordinates. Manual coordinate extraction not prioritized. Strategy Wiki (#22, #25, #52, #53) provides sufficient text-based coordinate data for key locations.
 
 ### 25. Strategy Wiki - Floor 10 ✅
 - **URL**: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Floor_10

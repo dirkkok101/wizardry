@@ -646,6 +646,66 @@ Since Reddit community sources are inaccessible, we validate existing documentat
 
 ---
 
+### Session 13: Failed Source Retry (2025-10-26)
+
+#### Retry Attempt: Wizardry Wiki - Items List (#19)
+- **URL:** https://wizardry.fandom.com/wiki/List_of_items_in_Wizardry:_Proving_Grounds_of_the_Mad_Overlord
+- **Original Status:** ⚠️ 404 ERROR during Week 1 research
+- **Retry Status:** ✅ **ACCESSIBLE** - Site now working
+- **Findings:**
+  - Complete weapons table successfully fetched
+  - All weapon data (damage, costs, special properties, class restrictions) accessible
+  - Data matches previously extracted sources (#17, #18, #21)
+  - 93+ items documented across weapons, armor, shields, miscellaneous
+- **Resolution:** Site accessibility issue resolved. No new data needed (already covered by other sources).
+- **Actions:** Updated source-materials.md status from ⚠️ to ✅
+
+#### Retry Attempt: TK421 - Wizardry 1 Maps (#24)
+- **URL:** https://www.tk421.net/wizardry/wiz1maps.shtml
+- **Original Status:** ⚠️ Image-based, coordinates not text-extractable
+- **Retry Status:** ⚠️ **CONFIRMED IMAGE FORMAT** - GIF files, manual extraction required
+- **Findings:**
+  - Maps are visual GIF images (map1-01.gif through map1-10.gif)
+  - No text-based coordinate data available
+  - Covers Apple/PC version, all 10 dungeon levels
+  - Would require manual coordinate extraction from images
+- **Resolution:** Deferred - Strategy Wiki sources (#22, #25, #52, #53) provide sufficient text-based coordinates for critical locations (Floors 1, 4, 10). Image extraction not prioritized.
+- **Actions:** Updated source-materials.md with confirmation of image format and deferral rationale.
+
+#### Retry Attempt: Original Manual PDF
+- **Original URL:** http://wizardryarchives.com/downloads/archivesmanual.pdf
+- **Original Status:** ⚠️ LZW compression issue, unreadable by WebFetch
+- **Retry Status:** ✅ **ALTERNATIVE FOUND** - Archive.org has OCR'd version
+- **Alternative URL:** https://archive.org/details/sir-tech-wizardry-1-a2-v2.1-black-manual-ph
+- **Findings:**
+  - Archive.org hosts Apple II v2.1 manual with black cover
+  - Available in multiple formats: PDF, EPUB, searchable text, DJVU, OCR HTML
+  - OCR processing enables full-text search and extraction
+  - Manual is fully readable and machine-parseable
+- **Resolution:** Alternative source located and accessible. Manual available for future validation needs.
+- **Actions:** Will add as new source entry to source-materials.md.
+
+#### Failed Source Resolution Summary
+
+**Wizardry Wiki Items (#19):**
+- ✅ NOW ACCESSIBLE
+- Data already covered by existing sources
+- No action needed beyond status update
+
+**TK421 Maps (#24):**
+- ⚠️ DEFERRED - Image extraction not prioritized
+- Alternative: Strategy Wiki text-based coordinates for critical floors
+- Adequate for game design phase
+
+**Original Manual PDF:**
+- ✅ ALTERNATIVE FOUND - Archive.org OCR version
+- Fully accessible and searchable
+- Available for future validation needs
+
+**Overall Result:** 2/3 sources now accessible, 1/3 deferred with adequate alternatives.
+
+---
+
 ## Discrepancies Found
 
 ### 1. Bishop Alignment Restriction (UNRESOLVED)
