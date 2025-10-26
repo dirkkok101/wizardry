@@ -11,6 +11,7 @@ import { SaveService } from '../../services/SaveService'
 import { StartGameCommand } from './commands/StartGameCommand'
 import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
 import { COLORS, BUTTON_SIZES, ANIMATION } from '../../ui/theme'
+import { SceneInputManager } from '../../ui/managers/InputManager'
 
 type TitleScreenMode = 'LOADING' | 'READY' | 'TRANSITIONING'
 
@@ -42,14 +43,10 @@ export class TitleScreenScene implements Scene {
     hovered: false
   }
 
-  private unsubscribeKeyPress?: () => void
+  private inputManager!: SceneInputManager
   private mouseX = 0
   private mouseY = 0
   private pulseTime = 0
-
-  // Event handlers stored as class properties for proper cleanup
-  private mouseMoveHandler?: (e: MouseEvent) => void
-  private mouseClickHandler?: (e: MouseEvent) => void
 
   /**
    * Initialize the scene
@@ -61,8 +58,8 @@ export class TitleScreenScene implements Scene {
     this.button.x = (canvas.width - this.button.width) / 2
     this.button.y = (canvas.height - this.button.height) / 2
 
-    // Set up mouse tracking
-    this.setupMouseTracking()
+    // Set up input handlers
+    this.setupInputHandlers()
 
     // Load assets
     await this.loadAssets()
@@ -86,11 +83,6 @@ export class TitleScreenScene implements Scene {
         this.mode = 'READY'
         this.button.disabled = false
         this.button.text = '(S)TART'
-
-        // Register keyboard handler
-        this.unsubscribeKeyPress = InputService.onKeyPress('s', () => {
-          this.handleStart()
-        })
       })
 
       AssetLoadingService.loadGameAssets()
@@ -101,41 +93,27 @@ export class TitleScreenScene implements Scene {
   }
 
   /**
-   * Convert screen coordinates to canvas coordinates
+   * Set up input handlers
    */
-  private screenToCanvasCoordinates(e: MouseEvent): { x: number, y: number } {
-    const rect = this.canvas.getBoundingClientRect()
-    const scaleX = this.canvas.width / rect.width
-    const scaleY = this.canvas.height / rect.height
+  private setupInputHandlers(): void {
+    this.inputManager = new SceneInputManager()
 
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
-    }
-  }
+    // Keyboard handler
+    this.inputManager.onKeyPress('s', () => {
+      this.handleStart()
+    })
 
-  /**
-   * Set up mouse tracking for hover effects
-   */
-  private setupMouseTracking(): void {
-    // Store handlers as class properties for cleanup
-    this.mouseMoveHandler = (e: MouseEvent) => {
-      const coords = this.screenToCanvasCoordinates(e)
-      this.mouseX = coords.x
-      this.mouseY = coords.y
-    }
+    // Mouse handlers
+    this.inputManager.onMouseMove(this.canvas, (x, y) => {
+      this.mouseX = x
+      this.mouseY = y
+    })
 
-    this.mouseClickHandler = (e: MouseEvent) => {
-      const coords = this.screenToCanvasCoordinates(e)
-
-      // Check if click is on button
-      if (this.isPointInButton(coords.x, coords.y) && !this.button.disabled) {
+    this.inputManager.onMouseClick(this.canvas, (x, y) => {
+      if (this.isPointInButton(x, y) && !this.button.disabled) {
         this.handleStart()
       }
-    }
-
-    this.canvas.addEventListener('mousemove', this.mouseMoveHandler)
-    this.canvas.addEventListener('click', this.mouseClickHandler)
+    })
   }
 
   /**
@@ -318,17 +296,6 @@ export class TitleScreenScene implements Scene {
    * Clean up resources
    */
   destroy(): void {
-    // Unsubscribe from keyboard events
-    if (this.unsubscribeKeyPress) {
-      this.unsubscribeKeyPress()
-    }
-
-    // Remove mouse event listeners
-    if (this.mouseMoveHandler) {
-      this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
-    }
-    if (this.mouseClickHandler) {
-      this.canvas.removeEventListener('click', this.mouseClickHandler)
-    }
+    this.inputManager.destroy()
   }
 }

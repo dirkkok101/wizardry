@@ -296,14 +296,13 @@ describe('TitleScreenScene', () => {
       check()
     })
 
-    // Should have unsubscribe function
-    expect((scene as any).unsubscribeKeyPress).toBeTruthy()
+    // Should have inputManager
+    expect((scene as any).inputManager).toBeTruthy()
 
-    // Destroy should call it
+    // Destroy should call inputManager.destroy()
     scene.destroy()
 
-    // After destroy, unsubscribe should have been called
-    // (we can't easily verify this, but we can check it doesn't throw)
+    // After destroy, should not throw
     expect(() => scene.destroy()).not.toThrow()
   })
 
