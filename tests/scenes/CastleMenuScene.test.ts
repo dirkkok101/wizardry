@@ -104,6 +104,46 @@ describe('CastleMenuScene', () => {
       // Should have updated hover states based on mouse position
       expect(scene['buttons'].some(btn => btn.hovered !== undefined)).toBe(true)
     })
+
+    it('should update button hover states on mouse movement', async () => {
+      await scene.init(canvas, ctx)
+      const buttons = scene['buttons']
+
+      // Initially no buttons hovered
+      expect(buttons.every(btn => !btn.hovered)).toBe(true)
+
+      // Move mouse over first button
+      scene['mouseX'] = buttons[0].x + 10
+      scene['mouseY'] = buttons[0].y + 10
+      scene.update(16)
+
+      // First button should be hovered
+      expect(buttons[0].hovered).toBe(true)
+      expect(buttons.slice(1).every(btn => !btn.hovered)).toBe(true)
+
+      // Move mouse to second button
+      scene['mouseX'] = buttons[1].x + 10
+      scene['mouseY'] = buttons[1].y + 10
+      scene.update(16)
+
+      // Second button should be hovered, first should not
+      expect(buttons[0].hovered).toBe(false)
+      expect(buttons[1].hovered).toBe(true)
+    })
+
+    it('should handle button clicks', async () => {
+      await scene.init(canvas, ctx)
+      const buttons = scene['buttons']
+
+      // Mock the navigation command
+      const navigateSpy = vi.spyOn(scene as any, 'handleNavigation')
+
+      // Click on second button (TEMPLE)
+      await scene['handleMouseClick'](buttons[1].x + 10, buttons[1].y + 10)
+
+      // Should have called handleNavigation with 't' key
+      expect(navigateSpy).toHaveBeenCalledWith('t')
+    })
   })
 
   describe('render', () => {
