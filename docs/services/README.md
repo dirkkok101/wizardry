@@ -21,37 +21,118 @@ Services for loading static game data:
 - **MonsterDataService**: Monster data (96 monsters)
 - **MapDataService**: Dungeon map data (10 levels)
 
+### Core System Services
+
+**[SceneNavigationService](./SceneNavigationService.md)** - Scene lifecycle and transitions
+
+Manages navigation between game scenes with state machine pattern:
+- Scene transitions with fade effects
+- Navigation history and back stack
+- Lifecycle hooks (onEnter, onExit, onUpdate)
+- Scene validation and error handling
+- Preloading support for next scene
+
+**[AssetLoadingService](./AssetLoadingService.md)** - Progressive asset loading
+
+Two-phase asset loading strategy:
+- Critical path loading (title screen bitmap)
+- Parallel loading (fonts, audio, sprites)
+- Progress tracking and callbacks
+- Error handling and retry logic
+- Asset manifest management
+
+**[InputService](./InputService.md)** - Cross-platform input handling
+
+Unified input abstraction for keyboard, mouse, and touch:
+- Single keystroke waiting (title screen mode)
+- Key press handlers with validation
+- Button click handlers
+- Input state management (enabled/disabled)
+- Event cleanup and memory management
+
+**[GameInitializationService](./GameInitializationService.md)** - New game creation
+
+Creates initial game state with default values:
+- Empty character roster
+- Starting gold (0)
+- Quest flags (all false)
+- Initial party state (empty, at castle)
+- New game detection
+
+### State Management Services
+
+**[SaveService](./SaveService.md)** - Game state persistence
+
+Serializes game state and event log to IndexedDB:
+- Save game to slots (save1-save10, autosave, quicksave)
+- Metadata management (timestamp, description, play time)
+- Compression support (50-70% size reduction)
+- Checksum generation for integrity
+- Autosave triggers (level change, party wipe, 10 min interval)
+
+**[LoadService](./LoadService.md)** - Save game loading
+
+Loads and deserializes saved games:
+- Load from save slots
+- Checksum verification (detect corruption)
+- Version migration (upgrade old saves)
+- State reconstruction from event log
+- Quickload and autosave loading
+
+**[ReplayService](./ReplayService.md)** - Event replay and time-travel
+
+Reconstructs game state from event streams:
+- Replay events to rebuild state
+- Time-travel to specific event
+- Undo/redo functionality
+- State snapshots (every 100 events)
+- State diff calculation
+
+**[EventService](./EventService.md)** - Event creation and management
+
+Event sourcing system for all state changes:
+- Create typed events (movement, combat, spell, character, level)
+- Event validation and schema
+- Event serialization/deserialization
+- Event metadata (timestamp, session ID)
+- 20+ event types defined
+
 ## Service Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│           Game Application Layer                │
-└─────────────────────────────────────────────────┘
-                      │
-                      ↓
-┌─────────────────────────────────────────────────┐
-│              Service Layer                      │
-│                                                 │
-│  ┌──────────────┐  ┌──────────────┐           │
-│  │ Data Services│  │ Game Services│           │
-│  │              │  │              │           │
-│  │ • Classes    │  │ • Character  │           │
-│  │ • Races      │  │ • Combat     │           │
-│  │ • Spells     │  │ • Inventory  │           │
-│  │ • Items      │  │ • Party      │           │
-│  │ • Monsters   │  │ • Dungeon    │           │
-│  │ • Maps       │  │ • Save/Load  │           │
-│  └──────────────┘  └──────────────┘           │
-└─────────────────────────────────────────────────┘
-                      │
-                      ↓
-┌─────────────────────────────────────────────────┐
-│              Data Layer                         │
-│                                                 │
-│  • JSON files in data/ directory                │
-│  • Individual files per entity                  │
-│  • 245+ data files total                        │
-└─────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                   Game Application Layer                      │
+└───────────────────────────────────────────────────────────────┘
+                              │
+                              ↓
+┌───────────────────────────────────────────────────────────────┐
+│                      Service Layer                            │
+│                                                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ Data Services│  │ Core System  │  │State Mgmt    │       │
+│  │              │  │  Services    │  │  Services    │       │
+│  │ • Classes    │  │              │  │              │       │
+│  │ • Races      │  │ • Scene Nav  │  │ • Save       │       │
+│  │ • Spells     │  │ • Assets     │  │ • Load       │       │
+│  │ • Items      │  │ • Input      │  │ • Replay     │       │
+│  │ • Monsters   │  │ • Game Init  │  │ • Events     │       │
+│  │ • Maps       │  │              │  │              │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
+│                                                               │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │         Game Logic Services (Planned)            │        │
+│  │  • Character  • Combat  • Inventory  • Party     │        │
+│  └──────────────────────────────────────────────────┘        │
+└───────────────────────────────────────────────────────────────┘
+                              │
+                              ↓
+┌───────────────────────────────────────────────────────────────┐
+│                      Data & Storage Layer                     │
+│                                                               │
+│  • JSON files in data/ directory (245+ files)                 │
+│  • IndexedDB (save games, event logs)                         │
+│  • Asset files (images, audio, fonts)                         │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ## Design Principles
@@ -133,46 +214,68 @@ Services should:
 
 ## Available Documentation
 
-### Current
-- **[Data Services](./data-services.md)** - Data loading and querying services
+### Data Services (7 services)
+- **[DataLoaderService](./data-services.md#dataloaderservice)** - Base JSON file loader
+- **[ClassDataService](./data-services.md#classdataservice)** - Character class data
+- **[RaceDataService](./data-services.md#racedataservice)** - Race data
+- **[SpellDataService](./data-services.md#spelldataservice)** - Spell data
+- **[ItemDataService](./data-services.md#itemdataservice)** - Item/equipment data
+- **[MonsterDataService](./data-services.md#monsterdataservice)** - Monster data
+- **[MapDataService](./data-services.md#mapdataservice)** - Dungeon map data
 
-### Planned
-- **Game Services** - Game state management services
-  - CharacterService
-  - CombatService
-  - InventoryService
-  - PartyService
-  - DungeonService
-  - SaveGameService
+### Core System Services (4 services)
+- **[SceneNavigationService](./SceneNavigationService.md)** - Scene lifecycle and transitions
+- **[AssetLoadingService](./AssetLoadingService.md)** - Progressive asset loading
+- **[InputService](./InputService.md)** - Cross-platform input handling
+- **[GameInitializationService](./GameInitializationService.md)** - New game creation
 
-- **Command Services** - User action handlers
-  - MovementCommands
-  - CombatCommands
-  - InventoryCommands
-  - SpellCommands
-  - TownCommands
+### State Management Services (4 services)
+- **[SaveService](./SaveService.md)** - Game state persistence to IndexedDB
+- **[LoadService](./LoadService.md)** - Save game loading and validation
+- **[ReplayService](./ReplayService.md)** - Event replay and time-travel debugging
+- **[EventService](./EventService.md)** - Event creation and management
+
+### Planned Services
+- **Game Logic Services** - Character, combat, inventory, party, dungeon
+- **Command Services** - User action handlers (movement, combat, spell, town)
 
 ## Implementation Status
 
-| Service Category | Status | Documentation |
-|-----------------|--------|---------------|
-| Data Services | ⚠️ Planned | ✅ Complete |
-| Game Services | ⚠️ Planned | ⚠️ Pending |
-| Command Services | ⚠️ Planned | ⚠️ Pending |
+| Service Category | Services | Documentation | Implementation |
+|-----------------|----------|---------------|----------------|
+| Data Services | 7 | ✅ Complete | ⚠️ Planned |
+| Core System Services | 4 | ✅ Complete | ⚠️ Planned |
+| State Management Services | 4 | ✅ Complete | ⚠️ Planned |
+| Game Logic Services | 0 | ⚠️ Pending | ⚠️ Pending |
+| Command Services | 0 | ⚠️ Pending | ⚠️ Pending |
+
+**Total Documented:** 15 services
 
 ## Next Steps
 
-1. Implement data loading services based on documentation
-2. Create TypeScript interfaces for all data types
-3. Write unit tests for data services
-4. Document game state management services
-5. Document command pattern services
+1. **Implementation Phase** - Begin implementing the 15 documented services
+   - Start with Core System Services (scene navigation, assets, input, game init)
+   - Implement Data Services (7 loaders for JSON data)
+   - Implement State Management Services (save/load/replay/events)
+
+2. **Type Definitions** - Create TypeScript interfaces for all documented services
+
+3. **Testing** - Write comprehensive unit tests following test specifications in docs
+
+4. **Additional Documentation** - Document remaining service categories
+   - Game Logic Services (character, combat, inventory, party, dungeon)
+   - Command Services (movement, combat, spell, town commands)
+
+5. **Integration** - Wire up services to Title Screen scene for first functional implementation
 
 ## Related Documentation
 
 - **[Data Format Specifications](../data-format/README.md)** - JSON file format documentation
 - **[Architecture](../architecture.md)** - Overall system architecture
 - **[Commands](../commands/README.md)** - Command pattern documentation
+- **[Title Screen Implementation Plan](../plans/title-screen-implementation-plan.md)** - First scene implementation
+- **[Title Screen Scene Spec](../ui/scenes/00-title-screen.md)** - Title screen design
+- **[Save/Load Architecture](../analysis/save-load-architecture.md)** - Event sourcing design
 
 ## Contributing
 
