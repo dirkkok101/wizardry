@@ -2,9 +2,9 @@
  * SceneManager - Manages scene lifecycle and transitions
  */
 
-import { Scene, SceneTransitionData } from '../scenes/Scene'
+import { Scene } from '../scenes/Scene'
 import { SceneType } from '../types/SceneType'
-import { SceneNavigationService } from '../services/SceneNavigationService'
+import { SceneNavigationService, SceneTransitionData } from '../services/SceneNavigationService'
 import { TitleScreenScene } from '../scenes/TitleScreenScene'
 import { CastleMenuScene } from '../scenes/CastleMenuScene'
 import { CampScene } from '../scenes/CampScene'

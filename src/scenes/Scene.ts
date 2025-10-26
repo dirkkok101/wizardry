@@ -3,10 +3,7 @@
  */
 
 import { SceneType } from '../types/SceneType'
-
-export interface SceneTransitionData {
-  data?: Record<string, any>
-}
+import { SceneTransitionData } from '../services/SceneNavigationService'
 
 export interface Scene {
   /**
