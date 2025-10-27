@@ -9,6 +9,7 @@ import { TitleScreenScene } from '../scenes/title-screen-scene/TitleScreenScene'
 import { CastleMenuScene } from '../scenes/castle-menu-scene/CastleMenuScene'
 import { CampScene } from '../scenes/camp-scene/CampScene'
 import { TrainingGroundsScene } from '../scenes/training-grounds-scene/TrainingGroundsScene'
+import { EdgeOfTownScene } from '../scenes/edge-of-town-scene/EdgeOfTownScene'
 import { CharacterListScene } from '../scenes/character-list-scene/CharacterListScene'
 import { CharacterInspectionScene } from '../scenes/character-inspection-scene/CharacterInspectionScene'
 import { CharacterCreationScene } from '../scenes/character-creation-scene/CharacterCreationScene'
@@ -46,6 +47,7 @@ export class SceneManager {
       SceneType.CASTLE_MENU,
       SceneType.CAMP,
       SceneType.TRAINING_GROUNDS,
+      SceneType.EDGE_OF_TOWN,
       SceneType.CHARACTER_LIST,
       SceneType.CHARACTER_INSPECTION,
       SceneType.CHARACTER_CREATION
@@ -125,6 +127,8 @@ export class SceneManager {
         return new CampScene()
       case SceneType.TRAINING_GROUNDS:
         return new TrainingGroundsScene()
+      case SceneType.EDGE_OF_TOWN:
+        return new EdgeOfTownScene()
       case SceneType.CHARACTER_LIST:
         return new CharacterListScene()
       case SceneType.CHARACTER_INSPECTION:
