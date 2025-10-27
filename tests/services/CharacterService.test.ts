@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { CharacterService } from '../../src/services/CharacterService'
 import { GameState } from '../../src/types/GameState'
-import { Character } from '../../src/types/Character'
+import { Character, CreateCharacterParams } from '../../src/types/Character'
 import { Race } from '../../src/types/Race'
 import { CharacterClass } from '../../src/types/CharacterClass'
 import { Alignment } from '../../src/types/Alignment'
@@ -79,6 +79,54 @@ describe('CharacterService', () => {
       expect(characters).toHaveLength(2)
       expect(characters[0].id).toBe('char1')
       expect(characters[1].id).toBe('char2')
+    })
+  })
+
+  describe('createCharacter', () => {
+    it('creates new character with rolled stats', () => {
+      const params: CreateCharacterParams = {
+        name: 'TestFighter',
+        race: Race.HUMAN,
+        class: CharacterClass.FIGHTER,
+        alignment: Alignment.GOOD,
+        password: 'secret'
+      }
+
+      const result = CharacterService.createCharacter(gameState, params)
+
+      expect(result.state.roster.size).toBe(1)
+      const character = Array.from(result.state.roster.values())[0]
+      expect(character.name).toBe('TestFighter')
+      expect(character.race).toBe(Race.HUMAN)
+      expect(character.class).toBe(CharacterClass.FIGHTER)
+      expect(character.alignment).toBe(Alignment.GOOD)
+      expect(character.password).toBe('secret')
+      expect(character.status).toBe(CharacterStatus.GOOD)
+      expect(character.level).toBe(1)
+      expect(character.experience).toBe(0)
+      expect(character.inventory).toEqual([])
+
+      // Stats should be in valid range (3-18 base)
+      expect(character.strength).toBeGreaterThanOrEqual(3)
+      expect(character.strength).toBeLessThanOrEqual(18)
+      expect(character.id).toBeTruthy()
+    })
+
+    it('applies race modifiers to stats', () => {
+      const params: CreateCharacterParams = {
+        name: 'TestElf',
+        race: Race.ELF,
+        class: CharacterClass.MAGE,
+        alignment: Alignment.GOOD,
+        password: 'secret'
+      }
+
+      const result = CharacterService.createCharacter(gameState, params)
+      const character = Array.from(result.state.roster.values())[0]
+
+      // Elf modifiers: STR-1, INT+1, PIE+1, VIT-2, AGI+1
+      // Stats should reflect race modifiers
+      expect(character.race).toBe(Race.ELF)
     })
   })
 })

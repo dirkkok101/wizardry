@@ -12,6 +12,87 @@ function getAllCharacters(state: GameState): Character[] {
   return Array.from(state.roster.values())
 }
 
+/**
+ * Roll a stat (3d6, range 3-18)
+ */
+function rollStat(): number {
+  return Math.floor(Math.random() * 6) + 1 +
+         Math.floor(Math.random() * 6) + 1 +
+         Math.floor(Math.random() * 6) + 1
+}
+
+/**
+ * Generate unique character ID
+ */
+function generateCharacterId(): string {
+  return `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+/**
+ * Create new character with rolled stats
+ */
+function createCharacter(
+  state: GameState,
+  params: CreateCharacterParams
+): { state: GameState, character: Character } {
+  // Roll base stats
+  const baseStrength = rollStat()
+  const baseIntelligence = rollStat()
+  const basePiety = rollStat()
+  const baseVitality = rollStat()
+  const baseAgility = rollStat()
+  const baseLuck = rollStat()
+
+  // Apply race modifiers
+  const raceModifiers = RACE_MODIFIERS[params.race]
+  const strength = baseStrength + raceModifiers.strength
+  const intelligence = baseIntelligence + raceModifiers.intelligence
+  const piety = basePiety + raceModifiers.piety
+  const vitality = baseVitality + raceModifiers.vitality
+  const agility = baseAgility + raceModifiers.agility
+  const luck = baseLuck + raceModifiers.luck
+
+  // Calculate starting HP (vitality-based)
+  const maxHp = Math.max(1, vitality + Math.floor(Math.random() * 8) + 1)
+
+  const character: Character = {
+    id: generateCharacterId(),
+    name: params.name,
+    race: params.race,
+    class: params.class,
+    alignment: params.alignment,
+    status: CharacterStatus.GOOD,
+    strength,
+    intelligence,
+    piety,
+    vitality,
+    agility,
+    luck,
+    level: 1,
+    experience: 0,
+    hp: maxHp,
+    maxHp,
+    ac: 10, // Base AC, improved by armor
+    inventory: [],
+    password: params.password,
+    createdAt: Date.now(),
+    lastModified: Date.now()
+  }
+
+  // Add to roster
+  const newRoster = new Map(state.roster)
+  newRoster.set(character.id, character)
+
+  return {
+    state: {
+      ...state,
+      roster: newRoster
+    },
+    character
+  }
+}
+
 export const CharacterService = {
-  getAllCharacters
+  getAllCharacters,
+  createCharacter
 }
