@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NavigateToCharacterCreationCommand } from '../../../../src/scenes/training-grounds-scene/commands/NavigateToCharacterCreationCommand'
 import { SceneType } from '../../../../src/types/SceneType'
+import { SceneNavigationService } from '../../../../src/services/SceneNavigationService'
 
 // Mock SceneNavigationService
 vi.mock('../../../../src/services/SceneNavigationService', () => ({
@@ -24,8 +25,6 @@ describe('NavigateToCharacterCreationCommand', () => {
     })
 
     it('should navigate to CHARACTER_CREATION scene when ready', async () => {
-      const { SceneNavigationService } = await import('../../../../src/services/SceneNavigationService')
-
       const result = await NavigateToCharacterCreationCommand.execute({ mode: 'READY' })
 
       expect(result.success).toBe(true)
@@ -37,7 +36,6 @@ describe('NavigateToCharacterCreationCommand', () => {
     })
 
     it('should handle errors gracefully', async () => {
-      const { SceneNavigationService } = await import('../../../../src/services/SceneNavigationService')
       vi.mocked(SceneNavigationService.transitionTo).mockRejectedValueOnce(new Error('Navigation failed'))
 
       const result = await NavigateToCharacterCreationCommand.execute({ mode: 'READY' })

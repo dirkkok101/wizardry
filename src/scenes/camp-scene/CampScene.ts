@@ -1,83 +1,99 @@
 /**
- * CampScene - Placeholder for Camp (maze entry/exit)
+ * CampScene - Dungeon entry staging area
+ *
+ * TODO: Full implementation
+ * - Party roster display
+ * - Inspect character action
+ * - Cast spell action
+ * - Leave camp to maze action
+ * - Return to Edge of Town action
  */
 
 import { Scene } from '../Scene'
 import { SceneType } from '../../types/SceneType'
-import { SceneTransitionData } from '../../services/SceneNavigationService'
+import { SceneTransitionData, SceneNavigationService } from '../../services/SceneNavigationService'
+import { SceneInputManager } from '../../ui/managers/InputManager'
+import { ButtonState } from '../../types/ButtonState'
+import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
+import { COLORS, BUTTON_SIZES } from '../../ui/theme'
+import { LayoutHelpers } from '../../ui/utils/LayoutHelpers'
+
+type CampMode = 'READY' | 'TRANSITIONING'
 
 export class CampScene implements Scene {
   readonly type = SceneType.CAMP
 
   private canvas!: HTMLCanvasElement
-  private pulseTime = 0
+  private inputManager!: SceneInputManager
+  private mode: CampMode = 'READY'
 
-  /**
-   * Initialize the scene
-   */
+  private buttons: ButtonState[] = [
+    { x: 0, y: 0, width: BUTTON_SIZES.LARGE.width, height: BUTTON_SIZES.LARGE.height, text: '(L)EAVE', key: 'l', disabled: false, hovered: false }
+  ]
+
   async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
     this.canvas = canvas
+    this.inputManager = new SceneInputManager()
+
+    // Center the single button
+    const pos = LayoutHelpers.centerRectangle(
+      canvas.width,
+      canvas.height,
+      BUTTON_SIZES.LARGE.width,
+      BUTTON_SIZES.LARGE.height + 100 // Offset below title
+    )
+    this.buttons[0].x = pos.x
+    this.buttons[0].y = pos.y + 100
+
+    // Register leave handler
+    this.inputManager.onKeyPress('l', () => this.handleLeave())
   }
 
-  /**
-   * Called when scene becomes active
-   */
-  enter(data?: SceneTransitionData): void {
-    console.log('Entered Camp scene', data)
-    this.pulseTime = 0
+  enter(_data?: SceneTransitionData): void {
+    this.mode = 'READY'
   }
 
-  /**
-   * Update scene state
-   */
-  update(deltaTime: number): void {
-    this.pulseTime += deltaTime
+  update(_deltaTime: number): void {
+    // TODO: Update hover states when mouse support added
   }
 
-  /**
-   * Render the scene
-   */
   render(ctx: CanvasRenderingContext2D): void {
     // Clear screen
-    ctx.fillStyle = '#000'
+    ctx.fillStyle = COLORS.BACKGROUND
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     // Draw title
-    ctx.fillStyle = '#fff'
+    ctx.fillStyle = COLORS.TEXT_PRIMARY
     ctx.font = '32px monospace'
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('CAMP', this.canvas.width / 2, this.canvas.height / 2 - 60)
+    ctx.fillText('CAMP', this.canvas.width / 2, 100)
 
-    // Draw subtitle
-    ctx.fillStyle = '#aaa'
+    // Draw "Under Construction" message
     ctx.font = '20px monospace'
-    ctx.fillText(
-      'Edge of the Maze',
-      this.canvas.width / 2,
-      this.canvas.height / 2 - 20
-    )
+    ctx.fillStyle = COLORS.TEXT_SECONDARY
+    ctx.fillText('(Under Construction)', this.canvas.width / 2, 140)
 
-    // Draw "Coming Soon" with pulse effect
-    const pulseAlpha = 0.5 + 0.5 * Math.sin(this.pulseTime / 800)
-    ctx.fillStyle = `rgba(170, 170, 170, ${pulseAlpha})`
-    ctx.font = '24px monospace'
-    ctx.fillText('Coming Soon', this.canvas.width / 2, this.canvas.height / 2 + 40)
-
-    // Draw footer
-    ctx.fillStyle = '#666'
-    ctx.font = '16px monospace'
-    ctx.fillText(
-      'This scene will be implemented in a future task',
-      this.canvas.width / 2,
-      this.canvas.height - 80
-    )
+    // Draw leave button
+    ButtonRenderer.renderButton(ctx, {
+      x: this.buttons[0].x,
+      y: this.buttons[0].y,
+      width: this.buttons[0].width,
+      height: this.buttons[0].height,
+      text: this.buttons[0].text,
+      state: 'normal'
+    })
   }
 
-  /**
-   * Clean up resources
-   */
+  private async handleLeave(): Promise<void> {
+    if (this.mode === 'TRANSITIONING') return
+    this.mode = 'TRANSITIONING'
+
+    await SceneNavigationService.transitionTo(SceneType.EDGE_OF_TOWN, {
+      direction: 'fade'
+    })
+  }
+
   destroy(): void {
-    // No resources to clean up yet
+    this.inputManager?.destroy()
   }
 }

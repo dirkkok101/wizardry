@@ -1,4 +1,10 @@
 // Test setup file
+import { afterEach, vi } from 'vitest'
+
+// Reset all mocks after each test to prevent interference
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 // Mock localStorage
 const localStorageMock = {

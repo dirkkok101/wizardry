@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom', // 2-3x faster than jsdom
-    isolate: false, // Faster, safe for pure functions
+    isolate: true, // Required for proper test isolation
     pool: 'threads', // Faster than default 'forks' pool
     setupFiles: ['./tests/setup.ts'],
     exclude: [
