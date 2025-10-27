@@ -1,8 +1,10 @@
 /**
- * ShowRosterCommand - Show character roster in view-only mode (STUB)
+ * ShowRosterCommand - Show character roster in view-only mode
  */
 
 import { SceneType } from '../../../types/SceneType'
+import { SceneNavigationService } from '../../../services/SceneNavigationService'
+import { Character } from '../../../types/Character'
 
 export interface ShowRosterContext {
   mode: 'READY' | 'TRANSITIONING'
@@ -25,18 +27,27 @@ async function execute(context: ShowRosterContext): Promise<NavigateCommandResul
   }
 
   try {
-    console.log('[STUB] ShowRosterCommand - Would show character roster in view-only mode')
-    // TODO: Implement after Character List scene exists
-    // const state = GameInitializationService.getGameState()
-    // const characters = CharacterService.getAllCharacters(state)
-    // await SceneNavigationService.transitionTo(SceneType.CHARACTER_LIST, {
-    //   fadeTime: 300,
-    //   data: {
-    //     characters,
-    //     mode: 'view-only',
-    //     title: 'CHARACTER ROSTER'
-    //   }
-    // })
+    // Navigate to CHARACTER_LIST scene with roster configuration
+    await SceneNavigationService.transitionTo(SceneType.CHARACTER_LIST, {
+      fadeTime: 300,
+      data: {
+        title: 'CHARACTER ROSTER',
+        emptyMessage: 'No characters in roster',
+        filter: null, // Show all characters
+        onSelect: (character: Character) => {
+          // Navigate to character inspection
+          SceneNavigationService.transitionTo(SceneType.CHARACTER_INSPECTION, {
+            fadeTime: 300,
+            data: {
+              character,
+              mode: 'inspect',
+              returnTo: SceneType.CHARACTER_LIST
+            }
+          })
+        },
+        returnTo: SceneType.TRAINING_GROUNDS
+      }
+    })
 
     return { success: true, nextScene: SceneType.CHARACTER_LIST }
   } catch (error) {
