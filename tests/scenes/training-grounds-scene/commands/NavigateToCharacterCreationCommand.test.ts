@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NavigateToCharacterCreationCommand } from '../../../../src/scenes/training-grounds-scene/commands/NavigateToCharacterCreationCommand'
 import { SceneType } from '../../../../src/types/SceneType'
 
+// Mock SceneNavigationService
+vi.mock('../../../../src/services/SceneNavigationService', () => ({
+  SceneNavigationService: {
+    transitionTo: vi.fn().mockResolvedValue(undefined)
+  }
+}))
+
 describe('NavigateToCharacterCreationCommand', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -16,25 +23,28 @@ describe('NavigateToCharacterCreationCommand', () => {
       expect(result.nextScene).toBe(SceneType.TRAINING_GROUNDS)
     })
 
-    it('should return success with CHARACTER_CREATION scene (stubbed)', async () => {
-      const consoleSpy = vi.spyOn(console, 'log')
+    it('should navigate to CHARACTER_CREATION scene when ready', async () => {
+      const { SceneNavigationService } = await import('../../../../src/services/SceneNavigationService')
 
       const result = await NavigateToCharacterCreationCommand.execute({ mode: 'READY' })
 
       expect(result.success).toBe(true)
       expect(result.nextScene).toBe(SceneType.CHARACTER_CREATION)
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[STUB]')
+      expect(SceneNavigationService.transitionTo).toHaveBeenCalledWith(
+        SceneType.CHARACTER_CREATION,
+        { direction: 'fade' }
       )
     })
 
     it('should handle errors gracefully', async () => {
-      // Mock error scenario by testing the catch block
-      // Since this is stubbed, we test the structure is correct
+      const { SceneNavigationService } = await import('../../../../src/services/SceneNavigationService')
+      vi.mocked(SceneNavigationService.transitionTo).mockRejectedValueOnce(new Error('Navigation failed'))
+
       const result = await NavigateToCharacterCreationCommand.execute({ mode: 'READY' })
 
-      expect(result).toHaveProperty('success')
-      expect(result).toHaveProperty('nextScene')
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Navigation failed')
+      expect(result.nextScene).toBe(SceneType.TRAINING_GROUNDS)
     })
   })
 })

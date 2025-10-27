@@ -1,8 +1,9 @@
 /**
- * NavigateToCharacterCreationCommand - Navigate to Character Creation (STUB)
+ * NavigateToCharacterCreationCommand - Navigate to Character Creation
  */
 
 import { SceneType } from '../../../types/SceneType'
+import { SceneNavigationService } from '../../../services/SceneNavigationService'
 
 export interface NavigateToCharacterCreationContext {
   mode: 'READY' | 'TRANSITIONING'
@@ -25,13 +26,9 @@ async function execute(context: NavigateToCharacterCreationContext): Promise<Nav
   }
 
   try {
-    console.log('[STUB] NavigateToCharacterCreationCommand - Would navigate to character creation')
-    // TODO: Implement after Character Creation scene exists
-    // await SaveService.saveGame()
-    // await SceneNavigationService.transitionTo(SceneType.CHARACTER_CREATION, {
-    //   fadeTime: 300,
-    //   data: { fromTrainingGrounds: true }
-    // })
+    await SceneNavigationService.transitionTo(SceneType.CHARACTER_CREATION, {
+      direction: 'fade'
+    })
 
     return { success: true, nextScene: SceneType.CHARACTER_CREATION }
   } catch (error) {
