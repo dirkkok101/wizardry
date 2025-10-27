@@ -318,6 +318,18 @@ export class CharacterInspectionScene implements Scene {
     ctx.fillStyle = COLORS.BACKGROUND
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
+    // Show message if no character selected
+    if (!this.character) {
+      TextRenderer.renderText(ctx, {
+        text: 'No character selected',
+        x: this.canvas.width / 2,
+        y: this.canvas.height / 2,
+        color: COLORS.TEXT_SECONDARY,
+        fontSize: 18
+      })
+      return
+    }
+
     // Draw character sheet
     this.renderCharacterSheet(ctx)
 
