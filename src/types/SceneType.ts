@@ -5,9 +5,13 @@ export enum SceneType {
   // System Scenes
   TITLE_SCREEN = 'TITLE_SCREEN',
 
-  // Castle/Town Scenes (to be implemented later)
+  // Castle/Town Scenes
   CASTLE_MENU = 'CASTLE_MENU',
+  TRAINING_GROUNDS = 'TRAINING_GROUNDS',
+  CHARACTER_CREATION = 'CHARACTER_CREATION',
+  CHARACTER_LIST = 'CHARACTER_LIST',
+  CHARACTER_INSPECTION = 'CHARACTER_INSPECTION',
 
-  // Dungeon Scenes (to be implemented later)
+  // Dungeon Scenes
   CAMP = 'CAMP',
 }
