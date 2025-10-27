@@ -8,6 +8,8 @@ import { SceneNavigationService, SceneTransitionData } from '../services/SceneNa
 import { TitleScreenScene } from '../scenes/title-screen-scene/TitleScreenScene'
 import { CastleMenuScene } from '../scenes/castle-menu-scene/CastleMenuScene'
 import { CampScene } from '../scenes/camp-scene/CampScene'
+import { TrainingGroundsScene } from '../scenes/training-grounds-scene/TrainingGroundsScene'
+import { CharacterListScene } from '../scenes/character-list-scene/CharacterListScene'
 
 export class SceneManager {
   private canvas: HTMLCanvasElement
@@ -37,7 +39,13 @@ export class SceneManager {
    */
   private setupSceneNavigationListeners(): void {
     // Listen for all scene types
-    const sceneTypes = [SceneType.TITLE_SCREEN, SceneType.CASTLE_MENU, SceneType.CAMP]
+    const sceneTypes = [
+      SceneType.TITLE_SCREEN,
+      SceneType.CASTLE_MENU,
+      SceneType.CAMP,
+      SceneType.TRAINING_GROUNDS,
+      SceneType.CHARACTER_LIST
+    ]
 
     sceneTypes.forEach(sceneType => {
       const unsubscribe = SceneNavigationService.onSceneEnter(sceneType, (data) => {
@@ -111,6 +119,10 @@ export class SceneManager {
         return new CastleMenuScene()
       case SceneType.CAMP:
         return new CampScene()
+      case SceneType.TRAINING_GROUNDS:
+        return new TrainingGroundsScene()
+      case SceneType.CHARACTER_LIST:
+        return new CharacterListScene()
       default:
         throw new Error(`Unknown scene type: ${sceneType}`)
     }
