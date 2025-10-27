@@ -92,7 +92,25 @@ function createCharacter(
   }
 }
 
+/**
+ * Delete character from roster
+ */
+function deleteCharacter(state: GameState, characterId: string): GameState {
+  if (!state.roster.has(characterId)) {
+    return state
+  }
+
+  const newRoster = new Map(state.roster)
+  newRoster.delete(characterId)
+
+  return {
+    ...state,
+    roster: newRoster
+  }
+}
+
 export const CharacterService = {
   getAllCharacters,
-  createCharacter
+  createCharacter,
+  deleteCharacter
 }

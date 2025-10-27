@@ -129,4 +129,44 @@ describe('CharacterService', () => {
       expect(character.race).toBe(Race.ELF)
     })
   })
+
+  describe('deleteCharacter', () => {
+    it('removes character from roster', () => {
+      const char: Character = {
+        id: 'char1',
+        name: 'Fighter1',
+        race: Race.HUMAN,
+        class: CharacterClass.FIGHTER,
+        alignment: Alignment.GOOD,
+        status: CharacterStatus.GOOD,
+        strength: 15,
+        intelligence: 10,
+        piety: 8,
+        vitality: 14,
+        agility: 12,
+        luck: 9,
+        level: 1,
+        experience: 0,
+        hp: 10,
+        maxHp: 10,
+        ac: 10,
+        inventory: [],
+        password: 'test123',
+        createdAt: Date.now(),
+        lastModified: Date.now()
+      }
+
+      gameState.roster.set('char1', char)
+
+      const newState = CharacterService.deleteCharacter(gameState, 'char1')
+
+      expect(newState.roster.size).toBe(0)
+      expect(newState.roster.has('char1')).toBe(false)
+    })
+
+    it('returns unchanged state if character not found', () => {
+      const newState = CharacterService.deleteCharacter(gameState, 'nonexistent')
+      expect(newState).toEqual(gameState)
+    })
+  })
 })
