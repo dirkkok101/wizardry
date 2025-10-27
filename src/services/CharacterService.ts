@@ -109,8 +109,42 @@ function deleteCharacter(state: GameState, characterId: string): GameState {
   }
 }
 
+/**
+ * Check if character stats meet class requirements
+ */
+function validateClassEligibility(
+  characterClass: CharacterClass,
+  stats: {
+    strength: number
+    intelligence: number
+    piety: number
+    vitality: number
+    agility: number
+    luck: number
+    alignment: Alignment
+  }
+): boolean {
+  const requirements = CLASS_REQUIREMENTS[characterClass]
+
+  // Check stat requirements
+  if (requirements.strength && stats.strength < requirements.strength) return false
+  if (requirements.intelligence && stats.intelligence < requirements.intelligence) return false
+  if (requirements.piety && stats.piety < requirements.piety) return false
+  if (requirements.vitality && stats.vitality < requirements.vitality) return false
+  if (requirements.agility && stats.agility < requirements.agility) return false
+  if (requirements.luck && stats.luck < requirements.luck) return false
+
+  // Check alignment requirement
+  if (requirements.alignment && !requirements.alignment.includes(stats.alignment)) {
+    return false
+  }
+
+  return true
+}
+
 export const CharacterService = {
   getAllCharacters,
   createCharacter,
-  deleteCharacter
+  deleteCharacter,
+  validateClassEligibility
 }

@@ -169,4 +169,74 @@ describe('CharacterService', () => {
       expect(newState).toEqual(gameState)
     })
   })
+
+  describe('validateClassEligibility', () => {
+    it('allows basic classes with any stats', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 5,
+        piety: 5,
+        vitality: 5,
+        agility: 5,
+        luck: 5,
+        alignment: Alignment.GOOD
+      }
+
+      expect(CharacterService.validateClassEligibility(CharacterClass.FIGHTER, stats)).toBe(true)
+      expect(CharacterService.validateClassEligibility(CharacterClass.MAGE, stats)).toBe(true)
+      expect(CharacterService.validateClassEligibility(CharacterClass.PRIEST, stats)).toBe(true)
+      expect(CharacterService.validateClassEligibility(CharacterClass.THIEF, stats)).toBe(true)
+    })
+
+    it('enforces stat requirements for advanced classes', () => {
+      const goodStats = {
+        strength: 18,
+        intelligence: 18,
+        piety: 18,
+        vitality: 18,
+        agility: 18,
+        luck: 18,
+        alignment: Alignment.GOOD
+      }
+
+      const badStats = {
+        strength: 10,
+        intelligence: 10,
+        piety: 10,
+        vitality: 10,
+        agility: 10,
+        luck: 10,
+        alignment: Alignment.GOOD
+      }
+
+      // Samurai requires STR 15, INT 11, PIE 10, VIT 14, AGI 10, GOOD alignment
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(true)
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, badStats)).toBe(false)
+    })
+
+    it('enforces alignment requirements', () => {
+      const goodStats = {
+        strength: 18,
+        intelligence: 18,
+        piety: 18,
+        vitality: 18,
+        agility: 18,
+        luck: 18,
+        alignment: Alignment.GOOD
+      }
+
+      const evilStats = {
+        ...goodStats,
+        alignment: Alignment.EVIL
+      }
+
+      // Ninja requires EVIL alignment
+      expect(CharacterService.validateClassEligibility(CharacterClass.NINJA, evilStats)).toBe(true)
+      expect(CharacterService.validateClassEligibility(CharacterClass.NINJA, goodStats)).toBe(false)
+
+      // Samurai requires GOOD alignment
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(true)
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, evilStats)).toBe(false)
+    })
+  })
 })
