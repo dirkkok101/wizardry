@@ -78,6 +78,19 @@ describe('AssetLoadingService', () => {
     })
   })
 
+  describe('loadTrainingGroundsAssets', () => {
+    it('loads training grounds background image', async () => {
+      const image = await AssetLoadingService.loadTrainingGroundsAssets()
+      expect(image).toBeDefined()
+    })
+
+    it('caches training grounds image', async () => {
+      const image1 = await AssetLoadingService.loadTrainingGroundsAssets()
+      const image2 = await AssetLoadingService.loadTrainingGroundsAssets()
+      expect(image1).toBe(image2)
+    })
+  })
+
   describe('clearCache', () => {
     it('should remove all cached assets', async () => {
       await AssetLoadingService.loadTitleAssets()

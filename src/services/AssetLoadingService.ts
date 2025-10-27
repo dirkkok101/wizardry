@@ -74,6 +74,13 @@ async function loadCastleMenuAssets(): Promise<HTMLImageElement> {
 }
 
 /**
+ * Load training grounds background image
+ */
+async function loadTrainingGroundsAssets(): Promise<HTMLImageElement> {
+  return await loadImage('training_grounds_bg', '/assets/images/scenes/scene-training-grounds.png')
+}
+
+/**
  * Load all game assets in parallel
  */
 async function loadGameAssets(): Promise<GameAssets> {
@@ -217,6 +224,7 @@ function clearCache(): void {
 export const AssetLoadingService = {
   loadTitleAssets,
   loadCastleMenuAssets,
+  loadTrainingGroundsAssets,
   loadGameAssets,
   isAssetLoaded,
   getAsset,
