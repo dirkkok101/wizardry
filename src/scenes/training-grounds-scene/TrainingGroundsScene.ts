@@ -32,10 +32,10 @@ export class TrainingGroundsScene implements Scene {
   private backgroundImage: HTMLImageElement | null = null
 
   private buttons: ButtonState[] = [
-    { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(C)REATE', key: 'c', disabled: false, hovered: false },
-    { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(I)NSPECT', key: 'i', disabled: false, hovered: false },
+    { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(C)REATE CHARACTER', key: 'c', disabled: false, hovered: false },
+    { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(I)NSPECT CHARACTER', key: 'i', disabled: false, hovered: false },
     { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(R)OSTER', key: 'r', disabled: false, hovered: false },
-    { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(B)ACK', key: 'b', disabled: false, hovered: false }
+    { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(L)EAVE', key: 'l', disabled: false, hovered: false }
   ]
 
   async init(canvas: HTMLCanvasElement, _ctx: CanvasRenderingContext2D): Promise<void> {
@@ -153,7 +153,7 @@ export class TrainingGroundsScene implements Scene {
       case 'c': return NavigateToCharacterCreationCommand.execute(context)
       case 'i': return NavigateToCharacterListCommand.execute(context)
       case 'r': return ShowRosterCommand.execute(context)
-      case 'b': return LeaveTrainingGroundsCommand.execute(context)
+      case 'l': return LeaveTrainingGroundsCommand.execute(context)
       default: return { success: false, nextScene: SceneType.TRAINING_GROUNDS, error: 'Unknown key' }
     }
   }

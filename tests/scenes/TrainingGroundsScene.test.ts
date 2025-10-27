@@ -56,13 +56,13 @@ describe('TrainingGroundsScene', () => {
       expect(keys).toContain('c') // Create
       expect(keys).toContain('i') // Inspect
       expect(keys).toContain('r') // Roster
-      expect(keys).toContain('b') // Back
+      expect(keys).toContain('l') // Leave
     })
 
     it('should have correct button labels', async () => {
       await scene.init(canvas, ctx)
       const labels = scene['buttons'].map(btn => btn.text)
-      expect(labels).toEqual(['(C)REATE', '(I)NSPECT', '(R)OSTER', '(B)ACK'])
+      expect(labels).toEqual(['(C)REATE CHARACTER', '(I)NSPECT CHARACTER', '(R)OSTER', '(L)EAVE'])
     })
 
     it('should position buttons vertically centered', async () => {
