@@ -10,6 +10,7 @@ import { CastleMenuScene } from '../scenes/castle-menu-scene/CastleMenuScene'
 import { CampScene } from '../scenes/camp-scene/CampScene'
 import { TrainingGroundsScene } from '../scenes/training-grounds-scene/TrainingGroundsScene'
 import { CharacterListScene } from '../scenes/character-list-scene/CharacterListScene'
+import { CharacterInspectionScene } from '../scenes/character-inspection-scene/CharacterInspectionScene'
 
 export class SceneManager {
   private canvas: HTMLCanvasElement
@@ -44,7 +45,8 @@ export class SceneManager {
       SceneType.CASTLE_MENU,
       SceneType.CAMP,
       SceneType.TRAINING_GROUNDS,
-      SceneType.CHARACTER_LIST
+      SceneType.CHARACTER_LIST,
+      SceneType.CHARACTER_INSPECTION
     ]
 
     sceneTypes.forEach(sceneType => {
@@ -123,6 +125,8 @@ export class SceneManager {
         return new TrainingGroundsScene()
       case SceneType.CHARACTER_LIST:
         return new CharacterListScene()
+      case SceneType.CHARACTER_INSPECTION:
+        return new CharacterInspectionScene()
       default:
         throw new Error(`Unknown scene type: ${sceneType}`)
     }
