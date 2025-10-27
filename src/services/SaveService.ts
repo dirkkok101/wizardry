@@ -16,6 +16,39 @@ async function checkForSaveData(): Promise<boolean> {
 }
 
 /**
+ * Serialize GameState to JSON-compatible format
+ */
+function serializeGameState(state: GameState): any {
+  return {
+    ...state,
+    roster: Array.from(state.roster.entries()),
+    dungeon: {
+      ...state.dungeon,
+      visitedTiles: Array.from(state.dungeon.visitedTiles.entries())
+    }
+  }
+}
+
+/**
+ * Deserialize JSON data back to GameState
+ * Handles backward compatibility with older save formats
+ */
+function deserializeGameState(data: any): GameState {
+  return {
+    ...data,
+    roster: new Map(data.roster || []),
+    dungeon: data.dungeon ? {
+      ...data.dungeon,
+      visitedTiles: new Map(data.dungeon.visitedTiles || [])
+    } : {
+      currentLevel: 1,
+      visitedTiles: new Map(),
+      encounters: []
+    }
+  }
+}
+
+/**
  * Save game to localStorage
  */
 async function saveGame(gameState: GameState): Promise<void> {
@@ -25,7 +58,10 @@ async function saveGame(gameState: GameState): Promise<void> {
     state: gameState
   }
 
-  const serialized = JSON.stringify(saveData)
+  const serialized = JSON.stringify({
+    ...saveData,
+    state: serializeGameState(gameState)
+  })
   localStorage.setItem(SAVE_KEY, serialized)
 }
 
@@ -40,14 +76,14 @@ async function loadGame(): Promise<GameState> {
   }
 
   try {
-    const saveData: SaveData = JSON.parse(saved)
+    const saveData: any = JSON.parse(saved)
 
     // Validate structure
     if (!saveData.state || !saveData.version) {
       throw new Error('Save data corrupted - missing required fields')
     }
 
-    return saveData.state
+    return deserializeGameState(saveData.state)
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error('Save data corrupted - invalid JSON')
