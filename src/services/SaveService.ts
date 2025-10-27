@@ -31,14 +31,19 @@ function serializeGameState(state: GameState): any {
 
 /**
  * Deserialize JSON data back to GameState
+ * Handles backward compatibility with older save formats
  */
 function deserializeGameState(data: any): GameState {
   return {
     ...data,
-    roster: new Map(data.roster),
-    dungeon: {
+    roster: new Map(data.roster || []),
+    dungeon: data.dungeon ? {
       ...data.dungeon,
-      visitedTiles: new Map(data.dungeon.visitedTiles)
+      visitedTiles: new Map(data.dungeon.visitedTiles || [])
+    } : {
+      currentLevel: 1,
+      visitedTiles: new Map(),
+      encounters: []
     }
   }
 }
