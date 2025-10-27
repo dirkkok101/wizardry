@@ -63,14 +63,14 @@ export class CampScene implements Scene {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     // Draw title
-    ctx.fillStyle = COLORS.TEXT
+    ctx.fillStyle = COLORS.TEXT_PRIMARY
     ctx.font = '32px monospace'
     ctx.textAlign = 'center'
     ctx.fillText('CAMP', this.canvas.width / 2, 100)
 
     // Draw "Under Construction" message
     ctx.font = '20px monospace'
-    ctx.fillStyle = COLORS.TEXT_DIM
+    ctx.fillStyle = COLORS.TEXT_SECONDARY
     ctx.fillText('(Under Construction)', this.canvas.width / 2, 140)
 
     // Draw leave button

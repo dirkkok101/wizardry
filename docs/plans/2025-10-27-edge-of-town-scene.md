@@ -47,7 +47,6 @@ git commit -m "feat: add EDGE_OF_TOWN scene type"
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest'
 import { PartyRosterRenderer } from '../../../src/ui/renderers/PartyRosterRenderer'
-import { createEmptyParty } from '../../helpers/test-factories'
 
 describe('PartyRosterRenderer', () => {
   let canvas: HTMLCanvasElement
@@ -62,12 +61,13 @@ describe('PartyRosterRenderer', () => {
 
   describe('render', () => {
     it('should render empty party message', () => {
-      const party = createEmptyParty()
+      // Empty character array
+      const characters: Character[] = []
 
       // Should not throw
       expect(() => {
         PartyRosterRenderer.render(ctx, {
-          party,
+          characters,
           x: 50,
           y: 400,
           maxWidth: 700
@@ -89,12 +89,12 @@ Expected: FAIL with "Cannot find module"
 **Step 3: Write minimal PartyRosterRenderer implementation**
 
 ```typescript
-import { Party } from '../../types/Party'
+import { Character } from '../../types/Character'
 import { COLORS } from '../theme'
 import { CharacterStatus } from '../../types/CharacterStatus'
 
 export interface PartyRosterRenderOptions {
-  party: Party
+  characters: Character[]
   x: number
   y: number
   maxWidth: number
@@ -110,7 +110,7 @@ export class PartyRosterRenderer {
     options: PartyRosterRenderOptions
   ): void {
     const {
-      party,
+      characters,
       x,
       y,
       maxWidth,
@@ -132,7 +132,7 @@ export class PartyRosterRenderer {
     }
 
     // Render empty party message
-    if (party.members.length === 0) {
+    if (characters.length === 0) {
       ctx.fillStyle = COLORS.TEXT_DIM
       ctx.font = `${fontSize}px monospace`
       ctx.fillText('No party formed', x, currentY)
@@ -140,14 +140,14 @@ export class PartyRosterRenderer {
     }
 
     // Render each party member
-    party.members.forEach((member, index) => {
+    characters.forEach((character, index) => {
       const isHighlighted = index === highlightIndex
 
       // Format member line
-      const line = `${index + 1}. ${member.name.padEnd(12)} ${member.class.padEnd(8)} Lvl ${member.level}  ${member.status}`
+      const line = `${index + 1}. ${character.name.padEnd(12)} ${character.class.padEnd(8)} Lvl ${character.level}  ${character.status}`
 
       // Determine color based on status
-      const color = this.getStatusColor(member.status, isHighlighted)
+      const color = this.getStatusColor(character.status, isHighlighted)
 
       ctx.fillStyle = color
       ctx.font = `${fontSize}px monospace`
@@ -163,9 +163,9 @@ export class PartyRosterRenderer {
     }
 
     switch (status) {
-      case CharacterStatus.OK:
+      case CharacterStatus.GOOD:
         return COLORS.TEXT
-      case CharacterStatus.WOUNDED:
+      case CharacterStatus.INJURED:
         return '#FFFF00' // Yellow
       case CharacterStatus.POISONED:
         return '#00FF00' // Green
@@ -175,7 +175,7 @@ export class PartyRosterRenderer {
         return '#FF0000' // Red
       case CharacterStatus.ASHES:
         return '#8B0000' // Dark red
-      case CharacterStatus.LOST:
+      case CharacterStatus.LOST_FOREVER:
         return '#8B0000' // Dark red
       default:
         return COLORS.TEXT
@@ -193,11 +193,15 @@ Expected: PASS
 
 ```typescript
 it('should render party with members', () => {
-  const party = createFullParty()
+  const characters = [
+    createTestCharacter({ name: 'Fighter1', class: 'FIGHTER' }),
+    createTestCharacter({ name: 'Mage1', class: 'MAGE' }),
+    createTestCharacter({ name: 'Priest1', class: 'PRIEST' })
+  ]
 
   expect(() => {
     PartyRosterRenderer.render(ctx, {
-      party,
+      characters,
       x: 50,
       y: 400,
       maxWidth: 700
@@ -206,11 +210,11 @@ it('should render party with members', () => {
 })
 
 it('should render without title when showTitle=false', () => {
-  const party = createEmptyParty()
+  const characters: Character[] = []
 
   expect(() => {
     PartyRosterRenderer.render(ctx, {
-      party,
+      characters,
       x: 50,
       y: 400,
       maxWidth: 700,
@@ -369,16 +373,18 @@ git commit -m "feat: add ReturnToCastleCommand"
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { EnterMazeCommand } from '../../../../src/scenes/edge-of-town-scene/commands/EnterMazeCommand'
-import { createEmptyParty, createTestCharacter, createFullParty } from '../../../helpers/test-factories'
+import { createTestCharacter, createGameState } from '../../../helpers/test-factories'
 import { CharacterStatus } from '../../../../src/types/CharacterStatus'
 import { SceneType } from '../../../../src/types/SceneType'
 
 describe('EnterMazeCommand', () => {
   describe('validation', () => {
     it('should fail with empty party', async () => {
+      const gameState = createGameState() // Empty party by default
+
       const context = {
         mode: 'READY' as const,
-        party: createEmptyParty()
+        gameState
       }
 
       const result = await EnterMazeCommand.execute(context)
@@ -388,12 +394,18 @@ describe('EnterMazeCommand', () => {
     })
 
     it('should fail with dead party member', async () => {
-      const party = createFullParty()
-      party.members[0].status = CharacterStatus.DEAD
+      // Create characters with one dead
+      const char1 = createTestCharacter({ name: 'Fighter', status: CharacterStatus.DEAD })
+      const char2 = createTestCharacter({ name: 'Mage' })
+
+      const gameState = createGameState()
+      gameState.roster.set(char1.id, char1)
+      gameState.roster.set(char2.id, char2)
+      gameState.party.members = [char1.id, char2.id]
 
       const context = {
         mode: 'READY' as const,
-        party
+        gameState
       }
 
       const result = await EnterMazeCommand.execute(context)
@@ -403,9 +415,14 @@ describe('EnterMazeCommand', () => {
     })
 
     it('should fail when already transitioning', async () => {
+      const char1 = createTestCharacter()
+      const gameState = createGameState()
+      gameState.roster.set(char1.id, char1)
+      gameState.party.members = [char1.id]
+
       const context = {
         mode: 'TRANSITIONING' as const,
-        party: createFullParty()
+        gameState
       }
 
       const result = await EnterMazeCommand.execute(context)
@@ -432,12 +449,13 @@ Expected: FAIL with "Cannot find module"
 
 import { SceneType } from '../../../types/SceneType'
 import { SceneNavigationService } from '../../../services/SceneNavigationService'
-import { Party } from '../../../types/Party'
+import { GameState } from '../../../types/GameState'
+import { Character } from '../../../types/Character'
 import { CharacterStatus } from '../../../types/CharacterStatus'
 
 export interface EnterMazeContext {
   mode: 'READY' | 'TRANSITIONING'
-  party: Party
+  gameState: GameState
 }
 
 export interface NavigateCommandResult {
@@ -457,7 +475,7 @@ async function execute(context: EnterMazeContext): Promise<NavigateCommandResult
   }
 
   // 2. Validate party exists
-  if (context.party.members.length === 0) {
+  if (context.gameState.party.members.length === 0) {
     return {
       success: false,
       nextScene: SceneType.EDGE_OF_TOWN,
@@ -465,11 +483,16 @@ async function execute(context: EnterMazeContext): Promise<NavigateCommandResult
     }
   }
 
-  // 3. Validate party health (no DEAD/ASHES/LOST members)
-  const hasDeadMembers = context.party.members.some(m =>
+  // 3. Resolve party member IDs to Character objects
+  const partyMembers = context.gameState.party.members
+    .map(id => context.gameState.roster.get(id))
+    .filter((c): c is Character => c !== undefined)
+
+  // 4. Validate party health (no DEAD/ASHES/LOST_FOREVER members)
+  const hasDeadMembers = partyMembers.some(m =>
     m.status === CharacterStatus.DEAD ||
     m.status === CharacterStatus.ASHES ||
-    m.status === CharacterStatus.LOST
+    m.status === CharacterStatus.LOST_FOREVER
   )
 
   if (hasDeadMembers) {
@@ -480,7 +503,7 @@ async function execute(context: EnterMazeContext): Promise<NavigateCommandResult
     }
   }
 
-  // 4. Navigate to Camp
+  // 5. Navigate to Camp
   try {
     await SceneNavigationService.transitionTo(SceneType.CAMP, {
       direction: 'fade'
@@ -510,9 +533,17 @@ Add to test file:
 
 ```typescript
 it('should succeed with healthy party', async () => {
+  const char1 = createTestCharacter({ name: 'Fighter', status: CharacterStatus.GOOD })
+  const char2 = createTestCharacter({ name: 'Mage', status: CharacterStatus.GOOD })
+
+  const gameState = createGameState()
+  gameState.roster.set(char1.id, char1)
+  gameState.roster.set(char2.id, char2)
+  gameState.party.members = [char1.id, char2.id]
+
   const context = {
     mode: 'READY' as const,
-    party: createFullParty() // All members OK by default
+    gameState
   }
 
   const result = await EnterMazeCommand.execute(context)
@@ -602,6 +633,8 @@ import { SceneType } from '../../types/SceneType'
 import { SceneTransitionData } from '../../services/SceneNavigationService'
 import { SceneInputManager } from '../../ui/managers/InputManager'
 import { ButtonState } from '../../types/ButtonState'
+import { Character } from '../../types/Character'
+import { CharacterStatus } from '../../types/CharacterStatus'
 import { ButtonRenderer } from '../../ui/renderers/ButtonRenderer'
 import { PartyRosterRenderer } from '../../ui/renderers/PartyRosterRenderer'
 import { COLORS, BUTTON_SIZES } from '../../ui/theme'
@@ -611,7 +644,7 @@ import { ReturnToCastleCommand } from './commands/ReturnToCastleCommand'
 import { ButtonStateHelpers } from '../../ui/utils/ButtonStateHelpers'
 import { LayoutHelpers } from '../../ui/utils/LayoutHelpers'
 import { MenuSceneHelpers } from '../../ui/utils/MenuSceneHelpers'
-import { GameStateManager } from '../../services/GameStateManager'
+import { GameInitializationService } from '../../services/GameInitializationService'
 
 type EdgeOfTownMode = 'READY' | 'TRANSITIONING'
 
@@ -709,10 +742,15 @@ export class EdgeOfTownScene implements Scene {
     })
 
     // Draw party roster in bottom section
-    const gameState = GameStateManager.getState()
+    const gameState = GameInitializationService.getGameState()
     if (gameState?.party) {
+      // Resolve party member IDs to Character objects
+      const partyMembers = gameState.party.members
+        .map(id => gameState.roster.get(id))
+        .filter((c): c is Character => c !== undefined)
+
       PartyRosterRenderer.render(ctx, {
-        party: gameState.party,
+        characters: partyMembers,
         x: 50,
         y: 450,
         maxWidth: this.canvas.width - 100
@@ -721,7 +759,7 @@ export class EdgeOfTownScene implements Scene {
   }
 
   private updateButtonStates(): void {
-    const gameState = GameStateManager.getState()
+    const gameState = GameInitializationService.getGameState()
 
     // Training and Castle always enabled
     ButtonStateHelpers.setEnabled(this.buttons[0], true) // Training
@@ -731,8 +769,15 @@ export class EdgeOfTownScene implements Scene {
     if (!gameState?.party || gameState.party.members.length === 0) {
       ButtonStateHelpers.setEnabled(this.buttons[1], false)
     } else {
-      const hasDeadMembers = gameState.party.members.some(m =>
-        m.status === 'DEAD' || m.status === 'ASHES' || m.status === 'LOST'
+      // Resolve party member IDs to Character objects
+      const partyMembers = gameState.party.members
+        .map(id => gameState.roster.get(id))
+        .filter((c): c is Character => c !== undefined)
+
+      const hasDeadMembers = partyMembers.some(m =>
+        m.status === CharacterStatus.DEAD ||
+        m.status === CharacterStatus.ASHES ||
+        m.status === CharacterStatus.LOST_FOREVER
       )
       ButtonStateHelpers.setEnabled(this.buttons[1], !hasDeadMembers)
     }
@@ -752,10 +797,10 @@ export class EdgeOfTownScene implements Scene {
   }
 
   private async executeNavigationCommand(key: string) {
-    const gameState = GameStateManager.getState()
+    const gameState = GameInitializationService.getGameState()
     const context = {
       mode: this.mode,
-      party: gameState?.party
+      gameState
     }
 
     switch (key) {
@@ -973,8 +1018,9 @@ Expected: All tests PASS, runtime < 2.5s
 
 Common issues:
 - Missing imports
-- Type errors with GameStateManager
+- Type errors with GameInitializationService
 - Scene registration order
+- Forgetting to resolve party member IDs to Character objects
 
 Fix any failures and rerun tests.
 
@@ -1062,9 +1108,10 @@ Confirm all components built:
 ## Notes
 
 **Dependencies:**
-- Requires GameStateManager.getState() to return current party
-- Assumes CharacterStatus enum exists with DEAD/ASHES/LOST values
+- Requires GameInitializationService.getGameState() to return current game state
+- Assumes CharacterStatus enum exists with GOOD/INJURED/DEAD/ASHES/LOST_FOREVER values
 - Uses existing ButtonRenderer, LayoutHelpers, MenuSceneHelpers
+- Party members stored as ID strings, must resolve via state.roster Map
 
 **Future Enhancements:**
 - Background images for Edge of Town and Camp

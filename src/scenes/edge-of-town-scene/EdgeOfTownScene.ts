@@ -30,7 +30,6 @@ export class EdgeOfTownScene implements Scene {
   private mode: EdgeOfTownMode = 'READY'
   private mouseX = 0
   private mouseY = 0
-  private backgroundImage: HTMLImageElement | null = null
 
   private buttons: ButtonState[] = [
     { x: 0, y: 0, width: BUTTON_SIZES.MEDIUM.width, height: BUTTON_SIZES.MEDIUM.height, text: '(T)RAINING GROUNDS', key: 't', disabled: false, hovered: false },
@@ -94,7 +93,7 @@ export class EdgeOfTownScene implements Scene {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     // Draw title
-    ctx.fillStyle = COLORS.TEXT
+    ctx.fillStyle = COLORS.TEXT_PRIMARY
     ctx.font = '32px monospace'
     ctx.textAlign = 'center'
     ctx.fillText('EDGE OF TOWN', this.canvas.width / 2, 100)

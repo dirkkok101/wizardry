@@ -22,7 +22,6 @@ export class PartyRosterRenderer {
       characters,
       x,
       y,
-      maxWidth,
       showTitle = true,
       fontSize = 16,
       lineHeight = 20,
@@ -33,7 +32,7 @@ export class PartyRosterRenderer {
 
     // Render title
     if (showTitle) {
-      ctx.fillStyle = COLORS.TEXT
+      ctx.fillStyle = COLORS.TEXT_PRIMARY
       ctx.font = `${fontSize}px monospace`
       ctx.textAlign = 'left'
       ctx.fillText('CURRENT PARTY:', x, currentY)
@@ -42,7 +41,7 @@ export class PartyRosterRenderer {
 
     // Render empty party message
     if (characters.length === 0) {
-      ctx.fillStyle = COLORS.TEXT_DIM
+      ctx.fillStyle = COLORS.TEXT_SECONDARY
       ctx.font = `${fontSize}px monospace`
       ctx.fillText('No party formed', x, currentY)
       return
@@ -68,12 +67,12 @@ export class PartyRosterRenderer {
 
   private static getStatusColor(status: CharacterStatus, highlighted: boolean): string {
     if (highlighted) {
-      return COLORS.HIGHLIGHT
+      return COLORS.TEXT_PRIMARY
     }
 
     switch (status) {
       case CharacterStatus.GOOD:
-        return COLORS.TEXT
+        return COLORS.TEXT_PRIMARY
       case CharacterStatus.INJURED:
         return '#FFFF00' // Yellow
       case CharacterStatus.POISONED:
@@ -87,7 +86,7 @@ export class PartyRosterRenderer {
       case CharacterStatus.LOST_FOREVER:
         return '#8B0000' // Dark red
       default:
-        return COLORS.TEXT
+        return COLORS.TEXT_PRIMARY
     }
   }
 }
