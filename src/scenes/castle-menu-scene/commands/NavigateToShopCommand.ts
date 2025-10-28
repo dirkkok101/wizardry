@@ -5,6 +5,7 @@
 import { SceneType } from '../../../types/SceneType'
 import { SaveService } from '../../../services/SaveService'
 import { SceneNavigationService } from '../../../services/SceneNavigationService'
+import { GameInitializationService } from '../../../services/GameInitializationService'
 
 export interface NavigateToShopContext {
   mode: 'READY' | 'TRANSITIONING'
@@ -28,7 +29,8 @@ async function execute(context: NavigateToShopContext): Promise<NavigateCommandR
 
   try {
     // 2. Auto-save before transition
-    await SaveService.saveGame()
+    const gameState = GameInitializationService.getGameState()
+    await SaveService.saveGame(gameState)
 
     // 3. Navigate to destination
     await SceneNavigationService.transitionTo(SceneType.SHOP, {

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { CastleMenuScene } from '../../src/scenes/castle-menu-scene/CastleMenuScene'
 import { SceneType } from '../../src/types/SceneType'
+import { NavigateToEdgeOfTownCommand } from '../../src/scenes/castle-menu-scene/commands/NavigateToEdgeOfTownCommand'
+import { SaveService } from '../../src/services/SaveService'
+import { SceneNavigationService } from '../../src/services/SceneNavigationService'
 
 // Mock AssetLoadingService to prevent actual image loading in tests
 vi.mock('../../src/services/AssetLoadingService', () => ({
@@ -169,6 +172,27 @@ describe('CastleMenuScene', () => {
       scene.destroy?.()
 
       expect(destroySpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('navigation', () => {
+    it('should pass READY mode to navigation commands, not TRANSITIONING', async () => {
+      await scene.init(canvas, ctx)
+      scene.enter()
+
+      // Mock services to prevent actual navigation
+      vi.spyOn(SaveService, 'saveGame').mockResolvedValue()
+      vi.spyOn(SceneNavigationService, 'transitionTo').mockResolvedValue()
+
+      // Spy on the command to check what context it receives
+      const commandSpy = vi.spyOn(NavigateToEdgeOfTownCommand, 'execute')
+
+      // Trigger navigation for Edge of Town
+      await (scene as any).handleNavigation('e')
+
+      // Command should have been called with mode: 'READY'
+      // BUG: Currently it receives mode: 'TRANSITIONING' which causes it to fail
+      expect(commandSpy).toHaveBeenCalledWith({ mode: 'READY' })
     })
   })
 })

@@ -159,9 +159,15 @@ export class EdgeOfTownScene implements Scene {
   private async handleNavigation(key: string): Promise<void> {
     if (this.mode === 'TRANSITIONING') return
 
+    // Create context with current mode (READY) BEFORE changing to TRANSITIONING
+    const gameState = GameInitializationService.getGameState()
+    const context = {
+      mode: this.mode,
+      gameState
+    }
     this.mode = 'TRANSITIONING'
 
-    const result = await this.executeNavigationCommand(key)
+    const result = await this.executeNavigationCommand(key, context)
 
     if (!result.success) {
       console.error('Navigation failed:', result.error)
@@ -169,13 +175,7 @@ export class EdgeOfTownScene implements Scene {
     }
   }
 
-  private async executeNavigationCommand(key: string) {
-    const gameState = GameInitializationService.getGameState()
-    const context = {
-      mode: this.mode,
-      gameState
-    }
-
+  private async executeNavigationCommand(key: string, context: { mode: 'READY' | 'TRANSITIONING', gameState: any }) {
     switch (key) {
       case 't': return EnterTrainingGroundsCommand.execute(context)
       case 'm': return EnterMazeCommand.execute(context)

@@ -5,6 +5,7 @@
 import { SceneType } from '../../../types/SceneType'
 import { SaveService } from '../../../services/SaveService'
 import { SceneNavigationService } from '../../../services/SceneNavigationService'
+import { GameInitializationService } from '../../../services/GameInitializationService'
 
 export interface LeaveTrainingGroundsContext {
   mode: 'READY' | 'TRANSITIONING'
@@ -28,7 +29,8 @@ async function execute(context: LeaveTrainingGroundsContext): Promise<NavigateCo
 
   try {
     // Auto-save before leaving (Training Grounds is a safe zone)
-    await SaveService.saveGame()
+    const gameState = GameInitializationService.getGameState()
+    await SaveService.saveGame(gameState)
 
     // Navigate back to Castle Menu
     await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {

@@ -139,9 +139,11 @@ export class CastleMenuScene implements Scene {
   private async handleNavigation(key: string): Promise<void> {
     if (this.mode === 'TRANSITIONING') return
 
+    // Create context with current mode (READY) BEFORE changing to TRANSITIONING
+    const context = { mode: this.mode }
     this.mode = 'TRANSITIONING'
 
-    const result = await this.executeNavigationCommand(key)
+    const result = await this.executeNavigationCommand(key, context)
 
     if (!result.success) {
       console.error('Navigation failed:', result.error)
@@ -149,9 +151,7 @@ export class CastleMenuScene implements Scene {
     }
   }
 
-  private async executeNavigationCommand(key: string) {
-    const context = { mode: this.mode }
-
+  private async executeNavigationCommand(key: string, context: { mode: 'READY' | 'TRANSITIONING' }) {
     switch (key) {
       case 'g': return NavigateToTavernCommand.execute(context)
       case 't': return NavigateToTempleCommand.execute(context)
