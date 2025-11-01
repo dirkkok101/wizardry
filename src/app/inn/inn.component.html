@@ -1,0 +1,62 @@
+<div class="inn">
+  <header>
+    <h1>ADVENTURER'S INN</h1>
+  </header>
+
+  <main>
+    <!-- Main menu view -->
+    @if (currentView() === 'main') {
+      <div class="main-view">
+        <div class="menu-section">
+          <app-menu
+            [items]="menuItems"
+            (select)="handleMenuSelect($event)"
+          />
+        </div>
+
+        <div class="party-section">
+          <h2>PARTY STATUS:</h2>
+          <app-character-list
+            [characters]="partyCharacters()"
+            [selectable]="false"
+            [emptyMessage]="'No party (visit Tavern to form party)'"
+          />
+
+          <div class="party-gold">
+            Gold: {{ currentParty().gold || 0 }}
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Stables view -->
+    @if (currentView() === 'stables') {
+      <div class="stables-view">
+        <h2>STABLES (Character Storage):</h2>
+        <p class="info">Board characters here for safekeeping.</p>
+
+        <app-character-list
+          [characters]="partyCharacters()"
+          [selectable]="false"
+          [emptyMessage]="'No characters to board'"
+        />
+
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+  </main>
+
+  <!-- Success message -->
+  @if (successMessage()) {
+    <div class="success-message">
+      <p>{{ successMessage() }}</p>
+    </div>
+  }
+
+  <!-- Error message -->
+  @if (errorMessage()) {
+    <div class="error-message">
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
+</div>

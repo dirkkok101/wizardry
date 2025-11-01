@@ -24,6 +24,7 @@ export interface Party {
     facing: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
   }
   light: boolean // Party has light active (LOMILWA spell or torch)
+  gold?: number // Party's shared gold pool for services (inn, temple, shop)
 }
 
 export interface Dungeon {

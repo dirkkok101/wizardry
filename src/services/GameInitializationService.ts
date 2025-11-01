@@ -26,7 +26,8 @@ function createNewGame(): GameState {
         y: 0,
         facing: 'NORTH'
       },
-      light: false
+      light: false,
+      gold: 100 // Starting gold for party services
     },
     dungeon: {
       currentLevel: 1,

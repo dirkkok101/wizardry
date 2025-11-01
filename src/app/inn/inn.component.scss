@@ -1,0 +1,113 @@
+@use '../../styles/variables' as *;
+
+.inn {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: $spacing-md;
+
+  header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: 24px;
+      color: $color-text-bright;
+      margin: 0;
+      text-align: center;
+    }
+  }
+
+  main {
+    flex: 1;
+  }
+}
+
+.main-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-xl;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.menu-section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.party-section {
+  h2 {
+    font-size: 16px;
+    color: $color-text-green;
+    margin: 0 0 $spacing-md 0;
+  }
+
+  .party-gold {
+    margin-top: $spacing-md;
+    padding: $spacing-sm;
+    border-top: 1px solid $color-text-dim;
+    color: $color-amber;
+    font-weight: bold;
+    text-align: right;
+  }
+}
+
+.stables-view {
+  max-width: 600px;
+  margin: 0 auto;
+
+  h2 {
+    font-size: 16px;
+    color: $color-text-bright;
+    margin: 0 0 $spacing-md 0;
+    text-align: center;
+  }
+
+  .info {
+    text-align: center;
+    color: $color-text-dim;
+    font-size: 14px;
+    margin-bottom: $spacing-lg;
+  }
+
+  .cancel-btn {
+    margin-top: $spacing-lg;
+    background: none;
+    border: 1px solid $color-text-dim;
+    color: $color-text-dim;
+    font-family: $font-mono;
+    padding: $spacing-sm $spacing-md;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+
+    &:hover {
+      border-color: $color-text-green;
+      color: $color-text-green;
+    }
+  }
+}
+
+.success-message {
+  margin-top: $spacing-lg;
+  text-align: center;
+
+  p {
+    color: $color-text-bright;
+    font-weight: bold;
+  }
+}
+
+.error-message {
+  margin-top: $spacing-lg;
+  text-align: center;
+
+  p {
+    color: $color-error;
+    font-weight: bold;
+  }
+}
