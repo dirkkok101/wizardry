@@ -14,11 +14,37 @@
     }
 
     @if (currentView() === 'buy') {
-      <div class="placeholder-view">
+      <div class="buy-view">
         <h2>BUY ITEMS</h2>
-        <p class="placeholder-text">
-          Item purchasing will be implemented in Phase 5.
-        </p>
+
+        @if (selectedCharacter(); as character) {
+          <div class="item-list">
+            @for (item of shopInventory(); track item.id) {
+              <div class="item-row">
+                <div class="item-info">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-description">{{ item.description }}</span>
+                </div>
+                <div class="item-price">
+                  <span class="buy-price">{{ item.price }} gold</span>
+                  <button
+                    class="buy-btn"
+                    (click)="buyItem(item.id)"
+                  >
+                    (B) Buy
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="party-gold">
+            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+          </div>
+        } @else {
+          <p class="error-message">No character selected</p>
+        }
+
         <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
       </div>
     }
@@ -79,11 +105,49 @@
     }
 
     @if (currentView() === 'identify') {
-      <div class="placeholder-view">
+      <div class="identify-view">
         <h2>IDENTIFY ITEMS</h2>
-        <p class="placeholder-text">
-          Item identification will be implemented in Phase 5.
-        </p>
+
+        @if (selectedCharacter(); as character) {
+          @if (getUnidentifiedItems().length > 0) {
+            <div class="identify-info">
+              <p>Identification Cost: {{ getIdentifyCost() }} gold</p>
+            </div>
+
+            <div class="item-list">
+              @for (item of getUnidentifiedItems(); track item.id) {
+                <div class="item-row">
+                  <div class="item-info">
+                    <span class="item-name">{{ item.unidentifiedName || 'Unknown Item' }}</span>
+                    <span class="item-type">{{ item.type }}</span>
+                  </div>
+                  <button
+                    class="identify-btn"
+                    (click)="identifyItem(item.id)"
+                  >
+                    (I) Identify
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (successMessage()) {
+              <div class="identification-result">
+                <h3>Identification Result:</h3>
+                <p class="result-text">{{ successMessage() }}</p>
+              </div>
+            }
+          } @else {
+            <p class="empty-message">No unidentified items</p>
+          }
+
+          <div class="party-gold">
+            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+          </div>
+        } @else {
+          <p class="error-message">No character selected</p>
+        }
+
         <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
       </div>
     }
