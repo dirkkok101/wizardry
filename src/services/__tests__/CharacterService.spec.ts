@@ -500,4 +500,66 @@ describe('CharacterService', () => {
       expect(eligibleNeutral).not.toContain(CharacterClass.NINJA)
     })
   })
+
+  describe('validateCharacterName', () => {
+    it('accepts valid name (alphanumeric + space)', () => {
+      expect(CharacterService.validateCharacterName('Gandalf')).toEqual({ valid: true })
+      expect(CharacterService.validateCharacterName('Sir Lancelot')).toEqual({ valid: true })
+      expect(CharacterService.validateCharacterName('Merlin 2')).toEqual({ valid: true })
+    })
+
+    it('rejects empty name', () => {
+      const result = CharacterService.validateCharacterName('')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('required')
+    })
+
+    it('rejects name > 15 characters', () => {
+      const result = CharacterService.validateCharacterName('ThisNameIsTooLong')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('15 characters')
+    })
+
+    it('rejects name with special characters', () => {
+      const result = CharacterService.validateCharacterName('Gandalf!')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('letters, numbers, and spaces')
+    })
+
+    it('accepts name with exactly 15 characters', () => {
+      expect(CharacterService.validateCharacterName('FifteenCharsNow')).toEqual({ valid: true })
+    })
+  })
+
+  describe('validatePassword', () => {
+    it('accepts valid password (4-8 chars alphanumeric)', () => {
+      expect(CharacterService.validatePassword('pass')).toEqual({ valid: true })
+      expect(CharacterService.validatePassword('12345678')).toEqual({ valid: true })
+      expect(CharacterService.validatePassword('Test123')).toEqual({ valid: true })
+    })
+
+    it('rejects empty password', () => {
+      const result = CharacterService.validatePassword('')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('required')
+    })
+
+    it('rejects password < 4 characters', () => {
+      const result = CharacterService.validatePassword('abc')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('4-8 characters')
+    })
+
+    it('rejects password > 8 characters', () => {
+      const result = CharacterService.validatePassword('toolongpassword')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('4-8 characters')
+    })
+
+    it('rejects password with special characters', () => {
+      const result = CharacterService.validatePassword('pass!')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('letters and numbers')
+    })
+  })
 })

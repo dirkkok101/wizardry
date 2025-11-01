@@ -6,6 +6,11 @@ import { Race, RACE_MODIFIERS } from '../types/Race'
 import { Alignment } from '../types/Alignment'
 import { BaseStats } from './CharacterCreationService'
 
+export interface ValidationResult {
+  valid: boolean
+  error?: string
+}
+
 /**
  * Class stat requirements based on authentic Wizardry mechanics
  */
@@ -235,10 +240,66 @@ function meetsRequirements(
   return true
 }
 
+/**
+ * Validate character name.
+ *
+ * Rules:
+ * - Required (not empty)
+ * - Max 15 characters
+ * - Alphanumeric + spaces only
+ */
+function validateCharacterName(name: string): ValidationResult {
+  if (!name || name.trim().length === 0) {
+    return { valid: false, error: 'Name is required' }
+  }
+
+  if (name.length > 15) {
+    return { valid: false, error: 'Name must be 15 characters or less' }
+  }
+
+  if (!/^[a-zA-Z0-9 ]+$/.test(name)) {
+    return {
+      valid: false,
+      error: 'Name must contain only letters, numbers, and spaces'
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * Validate character password.
+ *
+ * Rules:
+ * - Required (not empty)
+ * - 4-8 characters
+ * - Alphanumeric only
+ */
+function validatePassword(password: string): ValidationResult {
+  if (!password || password.length === 0) {
+    return { valid: false, error: 'Password is required' }
+  }
+
+  if (password.length < 4 || password.length > 8) {
+    return { valid: false, error: 'Password must be 4-8 characters' }
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(password)) {
+    return {
+      valid: false,
+      error: 'Password must contain only letters and numbers'
+    }
+  }
+
+  return { valid: true }
+}
+
 export const CharacterService = {
   getAllCharacters,
   createCharacter,
   deleteCharacter,
   validateClassEligibility,
-  getEligibleClasses
+  getEligibleClasses,
+  validateCharacterName,
+  validatePassword
 }
