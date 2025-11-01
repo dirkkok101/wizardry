@@ -167,9 +167,16 @@ export class ShopComponent implements OnInit {
       return []
     }
 
-    // Resolve item IDs to Item objects from shop inventory
+    // Inventory can contain either item IDs (string) or Item objects (for unidentified items)
     return character.inventory
-      .map(itemId => this.shopInventory().find(item => item.id === itemId))
+      .map(item => {
+        // If it's already an Item object, return it
+        if (typeof item === 'object') {
+          return item as Item
+        }
+        // Otherwise resolve ID from shop inventory
+        return this.shopInventory().find(shopItem => shopItem.id === item)
+      })
       .filter((item): item is Item => item !== undefined)
   }
 
@@ -293,5 +300,22 @@ export class ShopComponent implements OnInit {
     if (!itemId) return null
 
     return this.getCharacterInventory().find(i => i.id === itemId) || null
+  }
+
+  /**
+   * Get unidentified items from character inventory
+   */
+  getUnidentifiedItems(): Item[] {
+    const inventory = this.getCharacterInventory()
+
+    return inventory.filter(item => !item.identified)
+  }
+
+  /**
+   * Get identification cost (uses ShopService)
+   */
+  getIdentifyCost(): number {
+    // Flat 100 gold fee for any item
+    return 100
   }
 }

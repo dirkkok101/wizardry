@@ -9,7 +9,7 @@ import { CharacterClass } from '../../types/CharacterClass';
 import { Race } from '../../types/Race';
 import { Alignment } from '../../types/Alignment';
 import { CharacterStatus } from '../../types/CharacterStatus';
-import { SHOP_INVENTORY } from '../../data/shop-inventory';
+import { SHOP_INVENTORY, UNIDENTIFIED_ITEMS } from '../../data/shop-inventory';
 
 describe('ShopComponent', () => {
   let component: ShopComponent;
@@ -420,6 +420,61 @@ describe('ShopComponent', () => {
       const char = gameState.state().roster.get('char-1')!
       expect(char.inventory.length).toBe(1)
       expect(component.showSellConfirmation()).toBe(false)
+    })
+  })
+
+  describe('identify flow', () => {
+    beforeEach(() => {
+      // Create character with unidentified items
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          inventory: [UNIDENTIFIED_ITEMS[0], UNIDENTIFIED_ITEMS[2]] // 1 normal, 1 cursed
+        }),
+        party: {
+          ...state.party,
+          members: ['char-1'],
+          gold: 500
+        }
+      }))
+
+      component.selectCharacter('char-1')
+      component.handleMenuSelect('identify')
+    })
+
+    it('displays only unidentified items', () => {
+      const unidentified = component.getUnidentifiedItems()
+
+      expect(unidentified.length).toBe(2)
+      expect(unidentified.every(item => !item.identified)).toBe(true)
+    })
+
+    it('shows unidentifiedName instead of true name', () => {
+      const unidentified = component.getUnidentifiedItems()
+
+      expect(unidentified[0].unidentifiedName).toBe('Unknown Sword')
+      expect(unidentified[0].name).not.toBe('Unknown Sword')
+    })
+
+    it('shows empty message when no unidentified items', () => {
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          inventory: [] // Empty inventory
+        })
+      }))
+
+      const unidentified = component.getUnidentifiedItems()
+
+      expect(unidentified.length).toBe(0)
+    })
+
+    it('displays identification cost (100 gold flat)', () => {
+      const cost = component.getIdentifyCost()
+
+      expect(cost).toBe(100)
     })
   })
 });
