@@ -24,7 +24,7 @@ export interface RolledStats extends BaseStats {
  */
 export class CharacterCreationService {
   /**
-   * Roll 3d6 for each attribute and random bonus points (0-20).
+   * Roll 3d6 for each attribute and weighted bonus points (7-29).
    */
   static rollStats(): RolledStats {
     return {
@@ -34,7 +34,7 @@ export class CharacterCreationService {
       vitality: this.roll3d6(),
       agility: this.roll3d6(),
       luck: this.roll3d6(),
-      bonusPoints: Math.floor(Math.random() * 21) // 0-20
+      bonusPoints: this.rollBonusPoints()
     }
   }
 
@@ -47,6 +47,27 @@ export class CharacterCreationService {
       Math.floor(Math.random() * 6) + 1 +
       Math.floor(Math.random() * 6) + 1
     )
+  }
+
+  /**
+   * Roll bonus points using authentic Wizardry formula.
+   * Formula: 1d4 + 6, then 1/11 chance +10, then 1/11 chance +10 if <20
+   * Distribution: 7-10 points (90%), 17-20 points (9.25%), 27-29 points (0.75%)
+   */
+  private static rollBonusPoints(): number {
+    let points = Math.floor(Math.random() * 4) + 7 // 1d4 + 6 = 7-10
+
+    // 1/11 chance to add 10
+    if (Math.random() < 1/11) {
+      points += 10
+
+      // If still <20, another 1/11 chance to add 10
+      if (points < 20 && Math.random() < 1/11) {
+        points += 10
+      }
+    }
+
+    return points
   }
 
   /**

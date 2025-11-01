@@ -21,11 +21,11 @@ describe('CharacterCreationService', () => {
       expect(stats.luck).toBeLessThanOrEqual(18)
     })
 
-    it('generates random bonus points (0-20)', () => {
+    it('generates random bonus points (7-29)', () => {
       const stats = CharacterCreationService.rollStats()
 
-      expect(stats.bonusPoints).toBeGreaterThanOrEqual(0)
-      expect(stats.bonusPoints).toBeLessThanOrEqual(20)
+      expect(stats.bonusPoints).toBeGreaterThanOrEqual(7)
+      expect(stats.bonusPoints).toBeLessThanOrEqual(29)
     })
   })
 
