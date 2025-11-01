@@ -1,25 +1,257 @@
+<!-- src/app/training-grounds/training-grounds.component.html -->
 <div class="training-grounds">
   <header>
     <h1>TRAINING GROUNDS</h1>
   </header>
 
   <main>
-    <div class="placeholder-view">
-      <h2>CHARACTER CREATION</h2>
-      <p class="placeholder-text">
-        Character creation will be implemented in Phase 5.
-      </p>
-      <p class="placeholder-details">
-        This will include:
-      </p>
-      <ul>
-        <li>Roll character stats (Strength, IQ, Piety, etc.)</li>
-        <li>Choose character class (Fighter, Mage, Priest, Thief, etc.)</li>
-        <li>Assign bonus points</li>
-        <li>Name your character</li>
-        <li>Add to roster</li>
-      </ul>
-      <button class="back-btn" (click)="returnToCastle()">(ESC) Return to Castle</button>
-    </div>
+    <!-- Success/Error Messages -->
+    @if (successMessage()) {
+      <div class="success-message">{{ successMessage() }}</div>
+    }
+    @if (errorMessage()) {
+      <div class="error-message">{{ errorMessage() }}</div>
+    }
+
+    <!-- Race Selection -->
+    @if (currentStep() === 'RACE') {
+      <div class="wizard-step">
+        <h2>SELECT RACE</h2>
+        <div class="race-options">
+          @for (race of getRaceOptions(); track race) {
+            <button class="race-option" (click)="selectRace(race)">
+              <div class="race-name">{{ race }}</div>
+              <div class="race-modifiers">
+                @if (getRaceModifiers(race).strength !== 0) {
+                  <span>STR {{ getRaceModifiers(race).strength > 0 ? '+' : '' }}{{ getRaceModifiers(race).strength }}</span>
+                }
+                @if (getRaceModifiers(race).intelligence !== 0) {
+                  <span>IQ {{ getRaceModifiers(race).intelligence > 0 ? '+' : '' }}{{ getRaceModifiers(race).intelligence }}</span>
+                }
+                @if (getRaceModifiers(race).piety !== 0) {
+                  <span>PIE {{ getRaceModifiers(race).piety > 0 ? '+' : '' }}{{ getRaceModifiers(race).piety }}</span>
+                }
+                @if (getRaceModifiers(race).vitality !== 0) {
+                  <span>VIT {{ getRaceModifiers(race).vitality > 0 ? '+' : '' }}{{ getRaceModifiers(race).vitality }}</span>
+                }
+                @if (getRaceModifiers(race).agility !== 0) {
+                  <span>AGI {{ getRaceModifiers(race).agility > 0 ? '+' : '' }}{{ getRaceModifiers(race).agility }}</span>
+                }
+                @if (getRaceModifiers(race).luck !== 0) {
+                  <span>LUK {{ getRaceModifiers(race).luck > 0 ? '+' : '' }}{{ getRaceModifiers(race).luck }}</span>
+                }
+              </div>
+            </button>
+          }
+        </div>
+        <button class="cancel-btn" (click)="returnToCastle()">(ESC) Back to Castle</button>
+      </div>
+    }
+
+    <!-- Alignment Selection -->
+    @if (currentStep() === 'ALIGNMENT') {
+      <div class="wizard-step">
+        <h2>SELECT ALIGNMENT</h2>
+        <div class="alignment-options">
+          @for (alignment of getAlignmentOptions(); track alignment) {
+            <button class="alignment-option" (click)="selectAlignment(alignment)">
+              <div class="alignment-name">{{ alignment }}</div>
+              <div class="alignment-desc">{{ getAlignmentDescription(alignment) }}</div>
+            </button>
+          }
+        </div>
+        <button class="back-btn" (click)="previousStep()">(ESC) Back</button>
+      </div>
+    }
+
+    <!-- Stat Rolling -->
+    @if (currentStep() === 'STATS') {
+      <div class="wizard-step">
+        <h2>ROLL ATTRIBUTES</h2>
+
+        @if (wizardState().rolledStats; as stats) {
+          <div class="stats-display">
+            <div class="stat-row">
+              <span class="stat-label">Strength:</span>
+              <span class="stat-value">{{ stats.strength }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Intelligence:</span>
+              <span class="stat-value">{{ stats.intelligence }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Piety:</span>
+              <span class="stat-value">{{ stats.piety }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Vitality:</span>
+              <span class="stat-value">{{ stats.vitality }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Agility:</span>
+              <span class="stat-value">{{ stats.agility }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Luck:</span>
+              <span class="stat-value">{{ stats.luck }}</span>
+            </div>
+            <div class="stat-row bonus">
+              <span class="stat-label">Bonus Points:</span>
+              <span class="stat-value">{{ stats.bonusPoints }}</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary-btn" (click)="acceptStats()">(ENTER) Accept Stats</button>
+            <button class="secondary-btn" (click)="rollStats()">(R) Reroll</button>
+          </div>
+        } @else {
+          <button class="primary-btn" (click)="rollStats()">(R) Roll Stats</button>
+        }
+
+        <button class="back-btn" (click)="previousStep()">(ESC) Back</button>
+      </div>
+    }
+
+    <!-- Bonus Point Allocation -->
+    @if (currentStep() === 'BONUS_POINTS') {
+      <div class="wizard-step">
+        <h2>ALLOCATE BONUS POINTS</h2>
+        <p class="bonus-info">Bonus Points Available: {{ getAvailableBonusPoints() }}</p>
+
+        @if (wizardState().rolledStats; as stats) {
+          <div class="stat-allocation">
+            <div class="stat-row">
+              <span class="stat-label">Strength:</span>
+              <span class="stat-value">{{ stats.strength }}</span>
+              <button (click)="allocateBonusPoint('strength', 1)" [disabled]="getAvailableBonusPoints() === 0">+1</button>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Intelligence:</span>
+              <span class="stat-value">{{ stats.intelligence }}</span>
+              <button (click)="allocateBonusPoint('intelligence', 1)" [disabled]="getAvailableBonusPoints() === 0">+1</button>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Piety:</span>
+              <span class="stat-value">{{ stats.piety }}</span>
+              <button (click)="allocateBonusPoint('piety', 1)" [disabled]="getAvailableBonusPoints() === 0">+1</button>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Vitality:</span>
+              <span class="stat-value">{{ stats.vitality }}</span>
+              <button (click)="allocateBonusPoint('vitality', 1)" [disabled]="getAvailableBonusPoints() === 0">+1</button>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Agility:</span>
+              <span class="stat-value">{{ stats.agility }}</span>
+              <button (click)="allocateBonusPoint('agility', 1)" [disabled]="getAvailableBonusPoints() === 0">+1</button>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Luck:</span>
+              <span class="stat-value">{{ stats.luck }}</span>
+              <button (click)="allocateBonusPoint('luck', 1)" [disabled]="getAvailableBonusPoints() === 0">+1</button>
+            </div>
+          </div>
+
+          <div class="eligible-classes">
+            <h3>Eligible Classes:</h3>
+            <ul>
+              @for (cls of getEligibleClasses(); track cls) {
+                <li>{{ cls }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <button class="primary-btn" (click)="finishBonusAllocation()">(ENTER) Continue</button>
+        <button class="back-btn" (click)="previousStep()">(ESC) Back</button>
+      </div>
+    }
+
+    <!-- Class Selection -->
+    @if (currentStep() === 'CLASS') {
+      <div class="wizard-step">
+        <h2>SELECT CLASS</h2>
+
+        <div class="class-options">
+          @for (cls of [CharacterClass.FIGHTER, CharacterClass.MAGE, CharacterClass.PRIEST, CharacterClass.THIEF, CharacterClass.BISHOP, CharacterClass.SAMURAI, CharacterClass.LORD, CharacterClass.NINJA]; track cls) {
+            @if (getEligibleClasses().includes(cls)) {
+              <button class="class-option enabled" (click)="selectClass(cls)">
+                <div class="class-name">{{ cls }}</div>
+              </button>
+            } @else {
+              <button class="class-option disabled" disabled>
+                <div class="class-name">{{ cls }}</div>
+                <div class="class-requirement">{{ getIneligibilityReason(cls) }}</div>
+              </button>
+            }
+          }
+        </div>
+
+        <button class="back-btn" (click)="previousStep()">(ESC) Back</button>
+      </div>
+    }
+
+    <!-- Name and Password -->
+    @if (currentStep() === 'NAME_PASSWORD') {
+      <div class="wizard-step">
+        <h2>ENTER NAME AND PASSWORD</h2>
+
+        <div class="input-group">
+          <label for="name">Name (1-15 characters):</label>
+          <input
+            id="name"
+            type="text"
+            maxlength="15"
+            [value]="wizardState().name"
+            (input)="setName($any($event.target).value)"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="password">Password (4-8 characters):</label>
+          <input
+            id="password"
+            type="password"
+            maxlength="8"
+            [value]="wizardState().password"
+            (input)="setPassword($any($event.target).value)"
+          />
+        </div>
+
+        <button class="primary-btn" (click)="finishNamePassword()">(ENTER) Continue</button>
+        <button class="back-btn" (click)="previousStep()">(ESC) Back</button>
+      </div>
+    }
+
+    <!-- Confirmation -->
+    @if (currentStep() === 'CONFIRM') {
+      <div class="wizard-step">
+        <h2>CONFIRM CHARACTER</h2>
+
+        @if (wizardState(); as wizard) {
+          <div class="character-summary">
+            <p><strong>Name:</strong> {{ wizard.name }}</p>
+            <p><strong>Race:</strong> {{ wizard.selectedRace }}</p>
+            <p><strong>Alignment:</strong> {{ wizard.selectedAlignment }}</p>
+            <p><strong>Class:</strong> {{ wizard.selectedClass }}</p>
+
+            @if (wizard.rolledStats; as stats) {
+              <div class="stats-summary">
+                <p><strong>STR:</strong> {{ stats.strength }}</p>
+                <p><strong>IQ:</strong> {{ stats.intelligence }}</p>
+                <p><strong>PIE:</strong> {{ stats.piety }}</p>
+                <p><strong>VIT:</strong> {{ stats.vitality }}</p>
+                <p><strong>AGI:</strong> {{ stats.agility }}</p>
+                <p><strong>LUK:</strong> {{ stats.luck }}</p>
+              </div>
+            }
+          </div>
+        }
+
+        <button class="primary-btn" (click)="confirmCharacterCreation()">(ENTER) Create Character</button>
+        <button class="back-btn" (click)="previousStep()">(ESC) Back</button>
+      </div>
+    }
   </main>
 </div>

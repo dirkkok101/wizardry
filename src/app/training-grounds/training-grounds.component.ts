@@ -47,6 +47,9 @@ export interface WizardState {
   styleUrls: ['./training-grounds.component.scss']
 })
 export class TrainingGroundsComponent implements OnInit {
+  // Expose enum to template
+  readonly CharacterClass = CharacterClass
+
   // Wizard state
   readonly currentStep = signal<WizardStep>('RACE')
   readonly wizardState = signal<WizardState>({
