@@ -1,7 +1,7 @@
 # Angular 19 Migration Design
 
 **Date**: 2025-11-01
-**Status**: Approved
+**Status**: Approved (v1.1 - revised after code review)
 **Author**: Design session with project owner
 
 ---
@@ -12,9 +12,9 @@
 
 **Primary Driver**: Developer familiarity with Angular for improved productivity in building the menu-heavy UI.
 
-**Scope**: Complete replacement of UI layer (Canvas → Angular components). Service layer, command layer, and data layer remain unchanged.
+**Scope**: Complete replacement of UI layer (Canvas → Angular components). Most service layer logic remains unchanged, with SceneNavigationService refactored to use Angular Router.
 
-**Estimated Effort**: 15-22 days for complete migration
+**Estimated Effort**: 28-36 days base (5.5-7 weeks), plus 20% buffer = 34-43 days realistic total
 
 ---
 
@@ -58,19 +58,24 @@ The existing clean architecture remains intact. Angular only replaces the UI lay
 
 **What stays exactly the same**:
 - ✅ 4-layer architecture (UI/Command/Service/Data)
-- ✅ Event sourcing pattern
 - ✅ Command pattern for all user actions
-- ✅ Pure service functions (PartyService, CombatService, SpellService, etc.)
+- ✅ Stateless service functions (PartyService, CombatService, SpellService, etc.)
 - ✅ Immutable state updates
 - ✅ Scene-based vertical slice organization
 - ✅ All game logic and business rules
 - ✅ Testing strategy for services (pure function tests)
 
+**What requires refactoring**:
+- 🔄 SceneNavigationService → Refactored to use Angular Router (currently has module-level state)
+- 🔄 Commands → Simplified to use Router navigation (remove manual state management)
+
 **What changes**:
 - ❌ Vite → Angular CLI with esbuild
-- ❌ Canvas rendering → Angular component templates
+- ❌ Canvas rendering → Angular component templates (except Maze 3D view uses Canvas)
 - ❌ Vitest → Jest with @angular-builders/jest
 - ✅ 14 scenes become 14 Angular components (same structure, different rendering technology)
+
+**Event Sourcing Note**: Event sourcing is mentioned in architecture docs but not currently implemented. Migration will use simple state management with Angular Signals. Event sourcing can be added later if needed for dungeon/combat replay functionality.
 
 ---
 
@@ -86,7 +91,7 @@ State:         Angular Signals (reactive primitives)
 Routing:       Angular Router with functional guards
 HTTP:          Angular HttpClient (for loading data/*.json)
 Styling:       SCSS with retro/CRT theme
-Bundle Size:   ~180KB (Angular 19) + game logic
+Bundle Size:   ~340-440KB total (gzipped)
 Node Version:  18+ (Angular 19 requirement)
 TypeScript:    5.5+ (Angular 19 requirement)
 ```
@@ -312,22 +317,36 @@ export class CastleMenuComponent {
 
 **Directive**:
 ```typescript
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 @Directive({
   selector: '[appKeystrokeInput]',
   standalone: true
 })
-export class KeystrokeInputDirective implements OnInit {
+export class KeystrokeInputDirective implements OnInit, OnDestroy {
   @Input() validKeys: string[] = [];
   @Output() keyPressed = new EventEmitter<string>();
 
+  private destroy$ = new Subject<void>();
+
   ngOnInit(): void {
-    // Listen for keydown events
+    // Listen for keydown events with proper cleanup
     fromEvent<KeyboardEvent>(document, 'keydown')
       .pipe(
-        map(event => event.key.toUpperCase()),
+        takeUntil(this.destroy$),  // Prevents memory leak
+        map(event => {
+          event.preventDefault();  // Prevent browser shortcuts
+          return event.key.toUpperCase();
+        }),
         filter(key => this.validKeys.includes(key))
       )
       .subscribe(key => this.keyPressed.emit(key));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
 ```
@@ -395,6 +414,141 @@ export class KeystrokeInputDirective implements OnInit {
 }
 ```
 
+### 4.5 Maze 3D Rendering Strategy
+
+**Decision**: Use Canvas inside Angular component for authentic Wizardry first-person 3D wireframe view.
+
+**Rationale**:
+- Preserves retro Wizardry aesthetic (wireframe corridors, walls, doors)
+- Canvas 2D API provides full control over rendering
+- Familiar technology for developer
+- Best performance for 2D wireframe drawing
+- Angular manages UI overlays (stats, compass, commands)
+
+**Implementation**:
+
+```typescript
+import { Component, ViewChild, ElementRef, AfterViewInit, OnDestroy, inject } from '@angular/core';
+import { GameStateService } from '../../shared/services/game-state.service';
+
+@Component({
+  selector: 'app-maze',
+  standalone: true,
+  template: `
+    <div class="maze-container">
+      <!-- Canvas for 3D first-person view -->
+      <canvas #mazeCanvas
+              width="800"
+              height="600"
+              class="maze-canvas">
+      </canvas>
+
+      <!-- Angular UI overlays -->
+      <div class="maze-ui">
+        <div class="compass">Facing: {{ facing() }}</div>
+        <div class="position">Level {{ level() }}, ({{ x() }}, {{ y() }})</div>
+        <div class="controls">
+          (W)Forward (A)Left (S)Back (D)Right (Q)Turn-L (E)Turn-R
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .maze-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .maze-canvas {
+      display: block;
+      image-rendering: pixelated;  /* Retro sharp pixels */
+    }
+
+    .maze-ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #00ff00;
+      font-family: 'VT323', monospace;
+    }
+  `]
+})
+export class MazeComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('mazeCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+
+  private gameState = inject(GameStateService);
+  private ctx: CanvasRenderingContext2D | null = null;
+  private animationFrameId: number | null = null;
+
+  // Signals for UI overlays
+  facing = computed(() => this.gameState.state().party.facing);
+  level = computed(() => this.gameState.state().currentDungeonLevel);
+  x = computed(() => this.gameState.state().party.position.x);
+  y = computed(() => this.gameState.state().party.position.y);
+
+  ngAfterViewInit(): void {
+    const canvas = this.canvasRef.nativeElement;
+    this.ctx = canvas.getContext('2d')!;
+    this.render3DView();
+  }
+
+  ngOnDestroy(): void {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+  }
+
+  private render3DView(): void {
+    if (!this.ctx) return;
+
+    const state = this.gameState.getCurrentState();
+
+    // Clear canvas
+    this.ctx.fillStyle = '#000';
+    this.ctx.fillRect(0, 0, 800, 600);
+
+    // Draw 3D wireframe view (Wizardry-style)
+    // TODO: Implement full 3D rendering logic
+    // - Draw walls based on party position and facing
+    // - Draw doors
+    // - Draw distance fog effect
+    // - Render party view distance (3 tiles ahead typical for Wizardry)
+
+    this.ctx.strokeStyle = '#00ff00';
+    this.ctx.lineWidth = 2;
+
+    // Example: Draw simple corridor
+    this.drawCorridor(this.ctx);
+  }
+
+  private drawCorridor(ctx: CanvasRenderingContext2D): void {
+    // Simplified example - full implementation would check dungeon map
+    // and draw walls/doors based on actual tile data
+
+    // Draw perspective lines
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.lineTo(400, 300);
+    ctx.moveTo(700, 100);
+    ctx.lineTo(400, 300);
+    ctx.stroke();
+  }
+}
+```
+
+**Canvas Rendering Tasks** (to be implemented during migration):
+- Ray-casting or perspective projection for walls
+- Door rendering with open/closed states
+- Distance fog for depth perception
+- Special tile markers (stairs, fountains, etc.)
+- Monster encounter overlays
+
+**Separation of Concerns**:
+- **Canvas**: Renders 3D dungeon view only
+- **Angular**: Handles all UI (stats, controls, messages)
+- **Services**: Provide dungeon map data, party position, facing direction
+
 ---
 
 ## 5. State Management & Data Flow
@@ -405,8 +559,8 @@ export class KeystrokeInputDirective implements OnInit {
 ```typescript
 import { Injectable, signal, computed } from '@angular/core';
 import { GameState } from '../types/GameState';
-import { Command } from '../commands/Command';
-import { EventLogService } from '../services/EventLogService';
+import { GameInitializationService } from '../services/GameInitializationService';
+import { PartyStatus } from '../types/Party';
 
 @Injectable({ providedIn: 'root' })
 export class GameStateService {
@@ -422,19 +576,18 @@ export class GameStateService {
   currentScene = computed(() => this.state().currentScene);
   isInMaze = computed(() => this.state().party.status === PartyStatus.IN_MAZE);
 
-  // Execute command and update state
-  executeCommand(command: Command): void {
-    const currentState = this.stateSignal();
+  // Navigation error state (for route guards)
+  private navigationErrorSignal = signal<string | null>(null);
+  navigationError = this.navigationErrorSignal.asReadonly();
 
-    // Command executes using pure service functions
-    const newState = command.execute(currentState);
+  // Update state (called by services/components)
+  updateState(newState: GameState): void {
+    this.stateSignal.set(newState);
+  }
 
-    // Event sourcing: append event to log
-    const event = command.toEvent();
-    const stateWithEvent = EventLogService.appendEvent(newState, event);
-
-    // Update signal (triggers automatic change detection)
-    this.stateSignal.set(stateWithEvent);
+  // Set navigation error (called by route guards)
+  setNavigationError(error: string | null): void {
+    this.navigationErrorSignal.set(error);
   }
 
   // Get current state synchronously (for guards, services)
@@ -449,14 +602,16 @@ export class GameStateService {
 }
 ```
 
+**Note**: Event sourcing removed for simplicity. Can be added later if dungeon/combat replay functionality is needed.
+
 ### 5.2 Component Usage Pattern
 
 **Example: CastleMenuComponent**
 ```typescript
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { GameStateService } from '../../shared/services/game-state.service';
-import { CommandExecutorService } from '../../shared/services/command-executor.service';
-import { NavigateToTavernCommand } from './commands/NavigateToTavernCommand';
+import { SaveService } from '../../services/SaveService';
 
 @Component({
   selector: 'app-castle-menu',
@@ -467,7 +622,7 @@ import { NavigateToTavernCommand } from './commands/NavigateToTavernCommand';
 })
 export class CastleMenuComponent {
   private gameState = inject(GameStateService);
-  private commandExecutor = inject(CommandExecutorService);
+  private router = inject(Router);
 
   // Signals available in template
   state = this.gameState.state;
@@ -481,12 +636,13 @@ export class CastleMenuComponent {
     { key: 'E', label: "DGE OF TOWN", handler: () => this.navigateToEdgeOfTown() }
   ];
 
-  navigateToTavern(): void {
-    const command = new NavigateToTavernCommand();
-    this.commandExecutor.execute(command);
+  async navigateToTavern(): Promise<void> {
+    // Auto-save before navigation (safe zone)
+    await SaveService.saveGame(this.gameState.getCurrentState());
+    this.router.navigate(['/tavern']);
   }
 
-  // ... other methods
+  // ... other navigation methods follow same pattern
 }
 ```
 
@@ -616,32 +772,27 @@ export const routes: Routes = [
 
 ### 6.2 Functional Route Guards
 
+**Guard Pattern**: Guards validate and set error state, components display errors.
+
 **Example: Party Not In Maze Guard**
 ```typescript
 import { CanActivateFn } from '@angular/router';
 import { inject } from '@angular/core';
 import { GameStateService } from '../services/game-state.service';
-import { ErrorService } from '../services/error.service';
 import { PartyStatus } from '../../types/Party';
 
 export const partyNotInMazeGuard: CanActivateFn = () => {
   const gameState = inject(GameStateService);
-  const errorService = inject(ErrorService);
-
   const state = gameState.getCurrentState();
 
   if (state.party.status === PartyStatus.IN_MAZE) {
-    // Use Pattern 4: Error Handling
-    errorService.show({
-      severity: 'ERROR',
-      message: 'YOUR PARTY IS IN THE MAZE.',
-      details: 'You must return to town first.',
-      canRetry: false,
-      soundEffect: 'error'
-    });
-    return false;
+    // Set error flag - component will display it
+    gameState.setNavigationError('YOUR PARTY IS IN THE MAZE. You must return to town first.');
+    return false;  // Stay on current page
   }
 
+  // Clear any previous error
+  gameState.setNavigationError(null);
   return true;
 };
 ```
@@ -650,23 +801,26 @@ export const partyNotInMazeGuard: CanActivateFn = () => {
 ```typescript
 export const partyFormedGuard: CanActivateFn = () => {
   const gameState = inject(GameStateService);
-  const errorService = inject(ErrorService);
-
   const state = gameState.getCurrentState();
 
   if (state.party.members.length === 0) {
-    errorService.show({
-      severity: 'WARNING',
-      message: 'YOU MUST FORM A PARTY FIRST.',
-      details: 'Visit Gilgamesh\'s Tavern to add characters.',
-      canRetry: true,
-      soundEffect: 'warning'
-    });
+    gameState.setNavigationError('YOU MUST FORM A PARTY FIRST. Visit Gilgamesh\'s Tavern to add characters.');
     return false;
   }
 
+  gameState.setNavigationError(null);
   return true;
 };
+```
+
+**Component displays error** (example in any scene component):
+```typescript
+export class CastleMenuComponent implements OnInit {
+  private gameState = inject(GameStateService);
+  navigationError = this.gameState.navigationError;
+
+  // Template shows: @if (navigationError()) { <div class="error">{{ navigationError() }}</div> }
+}
 ```
 
 ### 6.3 Scene Navigation Service
@@ -935,26 +1089,27 @@ Deliverable: Clean repository with Angular implementation
 
 ### 7.2 Total Estimated Effort
 
-| Phase | Description | Duration |
-|-------|-------------|----------|
-| 1 | Angular workspace setup | 2-3 days |
-| 2 | Shared infrastructure | 2-3 days |
-| 3 | Simple scenes (Title, Castle, Edge) | 3-4 days |
-| 4 | Town service scenes (5 scenes) | 4-5 days |
-| 5 | Game-critical scenes (7 scenes) | 4-5 days |
-| 6 | Testing & polish | 2-3 days |
-| 7 | Cleanup & archival | 1 day |
-| **Total** | | **18-24 days** |
+| Phase | Description | Duration | Notes |
+|-------|-------------|----------|-------|
+| 1 | Angular workspace setup | 2-3 days | ng new, Jest config, copy services |
+| 2 | Shared infrastructure | 3-4 days | +1 day for SceneNavigationService refactoring |
+| 3 | Simple scenes (Title, Castle, Edge) | 3-4 days | Validation of architecture |
+| 4 | Town service scenes (5 scenes) | 7-8 days | Complex: Shop/Temple 1.5 days each |
+| 5 | Game-critical scenes (7 scenes) | 11-12 days | Maze (3D): 3 days, Combat: 3 days |
+| 6 | Testing & polish | 4-6 days | Rewrite Canvas tests, component tests |
+| 7 | Cleanup & archival | 1 day | Archive old project |
+| **Base Total** | | **31-40 days** | ~6-8 weeks |
+| **Risk Buffer** | +20% contingency | +6-8 days | Unexpected issues |
+| **Realistic Total** | | **37-48 days** | **7.5-9.5 weeks** |
 
 **Assumptions**:
 - Full-time development
 - No major blockers or scope changes
-- Existing service layer works as-is
+- Most service layer logic works as-is (except SceneNavigationService)
 - Single developer
+- Maze 3D rendering uses Canvas (reduces complexity)
 
-**Risk Buffer**: +20% (3-5 days) for unexpected issues
-
-**Realistic Total**: 21-29 days (4-6 weeks)
+**Critical Path**: Maze rendering (3 days) + Combat system (3 days) = 6 days of highest-risk work
 
 ---
 
@@ -1068,20 +1223,21 @@ Use Playwright or Cypress for smoke tests:
 ### 9.1 Expected Bundle Size
 
 ```
-Angular 19 framework:     ~150KB (gzipped)
-RxJS (minimal):           ~20KB (gzipped)
+Angular 19 framework:     ~200KB (gzipped)
+RxJS (for events):        ~40KB (gzipped)
+Router:                   included in framework
 Application code:         ~50-100KB (gzipped)
 Game data (JSON):         ~30-50KB (gzipped)
 Assets (fonts, images):   ~20-50KB (gzipped)
 -------------------------------------------
-Total:                    ~270-370KB (gzipped)
+Total:                    ~340-440KB (gzipped)
 ```
 
 **Comparison to Canvas version**:
 - Canvas version: ~100-150KB (no framework)
-- Angular version: ~270-370KB (+170-220KB overhead)
+- Angular version: ~340-440KB (+240-290KB overhead)
 
-**Acceptable for web game**: Yes, modern broadband can download 370KB in <1 second.
+**Acceptable for web game**: Yes. Modern broadband can download 440KB in <1 second. Mobile 4G downloads in ~2 seconds. This is acceptable overhead for the developer productivity gains.
 
 ### 9.2 Performance Optimizations
 
@@ -1319,4 +1475,5 @@ ng build --stats-json           # Build with bundle analysis
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-11-01 | Initial design document created |
+| 1.1 | 2025-11-01 | Major revisions after code review: Removed event sourcing, acknowledged SceneNavigationService refactoring, fixed KeystrokeInputDirective memory leak, corrected route guard pattern, added Maze 3D rendering strategy (Canvas), updated timeline to 37-48 days realistic, updated bundle size to 340-440KB |
 
