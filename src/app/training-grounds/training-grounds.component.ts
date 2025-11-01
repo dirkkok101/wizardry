@@ -365,6 +365,66 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
+   * Confirm character creation and add to roster
+   */
+  confirmCharacterCreation(): void {
+    const { selectedRace, selectedAlignment, rolledStats, selectedClass, name, password } =
+      this.wizardState()
+
+    // Validate all required fields
+    if (
+      !selectedRace ||
+      !selectedAlignment ||
+      !rolledStats ||
+      !selectedClass ||
+      !name ||
+      !password
+    ) {
+      this.errorMessage.set('Wizard not complete')
+      return
+    }
+
+    // Create character
+    const character = CharacterService.createCharacterFromStats({
+      name,
+      password,
+      race: selectedRace,
+      alignment: selectedAlignment,
+      stats: rolledStats,
+      selectedClass
+    })
+
+    // Add to game state roster
+    this.gameState.updateState(state => ({
+      ...state,
+      roster: new Map(state.roster).set(character.id, character)
+    }))
+
+    // Show success message
+    this.successMessage.set(`${character.name} created successfully!`)
+
+    // Reset wizard
+    this.resetWizard()
+  }
+
+  /**
+   * Reset wizard state to start over
+   */
+  private resetWizard(): void {
+    this.wizardState.set({
+      selectedRace: null,
+      selectedAlignment: null,
+      rolledStats: null,
+      selectedClass: null,
+      name: '',
+      password: ''
+    })
+
+    this.currentStep.set('RACE')
+    this.errorMessage.set(null)
+  }
+
+  /**
    * Return to castle menu
    */
   returnToCastle(): void {

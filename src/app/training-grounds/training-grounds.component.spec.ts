@@ -508,4 +508,66 @@ describe('TrainingGroundsComponent', () => {
       expect(component.currentStep()).toBe('CONFIRM')
     })
   })
+
+  describe('character creation completion', () => {
+    beforeEach(() => {
+      // Complete full wizard
+      component.selectRace(Race.HUMAN)
+      component.selectAlignment(Alignment.GOOD)
+      component.wizardState.update(state => ({
+        ...state,
+        rolledStats: {
+          strength: 15,
+          intelligence: 12,
+          piety: 12,
+          vitality: 14,
+          agility: 11,
+          luck: 10,
+          bonusPoints: 0
+        }
+      }))
+      component.acceptStats()
+      component.finishBonusAllocation()
+      component.selectClass(CharacterClass.FIGHTER)
+      component.setName('Gandalf')
+      component.setPassword('wizard')
+      component.finishNamePassword()
+    })
+
+    it('creates character from wizard state', () => {
+      const initialRosterSize = gameState.state().roster.size
+
+      component.confirmCharacterCreation()
+
+      const finalRosterSize = gameState.state().roster.size
+
+      expect(finalRosterSize).toBe(initialRosterSize + 1)
+    })
+
+    it('adds character to game state roster', () => {
+      component.confirmCharacterCreation()
+
+      const roster = gameState.state().roster
+      const character = Array.from(roster.values()).find(c => c.name === 'Gandalf')
+
+      expect(character).toBeDefined()
+      expect(character!.class).toBe(CharacterClass.FIGHTER)
+      expect(character!.race).toBe(Race.HUMAN)
+      expect(character!.alignment).toBe(Alignment.GOOD)
+    })
+
+    it('resets wizard state after creation', () => {
+      component.confirmCharacterCreation()
+
+      expect(component.wizardState().selectedRace).toBeNull()
+      expect(component.wizardState().name).toBe('')
+      expect(component.currentStep()).toBe('RACE')
+    })
+
+    it('shows success message after creation', () => {
+      component.confirmCharacterCreation()
+
+      expect(component.successMessage()).toContain('created successfully')
+    })
+  })
 })
