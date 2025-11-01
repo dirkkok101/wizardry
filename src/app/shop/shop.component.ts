@@ -192,4 +192,65 @@ export class ShopComponent implements OnInit {
   getSellPrice(item: Item): number {
     return ShopService.calculateSellPrice(item)
   }
+
+  /**
+   * Sell an item from character inventory
+   */
+  sellItem(itemId: string): void {
+    const character = this.selectedCharacter()
+    if (!character) {
+      this.errorMessage.set('No character selected')
+      return
+    }
+
+    // Find item in inventory (need to resolve ID to Item object)
+    const item = this.shopInventory().find(i => i.id === itemId)
+    if (!item) {
+      this.errorMessage.set('Item not found in inventory')
+      return
+    }
+
+    // Check if character actually has this item
+    if (!character.inventory.includes(itemId)) {
+      this.errorMessage.set('Item not found in inventory')
+      return
+    }
+
+    // Check if item can be sold (not equipped cursed)
+    if (item.equipped && item.cursed) {
+      this.errorMessage.set('Cannot sell equipped cursed item')
+      return
+    }
+
+    // Calculate sell price
+    const sellPrice = ShopService.calculateSellPrice(item)
+
+    if (sellPrice === 0) {
+      this.errorMessage.set('Cursed items cannot be sold')
+      return
+    }
+
+    // Remove item from character inventory
+    const charId = this.selectedCharacterId()!
+    const party = this.gameState.party()
+
+    this.gameState.updateState(state => {
+      const updatedChar = {
+        ...character,
+        inventory: character.inventory.filter(id => id !== itemId)
+      }
+
+      return {
+        ...state,
+        roster: new Map(state.roster).set(charId, updatedChar),
+        party: {
+          ...state.party,
+          gold: (party.gold || 0) + sellPrice
+        }
+      }
+    })
+
+    this.successMessage.set(`Sold ${item.name} for ${sellPrice} gold`)
+    this.errorMessage.set(null)
+  }
 }
