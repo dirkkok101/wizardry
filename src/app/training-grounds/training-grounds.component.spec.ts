@@ -135,4 +135,32 @@ describe('TrainingGroundsComponent', () => {
       expect(component.currentStep()).toBe('ALIGNMENT')
     })
   })
+
+  describe('alignment selection', () => {
+    beforeEach(() => {
+      component.selectRace(Race.HUMAN) // Advance to ALIGNMENT step
+    })
+
+    it('displays 3 alignment options', () => {
+      const alignments = component.getAlignmentOptions()
+
+      expect(alignments.length).toBe(3)
+      expect(alignments).toContain(Alignment.GOOD)
+      expect(alignments).toContain(Alignment.NEUTRAL)
+      expect(alignments).toContain(Alignment.EVIL)
+    })
+
+    it('selects alignment and advances to STATS step', () => {
+      component.selectAlignment(Alignment.GOOD)
+
+      expect(component.wizardState().selectedAlignment).toBe(Alignment.GOOD)
+      expect(component.currentStep()).toBe('STATS')
+    })
+
+    it('shows alignment description', () => {
+      const desc = component.getAlignmentDescription(Alignment.NEUTRAL)
+
+      expect(desc.toLowerCase()).toContain('balanced')
+    })
+  })
 })

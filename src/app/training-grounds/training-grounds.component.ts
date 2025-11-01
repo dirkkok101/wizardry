@@ -169,6 +169,25 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
+   * Get all available alignment options
+   */
+  getAlignmentOptions(): Alignment[] {
+    return [Alignment.GOOD, Alignment.NEUTRAL, Alignment.EVIL]
+  }
+
+  /**
+   * Get description for an alignment
+   */
+  getAlignmentDescription(alignment: Alignment): string {
+    const descriptions: Record<Alignment, string> = {
+      [Alignment.GOOD]: 'Virtuous and righteous characters who aid others',
+      [Alignment.NEUTRAL]: 'Balanced characters who follow their own path',
+      [Alignment.EVIL]: 'Self-serving characters who pursue power'
+    }
+    return descriptions[alignment]
+  }
+
+  /**
    * Return to castle menu
    */
   returnToCastle(): void {
