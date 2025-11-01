@@ -6,6 +6,7 @@ import { TavernComponent } from './tavern/tavern.component';
 import { InnComponent } from './inn/inn.component';
 import { TempleComponent } from './temple/temple.component';
 import { ShopComponent } from './shop/shop.component';
+import { TrainingGroundsComponent } from './training-grounds/training-grounds.component';
 
 export const routes: Routes = [
   {
@@ -35,6 +36,10 @@ export const routes: Routes = [
   {
     path: 'shop',
     component: ShopComponent
+  },
+  {
+    path: 'training-grounds',
+    component: TrainingGroundsComponent
   },
   {
     path: '**',
