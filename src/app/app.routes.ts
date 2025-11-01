@@ -5,6 +5,7 @@ import { EdgeOfTownComponent } from './edge-of-town/edge-of-town.component';
 import { TavernComponent } from './tavern/tavern.component';
 import { InnComponent } from './inn/inn.component';
 import { TempleComponent } from './temple/temple.component';
+import { ShopComponent } from './shop/shop.component';
 
 export const routes: Routes = [
   {
@@ -30,6 +31,10 @@ export const routes: Routes = [
   {
     path: 'temple',
     component: TempleComponent
+  },
+  {
+    path: 'shop',
+    component: ShopComponent
   },
   {
     path: '**',

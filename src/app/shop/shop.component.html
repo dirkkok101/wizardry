@@ -1,0 +1,46 @@
+<div class="shop">
+  <header>
+    <h1>BOLTAC'S TRADING POST</h1>
+  </header>
+
+  <main>
+    @if (currentView() === 'main') {
+      <div class="main-view">
+        <app-menu
+          [items]="menuItems"
+          (select)="handleMenuSelect($event)"
+        />
+      </div>
+    }
+
+    @if (currentView() === 'buy') {
+      <div class="placeholder-view">
+        <h2>BUY ITEMS</h2>
+        <p class="placeholder-text">
+          Item purchasing will be implemented in Phase 5.
+        </p>
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+
+    @if (currentView() === 'sell') {
+      <div class="placeholder-view">
+        <h2>SELL ITEMS</h2>
+        <p class="placeholder-text">
+          Item selling will be implemented in Phase 5.
+        </p>
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+
+    @if (currentView() === 'identify') {
+      <div class="placeholder-view">
+        <h2>IDENTIFY ITEMS</h2>
+        <p class="placeholder-text">
+          Item identification will be implemented in Phase 5.
+        </p>
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+  </main>
+</div>

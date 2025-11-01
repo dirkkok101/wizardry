@@ -1,0 +1,61 @@
+@use '../../styles/variables' as *;
+
+.shop {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: $spacing-md;
+
+  header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: 24px;
+      color: $color-text-bright;
+      margin: 0;
+      text-align: center;
+    }
+  }
+
+  main {
+    flex: 1;
+  }
+}
+
+.main-view {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.placeholder-view {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+
+  h2 {
+    font-size: 18px;
+    color: $color-text-bright;
+    margin-bottom: $spacing-lg;
+  }
+
+  .placeholder-text {
+    color: $color-amber;
+    font-weight: bold;
+    margin-bottom: $spacing-xl;
+  }
+
+  .cancel-btn {
+    background: none;
+    border: 1px solid $color-text-dim;
+    color: $color-text-dim;
+    font-family: $font-mono;
+    padding: $spacing-sm $spacing-md;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $color-text-green;
+      color: $color-text-green;
+    }
+  }
+}
