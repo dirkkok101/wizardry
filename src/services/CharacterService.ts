@@ -4,6 +4,41 @@ import { CharacterClass, CLASS_REQUIREMENTS } from '../types/CharacterClass'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { Race, RACE_MODIFIERS } from '../types/Race'
 import { Alignment } from '../types/Alignment'
+import { BaseStats } from './CharacterCreationService'
+
+/**
+ * Class stat requirements based on authentic Wizardry mechanics
+ */
+const CLASS_REQUIREMENTS_FOR_ELIGIBILITY: Record<CharacterClass, Partial<BaseStats>> = {
+  [CharacterClass.FIGHTER]: { strength: 11 },
+  [CharacterClass.MAGE]: { intelligence: 11 },
+  [CharacterClass.PRIEST]: { piety: 11 },
+  [CharacterClass.THIEF]: { agility: 11 },
+  [CharacterClass.BISHOP]: { intelligence: 12, piety: 12 },
+  [CharacterClass.SAMURAI]: {
+    strength: 15,
+    intelligence: 11,
+    piety: 10,
+    vitality: 14,
+    agility: 10
+  },
+  [CharacterClass.LORD]: {
+    strength: 15,
+    intelligence: 12,
+    piety: 12,
+    vitality: 15,
+    agility: 14,
+    luck: 15
+  },
+  [CharacterClass.NINJA]: {
+    strength: 17,
+    intelligence: 17,
+    piety: 17,
+    vitality: 17,
+    agility: 17,
+    luck: 17
+  }
+}
 
 /**
  * Get all characters from roster
@@ -142,9 +177,43 @@ function validateClassEligibility(
   return true
 }
 
+/**
+ * Calculate which classes a character is eligible for based on their stats.
+ *
+ * Returns array of eligible CharacterClass values.
+ */
+function getEligibleClasses(stats: BaseStats): CharacterClass[] {
+  const eligible: CharacterClass[] = []
+
+  for (const [className, requirements] of Object.entries(CLASS_REQUIREMENTS_FOR_ELIGIBILITY)) {
+    if (meetsRequirements(stats, requirements)) {
+      eligible.push(className as CharacterClass)
+    }
+  }
+
+  return eligible
+}
+
+/**
+ * Check if character stats meet the requirements for a class.
+ */
+function meetsRequirements(
+  stats: BaseStats,
+  requirements: Partial<BaseStats>
+): boolean {
+  for (const [stat, required] of Object.entries(requirements)) {
+    const statKey = stat as keyof BaseStats
+    if (stats[statKey] < required) {
+      return false
+    }
+  }
+  return true
+}
+
 export const CharacterService = {
   getAllCharacters,
   createCharacter,
   deleteCharacter,
-  validateClassEligibility
+  validateClassEligibility,
+  getEligibleClasses
 }

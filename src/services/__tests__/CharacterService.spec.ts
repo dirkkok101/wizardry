@@ -5,6 +5,7 @@ import { Race } from '../../types/Race'
 import { CharacterClass } from '../../types/CharacterClass'
 import { Alignment } from '../../types/Alignment'
 import { CharacterStatus } from '../../types/CharacterStatus'
+import { BaseStats } from '../CharacterCreationService'
 
 describe('CharacterService', () => {
   let gameState: GameState
@@ -236,6 +237,184 @@ describe('CharacterService', () => {
       // Samurai requires GOOD alignment
       expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(true)
       expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, evilStats)).toBe(false)
+    })
+  })
+
+  describe('getEligibleClasses', () => {
+    it('returns Fighter when STR >= 11', () => {
+      const stats: BaseStats = {
+        strength: 11,
+        intelligence: 8,
+        piety: 8,
+        vitality: 10,
+        agility: 9,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.FIGHTER)
+    })
+
+    it('excludes Fighter when STR < 11', () => {
+      const stats: BaseStats = {
+        strength: 10,
+        intelligence: 8,
+        piety: 8,
+        vitality: 10,
+        agility: 9,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).not.toContain(CharacterClass.FIGHTER)
+    })
+
+    it('returns Mage when IQ >= 11', () => {
+      const stats: BaseStats = {
+        strength: 8,
+        intelligence: 11,
+        piety: 8,
+        vitality: 10,
+        agility: 9,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.MAGE)
+    })
+
+    it('returns Priest when PIE >= 11', () => {
+      const stats: BaseStats = {
+        strength: 8,
+        intelligence: 8,
+        piety: 11,
+        vitality: 10,
+        agility: 9,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.PRIEST)
+    })
+
+    it('returns Thief when AGI >= 11', () => {
+      const stats: BaseStats = {
+        strength: 8,
+        intelligence: 8,
+        piety: 8,
+        vitality: 10,
+        agility: 11,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.THIEF)
+    })
+
+    it('returns Bishop when IQ >= 12 and PIE >= 12', () => {
+      const stats: BaseStats = {
+        strength: 8,
+        intelligence: 12,
+        piety: 12,
+        vitality: 10,
+        agility: 9,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.BISHOP)
+    })
+
+    it('excludes Bishop when IQ = 12 but PIE < 12', () => {
+      const stats: BaseStats = {
+        strength: 8,
+        intelligence: 12,
+        piety: 11,
+        vitality: 10,
+        agility: 9,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).not.toContain(CharacterClass.BISHOP)
+    })
+
+    it('returns Samurai when STR >= 15, IQ >= 11, PIE >= 10, VIT >= 14, AGI >= 10', () => {
+      const stats: BaseStats = {
+        strength: 15,
+        intelligence: 11,
+        piety: 10,
+        vitality: 14,
+        agility: 10,
+        luck: 8
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.SAMURAI)
+    })
+
+    it('returns Lord when STR >= 15, IQ >= 12, PIE >= 12, VIT >= 15, AGI >= 14, LUK >= 15', () => {
+      const stats: BaseStats = {
+        strength: 15,
+        intelligence: 12,
+        piety: 12,
+        vitality: 15,
+        agility: 14,
+        luck: 15
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.LORD)
+    })
+
+    it('returns Ninja when ALL stats >= 17', () => {
+      const stats: BaseStats = {
+        strength: 17,
+        intelligence: 17,
+        piety: 17,
+        vitality: 17,
+        agility: 17,
+        luck: 17
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).toContain(CharacterClass.NINJA)
+    })
+
+    it('excludes Ninja when one stat is 16', () => {
+      const stats: BaseStats = {
+        strength: 17,
+        intelligence: 17,
+        piety: 17,
+        vitality: 17,
+        agility: 17,
+        luck: 16 // One stat below 17
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+      expect(eligible).not.toContain(CharacterClass.NINJA)
+    })
+
+    it('returns multiple eligible classes', () => {
+      const stats: BaseStats = {
+        strength: 15,
+        intelligence: 12,
+        piety: 12,
+        vitality: 14,
+        agility: 11,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats)
+
+      // Should qualify for: Fighter, Mage, Priest, Thief, Bishop, Samurai
+      expect(eligible.length).toBeGreaterThanOrEqual(6)
+      expect(eligible).toContain(CharacterClass.FIGHTER)
+      expect(eligible).toContain(CharacterClass.MAGE)
+      expect(eligible).toContain(CharacterClass.PRIEST)
+      expect(eligible).toContain(CharacterClass.THIEF)
+      expect(eligible).toContain(CharacterClass.BISHOP)
+      expect(eligible).toContain(CharacterClass.SAMURAI)
     })
   })
 })
