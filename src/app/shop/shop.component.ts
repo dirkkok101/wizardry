@@ -398,4 +398,39 @@ export class ShopComponent implements OnInit {
     this.successMessage.set(message)
     this.errorMessage.set(null)
   }
+
+  /**
+   * Get formatted item properties for display
+   */
+  getItemProperties(itemId: string): string {
+    const character = this.selectedCharacter()
+    if (!character) {
+      return ''
+    }
+
+    const item = this.getCharacterInventory().find(i => i.id === itemId)
+    if (!item) {
+      return ''
+    }
+
+    const properties: string[] = []
+
+    if (item.damage) {
+      properties.push(`Damage: ${item.damage}`)
+    }
+
+    if (item.defense) {
+      properties.push(`Defense: ${item.defense}`)
+    }
+
+    if (item.cursed) {
+      properties.push('CURSED')
+    }
+
+    if (item.description) {
+      properties.push(item.description)
+    }
+
+    return properties.join(' | ')
+  }
 }

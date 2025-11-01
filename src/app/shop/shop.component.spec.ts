@@ -574,5 +574,26 @@ describe('ShopComponent', () => {
 
       expect(component.errorMessage()).toContain('No character selected')
     })
+
+    it('displays item properties after identification', () => {
+      const item = UNIDENTIFIED_ITEMS[0]
+
+      component.identifyItem(item.id)
+
+      const properties = component.getItemProperties(item.id)
+
+      expect(properties).toContain('Damage')
+      expect(properties).toContain(item.damage?.toString())
+    })
+
+    it('shows curse indicator in properties', () => {
+      const cursedItem = UNIDENTIFIED_ITEMS[2]
+
+      component.identifyItem(cursedItem.id)
+
+      const properties = component.getItemProperties(cursedItem.id)
+
+      expect(properties).toContain('CURSED')
+    })
   })
 });
