@@ -303,6 +303,68 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
+   * Set character name with validation
+   */
+  setName(name: string): void {
+    const validation = CharacterService.validateCharacterName(name)
+
+    if (!validation.valid) {
+      this.errorMessage.set(validation.error!)
+      return
+    }
+
+    this.wizardState.update(state => ({
+      ...state,
+      name
+    }))
+
+    this.errorMessage.set(null)
+  }
+
+  /**
+   * Set character password with validation
+   */
+  setPassword(password: string): void {
+    const validation = CharacterService.validatePassword(password)
+
+    if (!validation.valid) {
+      this.errorMessage.set(validation.error!)
+      return
+    }
+
+    this.wizardState.update(state => ({
+      ...state,
+      password
+    }))
+
+    this.errorMessage.set(null)
+  }
+
+  /**
+   * Finish name/password entry and advance to confirmation
+   */
+  finishNamePassword(): void {
+    const { name, password } = this.wizardState()
+
+    // Validate both are set
+    const nameValidation = CharacterService.validateCharacterName(name)
+    const passwordValidation = CharacterService.validatePassword(password)
+
+    if (!nameValidation.valid) {
+      this.errorMessage.set(nameValidation.error!)
+      return
+    }
+
+    if (!passwordValidation.valid) {
+      this.errorMessage.set(passwordValidation.error!)
+      return
+    }
+
+    this.errorMessage.set(null)
+    this.nextStep()
+  }
+
+  /**
    * Return to castle menu
    */
   returnToCastle(): void {

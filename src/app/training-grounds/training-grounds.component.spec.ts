@@ -444,4 +444,68 @@ describe('TrainingGroundsComponent', () => {
       expect(component.errorMessage()).toContain('not eligible')
     })
   })
+
+  describe('name and password input', () => {
+    beforeEach(() => {
+      // Complete wizard up to NAME_PASSWORD step
+      component.selectRace(Race.HUMAN)
+      component.selectAlignment(Alignment.GOOD)
+      component.wizardState.update(state => ({
+        ...state,
+        rolledStats: {
+          strength: 15,
+          intelligence: 12,
+          piety: 12,
+          vitality: 14,
+          agility: 11,
+          luck: 10,
+          bonusPoints: 0
+        }
+      }))
+      component.acceptStats()
+      component.finishBonusAllocation()
+      component.selectClass(CharacterClass.FIGHTER)
+    })
+
+    it('validates name (1-15 chars)', () => {
+      component.setName('Gandalf')
+
+      expect(component.wizardState().name).toBe('Gandalf')
+      expect(component.errorMessage()).toBeNull()
+    })
+
+    it('rejects name > 15 characters', () => {
+      component.setName('ThisNameIsTooLongForWizardry')
+
+      expect(component.errorMessage()).toContain('15 characters')
+    })
+
+    it('rejects empty name', () => {
+      component.setName('')
+      component.finishNamePassword()
+
+      expect(component.errorMessage()).toContain('required')
+    })
+
+    it('validates password (4-8 chars)', () => {
+      component.setPassword('wizard')
+
+      expect(component.wizardState().password).toBe('wizard')
+      expect(component.errorMessage()).toBeNull()
+    })
+
+    it('rejects password < 4 characters', () => {
+      component.setPassword('abc')
+
+      expect(component.errorMessage()).toContain('4-8 characters')
+    })
+
+    it('advances to CONFIRM step when valid name and password', () => {
+      component.setName('Gandalf')
+      component.setPassword('wizard')
+      component.finishNamePassword()
+
+      expect(component.currentStep()).toBe('CONFIRM')
+    })
+  })
 })
