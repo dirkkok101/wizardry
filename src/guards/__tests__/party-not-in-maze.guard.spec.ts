@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { partyNotInMazeGuard } from '../party-not-in-maze.guard';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
+import { SceneType } from '../../types/SceneType';
 
 describe('partyNotInMazeGuard', () => {
   let gameState: GameStateService;
@@ -27,7 +28,7 @@ describe('partyNotInMazeGuard', () => {
   it('allows access when not in maze', () => {
     gameState.updateState(state => ({
       ...state,
-      currentScene: 'CASTLE_MENU'
+      currentScene: SceneType.CASTLE_MENU
     }));
 
     const result = TestBed.runInInjectionContext(() => partyNotInMazeGuard({} as any, {} as any));
@@ -39,7 +40,7 @@ describe('partyNotInMazeGuard', () => {
   it('redirects to camp when in maze', () => {
     gameState.updateState(state => ({
       ...state,
-      currentScene: 'MAZE'
+      currentScene: SceneType.MAZE
     }));
 
     const result = TestBed.runInInjectionContext(() => partyNotInMazeGuard({} as any, {} as any));
@@ -51,7 +52,7 @@ describe('partyNotInMazeGuard', () => {
   it('redirects to camp when in combat', () => {
     gameState.updateState(state => ({
       ...state,
-      currentScene: 'COMBAT'
+      currentScene: SceneType.COMBAT
     }));
 
     const result = TestBed.runInInjectionContext(() => partyNotInMazeGuard({} as any, {} as any));

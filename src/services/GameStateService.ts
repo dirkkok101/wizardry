@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { GameState } from '../types/GameState';
+import { SceneType } from '../types/SceneType';
 import { GameInitializationService } from './GameInitializationService';
 import { SaveService } from './SaveService';
 
@@ -33,7 +34,7 @@ export class GameStateService {
   readonly roster = computed(() => this.state().roster);
   readonly isInMaze = computed(() => {
     const scene = this.currentScene();
-    return scene === 'MAZE' || scene === 'COMBAT';
+    return scene === SceneType.MAZE || scene === SceneType.COMBAT;
   });
 
   // Debounce timer for auto-save

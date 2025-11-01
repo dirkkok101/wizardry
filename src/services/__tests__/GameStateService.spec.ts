@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { GameStateService } from '../GameStateService';
 import { SaveService } from '../SaveService';
+import { SceneType } from '../../types/SceneType';
 
 describe('GameStateService', () => {
   let service: GameStateService;
@@ -17,7 +18,7 @@ describe('GameStateService', () => {
   describe('initialization', () => {
     it('starts with initial game state', () => {
       const state = service.state();
-      expect(state.currentScene).toBe('TITLE_SCREEN');
+      expect(state.currentScene).toBe(SceneType.TITLE_SCREEN);
       expect(state.party).toBeDefined();
       expect(state.party.members).toEqual([]);
     });
@@ -29,23 +30,23 @@ describe('GameStateService', () => {
 
       service.updateState(state => ({
         ...state,
-        currentScene: 'CASTLE_MENU'
+        currentScene: SceneType.CASTLE_MENU
       }));
 
       const newState = service.state();
-      expect(newState.currentScene).toBe('CASTLE_MENU');
+      expect(newState.currentScene).toBe(SceneType.CASTLE_MENU);
       expect(newState).not.toBe(initialState); // Different object
     });
 
     it('preserves other properties when updating', () => {
       service.updateState(state => ({
         ...state,
-        currentScene: 'TAVERN'
+        currentScene: SceneType.EDGE_OF_TOWN
       }));
 
       const state = service.state();
       expect(state.roster).toBeDefined();
-      expect(state.currentScene).toBe('TAVERN');
+      expect(state.currentScene).toBe(SceneType.EDGE_OF_TOWN);
     });
   });
 
@@ -53,10 +54,10 @@ describe('GameStateService', () => {
     it('currentScene computed signal works', () => {
       service.updateState(state => ({
         ...state,
-        currentScene: 'EDGE_OF_TOWN'
+        currentScene: SceneType.EDGE_OF_TOWN
       }));
 
-      expect(service.currentScene()).toBe('EDGE_OF_TOWN');
+      expect(service.currentScene()).toBe(SceneType.EDGE_OF_TOWN);
     });
 
     it('isInMaze computed signal detects maze scenes', () => {
@@ -66,14 +67,14 @@ describe('GameStateService', () => {
       // In maze
       service.updateState(state => ({
         ...state,
-        currentScene: 'MAZE'
+        currentScene: SceneType.MAZE
       }));
       expect(service.isInMaze()).toBe(true);
 
       // In combat
       service.updateState(state => ({
         ...state,
-        currentScene: 'COMBAT'
+        currentScene: SceneType.COMBAT
       }));
       expect(service.isInMaze()).toBe(true);
     });
@@ -83,13 +84,13 @@ describe('GameStateService', () => {
     it('resets to initial state', () => {
       service.updateState(state => ({
         ...state,
-        currentScene: 'MAZE'
+        currentScene: SceneType.MAZE
       }));
 
       service.resetState();
 
       const state = service.state();
-      expect(state.currentScene).toBe('TITLE_SCREEN');
+      expect(state.currentScene).toBe(SceneType.TITLE_SCREEN);
     });
   });
 });
