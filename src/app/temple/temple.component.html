@@ -1,0 +1,35 @@
+<div class="temple">
+  <header>
+    <h1>TEMPLE OF CANT</h1>
+  </header>
+
+  <main>
+    @if (currentView() === 'main') {
+      <div class="main-view">
+        <app-menu
+          [items]="menuItems"
+          (select)="handleMenuSelect($event)"
+        />
+      </div>
+    }
+
+    @if (currentView() === 'healing') {
+      <div class="placeholder-view">
+        <h2>HEALING SERVICES</h2>
+        <p class="placeholder-text">
+          Healing services will be implemented in Phase 5.
+        </p>
+        <p class="placeholder-details">
+          This will include:
+        </p>
+        <ul>
+          <li>Cure Poison</li>
+          <li>Cure Paralysis</li>
+          <li>Cure Stone</li>
+          <li>Resurrection (with success/failure mechanics)</li>
+        </ul>
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+  </main>
+</div>

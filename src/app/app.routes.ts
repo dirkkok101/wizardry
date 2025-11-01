@@ -4,6 +4,7 @@ import { CastleMenuComponent } from './castle-menu/castle-menu.component';
 import { EdgeOfTownComponent } from './edge-of-town/edge-of-town.component';
 import { TavernComponent } from './tavern/tavern.component';
 import { InnComponent } from './inn/inn.component';
+import { TempleComponent } from './temple/temple.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,10 @@ export const routes: Routes = [
   {
     path: 'inn',
     component: InnComponent
+  },
+  {
+    path: 'temple',
+    component: TempleComponent
   },
   {
     path: '**',
