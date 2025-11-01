@@ -52,6 +52,7 @@ export class InnComponent implements OnInit {
   readonly currentView = signal<InnView>('main');
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+  readonly processing = signal<boolean>(false);
 
   // Party
   readonly currentParty = computed(() => this.gameState.party());
@@ -95,11 +96,18 @@ export class InnComponent implements OnInit {
   }
 
   private rest(): void {
+    // Prevent race condition from rapid clicks
+    if (this.processing()) {
+      return;
+    }
+
+    this.processing.set(true);
     const party = this.currentParty();
 
     // Validate party exists
     if (party.members.length === 0) {
       this.errorMessage.set('You need a party to rest');
+      this.processing.set(false);
       return;
     }
 
@@ -110,6 +118,7 @@ export class InnComponent implements OnInit {
     // Check if party can afford
     if (partyGold < cost) {
       this.errorMessage.set(`Cannot afford rest. Need ${cost} gold (${REST_COST_PER_MEMBER} per member)`);
+      this.processing.set(false);
       return;
     }
 
@@ -138,6 +147,7 @@ export class InnComponent implements OnInit {
     });
 
     this.successMessage.set(`Party rested well! All HP restored. (-${cost} gold)`);
+    this.processing.set(false);
   }
 
   cancelView(): void {

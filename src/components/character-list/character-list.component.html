@@ -1,4 +1,4 @@
-<div class="character-list" [class.selectable]="selectable">
+<div class="character-list" [class.selectable]="selectable" [tabindex]="selectable ? 0 : -1">
   @if (filteredCharacters.length > 0) {
     <div class="character-items">
       @for (char of filteredCharacters; track char.id; let i = $index) {

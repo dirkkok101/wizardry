@@ -9,6 +9,8 @@ import { Character } from '../../types/Character';
 
 type TavernView = 'main' | 'add' | 'remove';
 
+const MAX_PARTY_SIZE = 6;
+
 /**
  * Tavern Component (Gilgamesh's Tavern)
  *
@@ -108,8 +110,8 @@ export class TavernComponent implements OnInit {
     const party = this.currentParty();
 
     // Check party size limit
-    if (party.members.length >= 6) {
-      this.errorMessage.set('Party is full (maximum 6 characters)');
+    if (party.members.length >= MAX_PARTY_SIZE) {
+      this.errorMessage.set(`Party is full (maximum ${MAX_PARTY_SIZE} characters)`);
       return;
     }
 

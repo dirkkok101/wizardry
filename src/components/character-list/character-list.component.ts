@@ -65,9 +65,10 @@ export class CharacterListComponent {
   }
 
   /**
-   * Handle keyboard navigation.
+   * Handle keyboard navigation (component-level to prevent memory leaks).
+   * Note: Component must be focused for keyboard navigation to work.
    */
-  @HostListener('window:keydown', ['$event'])
+  @HostListener('keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent): void {
     if (!this.selectable || this.filteredCharacters.length === 0) return;
 

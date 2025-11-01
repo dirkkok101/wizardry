@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
@@ -28,7 +28,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './confirmation-dialog.component.html',
   styleUrls: ['./confirmation-dialog.component.scss']
 })
-export class ConfirmationDialogComponent {
+export class ConfirmationDialogComponent implements AfterViewChecked {
   @Input() visible: boolean = false;
   @Input() message: string = 'Are you sure?';
   @Input() yesLabel: string = '(Y)es';
@@ -37,10 +37,14 @@ export class ConfirmationDialogComponent {
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
+  @ViewChild('dialogOverlay') dialogOverlay?: ElementRef<HTMLDivElement>;
+  private hasFocused = false;
+
   /**
-   * Handle keyboard shortcuts.
+   * Handle keyboard shortcuts (component-level to prevent memory leaks).
+   * The overlay element is made focusable for keyboard event capture.
    */
-  @HostListener('window:keydown', ['$event'])
+  @HostListener('keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent): void {
     if (!this.visible) return;
 
@@ -60,6 +64,7 @@ export class ConfirmationDialogComponent {
    */
   confirm(): void {
     this.confirmed.emit();
+    this.hasFocused = false; // Reset for next time
   }
 
   /**
@@ -67,5 +72,18 @@ export class ConfirmationDialogComponent {
    */
   cancel(): void {
     this.cancelled.emit();
+    this.hasFocused = false; // Reset for next time
+  }
+
+  /**
+   * Auto-focus the dialog overlay when it becomes visible.
+   */
+  ngAfterViewChecked(): void {
+    if (this.visible && this.dialogOverlay && !this.hasFocused) {
+      this.dialogOverlay.nativeElement.focus();
+      this.hasFocused = true;
+    } else if (!this.visible) {
+      this.hasFocused = false;
+    }
   }
 }
