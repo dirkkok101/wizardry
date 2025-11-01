@@ -1,0 +1,12 @@
+@if (visible) {
+  <div class="dialog-overlay" (click)="cancel()">
+    <div class="dialog-content" (click)="$event.stopPropagation()">
+      <div class="dialog-message">{{ message }}</div>
+
+      <div class="dialog-actions">
+        <button class="btn-yes" (click)="confirm()">{{ yesLabel }}</button>
+        <button class="btn-no" (click)="cancel()">{{ noLabel }}</button>
+      </div>
+    </div>
+  </div>
+}
