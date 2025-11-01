@@ -257,6 +257,52 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
+   * Get reason why a class is ineligible
+   */
+  getIneligibilityReason(characterClass: CharacterClass): string {
+    const stats = this.wizardState().rolledStats
+
+    if (!stats) {
+      return 'No stats rolled'
+    }
+
+    const requirements: Record<CharacterClass, string> = {
+      [CharacterClass.FIGHTER]: 'STR 11+',
+      [CharacterClass.MAGE]: 'IQ 11+',
+      [CharacterClass.PRIEST]: 'PIE 11+',
+      [CharacterClass.THIEF]: 'AGI 11+',
+      [CharacterClass.BISHOP]: 'IQ 12+, PIE 12+',
+      [CharacterClass.SAMURAI]: 'STR 15+, IQ 11+, PIE 10+, VIT 14+, AGI 10+',
+      [CharacterClass.LORD]: 'STR 15+, IQ 12+, PIE 12+, VIT 15+, AGI 14+, LUK 15+',
+      [CharacterClass.NINJA]: 'ALL stats 17+'
+    }
+
+    return `Requires: ${requirements[characterClass]}`
+  }
+
+  /**
+   * Select character class and advance to name/password step
+   */
+  selectClass(characterClass: CharacterClass): void {
+    const eligible = this.getEligibleClasses()
+
+    if (!eligible.includes(characterClass)) {
+      this.errorMessage.set(
+        `Character is not eligible for ${characterClass}`
+      )
+      return
+    }
+
+    this.wizardState.update(state => ({
+      ...state,
+      selectedClass: characterClass
+    }))
+
+    this.errorMessage.set(null)
+    this.nextStep()
+  }
+
+  /**
    * Return to castle menu
    */
   returnToCastle(): void {

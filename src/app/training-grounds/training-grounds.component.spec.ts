@@ -338,4 +338,110 @@ describe('TrainingGroundsComponent', () => {
       expect(eligibleBefore).not.toContain(CharacterClass.SAMURAI)
     })
   })
+
+  describe('class selection', () => {
+    beforeEach(() => {
+      component.selectRace(Race.HUMAN)
+      component.selectAlignment(Alignment.GOOD)
+
+      // Set high stats to make all classes eligible
+      component.wizardState.update(state => ({
+        ...state,
+        rolledStats: {
+          strength: 17,
+          intelligence: 17,
+          piety: 17,
+          vitality: 17,
+          agility: 17,
+          luck: 17,
+          bonusPoints: 0
+        }
+      }))
+
+      component.acceptStats()
+      component.finishBonusAllocation()
+    })
+
+    it('displays eligible classes as enabled', () => {
+      const eligible = component.getEligibleClasses()
+
+      // With all stats at 17 and GOOD alignment:
+      // Fighter, Mage, Priest, Bishop, Samurai, Lord eligible
+      // Thief (needs NEUTRAL/EVIL) and Ninja (needs EVIL) not eligible
+      expect(eligible.length).toBe(6)
+      expect(eligible).toContain(CharacterClass.FIGHTER)
+      expect(eligible).toContain(CharacterClass.MAGE)
+      expect(eligible).toContain(CharacterClass.PRIEST)
+      expect(eligible).toContain(CharacterClass.BISHOP)
+      expect(eligible).toContain(CharacterClass.SAMURAI)
+      expect(eligible).toContain(CharacterClass.LORD)
+    })
+
+    it('displays ineligible classes as disabled', () => {
+      // Lower stats to make some classes ineligible
+      component.wizardState.update(state => ({
+        ...state,
+        rolledStats: {
+          strength: 10,
+          intelligence: 10,
+          piety: 10,
+          vitality: 10,
+          agility: 10,
+          luck: 10,
+          bonusPoints: 0
+        }
+      }))
+
+      const eligible = component.getEligibleClasses()
+
+      expect(eligible).not.toContain(CharacterClass.SAMURAI)
+      expect(eligible).not.toContain(CharacterClass.LORD)
+      expect(eligible).not.toContain(CharacterClass.NINJA)
+    })
+
+    it('shows reason why class is ineligible', () => {
+      component.wizardState.update(state => ({
+        ...state,
+        rolledStats: {
+          strength: 10,
+          intelligence: 10,
+          piety: 10,
+          vitality: 10,
+          agility: 10,
+          luck: 10,
+          bonusPoints: 0
+        }
+      }))
+
+      const reason = component.getIneligibilityReason(CharacterClass.SAMURAI)
+
+      expect(reason).toContain('STR 15')
+    })
+
+    it('selects class and advances to NAME_PASSWORD step', () => {
+      component.selectClass(CharacterClass.FIGHTER)
+
+      expect(component.wizardState().selectedClass).toBe(CharacterClass.FIGHTER)
+      expect(component.currentStep()).toBe('NAME_PASSWORD')
+    })
+
+    it('prevents selecting ineligible class', () => {
+      component.wizardState.update(state => ({
+        ...state,
+        rolledStats: {
+          strength: 8,
+          intelligence: 8,
+          piety: 8,
+          vitality: 8,
+          agility: 8,
+          luck: 8,
+          bonusPoints: 0
+        }
+      }))
+
+      component.selectClass(CharacterClass.FIGHTER)
+
+      expect(component.errorMessage()).toContain('not eligible')
+    })
+  })
 })
