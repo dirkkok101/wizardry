@@ -188,6 +188,19 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
+   * Accept rolled stats and advance to bonus point allocation
+   */
+  acceptStats(): void {
+    if (!this.wizardState().rolledStats) {
+      this.errorMessage.set('Roll stats first')
+      return
+    }
+
+    this.errorMessage.set(null)
+    this.nextStep()
+  }
+
+  /**
    * Return to castle menu
    */
   returnToCastle(): void {

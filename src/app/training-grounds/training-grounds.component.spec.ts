@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
 import { TrainingGroundsComponent, WizardStep } from './training-grounds.component'
 import { GameStateService } from '../../services/GameStateService'
+import { CharacterCreationService } from '../../services/CharacterCreationService'
 import { SceneType } from '../../types/SceneType'
 import { Race } from '../../types/Race'
 import { Alignment } from '../../types/Alignment'
@@ -161,6 +162,94 @@ describe('TrainingGroundsComponent', () => {
       const desc = component.getAlignmentDescription(Alignment.NEUTRAL)
 
       expect(desc.toLowerCase()).toContain('balanced')
+    })
+  })
+
+  describe('stat rolling', () => {
+    beforeEach(() => {
+      component.selectRace(Race.HUMAN)
+      component.selectAlignment(Alignment.GOOD)
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('rolls stats when entering STATS step', () => {
+      component.rollStats()
+
+      const stats = component.wizardState().rolledStats
+
+      expect(stats).toBeDefined()
+      expect(stats!.strength).toBeGreaterThanOrEqual(3)
+      expect(stats!.strength).toBeLessThanOrEqual(18)
+    })
+
+    it('generates bonus points (7-29 range)', () => {
+      component.rollStats()
+
+      const stats = component.wizardState().rolledStats
+
+      expect(stats!.bonusPoints).toBeGreaterThanOrEqual(7)
+      expect(stats!.bonusPoints).toBeLessThanOrEqual(29)
+    })
+
+    it('applies race modifiers to rolled stats', () => {
+      // Select Elf (STR -1, INT +1, VIT -2, AGI +1)
+      component.currentStep.set('RACE')
+      component.selectRace(Race.ELF)
+      component.selectAlignment(Alignment.GOOD)
+
+      // Mock the random roll to get predictable values
+      jest.spyOn(CharacterCreationService, 'rollStats').mockReturnValue({
+        strength: 10,
+        intelligence: 10,
+        piety: 10,
+        vitality: 10,
+        agility: 10,
+        luck: 10,
+        bonusPoints: 10
+      })
+
+      component.rollStats()
+
+      const stats = component.wizardState().rolledStats
+
+      expect(stats!.strength).toBe(9) // 10 - 1 (Elf modifier)
+      expect(stats!.intelligence).toBe(11) // 10 + 1
+      expect(stats!.vitality).toBe(8) // 10 - 2
+      expect(stats!.agility).toBe(11) // 10 + 1
+    })
+
+    it('allows rerolling stats', () => {
+      component.rollStats()
+      const firstRoll = component.wizardState().rolledStats
+
+      component.rollStats() // Reroll
+
+      const secondRoll = component.wizardState().rolledStats
+
+      expect(secondRoll).toBeDefined()
+      // Rolls should be different (with very high probability)
+      const isDifferent =
+        firstRoll!.strength !== secondRoll!.strength ||
+        firstRoll!.intelligence !== secondRoll!.intelligence ||
+        firstRoll!.bonusPoints !== secondRoll!.bonusPoints
+
+      expect(isDifferent).toBe(true)
+    })
+
+    it('advances to BONUS_POINTS step when stats accepted', () => {
+      component.rollStats()
+      component.acceptStats()
+
+      expect(component.currentStep()).toBe('BONUS_POINTS')
+    })
+
+    it('shows error when trying to accept without rolling', () => {
+      component.acceptStats()
+
+      expect(component.errorMessage()).toContain('Roll stats')
     })
   })
 })
