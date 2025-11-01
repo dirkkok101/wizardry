@@ -366,5 +366,60 @@ describe('ShopComponent', () => {
 
       expect(component.errorMessage()).toContain('No character selected')
     })
+
+    it('shows confirmation before selling item', () => {
+      const itemId = 'weapon-long-sword'
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          inventory: [itemId]
+        })
+      }))
+
+      component.initiateSell(itemId)
+
+      expect(component.pendingSellItemId()).toBe(itemId)
+      expect(component.showSellConfirmation()).toBe(true)
+    })
+
+    it('completes sell after confirmation', () => {
+      const itemId = 'weapon-long-sword'
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          inventory: [itemId]
+        })
+      }))
+
+      component.initiateSell(itemId)
+      component.confirmSell()
+
+      const char = gameState.state().roster.get('char-1')!
+      expect(char.inventory.length).toBe(0)
+      expect(component.showSellConfirmation()).toBe(false)
+    })
+
+    it('cancels sell on decline confirmation', () => {
+      const itemId = 'weapon-long-sword'
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          inventory: [itemId]
+        })
+      }))
+
+      component.initiateSell(itemId)
+      component.cancelSell()
+
+      const char = gameState.state().roster.get('char-1')!
+      expect(char.inventory.length).toBe(1)
+      expect(component.showSellConfirmation()).toBe(false)
+    })
   })
 });

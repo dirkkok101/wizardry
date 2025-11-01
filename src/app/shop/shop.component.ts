@@ -40,6 +40,8 @@ export class ShopComponent implements OnInit {
   readonly selectedCharacterId = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+  readonly showSellConfirmation = signal<boolean>(false);
+  readonly pendingSellItemId = signal<string | null>(null);
 
   // Shop data
   readonly shopInventory = signal<Item[]>(SHOP_INVENTORY);
@@ -252,5 +254,44 @@ export class ShopComponent implements OnInit {
 
     this.successMessage.set(`Sold ${item.name} for ${sellPrice} gold`)
     this.errorMessage.set(null)
+  }
+
+  /**
+   * Initiate sell with confirmation prompt
+   */
+  initiateSell(itemId: string): void {
+    this.pendingSellItemId.set(itemId)
+    this.showSellConfirmation.set(true)
+  }
+
+  /**
+   * Confirm and complete the sell
+   */
+  confirmSell(): void {
+    const itemId = this.pendingSellItemId()
+    if (itemId) {
+      this.sellItem(itemId)
+    }
+
+    this.showSellConfirmation.set(false)
+    this.pendingSellItemId.set(null)
+  }
+
+  /**
+   * Cancel the sell
+   */
+  cancelSell(): void {
+    this.showSellConfirmation.set(false)
+    this.pendingSellItemId.set(null)
+  }
+
+  /**
+   * Get the pending sell item (for template use)
+   */
+  getPendingSellItem(): Item | null {
+    const itemId = this.pendingSellItemId()
+    if (!itemId) return null
+
+    return this.getCharacterInventory().find(i => i.id === itemId) || null
   }
 }
