@@ -17,19 +17,22 @@ export function addUnidentifiedItemsToCharacter(
     throw new Error(`Character ${characterId} not found`)
   }
 
-  const itemsToAdd = UNIDENTIFIED_ITEMS.slice(0, itemCount)
+  // Get item IDs, not full Item objects (inventory stores IDs)
+  const itemIds = UNIDENTIFIED_ITEMS.slice(0, itemCount).map(item => item.id)
 
   return {
     ...state,
     roster: new Map(state.roster).set(characterId, {
       ...character,
-      inventory: [...character.inventory, ...itemsToAdd]
+      inventory: [...character.inventory, ...itemIds]
     })
   }
 }
 
 /**
  * Test helper: Give character identified version of an item
+ * Note: This doesn't actually identify the item in the global items registry.
+ * It only adds the item ID to inventory (identification is handled by ShopService).
  */
 export function identifyItemForCharacter(
   state: GameState,
@@ -41,15 +44,17 @@ export function identifyItemForCharacter(
     throw new Error(`Character ${characterId} not found`)
   }
 
-  const updatedInventory = character.inventory.map(item =>
-    (typeof item === 'object' && item.id === itemId) ? { ...item, identified: true } : item
-  )
-
-  return {
-    ...state,
-    roster: new Map(state.roster).set(characterId, {
-      ...character,
-      inventory: updatedInventory
-    })
+  // Just ensure the item is in the inventory
+  // Actual identification logic is handled by the ShopService
+  if (!character.inventory.includes(itemId)) {
+    return {
+      ...state,
+      roster: new Map(state.roster).set(characterId, {
+        ...character,
+        inventory: [...character.inventory, itemId]
+      })
+    }
   }
+
+  return state
 }

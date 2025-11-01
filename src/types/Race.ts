@@ -10,16 +10,21 @@ export enum Race {
 }
 
 /**
- * Race stat modifiers (applied during character creation)
+ * Race modifier interface
  */
-export const RACE_MODIFIERS: Record<Race, {
+export interface RaceModifiers {
   strength: number
   intelligence: number
   piety: number
   vitality: number
   agility: number
   luck: number
-}> = {
+}
+
+/**
+ * Race stat modifiers (applied during character creation)
+ */
+export const RACE_MODIFIERS: Record<Race, RaceModifiers> = {
   [Race.HUMAN]: { strength: 0, intelligence: 0, piety: 0, vitality: 0, agility: 0, luck: 0 },
   [Race.ELF]: { strength: -1, intelligence: 1, piety: 1, vitality: -2, agility: 1, luck: 0 },
   [Race.DWARF]: { strength: 2, intelligence: 0, piety: 0, vitality: 2, agility: -1, luck: 0 },

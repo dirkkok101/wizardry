@@ -54,7 +54,7 @@ export class ShopComponent implements OnInit {
   });
 
   constructor(
-    private gameState: GameStateService,
+    protected gameState: GameStateService,
     private router: Router
   ) {}
 

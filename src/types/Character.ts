@@ -30,7 +30,8 @@ export interface Character {
   ac: number // Armor Class (lower is better)
 
   // Inventory (8 items max)
-  inventory: string[] // Item IDs
+  // Can contain either item IDs (string) or Item objects (for unidentified items)
+  inventory: (string | any)[] // Item IDs or Item objects for unidentified items
   equippedWeapon?: string // Item ID
   equippedArmor?: string // Item ID
 
