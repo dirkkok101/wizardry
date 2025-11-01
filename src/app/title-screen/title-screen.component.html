@@ -1,0 +1,28 @@
+<div class="title-screen" [class.loading]="isLoading()">
+  <!-- Title Bitmap (placeholder for future graphic) -->
+  <div class="title-logo">
+    <h1>WIZARDRY</h1>
+    <p class="subtitle">Proving Grounds of the Mad Overlord</p>
+  </div>
+
+  <!-- Loading indicator -->
+  <div class="loading-status" *ngIf="isLoading()">
+    <p>Loading assets...</p>
+  </div>
+
+  <!-- Ready state -->
+  <div class="ready-prompt" *ngIf="!isLoading()" appKeystrokeInput (keystroke)="handleKeyPress($event)">
+    <p class="press-key">Press any key to continue</p>
+
+    <!-- Save data indicator -->
+    <p class="save-indicator" *ngIf="hasSaveData()">
+      Saved game detected
+    </p>
+  </div>
+
+  <!-- Copyright -->
+  <div class="copyright">
+    <p>&copy; 1981 Sir-Tech Software, Inc.</p>
+    <p>Remake 2025</p>
+  </div>
+</div>

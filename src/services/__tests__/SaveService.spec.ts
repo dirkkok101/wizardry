@@ -80,4 +80,32 @@ describe('SaveService', () => {
       expect(isValid).toBe(false)
     })
   })
+
+  describe('hasSaveData', () => {
+    beforeEach(() => {
+      // Clear localStorage before each test
+      localStorage.clear();
+    });
+
+    it('returns false when no save exists', async () => {
+      const result = await service.hasSaveData(1);
+      expect(result).toBe(false);
+    });
+
+    it('returns true when save exists', async () => {
+      const gameState = GameInitializationService.createNewGame();
+      await service.saveGame(gameState, 1);
+
+      const result = await service.hasSaveData(1);
+      expect(result).toBe(true);
+    });
+
+    it('checks specific save slot', async () => {
+      const gameState = GameInitializationService.createNewGame();
+      await service.saveGame(gameState, 1);
+
+      expect(await service.hasSaveData(1)).toBe(true);
+      expect(await service.hasSaveData(2)).toBe(false);
+    });
+  })
 })

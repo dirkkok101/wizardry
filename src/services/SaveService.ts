@@ -13,11 +13,18 @@ const SAVE_VERSION = '1.0.0'
 })
 export class SaveService {
   /**
-   * Check if save data exists
+   * Check if save data exists (alias for hasSaveData)
    */
   async checkForSaveData(saveSlot: number = 1): Promise<boolean> {
     const saved = localStorage.getItem(`${SAVE_KEY}_${saveSlot}`)
     return saved !== null
+  }
+
+  /**
+   * Check if save data exists for a given save slot
+   */
+  async hasSaveData(saveSlot: number = 1): Promise<boolean> {
+    return this.checkForSaveData(saveSlot);
   }
 
   /**
