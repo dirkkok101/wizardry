@@ -24,11 +24,44 @@
     }
 
     @if (currentView() === 'sell') {
-      <div class="placeholder-view">
+      <div class="sell-view">
         <h2>SELL ITEMS</h2>
-        <p class="placeholder-text">
-          Item selling will be implemented in Phase 5.
-        </p>
+
+        @if (selectedCharacter(); as character) {
+          @if (getSellableItems().length > 0) {
+            <div class="item-list">
+              @for (item of getSellableItems(); track item.id) {
+                <div class="item-row">
+                  <div class="item-info">
+                    <span class="item-name">{{ item.name }}</span>
+                    @if (item.equipped) {
+                      <span class="equipped-badge">(Equipped)</span>
+                    }
+                  </div>
+                  <div class="item-price">
+                    <span class="sell-price">Sell: {{ getSellPrice(item) }} gold</span>
+                    <button
+                      class="sell-btn"
+                      (click)="sellItem(item.id)"
+                      [disabled]="getSellPrice(item) === 0"
+                    >
+                      (S) Sell
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-message">No items to sell</p>
+          }
+
+          <div class="party-gold">
+            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+          </div>
+        } @else {
+          <p class="error-message">No character selected</p>
+        }
+
         <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
       </div>
     }
