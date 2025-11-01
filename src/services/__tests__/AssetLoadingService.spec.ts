@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { AssetLoadingService } from '../AssetLoadingService'
 
 // Mock HTMLImageElement
@@ -17,13 +18,19 @@ global.Image = class MockImage {
 } as any
 
 describe('AssetLoadingService', () => {
+  let service: AssetLoadingService;
+
   beforeEach(() => {
-    AssetLoadingService.clearCache()
+    TestBed.configureTestingModule({
+      providers: [AssetLoadingService]
+    });
+    service = TestBed.inject(AssetLoadingService);
+    service.clearCache()
   })
 
   describe('loadTitleAssets', () => {
     it('should load title bitmap and return TitleAssets', async () => {
-      const assets = await AssetLoadingService.loadTitleAssets()
+      const assets = await service.loadTitleAssets()
 
       expect(assets).toBeDefined()
       expect(assets.titleBitmap).toBeDefined()
@@ -31,33 +38,33 @@ describe('AssetLoadingService', () => {
 
     it('should complete in under 500ms', async () => {
       const start = Date.now()
-      await AssetLoadingService.loadTitleAssets()
+      await service.loadTitleAssets()
       const duration = Date.now() - start
 
       expect(duration).toBeLessThan(500)
     })
 
     it('should cache loaded assets', async () => {
-      await AssetLoadingService.loadTitleAssets()
+      await service.loadTitleAssets()
 
-      expect(AssetLoadingService.isAssetLoaded('title_bitmap')).toBe(true)
+      expect(service.isAssetLoaded('title_bitmap')).toBe(true)
     })
   })
 
   describe('loadGameAssets', () => {
     it('should load game assets and fire onLoadComplete', async () => {
       const completeSpy = jest.fn()
-      AssetLoadingService.onLoadComplete(completeSpy)
+      service.onLoadComplete(completeSpy)
 
-      await AssetLoadingService.loadGameAssets()
+      await service.loadGameAssets()
 
       expect(completeSpy).toHaveBeenCalled()
     })
 
     it('should update loading stats', async () => {
-      await AssetLoadingService.loadGameAssets()
+      await service.loadGameAssets()
 
-      const stats = AssetLoadingService.getLoadingStats()
+      const stats = service.getLoadingStats()
       expect(stats.state).toBe('complete')
       expect(stats.progress).toBe(100)
     })
@@ -65,38 +72,38 @@ describe('AssetLoadingService', () => {
 
   describe('getAsset', () => {
     it('should return null for non-existent asset', () => {
-      const asset = AssetLoadingService.getAsset('nonexistent')
+      const asset = service.getAsset('nonexistent')
       expect(asset).toBeNull()
     })
 
     it('should return cached asset', async () => {
-      await AssetLoadingService.loadTitleAssets()
+      await service.loadTitleAssets()
 
-      const bitmap = AssetLoadingService.getAsset<HTMLImageElement>('title_bitmap')
+      const bitmap = service.getAsset<HTMLImageElement>('title_bitmap')
       expect(bitmap).toBeDefined()
     })
   })
 
   describe('loadTrainingGroundsAssets', () => {
     it('loads training grounds background image', async () => {
-      const image = await AssetLoadingService.loadTrainingGroundsAssets()
+      const image = await service.loadTrainingGroundsAssets()
       expect(image).toBeDefined()
     })
 
     it('caches training grounds image', async () => {
-      const image1 = await AssetLoadingService.loadTrainingGroundsAssets()
-      const image2 = await AssetLoadingService.loadTrainingGroundsAssets()
+      const image1 = await service.loadTrainingGroundsAssets()
+      const image2 = await service.loadTrainingGroundsAssets()
       expect(image1).toBe(image2)
     })
   })
 
   describe('clearCache', () => {
     it('should remove all cached assets', async () => {
-      await AssetLoadingService.loadTitleAssets()
-      expect(AssetLoadingService.isAssetLoaded('title_bitmap')).toBe(true)
+      await service.loadTitleAssets()
+      expect(service.isAssetLoaded('title_bitmap')).toBe(true)
 
-      AssetLoadingService.clearCache()
-      expect(AssetLoadingService.isAssetLoaded('title_bitmap')).toBe(false)
+      service.clearCache()
+      expect(service.isAssetLoaded('title_bitmap')).toBe(false)
     })
   })
 })
