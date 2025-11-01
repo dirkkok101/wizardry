@@ -1,4 +1,3 @@
-import { Character } from '../types/Character'
 import { Item } from '../types/Item'
 
 /**
@@ -24,10 +23,12 @@ export class ShopService {
   }
 
   /**
-   * Check if character can afford an item.
+   * Check if party can afford an item.
+   * @param partyGold - Current party gold amount
+   * @param item - Item to purchase
    */
-  static canAfford(character: Character, item: Item): boolean {
-    return (character.gold || 0) >= item.price
+  static canAfford(partyGold: number, item: Item): boolean {
+    return partyGold >= item.price
   }
 
   /**

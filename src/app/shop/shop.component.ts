@@ -114,7 +114,7 @@ export class ShopComponent implements OnInit {
     const partyGold = this.gameState.state().party.gold || 0;
 
     // Check if party can afford
-    if (partyGold < item.price) {
+    if (!ShopService.canAfford(partyGold, item)) {
       this.errorMessage.set(`Cannot afford ${item.name}. Need ${item.price} gold.`);
       return;
     }

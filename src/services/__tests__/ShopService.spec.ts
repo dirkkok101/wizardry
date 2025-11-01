@@ -1,8 +1,6 @@
 import { ShopService } from '../ShopService'
 import { Item } from '../../types/Item'
 import { ItemType, ItemSlot } from '../../types/ItemType'
-import { Character } from '../../types/Character'
-import { CharacterClass } from '../../types/CharacterClass'
 
 describe('ShopService', () => {
   const mockItem: Item = {
@@ -17,13 +15,6 @@ describe('ShopService', () => {
     equipped: false
   }
 
-  const mockCharacter: Character = {
-    id: 'char-1',
-    name: 'Gandalf',
-    // ... other required fields
-    inventory: [],
-    gold: 500
-  } as Character
 
   describe('calculateSellPrice', () => {
     it('returns 50% of purchase price', () => {
@@ -45,13 +36,20 @@ describe('ShopService', () => {
   })
 
   describe('canAfford', () => {
-    it('returns true when character has enough gold', () => {
-      expect(ShopService.canAfford(mockCharacter, mockItem)).toBe(true)
+    it('returns true when party has enough gold', () => {
+      expect(ShopService.canAfford(500, mockItem)).toBe(true)
     })
 
-    it('returns false when character does not have enough gold', () => {
-      const poorChar = { ...mockCharacter, gold: 50 }
-      expect(ShopService.canAfford(poorChar, mockItem)).toBe(false)
+    it('returns false when party does not have enough gold', () => {
+      expect(ShopService.canAfford(50, mockItem)).toBe(false)
+    })
+
+    it('returns false when gold exactly equals price minus one', () => {
+      expect(ShopService.canAfford(199, mockItem)).toBe(false)
+    })
+
+    it('returns true when gold exactly equals price', () => {
+      expect(ShopService.canAfford(200, mockItem)).toBe(true)
     })
   })
 
