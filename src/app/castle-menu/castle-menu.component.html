@@ -1,0 +1,12 @@
+<div class="castle-menu">
+  <header>
+    <h1>CASTLE</h1>
+  </header>
+
+  <main>
+    <app-menu
+      [items]="menuItems"
+      (select)="handleMenuSelect($event)"
+    />
+  </main>
+</div>

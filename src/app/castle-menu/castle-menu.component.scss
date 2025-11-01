@@ -1,0 +1,37 @@
+@use '../../styles/variables' as *;
+
+.castle-menu {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: $padding-standard;
+
+  header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: 24px;
+      color: $color-text-bright;
+      margin: 0;
+      text-align: center;
+    }
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 640px) {
+  .castle-menu {
+    padding: $padding-small;
+
+    header h1 {
+      font-size: 20px;
+    }
+  }
+}
