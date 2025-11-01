@@ -318,4 +318,84 @@ export class ShopComponent implements OnInit {
     // Flat 100 gold fee for any item
     return 100
   }
+
+  /**
+   * Identify an item from character inventory
+   */
+  identifyItem(itemId: string): void {
+    const character = this.selectedCharacter()
+    if (!character) {
+      this.errorMessage.set('No character selected')
+      return
+    }
+
+    // Find item in inventory
+    const item = this.getCharacterInventory().find(i => i.id === itemId)
+    if (!item) {
+      this.errorMessage.set('Item not found in inventory')
+      return
+    }
+
+    // Check if already identified
+    if (item.identified) {
+      this.errorMessage.set('Item is already identified')
+      return
+    }
+
+    // Check if party can afford (100 gold flat fee)
+    const identifyCost = this.getIdentifyCost()
+    const party = this.gameState.party()
+    const partyGold = party.gold || 0
+
+    if (partyGold < identifyCost) {
+      this.errorMessage.set(`Cannot afford identification. Need ${identifyCost} gold.`)
+      return
+    }
+
+    // Mark item as identified
+    const charId = this.selectedCharacterId()!
+
+    this.gameState.updateState(state => {
+      const updatedInventory = character.inventory.map(invItem => {
+        // Handle both Item objects and string IDs
+        if (typeof invItem === 'object') {
+          return invItem.id === itemId ? { ...invItem, identified: true } : invItem
+        }
+        return invItem
+      })
+
+      const updatedChar = {
+        ...character,
+        inventory: updatedInventory
+      }
+
+      return {
+        ...state,
+        roster: new Map(state.roster).set(charId, updatedChar),
+        party: {
+          ...state.party,
+          gold: partyGold - identifyCost
+        }
+      }
+    })
+
+    // Build success message with item details
+    let message = `Identified: ${item.name}`
+
+    // Add properties
+    if (item.damage) {
+      message += ` (Damage: ${item.damage})`
+    }
+    if (item.defense) {
+      message += ` (Defense: ${item.defense})`
+    }
+
+    // Warn if cursed
+    if (item.cursed) {
+      message += ' - WARNING: CURSED! Cannot be removed once equipped!'
+    }
+
+    this.successMessage.set(message)
+    this.errorMessage.set(null)
+  }
 }

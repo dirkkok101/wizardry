@@ -476,5 +476,103 @@ describe('ShopComponent', () => {
 
       expect(cost).toBe(100)
     })
+
+    it('deducts 100 gold from party when identifying', () => {
+      const initialGold = gameState.party().gold || 0
+
+      component.identifyItem(UNIDENTIFIED_ITEMS[0].id)
+
+      const finalGold = gameState.party().gold || 0
+
+      expect(finalGold).toBe(initialGold - 100)
+    })
+
+    it('marks item as identified', () => {
+      const item = UNIDENTIFIED_ITEMS[0]
+
+      component.identifyItem(item.id)
+
+      const char = gameState.state().roster.get('char-1')!
+      const identifiedItem = char.inventory.find(i => (typeof i === 'object' ? i.id : i) === item.id)!
+
+      expect((identifiedItem as Item).identified).toBe(true)
+    })
+
+    it('reveals true item name', () => {
+      const item = UNIDENTIFIED_ITEMS[0]
+      const trueName = item.name
+
+      component.identifyItem(item.id)
+
+      expect(component.successMessage()).toContain(trueName)
+    })
+
+    it('reveals item properties after identification', () => {
+      const item = UNIDENTIFIED_ITEMS[0]
+
+      component.identifyItem(item.id)
+
+      const char = gameState.state().roster.get('char-1')!
+      const identifiedItem = char.inventory.find(i => (typeof i === 'object' ? i.id : i) === item.id)! as Item
+
+      expect(identifiedItem.damage).toBeDefined()
+      expect(component.successMessage()).toContain('Damage')
+    })
+
+    it('reveals curse status if cursed', () => {
+      const cursedItem = UNIDENTIFIED_ITEMS[2] // Cursed item
+
+      component.identifyItem(cursedItem.id)
+
+      expect(component.successMessage()).toContain('CURSED')
+      expect(component.successMessage()).toContain('WARNING')
+    })
+
+    it('shows error when cannot afford identification', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 50 // Not enough for 100 gold cost
+        }
+      }))
+
+      component.identifyItem(UNIDENTIFIED_ITEMS[0].id)
+
+      expect(component.errorMessage()).toContain('afford')
+    })
+
+    it('shows error when item not found', () => {
+      component.identifyItem('nonexistent-item')
+
+      expect(component.errorMessage()).toContain('not found')
+    })
+
+    it('shows error when item already identified', () => {
+      const identifiedItem: Item = {
+        ...UNIDENTIFIED_ITEMS[0],
+        identified: true
+      }
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          inventory: [identifiedItem]
+        })
+      }))
+
+      component.identifyItem(identifiedItem.id)
+
+      expect(component.errorMessage()).toContain('already identified')
+    })
+
+    it('shows error when no character selected', () => {
+      component.selectedCharacterId.set(null)
+
+      component.identifyItem(UNIDENTIFIED_ITEMS[0].id)
+
+      expect(component.errorMessage()).toContain('No character selected')
+    })
   })
 });
