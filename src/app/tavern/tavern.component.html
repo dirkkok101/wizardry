@@ -1,0 +1,62 @@
+<div class="tavern">
+  <header>
+    <h1>GILGAMESH'S TAVERN</h1>
+  </header>
+
+  <main>
+    <!-- Main menu view -->
+    @if (currentView() === 'main') {
+      <div class="main-view">
+        <div class="menu-section">
+          <app-menu
+            [items]="menuItems"
+            (select)="handleMenuSelect($event)"
+          />
+        </div>
+
+        <div class="party-section">
+          <h2>CURRENT PARTY ({{ partyCharacters().length }}/6):</h2>
+          <app-character-list
+            [characters]="partyCharacters()"
+            [selectable]="false"
+            [emptyMessage]="'No party members'"
+          />
+        </div>
+      </div>
+    }
+
+    <!-- Add character view -->
+    @if (currentView() === 'add') {
+      <div class="character-select-view">
+        <h2>SELECT CHARACTER TO ADD:</h2>
+        <app-character-list
+          [characters]="availableCharacters()"
+          [selectable]="true"
+          [emptyMessage]="'No characters available (all in party or none created)'"
+          (characterSelected)="handleAddCharacter($event)"
+        />
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Cancel</button>
+      </div>
+    }
+
+    <!-- Remove character view -->
+    @if (currentView() === 'remove') {
+      <div class="character-select-view">
+        <h2>SELECT CHARACTER TO REMOVE:</h2>
+        <app-character-list
+          [characters]="partyCharacters()"
+          [selectable]="true"
+          (characterSelected)="handleRemoveCharacter($event)"
+        />
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Cancel</button>
+      </div>
+    }
+  </main>
+
+  <!-- Error message -->
+  @if (errorMessage()) {
+    <div class="error-message">
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
+</div>
