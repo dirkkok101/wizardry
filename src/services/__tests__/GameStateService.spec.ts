@@ -93,4 +93,50 @@ describe('GameStateService', () => {
       expect(state.currentScene).toBe(SceneType.TITLE_SCREEN);
     });
   });
+
+  describe('loadGame (integration)', () => {
+    beforeEach(() => {
+      // Clear localStorage before each test
+      localStorage.clear();
+    });
+
+    it('loads saved game state', async () => {
+      // Setup: Create and save a custom state
+      service.updateState(state => ({
+        ...state,
+        currentScene: SceneType.CASTLE_MENU,
+        party: {
+          ...state.party,
+          members: ['character-1', 'character-2'],
+          light: true
+        }
+      }));
+
+      // Manually save the current state
+      await saveService.saveGame(service.state());
+
+      // Reset to initial state
+      service.resetState();
+      expect(service.currentScene()).toBe(SceneType.TITLE_SCREEN);
+
+      // Load saved state
+      await service.loadGame();
+
+      // Verify loaded state
+      const loadedState = service.state();
+      expect(loadedState.currentScene).toBe(SceneType.CASTLE_MENU);
+      expect(loadedState.party.members).toEqual(['character-1', 'character-2']);
+      expect(loadedState.party.light).toBe(true);
+    });
+
+    it('handles loading when no save exists', async () => {
+      const initialState = service.state();
+
+      // Try to load non-existent save
+      await service.loadGame();
+
+      // State should remain unchanged
+      expect(service.state()).toBe(initialState);
+    });
+  });
 });
