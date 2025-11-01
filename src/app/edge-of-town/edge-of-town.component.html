@@ -1,0 +1,42 @@
+<div class="edge-of-town">
+  <header>
+    <h1>EDGE OF TOWN</h1>
+  </header>
+
+  <main>
+    <div class="menu-section">
+      <app-menu
+        [items]="menuItems"
+        (select)="handleMenuSelect($event)"
+      />
+    </div>
+
+    <div class="party-section">
+      <h2>CURRENT PARTY:</h2>
+      <ul *ngIf="partyCharacters().length > 0; else noParty">
+        <li *ngFor="let char of partyCharacters(); let i = index">
+          {{ i + 1 }}. {{ char.name }} - {{ char.class }} (Lv{{ char.level }})
+        </li>
+      </ul>
+      <ng-template #noParty>
+        <p class="no-party">No party formed</p>
+      </ng-template>
+    </div>
+  </main>
+
+  <!-- Error message -->
+  <div class="error-message" *ngIf="errorMessage()">
+    <p>{{ errorMessage() }}</p>
+  </div>
+
+  <!-- Exit confirmation -->
+  <div class="confirmation-dialog" *ngIf="showExitConfirmation()">
+    <div class="dialog-content">
+      <p>Save and quit?</p>
+      <div class="dialog-actions">
+        <button (click)="confirmExit()">(Y)es</button>
+        <button (click)="cancelExit()">(N)o</button>
+      </div>
+    </div>
+  </div>
+</div>

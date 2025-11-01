@@ -1,0 +1,126 @@
+@use '../../styles/variables' as *;
+
+.edge-of-town {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: $padding-standard;
+
+  header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: 24px;
+      color: $color-text-bright;
+      margin: 0;
+      text-align: center;
+    }
+  }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .menu-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .party-section {
+    border-left: 1px solid $color-text-dim;
+    padding-left: $spacing-lg;
+
+    @media (max-width: 640px) {
+      border-left: none;
+      border-top: 1px solid $color-text-dim;
+      padding-left: 0;
+      padding-top: $spacing-lg;
+    }
+
+    h2 {
+      font-size: 16px;
+      color: $color-text-green;
+      margin: 0 0 $spacing-md 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        color: $color-text-green;
+        margin-bottom: $spacing-sm;
+      }
+    }
+
+    .no-party {
+      color: $color-text-dim;
+      font-style: italic;
+    }
+  }
+
+  .error-message {
+    margin-top: $spacing-lg;
+    text-align: center;
+
+    p {
+      color: $color-error;
+      font-weight: bold;
+    }
+  }
+
+  .confirmation-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .dialog-content {
+      background: $color-bg-black;
+      border: 2px solid $color-text-bright;
+      padding: $spacing-xl;
+      text-align: center;
+
+      p {
+        font-size: 18px;
+        color: $color-text-bright;
+        margin: 0 0 $spacing-lg 0;
+      }
+
+      .dialog-actions {
+        display: flex;
+        gap: $spacing-md;
+        justify-content: center;
+
+        button {
+          background: none;
+          border: 1px solid $color-text-green;
+          color: $color-text-green;
+          font-family: $font-mono;
+          font-size: 14px;
+          padding: $spacing-sm $spacing-lg;
+          cursor: pointer;
+
+          &:hover {
+            background: $color-text-green;
+            color: $color-bg-black;
+          }
+        }
+      }
+    }
+  }
+}
