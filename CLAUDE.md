@@ -264,22 +264,30 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
 **Migration Status**: Angular migration complete - project now uses Angular framework at root level.
 
 **Completed**:
-- Angular project structure setup with Angular CLI
-- Migration from Vite to Angular build system
-- Migration from Vitest to Jest testing framework
-- Service layer migration (6 core services migrated):
-  - AssetLoadingService
-  - CharacterService
-  - GameInitializationService
-  - InputService
-  - SaveService
-  - SceneNavigationService
-- Test suite migration to Jest with jest-preset-angular
-- Game data files and documentation preserved at root level
-- Comprehensive documentation (14/14 UI scenes, all core services, all game systems)
+- **Phases 1-4**: Core architecture and Angular migration
+  - Angular project structure setup with Angular CLI
+  - Migration from Vite to Angular build system
+  - Migration from Vitest to Jest testing framework
+  - Service layer migration (13+ core services)
+  - Test suite migration to Jest with jest-preset-angular
+  - Game data files and documentation preserved at root level
+
+- **Phase 5**: Town Service Business Logic (Complete)
+  - **Temple Component**: Healing, resurrection, cure services with tithe calculations
+  - **Shop Component**: Buy, sell, identify flows with party-based gold system
+  - **Training Grounds Component**: Complete 7-step character creation wizard
+  - **CharacterService**: Class eligibility, character creation, validation (29 tests)
+  - **TempleService**: Tithe calculations based on service type and character level
+  - **ResurrectionService**: Success rate logic based on Vitality stat
+  - **ShopService**: Buy/sell/identify pricing calculations
+  - **InventoryService**: Character inventory management
+  - **Integration Tests**: 5 E2E tests covering character creation and shop flows
+  - **336 total tests passing** in **<4 seconds** (3.48s)
+  - All placeholders removed, code polished
 
 **Next Steps**:
-- Continue implementing UI layer with Angular components
-- Migrate canvas rendering to Angular services/components
-- Implement remaining services and commands following the documentation in `docs/services/` and `docs/commands/`
-- Add Angular-specific features (dependency injection, change detection optimization)
+- **Phase 6**: Castle Menu and remaining town services (Inn, Tavern)
+- **Phase 7**: Dungeon navigation and combat system
+- Canvas rendering for dungeon visualization
+- Party formation and management UI
+- Add Angular-specific optimizations (OnPush change detection)
