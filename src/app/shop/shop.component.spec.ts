@@ -4,6 +4,7 @@ import { ShopComponent } from './shop.component';
 import { GameStateService } from '../../services/GameStateService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
+import { Item } from '../../types/Item';
 import { CharacterClass } from '../../types/CharacterClass';
 import { Race } from '../../types/Race';
 import { Alignment } from '../../types/Alignment';
@@ -242,6 +243,40 @@ describe('ShopComponent', () => {
 
       // All current items are sellable (none are equipped+cursed)
       expect(sellable.length).toBe(inventory.length)
+    })
+
+    it('calculates sell price (50% of purchase price)', () => {
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!
+
+      const sellPrice = component.getSellPrice(item)
+
+      expect(sellPrice).toBe(100) // 50% of 200
+    })
+
+    it('floors sell price for odd amounts', () => {
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-dagger')!
+
+      const sellPrice = component.getSellPrice(item)
+
+      expect(sellPrice).toBe(10) // floor(20 * 0.5) = 10
+    })
+
+    it('returns 0 sell price for cursed items', () => {
+      // Create a cursed item for testing
+      const cursedItem: Item = {
+        id: 'cursed-sword',
+        name: 'Cursed Sword',
+        type: SHOP_INVENTORY[0].type,
+        slot: SHOP_INVENTORY[0].slot,
+        price: 300,
+        cursed: true,
+        identified: true,
+        equipped: false
+      }
+
+      const sellPrice = component.getSellPrice(cursedItem)
+
+      expect(sellPrice).toBe(0)
     })
   })
 });

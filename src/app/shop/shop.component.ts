@@ -185,4 +185,11 @@ export class ShopComponent implements OnInit {
       return true
     })
   }
+
+  /**
+   * Calculate sell price for an item (uses ShopService)
+   */
+  getSellPrice(item: Item): number {
+    return ShopService.calculateSellPrice(item)
+  }
 }
