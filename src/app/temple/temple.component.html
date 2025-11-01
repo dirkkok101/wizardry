@@ -13,23 +13,6 @@
       </div>
     }
 
-    @if (currentView() === 'healing') {
-      <div class="placeholder-view">
-        <h2>HEALING SERVICES</h2>
-        <p class="placeholder-text">
-          Healing services will be implemented in Phase 5.
-        </p>
-        <p class="placeholder-details">
-          This will include:
-        </p>
-        <ul>
-          <li>Cure Poison</li>
-          <li>Cure Paralysis</li>
-          <li>Cure Stone</li>
-          <li>Resurrection (with success/failure mechanics)</li>
-        </ul>
-        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
-      </div>
-    }
+    <!-- Additional views (select-character, select-service, confirm-service) are rendered by character-list component -->
   </main>
 </div>
