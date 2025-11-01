@@ -178,17 +178,42 @@ function validateClassEligibility(
 }
 
 /**
- * Calculate which classes a character is eligible for based on their stats.
+ * Alignment restrictions for each class based on authentic Wizardry mechanics
+ */
+const CLASS_ALIGNMENT_RESTRICTIONS: Record<CharacterClass, Alignment[] | null> = {
+  [CharacterClass.FIGHTER]: null, // Any alignment
+  [CharacterClass.MAGE]: null, // Any alignment
+  [CharacterClass.PRIEST]: [Alignment.GOOD, Alignment.EVIL], // Not Neutral
+  [CharacterClass.THIEF]: [Alignment.NEUTRAL, Alignment.EVIL], // Not Good
+  [CharacterClass.BISHOP]: null, // Any alignment
+  [CharacterClass.SAMURAI]: [Alignment.GOOD, Alignment.NEUTRAL], // Not Evil
+  [CharacterClass.LORD]: [Alignment.GOOD], // Good only
+  [CharacterClass.NINJA]: [Alignment.EVIL] // Evil only
+}
+
+/**
+ * Calculate which classes a character is eligible for based on their stats and alignment.
  *
  * Returns array of eligible CharacterClass values.
  */
-function getEligibleClasses(stats: BaseStats): CharacterClass[] {
+function getEligibleClasses(stats: BaseStats, alignment: Alignment): CharacterClass[] {
   const eligible: CharacterClass[] = []
 
   for (const [className, requirements] of Object.entries(CLASS_REQUIREMENTS_FOR_ELIGIBILITY)) {
-    if (meetsRequirements(stats, requirements)) {
-      eligible.push(className as CharacterClass)
+    const charClass = className as CharacterClass
+
+    // Check stat requirements first
+    if (!meetsRequirements(stats, requirements)) {
+      continue
     }
+
+    // Check alignment requirements
+    const allowedAlignments = CLASS_ALIGNMENT_RESTRICTIONS[charClass]
+    if (allowedAlignments !== null && !allowedAlignments.includes(alignment)) {
+      continue
+    }
+
+    eligible.push(charClass)
   }
 
   return eligible

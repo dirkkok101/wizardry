@@ -251,7 +251,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).toContain(CharacterClass.FIGHTER)
     })
 
@@ -265,7 +265,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).not.toContain(CharacterClass.FIGHTER)
     })
 
@@ -279,7 +279,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).toContain(CharacterClass.MAGE)
     })
 
@@ -293,7 +293,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).toContain(CharacterClass.PRIEST)
     })
 
@@ -307,7 +307,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
       expect(eligible).toContain(CharacterClass.THIEF)
     })
 
@@ -321,7 +321,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).toContain(CharacterClass.BISHOP)
     })
 
@@ -335,7 +335,7 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).not.toContain(CharacterClass.BISHOP)
     })
 
@@ -349,7 +349,7 @@ describe('CharacterService', () => {
         luck: 8
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).toContain(CharacterClass.SAMURAI)
     })
 
@@ -363,7 +363,7 @@ describe('CharacterService', () => {
         luck: 15
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
       expect(eligible).toContain(CharacterClass.LORD)
     })
 
@@ -377,7 +377,7 @@ describe('CharacterService', () => {
         luck: 17
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
       expect(eligible).toContain(CharacterClass.NINJA)
     })
 
@@ -391,7 +391,7 @@ describe('CharacterService', () => {
         luck: 16 // One stat below 17
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
       expect(eligible).not.toContain(CharacterClass.NINJA)
     })
 
@@ -405,16 +405,99 @@ describe('CharacterService', () => {
         luck: 10
       }
 
-      const eligible = CharacterService.getEligibleClasses(stats)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
 
-      // Should qualify for: Fighter, Mage, Priest, Thief, Bishop, Samurai
-      expect(eligible.length).toBeGreaterThanOrEqual(6)
+      // Should qualify for: Fighter, Mage, Priest, Bishop, Samurai
+      // NOT Thief (Good cannot be Thief)
+      expect(eligible.length).toBeGreaterThanOrEqual(5)
       expect(eligible).toContain(CharacterClass.FIGHTER)
       expect(eligible).toContain(CharacterClass.MAGE)
       expect(eligible).toContain(CharacterClass.PRIEST)
-      expect(eligible).toContain(CharacterClass.THIEF)
+      expect(eligible).not.toContain(CharacterClass.THIEF)
       expect(eligible).toContain(CharacterClass.BISHOP)
       expect(eligible).toContain(CharacterClass.SAMURAI)
+    })
+
+    it('excludes Priest when alignment is Neutral', () => {
+      const stats: BaseStats = {
+        strength: 10,
+        intelligence: 10,
+        piety: 11,
+        vitality: 10,
+        agility: 10,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
+      expect(eligible).not.toContain(CharacterClass.PRIEST)
+    })
+
+    it('excludes Thief when alignment is Good', () => {
+      const stats: BaseStats = {
+        strength: 10,
+        intelligence: 10,
+        piety: 10,
+        vitality: 10,
+        agility: 11,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
+      expect(eligible).not.toContain(CharacterClass.THIEF)
+    })
+
+    it('excludes Samurai when alignment is Evil', () => {
+      const stats: BaseStats = {
+        strength: 15,
+        intelligence: 11,
+        piety: 10,
+        vitality: 14,
+        agility: 10,
+        luck: 10
+      }
+
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
+      expect(eligible).not.toContain(CharacterClass.SAMURAI)
+    })
+
+    it('requires Good alignment for Lord', () => {
+      const stats: BaseStats = {
+        strength: 15,
+        intelligence: 12,
+        piety: 12,
+        vitality: 15,
+        agility: 14,
+        luck: 15
+      }
+
+      const eligibleGood = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
+      expect(eligibleGood).toContain(CharacterClass.LORD)
+
+      const eligibleNeutral = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
+      expect(eligibleNeutral).not.toContain(CharacterClass.LORD)
+
+      const eligibleEvil = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
+      expect(eligibleEvil).not.toContain(CharacterClass.LORD)
+    })
+
+    it('requires Evil alignment for Ninja', () => {
+      const stats: BaseStats = {
+        strength: 17,
+        intelligence: 17,
+        piety: 17,
+        vitality: 17,
+        agility: 17,
+        luck: 17
+      }
+
+      const eligibleEvil = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
+      expect(eligibleEvil).toContain(CharacterClass.NINJA)
+
+      const eligibleGood = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
+      expect(eligibleGood).not.toContain(CharacterClass.NINJA)
+
+      const eligibleNeutral = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
+      expect(eligibleNeutral).not.toContain(CharacterClass.NINJA)
     })
   })
 })
