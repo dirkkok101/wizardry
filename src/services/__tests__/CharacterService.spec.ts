@@ -562,4 +562,149 @@ describe('CharacterService', () => {
       expect(result.error).toContain('letters and numbers')
     })
   })
+
+  describe('createCharacterFromStats', () => {
+    const validStats: BaseStats = {
+      strength: 15,
+      intelligence: 12,
+      piety: 12,
+      vitality: 14,
+      agility: 11,
+      luck: 10
+    }
+
+    it('creates character with all required fields', () => {
+      const char = CharacterService.createCharacterFromStats({
+        name: 'Gandalf',
+        password: 'wizard',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.MAGE
+      })
+
+      expect(char.name).toBe('Gandalf')
+      expect(char.password).toBe('wizard')
+      expect(char.race).toBe(Race.HUMAN)
+      expect(char.alignment).toBe(Alignment.GOOD)
+      expect(char.class).toBe(CharacterClass.MAGE)
+      expect(char.level).toBe(1)
+      expect(char.status).toBe(CharacterStatus.OK)
+    })
+
+    it('assigns stats from input', () => {
+      const char = CharacterService.createCharacterFromStats({
+        name: 'Test',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      expect(char.strength).toBe(15)
+      expect(char.intelligence).toBe(12)
+      expect(char.piety).toBe(12)
+      expect(char.vitality).toBe(14)
+      expect(char.agility).toBe(11)
+      expect(char.luck).toBe(10)
+    })
+
+    it('generates unique character ID', () => {
+      const char1 = CharacterService.createCharacterFromStats({
+        name: 'Char1',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      const char2 = CharacterService.createCharacterFromStats({
+        name: 'Char2',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      expect(char1.id).toBeDefined()
+      expect(char2.id).toBeDefined()
+      expect(char1.id).not.toBe(char2.id)
+    })
+
+    it('initializes character with empty inventory', () => {
+      const char = CharacterService.createCharacterFromStats({
+        name: 'Test',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      expect(char.inventory).toEqual([])
+    })
+
+    it('initializes character with level 1 and 0 experience', () => {
+      const char = CharacterService.createCharacterFromStats({
+        name: 'Test',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      expect(char.level).toBe(1)
+      expect(char.experience).toBe(0)
+    })
+
+    it('calculates starting HP based on class and vitality', () => {
+      const fighterChar = CharacterService.createCharacterFromStats({
+        name: 'Fighter',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: { ...validStats, vitality: 14 },
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      const mageChar = CharacterService.createCharacterFromStats({
+        name: 'Mage',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: { ...validStats, vitality: 14 },
+        selectedClass: CharacterClass.MAGE
+      })
+
+      // Fighter should have higher HP than Mage with same vitality
+      expect(fighterChar.hp).toBeGreaterThan(mageChar.hp)
+      expect(fighterChar.maxHp).toBeGreaterThan(mageChar.maxHp)
+    })
+
+    it('throws error when character does not meet class requirements', () => {
+      const lowStats: BaseStats = {
+        strength: 8,
+        intelligence: 8,
+        piety: 8,
+        vitality: 8,
+        agility: 8,
+        luck: 8
+      }
+
+      expect(() => {
+        CharacterService.createCharacterFromStats({
+          name: 'Test',
+          password: 'test',
+          race: Race.HUMAN,
+          alignment: Alignment.GOOD,
+          stats: lowStats,
+          selectedClass: CharacterClass.SAMURAI // Requires high stats
+        })
+      }).toThrow('does not meet requirements for SAMURAI')
+    })
+  })
 })

@@ -5,10 +5,20 @@ import { CharacterStatus } from '../types/CharacterStatus'
 import { Race, RACE_MODIFIERS } from '../types/Race'
 import { Alignment } from '../types/Alignment'
 import { BaseStats } from './CharacterCreationService'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface ValidationResult {
   valid: boolean
   error?: string
+}
+
+export interface CreateCharacterInput {
+  name: string
+  password: string
+  race: Race
+  alignment: Alignment
+  stats: BaseStats
+  selectedClass: CharacterClass
 }
 
 /**
@@ -294,6 +304,96 @@ function validatePassword(password: string): ValidationResult {
   return { valid: true }
 }
 
+/**
+ * Calculate starting HP based on class and vitality.
+ *
+ * Formula (authentic Wizardry):
+ * - Base HP varies by class
+ * - Modified by vitality bonus
+ */
+function calculateStartingHP(
+  characterClass: CharacterClass,
+  vitality: number
+): { hp: number; maxHp: number } {
+  // Base HP by class (from original Wizardry)
+  const baseHP: Record<CharacterClass, number> = {
+    [CharacterClass.FIGHTER]: 10,
+    [CharacterClass.MAGE]: 4,
+    [CharacterClass.PRIEST]: 8,
+    [CharacterClass.THIEF]: 6,
+    [CharacterClass.BISHOP]: 4,
+    [CharacterClass.SAMURAI]: 10,
+    [CharacterClass.LORD]: 10,
+    [CharacterClass.NINJA]: 8
+  }
+
+  // Vitality bonus: (VIT - 10) / 3, minimum 0
+  const vitalityBonus = Math.max(0, Math.floor((vitality - 10) / 3))
+
+  const maxHp = baseHP[characterClass] + vitalityBonus
+
+  return { hp: maxHp, maxHp }
+}
+
+/**
+ * Create a new character with validated stats and class.
+ *
+ * Throws error if character does not meet class requirements.
+ */
+function createCharacterFromStats(input: CreateCharacterInput): Character {
+  const { name, password, race, alignment, stats, selectedClass } = input
+
+  // Validate character meets class requirements
+  const eligible = getEligibleClasses(stats, alignment)
+  if (!eligible.includes(selectedClass)) {
+    throw new Error(
+      `Character does not meet requirements for ${selectedClass}`
+    )
+  }
+
+  // Calculate starting HP based on class and vitality
+  const { hp, maxHp } = calculateStartingHP(selectedClass, stats.vitality)
+
+  // Create character
+  const character: Character = {
+    id: uuidv4(),
+    name,
+    password,
+    race,
+    alignment,
+    class: selectedClass,
+    level: 1,
+    experience: 0,
+
+    // Stats
+    strength: stats.strength,
+    intelligence: stats.intelligence,
+    piety: stats.piety,
+    vitality: stats.vitality,
+    agility: stats.agility,
+    luck: stats.luck,
+
+    // HP
+    hp,
+    maxHp,
+
+    // AC (base 10, improved by armor)
+    ac: 10,
+
+    // Status
+    status: CharacterStatus.OK,
+
+    // Inventory
+    inventory: [],
+
+    // Metadata
+    createdAt: Date.now(),
+    lastModified: Date.now()
+  }
+
+  return character
+}
+
 export const CharacterService = {
   getAllCharacters,
   createCharacter,
@@ -301,5 +401,6 @@ export const CharacterService = {
   validateClassEligibility,
   getEligibleClasses,
   validateCharacterName,
-  validatePassword
+  validatePassword,
+  createCharacterFromStats
 }

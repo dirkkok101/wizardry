@@ -12,6 +12,9 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!.*\\.mjs$|uuid)'
+  ],
   transform: {
     '^.+\\.(ts|js|html)$': [
       'jest-preset-angular',
