@@ -2,10 +2,17 @@ import { Character } from './Character'
 import { SceneType } from './SceneType'
 
 /**
- * Core game state structure
+ * Party represents the player's adventuring party.
+ *
+ * Design Decision: Party is ALWAYS present in GameState (never null).
+ * An empty party has members: [] rather than being null.
+ * This simplifies state management by eliminating null checks.
+ *
+ * Use `party.members.length === 0` to check for empty party,
+ * not `party === null`.
  */
 export interface Party {
-  members: string[] // Character IDs (1-6)
+  members: string[] // Character IDs (1-6). Empty array = no active party
   formation: {
     frontRow: string[] // Max 3 character IDs
     backRow: string[] // Max 3 character IDs
