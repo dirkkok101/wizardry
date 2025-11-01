@@ -1,0 +1,19 @@
+<div class="menu">
+  @if (title) {
+    <div class="menu__title">{{ title }}</div>
+  }
+
+  @for (item of items; track item.id; let i = $index) {
+    <div
+      class="menu__item"
+      [class.menu__item--selected]="i === selectedIndex"
+      [class.menu__item--disabled]="!item.enabled">
+
+      @if (item.shortcut) {
+        <span class="menu__shortcut">[{{ item.shortcut }}]</span>
+      }
+
+      <span class="menu__label">{{ item.label }}</span>
+    </div>
+  }
+</div>
