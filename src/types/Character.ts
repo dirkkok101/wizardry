@@ -31,6 +31,8 @@ export interface Character {
 
   // Inventory (8 items max)
   inventory: string[] // Item IDs
+  equippedWeapon?: string // Item ID
+  equippedArmor?: string // Item ID
 
   // Password protection
   password: string
