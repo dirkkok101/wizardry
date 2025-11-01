@@ -5,7 +5,7 @@ import { GameStateService } from '../../services/GameStateService'
 import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService'
 import { CharacterService } from '../../services/CharacterService'
 import { SceneType } from '../../types/SceneType'
-import { Race } from '../../types/Race'
+import { Race, RACE_MODIFIERS, RaceModifiers } from '../../types/Race'
 import { Alignment } from '../../types/Alignment'
 import { CharacterClass } from '../../types/CharacterClass'
 
@@ -152,6 +152,20 @@ export class TrainingGroundsComponent implements OnInit {
     if (currentIndex > 0) {
       this.currentStep.set(this.stepSequence[currentIndex - 1])
     }
+  }
+
+  /**
+   * Get all available race options
+   */
+  getRaceOptions(): Race[] {
+    return [Race.HUMAN, Race.ELF, Race.DWARF, Race.GNOME, Race.HOBBIT]
+  }
+
+  /**
+   * Get stat modifiers for a race
+   */
+  getRaceModifiers(race: Race): RaceModifiers {
+    return RACE_MODIFIERS[race]
   }
 
   /**

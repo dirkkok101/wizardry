@@ -103,4 +103,36 @@ describe('TrainingGroundsComponent', () => {
       expect(secondRoll).toBeDefined()
     })
   })
+
+  describe('race selection', () => {
+    it('displays 5 race options', () => {
+      component.ngOnInit()
+      fixture.detectChanges()
+
+      const raceOptions = component.getRaceOptions()
+
+      expect(raceOptions.length).toBe(5)
+      expect(raceOptions).toContain(Race.HUMAN)
+      expect(raceOptions).toContain(Race.ELF)
+      expect(raceOptions).toContain(Race.DWARF)
+      expect(raceOptions).toContain(Race.GNOME)
+      expect(raceOptions).toContain(Race.HOBBIT)
+    })
+
+    it('shows race modifiers for each race', () => {
+      const modifiers = component.getRaceModifiers(Race.ELF)
+
+      expect(modifiers.strength).toBe(-1)
+      expect(modifiers.intelligence).toBe(1)
+      expect(modifiers.vitality).toBe(-2)
+      expect(modifiers.agility).toBe(1)
+    })
+
+    it('selects race and updates wizard state', () => {
+      component.selectRace(Race.DWARF)
+
+      expect(component.wizardState().selectedRace).toBe(Race.DWARF)
+      expect(component.currentStep()).toBe('ALIGNMENT')
+    })
+  })
 })
