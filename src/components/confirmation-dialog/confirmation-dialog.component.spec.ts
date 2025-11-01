@@ -32,6 +32,40 @@ describe('ConfirmationDialogComponent', () => {
       const compiled = fixture.nativeElement;
       expect(compiled.querySelector('.dialog-overlay')).toBeFalsy();
     });
+
+    it('auto-focuses dialog overlay when visible', () => {
+      component.visible = true;
+      component.message = 'Test message';
+      fixture.detectChanges();
+
+      // Trigger ngAfterViewChecked to apply auto-focus
+      component.ngAfterViewChecked();
+
+      const compiled = fixture.nativeElement;
+      const overlay = compiled.querySelector('.dialog-overlay');
+
+      // Verify overlay is focusable
+      expect(overlay.getAttribute('tabindex')).toBe('0');
+
+      // Verify hasFocused flag was set
+      expect(component['hasFocused']).toBe(true);
+    });
+
+    it('resets hasFocused flag when dialog becomes invisible', () => {
+      component.visible = true;
+      fixture.detectChanges();
+      component.ngAfterViewChecked();
+
+      // Verify flag is set
+      expect(component['hasFocused']).toBe(true);
+
+      // Make dialog invisible
+      component.visible = false;
+      component.ngAfterViewChecked();
+
+      // Verify flag is reset
+      expect(component['hasFocused']).toBe(false);
+    });
   });
 
   describe('user interaction', () => {

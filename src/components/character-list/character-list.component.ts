@@ -13,13 +13,34 @@ import { Character } from '../../types/Character';
  * - Filtering: Custom filter function for conditional display
  * - Empty state: Shows message when no characters available
  *
+ * Keyboard Navigation:
+ * - Arrow Up/Down: Move selection between characters
+ * - Enter: Select current character
+ * - Note: Component must be focused for keyboard navigation to work
+ *   (component is automatically focusable when selectable=true via tabindex)
+ *
  * @example
+ * // Basic usage - component auto-focuses on user interaction
  * <app-character-list
  *   [characters]="roster"
  *   [selectable]="true"
  *   [selectedId]="currentCharId"
  *   (characterSelected)="onSelectChar($event)">
  * </app-character-list>
+ *
+ * @example
+ * // Programmatic focus (if needed)
+ * <app-character-list
+ *   #charList
+ *   [characters]="roster"
+ *   [selectable]="true"
+ *   (characterSelected)="onSelectChar($event)">
+ * </app-character-list>
+ * // In component:
+ * @ViewChild('charList', { read: ElementRef }) charList!: ElementRef;
+ * ngAfterViewInit() {
+ *   this.charList.nativeElement.focus();
+ * }
  */
 @Component({
   selector: 'app-character-list',

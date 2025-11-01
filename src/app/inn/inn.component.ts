@@ -102,52 +102,55 @@ export class InnComponent implements OnInit {
     }
 
     this.processing.set(true);
-    const party = this.currentParty();
 
-    // Validate party exists
-    if (party.members.length === 0) {
-      this.errorMessage.set('You need a party to rest');
-      this.processing.set(false);
-      return;
-    }
+    try {
+      const party = this.currentParty();
 
-    // Calculate cost
-    const cost = party.members.length * REST_COST_PER_MEMBER;
-    const partyGold = party.gold || 0;
+      // Validate party exists
+      if (party.members.length === 0) {
+        this.errorMessage.set('You need a party to rest');
+        return;
+      }
 
-    // Check if party can afford
-    if (partyGold < cost) {
-      this.errorMessage.set(`Cannot afford rest. Need ${cost} gold (${REST_COST_PER_MEMBER} per member)`);
-      this.processing.set(false);
-      return;
-    }
+      // Calculate cost
+      const cost = party.members.length * REST_COST_PER_MEMBER;
+      const partyGold = party.gold || 0;
 
-    // Restore all party members to full HP
-    this.gameState.updateState(state => {
-      const newRoster = new Map(state.roster);
+      // Check if party can afford
+      if (partyGold < cost) {
+        this.errorMessage.set(`Cannot afford rest. Need ${cost} gold (${REST_COST_PER_MEMBER} per member)`);
+        return;
+      }
 
-      party.members.forEach(charId => {
-        const char = newRoster.get(charId);
-        if (char) {
-          newRoster.set(charId, {
-            ...char,
-            hp: char.maxHp
-          });
-        }
+      // Restore all party members to full HP and deduct gold atomically
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster);
+
+        party.members.forEach(charId => {
+          const char = newRoster.get(charId);
+          if (char) {
+            newRoster.set(charId, {
+              ...char,
+              hp: char.maxHp
+            });
+          }
+        });
+
+        return {
+          ...state,
+          roster: newRoster,
+          party: {
+            ...state.party,
+            gold: (state.party.gold || 0) - cost // Re-read current gold from state
+          }
+        };
       });
 
-      return {
-        ...state,
-        roster: newRoster,
-        party: {
-          ...state.party,
-          gold: partyGold - cost
-        }
-      };
-    });
-
-    this.successMessage.set(`Party rested well! All HP restored. (-${cost} gold)`);
-    this.processing.set(false);
+      this.successMessage.set(`Party rested well! All HP restored. (-${cost} gold)`);
+    } finally {
+      // Always reset processing flag, even if error occurs
+      this.processing.set(false);
+    }
   }
 
   cancelView(): void {

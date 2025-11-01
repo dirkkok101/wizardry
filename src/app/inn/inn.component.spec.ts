@@ -117,6 +117,44 @@ describe('InnComponent', () => {
       component.handleMenuSelect('rest');
       expect(component.errorMessage()).toBeTruthy();
     });
+
+    it('prevents race condition by checking processing flag', () => {
+      // Set party gold to sufficient amount
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 100
+        }
+      }));
+
+      const initialGold = gameState.party().gold || 0;
+
+      // Manually set processing flag to simulate in-progress operation
+      component.processing.set(true);
+
+      // Attempt to rest while processing is true
+      component.handleMenuSelect('rest');
+
+      const goldAfterBlockedAttempt = gameState.party().gold || 0;
+
+      // Gold should not be deducted because processing flag blocked the operation
+      expect(goldAfterBlockedAttempt).toBe(initialGold);
+
+      // Reset processing flag
+      component.processing.set(false);
+
+      // Now rest should succeed
+      component.handleMenuSelect('rest');
+
+      const finalGold = gameState.party().gold || 0;
+
+      // Gold should be deducted once
+      expect(finalGold).toBe(initialGold - 10);
+
+      // Verify processing flag is reset after successful operation
+      expect(component.processing()).toBe(false);
+    });
   });
 
   describe('stables functionality', () => {
