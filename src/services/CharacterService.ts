@@ -61,7 +61,7 @@ function createCharacter(
     race: params.race,
     class: params.class,
     alignment: params.alignment,
-    status: CharacterStatus.GOOD,
+    status: CharacterStatus.OK,
     strength,
     intelligence,
     piety,

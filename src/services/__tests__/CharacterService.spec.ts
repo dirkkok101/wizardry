@@ -46,7 +46,7 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         class: CharacterClass.FIGHTER,
         alignment: Alignment.GOOD,
-        status: CharacterStatus.GOOD,
+        status: CharacterStatus.OK,
         strength: 15,
         intelligence: 10,
         piety: 8,
@@ -100,7 +100,7 @@ describe('CharacterService', () => {
       expect(character.class).toBe(CharacterClass.FIGHTER)
       expect(character.alignment).toBe(Alignment.GOOD)
       expect(character.password).toBe('secret')
-      expect(character.status).toBe(CharacterStatus.GOOD)
+      expect(character.status).toBe(CharacterStatus.OK)
       expect(character.level).toBe(1)
       expect(character.experience).toBe(0)
       expect(character.inventory).toEqual([])
@@ -137,7 +137,7 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         class: CharacterClass.FIGHTER,
         alignment: Alignment.GOOD,
-        status: CharacterStatus.GOOD,
+        status: CharacterStatus.OK,
         strength: 15,
         intelligence: 10,
         piety: 8,
