@@ -155,4 +155,34 @@ export class ShopComponent implements OnInit {
   cancelView(): void {
     this.currentView.set('main');
   }
+
+  /**
+   * Get current character's inventory as Item objects
+   */
+  getCharacterInventory(): Item[] {
+    const character = this.selectedCharacter()
+    if (!character) {
+      return []
+    }
+
+    // Resolve item IDs to Item objects from shop inventory
+    return character.inventory
+      .map(itemId => this.shopInventory().find(item => item.id === itemId))
+      .filter((item): item is Item => item !== undefined)
+  }
+
+  /**
+   * Get items that can be sold (not equipped cursed items)
+   */
+  getSellableItems(): Item[] {
+    const inventory = this.getCharacterInventory()
+
+    return inventory.filter(item => {
+      // Cannot sell equipped cursed items
+      if (item.equipped && item.cursed) {
+        return false
+      }
+      return true
+    })
+  }
 }
