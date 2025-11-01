@@ -1,16 +1,43 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { GameStateService } from '../../services/GameStateService';
-import { SceneType } from '../../types/SceneType';
+import { Component, OnInit, signal, computed } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { Router } from '@angular/router'
+import { GameStateService } from '../../services/GameStateService'
+import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService'
+import { CharacterService } from '../../services/CharacterService'
+import { SceneType } from '../../types/SceneType'
+import { Race } from '../../types/Race'
+import { Alignment } from '../../types/Alignment'
+import { CharacterClass } from '../../types/CharacterClass'
+
+export type WizardStep =
+  | 'RACE'
+  | 'ALIGNMENT'
+  | 'STATS'
+  | 'BONUS_POINTS'
+  | 'CLASS'
+  | 'NAME_PASSWORD'
+  | 'CONFIRM'
+
+export interface WizardState {
+  selectedRace: Race | null
+  selectedAlignment: Alignment | null
+  rolledStats: RolledStats | null
+  selectedClass: CharacterClass | null
+  name: string
+  password: string
+}
 
 /**
  * Training Grounds Component
  *
- * Character creation service (Phase 4: Scaffolded)
- * - Basic structure and navigation
- * - Placeholder for character creation wizard
- * - Full creation flow in Phase 5
+ * Character creation wizard with 7 steps:
+ * 1. Race selection (Human, Elf, Dwarf, Gnome, Hobbit)
+ * 2. Alignment selection (Good, Neutral, Evil)
+ * 3. Stat rolling (3d6 per attribute + bonus points)
+ * 4. Bonus point allocation
+ * 5. Class selection (based on stat requirements)
+ * 6. Name and password entry
+ * 7. Confirmation
  */
 @Component({
   selector: 'app-training-grounds',
@@ -20,6 +47,32 @@ import { SceneType } from '../../types/SceneType';
   styleUrls: ['./training-grounds.component.scss']
 })
 export class TrainingGroundsComponent implements OnInit {
+  // Wizard state
+  readonly currentStep = signal<WizardStep>('RACE')
+  readonly wizardState = signal<WizardState>({
+    selectedRace: null,
+    selectedAlignment: null,
+    rolledStats: null,
+    selectedClass: null,
+    name: '',
+    password: ''
+  })
+
+  // Error and success messages
+  readonly errorMessage = signal<string | null>(null)
+  readonly successMessage = signal<string | null>(null)
+
+  // Step sequence for navigation
+  private readonly stepSequence: WizardStep[] = [
+    'RACE',
+    'ALIGNMENT',
+    'STATS',
+    'BONUS_POINTS',
+    'CLASS',
+    'NAME_PASSWORD',
+    'CONFIRM'
+  ]
+
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -29,10 +82,82 @@ export class TrainingGroundsComponent implements OnInit {
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.TRAINING_GROUNDS
-    }));
+    }))
   }
 
+  /**
+   * Select race and advance to alignment step
+   */
+  selectRace(race: Race): void {
+    this.wizardState.update(state => ({
+      ...state,
+      selectedRace: race
+    }))
+    this.nextStep()
+  }
+
+  /**
+   * Select alignment and advance to stats step
+   */
+  selectAlignment(alignment: Alignment): void {
+    this.wizardState.update(state => ({
+      ...state,
+      selectedAlignment: alignment
+    }))
+    this.nextStep()
+  }
+
+  /**
+   * Roll stats (or reroll)
+   */
+  rollStats(): void {
+    const baseStats = CharacterCreationService.rollStats()
+    const race = this.wizardState().selectedRace
+
+    if (!race) {
+      this.errorMessage.set('Race not selected')
+      return
+    }
+
+    // Apply race modifiers
+    const modifiedStats = CharacterCreationService.applyRaceModifiers(
+      baseStats,
+      race
+    )
+
+    this.wizardState.update(state => ({
+      ...state,
+      rolledStats: {
+        ...modifiedStats,
+        bonusPoints: baseStats.bonusPoints
+      }
+    }))
+  }
+
+  /**
+   * Advance to next step in wizard
+   */
+  private nextStep(): void {
+    const currentIndex = this.stepSequence.indexOf(this.currentStep())
+    if (currentIndex < this.stepSequence.length - 1) {
+      this.currentStep.set(this.stepSequence[currentIndex + 1])
+    }
+  }
+
+  /**
+   * Go back to previous step in wizard
+   */
+  previousStep(): void {
+    const currentIndex = this.stepSequence.indexOf(this.currentStep())
+    if (currentIndex > 0) {
+      this.currentStep.set(this.stepSequence[currentIndex - 1])
+    }
+  }
+
+  /**
+   * Return to castle menu
+   */
   returnToCastle(): void {
-    this.router.navigate(['/castle-menu']);
+    this.router.navigate(['/castle-menu'])
   }
 }
