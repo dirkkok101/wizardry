@@ -1,0 +1,101 @@
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Character } from '../../types/Character';
+
+/**
+ * CharacterListComponent - Reusable character roster display and selection.
+ *
+ * Implements UI Pattern 2: Character Selection.
+ *
+ * Features:
+ * - Display mode: Shows character list with stats
+ * - Selection mode: Allows character picking with keyboard/mouse
+ * - Filtering: Custom filter function for conditional display
+ * - Empty state: Shows message when no characters available
+ *
+ * @example
+ * <app-character-list
+ *   [characters]="roster"
+ *   [selectable]="true"
+ *   [selectedId]="currentCharId"
+ *   (characterSelected)="onSelectChar($event)">
+ * </app-character-list>
+ */
+@Component({
+  selector: 'app-character-list',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './character-list.component.html',
+  styleUrls: ['./character-list.component.scss']
+})
+export class CharacterListComponent {
+  @Input() characters: Character[] = [];
+  @Input() selectable: boolean = false;
+  @Input() selectedId: string | null = null;
+  @Input() filterFn: ((char: Character) => boolean) | null = null;
+  @Input() emptyMessage: string = 'No characters available';
+
+  @Output() characterSelected = new EventEmitter<string>();
+
+  selectedIndex: number = 0;
+
+  /**
+   * Get filtered characters list.
+   */
+  get filteredCharacters(): Character[] {
+    if (this.filterFn) {
+      return this.characters.filter(this.filterFn);
+    }
+    return this.characters;
+  }
+
+  /**
+   * Handle character selection (click).
+   */
+  selectCharacter(charId: string): void {
+    if (!this.selectable) return;
+    this.characterSelected.emit(charId);
+  }
+
+  /**
+   * Check if character is selected.
+   */
+  isSelected(charId: string): boolean {
+    return this.selectedId === charId;
+  }
+
+  /**
+   * Handle keyboard navigation.
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyPress(event: KeyboardEvent): void {
+    if (!this.selectable || this.filteredCharacters.length === 0) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        this.selectedIndex = (this.selectedIndex + 1) % this.filteredCharacters.length;
+        event.preventDefault();
+        break;
+
+      case 'ArrowUp':
+        this.selectedIndex = (this.selectedIndex - 1 + this.filteredCharacters.length) % this.filteredCharacters.length;
+        event.preventDefault();
+        break;
+
+      case 'Enter':
+        const selectedChar = this.filteredCharacters[this.selectedIndex];
+        if (selectedChar) {
+          this.characterSelected.emit(selectedChar.id);
+        }
+        event.preventDefault();
+        break;
+    }
+  }
+
+  /**
+   * Format HP display.
+   */
+  formatHP(char: Character): string {
+    return `${char.hp}/${char.maxHp}`;
+  }
+}

@@ -1,0 +1,32 @@
+<div class="character-list" [class.selectable]="selectable">
+  @if (filteredCharacters.length > 0) {
+    <div class="character-items">
+      @for (char of filteredCharacters; track char.id; let i = $index) {
+        <div
+          class="character-item"
+          [class.selected]="isSelected(char.id) || (selectable && i === selectedIndex)"
+          (click)="selectCharacter(char.id)">
+
+          <div class="character-number">{{ i + 1 }}.</div>
+
+          <div class="character-info">
+            <div class="character-name">{{ char.name }}</div>
+            <div class="character-stats">
+              <span class="class">{{ char.class }}</span>
+              <span class="level">Lv{{ char.level }}</span>
+              <span class="hp">HP: {{ formatHP(char) }}</span>
+            </div>
+          </div>
+
+          <div class="character-status" [class.dead]="char.status !== 'OK'">
+            {{ char.status }}
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <p>{{ emptyMessage }}</p>
+    </div>
+  }
+</div>
