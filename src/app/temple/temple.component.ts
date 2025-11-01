@@ -5,7 +5,6 @@ import { GameStateService } from '../../services/GameStateService';
 import { TempleService } from '../../services/TempleService';
 import { ResurrectionService } from '../../services/ResurrectionService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
-import { CharacterListComponent } from '../../components/character-list/character-list.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterStatus } from '../../types/CharacterStatus';
@@ -25,7 +24,7 @@ type TempleView = 'main' | 'select-character' | 'select-service';
 @Component({
   selector: 'app-temple',
   standalone: true,
-  imports: [CommonModule, MenuComponent, CharacterListComponent],
+  imports: [CommonModule, MenuComponent],
   templateUrl: './temple.component.html',
   styleUrls: ['./temple.component.scss']
 })

@@ -2,6 +2,7 @@ import { Race } from './Race'
 import { CharacterClass } from './CharacterClass'
 import { Alignment } from './Alignment'
 import { CharacterStatus } from './CharacterStatus'
+import { Item } from './Item'
 
 /**
  * Character - Core character data structure
@@ -31,7 +32,7 @@ export interface Character {
 
   // Inventory (8 items max)
   // Can contain either item IDs (string) or Item objects (for unidentified items)
-  inventory: (string | any)[] // Item IDs or Item objects for unidentified items
+  inventory: (string | Item)[] // Item IDs or Item objects for unidentified items
   equippedWeapon?: string // Item ID
   equippedArmor?: string // Item ID
 
