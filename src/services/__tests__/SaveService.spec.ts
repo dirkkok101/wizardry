@@ -1,23 +1,30 @@
+import { TestBed } from '@angular/core/testing';
 import { SaveService } from '../SaveService'
 import { GameInitializationService } from '../GameInitializationService'
 
 describe('SaveService', () => {
+  let service: SaveService;
+
   beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [SaveService]
+    });
+    service = TestBed.inject(SaveService);
     // Clear localStorage before each test
     localStorage.clear()
   })
 
   describe('checkForSaveData', () => {
     it('should return false when no save exists', async () => {
-      const exists = await SaveService.checkForSaveData()
+      const exists = await service.checkForSaveData()
       expect(exists).toBe(false)
     })
 
     it('should return true when save exists', async () => {
       const gameState = GameInitializationService.createNewGame()
-      await SaveService.saveGame(gameState)
+      await service.saveGame(gameState)
 
-      const exists = await SaveService.checkForSaveData()
+      const exists = await service.checkForSaveData()
       expect(exists).toBe(true)
     })
   })
@@ -26,9 +33,9 @@ describe('SaveService', () => {
     it('should save game to localStorage', async () => {
       const gameState = GameInitializationService.createNewGame()
 
-      await SaveService.saveGame(gameState)
+      await service.saveGame(gameState)
 
-      const saved = localStorage.getItem('wizardry_save')
+      const saved = localStorage.getItem('wizardry_save_1')
       expect(saved).toBeTruthy()
     })
   })
@@ -36,24 +43,23 @@ describe('SaveService', () => {
   describe('loadGame', () => {
     it('should load game from localStorage', async () => {
       const gameState = GameInitializationService.createNewGame()
-      await SaveService.saveGame(gameState)
+      await service.saveGame(gameState)
 
-      const loaded = await SaveService.loadGame()
+      const loaded = await service.loadGame()
 
       expect(loaded).toEqual(gameState)
     })
 
-    it('should throw error when no save exists', async () => {
-      await expect(
-        SaveService.loadGame()
-      ).rejects.toThrow('No save data found')
+    it('should return null when no save exists', async () => {
+      const loaded = await service.loadGame()
+      expect(loaded).toBeNull()
     })
 
     it('should throw error when save is corrupted', async () => {
-      localStorage.setItem('wizardry_save', 'invalid json')
+      localStorage.setItem('wizardry_save_1', 'invalid json')
 
       await expect(
-        SaveService.loadGame()
+        service.loadGame()
       ).rejects.toThrow('corrupted')
     })
   })
@@ -61,16 +67,16 @@ describe('SaveService', () => {
   describe('validateSaveData', () => {
     it('should return true for valid save', async () => {
       const gameState = GameInitializationService.createNewGame()
-      await SaveService.saveGame(gameState)
+      await service.saveGame(gameState)
 
-      const isValid = await SaveService.validateSaveData()
+      const isValid = await service.validateSaveData()
       expect(isValid).toBe(true)
     })
 
     it('should return false for invalid save', async () => {
-      localStorage.setItem('wizardry_save', 'invalid')
+      localStorage.setItem('wizardry_save_1', 'invalid')
 
-      const isValid = await SaveService.validateSaveData()
+      const isValid = await service.validateSaveData()
       expect(isValid).toBe(false)
     })
   })
