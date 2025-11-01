@@ -82,3 +82,62 @@ export const SHOP_INVENTORY: Item[] = [
     description: 'Wooden shield for blocking attacks'
   }
 ]
+
+/**
+ * Unidentified items for testing identification mechanics
+ * These are not for sale but can be found in character inventories
+ */
+export const UNIDENTIFIED_ITEMS: Item[] = [
+  {
+    id: 'unknown-sword-1',
+    name: 'Sharpened Blade',
+    unidentifiedName: 'Unknown Sword',
+    type: ItemType.WEAPON,
+    slot: ItemSlot.WEAPON,
+    price: 250,
+    damage: 12,
+    cursed: false,
+    identified: false,
+    equipped: false,
+    description: 'A finely crafted sword with excellent balance'
+  },
+  {
+    id: 'unknown-armor-1',
+    name: 'Reinforced Mail',
+    unidentifiedName: 'Unknown Armor',
+    type: ItemType.ARMOR,
+    slot: ItemSlot.ARMOR,
+    price: 400,
+    defense: 5,
+    cursed: false,
+    identified: false,
+    equipped: false,
+    description: 'Heavy armor with reinforced plating'
+  },
+  {
+    id: 'cursed-sword-1',
+    name: 'Blade of Despair',
+    unidentifiedName: 'Mysterious Sword',
+    type: ItemType.WEAPON,
+    slot: ItemSlot.WEAPON,
+    price: 500,
+    damage: 15,
+    cursed: true,
+    identified: false,
+    equipped: false,
+    description: 'A powerful but cursed weapon that cannot be removed once equipped'
+  },
+  {
+    id: 'cursed-armor-1',
+    name: 'Cursed Plate',
+    unidentifiedName: 'Heavy Armor',
+    type: ItemType.ARMOR,
+    slot: ItemSlot.ARMOR,
+    price: 600,
+    defense: 8,
+    cursed: true,
+    identified: false,
+    equipped: false,
+    description: 'Excellent protection, but binds to the wearer permanently'
+  }
+]
