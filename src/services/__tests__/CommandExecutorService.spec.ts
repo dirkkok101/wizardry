@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { CommandExecutorService, Command } from '../CommandExecutorService';
+import { CommandExecutorService } from '../CommandExecutorService';
+import { Command } from '../../types/Command';
 import { GameStateService } from '../GameStateService';
 import { SaveService } from '../SaveService';
+import { LoggerService } from '../LoggerService';
 
 describe('CommandExecutorService', () => {
   let service: CommandExecutorService;
@@ -9,7 +11,7 @@ describe('CommandExecutorService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [CommandExecutorService, GameStateService, SaveService]
+      providers: [CommandExecutorService, GameStateService, SaveService, LoggerService]
     });
     service = TestBed.inject(CommandExecutorService);
     gameState = TestBed.inject(GameStateService);
