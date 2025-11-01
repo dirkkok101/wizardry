@@ -1,0 +1,11 @@
+{
+  "id": "bamordi",
+  "name": "BAMORDI",
+  "level": 4,
+  "type": "offensive",
+  "target": "single_enemy",
+  "damage": "3d8",
+  "damageType": "holy",
+  "description": "3d8 damage",
+  "castableIn": ["combat"]
+}

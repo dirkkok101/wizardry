@@ -1,0 +1,17 @@
+{
+  "id": "staff_mogref",
+  "name": "Staff of Mogref",
+  "category": "weapon",
+  "weaponType": "staff",
+  "damage": { "dice": "1d6", "min": 1, "max": 6 },
+  "enhancement": 0,
+  "cost": 3000,
+  "usableBy": ["mage", "bishop"],
+  "cursed": false,
+  "depletionChance": 25,
+  "transformsTo": "broken_item",
+  "special": {
+    "invoke": "cast_spell",
+    "spellId": "mogref"
+  }
+}

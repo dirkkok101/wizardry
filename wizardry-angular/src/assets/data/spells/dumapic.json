@@ -1,0 +1,10 @@
+{
+  "id": "dumapic",
+  "name": "DUMAPIC",
+  "level": 1,
+  "type": "utility",
+  "target": "party",
+  "effect": "show_coordinates",
+  "description": "Shows current coordinates and facing direction",
+  "castableIn": ["dungeon", "combat"]
+}

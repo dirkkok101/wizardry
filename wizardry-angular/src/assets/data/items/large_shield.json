@@ -1,0 +1,11 @@
+{
+  "id": "large_shield",
+  "name": "Large Shield",
+  "category": "shield",
+  "ac": 3,
+  "enhancement": 0,
+  "cost": 40,
+  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

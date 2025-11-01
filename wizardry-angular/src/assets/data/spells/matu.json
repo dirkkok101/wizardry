@@ -1,0 +1,11 @@
+{
+  "id": "matu",
+  "name": "MATU",
+  "level": 2,
+  "type": "buff",
+  "target": "party",
+  "effect": "ac_bonus",
+  "acBonus": -2,
+  "description": "-2 AC to entire party",
+  "castableIn": ["combat"]
+}

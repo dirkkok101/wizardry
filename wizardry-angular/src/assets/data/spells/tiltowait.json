@@ -1,0 +1,11 @@
+{
+  "id": "tiltowait",
+  "name": "TILTOWAIT",
+  "level": 6,
+  "type": "offensive",
+  "target": "all_enemies",
+  "damage": "massive",
+  "damageType": "magic",
+  "description": "Massive damage to all groups",
+  "castableIn": ["combat"]
+}

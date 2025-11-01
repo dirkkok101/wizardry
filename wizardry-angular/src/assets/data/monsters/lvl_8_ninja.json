@@ -1,0 +1,19 @@
+{
+  "id": "lvl_8_ninja",
+  "name": "Lvl 8 Ninja",
+  "level": 8,
+  "numberAppearing": { "min": 1, "max": 3 },
+  "hp": { "min": 8, "max": 32 },
+  "ac": 4,
+  "damage": [
+    { "dice": "1d10", "min": 1, "max": 10 }
+  ],
+  "xp": 1020,
+  "type": "humanoid",
+  "class": "ninja",
+  "specialAbilities": ["decapitate"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

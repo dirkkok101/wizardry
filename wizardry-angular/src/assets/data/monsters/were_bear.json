@@ -1,0 +1,19 @@
+{
+  "id": "were_bear",
+  "name": "Were Bear",
+  "level": 3,
+  "numberAppearing": { "min": 4, "max": 8 },
+  "hp": { "min": 5, "max": 40 },
+  "ac": 6,
+  "damage": [
+    { "dice": "2d6", "min": 2, "max": 12 }
+  ],
+  "xp": 1320,
+  "type": "werebeast",
+  "class": null,
+  "specialAbilities": ["poison", "paralyze", "regeneration"],
+  "resistances": [],
+  "regeneration": 2,
+  "isBoss": false,
+  "canFlee": false
+}

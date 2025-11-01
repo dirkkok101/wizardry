@@ -1,0 +1,20 @@
+{
+  "id": "lvl_4_thief",
+  "name": "Lvl 4 Thief",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 7, "max": 35 },
+  "ac": 10,
+  "damage": [
+    { "dice": "1d6", "min": 1, "max": 6 },
+    { "dice": "1d6", "min": 1, "max": 6 }
+  ],
+  "xp": 740,
+  "type": "humanoid",
+  "class": "thief",
+  "specialAbilities": ["multiple_attacks"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

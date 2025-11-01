@@ -1,0 +1,10 @@
+{
+  "id": "lomilwa_priest",
+  "name": "LOMILWA",
+  "level": 3,
+  "type": "utility",
+  "target": "party",
+  "effect": "light_extended",
+  "description": "Extended light radius",
+  "castableIn": ["dungeon"]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "frost_giant",
+  "name": "Frost Giant",
+  "level": 9,
+  "numberAppearing": { "min": 1, "max": 4 },
+  "hp": { "min": 51, "max": 58 },
+  "ac": 6,
+  "damage": [
+    { "dice": "4d10", "min": 4, "max": 40 }
+  ],
+  "xp": 41355,
+  "type": "mythical",
+  "class": null,
+  "specialAbilities": ["magic_resistance"],
+  "resistances": [
+    { "type": "magic", "value": 95 },
+    { "type": "cold", "value": 100 }
+  ],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

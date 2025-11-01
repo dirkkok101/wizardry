@@ -1,0 +1,11 @@
+{
+  "id": "calfo",
+  "name": "CALFO",
+  "level": 2,
+  "type": "utility",
+  "target": "chest",
+  "effect": "identify_trap",
+  "successRate": 0.95,
+  "description": "Identify trap type (95% success)",
+  "castableIn": ["dungeon"]
+}

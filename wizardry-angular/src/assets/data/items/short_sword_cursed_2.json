@@ -1,0 +1,12 @@
+{
+  "id": "short_sword_cursed_2",
+  "name": "Short Sword -2",
+  "category": "weapon",
+  "weaponType": "sword",
+  "damage": { "dice": "1d6", "min": 1, "max": 6 },
+  "enhancement": -2,
+  "cost": 8000,
+  "usableBy": ["fighter", "thief", "samurai", "lord", "ninja"],
+  "cursed": true,
+  "special": null
+}

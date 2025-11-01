@@ -1,0 +1,24 @@
+{
+  "id": "gargoyle",
+  "name": "Gargoyle",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 6 },
+  "hp": { "min": 8, "max": 36 },
+  "ac": 5,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 },
+    { "dice": "1d8", "min": 1, "max": 8 },
+    { "dice": "1d8", "min": 1, "max": 8 },
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 2435,
+  "type": "mythical",
+  "class": null,
+  "specialAbilities": ["multiple_attacks", "magic_resistance"],
+  "resistances": [
+    { "type": "magic", "value": 50 }
+  ],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

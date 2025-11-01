@@ -1,0 +1,16 @@
+{
+  "id": "potion_dial",
+  "name": "Potion of Healing",
+  "category": "consumable",
+  "consumableType": "potion",
+  "cost": 5000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "singleUse": true,
+  "depletionChance": 100,
+  "transformsTo": "broken_item",
+  "effect": {
+    "type": "heal",
+    "healing": "2d8"
+  }
+}

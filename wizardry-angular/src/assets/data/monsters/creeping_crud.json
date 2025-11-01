@@ -1,0 +1,21 @@
+{
+  "id": "creeping_crud",
+  "name": "Creeping Crud",
+  "level": 2,
+  "numberAppearing": { "min": 2, "max": 7 },
+  "hp": { "min": 3, "max": 12 },
+  "ac": 6,
+  "damage": [
+    { "dice": "1d6", "min": 1, "max": 6 }
+  ],
+  "xp": 550,
+  "type": "normal",
+  "class": null,
+  "specialAbilities": ["poison"],
+  "resistances": [
+    { "type": "cold", "value": 100 }
+  ],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

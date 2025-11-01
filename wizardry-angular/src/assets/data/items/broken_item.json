@@ -1,0 +1,10 @@
+{
+  "id": "broken_item",
+  "name": "Broken Item",
+  "category": "special",
+  "specialType": "broken",
+  "cost": 0,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

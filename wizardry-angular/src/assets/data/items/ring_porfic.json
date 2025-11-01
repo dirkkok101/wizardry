@@ -1,0 +1,13 @@
+{
+  "id": "ring_porfic",
+  "name": "Ring of Porfic",
+  "category": "accessory",
+  "accessoryType": "ring",
+  "cost": 10000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": {
+    "invoke": "cast_spell",
+    "spellId": "porfic"
+  }
+}

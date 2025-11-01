@@ -1,0 +1,18 @@
+{
+  "id": "hobbit",
+  "name": "Hobbit",
+  "baseStats": {
+    "str": 5,
+    "int": 7,
+    "pie": 7,
+    "vit": 6,
+    "agi": 10,
+    "luc": 15
+  },
+  "statTotal": 50,
+  "description": "Lucky rogue with extreme LUC advantage. Hardest race to qualify for elite classes but highest stat total.",
+  "strengths": ["Highest LUC by far (15)", "High AGI (10)", "Highest stat total (50)"],
+  "weaknesses": ["Lowest STR (5)", "Low VIT (6)", "Low stats overall"],
+  "bestClasses": ["thief", "ninja"],
+  "savingThrowBonus": {}
+}

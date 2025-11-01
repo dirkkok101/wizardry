@@ -1,0 +1,11 @@
+{
+  "id": "badial",
+  "name": "BADIAL",
+  "level": 3,
+  "type": "offensive",
+  "target": "all_enemies",
+  "damage": "2d8",
+  "damageType": "holy",
+  "description": "2d8 damage to all enemy groups",
+  "castableIn": ["combat"]
+}

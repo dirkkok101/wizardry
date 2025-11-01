@@ -1,0 +1,10 @@
+{
+  "id": "dial_5",
+  "name": "DIAL",
+  "level": 5,
+  "type": "healing",
+  "target": "single_ally",
+  "healing": "full",
+  "description": "Full HP restore",
+  "castableIn": ["combat", "dungeon", "town"]
+}

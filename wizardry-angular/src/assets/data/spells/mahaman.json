@@ -1,0 +1,10 @@
+{
+  "id": "mahaman",
+  "name": "MAHAMAN",
+  "level": 6,
+  "type": "utility",
+  "target": "all_enemies",
+  "effect": "transform",
+  "description": "Transforms all monster groups",
+  "castableIn": ["combat"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "mahalito",
+  "name": "MAHALITO",
+  "level": 3,
+  "type": "offensive",
+  "target": "enemy_group",
+  "damage": "4d6",
+  "damageType": "fire",
+  "description": "4d6 fire damage",
+  "castableIn": ["combat"]
+}

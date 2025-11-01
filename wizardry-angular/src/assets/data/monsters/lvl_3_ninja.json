@@ -1,0 +1,19 @@
+{
+  "id": "lvl_3_ninja",
+  "name": "Lvl 3 Ninja",
+  "level": 3,
+  "numberAppearing": { "min": 4, "max": 10 },
+  "hp": { "min": 3, "max": 24 },
+  "ac": 3,
+  "damage": [
+    { "dice": "1d8", "min": 1, "max": 8 }
+  ],
+  "xp": 1360,
+  "type": "humanoid",
+  "class": "ninja",
+  "specialAbilities": ["poison", "decapitate"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

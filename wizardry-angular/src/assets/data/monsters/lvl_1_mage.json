@@ -1,0 +1,19 @@
+{
+  "id": "lvl_1_mage",
+  "name": "Lvl 1 Mage",
+  "level": 1,
+  "numberAppearing": { "min": 1, "max": 1 },
+  "hp": { "min": 2, "max": 5 },
+  "ac": 4,
+  "damage": [],
+  "xp": 475,
+  "type": "humanoid",
+  "class": "mage",
+  "spellLevels": { "mage": 1 },
+  "spells": ["katino", "halito"],
+  "specialAbilities": ["spellcasting"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

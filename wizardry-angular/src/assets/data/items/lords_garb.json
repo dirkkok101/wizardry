@@ -1,0 +1,18 @@
+{
+  "id": "lords_garb",
+  "name": "Lords Garb",
+  "category": "armor",
+  "armorType": "body",
+  "ac": 10,
+  "enhancement": 0,
+  "cost": 1000000,
+  "usableBy": ["lord"],
+  "cursed": false,
+  "depletionChance": 50,
+  "transformsTo": null,
+  "special": {
+    "protections": ["mythical", "dragon", "werebeast", "demon", "undead"],
+    "regeneration": 1,
+    "invoke": "party_heal"
+  }
+}

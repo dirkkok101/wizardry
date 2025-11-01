@@ -1,0 +1,10 @@
+{
+  "id": "badi",
+  "name": "BADI",
+  "level": 5,
+  "type": "offensive",
+  "target": "enemy_group",
+  "effect": "instant_death",
+  "description": "Instant death to enemy group",
+  "castableIn": ["combat"]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "wererat",
+  "name": "Wererat",
+  "level": 5,
+  "numberAppearing": { "min": 1, "max": 4 },
+  "hp": { "min": 4, "max": 25 },
+  "ac": 6,
+  "damage": [
+    { "dice": "1d6", "min": 1, "max": 6 }
+  ],
+  "xp": 755,
+  "type": "werebeast",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

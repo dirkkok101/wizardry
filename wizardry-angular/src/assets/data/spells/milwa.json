@@ -1,0 +1,10 @@
+{
+  "id": "milwa",
+  "name": "MILWA",
+  "level": 1,
+  "type": "utility",
+  "target": "party",
+  "effect": "light",
+  "description": "Illuminates dungeon",
+  "castableIn": ["dungeon"]
+}

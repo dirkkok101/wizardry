@@ -1,0 +1,12 @@
+{
+  "id": "short_sword_2",
+  "name": "Short Sword +2",
+  "category": "weapon",
+  "weaponType": "sword",
+  "damage": { "dice": "3d3", "min": 3, "max": 8 },
+  "enhancement": 2,
+  "cost": 4000,
+  "usableBy": ["fighter", "thief", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

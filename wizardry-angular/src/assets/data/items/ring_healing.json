@@ -1,0 +1,12 @@
+{
+  "id": "ring_healing",
+  "name": "Ring of Healing",
+  "category": "accessory",
+  "accessoryType": "ring",
+  "cost": 300000,
+  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": {
+    "regeneration": 1
+  }
+}

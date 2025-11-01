@@ -1,0 +1,22 @@
+{
+  "id": "high_priest_greater",
+  "name": "High Priest (Greater)",
+  "level": 10,
+  "numberAppearing": { "min": 1, "max": 1 },
+  "hp": { "min": 11, "max": 88 },
+  "ac": 2,
+  "damage": [
+    { "dice": "2d10", "min": 2, "max": 20 },
+    { "dice": "2d10", "min": 2, "max": 20 }
+  ],
+  "xp": 3300,
+  "type": "humanoid",
+  "class": "priest",
+  "spellLevels": { "priest": 6 },
+  "spells": ["malikto", "lorto"],
+  "specialAbilities": ["spellcasting", "multiple_attacks"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

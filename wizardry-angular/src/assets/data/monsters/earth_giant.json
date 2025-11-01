@@ -1,0 +1,22 @@
+{
+  "id": "earth_giant",
+  "name": "Earth Giant",
+  "level": 6,
+  "numberAppearing": { "min": 1, "max": 5 },
+  "hp": { "min": 41, "max": 41 },
+  "ac": 9,
+  "damage": [
+    { "dice": "3d10", "min": 3, "max": 30 },
+    { "dice": "3d10", "min": 3, "max": 30 }
+  ],
+  "xp": 20675,
+  "type": "mythical",
+  "class": null,
+  "specialAbilities": ["multiple_attacks", "magic_resistance"],
+  "resistances": [
+    { "type": "magic", "value": 85 }
+  ],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

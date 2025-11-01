@@ -1,0 +1,18 @@
+{
+  "id": "human",
+  "name": "Human",
+  "baseStats": {
+    "str": 8,
+    "int": 8,
+    "pie": 5,
+    "vit": 8,
+    "agi": 8,
+    "luc": 9
+  },
+  "statTotal": 46,
+  "description": "Balanced race with no extreme strengths or weaknesses. Most versatile for general builds.",
+  "strengths": ["Balanced", "Versatile"],
+  "weaknesses": ["Low PIE (5) makes Priest classes harder"],
+  "bestClasses": ["fighter", "mage", "thief"],
+  "savingThrowBonus": {}
+}

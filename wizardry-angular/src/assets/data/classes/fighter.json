@@ -1,0 +1,28 @@
+{
+  "id": "fighter",
+  "name": "Fighter",
+  "type": "basic",
+  "description": "Master of weapons and armor. Can use any weapon and armor in the game.",
+  "requirements": {
+    "str": 11
+  },
+  "alignmentRestrictions": [],
+  "equipmentRestrictions": {
+    "weapons": [],
+    "armor": [],
+    "shields": [],
+    "helmets": []
+  },
+  "spellAccess": null,
+  "specialAbilities": [],
+  "hitDice": "1d10",
+  "attacksPerLevel": {
+    "1-4": 1,
+    "5-9": 2,
+    "10-12": 3,
+    "13+": 4
+  },
+  "canIdentifyItems": false,
+  "canDispelUndead": false,
+  "canCriticalHit": false
+}

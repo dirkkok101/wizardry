@@ -1,0 +1,12 @@
+{
+  "id": "molito",
+  "name": "MOLITO",
+  "level": 3,
+  "type": "offensive",
+  "target": "enemy_group",
+  "damage": "3d6",
+  "damageType": "lightning",
+  "damageMode": "each",
+  "description": "3d6 damage to each enemy",
+  "castableIn": ["combat"]
+}

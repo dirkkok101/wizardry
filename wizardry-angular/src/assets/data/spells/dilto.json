@@ -1,0 +1,10 @@
+{
+  "id": "dilto",
+  "name": "DILTO",
+  "level": 2,
+  "type": "debuff",
+  "target": "enemy_group",
+  "effect": "blind",
+  "description": "Blinds enemy group",
+  "castableIn": ["combat"]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "neut_pmail_2",
+  "name": "Neut P-Mail +2",
+  "category": "armor",
+  "armorType": "body",
+  "ac": 7,
+  "enhancement": 2,
+  "cost": 8000,
+  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "alignmentRequired": "neutral",
+  "cursed": false,
+  "special": null
+}

@@ -1,0 +1,10 @@
+{
+  "id": "dios",
+  "name": "DIOS",
+  "level": 1,
+  "type": "healing",
+  "target": "single_ally",
+  "healing": "1d8",
+  "description": "Restore 1d8 HP",
+  "castableIn": ["combat", "dungeon", "town"]
+}

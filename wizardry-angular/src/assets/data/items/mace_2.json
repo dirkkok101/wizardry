@@ -1,0 +1,12 @@
+{
+  "id": "mace_2",
+  "name": "Mace +2",
+  "category": "weapon",
+  "weaponType": "mace",
+  "damage": { "dice": "3d5", "min": 3, "max": 10 },
+  "enhancement": 2,
+  "cost": 4000,
+  "usableBy": ["fighter", "priest", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}

@@ -1,0 +1,21 @@
+{
+  "id": "master_ninja",
+  "name": "Master Ninja",
+  "level": 10,
+  "numberAppearing": { "min": 1, "max": 5 },
+  "hp": { "min": 10, "max": 40 },
+  "ac": 3,
+  "damage": [
+    { "dice": "2d8", "min": 2, "max": 16 },
+    { "dice": "2d8", "min": 2, "max": 16 },
+    { "dice": "2d8", "min": 2, "max": 16 }
+  ],
+  "xp": 1280,
+  "type": "humanoid",
+  "class": "ninja",
+  "specialAbilities": ["multiple_attacks", "decapitate"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": true,
+  "canFlee": false
+}

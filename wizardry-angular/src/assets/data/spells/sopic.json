@@ -1,0 +1,10 @@
+{
+  "id": "sopic",
+  "name": "SOPIC",
+  "level": 2,
+  "type": "buff",
+  "target": "single_ally",
+  "effect": "invisible",
+  "description": "Makes ally invisible",
+  "castableIn": ["combat"]
+}

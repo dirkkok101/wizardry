@@ -1,0 +1,18 @@
+{
+  "id": "gnome",
+  "name": "Gnome",
+  "baseStats": {
+    "str": 7,
+    "int": 7,
+    "pie": 10,
+    "vit": 8,
+    "agi": 10,
+    "luc": 7
+  },
+  "statTotal": 49,
+  "description": "Nimble caster with balanced magical abilities and highest AGI. Good for agility-dependent builds.",
+  "strengths": ["Highest AGI (10)", "Good PIE (10)", "Balanced"],
+  "weaknesses": ["No standout high stats"],
+  "bestClasses": ["thief", "priest", "bishop"],
+  "savingThrowBonus": {}
+}

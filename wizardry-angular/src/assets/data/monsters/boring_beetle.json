@@ -1,0 +1,19 @@
+{
+  "id": "boring_beetle",
+  "name": "Boring Beetle",
+  "level": 4,
+  "numberAppearing": { "min": 1, "max": 8 },
+  "hp": { "min": 5, "max": 40 },
+  "ac": 3,
+  "damage": [
+    { "dice": "1d10", "min": 1, "max": 10 }
+  ],
+  "xp": 1120,
+  "type": "normal",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

@@ -1,0 +1,12 @@
+{
+  "id": "leather_cursed_2",
+  "name": "Leather -2",
+  "category": "armor",
+  "armorType": "body",
+  "ac": 0,
+  "enhancement": -2,
+  "cost": 8000,
+  "usableBy": ["fighter", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": true,
+  "special": null
+}

@@ -1,0 +1,12 @@
+{
+  "id": "di",
+  "name": "DI",
+  "level": 7,
+  "type": "utility",
+  "target": "dead_body",
+  "effect": "resurrect",
+  "successRate": 0.9,
+  "failureResult": "ashes",
+  "description": "Resurrect from death (90% success, failure = ashes)",
+  "castableIn": ["town", "dungeon"]
+}

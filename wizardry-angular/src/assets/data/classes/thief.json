@@ -1,0 +1,25 @@
+{
+  "id": "thief",
+  "name": "Thief",
+  "type": "basic",
+  "description": "Expert at disarming traps and backstabbing enemies. Poor combat otherwise.",
+  "requirements": {
+    "agi": 11
+  },
+  "alignmentRestrictions": ["neutral", "evil"],
+  "equipmentRestrictions": {
+    "weapons": ["dagger", "short_sword", "club"],
+    "armor": ["leather", "none"],
+    "shields": ["small"],
+    "helmets": ["leather"]
+  },
+  "spellAccess": null,
+  "specialAbilities": ["disarm_traps", "backstab"],
+  "hitDice": "1d8",
+  "attacksPerLevel": {
+    "1+": 1
+  },
+  "canIdentifyItems": false,
+  "canDispelUndead": false,
+  "canCriticalHit": true
+}

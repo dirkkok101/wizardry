@@ -1,0 +1,21 @@
+{
+  "id": "fire_giant",
+  "name": "Fire Giant",
+  "level": 9,
+  "numberAppearing": { "min": 1, "max": 4 },
+  "hp": { "min": 15, "max": 92 },
+  "ac": 3,
+  "damage": [
+    { "dice": "3d10", "min": 3, "max": 30 }
+  ],
+  "xp": 2115,
+  "type": "mythical",
+  "class": null,
+  "specialAbilities": [],
+  "resistances": [
+    { "type": "fire", "value": 100 }
+  ],
+  "regeneration": 0,
+  "isBoss": false,
+  "canFlee": false
+}

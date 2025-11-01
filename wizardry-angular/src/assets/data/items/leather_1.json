@@ -1,0 +1,12 @@
+{
+  "id": "leather_1",
+  "name": "Leather +1",
+  "category": "armor",
+  "armorType": "body",
+  "ac": 3,
+  "enhancement": 1,
+  "cost": 1500,
+  "usableBy": ["fighter", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "cursed": false,
+  "special": null
+}
