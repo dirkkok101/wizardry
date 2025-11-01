@@ -4,28 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a faithful remake of **Wizardry 1: Proving Grounds of the Mad Overlord** (1981) - a turn-based, party-based dungeon crawler with first-person 3D-style rendering using TypeScript, HTML5 Canvas, and Vite.
+This is a faithful remake of **Wizardry 1: Proving Grounds of the Mad Overlord** (1981) - a turn-based, party-based dungeon crawler with first-person 3D-style rendering using TypeScript, Angular, and HTML5 Canvas.
 
 ## Development Commands
 
 ```bash
 # Development server with hot reload
-npm run dev
+npm start
+# or
+ng serve
 
 # Build for production
 npm run build
+# or
+ng build
 
-# Preview production build
-npm run preview
-
-# Run all tests (single run, exits when complete)
-npm test -- --run
-
-# Run all tests (watch mode - default, may leave background processes)
+# Run all tests (Jest)
 npm test
 
-# Clean up background processes before running tests (recommended)
-killall -9 node 2>/dev/null || true && npm test -- --run
+# Run tests in watch mode
+npm test -- --watch
 
 # Run specific test file
 npm test -- PartyService
@@ -35,9 +33,6 @@ npm test -- --coverage
 
 # Run tests matching pattern
 npm test -- --testNamePattern="adds character"
-
-# Run tests in watch mode (re-run on file changes)
-npm test -- --watch
 ```
 
 ## Architecture Overview
@@ -110,15 +105,21 @@ Services can call other services but **no circular dependencies allowed**.
 
 **TDD (Test-Driven Development)**: Write tests first, then implementation.
 
+**Test Framework**: Jest with jest-preset-angular for Angular-specific testing support.
+
 **No Mocks for Services**: Services are pure functions - test with real data using factory functions.
 
-**Colocated Tests**: Tests live in `tests/` directory mirroring `src/` structure:
+**Colocated Tests**: Tests are colocated with source files using `__tests__/` subdirectories:
 ```
-tests/
-├── services/       # One test file per service
-├── commands/       # One test file per command
-├── integration/    # Multi-layer integration tests
-└── setup.ts        # Test configuration
+src/
+├── services/
+│   ├── __tests__/           # Service tests
+│   │   ├── PartyService.spec.ts
+│   │   └── CombatService.spec.ts
+│   ├── PartyService.ts
+│   └── CombatService.ts
+└── app/
+    └── app.component.spec.ts  # Angular component tests
 ```
 
 **Test Naming Convention**:
@@ -177,11 +178,36 @@ await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
 
 ```
 src/
-├── types/           # TypeScript interfaces (GameState, Party, Character, etc.)
-├── services/        # Pure function services (business logic)
-├── commands/        # Command objects (user actions)
-├── ui/             # Canvas rendering and input handling
-└── main.ts         # Application entry point
+├── app/              # Angular components and modules
+│   ├── app.component.ts
+│   ├── app.component.spec.ts
+│   └── app.config.ts
+├── services/         # Pure function services (business logic)
+│   ├── __tests__/    # Service tests
+│   ├── AssetLoadingService.ts
+│   ├── CharacterService.ts
+│   ├── GameInitializationService.ts
+│   ├── InputService.ts
+│   ├── SaveService.ts
+│   └── SceneNavigationService.ts
+├── types/            # TypeScript interfaces (GameState, Party, Character, etc.)
+├── assets/           # Static assets and game data (copied from data/)
+├── main.ts           # Angular bootstrap entry point
+├── index.html        # Application entry HTML
+└── styles.scss       # Global styles
+
+angular.json          # Angular CLI configuration
+jest.config.js        # Jest test configuration
+setup-jest.ts         # Jest setup file
+tsconfig.json         # TypeScript base configuration
+tsconfig.app.json     # TypeScript config for application
+tsconfig.spec.json    # TypeScript config for tests
+
+data/                 # Game data (source of truth)
+├── maps/             # level-01.json through level-10.json
+├── spells/           # mage-spells.json, priest-spells.json
+├── monsters/         # monsters.json
+└── items/            # weapons.json, armor.json, consumables.json
 
 docs/
 ├── architecture.md     # Technical architecture overview
@@ -192,12 +218,6 @@ docs/
 ├── ui/               # UI/UX scene documentation (14 scenes)
 ├── systems/          # System design docs (combat, spells, etc.)
 └── research/         # Source validation and research
-
-data/
-├── maps/          # level-01.json through level-10.json
-├── spells/        # mage-spells.json, priest-spells.json
-├── monsters/      # monsters.json
-└── items/         # weapons.json, armor.json, consumables.json
 ```
 
 ## TypeScript Configuration
@@ -241,14 +261,25 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
 
 ## Current Implementation Status
 
+**Migration Status**: Angular migration complete - project now uses Angular framework at root level.
+
 **Completed**:
-- Project initialization with Vite + TypeScript
-- Canvas setup with 4:3 aspect ratio and responsive sizing
-- AssetLoadingService with title screen asset loading
-- SceneNavigationService with transition validation
-- GameInitializationService for state setup
-- SaveService with IndexedDB persistence
-- InputService for keyboard handling
+- Angular project structure setup with Angular CLI
+- Migration from Vite to Angular build system
+- Migration from Vitest to Jest testing framework
+- Service layer migration (6 core services migrated):
+  - AssetLoadingService
+  - CharacterService
+  - GameInitializationService
+  - InputService
+  - SaveService
+  - SceneNavigationService
+- Test suite migration to Jest with jest-preset-angular
+- Game data files and documentation preserved at root level
 - Comprehensive documentation (14/14 UI scenes, all core services, all game systems)
 
-**Next Steps**: Implement remaining services and commands following the documentation in `docs/services/` and `docs/commands/`.
+**Next Steps**:
+- Continue implementing UI layer with Angular components
+- Migrate canvas rendering to Angular services/components
+- Implement remaining services and commands following the documentation in `docs/services/` and `docs/commands/`
+- Add Angular-specific features (dependency injection, change detection optimization)
