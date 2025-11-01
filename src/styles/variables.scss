@@ -1,0 +1,31 @@
+// Retro CRT Colors
+$color-bg-black: #000000;
+$color-text-green: #00ff00;
+$color-text-bright: #00ff88;
+$color-text-dim: #008800;
+$color-amber: #ffaa00;
+$color-error: #ff0000;
+
+// Typography
+$font-mono: 'Courier New', 'Courier', monospace;
+$font-size-base: 16px;
+$font-size-large: 20px;
+$font-size-small: 14px;
+
+// Layout
+$screen-width: 640px;
+$screen-height: 480px;
+$padding-standard: 16px;
+$padding-small: 8px;
+
+// Borders
+$border-width: 2px;
+$border-style: solid;
+$border-color: $color-text-green;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
