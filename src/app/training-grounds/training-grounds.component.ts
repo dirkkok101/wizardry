@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../services/GameStateService'
-import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService'
+import { CharacterCreationService, RolledStats, BaseStats } from '../../services/CharacterCreationService'
 import { CharacterService } from '../../services/CharacterService'
 import { SceneType } from '../../types/SceneType'
 import { Race, RACE_MODIFIERS, RaceModifiers } from '../../types/Race'
@@ -197,6 +197,62 @@ export class TrainingGroundsComponent implements OnInit {
     }
 
     this.errorMessage.set(null)
+    this.nextStep()
+  }
+
+  /**
+   * Get available bonus points
+   */
+  getAvailableBonusPoints(): number {
+    return this.wizardState().rolledStats?.bonusPoints ?? 0
+  }
+
+  /**
+   * Allocate bonus points to a specific stat
+   */
+  allocateBonusPoint(stat: keyof BaseStats, points: number): void {
+    const currentStats = this.wizardState().rolledStats
+
+    if (!currentStats) {
+      this.errorMessage.set('No stats rolled')
+      return
+    }
+
+    try {
+      const updatedStats = CharacterCreationService.allocateBonusPoints(
+        currentStats,
+        stat,
+        points
+      )
+
+      this.wizardState.update(state => ({
+        ...state,
+        rolledStats: updatedStats
+      }))
+
+      this.errorMessage.set(null)
+    } catch (error) {
+      this.errorMessage.set((error as Error).message)
+    }
+  }
+
+  /**
+   * Get eligible classes based on current stats (with bonus allocation)
+   */
+  getEligibleClasses(): CharacterClass[] {
+    const { rolledStats, selectedAlignment } = this.wizardState()
+
+    if (!rolledStats || !selectedAlignment) {
+      return []
+    }
+
+    return CharacterService.getEligibleClasses(rolledStats, selectedAlignment)
+  }
+
+  /**
+   * Finish bonus point allocation and advance to class selection
+   */
+  finishBonusAllocation(): void {
     this.nextStep()
   }
 

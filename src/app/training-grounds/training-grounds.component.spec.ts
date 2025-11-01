@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
 import { TrainingGroundsComponent, WizardStep } from './training-grounds.component'
 import { GameStateService } from '../../services/GameStateService'
-import { CharacterCreationService } from '../../services/CharacterCreationService'
+import { CharacterCreationService, BaseStats } from '../../services/CharacterCreationService'
 import { SceneType } from '../../types/SceneType'
 import { Race } from '../../types/Race'
 import { Alignment } from '../../types/Alignment'
@@ -250,6 +250,92 @@ describe('TrainingGroundsComponent', () => {
       component.acceptStats()
 
       expect(component.errorMessage()).toContain('Roll stats')
+    })
+  })
+
+  describe('bonus point allocation', () => {
+    beforeEach(() => {
+      component.selectRace(Race.HUMAN)
+      component.selectAlignment(Alignment.GOOD)
+      component.rollStats()
+      component.acceptStats()
+    })
+
+    it('displays available bonus points', () => {
+      const points = component.getAvailableBonusPoints()
+
+      expect(points).toBeGreaterThanOrEqual(7)
+      expect(points).toBeLessThanOrEqual(29)
+    })
+
+    it('allocates bonus points to a stat', () => {
+      const initialStats = component.wizardState().rolledStats!
+      const initialStr = initialStats.strength
+      const initialBonus = initialStats.bonusPoints
+
+      component.allocateBonusPoint('strength', 1)
+
+      const updatedStats = component.wizardState().rolledStats!
+
+      expect(updatedStats.strength).toBe(initialStr + 1)
+      expect(updatedStats.bonusPoints).toBe(initialBonus - 1)
+    })
+
+    it('prevents allocating more points than available', () => {
+      const stats = component.wizardState().rolledStats!
+      const availablePoints = stats.bonusPoints
+
+      component.allocateBonusPoint('strength', availablePoints + 1)
+
+      expect(component.errorMessage()).toContain('Not enough bonus points')
+    })
+
+    it('allows allocating all bonus points', () => {
+      const stats = component.wizardState().rolledStats!
+      const allPoints = stats.bonusPoints
+
+      component.allocateBonusPoint('strength', allPoints)
+
+      const updated = component.wizardState().rolledStats!
+
+      expect(updated.bonusPoints).toBe(0)
+      expect(updated.strength).toBe(stats.strength + allPoints)
+    })
+
+    it('advances to CLASS step when bonus points allocated', () => {
+      component.finishBonusAllocation()
+
+      expect(component.currentStep()).toBe('CLASS')
+    })
+
+    it('updates eligible classes in real-time as points allocated', () => {
+      // Start with low stats but select GOOD alignment for Samurai
+      component.wizardState.update(state => ({
+        ...state,
+        selectedAlignment: Alignment.GOOD,
+        rolledStats: {
+          strength: 10,
+          intelligence: 10,
+          piety: 10,
+          vitality: 10,
+          agility: 10,
+          luck: 10,
+          bonusPoints: 10
+        }
+      }))
+
+      const eligibleBefore = component.getEligibleClasses()
+
+      // Allocate points to make character eligible for Samurai
+      // Samurai needs: STR 15+, IQ 11+, PIE 10+, VIT 14+, AGI 10+ and GOOD/NEUTRAL alignment
+      component.allocateBonusPoint('strength', 5) // 10 + 5 = 15
+      component.allocateBonusPoint('intelligence', 1) // 10 + 1 = 11
+      component.allocateBonusPoint('vitality', 4) // 10 + 4 = 14
+
+      const eligibleAfter = component.getEligibleClasses()
+
+      expect(eligibleAfter).toContain(CharacterClass.SAMURAI)
+      expect(eligibleBefore).not.toContain(CharacterClass.SAMURAI)
     })
   })
 })
