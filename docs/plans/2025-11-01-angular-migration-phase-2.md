@@ -616,8 +616,7 @@ describe('partyExistsGuard', () => {
       party: {
         members: [],
         formation: { frontRow: [], backRow: [] },
-        position: { level: 1, x: 0, y: 0 },
-        facing: 'NORTH',
+        position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
         light: false
       }
     }));

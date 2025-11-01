@@ -21,11 +21,12 @@ function createNewGame(): GameState {
         backRow: []
       },
       position: {
+        level: 1,
         x: 0,
         y: 0,
         facing: 'NORTH'
       },
-      inMaze: false
+      light: false
     },
     dungeon: {
       currentLevel: 1,

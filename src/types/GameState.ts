@@ -5,17 +5,18 @@ import { SceneType } from './SceneType'
  * Core game state structure
  */
 export interface Party {
-  members: string[] // Character IDs
+  members: string[] // Character IDs (1-6)
   formation: {
     frontRow: string[] // Max 3 character IDs
     backRow: string[] // Max 3 character IDs
   }
   position: {
-    x: number
-    y: number
+    level: number // Dungeon level (1-10)
+    x: number // X coordinate (0-19)
+    y: number // Y coordinate (0-19)
     facing: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
   }
-  inMaze: boolean
+  light: boolean // Party has light active (LOMILWA spell or torch)
 }
 
 export interface Dungeon {
