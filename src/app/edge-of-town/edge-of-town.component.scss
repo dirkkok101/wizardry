@@ -78,6 +78,16 @@
     }
   }
 
+  .info-message {
+    margin-top: $spacing-lg;
+    text-align: center;
+
+    p {
+      color: $color-text-bright;
+      font-weight: bold;
+    }
+  }
+
   .confirmation-dialog {
     position: fixed;
     top: 0;

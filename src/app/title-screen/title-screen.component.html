@@ -6,12 +6,17 @@
   </div>
 
   <!-- Loading indicator -->
-  <div class="loading-status" *ngIf="isLoading()">
+  <div class="loading-status" *ngIf="isLoading() && !errorMessage()">
     <p>Loading assets...</p>
   </div>
 
+  <!-- Error state -->
+  <div class="error-status" *ngIf="errorMessage()">
+    <p class="error-message">{{ errorMessage() }}</p>
+  </div>
+
   <!-- Ready state -->
-  <div class="ready-prompt" *ngIf="!isLoading()" appKeystrokeInput (keystroke)="handleKeyPress($event)">
+  <div class="ready-prompt" *ngIf="!isLoading() && !errorMessage()" appKeystrokeInput (keystroke)="handleKeyPress($event)">
     <p class="press-key">Press any key to continue</p>
 
     <!-- Save data indicator -->

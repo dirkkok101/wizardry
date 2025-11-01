@@ -29,6 +29,11 @@
     <p>{{ errorMessage() }}</p>
   </div>
 
+  <!-- Info message -->
+  <div class="info-message" *ngIf="infoMessage()">
+    <p>{{ infoMessage() }}</p>
+  </div>
+
   <!-- Exit confirmation -->
   <div class="confirmation-dialog" *ngIf="showExitConfirmation()">
     <div class="dialog-content">

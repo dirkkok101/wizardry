@@ -72,6 +72,7 @@ export class EdgeOfTownComponent implements OnInit {
 
   // Error and confirmation state
   readonly errorMessage = signal<string | null>(null);
+  readonly infoMessage = signal<string | null>(null);
   readonly showExitConfirmation = signal(false);
 
   constructor(
@@ -141,7 +142,7 @@ export class EdgeOfTownComponent implements OnInit {
     // If window.close() fails (most browsers), show a message
     // informing the user they can safely close the tab
     this.showExitConfirmation.set(false);
-    alert('Game saved successfully. You can now close this window.');
+    this.infoMessage.set('Game saved successfully. You can now close this window.');
   }
 
   cancelExit(): void {

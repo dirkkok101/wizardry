@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AssetLoadingService } from '../../services/AssetLoadingService';
 import { SaveService } from '../../services/SaveService';
+import { LoggerService } from '../../services/LoggerService';
 import { KeystrokeInputDirective } from '../../directives/keystroke-input.directive';
 
 /**
@@ -23,6 +24,7 @@ export class TitleScreenComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly canPressKey = signal(false);
   readonly hasSaveData = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   // Navigation state
   private hasNavigated = false;
@@ -30,7 +32,8 @@ export class TitleScreenComponent implements OnInit {
   constructor(
     private assetService: AssetLoadingService,
     private saveService: SaveService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -46,8 +49,9 @@ export class TitleScreenComponent implements OnInit {
       this.isLoading.set(false);
       this.canPressKey.set(true);
     } catch (error) {
-      console.error('Failed to load title screen:', error);
-      // Show error state (future enhancement)
+      this.logger.error('Failed to load title screen:', error);
+      this.errorMessage.set('Failed to load assets. Please refresh the page.');
+      this.isLoading.set(false);
     }
   }
 
