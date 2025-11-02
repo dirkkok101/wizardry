@@ -85,11 +85,6 @@ export class CharacterCreationComponent implements OnInit {
     return steps.indexOf(this.currentStep()) + 1;
   });
 
-  // Data arrays for template
-  readonly allRaces = computed(() => RaceService.getAllRaces());
-  readonly allClasses = computed(() => ClassService.getAllClasses());
-  readonly allAlignments = [Alignment.GOOD, Alignment.NEUTRAL, Alignment.EVIL];
-
   // Expose Alignment enum to template
   readonly Alignment = Alignment;
 
