@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
 import { SceneType } from '../../types/SceneType';
+import { Character } from '../../types/Character';
 
 /**
  * Castle Menu Component
@@ -23,38 +24,30 @@ import { SceneType } from '../../types/SceneType';
   styleUrls: ['./castle-menu.component.scss']
 })
 export class CastleMenuComponent implements OnInit {
-  readonly menuItems: MenuItem[] = [
-    {
-      id: 'tavern',
-      label: "GILGAMESH'S TAVERN",
-      enabled: true,
-      shortcut: 'G'
-    },
-    {
-      id: 'temple',
-      label: 'TEMPLE OF CANT',
-      enabled: true,
-      shortcut: 'T'
-    },
-    {
-      id: 'shop',
-      label: "BOLTAC'S TRADING POST",
-      enabled: true,
-      shortcut: 'B'
-    },
-    {
-      id: 'inn',
-      label: "ADVENTURER'S INN",
-      enabled: true,
-      shortcut: 'A'
-    },
-    {
-      id: 'edge-of-town',
-      label: 'EDGE OF TOWN',
-      enabled: true,
-      shortcut: 'E'
-    }
-  ];
+  // Party display signals
+  readonly currentParty = computed(() => this.gameState.party());
+  readonly partyCharacters = computed(() => {
+    const party = this.currentParty();
+    const state = this.gameState.state();
+    return party.members
+      .map(id => state.roster.get(id))
+      .filter((char): char is Character => char !== undefined);
+  });
+
+  readonly menuItems = computed(() => {
+    const baseItems: MenuItem[] = [
+      { id: 'tavern', label: "GILGAMESH'S TAVERN", enabled: true, shortcut: 'G' },
+      { id: 'temple', label: 'TEMPLE OF CANT', enabled: true, shortcut: 'T' },
+      { id: 'shop', label: "BOLTAC'S TRADING POST", enabled: true, shortcut: 'B' },
+      { id: 'inn', label: "ADVENTURER'S INN", enabled: true, shortcut: 'A' },
+      { id: 'edge-of-town', label: 'EDGE OF TOWN', enabled: this.hasParty(), shortcut: 'E' }
+    ];
+    return baseItems;
+  });
+
+  private hasParty(): boolean {
+    return this.currentParty().members.length > 0;
+  }
 
   constructor(
     private gameState: GameStateService,
@@ -72,5 +65,11 @@ export class CastleMenuComponent implements OnInit {
   handleMenuSelect(itemId: string): void {
     // Navigate to selected service
     this.router.navigate([`/${itemId}`]);
+  }
+
+  handleInspectCharacter(charId: string): void {
+    this.router.navigate(['/character-inspection'], {
+      queryParams: { characterId: charId, returnTo: 'castle-menu' }
+    });
   }
 }
