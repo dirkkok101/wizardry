@@ -848,10 +848,10 @@ describe('CharacterCreationComponent', () => {
         }
       });
 
-      it('should select BISHOP on "i" key when eligible (not "b")', () => {
-        // Verify BISHOP uses 'I' key, not 'B' (which is for Back button)
+      it('should select BISHOP on "b" key when eligible', () => {
+        // Verify BISHOP uses 'B' key (changed from 'I' to avoid alignment conflicts)
         const shortcut = component.getClassShortcut('BISHOP');
-        expect(shortcut).toBe('I');
+        expect(shortcut).toBe('B');
       });
 
       it('should NOT select class when stats not rolled', () => {
@@ -924,15 +924,15 @@ describe('CharacterCreationComponent', () => {
         }
       }));
 
-      it('should select SAMURAI (S) when form incomplete', fakeAsync(() => {
+      it('should select SAMURAI (A) when form incomplete', fakeAsync(() => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.rollStats();
         tick(350);
 
         if (component.isClassEligible(CharacterClass.SAMURAI)) {
-          // Form is NOT complete (no name), so 'S' should select Samurai
-          const event = new KeyboardEvent('keydown', { key: 's' });
+          // Form is NOT complete (no name), so 'A' should select Samurai (changed from 'S')
+          const event = new KeyboardEvent('keydown', { key: 'a' });
           component.handleKeyPress(event);
 
           expect(component.selectedClass()).toBe(CharacterClass.SAMURAI);
@@ -951,15 +951,15 @@ describe('CharacterCreationComponent', () => {
         expect(component.selectedClass()).toBeNull();
       }));
 
-      it('should select NINJA (N) when stats rolled and alignment set', fakeAsync(() => {
+      it('should select NINJA (J) when stats rolled and alignment set', fakeAsync(() => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.EVIL); // NINJA requires EVIL
         component.rollStats();
         tick(350);
 
         if (component.isClassEligible(CharacterClass.NINJA)) {
-          // Now 'N' should select Ninja (alignment already set)
-          const event = new KeyboardEvent('keydown', { key: 'n' });
+          // Now 'J' should select Ninja (changed from 'N', alignment already set)
+          const event = new KeyboardEvent('keydown', { key: 'j' });
           component.handleKeyPress(event);
 
           expect(component.selectedClass()).toBe(CharacterClass.NINJA);
@@ -1279,6 +1279,136 @@ describe('CharacterCreationComponent', () => {
 
       // Should still be GOOD
       expect(component.selectedAlignment()).toBe(Alignment.GOOD);
+    });
+  });
+
+  describe('class selection keyboard shortcuts', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should select Fighter with F key', () => {
+      const event = new KeyboardEvent('keydown', { key: 'f' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+    });
+
+    it('should select Mage with M key', () => {
+      const event = new KeyboardEvent('keydown', { key: 'm' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.MAGE);
+    });
+
+    it('should select Priest with P key', () => {
+      const event = new KeyboardEvent('keydown', { key: 'p' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.PRIEST);
+    });
+
+    it('should select Thief with T key', () => {
+      // Reset and setup for Thief (requires NEUTRAL or EVIL alignment)
+      component.resetForm();
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.NEUTRAL);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      // Set stats to ensure Thief is eligible (needs AGI 11)
+      component.rolledStats.set({
+        strength: 10, intelligence: 10, piety: 10,
+        vitality: 10, agility: 11, luck: 10, bonusPoints: 3
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 't' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.THIEF);
+    });
+
+    it('should select Bishop with B key', () => {
+      // Roll stats that make Bishop eligible
+      component.rolledStats.set({
+        strength: 10, intelligence: 12, piety: 12,
+        vitality: 10, agility: 10, luck: 10, bonusPoints: 5
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'b' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.BISHOP);
+    });
+
+    it('should select Samurai with A key', () => {
+      // Roll stats that make Samurai eligible
+      component.rolledStats.set({
+        strength: 15, intelligence: 11, piety: 10,
+        vitality: 14, agility: 10, luck: 10, bonusPoints: 5
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'a' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.SAMURAI);
+    });
+
+    it('should select Lord with L key', () => {
+      // Roll stats that make Lord eligible
+      component.rolledStats.set({
+        strength: 15, intelligence: 12, piety: 12,
+        vitality: 14, agility: 10, luck: 10, bonusPoints: 6
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'l' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.LORD);
+    });
+
+    it('should select Ninja with J key', () => {
+      // Reset and setup for Ninja (requires EVIL alignment and all stats 17)
+      component.resetForm();
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.EVIL);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      // Roll stats that make Ninja eligible (needs all stats 17)
+      component.rolledStats.set({
+        strength: 17, intelligence: 17, piety: 17,
+        vitality: 17, agility: 17, luck: 10, bonusPoints: 8
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'j' });
+      component.handleKeyPress(event);
+      expect(component.selectedClass()).toBe(CharacterClass.NINJA);
+    });
+
+    it('should not select class before stats rolled', () => {
+      component.resetForm();
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+
+      const event = new KeyboardEvent('keydown', { key: 'f' });
+      component.handleKeyPress(event);
+
+      expect(component.selectedClass()).toBeNull();
+    });
+
+    it('should not select ineligible class', () => {
+      // Stats that don't qualify for Ninja
+      component.rolledStats.set({
+        strength: 10, intelligence: 10, piety: 10,
+        vitality: 10, agility: 10, luck: 10, bonusPoints: 3
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'j' });
+      component.handleKeyPress(event);
+
+      expect(component.selectedClass()).not.toBe(CharacterClass.NINJA);
     });
   });
 });

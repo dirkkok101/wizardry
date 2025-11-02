@@ -242,10 +242,10 @@ export class CharacterCreationComponent implements OnInit {
       'MAGE': 'M',
       'PRIEST': 'P',
       'THIEF': 'T',
-      'BISHOP': 'I',
-      'SAMURAI': 'S',
+      'BISHOP': 'B',    // Changed from 'I'
+      'SAMURAI': 'A',   // Changed from 'S'
       'LORD': 'L',
-      'NINJA': 'N'
+      'NINJA': 'J'      // Changed from 'N'
     };
     return shortcuts[classId] || '?';
   }
@@ -307,7 +307,7 @@ export class CharacterCreationComponent implements OnInit {
       }
     }
 
-    // Priority 6: Class selection (F, M, P, T, I, S, L, N)
+    // Priority 6: Class selection (F, M, P, T, B, A, L, J)
     // Only active when stats rolled (so alignment keys won't conflict) AND form not complete (so Save key takes precedence)
     if (this.rolledStats() && !this.canSave()) {
       const classMap: { [key: string]: CharacterClass } = {
@@ -315,10 +315,10 @@ export class CharacterCreationComponent implements OnInit {
         'm': CharacterClass.MAGE,
         'p': CharacterClass.PRIEST,
         't': CharacterClass.THIEF,
-        'i': CharacterClass.BISHOP,
-        's': CharacterClass.SAMURAI,
+        'b': CharacterClass.BISHOP,   // Changed from 'i'
+        'a': CharacterClass.SAMURAI,  // Changed from 's'
         'l': CharacterClass.LORD,
-        'n': CharacterClass.NINJA
+        'j': CharacterClass.NINJA     // Changed from 'n'
       };
 
       const charClass = classMap[key];
