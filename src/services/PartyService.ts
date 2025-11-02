@@ -2,6 +2,7 @@ import { Party } from '../types/GameState'
 import { Character } from '../types/Character'
 import { Alignment } from '../types/Alignment'
 import { CharacterStatus } from '../types/CharacterStatus'
+import { isDefined } from '../utils/type-guards'
 
 interface ValidationResult {
   allowed: boolean
@@ -45,7 +46,7 @@ export class PartyService {
     // Check alignment conflicts (Good vs Evil)
     const partyCharacters = party.members
       .map(id => allCharacters.get(id))
-      .filter((c): c is Character => c !== undefined)
+      .filter(isDefined)
 
     const hasGood = partyCharacters.some(c => c.alignment === Alignment.GOOD)
     const hasEvil = partyCharacters.some(c => c.alignment === Alignment.EVIL)
