@@ -10,8 +10,13 @@
           <button
             class="race-button"
             [class.selected]="selectedRace() === parseRaceId(race.id)"
+            [class.locked]="isLocked() && selectedRace() === parseRaceId(race.id)"
+            [disabled]="isLocked()"
             (click)="selectRace(parseRaceId(race.id)!)">
             [{{ i + 1 }}] {{ race.name }}
+            @if (isLocked() && selectedRace() === parseRaceId(race.id)) {
+              <span class="lock-icon">🔒</span>
+            }
           </button>
         }
       </div>
@@ -39,6 +44,9 @@
           }
         </div>
       }
+      @if (isLocked()) {
+        <p class="lock-hint">Press ESC to unlock and change race</p>
+      }
     </section>
 
     <!-- Section 2: Alignment Selection -->
@@ -48,25 +56,40 @@
         <button
           class="alignment-button"
           [class.selected]="selectedAlignment() === Alignment.GOOD"
-          [disabled]="!selectedRace()"
+          [class.locked]="isLocked() && selectedAlignment() === Alignment.GOOD"
+          [disabled]="!selectedRace() || isLocked()"
           (click)="selectAlignment(Alignment.GOOD)">
           [G] GOOD
+          @if (isLocked() && selectedAlignment() === Alignment.GOOD) {
+            <span class="lock-icon">🔒</span>
+          }
         </button>
         <button
           class="alignment-button"
           [class.selected]="selectedAlignment() === Alignment.NEUTRAL"
-          [disabled]="!selectedRace()"
+          [class.locked]="isLocked() && selectedAlignment() === Alignment.NEUTRAL"
+          [disabled]="!selectedRace() || isLocked()"
           (click)="selectAlignment(Alignment.NEUTRAL)">
           [N] NEUTRAL
+          @if (isLocked() && selectedAlignment() === Alignment.NEUTRAL) {
+            <span class="lock-icon">🔒</span>
+          }
         </button>
         <button
           class="alignment-button"
           [class.selected]="selectedAlignment() === Alignment.EVIL"
-          [disabled]="!selectedRace()"
+          [class.locked]="isLocked() && selectedAlignment() === Alignment.EVIL"
+          [disabled]="!selectedRace() || isLocked()"
           (click)="selectAlignment(Alignment.EVIL)">
           [E] EVIL
+          @if (isLocked() && selectedAlignment() === Alignment.EVIL) {
+            <span class="lock-icon">🔒</span>
+          }
         </button>
       </div>
+      @if (isLocked()) {
+        <p class="lock-hint">Press ESC to unlock and change alignment</p>
+      }
     </section>
 
     <!-- Section 3: Roll Stats -->
