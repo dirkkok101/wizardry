@@ -26,7 +26,8 @@
   "attacksPerLevel": {
     "1-4": 1,
     "5-9": 2,
-    "10+": 3
+    "10-14": 3,
+    "15+": 4
   },
   "xpTable": [3500, 7000, 14000, 28000, 56000, 112000, 224000, 450000, 900000, 1350000, 1800000],
   "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (max level 6)"],

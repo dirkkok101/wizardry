@@ -17,11 +17,12 @@
   "attacksPerLevel": {
     "1-4": 1,
     "5-9": 2,
-    "10+": 3
+    "10-14": 3,
+    "15+": 4
   },
   "xpTable": [2000, 4000, 8000, 16000, 32000, 64000, 128000, 250000, 500000, 1000000, 1500000],
   "specialAbilities": ["Can use all weapons and armor"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
-  "canCriticalHit": true
+  "canCriticalHit": false
 }
