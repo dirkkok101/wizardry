@@ -285,9 +285,28 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
   - **336 total tests passing** in **<4 seconds** (3.48s)
   - All placeholders removed, code polished
 
+- **Phase 6**: Town Service Completion & Castle Integration (Complete)
+  - **Tavern Component**: Party formation with alignment validation, gold divvy
+  - **Inn Component**: 5 room types, HP healing, level-up processing, spell learning
+  - **Character Inspection Component**: Full character sheet with stats, equipment, spells
+  - **Utilities Component**: Save/load system with 3 slots, metadata display
+  - **Castle Menu Component**: Enhanced with party display, navigation to all services
+  - **PartyService**: Alignment validation, gold distribution (100% coverage)
+  - **LevelUpService**: XP tables, HP rolls, stat increases (95% coverage)
+  - **SpellLearningService**: Spell progression for Mage/Priest/Bishop (100% coverage)
+  - **InnService**: Room costs, heal rates, rest mechanics (100% coverage)
+  - **SaveService**: IndexedDB persistence with slot metadata (85% coverage)
+  - **Integration Tests**: 9 E2E tests (6 new) covering town service workflows
+  - **Performance Tests**: 3 tests verifying speed targets met
+  - **501 total tests passing** in **7.8 seconds**
+  - **89.07% code coverage** (exceeds 80% target)
+  - See `docs/implementation/phase-6-summary.md` for full details
+
 **Next Steps**:
-- **Phase 6**: Castle Menu and remaining town services (Inn, Tavern)
 - **Phase 7**: Dungeon navigation and combat system
-- Canvas rendering for dungeon visualization
-- Party formation and management UI
-- Add Angular-specific optimizations (OnPush change detection)
+  - Camp scene (pre-dungeon staging)
+  - Maze scene (3D Canvas rendering, movement)
+  - Combat scene (turn-based battles)
+  - Chest scene (loot and traps)
+  - Encounter system (monster spawning, initiative)
+  - Spell casting (combat and utility spells)
