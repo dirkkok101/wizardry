@@ -334,7 +334,12 @@ export class CharacterCreationComponent implements OnInit {
     }
   }
 
-  // Handle name modal save (wrapper for backward compatibility)
+  /**
+   * Wrapper method for test backward compatibility.
+   * Note: The template uses submitCharacter() directly via (nameSubmitted) event.
+   * This method exists solely for existing test code that calls handleNameSave().
+   * @param name - Character name entered by user
+   */
   handleNameSave(name: string) {
     this.submitCharacter(name);
   }
