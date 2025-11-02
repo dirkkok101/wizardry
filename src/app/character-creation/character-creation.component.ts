@@ -354,88 +354,103 @@ export class CharacterCreationComponent implements OnInit {
   handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
 
-    // Priority 0: Block all shortcuts if name modal is open
-    if (this.showNameModal()) {
-      return;
+    // Route by current step
+    switch(this.currentStep()) {
+      case CreationStep.SELECT_RACE:
+        this.handleRaceStepKeys(key);
+        break;
+
+      case CreationStep.SELECT_ALIGNMENT:
+        this.handleAlignmentStepKeys(key);
+        break;
+
+      case CreationStep.ROLL_STATS:
+        this.handleRollStatsStepKeys(key);
+        break;
+
+      case CreationStep.SELECT_CLASS:
+        this.handleSelectClassStepKeys(key);
+        break;
+
+      case CreationStep.NAME_CHARACTER:
+        this.handleNameCharacterStepKeys(key);
+        break;
     }
 
-    // Priority 1: Reset wizard (ESC)
-    if (key === 'escape') {
-      event.preventDefault();
-      this.resetWizard();
-      return;
-    }
-
-    // Priority 2: Quit to Training Grounds (Q)
+    // Global shortcuts (work on any step)
     if (key === 'q') {
+      this.quitToTrainingGrounds();
       event.preventDefault();
-      this.navigateToTrainingGrounds();
-      return;
     }
+  }
 
-    // Priority 3: Race selection (1-5) - only if not locked
-    if (key >= '1' && key <= '5' && !this.isLocked()) {
-      const races = this.allRaces();
+  private handleRaceStepKeys(key: string) {
+    if (['1','2','3','4','5'].includes(key)) {
+      const races: Race[] = [Race.HUMAN, Race.ELF, Race.DWARF, Race.GNOME, Race.HOBBIT];
       const index = parseInt(key) - 1;
-      if (index < races.length) {
-        event.preventDefault();
-        const raceId = this.parseRaceId(races[index].id);
-        if (raceId) this.selectRace(raceId);
-      }
-      return;
+      this.selectedRace.set(races[index]);
+    } else if (key === 'enter' && this.selectedRace()) {
+      this.advanceToAlignment();
+    } else if (key === 'escape') {
+      this.cancelToTrainingGrounds();
     }
+  }
 
-    // Priority 4: Alignment selection (G, N, E) - only if race selected and not locked
-    if (this.selectedRace() && !this.isLocked()) {
-      switch(key) {
-        case 'g':
-          event.preventDefault();
-          this.selectAlignment(Alignment.GOOD);
-          return;
-        case 'n':
-          event.preventDefault();
-          this.selectAlignment(Alignment.NEUTRAL);
-          return;
-        case 'e':
-          event.preventDefault();
-          this.selectAlignment(Alignment.EVIL);
-          return;
-      }
+  private handleAlignmentStepKeys(key: string) {
+    if (key === 'g') {
+      this.selectedAlignment.set(Alignment.GOOD);
+    } else if (key === 'n') {
+      this.selectedAlignment.set(Alignment.NEUTRAL);
+    } else if (key === 'e') {
+      this.selectedAlignment.set(Alignment.EVIL);
+    } else if (key === 'enter' && this.selectedAlignment()) {
+      this.advanceToRollStats();
+    } else if (key === 'escape') {
+      this.goBackFromAlignment();
     }
+  }
 
-    // Priority 5: Roll stats (R)
-    if (key === 'r' && this.selectedAlignment()) {
-      event.preventDefault();
+  private handleRollStatsStepKeys(key: string) {
+    if (key === 'r' && !this.isRolling()) {
       this.rollStats();
-      return;
+    } else if (key === 'escape') {
+      this.goBackFromRollStats();
     }
+  }
 
-    // Priority 6: Class selection (F, M, P, T, B, A, L, J) - only when locked
-    if (this.rolledStats() && this.isLocked() && !this.canAccept()) {
-      const classMap: { [key: string]: CharacterClass } = {
-        'f': CharacterClass.FIGHTER,
-        'm': CharacterClass.MAGE,
-        'p': CharacterClass.PRIEST,
-        't': CharacterClass.THIEF,
-        'b': CharacterClass.BISHOP,
-        'a': CharacterClass.SAMURAI,
-        'l': CharacterClass.LORD,
-        'j': CharacterClass.NINJA
-      };
+  private handleSelectClassStepKeys(key: string) {
+    const classMap: Record<string, CharacterClass> = {
+      'f': CharacterClass.FIGHTER,
+      'm': CharacterClass.MAGE,
+      'p': CharacterClass.PRIEST,
+      't': CharacterClass.THIEF,
+      'b': CharacterClass.BISHOP,
+      'a': CharacterClass.SAMURAI,
+      'l': CharacterClass.LORD,
+      'j': CharacterClass.NINJA
+    };
 
-      const charClass = classMap[key];
-      if (charClass && this.isClassEligible(charClass)) {
-        event.preventDefault();
-        this.selectClass(charClass);
-        return;
+    if (key === 'r') {
+      this.rerollStats();
+    } else if (key in classMap) {
+      const selectedClass = classMap[key];
+      // Only allow selecting eligible classes
+      const eligible = this.eligibleClasses();
+      if (eligible.includes(selectedClass)) {
+        this.selectedClass.set(selectedClass);
       }
+    } else if (key === 'enter' && this.selectedClass()) {
+      this.advanceToNameCharacter();
+    } else if (key === 'escape') {
+      this.goBackFromSelectClass();
     }
+  }
 
-    // Priority 7: Accept character (Enter) - only when class selected
-    if (key === 'enter' && this.canAccept()) {
-      event.preventDefault();
-      this.acceptCharacter();
-      return;
+  private handleNameCharacterStepKeys(key: string) {
+    // Let the input field handle typing
+    // Only intercept Escape (Enter handled by form submit)
+    if (key === 'escape') {
+      this.goBackFromNameCharacter();
     }
   }
 
