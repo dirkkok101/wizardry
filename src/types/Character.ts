@@ -36,6 +36,9 @@ export interface Character {
   equippedWeapon?: string // Item ID
   equippedArmor?: string // Item ID
 
+  // Gold
+  gold?: number // Character's individual gold (separate from party gold pool)
+
   // Password protection
   password: string
 
