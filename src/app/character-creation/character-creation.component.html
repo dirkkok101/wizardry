@@ -156,7 +156,77 @@
       <div class="character-sheet">
         <h3>YOUR CHARACTER</h3>
 
-        <!-- Progressive build-up (next task) -->
+        <!-- Race -->
+        @if (selectedRace()) {
+          <div class="sheet-section race">
+            <label>Race:</label>
+            <span class="value">{{ getRaceName(selectedRace()!) }}</span>
+          </div>
+        }
+
+        <!-- Alignment -->
+        @if (selectedAlignment()) {
+          <div class="sheet-section alignment">
+            <label>Alignment:</label>
+            <span class="value">{{ getAlignmentName(selectedAlignment()!) }}</span>
+          </div>
+        }
+
+        <!-- Stats -->
+        @if (rolledStats() && finalStats()) {
+          <div class="sheet-section stats">
+            <label>Attributes:</label>
+            <div class="stat-list">
+              <div class="stat-row">
+                <span class="stat-name">STR:</span>
+                <span class="stat-formula">
+                  {{ raceData()!.baseStats.str }} + {{ rolledStats()!.strength }} = {{ finalStats()!.strength }}
+                </span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">INT:</span>
+                <span class="stat-formula">
+                  {{ raceData()!.baseStats.int }} + {{ rolledStats()!.intelligence }} = {{ finalStats()!.intelligence }}
+                </span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">PIE:</span>
+                <span class="stat-formula">
+                  {{ raceData()!.baseStats.pie }} + {{ rolledStats()!.piety }} = {{ finalStats()!.piety }}
+                </span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">VIT:</span>
+                <span class="stat-formula">
+                  {{ raceData()!.baseStats.vit }} + {{ rolledStats()!.vitality }} = {{ finalStats()!.vitality }}
+                </span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">AGI:</span>
+                <span class="stat-formula">
+                  {{ raceData()!.baseStats.agi }} + {{ rolledStats()!.agility }} = {{ finalStats()!.agility }}
+                </span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">LUC:</span>
+                <span class="stat-formula">
+                  {{ raceData()!.baseStats.luc }} + {{ rolledStats()!.luck }} = {{ finalStats()!.luck }}
+                </span>
+              </div>
+              <div class="bonus-points">
+                <strong>Bonus Points:</strong> {{ rolledStats()!.bonusPoints }}
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Class -->
+        @if (selectedClass()) {
+          <div class="sheet-section class">
+            <label>Class:</label>
+            <span class="value">{{ getClassName(selectedClass()!) }}</span>
+          </div>
+        }
       </div>
     </div>
   </div>

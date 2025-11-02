@@ -265,6 +265,31 @@ export class CharacterCreationComponent implements OnInit {
     }
   }
 
+  getRaceName(race: Race): string {
+    const names: Record<Race, string> = {
+      HUMAN: 'Human',
+      ELF: 'Elf',
+      DWARF: 'Dwarf',
+      GNOME: 'Gnome',
+      HOBBIT: 'Hobbit'
+    };
+    return names[race];
+  }
+
+  getAlignmentName(alignment: Alignment): string {
+    const names: Record<Alignment, string> = {
+      GOOD: 'Good',
+      NEUTRAL: 'Neutral',
+      EVIL: 'Evil'
+    };
+    return names[alignment];
+  }
+
+  getClassName(classId: CharacterClass): string {
+    const classData = ClassService.getClassData(classId);
+    return classData.name;
+  }
+
   // Accept character and show name modal
   acceptCharacter() {
     if (!this.canAccept()) return;
