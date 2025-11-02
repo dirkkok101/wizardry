@@ -1,0 +1,13 @@
+.scene-header {
+  padding: var(--spacing-lg);
+  border-bottom: 2px solid var(--color-border);
+  text-align: center;
+  background: var(--color-bg-black);
+
+  h1 {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    margin: 0;
+    text-transform: uppercase;
+  }
+}

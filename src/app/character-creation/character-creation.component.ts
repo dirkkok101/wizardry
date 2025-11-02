@@ -1,421 +1,274 @@
-import { Component, OnInit, signal, computed } from '@angular/core'
-import { CommonModule } from '@angular/common'
-import { Router } from '@angular/router'
-import { GameStateService } from '../../services/GameStateService'
-import { CharacterCreationService, RolledStats, BaseStats } from '../../services/CharacterCreationService'
-import { CharacterService } from '../../services/CharacterService'
-import { SceneType } from '../../types/SceneType'
-import { Race, RACE_MODIFIERS, RaceModifiers } from '../../types/Race'
-import { Alignment } from '../../types/Alignment'
-import { CharacterClass } from '../../types/CharacterClass'
+import { Component, computed, HostListener, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { GameStateService } from '../../services/GameStateService';
+import { RaceService } from '../../services/RaceService';
+import { ClassService } from '../../services/ClassService';
+import { CharacterService } from '../../services/CharacterService';
+import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { Race, parseRace } from '../../types/Race';
+import { CharacterClass, parseClass } from '../../types/CharacterClass';
+import { Alignment } from '../../types/Alignment';
+import { MenuItem } from '../../components/menu/menu.component';
 
-export type WizardStep =
-  | 'RACE'
-  | 'ALIGNMENT'
-  | 'STATS'
-  | 'BONUS_POINTS'
-  | 'CLASS'
-  | 'NAME_PASSWORD'
-  | 'CONFIRM'
-
-export interface WizardState {
-  selectedRace: Race | null
-  selectedAlignment: Alignment | null
-  rolledStats: RolledStats | null
-  selectedClass: CharacterClass | null
-  name: string
-  password: string
+interface FinalStats {
+  strength: number;
+  intelligence: number;
+  piety: number;
+  vitality: number;
+  agility: number;
+  luck: number;
+  bonusPoints: number;
 }
 
-/**
- * Character Creation Component
- *
- * Character creation wizard with 7 steps:
- * 1. Race selection (Human, Elf, Dwarf, Gnome, Hobbit)
- * 2. Alignment selection (Good, Neutral, Evil)
- * 3. Stat rolling (3d6 per attribute + bonus points)
- * 4. Bonus point allocation
- * 5. Class selection (based on stat requirements)
- * 6. Name and password entry
- * 7. Confirmation
- */
 @Component({
   selector: 'app-character-creation',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SceneTitleComponent,
+    SceneFooterComponent,
+    ConfirmationDialogComponent
+  ],
   templateUrl: './character-creation.component.html',
-  styleUrls: ['./character-creation.component.scss']
+  styleUrl: './character-creation.component.scss'
 })
 export class CharacterCreationComponent implements OnInit {
-  // Expose enum to template
-  readonly CharacterClass = CharacterClass
+  // Form state signals
+  readonly selectedRace = signal<Race | null>(null);
+  readonly selectedAlignment = signal<Alignment | null>(null);
+  readonly rolledStats = signal<RolledStats | null>(null);
+  readonly selectedClass = signal<CharacterClass | null>(null);
+  readonly characterName = signal<string>('');
 
-  // Wizard state
-  readonly currentStep = signal<WizardStep>('RACE')
-  readonly wizardState = signal<WizardState>({
-    selectedRace: null,
-    selectedAlignment: null,
-    rolledStats: null,
-    selectedClass: null,
-    name: '',
-    password: ''
-  })
+  // UI state signals
+  readonly isRolling = signal<boolean>(false);
+  readonly successMessage = signal<string | null>(null);
+  readonly errorMessage = signal<string | null>(null);
+  readonly showCancelConfirmation = signal<boolean>(false);
 
-  // Error and success messages
-  readonly errorMessage = signal<string | null>(null)
-  readonly successMessage = signal<string | null>(null)
+  // Data arrays for template
+  readonly allRaces = computed(() => RaceService.getAllRaces());
+  readonly allClasses = computed(() => ClassService.getAllClasses());
+  readonly allAlignments = [Alignment.GOOD, Alignment.NEUTRAL, Alignment.EVIL];
 
-  // Step sequence for navigation
-  private readonly stepSequence: WizardStep[] = [
-    'RACE',
-    'ALIGNMENT',
-    'STATS',
-    'BONUS_POINTS',
-    'CLASS',
-    'NAME_PASSWORD',
-    'CONFIRM'
-  ]
+  // Computed signals (derived state)
+  readonly raceData = computed(() => {
+    const race = this.selectedRace();
+    return race ? RaceService.getRaceData(race) : null;
+  });
+
+  readonly finalStats = computed((): FinalStats | null => {
+    const rolled = this.rolledStats();
+    const raceData = this.raceData();
+    if (!rolled || !raceData) return null;
+
+    // NEW FORMULA: raceBase + rolled
+    return {
+      strength: raceData.baseStats.str + rolled.strength,
+      intelligence: raceData.baseStats.int + rolled.intelligence,
+      piety: raceData.baseStats.pie + rolled.piety,
+      vitality: raceData.baseStats.vit + rolled.vitality,
+      agility: raceData.baseStats.agi + rolled.agility,
+      luck: raceData.baseStats.luc + rolled.luck,
+      bonusPoints: rolled.bonusPoints
+    };
+  });
+
+  readonly eligibleClasses = computed(() => {
+    const stats = this.finalStats();
+    const alignment = this.selectedAlignment();
+    if (!stats || !alignment) return [];
+
+    return CharacterService.getEligibleClasses(stats, alignment);
+  });
+
+  readonly canSave = computed(() => {
+    return this.selectedRace() !== null &&
+           this.selectedAlignment() !== null &&
+           this.selectedClass() !== null &&
+           this.characterName().trim().length > 0;
+  });
+
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    { id: 'save', label: 'SAVE CHARACTER', shortcut: 'S', enabled: this.canSave() },
+    { id: 'cancel', label: 'CANCEL', shortcut: 'ESC', enabled: true },
+    { id: 'back', label: 'BACK TO TRAINING GROUNDS', shortcut: 'B', enabled: true }
+  ]);
 
   constructor(
     private gameState: GameStateService,
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    this.gameState.updateState(state => ({
-      ...state,
-      currentScene: SceneType.CHARACTER_CREATION
-    }))
-  }
-
-  /**
-   * Select race and advance to alignment step
-   */
-  selectRace(race: Race): void {
-    this.wizardState.update(state => ({
-      ...state,
-      selectedRace: race
-    }))
-    this.nextStep()
-  }
-
-  /**
-   * Select alignment and advance to stats step
-   */
-  selectAlignment(alignment: Alignment): void {
-    this.wizardState.update(state => ({
-      ...state,
-      selectedAlignment: alignment
-    }))
-    this.nextStep()
-  }
-
-  /**
-   * Roll stats (or reroll)
-   */
-  rollStats(): void {
-    const baseStats = CharacterCreationService.rollStats()
-    const race = this.wizardState().selectedRace
-
-    if (!race) {
-      this.errorMessage.set('Race not selected')
-      return
-    }
-
-    // Apply race modifiers
-    const modifiedStats = CharacterCreationService.applyRaceModifiers(
-      baseStats,
-      race
-    )
-
-    this.wizardState.update(state => ({
-      ...state,
-      rolledStats: {
-        ...modifiedStats,
-        bonusPoints: baseStats.bonusPoints
-      }
-    }))
-  }
-
-  /**
-   * Advance to next step in wizard
-   */
-  private nextStep(): void {
-    const currentIndex = this.stepSequence.indexOf(this.currentStep())
-    if (currentIndex < this.stepSequence.length - 1) {
-      this.currentStep.set(this.stepSequence[currentIndex + 1])
+  ngOnInit() {
+    // Verify services are initialized
+    if (!RaceService.isInitialized() || !ClassService.isInitialized()) {
+      this.errorMessage.set('Game data not loaded. Please refresh.');
     }
   }
 
-  /**
-   * Go back to previous step in wizard
-   */
-  previousStep(): void {
-    const currentIndex = this.stepSequence.indexOf(this.currentStep())
-    if (currentIndex > 0) {
-      this.currentStep.set(this.stepSequence[currentIndex - 1])
+  // Race selection
+  selectRace(race: Race) {
+    this.selectedRace.set(race);
+    // Reset downstream selections
+    this.rolledStats.set(null);
+    this.selectedClass.set(null);
+  }
+
+  // Alignment selection
+  selectAlignment(alignment: Alignment) {
+    this.selectedAlignment.set(alignment);
+    // Reset downstream selections
+    this.rolledStats.set(null);
+    this.selectedClass.set(null);
+  }
+
+  // Roll stats (NEW FORMULA)
+  rollStats() {
+    this.isRolling.set(true);
+
+    // Simulate dice rolling animation
+    setTimeout(() => {
+      const rolled = CharacterCreationService.rollStats();
+      this.rolledStats.set(rolled);
+      this.selectedClass.set(null); // Reset class when rerolling
+      this.isRolling.set(false);
+    }, 300);
+  }
+
+  // Class eligibility check
+  isClassEligible(charClass: CharacterClass): boolean {
+    const eligible = this.eligibleClasses();
+    return eligible.includes(charClass);
+  }
+
+  // Class selection
+  selectClass(charClass: CharacterClass) {
+    if (this.isClassEligible(charClass)) {
+      this.selectedClass.set(charClass);
     }
   }
 
-  /**
-   * Get all available race options
-   */
-  getRaceOptions(): Race[] {
-    return [Race.HUMAN, Race.ELF, Race.DWARF, Race.GNOME, Race.HOBBIT]
-  }
+  // Save character
+  saveCharacter() {
+    if (!this.canSave()) return;
 
-  /**
-   * Get stat modifiers for a race
-   */
-  getRaceModifiers(race: Race): RaceModifiers {
-    return RACE_MODIFIERS[race]
-  }
-
-  /**
-   * Get all available alignment options
-   */
-  getAlignmentOptions(): Alignment[] {
-    return [Alignment.GOOD, Alignment.NEUTRAL, Alignment.EVIL]
-  }
-
-  /**
-   * Get description for an alignment
-   */
-  getAlignmentDescription(alignment: Alignment): string {
-    const descriptions: Record<Alignment, string> = {
-      [Alignment.GOOD]: 'Virtuous and righteous characters who aid others',
-      [Alignment.NEUTRAL]: 'Balanced characters who follow their own path',
-      [Alignment.EVIL]: 'Self-serving characters who pursue power'
-    }
-    return descriptions[alignment]
-  }
-
-  /**
-   * Accept rolled stats and advance to bonus point allocation
-   */
-  acceptStats(): void {
-    if (!this.wizardState().rolledStats) {
-      this.errorMessage.set('Roll stats first')
-      return
-    }
-
-    this.errorMessage.set(null)
-    this.nextStep()
-  }
-
-  /**
-   * Get available bonus points
-   */
-  getAvailableBonusPoints(): number {
-    return this.wizardState().rolledStats?.bonusPoints ?? 0
-  }
-
-  /**
-   * Allocate bonus points to a specific stat
-   */
-  allocateBonusPoint(stat: keyof BaseStats, points: number): void {
-    const currentStats = this.wizardState().rolledStats
-
-    if (!currentStats) {
-      this.errorMessage.set('No stats rolled')
-      return
-    }
-
-    try {
-      const updatedStats = CharacterCreationService.allocateBonusPoints(
-        currentStats,
-        stat,
-        points
-      )
-
-      this.wizardState.update(state => ({
-        ...state,
-        rolledStats: updatedStats
-      }))
-
-      this.errorMessage.set(null)
-    } catch (error) {
-      this.errorMessage.set((error as Error).message)
-    }
-  }
-
-  /**
-   * Get eligible classes based on current stats (with bonus allocation)
-   */
-  getEligibleClasses(): CharacterClass[] {
-    const { rolledStats, selectedAlignment } = this.wizardState()
-
-    if (!rolledStats || !selectedAlignment) {
-      return []
-    }
-
-    return CharacterService.getEligibleClasses(rolledStats, selectedAlignment)
-  }
-
-  /**
-   * Finish bonus point allocation and advance to class selection
-   */
-  finishBonusAllocation(): void {
-    this.nextStep()
-  }
-
-  /**
-   * Get reason why a class is ineligible
-   */
-  getIneligibilityReason(characterClass: CharacterClass): string {
-    const stats = this.wizardState().rolledStats
-
-    if (!stats) {
-      return 'No stats rolled'
-    }
-
-    const requirements: Record<CharacterClass, string> = {
-      [CharacterClass.FIGHTER]: 'STR 11+',
-      [CharacterClass.MAGE]: 'IQ 11+',
-      [CharacterClass.PRIEST]: 'PIE 11+',
-      [CharacterClass.THIEF]: 'AGI 11+',
-      [CharacterClass.BISHOP]: 'IQ 12+, PIE 12+',
-      [CharacterClass.SAMURAI]: 'STR 15+, IQ 11+, PIE 10+, VIT 14+, AGI 10+',
-      [CharacterClass.LORD]: 'STR 15+, IQ 12+, PIE 12+, VIT 15+, AGI 14+, LUK 15+',
-      [CharacterClass.NINJA]: 'ALL stats 17+'
-    }
-
-    return `Requires: ${requirements[characterClass]}`
-  }
-
-  /**
-   * Select character class and advance to name/password step
-   */
-  selectClass(characterClass: CharacterClass): void {
-    const eligible = this.getEligibleClasses()
-
-    if (!eligible.includes(characterClass)) {
-      this.errorMessage.set(
-        `Character is not eligible for ${characterClass}`
-      )
-      return
-    }
-
-    this.wizardState.update(state => ({
-      ...state,
-      selectedClass: characterClass
-    }))
-
-    this.errorMessage.set(null)
-    this.nextStep()
-  }
-
-  /**
-   * Set character name with validation
-   */
-  setName(name: string): void {
-    const validation = CharacterService.validateCharacterName(name)
-
-    if (!validation.valid) {
-      this.errorMessage.set(validation.error!)
-      return
-    }
-
-    this.wizardState.update(state => ({
-      ...state,
-      name
-    }))
-
-    this.errorMessage.set(null)
-  }
-
-  /**
-   * Set character password with validation
-   */
-  setPassword(password: string): void {
-    const validation = CharacterService.validatePassword(password)
-
-    if (!validation.valid) {
-      this.errorMessage.set(validation.error!)
-      return
-    }
-
-    this.wizardState.update(state => ({
-      ...state,
-      password
-    }))
-
-    this.errorMessage.set(null)
-  }
-
-  /**
-   * Finish name/password entry and advance to confirmation
-   */
-  finishNamePassword(): void {
-    const { name, password } = this.wizardState()
-
-    // Validate both are set
-    const nameValidation = CharacterService.validateCharacterName(name)
-    const passwordValidation = CharacterService.validatePassword(password)
-
-    if (!nameValidation.valid) {
-      this.errorMessage.set(nameValidation.error!)
-      return
-    }
-
-    if (!passwordValidation.valid) {
-      this.errorMessage.set(passwordValidation.error!)
-      return
-    }
-
-    this.errorMessage.set(null)
-    this.nextStep()
-  }
-
-  /**
-   * Confirm character creation and add to roster
-   */
-  confirmCharacterCreation(): void {
-    const { selectedRace, selectedAlignment, rolledStats, selectedClass, name, password } =
-      this.wizardState()
-
-    // Validate all required fields
-    if (
-      !selectedRace ||
-      !selectedAlignment ||
-      !rolledStats ||
-      !selectedClass ||
-      !name ||
-      !password
-    ) {
-      this.errorMessage.set('Wizard not complete')
-      return
-    }
-
-    // Create character
+    const stats = this.finalStats()!;
     const character = CharacterService.createCharacterFromStats({
-      name,
-      password,
-      race: selectedRace,
-      alignment: selectedAlignment,
-      stats: rolledStats,
-      selectedClass
-    })
+      name: this.characterName().trim(),
+      password: '', // Password field removed per plan, but required by interface
+      race: this.selectedRace()!,
+      alignment: this.selectedAlignment()!,
+      selectedClass: this.selectedClass()!,
+      stats: {
+        strength: stats.strength,
+        intelligence: stats.intelligence,
+        piety: stats.piety,
+        vitality: stats.vitality,
+        agility: stats.agility,
+        luck: stats.luck
+      }
+    });
 
-    // Add to game state roster
+    // Add to roster
     this.gameState.updateState(state => ({
       ...state,
       roster: new Map(state.roster).set(character.id, character)
-    }))
+    }));
 
-    // Show success message
-    this.successMessage.set(`${character.name} created successfully!`)
-
-    // Navigate back to training grounds after brief delay
+    // Show success and reset
+    this.successMessage.set(`${character.name} created successfully!`);
     setTimeout(() => {
-      this.router.navigate(['/training-grounds'])
-    }, 1500)
+      this.resetForm();
+      this.successMessage.set(null);
+    }, 2000);
   }
 
-  /**
-   * Return to training grounds
-   */
-  returnToCastle(): void {
-    this.router.navigate(['/training-grounds'])
+  // Reset form
+  resetForm() {
+    this.selectedRace.set(null);
+    this.selectedAlignment.set(null);
+    this.rolledStats.set(null);
+    this.selectedClass.set(null);
+    this.characterName.set('');
+    this.errorMessage.set(null);
+    this.showCancelConfirmation.set(false);
+  }
+
+  // Cancel with confirmation
+  confirmCancel() {
+    // Only confirm if form has data
+    const hasData = this.selectedRace() || this.selectedAlignment() ||
+                    this.rolledStats() || this.characterName();
+
+    if (hasData) {
+      this.showCancelConfirmation.set(true);
+    } else {
+      this.resetForm();
+    }
+  }
+
+  // Navigation
+  navigateToTrainingGrounds() {
+    this.router.navigate(['/training-grounds']);
+  }
+
+  // Keyboard shortcuts
+  @HostListener('window:keydown', ['$event'])
+  handleKeyPress(event: KeyboardEvent) {
+    const key = event.key.toLowerCase();
+
+    switch(key) {
+      case 'r':
+        if (this.selectedAlignment()) {
+          event.preventDefault();
+          this.rollStats();
+        }
+        break;
+      case 's':
+        if (this.canSave()) {
+          event.preventDefault();
+          this.saveCharacter();
+        }
+        break;
+      case 'escape':
+        event.preventDefault();
+        this.confirmCancel();
+        break;
+    }
+  }
+
+  // Footer menu handler
+  handleFooterAction(itemId: string) {
+    switch(itemId) {
+      case 'save':
+        this.saveCharacter();
+        break;
+      case 'cancel':
+        this.confirmCancel();
+        break;
+      case 'back':
+        this.navigateToTrainingGrounds();
+        break;
+    }
+  }
+
+  // Template helper methods
+  parseRaceId(id: string): Race | null {
+    return parseRace(id);
+  }
+
+  parseClassId(id: string): CharacterClass | null {
+    return parseClass(id);
+  }
+
+  getClassData(charClass: CharacterClass) {
+    return ClassService.getClassData(charClass);
   }
 }

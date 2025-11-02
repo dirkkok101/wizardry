@@ -1,23 +1,256 @@
-@use '../../styles/variables' as *;
+@import '../../styles/variables.scss';
 
-.training-grounds {
+.character-creation {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: $spacing-md;
+  height: 100vh;
+  background: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
 
-  header {
-    margin-bottom: $spacing-xl;
+  main.creation-form {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-lg;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
 
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0;
-      text-align: center;
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
     }
   }
 
-  main {
-    flex: 1;
+  .form-section {
+    border: $border-width $border-style $border-color;
+    padding: $spacing-md;
+    margin-bottom: $spacing-lg;
+
+    &.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    h2 {
+      color: $color-text-bright;
+      margin-bottom: $spacing-md;
+      border-bottom: 1px solid $border-color;
+      padding-bottom: $spacing-sm;
+      font-size: $font-size-base;
+    }
+  }
+
+  // Race/Alignment/Class button grids
+  .race-options,
+  .alignment-options,
+  .class-grid {
+    display: grid;
+    gap: $spacing-sm;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .race-button,
+  .alignment-button,
+  .class-button {
+    background: $color-bg-black;
+    border: $border-width $border-style $border-color;
+    color: $color-text-green;
+    padding: $spacing-md;
+    cursor: pointer;
+    font-family: $font-mono;
+    font-size: $font-size-base;
+    text-transform: uppercase;
+
+    &:hover:not(:disabled) {
+      background: $color-text-green;
+      color: $color-bg-black;
+    }
+
+    &.selected {
+      background: $color-text-bright;
+      color: $color-bg-black;
+      border-color: $color-text-bright;
+    }
+
+    &.ineligible {
+      color: $color-text-dim;
+      border-color: $color-text-dim;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .class-button {
+    position: relative;
+
+    .ineligible-indicator {
+      position: absolute;
+      top: $spacing-xs;
+      right: $spacing-xs;
+      color: $color-error;
+      font-weight: bold;
+    }
+  }
+
+  // Race and class details
+  .race-details,
+  .class-details {
+    margin-top: $spacing-md;
+    padding: $spacing-md;
+    border-top: 1px solid $border-color;
+
+    .description {
+      margin-bottom: $spacing-sm;
+      color: $color-text-green;
+    }
+
+    .base-stats,
+    .hit-dice,
+    .strengths,
+    .weaknesses {
+      margin-bottom: $spacing-xs;
+      font-size: $font-size-small;
+    }
+
+    .strengths {
+      color: $color-success;
+    }
+
+    .weaknesses {
+      color: $color-text-dim;
+    }
+  }
+
+  // Stats display (3-column: base + rolled = final)
+  .roll-button {
+    background: $color-bg-black;
+    border: $border-width $border-style $border-color;
+    color: $color-text-green;
+    padding: $spacing-md;
+    cursor: pointer;
+    font-family: $font-mono;
+    font-size: $font-size-base;
+    width: 100%;
+    margin-bottom: $spacing-md;
+
+    &:hover:not(:disabled) {
+      background: $color-text-green;
+      color: $color-bg-black;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .stats-display {
+    margin-top: $spacing-md;
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 60px 40px 20px 40px 20px 60px;
+      gap: $spacing-xs;
+      padding: $spacing-xs 0;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .stat-label {
+        font-weight: bold;
+        color: $color-text-bright;
+      }
+
+      .stat-base {
+        color: $color-text-dim;
+        text-align: right;
+      }
+
+      .stat-plus,
+      .stat-equals {
+        color: $color-text-green;
+        text-align: center;
+      }
+
+      .stat-rolled {
+        color: $color-text-green;
+        text-align: right;
+      }
+
+      .stat-final {
+        color: $color-text-bright;
+        font-weight: bold;
+        text-align: right;
+      }
+    }
+
+    .bonus-points {
+      margin-top: $spacing-md;
+      padding-top: $spacing-md;
+      border-top: 1px solid $border-color;
+      color: $color-amber;
+      font-weight: bold;
+    }
+  }
+
+  // Form inputs
+  .input-group {
+    margin-bottom: $spacing-md;
+
+    label {
+      display: block;
+      margin-bottom: $spacing-xs;
+      color: $color-text-bright;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      background: $color-bg-black;
+      border: $border-width $border-style $border-color;
+      color: $color-text-green;
+      padding: $spacing-sm;
+      font-family: $font-mono;
+      font-size: $font-size-base;
+
+      &:focus {
+        outline: none;
+        border-color: $color-text-bright;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      &::placeholder {
+        color: $color-text-dim;
+      }
+    }
+  }
+
+  // Success/error messages
+  .success-message {
+    padding: $spacing-md;
+    background: rgba(0, 255, 136, 0.1);
+    border: $border-width $border-style $color-success;
+    color: $color-success;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .error-message {
+    padding: $spacing-md;
+    background: rgba(255, 0, 0, 0.1);
+    border: $border-width $border-style $color-error;
+    color: $color-error;
+    text-align: center;
+    font-weight: bold;
   }
 }

@@ -102,6 +102,16 @@ See [Architecture Diagram](./diagrams/architecture-layers.md) for detailed visua
 - **commands/StartGameCommand.ts**: Business logic for starting game (new game vs load game)
 - Future: **components/Button.ts**: Reusable button component
 
+### 1.4 Reusable UI Components
+
+Beyond scene-specific components, certain UI patterns appear across multiple scenes and are implemented as shared, reusable components:
+
+- **SceneTitleComponent**: Standardized header for scenes with consistent styling and layout. Used in Training Grounds, Character Creation, and other scenes.
+- **SceneFooterComponent**: Standardized footer containing navigation menu and scene-specific actions. Wraps MenuComponent for consistent navigation across scenes.
+- **MenuComponent**: Horizontal button menu for scene navigation and actions. Used within SceneFooter.
+
+These components enforce UI consistency across scenes while allowing scenes to customize which menu options are available.
+
 See [Scene Architecture](./scenes/README.md) for detailed scene implementation patterns.
 
 ## 2. Core Patterns
