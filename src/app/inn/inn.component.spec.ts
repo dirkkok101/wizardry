@@ -5,6 +5,8 @@ import { GameStateService } from '../../services/GameStateService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
+import { RoomType } from '../../services/InnService';
+import { createTestCharacter } from '../../test-helpers/test-factories';
 
 describe('InnComponent', () => {
   let component: InnComponent;
@@ -175,6 +177,87 @@ describe('InnComponent', () => {
     it('returns to castle when selected', () => {
       component.handleMenuSelect('castle');
       expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+  });
+
+  describe('room selection and rest', () => {
+    it('allows selecting character to rest', () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 10,
+        maxHp: 20,
+        gold: 100
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+
+      component.selectCharacterToRest(character.id);
+
+      expect(component.selectedCharacterId()).toBe(character.id);
+      expect(component.currentView()).toBe('room-select');
+    });
+
+    it('rests character in BARRACKS for one week', async () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 10,
+        maxHp: 20,
+        gold: 100
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.selectCharacterToRest(character.id);
+
+      await component.restInRoom(RoomType.BARRACKS);
+
+      const updatedChar = gameState.state().roster.get('char-1')!;
+      expect(updatedChar.hp).toBe(11); // 10 + 1
+      expect(updatedChar.gold).toBe(90); // 100 - 10
+    });
+
+    it('shows error when character cannot afford room', async () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 10,
+        maxHp: 20,
+        gold: 5
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.selectCharacterToRest(character.id);
+
+      await component.restInRoom(RoomType.BARRACKS);
+
+      expect(component.errorMessage()).toContain('Not enough gold');
+    });
+
+    it('triggers level up when HP reaches max and has XP', async () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 19,
+        maxHp: 20,
+        gold: 100,
+        level: 1,
+        experience: 3000,
+        class: CharacterClass.FIGHTER
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.selectCharacterToRest(character.id);
+
+      await component.restInRoom(RoomType.BARRACKS);
+
+      expect(component.currentView()).toBe('level-up');
+      expect(component.levelUpData()).toBeDefined();
+      expect(component.levelUpData()!.newLevel).toBe(2);
     });
   });
 });
