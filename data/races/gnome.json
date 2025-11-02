@@ -10,9 +10,11 @@
     "luc": 7
   },
   "statTotal": 49,
-  "description": "Nimble caster with balanced magical abilities and highest AGI. Good for agility-dependent builds.",
-  "strengths": ["Highest AGI (10)", "Good PIE (10)", "Balanced"],
-  "weaknesses": ["No standout high stats"],
-  "bestClasses": ["thief", "priest", "bishop"],
-  "savingThrowBonus": {}
+  "savingThrowBonus": {
+    "petrify": -2
+  },
+  "description": "Gnomes are small but nimble, with good piety and agility. They make excellent thieves and clerics.",
+  "strengths": ["Good agility and piety", "Petrification resistance"],
+  "weaknesses": ["Low strength", "Fragile"],
+  "bestClasses": ["Thief", "Priest", "Bishop"]
 }
