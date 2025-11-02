@@ -1669,5 +1669,45 @@ describe('CharacterCreationComponent', () => {
         expect(component.eligibleClasses().length).toBeGreaterThan(0);
       });
     });
+
+    describe('complete character creation flow', () => {
+      it('creates character and resets immediately', async () => {
+        // Step 1: Select race
+        component.selectedRace.set(Race.ELF);
+        component.advanceToAlignment();
+
+        // Step 2: Select alignment
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.advanceToRollStats();
+
+        // Step 3: Roll stats
+        await component.rollStats();
+        expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
+
+        // Step 4: Select class (pick first eligible)
+        const eligibleClass = component.eligibleClasses()[0];
+        component.selectedClass.set(eligibleClass);
+        component.advanceToNameCharacter();
+
+        // Step 5: Submit name
+        await component.submitCharacter('Legolas');
+
+        // Verify immediate reset (no delay)
+        expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
+        expect(component.selectedRace()).toBeNull();
+        expect(component.selectedAlignment()).toBeNull();
+        expect(component.rolledStats()).toBeNull();
+        expect(component.selectedClass()).toBeNull();
+
+        // Verify character was added to roster
+        const state = gameStateService.state();
+        const characters = Array.from(state.roster.values());
+        const legolas = characters.find(c => c.name === 'Legolas');
+
+        expect(legolas).toBeDefined();
+        expect(legolas?.race).toBe(Race.ELF);
+        expect(legolas?.alignment).toBe(Alignment.GOOD);
+      });
+    });
   });
 });
