@@ -76,7 +76,6 @@ describe('CharacterInspectionComponent', () => {
 
   describe('initialization', () => {
     it('loads character by ID from query params', () => {
-      component.ngOnInit();
       fixture.detectChanges();
 
       expect(component.characterId()).toBe('char-123');
@@ -85,27 +84,46 @@ describe('CharacterInspectionComponent', () => {
     });
 
     it('sets return navigation from query params', () => {
-      component.ngOnInit();
       fixture.detectChanges();
 
       expect(component.returnTo()).toBe('tavern');
     });
 
     it('defaults returnTo to castle-menu when not provided', () => {
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'char-123'
+      // Reset and reconfigure TestBed with different query params
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'char-123'
+              })
+            }
+          }
+        ]
       });
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      const newGameState = TestBed.inject(GameStateService);
 
-      expect(component.returnTo()).toBe('castle-menu');
+      // Add test character to roster
+      newGameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-123', testCharacter)
+      }));
+
+      newFixture.detectChanges();
+
+      expect(newComponent.returnTo()).toBe('castle-menu');
     });
   });
 
   describe('character display', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
     });
 
@@ -161,7 +179,6 @@ describe('CharacterInspectionComponent', () => {
 
   describe('equipment display', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
     });
 
@@ -180,42 +197,47 @@ describe('CharacterInspectionComponent', () => {
         equippedWeapon: undefined
       });
 
-      gameState.updateState(state => ({
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'char-456',
+                returnTo: 'tavern'
+              })
+            }
+          }
+        ]
+      });
+
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newGameState = TestBed.inject(GameStateService);
+
+      newGameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-456', charWithoutWeapon)
       }));
 
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'char-456',
-        returnTo: 'tavern'
-      });
+      newFixture.detectChanges();
 
-      component.ngOnInit();
-      fixture.detectChanges();
-
-      const compiled = fixture.nativeElement;
+      const compiled = newFixture.nativeElement;
       expect(compiled.textContent).toContain('None');
     });
   });
 
   describe('inventory display', () => {
-    beforeEach(() => {
-      // Reset query params to ensure correct character is loaded
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'char-123',
-        returnTo: 'tavern'
-      });
-
-      component.ngOnInit();
-      fixture.detectChanges();
-    });
-
     it('shows inventory items (8 slots max)', () => {
+      fixture.detectChanges();
       const slots = component.inventorySlots();
       expect(slots.length).toBe(8);
     });
 
     it('displays items in inventory', () => {
+      fixture.detectChanges();
       const compiled = fixture.nativeElement;
 
       expect(compiled.textContent).toContain('Potion');
@@ -224,11 +246,13 @@ describe('CharacterInspectionComponent', () => {
     });
 
     it('shows "Empty" for empty slots', () => {
+      fixture.detectChanges();
       const compiled = fixture.nativeElement;
       expect(compiled.textContent).toContain('Empty');
     });
 
     it('shows all 8 inventory slots', () => {
+      fixture.detectChanges();
       const compiled = fixture.nativeElement;
       const slotNumbers = ['1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.'];
 
@@ -240,13 +264,6 @@ describe('CharacterInspectionComponent', () => {
 
   describe('spell display', () => {
     it('shows spells section for Mage', () => {
-      // Reset query params to ensure correct character is loaded
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'char-123',
-        returnTo: 'tavern'
-      });
-
-      component.ngOnInit();
       fixture.detectChanges();
 
       expect(component.isSpellcaster()).toBe(true);
@@ -264,23 +281,38 @@ describe('CharacterInspectionComponent', () => {
         class: CharacterClass.PRIEST
       });
 
-      gameState.updateState(state => ({
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'priest-1',
+                returnTo: 'tavern'
+              })
+            }
+          }
+        ]
+      });
+
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      const newGameState = TestBed.inject(GameStateService);
+
+      newGameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('priest-1', priest)
       }));
 
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'priest-1',
-        returnTo: 'tavern'
-      });
+      newFixture.detectChanges();
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      expect(newComponent.hasPriestSpells()).toBe(true);
+      expect(newComponent.hasMageSpells()).toBe(false);
 
-      expect(component.hasPriestSpells()).toBe(true);
-      expect(component.hasMageSpells()).toBe(false);
-
-      const compiled = fixture.nativeElement;
+      const compiled = newFixture.nativeElement;
       expect(compiled.textContent).toContain('Priest Spells');
     });
 
@@ -290,23 +322,38 @@ describe('CharacterInspectionComponent', () => {
         class: CharacterClass.BISHOP
       });
 
-      gameState.updateState(state => ({
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'bishop-1',
+                returnTo: 'tavern'
+              })
+            }
+          }
+        ]
+      });
+
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      const newGameState = TestBed.inject(GameStateService);
+
+      newGameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('bishop-1', bishop)
       }));
 
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'bishop-1',
-        returnTo: 'tavern'
-      });
+      newFixture.detectChanges();
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      expect(newComponent.hasMageSpells()).toBe(true);
+      expect(newComponent.hasPriestSpells()).toBe(true);
 
-      expect(component.hasMageSpells()).toBe(true);
-      expect(component.hasPriestSpells()).toBe(true);
-
-      const compiled = fixture.nativeElement;
+      const compiled = newFixture.nativeElement;
       expect(compiled.textContent).toContain('Mage Spells');
       expect(compiled.textContent).toContain('Priest Spells');
     });
@@ -317,61 +364,101 @@ describe('CharacterInspectionComponent', () => {
         class: CharacterClass.FIGHTER
       });
 
-      gameState.updateState(state => ({
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'fighter-1',
+                returnTo: 'tavern'
+              })
+            }
+          }
+        ]
+      });
+
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      const newGameState = TestBed.inject(GameStateService);
+
+      newGameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('fighter-1', fighter)
       }));
 
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'fighter-1',
-        returnTo: 'tavern'
-      });
+      newFixture.detectChanges();
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      expect(newComponent.isSpellcaster()).toBe(false);
 
-      expect(component.isSpellcaster()).toBe(false);
-
-      const compiled = fixture.nativeElement;
+      const compiled = newFixture.nativeElement;
       expect(compiled.querySelector('.spells')).toBeFalsy();
     });
   });
 
   describe('error handling', () => {
     it('handles missing character ID', () => {
-      (activatedRoute.queryParams as any) = of({
-        returnTo: 'tavern'
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                returnTo: 'tavern'
+              })
+            }
+          }
+        ]
       });
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      newFixture.detectChanges();
 
-      expect(component.characterId()).toBeNull();
-      expect(component.character()).toBeNull();
+      expect(newComponent.characterId()).toBeNull();
+      expect(newComponent.character()).toBeNull();
 
-      const compiled = fixture.nativeElement;
+      const compiled = newFixture.nativeElement;
       expect(compiled.textContent).toContain('Character not found');
     });
 
     it('displays error when character does not exist', () => {
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'invalid-id',
-        returnTo: 'tavern'
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'invalid-id',
+                returnTo: 'tavern'
+              })
+            }
+          }
+        ]
       });
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      newFixture.detectChanges();
 
-      expect(component.character()).toBeNull();
+      expect(newComponent.character()).toBeNull();
 
-      const compiled = fixture.nativeElement;
+      const compiled = newFixture.nativeElement;
       expect(compiled.textContent).toContain('Character not found');
     });
   });
 
   describe('navigation', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
     });
 
@@ -382,16 +469,39 @@ describe('CharacterInspectionComponent', () => {
     });
 
     it('navigates to castle-menu by default', () => {
-      (activatedRoute.queryParams as any) = of({
-        characterId: 'char-123'
+      // Reset and reconfigure TestBed
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [CharacterInspectionComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              queryParams: of({
+                characterId: 'char-123'
+              })
+            }
+          }
+        ]
       });
 
-      component.ngOnInit();
-      fixture.detectChanges();
+      const newFixture = TestBed.createComponent(CharacterInspectionComponent);
+      const newComponent = newFixture.componentInstance;
+      const newRouter = TestBed.inject(Router);
+      const newGameState = TestBed.inject(GameStateService);
+      jest.spyOn(newRouter, 'navigate');
 
-      component.returnToPrevious();
+      // Add test character to roster
+      newGameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-123', testCharacter)
+      }));
 
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      newFixture.detectChanges();
+
+      newComponent.returnToPrevious();
+
+      expect(newRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
 
     it('shows back button', () => {

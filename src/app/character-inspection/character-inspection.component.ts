@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { GameStateService } from '../../services/GameStateService';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
@@ -25,10 +26,24 @@ import { CharacterClass } from '../../types/CharacterClass';
   templateUrl: './character-inspection.component.html',
   styleUrls: ['./character-inspection.component.scss']
 })
-export class CharacterInspectionComponent implements OnInit {
-  // Query params
-  readonly characterId = signal<string | null>(null);
-  readonly returnTo = signal<string>('castle-menu');
+export class CharacterInspectionComponent {
+  // Inject dependencies using inject() for use in field initializers
+  private readonly gameState = inject(GameStateService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  // Query params (auto-managed with toSignal)
+  private readonly queryParams = toSignal(this.route.queryParams, {
+    initialValue: {}
+  });
+
+  readonly characterId = computed(() =>
+    this.queryParams()?.['characterId'] || null
+  );
+
+  readonly returnTo = computed(() =>
+    this.queryParams()?.['returnTo'] || 'castle-menu'
+  );
 
   // Character data
   readonly character = computed(() => {
@@ -74,19 +89,6 @@ export class CharacterInspectionComponent implements OnInit {
     return ['PRIEST', 'BISHOP', 'LORD'].includes(char.class);
   });
 
-  constructor(
-    private gameState: GameStateService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {}
-
-  ngOnInit(): void {
-    // Subscribe to query params
-    this.route.queryParams.subscribe(params => {
-      this.characterId.set(params['characterId'] || null);
-      this.returnTo.set(params['returnTo'] || 'castle-menu');
-    });
-  }
 
   /**
    * Navigate back to the previous scene
