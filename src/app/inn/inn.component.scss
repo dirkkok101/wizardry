@@ -55,6 +55,149 @@
   }
 }
 
+.character-select-view,
+.room-select-view,
+.level-up-view {
+  max-width: 600px;
+  margin: 0 auto;
+
+  h2, h3 {
+    font-size: 18px;
+    color: $color-text-bright;
+    margin-bottom: $spacing-lg;
+    text-align: center;
+  }
+
+  h3 {
+    font-size: 16px;
+    color: $color-text-green;
+  }
+}
+
+.character-info {
+  background-color: rgba($color-text-dim, 0.1);
+  border: 1px solid $color-text-dim;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  h2 {
+    margin: 0 0 $spacing-sm 0;
+    text-align: left;
+  }
+
+  .stats {
+    display: flex;
+    gap: $spacing-lg;
+    color: $color-text-dim;
+
+    span {
+      font-size: 14px;
+    }
+  }
+}
+
+.room-options {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+
+  .room-option {
+    background: none;
+    border: 1px solid $color-text-dim;
+    color: $color-text-bright;
+    font-family: $font-mono;
+    padding: $spacing-md;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: $color-text-green;
+      background-color: rgba($color-text-green, 0.1);
+    }
+
+    .room-label {
+      font-size: 14px;
+    }
+  }
+}
+
+.level-up-view {
+  h2 {
+    color: $color-amber;
+    font-size: 24px;
+    margin-bottom: $spacing-xl;
+  }
+
+  .level-up-message {
+    color: $color-text-bright;
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: $spacing-lg;
+  }
+
+  .stat-changes {
+    background-color: rgba($color-text-green, 0.1);
+    border: 1px solid $color-text-green;
+    padding: $spacing-lg;
+    margin-bottom: $spacing-xl;
+
+    .hp-increase {
+      color: $color-text-green;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: $spacing-md;
+    }
+
+    .stat-increases {
+      margin-bottom: $spacing-md;
+
+      .stat-increase {
+        color: $color-text-bright;
+        font-size: 14px;
+        margin-bottom: $spacing-xs;
+      }
+    }
+
+    .new-spells {
+      h4 {
+        color: $color-amber;
+        font-size: 14px;
+        margin-bottom: $spacing-sm;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          color: $color-text-bright;
+          font-size: 14px;
+          margin-bottom: $spacing-xs;
+        }
+      }
+    }
+  }
+
+  .continue-btn {
+    background: none;
+    border: 1px solid $color-text-green;
+    color: $color-text-green;
+    font-family: $font-mono;
+    padding: $spacing-sm $spacing-lg;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+    font-size: 16px;
+
+    &:hover {
+      background-color: rgba($color-text-green, 0.2);
+    }
+  }
+}
+
 .stables-view {
   max-width: 600px;
   margin: 0 auto;
@@ -72,28 +215,30 @@
     font-size: 14px;
     margin-bottom: $spacing-lg;
   }
+}
 
-  .cancel-btn {
-    margin-top: $spacing-lg;
-    background: none;
-    border: 1px solid $color-text-dim;
-    color: $color-text-dim;
-    font-family: $font-mono;
-    padding: $spacing-sm $spacing-md;
-    cursor: pointer;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+.cancel-btn {
+  background: none;
+  border: 1px solid $color-text-dim;
+  color: $color-text-dim;
+  font-family: $font-mono;
+  padding: $spacing-sm $spacing-md;
+  cursor: pointer;
+  display: block;
+  margin: $spacing-lg auto 0;
 
-    &:hover {
-      border-color: $color-text-green;
-      color: $color-text-green;
-    }
+  &:hover {
+    border-color: $color-text-green;
+    color: $color-text-green;
   }
 }
 
 .success-message {
-  margin-top: $spacing-lg;
+  color: $color-text-green;
+  background-color: rgba($color-text-green, 0.1);
+  border: 1px solid $color-text-green;
+  padding: $spacing-sm $spacing-md;
+  margin: $spacing-md 0;
   text-align: center;
 
   p {
@@ -103,7 +248,11 @@
 }
 
 .error-message {
-  margin-top: $spacing-lg;
+  color: $color-red;
+  background-color: rgba($color-red, 0.1);
+  border: 1px solid $color-red;
+  padding: $spacing-sm $spacing-md;
+  margin: $spacing-md 0;
   text-align: center;
 
   p {

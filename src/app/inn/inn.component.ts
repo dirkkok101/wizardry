@@ -38,8 +38,9 @@ interface LevelUpDisplayData {
   styleUrls: ['./inn.component.scss']
 })
 export class InnComponent implements OnInit {
-  // Expose RoomType enum to template
+  // Expose RoomType enum and Object to template
   readonly RoomType = RoomType;
+  readonly Object = Object;
 
   readonly menuItems: MenuItem[] = [
     {
