@@ -15,8 +15,7 @@ export interface MenuItem {
  *
  * Features:
  * - Arrow key navigation
- * - Number key shortcuts (1-9)
- * - Letter key shortcuts
+ * - Explicit keyboard shortcuts (defined in MenuItem.shortcut)
  * - Enter to select
  * - Disabled items support
  *
@@ -68,14 +67,7 @@ export class MenuComponent implements OnInit {
         break;
 
       default:
-        // Check for number shortcuts (1-9)
-        const num = parseInt(event.key);
-        if (num >= 1 && num <= 9) {
-          this.selectItemByIndex(num - 1);
-          event.preventDefault();
-        }
-
-        // Check for letter shortcuts
+        // Check for explicit shortcuts only (no automatic number mapping)
         const item = this.items.find(item =>
           item.shortcut?.toUpperCase() === event.key.toUpperCase()
         );

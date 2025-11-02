@@ -94,6 +94,60 @@ describe('GameStateService', () => {
     });
   });
 
+  describe('auto-load on initialization', () => {
+    beforeEach(() => {
+      // Clear localStorage before each test
+      localStorage.clear();
+    });
+
+    it('auto-loads from slot 1 if save exists on service creation', async () => {
+      // Setup: Create a saved game in slot 1
+      const savedState = {
+        ...service.state(),
+        currentScene: SceneType.CASTLE_MENU,
+        party: {
+          ...service.state().party,
+          members: ['auto-loaded-character'],
+          gold: 5000
+        }
+      };
+      await saveService.saveGame(savedState, 1);
+
+      // Destroy and recreate service to trigger initialization
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [GameStateService, SaveService]
+      });
+      const newService = TestBed.inject(GameStateService);
+
+      // Wait for async initialization
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify state was auto-loaded
+      expect(newService.state().party.members).toContain('auto-loaded-character');
+      expect(newService.state().party.gold).toBe(5000);
+    });
+
+    it('starts with new game if no save exists', async () => {
+      // Clear any previous saves
+      localStorage.clear();
+
+      // Recreate service after clearing localStorage
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [GameStateService, SaveService]
+      });
+      const freshService = TestBed.inject(GameStateService);
+
+      // Wait for async initialization
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Verify starts with fresh state when no save
+      expect(freshService.state().party.members).toEqual([]);
+      expect(freshService.currentScene()).toBe(SceneType.TITLE_SCREEN);
+    });
+  });
+
   describe('loadGame (integration)', () => {
     beforeEach(() => {
       // Clear localStorage before each test

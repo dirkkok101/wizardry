@@ -41,6 +41,9 @@ export class GameStateService {
   private saveDebounceTimer?: ReturnType<typeof setTimeout>;
 
   constructor(private saveService: SaveService) {
+    // Auto-load from slot 1 on initialization
+    this.initializeFromSave();
+
     // Auto-save effect (debounced to prevent excessive IndexedDB writes)
     effect(() => {
       const currentState = this.state();
@@ -55,6 +58,23 @@ export class GameStateService {
           this.saveService.saveGame(currentState);
         }, 500);
       }
+    });
+  }
+
+  /**
+   * Initialize state from save slot 1 if it exists.
+   * Called automatically on service construction.
+   * @private
+   */
+  private initializeFromSave(): void {
+    this.saveService.loadGame(1).then(savedState => {
+      if (savedState) {
+        this._state.set(savedState);
+      }
+      // If no save exists, keep the initial state (new game)
+    }).catch(error => {
+      console.error('Failed to load saved game:', error);
+      // Keep initial state on error
     });
   }
 
