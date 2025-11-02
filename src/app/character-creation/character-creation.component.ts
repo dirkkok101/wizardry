@@ -268,6 +268,38 @@ export class CharacterCreationComponent implements OnInit {
     this.showNameModal.set(false);
   }
 
+  // Navigation: Go back (with clearing logic)
+  goBackFromAlignment() {
+    this.selectedAlignment.set(null);
+    this.currentStep.set(CreationStep.SELECT_RACE);
+  }
+
+  goBackFromRollStats() {
+    this.rolledStats.set(null);
+    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  goBackFromSelectClass() {
+    // Nuclear option: lose stats AND class
+    this.rolledStats.set(null);
+    this.selectedClass.set(null);
+    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  goBackFromNameCharacter() {
+    // Just go back, keep stats and class
+    this.currentStep.set(CreationStep.SELECT_CLASS);
+  }
+
+  cancelToTrainingGrounds() {
+    // Navigate back to training grounds scene
+    this.router.navigate(['/training-grounds']);
+  }
+
+  quitToTrainingGrounds() {
+    this.cancelToTrainingGrounds();
+  }
+
   // Navigation
   navigateToTrainingGrounds() {
     this.router.navigate(['/training-grounds']);
