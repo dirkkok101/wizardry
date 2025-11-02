@@ -1,0 +1,14 @@
+@use '../../styles/variables' as *;
+
+.menu {
+  // Inherits from global .menu styles
+
+  &__shortcut {
+    color: $color-amber;
+    margin-right: $spacing-sm;
+  }
+
+  &__label {
+    flex: 1;
+  }
+}

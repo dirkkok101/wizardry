@@ -1,0 +1,18 @@
+<div class="temple">
+  <header>
+    <h1>TEMPLE OF CANT</h1>
+  </header>
+
+  <main>
+    @if (currentView() === 'main') {
+      <div class="main-view">
+        <app-menu
+          [items]="menuItems"
+          (select)="handleMenuSelect($event)"
+        />
+      </div>
+    }
+
+    <!-- Additional views (select-character, select-service, confirm-service) are rendered by character-list component -->
+  </main>
+</div>

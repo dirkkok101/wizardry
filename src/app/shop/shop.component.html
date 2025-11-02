@@ -1,0 +1,155 @@
+<div class="shop">
+  <header>
+    <h1>BOLTAC'S TRADING POST</h1>
+  </header>
+
+  <main>
+    @if (currentView() === 'main') {
+      <div class="main-view">
+        <app-menu
+          [items]="menuItems"
+          (select)="handleMenuSelect($event)"
+        />
+      </div>
+    }
+
+    @if (currentView() === 'buy') {
+      <div class="buy-view">
+        <h2>BUY ITEMS</h2>
+
+        @if (selectedCharacter(); as character) {
+          <div class="item-list">
+            @for (item of shopInventory(); track item.id) {
+              <div class="item-row">
+                <div class="item-info">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-description">{{ item.description }}</span>
+                </div>
+                <div class="item-price">
+                  <span class="buy-price">{{ item.price }} gold</span>
+                  <button
+                    class="buy-btn"
+                    (click)="buyItem(item.id)"
+                  >
+                    (B) Buy
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="party-gold">
+            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+          </div>
+        } @else {
+          <p class="error-message">No character selected</p>
+        }
+
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+
+    @if (currentView() === 'sell') {
+      <div class="sell-view">
+        <h2>SELL ITEMS</h2>
+
+        @if (showSellConfirmation()) {
+          <div class="confirmation-dialog">
+            @if (getPendingSellItem(); as item) {
+              <p>Sell {{ item.name }} for {{ getSellPrice(item) }} gold?</p>
+              <div class="confirmation-actions">
+                <button class="confirm-btn" (click)="confirmSell()">(Y) Yes</button>
+                <button class="cancel-btn" (click)="cancelSell()">(N) No</button>
+              </div>
+            }
+          </div>
+        } @else {
+          @if (selectedCharacter(); as character) {
+            @if (getSellableItems().length > 0) {
+              <div class="item-list">
+                @for (item of getSellableItems(); track item.id) {
+                  <div class="item-row">
+                    <div class="item-info">
+                      <span class="item-name">{{ item.name }}</span>
+                      @if (item.equipped) {
+                        <span class="equipped-badge">(Equipped)</span>
+                      }
+                    </div>
+                    <div class="item-price">
+                      <span class="sell-price">Sell: {{ getSellPrice(item) }} gold</span>
+                      <button
+                        class="sell-btn"
+                        (click)="initiateSell(item.id)"
+                        [disabled]="getSellPrice(item) === 0"
+                      >
+                        (S) Sell
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="empty-message">No items to sell</p>
+            }
+
+            <div class="party-gold">
+              <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+            </div>
+          } @else {
+            <p class="error-message">No character selected</p>
+          }
+
+          <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+        }
+      </div>
+    }
+
+    @if (currentView() === 'identify') {
+      <div class="identify-view">
+        <h2>IDENTIFY ITEMS</h2>
+
+        @if (selectedCharacter(); as character) {
+          @if (getUnidentifiedItems().length > 0) {
+            <div class="identify-info">
+              <p>Identification Cost: {{ getIdentifyCost() }} gold</p>
+            </div>
+
+            <div class="item-list">
+              @for (item of getUnidentifiedItems(); track item.id) {
+                <div class="item-row">
+                  <div class="item-info">
+                    <span class="item-name">{{ item.unidentifiedName || 'Unknown Item' }}</span>
+                    <span class="item-type">{{ item.type }}</span>
+                  </div>
+                  <button
+                    class="identify-btn"
+                    (click)="identifyItem(item.id)"
+                  >
+                    (I) Identify
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (successMessage()) {
+              <div class="identification-result">
+                <h3>Identification Result:</h3>
+                <p class="result-text">{{ successMessage() }}</p>
+              </div>
+            }
+          } @else {
+            <p class="empty-message">No unidentified items</p>
+          }
+
+          <div class="party-gold">
+            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+          </div>
+        } @else {
+          <p class="error-message">No character selected</p>
+        }
+
+        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+      </div>
+    }
+  </main>
+</div>

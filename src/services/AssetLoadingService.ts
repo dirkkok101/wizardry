@@ -1,5 +1,7 @@
+import { Injectable } from '@angular/core';
+
 /**
- * AssetLoadingService - Pure function service for loading game assets
+ * AssetLoadingService - Service for loading game assets
  */
 
 export interface TitleAssets {
@@ -221,17 +223,98 @@ function clearCache(): void {
   loadingStats.state = 'idle'
 }
 
-export const AssetLoadingService = {
-  loadTitleAssets,
-  loadCastleMenuAssets,
-  loadTrainingGroundsAssets,
-  loadGameAssets,
-  isAssetLoaded,
-  getAsset,
-  getLoadingProgress,
-  getLoadingStats,
-  onLoadComplete,
-  onLoadProgress,
-  onLoadError,
-  clearCache
+@Injectable({
+  providedIn: 'root'
+})
+export class AssetLoadingService {
+  /**
+   * Load title screen assets (alias for loadTitleAssets)
+   */
+  async loadTitleScreenAssets(): Promise<TitleAssets> {
+    return loadTitleAssets();
+  }
+
+  /**
+   * Load title screen assets (critical path)
+   */
+  async loadTitleAssets(): Promise<TitleAssets> {
+    return loadTitleAssets();
+  }
+
+  /**
+   * Load castle menu background image
+   */
+  async loadCastleMenuAssets(): Promise<HTMLImageElement> {
+    return loadCastleMenuAssets();
+  }
+
+  /**
+   * Load training grounds background image
+   */
+  async loadTrainingGroundsAssets(): Promise<HTMLImageElement> {
+    return loadTrainingGroundsAssets();
+  }
+
+  /**
+   * Load all game assets in parallel
+   */
+  async loadGameAssets(): Promise<GameAssets> {
+    return loadGameAssets();
+  }
+
+  /**
+   * Check if asset is loaded
+   */
+  isAssetLoaded(assetId: string): boolean {
+    return isAssetLoaded(assetId);
+  }
+
+  /**
+   * Get loaded asset by ID
+   */
+  getAsset<T>(assetId: string): T | null {
+    return getAsset<T>(assetId);
+  }
+
+  /**
+   * Get loading progress (0-100)
+   */
+  getLoadingProgress(): number {
+    return getLoadingProgress();
+  }
+
+  /**
+   * Get loading statistics
+   */
+  getLoadingStats(): LoadingStats {
+    return getLoadingStats();
+  }
+
+  /**
+   * Register callback for load complete
+   */
+  onLoadComplete(callback: () => void): () => void {
+    return onLoadComplete(callback);
+  }
+
+  /**
+   * Register callback for load progress
+   */
+  onLoadProgress(callback: (progress: number) => void): () => void {
+    return onLoadProgress(callback);
+  }
+
+  /**
+   * Register callback for load errors
+   */
+  onLoadError(callback: (error: AssetLoadError) => void): () => void {
+    return onLoadError(callback);
+  }
+
+  /**
+   * Clear all cached assets
+   */
+  clearCache(): void {
+    clearCache();
+  }
 }

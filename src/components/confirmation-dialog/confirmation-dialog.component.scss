@@ -1,0 +1,61 @@
+@use '../../styles/variables' as *;
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.dialog-content {
+  background: $color-bg-black;
+  border: 2px solid $color-text-bright;
+  padding: $spacing-xl;
+  min-width: 300px;
+  max-width: 500px;
+  text-align: center;
+}
+
+.dialog-message {
+  font-size: 18px;
+  color: $color-text-bright;
+  margin-bottom: $spacing-lg;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: $spacing-md;
+  justify-content: center;
+
+  button {
+    background: none;
+    border: 1px solid $color-text-green;
+    color: $color-text-green;
+    font-family: $font-mono;
+    font-size: 14px;
+    padding: $spacing-sm $spacing-lg;
+    cursor: pointer;
+    transition: all 0.1s;
+
+    &:hover {
+      background: $color-text-green;
+      color: $color-bg-black;
+    }
+
+    &.btn-yes {
+      border-color: $color-text-bright;
+      color: $color-text-bright;
+
+      &:hover {
+        background: $color-text-bright;
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { Race } from './Race'
 import { CharacterClass } from './CharacterClass'
 import { Alignment } from './Alignment'
 import { CharacterStatus } from './CharacterStatus'
+import { Item } from './Item'
 
 /**
  * Character - Core character data structure
@@ -30,7 +31,16 @@ export interface Character {
   ac: number // Armor Class (lower is better)
 
   // Inventory (8 items max)
-  inventory: string[] // Item IDs
+  // Can contain either item IDs (string) or Item objects (for unidentified items)
+  inventory: (string | Item)[] // Item IDs or Item objects for unidentified items
+  equippedWeapon?: string // Item ID
+  equippedArmor?: string // Item ID
+
+  // Gold
+  gold?: number // Character's individual gold (separate from party gold pool)
+
+  // Spells (for caster classes: Mage, Priest, Bishop)
+  knownSpells?: string[] // Spell IDs that character has learned
 
   // Password protection
   password: string

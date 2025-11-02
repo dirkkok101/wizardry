@@ -1,0 +1,29 @@
+@use '../../styles/variables' as *;
+
+.shop {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: $spacing-md;
+
+  header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: 24px;
+      color: $color-text-bright;
+      margin: 0;
+      text-align: center;
+    }
+  }
+
+  main {
+    flex: 1;
+  }
+}
+
+.main-view {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}

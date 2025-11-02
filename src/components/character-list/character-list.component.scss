@@ -1,0 +1,88 @@
+@use '../../styles/variables' as *;
+
+.character-list {
+  border: 1px solid $color-text-dim;
+  padding: $spacing-md;
+
+  &.selectable {
+    .character-item {
+      cursor: pointer;
+      transition: background-color 0.1s;
+
+      &:hover {
+        background-color: rgba(0, 255, 0, 0.1);
+      }
+    }
+  }
+}
+
+.character-items {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.character-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: $spacing-md;
+  padding: $spacing-sm;
+  border: 1px solid transparent;
+
+  &.selected {
+    background-color: rgba(0, 255, 0, 0.2);
+    border-color: $color-text-bright;
+  }
+}
+
+.character-number {
+  color: $color-text-dim;
+  font-weight: bold;
+}
+
+.character-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.character-name {
+  color: $color-text-bright;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.character-stats {
+  display: flex;
+  gap: $spacing-md;
+  font-size: 12px;
+  color: $color-text-green;
+
+  .class {
+    color: $color-amber;
+  }
+
+  .level {
+    color: $color-text-bright;
+  }
+
+  .hp {
+    color: $color-text-green;
+  }
+}
+
+.character-status {
+  color: $color-text-bright;
+  font-weight: bold;
+
+  &.dead {
+    color: $color-error;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: $spacing-xl;
+  color: $color-text-dim;
+  font-style: italic;
+}

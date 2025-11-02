@@ -1,0 +1,263 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { InnComponent } from './inn.component';
+import { GameStateService } from '../../services/GameStateService';
+import { SceneType } from '../../types/SceneType';
+import { Character } from '../../types/Character';
+import { CharacterClass } from '../../types/CharacterClass';
+import { RoomType } from '../../services/InnService';
+import { createTestCharacter } from '../../test-helpers/test-factories';
+
+describe('InnComponent', () => {
+  let component: InnComponent;
+  let fixture: ComponentFixture<InnComponent>;
+  let gameState: GameStateService;
+  let router: Router;
+
+  const mockCharacter: Character = {
+    id: 'char-1',
+    name: 'Gandalf',
+    class: CharacterClass.MAGE,
+    level: 5,
+    hp: 15,
+    maxHp: 25,
+    status: 'OK',
+    gold: 100,
+    experience: 10000
+  } as Character;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [InnComponent]
+    });
+
+    fixture = TestBed.createComponent(InnComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+    router = TestBed.inject(Router);
+
+    jest.spyOn(router, 'navigate');
+
+    // Setup party with character
+    gameState.updateState(state => ({
+      ...state,
+      roster: new Map(state.roster).set('char-1', mockCharacter),
+      party: {
+        ...state.party,
+        members: ['char-1']
+      }
+    }));
+  });
+
+  describe('initialization', () => {
+    it('updates scene to INN on init', () => {
+      component.ngOnInit();
+      expect(gameState.currentScene()).toBe(SceneType.INN);
+    });
+
+    it('displays inn title', () => {
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      expect(compiled.querySelector('h1').textContent).toContain('INN');
+    });
+
+    it('shows menu options', () => {
+      fixture.detectChanges();
+      expect(component.menuItems.length).toBe(3);
+      expect(component.menuItems[0].id).toBe('rest');
+      expect(component.menuItems[1].id).toBe('stables');
+      expect(component.menuItems[2].id).toBe('castle');
+    });
+  });
+
+  describe('rest functionality', () => {
+    it('restores all party HP to maximum', () => {
+      component.handleMenuSelect('rest');
+
+      const state = gameState.state();
+      const character = state.roster.get('char-1')!;
+      expect(character.hp).toBe(character.maxHp);
+    });
+
+    it('shows success message after resting', () => {
+      component.handleMenuSelect('rest');
+      expect(component.successMessage()).toBeTruthy();
+      expect(component.successMessage()).toContain('rested');
+    });
+
+    it('costs 10 gold per party member', () => {
+      const initialGold = gameState.party().gold || 0;
+      component.handleMenuSelect('rest');
+
+      const finalGold = gameState.party().gold || 0;
+      expect(finalGold).toBe(initialGold - 10);
+    });
+
+    it('shows error when party cannot afford rest', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 5
+        }
+      }));
+
+      component.handleMenuSelect('rest');
+      expect(component.errorMessage()).toBeTruthy();
+      expect(component.errorMessage()).toContain('afford');
+    });
+
+    it('shows error when no party exists', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          members: []
+        }
+      }));
+
+      component.handleMenuSelect('rest');
+      expect(component.errorMessage()).toBeTruthy();
+    });
+
+    it('prevents race condition by checking processing flag', () => {
+      // Set party gold to sufficient amount
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 100
+        }
+      }));
+
+      const initialGold = gameState.party().gold || 0;
+
+      // Manually set processing flag to simulate in-progress operation
+      component.processing.set(true);
+
+      // Attempt to rest while processing is true
+      component.handleMenuSelect('rest');
+
+      const goldAfterBlockedAttempt = gameState.party().gold || 0;
+
+      // Gold should not be deducted because processing flag blocked the operation
+      expect(goldAfterBlockedAttempt).toBe(initialGold);
+
+      // Reset processing flag
+      component.processing.set(false);
+
+      // Now rest should succeed
+      component.handleMenuSelect('rest');
+
+      const finalGold = gameState.party().gold || 0;
+
+      // Gold should be deducted once
+      expect(finalGold).toBe(initialGold - 10);
+
+      // Verify processing flag is reset after successful operation
+      expect(component.processing()).toBe(false);
+    });
+  });
+
+  describe('stables functionality', () => {
+    it('shows stables view when selected', () => {
+      component.handleMenuSelect('stables');
+      expect(component.currentView()).toBe('stables');
+    });
+
+    it('displays party characters for stable boarding', () => {
+      component.currentView.set('stables');
+      fixture.detectChanges();
+
+      expect(component.partyCharacters().length).toBe(1);
+    });
+  });
+
+  describe('navigation', () => {
+    it('returns to castle when selected', () => {
+      component.handleMenuSelect('castle');
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+  });
+
+  describe('room selection and rest', () => {
+    it('allows selecting character to rest', () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 10,
+        maxHp: 20,
+        gold: 100
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+
+      component.selectCharacterToRest(character.id);
+
+      expect(component.selectedCharacterId()).toBe(character.id);
+      expect(component.currentView()).toBe('room-select');
+    });
+
+    it('rests character in BARRACKS for one week', async () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 10,
+        maxHp: 20,
+        gold: 100
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.selectCharacterToRest(character.id);
+
+      await component.restInRoom(RoomType.BARRACKS);
+
+      const updatedChar = gameState.state().roster.get('char-1')!;
+      expect(updatedChar.hp).toBe(11); // 10 + 1
+      expect(updatedChar.gold).toBe(90); // 100 - 10
+    });
+
+    it('shows error when character cannot afford room', async () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 10,
+        maxHp: 20,
+        gold: 5
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.selectCharacterToRest(character.id);
+
+      await component.restInRoom(RoomType.BARRACKS);
+
+      expect(component.errorMessage()).toContain('Not enough gold');
+    });
+
+    it('triggers level up when HP reaches max and has XP', async () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        hp: 19,
+        maxHp: 20,
+        gold: 100,
+        level: 1,
+        experience: 3000,
+        class: CharacterClass.FIGHTER
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.selectCharacterToRest(character.id);
+
+      await component.restInRoom(RoomType.BARRACKS);
+
+      expect(component.currentView()).toBe('level-up');
+      expect(component.levelUpData()).toBeDefined();
+      expect(component.levelUpData()!.newLevel).toBe(2);
+    });
+  });
+});

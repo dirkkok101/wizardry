@@ -1,0 +1,221 @@
+.character-inspection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #000;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+}
+
+.character-sheet {
+  max-width: 800px;
+  width: 100%;
+  background-color: #111;
+  border: 2px solid #0f0;
+  padding: 2rem;
+}
+
+.section {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  h2, h3, h4 {
+    color: #0f0;
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  h4 {
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+}
+
+// Header Section
+.header {
+  text-align: center;
+
+  .header-info {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+
+    span {
+      color: #0f0;
+    }
+  }
+}
+
+// Stats Section
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #000;
+  border: 1px solid #0f0;
+
+  .stat-label {
+    font-weight: bold;
+  }
+
+  .stat-value {
+    color: #ff0;
+  }
+}
+
+// Status Section
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #000;
+  border: 1px solid #0f0;
+
+  .status-label {
+    font-weight: bold;
+  }
+
+  .status-value {
+    color: #ff0;
+
+    &.status-ok {
+      color: #0f0;
+    }
+
+    &.status-dead {
+      color: #f00;
+    }
+
+    &.status-afflicted {
+      color: #fa0;
+    }
+  }
+}
+
+// Equipment Section
+.equipment-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.equipment-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #000;
+  border: 1px solid #0f0;
+
+  .equipment-label {
+    font-weight: bold;
+  }
+
+  .equipment-value {
+    color: #ff0;
+  }
+}
+
+// Inventory Section
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.inventory-slot {
+  display: flex;
+  padding: 0.5rem;
+  background-color: #000;
+  border: 1px solid #0f0;
+
+  .slot-number {
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+
+  .slot-item {
+    color: #ff0;
+  }
+}
+
+// Spells Section
+.spell-category {
+  margin-bottom: 1rem;
+
+  .spell-placeholder {
+    color: #888;
+    font-style: italic;
+    margin: 0.5rem 0;
+  }
+}
+
+// Actions Section
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  border-bottom: none;
+}
+
+.btn-back {
+  background-color: #000;
+  color: #0f0;
+  border: 2px solid #0f0;
+  padding: 0.75rem 2rem;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #0f0;
+    color: #000;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// Error Message
+.error-message {
+  text-align: center;
+  padding: 2rem;
+
+  p {
+    color: #f00;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+}

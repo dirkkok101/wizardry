@@ -4,28 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a faithful remake of **Wizardry 1: Proving Grounds of the Mad Overlord** (1981) - a turn-based, party-based dungeon crawler with first-person 3D-style rendering using TypeScript, HTML5 Canvas, and Vite.
+This is a faithful remake of **Wizardry 1: Proving Grounds of the Mad Overlord** (1981) - a turn-based, party-based dungeon crawler with first-person 3D-style rendering using TypeScript, Angular, and HTML5 Canvas.
 
 ## Development Commands
 
 ```bash
 # Development server with hot reload
-npm run dev
+npm start
+# or
+ng serve
 
 # Build for production
 npm run build
+# or
+ng build
 
-# Preview production build
-npm run preview
-
-# Run all tests (single run, exits when complete)
-npm test -- --run
-
-# Run all tests (watch mode - default, may leave background processes)
+# Run all tests (Jest)
 npm test
 
-# Clean up background processes before running tests (recommended)
-killall -9 node 2>/dev/null || true && npm test -- --run
+# Run tests in watch mode
+npm test -- --watch
 
 # Run specific test file
 npm test -- PartyService
@@ -35,9 +33,6 @@ npm test -- --coverage
 
 # Run tests matching pattern
 npm test -- --testNamePattern="adds character"
-
-# Run tests in watch mode (re-run on file changes)
-npm test -- --watch
 ```
 
 ## Architecture Overview
@@ -110,15 +105,21 @@ Services can call other services but **no circular dependencies allowed**.
 
 **TDD (Test-Driven Development)**: Write tests first, then implementation.
 
+**Test Framework**: Jest with jest-preset-angular for Angular-specific testing support.
+
 **No Mocks for Services**: Services are pure functions - test with real data using factory functions.
 
-**Colocated Tests**: Tests live in `tests/` directory mirroring `src/` structure:
+**Colocated Tests**: Tests are colocated with source files using `__tests__/` subdirectories:
 ```
-tests/
-├── services/       # One test file per service
-├── commands/       # One test file per command
-├── integration/    # Multi-layer integration tests
-└── setup.ts        # Test configuration
+src/
+├── services/
+│   ├── __tests__/           # Service tests
+│   │   ├── PartyService.spec.ts
+│   │   └── CombatService.spec.ts
+│   ├── PartyService.ts
+│   └── CombatService.ts
+└── app/
+    └── app.component.spec.ts  # Angular component tests
 ```
 
 **Test Naming Convention**:
@@ -177,11 +178,36 @@ await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
 
 ```
 src/
-├── types/           # TypeScript interfaces (GameState, Party, Character, etc.)
-├── services/        # Pure function services (business logic)
-├── commands/        # Command objects (user actions)
-├── ui/             # Canvas rendering and input handling
-└── main.ts         # Application entry point
+├── app/              # Angular components and modules
+│   ├── app.component.ts
+│   ├── app.component.spec.ts
+│   └── app.config.ts
+├── services/         # Pure function services (business logic)
+│   ├── __tests__/    # Service tests
+│   ├── AssetLoadingService.ts
+│   ├── CharacterService.ts
+│   ├── GameInitializationService.ts
+│   ├── InputService.ts
+│   ├── SaveService.ts
+│   └── SceneNavigationService.ts
+├── types/            # TypeScript interfaces (GameState, Party, Character, etc.)
+├── assets/           # Static assets and game data (copied from data/)
+├── main.ts           # Angular bootstrap entry point
+├── index.html        # Application entry HTML
+└── styles.scss       # Global styles
+
+angular.json          # Angular CLI configuration
+jest.config.js        # Jest test configuration
+setup-jest.ts         # Jest setup file
+tsconfig.json         # TypeScript base configuration
+tsconfig.app.json     # TypeScript config for application
+tsconfig.spec.json    # TypeScript config for tests
+
+data/                 # Game data (source of truth)
+├── maps/             # level-01.json through level-10.json
+├── spells/           # mage-spells.json, priest-spells.json
+├── monsters/         # monsters.json
+└── items/            # weapons.json, armor.json, consumables.json
 
 docs/
 ├── architecture.md     # Technical architecture overview
@@ -192,12 +218,6 @@ docs/
 ├── ui/               # UI/UX scene documentation (14 scenes)
 ├── systems/          # System design docs (combat, spells, etc.)
 └── research/         # Source validation and research
-
-data/
-├── maps/          # level-01.json through level-10.json
-├── spells/        # mage-spells.json, priest-spells.json
-├── monsters/      # monsters.json
-└── items/         # weapons.json, armor.json, consumables.json
 ```
 
 ## TypeScript Configuration
@@ -241,14 +261,52 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
 
 ## Current Implementation Status
 
-**Completed**:
-- Project initialization with Vite + TypeScript
-- Canvas setup with 4:3 aspect ratio and responsive sizing
-- AssetLoadingService with title screen asset loading
-- SceneNavigationService with transition validation
-- GameInitializationService for state setup
-- SaveService with IndexedDB persistence
-- InputService for keyboard handling
-- Comprehensive documentation (14/14 UI scenes, all core services, all game systems)
+**Migration Status**: Angular migration complete - project now uses Angular framework at root level.
 
-**Next Steps**: Implement remaining services and commands following the documentation in `docs/services/` and `docs/commands/`.
+**Completed**:
+- **Phases 1-4**: Core architecture and Angular migration
+  - Angular project structure setup with Angular CLI
+  - Migration from Vite to Angular build system
+  - Migration from Vitest to Jest testing framework
+  - Service layer migration (13+ core services)
+  - Test suite migration to Jest with jest-preset-angular
+  - Game data files and documentation preserved at root level
+
+- **Phase 5**: Town Service Business Logic (Complete)
+  - **Temple Component**: Healing, resurrection, cure services with tithe calculations
+  - **Shop Component**: Buy, sell, identify flows with party-based gold system
+  - **Training Grounds Component**: Complete 7-step character creation wizard
+  - **CharacterService**: Class eligibility, character creation, validation (29 tests)
+  - **TempleService**: Tithe calculations based on service type and character level
+  - **ResurrectionService**: Success rate logic based on Vitality stat
+  - **ShopService**: Buy/sell/identify pricing calculations
+  - **InventoryService**: Character inventory management
+  - **Integration Tests**: 5 E2E tests covering character creation and shop flows
+  - **336 total tests passing** in **<4 seconds** (3.48s)
+  - All placeholders removed, code polished
+
+- **Phase 6**: Town Service Completion & Castle Integration (Complete)
+  - **Tavern Component**: Party formation with alignment validation, gold divvy
+  - **Inn Component**: 5 room types, HP healing, level-up processing, spell learning
+  - **Character Inspection Component**: Full character sheet with stats, equipment, spells
+  - **Utilities Component**: Save/load system with 3 slots, metadata display
+  - **Castle Menu Component**: Enhanced with party display, navigation to all services
+  - **PartyService**: Alignment validation, gold distribution (100% coverage)
+  - **LevelUpService**: XP tables, HP rolls, stat increases (95% coverage)
+  - **SpellLearningService**: Spell progression for Mage/Priest/Bishop (100% coverage)
+  - **InnService**: Room costs, heal rates, rest mechanics (100% coverage)
+  - **SaveService**: IndexedDB persistence with slot metadata (85% coverage)
+  - **Integration Tests**: 9 E2E tests (6 new) covering town service workflows
+  - **Performance Tests**: 3 tests verifying speed targets met
+  - **501 total tests passing** in **7.8 seconds**
+  - **89.07% code coverage** (exceeds 80% target)
+  - See `docs/implementation/phase-6-summary.md` for full details
+
+**Next Steps**:
+- **Phase 7**: Dungeon navigation and combat system
+  - Camp scene (pre-dungeon staging)
+  - Maze scene (3D Canvas rendering, movement)
+  - Combat scene (turn-based battles)
+  - Chest scene (loot and traps)
+  - Encounter system (monster spawning, initiative)
+  - Spell casting (combat and utility spells)

@@ -1,0 +1,196 @@
+@use './variables' as *;
+
+// Global retro styles
+body {
+  margin: 0;
+  padding: 0;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
+  font-size: $font-size-base;
+  line-height: 1.5;
+
+  // CRT scanline effect
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 9999;
+  }
+}
+
+// Game container (4:3 aspect ratio, centered)
+.game-container {
+  width: 100%;
+  max-width: $screen-width;
+  margin: 0 auto;
+  padding: $padding-standard;
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  // Mobile: reduce padding on smaller screens
+  @media (max-width: 640px) {
+    padding: $padding-small;
+  }
+}
+
+// Text styles
+.text-bright {
+  color: $color-text-bright;
+}
+
+.text-dim {
+  color: $color-text-dim;
+}
+
+.text-amber {
+  color: $color-amber;
+}
+
+.text-error {
+  color: $color-error;
+}
+
+.text-large {
+  font-size: $font-size-large;
+}
+
+.text-small {
+  font-size: $font-size-small;
+}
+
+// Menu styles
+.menu {
+  border: $border-width $border-style $border-color;
+  padding: $padding-standard;
+  margin: $spacing-md 0;
+
+  &__title {
+    font-size: $font-size-large;
+    color: $color-text-bright;
+    margin-bottom: $spacing-md;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  &__item {
+    padding: $spacing-sm $spacing-md;
+    cursor: pointer;
+    transition: background-color 0.1s;
+
+    &:hover,
+    &--selected {
+      background-color: rgba(0, 255, 0, 0.1);
+      color: $color-text-bright;
+    }
+
+    &--disabled {
+      color: $color-text-dim;
+      cursor: not-allowed;
+
+      &:hover {
+        background-color: transparent;
+      }
+    }
+  }
+}
+
+// Button styles
+.button {
+  background-color: transparent;
+  border: $border-width $border-style $border-color;
+  color: $color-text-green;
+  font-family: $font-mono;
+  font-size: $font-size-base;
+  padding: $spacing-sm $spacing-md;
+  cursor: pointer;
+  transition: all 0.1s;
+
+  &:hover {
+    background-color: rgba(0, 255, 0, 0.1);
+    color: $color-text-bright;
+  }
+
+  &:active {
+    background-color: rgba(0, 255, 0, 0.2);
+  }
+
+  &:disabled {
+    color: $color-text-dim;
+    cursor: not-allowed;
+    opacity: 0.5;
+
+    &:hover {
+      background-color: transparent;
+    }
+  }
+}
+
+// Panel/box styles
+.panel {
+  border: $border-width $border-style $border-color;
+  padding: $padding-standard;
+  margin: $spacing-md 0;
+
+  &__header {
+    font-size: $font-size-large;
+    color: $color-text-bright;
+    margin-bottom: $spacing-md;
+    border-bottom: 1px $border-style $border-color;
+    padding-bottom: $spacing-sm;
+  }
+
+  &__body {
+    padding: $spacing-sm 0;
+  }
+}
+
+// Character stat display
+.stat {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-xs 0;
+
+  &__label {
+    color: $color-text-dim;
+  }
+
+  &__value {
+    color: $color-text-bright;
+  }
+}
+
+// ASCII art / logo
+.ascii-art {
+  white-space: pre;
+  font-family: $font-mono;
+  text-align: center;
+  color: $color-text-bright;
+  line-height: 1.2;
+}
+
+// Utility classes
+.text-center {
+  text-align: center;
+}
+
+.mt-md {
+  margin-top: $spacing-md;
+}
+
+.mb-md {
+  margin-bottom: $spacing-md;
+}
+
+.p-md {
+  padding: $spacing-md;
+}
