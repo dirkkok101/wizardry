@@ -9,7 +9,6 @@ import { CharacterService } from '../../services/CharacterService';
 import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { NameModalComponent } from '../components/name-modal/name-modal.component';
 import { Race, parseRace } from '../../types/Race';
 import { CharacterClass, parseClass } from '../../types/CharacterClass';
 import { Alignment } from '../../types/Alignment';
@@ -40,8 +39,7 @@ interface FinalStats {
     CommonModule,
     FormsModule,
     SceneTitleComponent,
-    SceneFooterComponent,
-    NameModalComponent
+    SceneFooterComponent
   ],
   templateUrl: './character-creation.component.html',
   styleUrl: './character-creation.component.scss'
@@ -60,7 +58,6 @@ export class CharacterCreationComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly isLocked = signal<boolean>(false);
-  readonly showNameModal = signal<boolean>(false);
 
   // Wizard state machine
   currentStep = signal<CreationStep>(CreationStep.SELECT_RACE);
@@ -145,18 +142,8 @@ export class CharacterCreationComponent implements OnInit {
     return CharacterService.getEligibleClasses(stats, alignment);
   });
 
-  readonly canAccept = computed(() => {
-    return this.selectedRace() !== null &&
-           this.selectedAlignment() !== null &&
-           this.selectedClass() !== null;
-  });
-
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = [];
-
-    if (this.canAccept()) {
-      items.push({ id: 'accept', label: 'ACCEPT & NAME CHARACTER', shortcut: 'ENTER', enabled: true });
-    }
 
     items.push({ id: 'reset', label: 'RESET', shortcut: 'ESC', enabled: true });
     items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
@@ -287,13 +274,7 @@ export class CharacterCreationComponent implements OnInit {
     return classData.name;
   }
 
-  // Accept character and show name modal
-  acceptCharacter() {
-    if (!this.canAccept()) return;
-    this.showNameModal.set(true);
-  }
-
-  // Submit character (formerly handleNameSave)
+  // Submit character
   async submitCharacter(name: string) {
     try {
       const stats = this.finalStats()!;
@@ -320,9 +301,6 @@ export class CharacterCreationComponent implements OnInit {
         roster: new Map(state.roster).set(character.id, character)
       }));
 
-      // Close modal
-      this.showNameModal.set(false);
-
       // Success feedback
       this.successMessage.set(`${character.name} created successfully!`);
 
@@ -332,21 +310,6 @@ export class CharacterCreationComponent implements OnInit {
     } catch (error) {
       this.errorMessage.set(error instanceof Error ? error.message : 'Failed to create character');
     }
-  }
-
-  /**
-   * Wrapper method for test backward compatibility.
-   * Note: The template uses submitCharacter() directly via (nameSubmitted) event.
-   * This method exists solely for existing test code that calls handleNameSave().
-   * @param name - Character name entered by user
-   */
-  handleNameSave(name: string) {
-    this.submitCharacter(name);
-  }
-
-  // Handle name modal cancel
-  handleNameCancel() {
-    this.showNameModal.set(false);
   }
 
   // Reset wizard
@@ -586,10 +549,16 @@ export class CharacterCreationComponent implements OnInit {
 
   private handleNameCharacterStepKeys(key: string): boolean {
     // Let the input field handle typing
-    // Only intercept Escape (Enter handled by form submit)
     if (key === 'escape') {
       this.goBackFromNameCharacter();
       return true;
+    } else if (key === 'enter') {
+      // Submit character if name is valid
+      const name = this.characterName().trim();
+      if (name) {
+        this.submitCharacter(name);
+        return true;
+      }
     }
     return false;
   }
@@ -597,9 +566,6 @@ export class CharacterCreationComponent implements OnInit {
   // Footer menu handler
   handleFooterAction(itemId: string) {
     switch(itemId) {
-      case 'accept':
-        this.acceptCharacter();
-        break;
       case 'reset':
         this.resetWizard();
         break;

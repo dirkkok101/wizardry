@@ -49,20 +49,20 @@
             <div class="alignment-selection">
               <div class="button-grid alignments">
                 <button
-                  [class.selected]="selectedAlignment() === 'GOOD'"
-                  (click)="selectAlignment('GOOD')"
+                  [class.selected]="selectedAlignment() === Alignment.GOOD"
+                  (click)="selectAlignment(Alignment.GOOD)"
                 >
                   <span class="shortcut">G</span>: Good
                 </button>
                 <button
-                  [class.selected]="selectedAlignment() === 'NEUTRAL'"
-                  (click)="selectAlignment('NEUTRAL')"
+                  [class.selected]="selectedAlignment() === Alignment.NEUTRAL"
+                  (click)="selectAlignment(Alignment.NEUTRAL)"
                 >
                   <span class="shortcut">N</span>: Neutral
                 </button>
                 <button
-                  [class.selected]="selectedAlignment() === 'EVIL'"
-                  (click)="selectAlignment('EVIL')"
+                  [class.selected]="selectedAlignment() === Alignment.EVIL"
+                  (click)="selectAlignment(Alignment.EVIL)"
                 >
                   <span class="shortcut">E</span>: Evil
                 </button>
@@ -133,13 +133,15 @@
                 <input
                   id="character-name"
                   type="text"
-                  [(ngModel)]="characterName"
+                  [ngModel]="characterName()"
+                  (ngModelChange)="characterName.set($event)"
                   name="characterName"
                   maxlength="15"
                   placeholder="Enter name..."
                   autofocus
                 />
                 <div class="char-count">{{ characterName().length }} / 15</div>
+                <button type="submit" style="display: none;">Submit</button>
               </form>
             </div>
           }
@@ -257,13 +259,4 @@
 
   <!-- Scene Footer (full width) -->
   <app-scene-footer [menuItems]="footerMenuItems()" />
-
-  <!-- Name Modal (reuse existing) -->
-  @if (showNameModal()) {
-    <app-name-modal
-      [isOpen]="showNameModal()"
-      (nameSubmitted)="submitCharacter($event)"
-      (cancelled)="showNameModal.set(false)"
-    />
-  }
 </div>
