@@ -1556,5 +1556,71 @@ describe('CharacterCreationComponent', () => {
         expect(component.stepNumber()).toBe(5);
       });
     });
+
+    describe('backward navigation', () => {
+      it('goes back from SELECT_ALIGNMENT to SELECT_RACE and clears alignment', () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.advanceToAlignment();
+
+        component.goBackFromAlignment();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
+        expect(component.selectedAlignment()).toBeNull();
+        expect(component.selectedRace()).toBe(Race.HUMAN); // race persists
+      });
+
+      it('goes back from ROLL_STATS to SELECT_ALIGNMENT and clears stats', () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.advanceToRollStats();
+        component.rolledStats.set({
+          strength: 10,
+          intelligence: 12,
+          piety: 8,
+          vitality: 11,
+          agility: 9,
+          luck: 10,
+          bonusPoints: 40
+        });
+
+        component.goBackFromRollStats();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
+        expect(component.rolledStats()).toBeNull();
+        expect(component.selectedAlignment()).toBe(Alignment.GOOD); // alignment persists
+      });
+
+      it('goes back from SELECT_CLASS to SELECT_ALIGNMENT (nuclear option)', async () => {
+        // Setup: reach class selection
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        await component.rollStats();
+        component.selectedClass.set(CharacterClass.FIGHTER);
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
+        expect(component.rolledStats()).toBeTruthy();
+        expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+
+        // Go back (nuclear option)
+        component.goBackFromSelectClass();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
+        expect(component.rolledStats()).toBeNull(); // stats cleared
+        expect(component.selectedClass()).toBeNull(); // class cleared
+        expect(component.selectedAlignment()).toBe(Alignment.GOOD); // alignment persists
+      });
+
+      it('goes back from NAME_CHARACTER to SELECT_CLASS', () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedClass.set(CharacterClass.FIGHTER);
+        component.currentStep.set(CreationStep.NAME_CHARACTER);
+
+        component.goBackFromNameCharacter();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
+        expect(component.selectedClass()).toBe(CharacterClass.FIGHTER); // class persists
+      });
+    });
   });
 });
