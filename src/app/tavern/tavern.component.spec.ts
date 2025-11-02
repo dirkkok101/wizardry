@@ -5,6 +5,9 @@ import { GameStateService } from '../../services/GameStateService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
+import { Alignment } from '../../types/Alignment';
+import { CharacterStatus } from '../../types/CharacterStatus';
+import { createTestCharacter } from '../../test-helpers/test-factories';
 
 describe('TavernComponent', () => {
   let component: TavernComponent;
@@ -133,6 +136,108 @@ describe('TavernComponent', () => {
 
       const availableChars = component.availableCharacters();
       expect(availableChars.some(c => c.id === 'char-1')).toBe(false);
+    });
+  });
+
+  describe('handleAddCharacter', () => {
+    it('adds character to empty party', () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        alignment: Alignment.GOOD,
+        status: CharacterStatus.OK
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+
+      component.handleAddCharacter(character.id);
+
+      const party = gameState.party();
+      expect(party.members).toContain(character.id);
+      expect(party.members.length).toBe(1);
+    });
+
+    it('shows error when adding to full party', () => {
+      const characters = Array.from({ length: 6 }, (_, i) =>
+        createTestCharacter({ id: `char-${i}`, alignment: Alignment.NEUTRAL })
+      );
+      const newChar = createTestCharacter({ id: 'char-7', alignment: Alignment.NEUTRAL });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([
+          ...characters.map(c => [c.id, c] as const),
+          [newChar.id, newChar]
+        ]),
+        party: {
+          ...state.party,
+          members: characters.map(c => c.id)
+        }
+      }));
+
+      component.handleAddCharacter(newChar.id);
+
+      expect(component.errorMessage()).toBe('Party is full (maximum 6 members)');
+      const party = gameState.party();
+      expect(party.members.length).toBe(6);
+    });
+
+    it('shows error when adding Evil character to Good party', () => {
+      const goodChar = createTestCharacter({
+        id: 'good-1',
+        alignment: Alignment.GOOD
+      });
+      const evilChar = createTestCharacter({
+        id: 'evil-1',
+        alignment: Alignment.EVIL
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[goodChar.id, goodChar], [evilChar.id, evilChar]]),
+        party: {
+          ...state.party,
+          members: [goodChar.id]
+        }
+      }));
+
+      component.handleAddCharacter(evilChar.id);
+
+      expect(component.errorMessage()).toBe('Good and Evil cannot party together');
+      const party = gameState.party();
+      expect(party.members).not.toContain(evilChar.id);
+    });
+
+    it('shows error when adding DEAD character', () => {
+      const deadChar = createTestCharacter({
+        id: 'dead-1',
+        status: CharacterStatus.DEAD
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[deadChar.id, deadChar]])
+      }));
+
+      component.handleAddCharacter(deadChar.id);
+
+      expect(component.errorMessage()).toContain('not available');
+      const party = gameState.party();
+      expect(party.members).not.toContain(deadChar.id);
+    });
+
+    it('returns to main view after successful add', () => {
+      const character = createTestCharacter({
+        id: 'char-1',
+        status: CharacterStatus.OK
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]])
+      }));
+      component.currentView.set('add');
+
+      component.handleAddCharacter(character.id);
+
+      expect(component.currentView()).toBe('main');
     });
   });
 

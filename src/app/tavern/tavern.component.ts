@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
+import { PartyService } from '../../services/PartyService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
 import { CharacterListComponent } from '../../components/character-list/character-list.component';
 import { SceneType } from '../../types/SceneType';
@@ -107,15 +108,24 @@ export class TavernComponent implements OnInit {
   }
 
   handleAddCharacter(charId: string): void {
+    const state = this.gameState.state();
     const party = this.currentParty();
+    const character = state.roster.get(charId);
 
-    // Check party size limit
-    if (party.members.length >= MAX_PARTY_SIZE) {
-      this.errorMessage.set(`Party is full (maximum ${MAX_PARTY_SIZE} characters)`);
+    if (!character) {
+      this.errorMessage.set('Character not found');
       return;
     }
 
-    // Add character to party
+    // Validate using PartyService
+    const validation = PartyService.canAddCharacterToParty(party, character, state.roster);
+
+    if (!validation.allowed) {
+      this.errorMessage.set(validation.reason || 'Cannot add character');
+      return;
+    }
+
+    // Add character to party (immutable update)
     this.gameState.updateState(state => ({
       ...state,
       party: {
