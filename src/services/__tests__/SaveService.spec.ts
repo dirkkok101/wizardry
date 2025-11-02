@@ -108,4 +108,68 @@ describe('SaveService', () => {
       expect(await service.hasSaveData(2)).toBe(false);
     });
   })
+
+  describe('deleteSave', () => {
+    it('should delete save from localStorage', async () => {
+      const gameState = GameInitializationService.createNewGame()
+      await service.saveGame(gameState, 1)
+
+      expect(await service.hasSaveData(1)).toBe(true)
+
+      await service.deleteSave(1)
+
+      expect(await service.hasSaveData(1)).toBe(false)
+    })
+  })
+
+  describe('getSlotMetadata', () => {
+    it('should return null when slot is empty', async () => {
+      const metadata = await service.getSlotMetadata(1)
+      expect(metadata).toBeNull()
+    })
+
+    it('should return null when save data is corrupted (invalid JSON)', async () => {
+      localStorage.setItem('wizardry_save_1', 'invalid json')
+      const metadata = await service.getSlotMetadata(1)
+      expect(metadata).toBeNull()
+    })
+
+    it('should return null when save data missing required fields', async () => {
+      localStorage.setItem('wizardry_save_1', JSON.stringify({ incomplete: true }))
+      const metadata = await service.getSlotMetadata(1)
+      expect(metadata).toBeNull()
+    })
+
+    it('should return metadata for valid save', async () => {
+      const gameState = GameInitializationService.createNewGame()
+      await service.saveGame(gameState, 1)
+
+      const metadata = await service.getSlotMetadata(1)
+
+      expect(metadata).toBeDefined()
+      expect(metadata?.slotId).toBe(1)
+      expect(metadata?.partySize).toBe(0)
+      expect(metadata?.partyGold).toBe(100) // Initial game state has 100 gold
+      expect(metadata?.currentScene).toBeDefined()
+    })
+  })
+
+  describe('loadGame - error handling', () => {
+    it('should throw error for save with missing state field', async () => {
+      localStorage.setItem('wizardry_save_1', JSON.stringify({ version: '1.0.0', timestamp: Date.now() }))
+
+      await expect(
+        service.loadGame()
+      ).rejects.toThrow('corrupted')
+    })
+
+    it('should re-throw non-SyntaxError errors', async () => {
+      // Save valid JSON but with a structure that triggers a different error
+      localStorage.setItem('wizardry_save_1', JSON.stringify({ state: null, version: '1.0.0' }))
+
+      await expect(
+        service.loadGame()
+      ).rejects.toThrow('corrupted')
+    })
+  })
 })

@@ -103,6 +103,19 @@ describe('LevelUpService', () => {
 
       expect(hpIncrease).toBeGreaterThanOrEqual(1)
     })
+
+    it('applies maximum vitality bonus for VIT 18', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        vitality: 18 // +4 bonus
+      })
+
+      const hpIncrease = LevelUpService.rollHPIncrease(character)
+
+      // d10 + 4 VIT bonus = 5-14
+      expect(hpIncrease).toBeGreaterThanOrEqual(5)
+      expect(hpIncrease).toBeLessThanOrEqual(14)
+    })
   })
 
   describe('rollStatIncreases', () => {
