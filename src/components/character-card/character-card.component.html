@@ -1,0 +1,20 @@
+<div class="character-card">
+  <div class="card-header">
+    <h3 class="character-name">{{ character.name }}</h3>
+    <span class="status-badge" [class]="'status-' + status">
+      {{ status }}
+    </span>
+  </div>
+
+  <div class="card-body">
+    <div class="char-info">
+      <span class="race-class">{{ character.race }} {{ character.class }}</span>
+      <span class="level">Level {{ character.level }}</span>
+    </div>
+  </div>
+
+  <div class="card-actions">
+    <button class="inspect-btn" (click)="onInspect()">Inspect</button>
+    <button class="delete-btn" (click)="onDelete()">Delete</button>
+  </div>
+</div>
