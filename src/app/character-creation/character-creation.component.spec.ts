@@ -28,9 +28,9 @@ describe('CharacterCreationComponent', () => {
   })
 
   describe('initialization', () => {
-    it('updates scene to TRAINING_GROUNDS on init', () => {
+    it('updates scene to CHARACTER_CREATION on init', () => {
       component.ngOnInit()
-      expect(gameState.currentScene()).toBe(SceneType.TRAINING_GROUNDS)
+      expect(gameState.currentScene()).toBe(SceneType.CHARACTER_CREATION)
     })
 
     it('starts wizard at RACE step', () => {

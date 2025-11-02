@@ -84,7 +84,7 @@ export class CharacterCreationComponent implements OnInit {
   ngOnInit(): void {
     this.gameState.updateState(state => ({
       ...state,
-      currentScene: SceneType.TRAINING_GROUNDS
+      currentScene: SceneType.CHARACTER_CREATION
     }))
   }
 

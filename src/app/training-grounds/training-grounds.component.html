@@ -23,6 +23,13 @@
     }
   </main>
 
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="error-message">
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
+
   <!-- Navigation Footer -->
   <footer class="scene-footer">
     <button class="nav-button" (click)="handleCreateCharacter()">

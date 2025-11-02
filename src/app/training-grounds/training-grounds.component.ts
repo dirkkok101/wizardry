@@ -38,6 +38,9 @@ export class TrainingGroundsComponent implements OnInit {
   readonly deleteConfirmationMessage = signal('');
   private pendingDeleteId: string | null = null;
 
+  // Error message state
+  readonly errorMessage = signal<string | null>(null);
+
   // Computed available characters
   readonly availableCharacters = computed<CharacterWithStatus[]>(() => {
     const state = this.gameState.state();
@@ -124,9 +127,10 @@ export class TrainingGroundsComponent implements OnInit {
       this.gameState.updateState(state =>
         CharacterService.deleteCharacter(state, characterId)
       );
+      this.errorMessage.set(null); // Clear any previous errors
     } catch (error) {
       console.error('Failed to delete character:', error);
-      // TODO: Show error toast/message to user
+      this.errorMessage.set((error as Error).message);
     }
 
     this.closeDeleteDialog();
