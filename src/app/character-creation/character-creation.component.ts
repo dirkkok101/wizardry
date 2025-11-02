@@ -15,6 +15,14 @@ import { CharacterClass, parseClass } from '../../types/CharacterClass';
 import { Alignment } from '../../types/Alignment';
 import { MenuItem } from '../../components/menu/menu.component';
 
+enum CreationStep {
+  SELECT_RACE = 'SELECT_RACE',
+  SELECT_ALIGNMENT = 'SELECT_ALIGNMENT',
+  ROLL_STATS = 'ROLL_STATS',
+  SELECT_CLASS = 'SELECT_CLASS',
+  NAME_CHARACTER = 'NAME_CHARACTER'
+}
+
 interface FinalStats {
   strength: number;
   intelligence: number;
@@ -51,6 +59,31 @@ export class CharacterCreationComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly isLocked = signal<boolean>(false);
   readonly showNameModal = signal<boolean>(false);
+
+  // Wizard state machine
+  currentStep = signal<CreationStep>(CreationStep.SELECT_RACE);
+
+  // Step metadata
+  stepTitle = computed(() => {
+    switch(this.currentStep()) {
+      case CreationStep.SELECT_RACE: return 'Choose Your Race';
+      case CreationStep.SELECT_ALIGNMENT: return 'Choose Your Alignment';
+      case CreationStep.ROLL_STATS: return 'Roll Your Attributes';
+      case CreationStep.SELECT_CLASS: return 'Choose Your Class';
+      case CreationStep.NAME_CHARACTER: return 'Name Your Character';
+    }
+  });
+
+  stepNumber = computed(() => {
+    const steps = [
+      CreationStep.SELECT_RACE,
+      CreationStep.SELECT_ALIGNMENT,
+      CreationStep.ROLL_STATS,
+      CreationStep.SELECT_CLASS,
+      CreationStep.NAME_CHARACTER
+    ];
+    return steps.indexOf(this.currentStep()) + 1;
+  });
 
   // Data arrays for template
   readonly allRaces = computed(() => RaceService.getAllRaces());
