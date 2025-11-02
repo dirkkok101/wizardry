@@ -315,17 +315,12 @@ describe('CharacterCreationComponent', () => {
       expect(component.selectedRace()).toBe(Race.HUMAN);
     });
 
-    it('should reset downstream selections (stats, class)', fakeAsync(() => {
+    it('should reset downstream selections (stats, class) when not locked', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
+      // Don't roll stats - stay unlocked
 
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-      }
-
-      // Change race should reset stats and class
+      // Change race should reset alignment
       component.selectRace(Race.ELF);
 
       expect(component.selectedRace()).toBe(Race.ELF);
@@ -349,17 +344,12 @@ describe('CharacterCreationComponent', () => {
       expect(component.selectedAlignment()).toBe(Alignment.GOOD);
     });
 
-    it('should reset downstream selections (stats, class)', fakeAsync(() => {
+    it('should reset downstream selections (stats, class) when not locked', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
+      // Don't roll stats - stay unlocked
 
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-      }
-
-      // Change alignment should reset stats and class
+      // Change alignment should reset (no stats rolled yet)
       component.selectAlignment(Alignment.EVIL);
 
       expect(component.selectedAlignment()).toBe(Alignment.EVIL);
@@ -1163,43 +1153,33 @@ describe('CharacterCreationComponent', () => {
   });
 
   describe('Cascade Reset Logic', () => {
-    it('should cascade reset when changing race', fakeAsync(() => {
-      // Set up complete form
+    it('should cascade reset when changing race (before locking)', fakeAsync(() => {
+      // Set up form but don't roll stats (stay unlocked)
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-      }
-      component.characterName.set('Test');
+      // Don't roll stats - this keeps it unlocked
 
-      // Change race should reset stats and class, but not alignment or name
+      // Change race should reset alignment
       component.selectRace(Race.ELF);
 
-      expect(component.selectedAlignment()).toBe(Alignment.GOOD); // Not reset
-      expect(component.rolledStats()).toBeNull(); // Reset
-      expect(component.selectedClass()).toBeNull(); // Reset
-      // Note: name is also reset in cascade, per component logic
+      expect(component.selectedRace()).toBe(Race.ELF);
+      expect(component.rolledStats()).toBeNull(); // Still null
+      expect(component.selectedClass()).toBeNull(); // Still null
     }));
 
-    it('should cascade reset when changing alignment', fakeAsync(() => {
-      // Set up complete form
+    it('should cascade reset when changing alignment (before locking)', fakeAsync(() => {
+      // Set up form but don't roll stats (stay unlocked)
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-      }
-      component.characterName.set('Test');
+      // Don't roll stats - this keeps it unlocked
 
-      // Change alignment should reset stats and class
+      // Change alignment should reset stats and class (though they're already null)
       component.selectAlignment(Alignment.EVIL);
 
       expect(component.selectedRace()).toBe(Race.HUMAN); // Not reset
-      expect(component.rolledStats()).toBeNull(); // Reset
-      expect(component.selectedClass()).toBeNull(); // Reset
+      expect(component.selectedAlignment()).toBe(Alignment.EVIL);
+      expect(component.rolledStats()).toBeNull(); // Still null
+      expect(component.selectedClass()).toBeNull(); // Still null
     }));
 
     it('should cascade reset when rerolling stats', fakeAsync(() => {
@@ -1221,5 +1201,84 @@ describe('CharacterCreationComponent', () => {
       expect(component.rolledStats()).toBeTruthy(); // New stats
       expect(component.selectedClass()).toBeNull(); // Reset
     }));
+  });
+
+  describe('state locking', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should not be locked initially', () => {
+      expect(component.isLocked()).toBe(false);
+    });
+
+    it('should lock race and alignment after first stats roll', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+
+      expect(component.isLocked()).toBe(false);
+
+      component.rollStats();
+
+      // Wait for animation
+      jest.advanceTimersByTime(300);
+
+      expect(component.isLocked()).toBe(true);
+    });
+
+    it('should remain locked after rerolling stats', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      expect(component.isLocked()).toBe(true);
+    });
+
+    it('should unlock when form is reset', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      expect(component.isLocked()).toBe(true);
+
+      component.resetForm();
+
+      expect(component.isLocked()).toBe(false);
+    });
+
+    it('should prevent race selection when locked', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      // Try to select different race
+      component.selectRace(Race.ELF);
+
+      // Should still be HUMAN
+      expect(component.selectedRace()).toBe(Race.HUMAN);
+    });
+
+    it('should prevent alignment selection when locked', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+
+      // Try to select different alignment
+      component.selectAlignment(Alignment.EVIL);
+
+      // Should still be GOOD
+      expect(component.selectedAlignment()).toBe(Alignment.GOOD);
+    });
   });
 });

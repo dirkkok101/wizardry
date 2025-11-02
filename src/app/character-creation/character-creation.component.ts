@@ -51,6 +51,7 @@ export class CharacterCreationComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly showCancelConfirmation = signal<boolean>(false);
+  readonly isLocked = signal<boolean>(false);
 
   // Data arrays for template
   readonly allRaces = computed(() => RaceService.getAllRaces());
@@ -118,6 +119,9 @@ export class CharacterCreationComponent implements OnInit {
 
   // Race selection
   selectRace(race: Race) {
+    // Prevent selection if locked
+    if (this.isLocked()) return;
+
     this.selectedRace.set(race);
     // Reset downstream selections
     this.rolledStats.set(null);
@@ -126,6 +130,9 @@ export class CharacterCreationComponent implements OnInit {
 
   // Alignment selection
   selectAlignment(alignment: Alignment) {
+    // Prevent selection if locked
+    if (this.isLocked()) return;
+
     this.selectedAlignment.set(alignment);
     // Reset downstream selections
     this.rolledStats.set(null);
@@ -142,6 +149,11 @@ export class CharacterCreationComponent implements OnInit {
       this.rolledStats.set(rolled);
       this.selectedClass.set(null); // Reset class when rerolling
       this.isRolling.set(false);
+
+      // Lock race and alignment after first roll
+      if (!this.isLocked()) {
+        this.isLocked.set(true);
+      }
     }, 300);
   }
 
@@ -202,6 +214,7 @@ export class CharacterCreationComponent implements OnInit {
     this.characterName.set('');
     this.errorMessage.set(null);
     this.showCancelConfirmation.set(false);
+    this.isLocked.set(false);
   }
 
   // Cancel with confirmation
