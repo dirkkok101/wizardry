@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { GameStateService } from '../services/GameStateService';
+import { LoggerService } from '../services/LoggerService';
 
 /**
  * Route guard that prevents access to town services while party is in maze.
@@ -17,11 +18,12 @@ import { GameStateService } from '../services/GameStateService';
 export const partyNotInMazeGuard: CanActivateFn = () => {
   const gameState = inject(GameStateService);
   const router = inject(Router);
+  const logger = inject(LoggerService);
 
   const isInMaze = gameState.isInMaze();
 
   if (isInMaze) {
-    console.warn('[Guard] Cannot access town services while in maze. Redirecting to Camp.');
+    logger.warn('[Guard] Cannot access town services while in maze. Redirecting to Camp.');
     router.navigate(['/camp']);
     return false;
   }
