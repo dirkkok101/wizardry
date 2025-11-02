@@ -2,52 +2,57 @@ import { Race } from './Race'
 import { CharacterClass } from './CharacterClass'
 import { Alignment } from './Alignment'
 import { CharacterStatus } from './CharacterStatus'
-import { Item } from './Item'
+import { MaxCurrent } from './MaxCurrent'
+import { CharacterSpellPoints } from './SpellPoints'
 
 /**
- * Character - Core character data structure
+ * Complete character data structure matching original Wizardry 1
  */
 export interface Character {
+  // Identity
   id: string
   name: string
+
+  // Core Classification
   race: Race
   class: CharacterClass
   alignment: Alignment
-  status: CharacterStatus
 
-  // Core stats (3-18 base range)
-  strength: number
+  // Attributes (final values after racial base stats + rolls applied)
+  strength: number      // 3-18+ range
   intelligence: number
   piety: number
   vitality: number
   agility: number
   luck: number
 
-  // Derived stats
-  level: number
-  experience: number
-  hp: number
-  maxHp: number
-  ac: number // Armor Class (lower is better)
+  // Progression
+  level: number         // 1-13+
+  experience: number    // XP total
+  age: number           // Starting 14-16, increases with inn rests
 
-  // Inventory (8 items max)
-  // Can contain either item IDs (string) or Item objects (for unidentified items)
-  inventory: (string | Item)[] // Item IDs or Item objects for unidentified items
-  equippedWeapon?: string // Item ID
-  equippedArmor?: string // Item ID
+  // Combat Stats
+  hp: number            // Current hit points
+  maxHp: number         // Maximum hit points
+  ac: number            // Armor class (lower is better, D&D style)
 
-  // Gold
-  gold?: number // Character's individual gold (separate from party gold pool)
+  // Status & Vitality
+  status: CharacterStatus  // OK, DEAD, ASHES, etc. (single status at a time)
+  vim: MaxCurrent          // Vitality for resurrection (degrades with rests/deaths)
 
-  // Spells (for caster classes: Mage, Priest, Bishop)
-  knownSpells?: string[] // Spell IDs that character has learned
+  // Spell System (for caster classes only)
+  spellPoints?: CharacterSpellPoints  // Optional: 7 levels per spell type
+  knownSpells: string[]                // Spell IDs learned by this character
 
-  // Password protection
-  password: string
+  // Equipment (5 slots total)
+  equippedWeapon?: string      // Weapon slot (item ID)
+  equippedArmor?: string       // Armor slot (item ID)
+  equippedShield?: string      // Shield slot (item ID)
+  equippedHelmet?: string      // Helmet slot (item ID)
+  equippedGauntlets?: string   // Gauntlet slot (item ID)
 
-  // Metadata
-  createdAt: number // Unix timestamp
-  lastModified: number
+  // Inventory
+  inventory: string[]  // Item IDs (max 8 items)
 }
 
 /**
