@@ -93,6 +93,9 @@ export class CharacterCreationComponent implements OnInit {
   // Expose Alignment enum to template
   readonly Alignment = Alignment;
 
+  // Expose CreationStep enum to template
+  readonly CreationStep = CreationStep;
+
   // Computed signals (derived state)
   readonly raceData = computed(() => {
     const race = this.selectedRace();
@@ -188,6 +191,11 @@ export class CharacterCreationComponent implements OnInit {
     this.rolledStats.set(rolled);
     this.isRolling.set(false);
 
+    // Lock race and alignment after first roll
+    if (!this.isLocked()) {
+      this.isLocked.set(true);
+    }
+
     // Auto-advance to class selection
     this.advanceToSelectClass();
   }
@@ -219,8 +227,8 @@ export class CharacterCreationComponent implements OnInit {
     this.showNameModal.set(true);
   }
 
-  // Handle name modal save
-  handleNameSave(name: string) {
+  // Submit character (formerly handleNameSave)
+  async submitCharacter(name: string) {
     try {
       const stats = this.finalStats()!;
       // Create character
@@ -260,6 +268,11 @@ export class CharacterCreationComponent implements OnInit {
     }
   }
 
+  // Handle name modal save (wrapper for backward compatibility)
+  handleNameSave(name: string) {
+    this.submitCharacter(name);
+  }
+
   // Handle name modal cancel
   handleNameCancel() {
     this.showNameModal.set(false);
@@ -274,6 +287,7 @@ export class CharacterCreationComponent implements OnInit {
     this.selectedClass.set(null);
     this.successMessage.set(null);
     this.errorMessage.set(null);
+    this.isLocked.set(false);
   }
 
   // Navigation: Advance to next step
@@ -353,72 +367,91 @@ export class CharacterCreationComponent implements OnInit {
   @HostListener('window:keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
+    let handled = false;
 
     // Route by current step
     switch(this.currentStep()) {
       case CreationStep.SELECT_RACE:
-        this.handleRaceStepKeys(key);
+        handled = this.handleRaceStepKeys(key);
         break;
 
       case CreationStep.SELECT_ALIGNMENT:
-        this.handleAlignmentStepKeys(key);
+        handled = this.handleAlignmentStepKeys(key);
         break;
 
       case CreationStep.ROLL_STATS:
-        this.handleRollStatsStepKeys(key);
+        handled = this.handleRollStatsStepKeys(key);
         break;
 
       case CreationStep.SELECT_CLASS:
-        this.handleSelectClassStepKeys(key);
+        handled = this.handleSelectClassStepKeys(key);
         break;
 
       case CreationStep.NAME_CHARACTER:
-        this.handleNameCharacterStepKeys(key);
+        handled = this.handleNameCharacterStepKeys(key);
         break;
     }
 
     // Global shortcuts (work on any step)
     if (key === 'q') {
+      event.preventDefault();
       this.quitToTrainingGrounds();
+      return;
+    }
+
+    if (handled) {
       event.preventDefault();
     }
   }
 
-  private handleRaceStepKeys(key: string) {
+  private handleRaceStepKeys(key: string): boolean {
     if (['1','2','3','4','5'].includes(key)) {
       const races: Race[] = [Race.HUMAN, Race.ELF, Race.DWARF, Race.GNOME, Race.HOBBIT];
       const index = parseInt(key) - 1;
       this.selectedRace.set(races[index]);
+      return true;
     } else if (key === 'enter' && this.selectedRace()) {
       this.advanceToAlignment();
+      return true;
     } else if (key === 'escape') {
       this.cancelToTrainingGrounds();
+      return true;
     }
+    return false;
   }
 
-  private handleAlignmentStepKeys(key: string) {
+  private handleAlignmentStepKeys(key: string): boolean {
     if (key === 'g') {
       this.selectedAlignment.set(Alignment.GOOD);
+      return true;
     } else if (key === 'n') {
       this.selectedAlignment.set(Alignment.NEUTRAL);
+      return true;
     } else if (key === 'e') {
       this.selectedAlignment.set(Alignment.EVIL);
+      return true;
     } else if (key === 'enter' && this.selectedAlignment()) {
       this.advanceToRollStats();
+      return true;
     } else if (key === 'escape') {
       this.goBackFromAlignment();
+      return true;
     }
+    return false;
   }
 
-  private handleRollStatsStepKeys(key: string) {
+  private handleRollStatsStepKeys(key: string): boolean {
     if (key === 'r' && !this.isRolling()) {
       this.rollStats();
+      return true;
     } else if (key === 'escape') {
       this.goBackFromRollStats();
+      return true;
     }
+    return false;
   }
 
-  private handleSelectClassStepKeys(key: string) {
+  private handleSelectClassStepKeys(key: string): boolean {
     const classMap: Record<string, CharacterClass> = {
       'f': CharacterClass.FIGHTER,
       'm': CharacterClass.MAGE,
@@ -432,6 +465,7 @@ export class CharacterCreationComponent implements OnInit {
 
     if (key === 'r') {
       this.rerollStats();
+      return true;
     } else if (key in classMap) {
       const selectedClass = classMap[key];
       // Only allow selecting eligible classes
@@ -439,19 +473,25 @@ export class CharacterCreationComponent implements OnInit {
       if (eligible.includes(selectedClass)) {
         this.selectedClass.set(selectedClass);
       }
+      return true;
     } else if (key === 'enter' && this.selectedClass()) {
       this.advanceToNameCharacter();
+      return true;
     } else if (key === 'escape') {
       this.goBackFromSelectClass();
+      return true;
     }
+    return false;
   }
 
-  private handleNameCharacterStepKeys(key: string) {
+  private handleNameCharacterStepKeys(key: string): boolean {
     // Let the input field handle typing
     // Only intercept Escape (Enter handled by form submit)
     if (key === 'escape') {
       this.goBackFromNameCharacter();
+      return true;
     }
+    return false;
   }
 
   // Footer menu handler
