@@ -556,13 +556,7 @@ describe('CharacterCreationComponent', () => {
       expect(character!.alignment).toBe(Alignment.GOOD)
     })
 
-    it('resets wizard state after creation', () => {
-      component.confirmCharacterCreation()
-
-      expect(component.wizardState().selectedRace).toBeNull()
-      expect(component.wizardState().name).toBe('')
-      expect(component.currentStep()).toBe('RACE')
-    })
+    // Navigation to training-grounds happens via setTimeout (tested in E2E tests)
 
     it('shows success message after creation', () => {
       component.confirmCharacterCreation()

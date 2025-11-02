@@ -353,7 +353,7 @@ describe('CastleMenuComponent', () => {
       fixture.detectChanges();
 
       const tavernItem = component.menuItems().find(item => item.id === 'tavern');
-      const trainingItem = component.menuItems().find(item => item.id === 'training');
+      const trainingItem = component.menuItems().find(item => item.id === 'training-grounds');
       const innItem = component.menuItems().find(item => item.id === 'inn');
       const shopItem = component.menuItems().find(item => item.id === 'shop');
       const templeItem = component.menuItems().find(item => item.id === 'temple');
