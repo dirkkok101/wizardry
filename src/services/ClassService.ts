@@ -1,49 +1,6 @@
 import { CharacterClass, ClassData, getClassId, getAttacksForLevel, parseAlignmentRestrictions } from '../types/CharacterClass'
 import { Alignment } from '../types/Alignment'
-
-/**
- * Load all JSON data files from a directory
- * @param directory - Directory name under /assets/ (e.g., 'races', 'classes')
- * @returns Map of data objects keyed by their 'id' property
- */
-async function loadDataFiles<T extends { id: string }>(directory: string): Promise<Map<string, T>> {
-  const dataMap = new Map<string, T>()
-
-  // Determine file list based on directory
-  const files = getDataFileList(directory)
-
-  // Load each file
-  for (const filename of files) {
-    const path = `/assets/${directory}/${filename}`
-    try {
-      const response = await fetch(path)
-      if (!response.ok) {
-        throw new Error(`Failed to load ${path}: ${response.statusText}`)
-      }
-      const data: T = await response.json()
-      dataMap.set(data.id, data)
-    } catch (error) {
-      console.error(`Error loading ${path}:`, error)
-      throw error
-    }
-  }
-
-  return dataMap
-}
-
-/**
- * Get list of data files for a directory
- */
-function getDataFileList(directory: string): string[] {
-  switch (directory) {
-    case 'races':
-      return ['human.json', 'elf.json', 'dwarf.json', 'gnome.json', 'hobbit.json']
-    case 'classes':
-      return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
-    default:
-      throw new Error(`Unknown data directory: ${directory}`)
-  }
-}
+import { AssetLoadingService } from './AssetLoadingService'
 
 class ClassServiceClass {
   private classData: Map<string, ClassData> | null = null
@@ -52,7 +9,8 @@ class ClassServiceClass {
    * Initialize the class service by loading all class data
    */
   async initialize(): Promise<void> {
-    this.classData = await loadDataFiles<ClassData>('classes')
+    const service = new AssetLoadingService()
+    this.classData = await service.loadDataFiles<ClassData>('classes')
   }
 
   /**

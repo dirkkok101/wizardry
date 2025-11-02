@@ -1,50 +1,7 @@
 import { Race, RaceData, getRaceId } from '../types/Race'
+import { AssetLoadingService } from './AssetLoadingService'
 
 type SaveType = 'death' | 'wand' | 'breath' | 'petrify' | 'spell'
-
-/**
- * Load all JSON data files from a directory
- * @param directory - Directory name under /assets/ (e.g., 'races', 'classes')
- * @returns Map of data objects keyed by their 'id' property
- */
-async function loadDataFiles<T extends { id: string }>(directory: string): Promise<Map<string, T>> {
-  const dataMap = new Map<string, T>()
-
-  // Determine file list based on directory
-  const files = getDataFileList(directory)
-
-  // Load each file
-  for (const filename of files) {
-    const path = `/assets/${directory}/${filename}`
-    try {
-      const response = await fetch(path)
-      if (!response.ok) {
-        throw new Error(`Failed to load ${path}: ${response.statusText}`)
-      }
-      const data: T = await response.json()
-      dataMap.set(data.id, data)
-    } catch (error) {
-      console.error(`Error loading ${path}:`, error)
-      throw error
-    }
-  }
-
-  return dataMap
-}
-
-/**
- * Get list of data files for a directory
- */
-function getDataFileList(directory: string): string[] {
-  switch (directory) {
-    case 'races':
-      return ['human.json', 'elf.json', 'dwarf.json', 'gnome.json', 'hobbit.json']
-    case 'classes':
-      return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
-    default:
-      throw new Error(`Unknown data directory: ${directory}`)
-  }
-}
 
 class RaceServiceClass {
   private raceData: Map<string, RaceData> | null = null
@@ -53,7 +10,8 @@ class RaceServiceClass {
    * Initialize the race service by loading all race data
    */
   async initialize(): Promise<void> {
-    this.raceData = await loadDataFiles<RaceData>('races')
+    const service = new AssetLoadingService()
+    this.raceData = await service.loadDataFiles<RaceData>('races')
   }
 
   /**
