@@ -1,0 +1,127 @@
+.utilities-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+
+  h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .success-message,
+  .error-message {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .success-message {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .error-message {
+    background-color: #f44336;
+    color: white;
+  }
+
+  .save-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .save-slot {
+      border: 2px solid #666;
+      padding: 1rem;
+      border-radius: 4px;
+      background-color: #222;
+
+      .slot-number {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+      }
+
+      .slot-data {
+        margin: 1rem 0;
+
+        div {
+          margin: 0.25rem 0;
+        }
+
+        .timestamp {
+          font-size: 0.9rem;
+          color: #aaa;
+        }
+      }
+
+      .empty {
+        font-style: italic;
+        color: #666;
+        margin: 1rem 0;
+      }
+
+      .slot-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+
+      button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #666;
+        background-color: #333;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+
+        &:hover {
+          background-color: #444;
+        }
+
+        &.btn-load {
+          border-color: #4caf50;
+
+          &:hover {
+            background-color: #4caf50;
+          }
+        }
+
+        &.btn-delete {
+          border-color: #f44336;
+
+          &:hover {
+            background-color: #f44336;
+          }
+        }
+
+        &.btn-save {
+          border-color: #2196f3;
+
+          &:hover {
+            background-color: #2196f3;
+          }
+        }
+      }
+    }
+  }
+
+  .navigation {
+    text-align: center;
+
+    .btn-back {
+      padding: 1rem 2rem;
+      border: 1px solid #666;
+      background-color: #333;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+
+      &:hover {
+        background-color: #444;
+      }
+    }
+  }
+}
