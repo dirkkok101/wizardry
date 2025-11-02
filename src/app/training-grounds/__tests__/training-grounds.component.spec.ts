@@ -248,4 +248,22 @@ describe('TrainingGroundsComponent', () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
   });
+
+  describe('handleFooterAction', () => {
+    it('calls handleCreateCharacter when create action selected', () => {
+      const spy = jest.spyOn(component, 'handleCreateCharacter');
+
+      component.handleFooterAction('create');
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('calls returnToCastle when return action selected', () => {
+      const spy = jest.spyOn(component, 'returnToCastle');
+
+      component.handleFooterAction('return');
+
+      expect(spy).toHaveBeenCalled();
+    });
+  });
 });

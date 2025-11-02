@@ -1,10 +1,13 @@
-import { Component, OnInit, computed, signal, HostListener } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { CharacterService } from '../../services/CharacterService';
 import { CharacterCardComponent } from '../../components/character-card/character-card.component';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { MenuItem } from '../../components/menu/menu.component';
 import { Character } from '../../types/Character';
 import { CharacterStatus } from '../../types/CharacterStatus';
 import { Party } from '../../types/GameState';
@@ -28,7 +31,13 @@ interface CharacterWithStatus {
 @Component({
   selector: 'app-training-grounds',
   standalone: true,
-  imports: [CommonModule, CharacterCardComponent, ConfirmationDialogComponent],
+  imports: [
+    CommonModule,
+    CharacterCardComponent,
+    ConfirmationDialogComponent,
+    SceneTitleComponent,
+    SceneFooterComponent
+  ],
   templateUrl: './training-grounds.component.html',
   styleUrls: ['./training-grounds.component.scss']
 })
@@ -54,6 +63,12 @@ export class TrainingGroundsComponent implements OnInit {
       }));
   });
 
+  // Footer menu items
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    { id: 'create', label: 'CREATE CHARACTER', shortcut: 'C', enabled: true },
+    { id: 'return', label: 'RETURN TO CASTLE', shortcut: 'L', enabled: true }
+  ]);
+
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -65,22 +80,6 @@ export class TrainingGroundsComponent implements OnInit {
       ...state,
       currentScene: SceneType.TRAINING_GROUNDS
     }));
-  }
-
-  /**
-   * Handle keyboard shortcuts
-   */
-  @HostListener('window:keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    const key = event.key.toLowerCase();
-
-    if (key === 'c') {
-      this.handleCreateCharacter();
-      event.preventDefault();
-    } else if (key === 'l') {
-      this.returnToCastle();
-      event.preventDefault();
-    }
   }
 
   /**
@@ -148,6 +147,20 @@ export class TrainingGroundsComponent implements OnInit {
    */
   returnToCastle(): void {
     this.router.navigate(['/castle-menu']);
+  }
+
+  /**
+   * Handle footer menu actions
+   */
+  handleFooterAction(itemId: string): void {
+    switch(itemId) {
+      case 'create':
+        this.handleCreateCharacter();
+        break;
+      case 'return':
+        this.returnToCastle();
+        break;
+    }
   }
 
   /**
