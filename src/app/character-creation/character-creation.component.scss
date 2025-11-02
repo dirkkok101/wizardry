@@ -12,13 +12,8 @@
     flex: 1;
     overflow-y: auto;
     padding: $spacing-lg;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $spacing-xl;
-
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-    }
+    max-width: 900px;
+    margin: 0 auto;
   }
 
   .form-section {

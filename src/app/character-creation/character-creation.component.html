@@ -2,177 +2,173 @@
   <app-scene-title [title]="'CHARACTER CREATION'" />
 
   <main class="creation-form">
-    <div class="form-column-left">
-      <!-- Section 1: Race Selection -->
-      <section class="form-section">
-        <h2>1. CHOOSE RACE</h2>
-        <div class="race-options">
-          @for (race of allRaces(); track race.id) {
-            <button
-              class="race-button"
-              [class.selected]="selectedRace() === parseRaceId(race.id)"
-              (click)="selectRace(parseRaceId(race.id)!)">
-              {{ race.name }}
-            </button>
+    <!-- Section 1: Race Selection -->
+    <section class="form-section">
+      <h2>1. CHOOSE RACE</h2>
+      <div class="race-options">
+        @for (race of allRaces(); track race.id) {
+          <button
+            class="race-button"
+            [class.selected]="selectedRace() === parseRaceId(race.id)"
+            (click)="selectRace(parseRaceId(race.id)!)">
+            {{ race.name }}
+          </button>
+        }
+      </div>
+      @if (raceData(); as data) {
+        <div class="race-details">
+          <p class="description">{{ data.description }}</p>
+          <div class="base-stats">
+            <strong>Base Stats:</strong>
+            STR {{ data.baseStats.str }} |
+            INT {{ data.baseStats.int }} |
+            PIE {{ data.baseStats.pie }} |
+            VIT {{ data.baseStats.vit }} |
+            AGI {{ data.baseStats.agi }} |
+            LUC {{ data.baseStats.luc }}
+          </div>
+          @if (data.strengths.length > 0) {
+            <div class="strengths">
+              <strong>Strengths:</strong> {{ data.strengths.join(', ') }}
+            </div>
+          }
+          @if (data.weaknesses.length > 0) {
+            <div class="weaknesses">
+              <strong>Weaknesses:</strong> {{ data.weaknesses.join(', ') }}
+            </div>
           }
         </div>
-        @if (raceData(); as data) {
-          <div class="race-details">
-            <p class="description">{{ data.description }}</p>
-            <div class="base-stats">
-              <strong>Base Stats:</strong>
-              STR {{ data.baseStats.str }} |
-              INT {{ data.baseStats.int }} |
-              PIE {{ data.baseStats.pie }} |
-              VIT {{ data.baseStats.vit }} |
-              AGI {{ data.baseStats.agi }} |
-              LUC {{ data.baseStats.luc }}
-            </div>
-            @if (data.strengths.length > 0) {
-              <div class="strengths">
-                <strong>Strengths:</strong> {{ data.strengths.join(', ') }}
-              </div>
+      }
+    </section>
+
+    <!-- Section 2: Alignment Selection -->
+    <section class="form-section" [class.disabled]="!selectedRace()">
+      <h2>2. CHOOSE ALIGNMENT</h2>
+      <div class="alignment-options">
+        @for (alignment of allAlignments; track alignment) {
+          <button
+            class="alignment-button"
+            [class.selected]="selectedAlignment() === alignment"
+            [disabled]="!selectedRace()"
+            (click)="selectAlignment(alignment)">
+            {{ alignment }}
+          </button>
+        }
+      </div>
+    </section>
+
+    <!-- Section 3: Roll Stats -->
+    <section class="form-section" [class.disabled]="!selectedAlignment()">
+      <h2>3. ROLL STATS</h2>
+      <button
+        class="roll-button"
+        [disabled]="!selectedAlignment()"
+        (click)="rollStats()">
+        {{ rolledStats() ? 'REROLL STATS (R)' : 'ROLL DICE (R)' }}
+      </button>
+
+      @if (finalStats(); as stats) {
+        <div class="stats-display">
+          <div class="stat-row">
+            <span class="stat-label">STR:</span>
+            <span class="stat-base">{{ raceData()!.baseStats.str }}</span>
+            <span class="stat-plus">+</span>
+            <span class="stat-rolled">{{ rolledStats()!.strength }}</span>
+            <span class="stat-equals">=</span>
+            <span class="stat-final">{{ stats.strength }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">INT:</span>
+            <span class="stat-base">{{ raceData()!.baseStats.int }}</span>
+            <span class="stat-plus">+</span>
+            <span class="stat-rolled">{{ rolledStats()!.intelligence }}</span>
+            <span class="stat-equals">=</span>
+            <span class="stat-final">{{ stats.intelligence }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">PIE:</span>
+            <span class="stat-base">{{ raceData()!.baseStats.pie }}</span>
+            <span class="stat-plus">+</span>
+            <span class="stat-rolled">{{ rolledStats()!.piety }}</span>
+            <span class="stat-equals">=</span>
+            <span class="stat-final">{{ stats.piety }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">VIT:</span>
+            <span class="stat-base">{{ raceData()!.baseStats.vit }}</span>
+            <span class="stat-plus">+</span>
+            <span class="stat-rolled">{{ rolledStats()!.vitality }}</span>
+            <span class="stat-equals">=</span>
+            <span class="stat-final">{{ stats.vitality }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">AGI:</span>
+            <span class="stat-base">{{ raceData()!.baseStats.agi }}</span>
+            <span class="stat-plus">+</span>
+            <span class="stat-rolled">{{ rolledStats()!.agility }}</span>
+            <span class="stat-equals">=</span>
+            <span class="stat-final">{{ stats.agility }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">LUC:</span>
+            <span class="stat-base">{{ raceData()!.baseStats.luc }}</span>
+            <span class="stat-plus">+</span>
+            <span class="stat-rolled">{{ rolledStats()!.luck }}</span>
+            <span class="stat-equals">=</span>
+            <span class="stat-final">{{ stats.luck }}</span>
+          </div>
+          <div class="bonus-points">
+            <strong>Bonus Points:</strong> {{ stats.bonusPoints }}
+          </div>
+        </div>
+      }
+    </section>
+
+    <!-- Section 4: Class Selection -->
+    <section class="form-section" [class.disabled]="!rolledStats()">
+      <h2>4. CHOOSE CLASS</h2>
+      <div class="class-grid">
+        @for (classData of allClasses(); track classData.id) {
+          <button
+            class="class-button"
+            [class.selected]="selectedClass() === parseClassId(classData.id)"
+            [class.ineligible]="!isClassEligible(parseClassId(classData.id)!)"
+            [disabled]="!rolledStats() || !isClassEligible(parseClassId(classData.id)!)"
+            (click)="selectClass(parseClassId(classData.id)!)">
+            <div class="class-name">{{ classData.name }}</div>
+            @if (!isClassEligible(parseClassId(classData.id)!)) {
+              <div class="ineligible-indicator">✗</div>
             }
-            @if (data.weaknesses.length > 0) {
-              <div class="weaknesses">
-                <strong>Weaknesses:</strong> {{ data.weaknesses.join(', ') }}
-              </div>
-            }
-          </div>
+          </button>
         }
-      </section>
-
-      <!-- Section 2: Alignment Selection -->
-      <section class="form-section" [class.disabled]="!selectedRace()">
-        <h2>2. CHOOSE ALIGNMENT</h2>
-        <div class="alignment-options">
-          @for (alignment of allAlignments; track alignment) {
-            <button
-              class="alignment-button"
-              [class.selected]="selectedAlignment() === alignment"
-              [disabled]="!selectedRace()"
-              (click)="selectAlignment(alignment)">
-              {{ alignment }}
-            </button>
-          }
-        </div>
-      </section>
-
-      <!-- Section 3: Roll Stats -->
-      <section class="form-section" [class.disabled]="!selectedAlignment()">
-        <h2>3. ROLL STATS</h2>
-        <button
-          class="roll-button"
-          [disabled]="!selectedAlignment()"
-          (click)="rollStats()">
-          {{ rolledStats() ? 'REROLL STATS (R)' : 'ROLL DICE (R)' }}
-        </button>
-
-        @if (finalStats(); as stats) {
-          <div class="stats-display">
-            <div class="stat-row">
-              <span class="stat-label">STR:</span>
-              <span class="stat-base">{{ raceData()!.baseStats.str }}</span>
-              <span class="stat-plus">+</span>
-              <span class="stat-rolled">{{ rolledStats()!.strength }}</span>
-              <span class="stat-equals">=</span>
-              <span class="stat-final">{{ stats.strength }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">INT:</span>
-              <span class="stat-base">{{ raceData()!.baseStats.int }}</span>
-              <span class="stat-plus">+</span>
-              <span class="stat-rolled">{{ rolledStats()!.intelligence }}</span>
-              <span class="stat-equals">=</span>
-              <span class="stat-final">{{ stats.intelligence }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">PIE:</span>
-              <span class="stat-base">{{ raceData()!.baseStats.pie }}</span>
-              <span class="stat-plus">+</span>
-              <span class="stat-rolled">{{ rolledStats()!.piety }}</span>
-              <span class="stat-equals">=</span>
-              <span class="stat-final">{{ stats.piety }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">VIT:</span>
-              <span class="stat-base">{{ raceData()!.baseStats.vit }}</span>
-              <span class="stat-plus">+</span>
-              <span class="stat-rolled">{{ rolledStats()!.vitality }}</span>
-              <span class="stat-equals">=</span>
-              <span class="stat-final">{{ stats.vitality }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">AGI:</span>
-              <span class="stat-base">{{ raceData()!.baseStats.agi }}</span>
-              <span class="stat-plus">+</span>
-              <span class="stat-rolled">{{ rolledStats()!.agility }}</span>
-              <span class="stat-equals">=</span>
-              <span class="stat-final">{{ stats.agility }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">LUC:</span>
-              <span class="stat-base">{{ raceData()!.baseStats.luc }}</span>
-              <span class="stat-plus">+</span>
-              <span class="stat-rolled">{{ rolledStats()!.luck }}</span>
-              <span class="stat-equals">=</span>
-              <span class="stat-final">{{ stats.luck }}</span>
-            </div>
-            <div class="bonus-points">
-              <strong>Bonus Points:</strong> {{ stats.bonusPoints }}
-            </div>
-          </div>
-        }
-      </section>
-    </div>
-
-    <div class="form-column-right">
-      <!-- Section 4: Class Selection -->
-      <section class="form-section" [class.disabled]="!rolledStats()">
-        <h2>4. CHOOSE CLASS</h2>
-        <div class="class-grid">
-          @for (classData of allClasses(); track classData.id) {
-            <button
-              class="class-button"
-              [class.selected]="selectedClass() === parseClassId(classData.id)"
-              [class.ineligible]="!isClassEligible(parseClassId(classData.id)!)"
-              [disabled]="!rolledStats() || !isClassEligible(parseClassId(classData.id)!)"
-              (click)="selectClass(parseClassId(classData.id)!)">
-              <div class="class-name">{{ classData.name }}</div>
-              @if (!isClassEligible(parseClassId(classData.id)!)) {
-                <div class="ineligible-indicator">✗</div>
-              }
-            </button>
-          }
-        </div>
-        @if (selectedClass(); as charClass) {
-          <div class="class-details">
-            <p class="description">{{ getClassData(charClass).description }}</p>
-            <div class="hit-dice">
-              <strong>Hit Dice:</strong> {{ getClassData(charClass).hitDice }}
-            </div>
-          </div>
-        }
-      </section>
-
-      <!-- Section 5: Name Character -->
-      <section class="form-section" [class.disabled]="!selectedClass()">
-        <h2>5. NAME CHARACTER</h2>
-        <div class="form-inputs">
-          <div class="input-group">
-            <label for="char-name">Name:</label>
-            <input
-              id="char-name"
-              type="text"
-              [disabled]="!selectedClass()"
-              [(ngModel)]="characterName"
-              maxlength="15"
-              placeholder="Enter name"
-            />
+      </div>
+      @if (selectedClass(); as charClass) {
+        <div class="class-details">
+          <p class="description">{{ getClassData(charClass).description }}</p>
+          <div class="hit-dice">
+            <strong>Hit Dice:</strong> {{ getClassData(charClass).hitDice }}
           </div>
         </div>
-      </section>
-    </div>
+      }
+    </section>
+
+    <!-- Section 5: Name Character -->
+    <section class="form-section" [class.disabled]="!selectedClass()">
+      <h2>5. NAME CHARACTER</h2>
+      <div class="form-inputs">
+        <div class="input-group">
+          <label for="char-name">Name:</label>
+          <input
+            id="char-name"
+            type="text"
+            [disabled]="!selectedClass()"
+            [(ngModel)]="characterName"
+            maxlength="15"
+            placeholder="Enter name"
+          />
+        </div>
+      </div>
+    </section>
   </main>
 
   @if (successMessage(); as message) {
