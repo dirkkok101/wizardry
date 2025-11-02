@@ -1,8 +1,7 @@
 {
   "id": "lord",
   "name": "Lord",
-  "type": "elite",
-  "description": "Fighter with priest spells. Excellent combat with healing and protection.",
+  "description": "Noble paladin with priest magic. Excellent combat with healing and protection.",
   "requirements": {
     "str": 15,
     "int": 12,
@@ -13,25 +12,25 @@
   },
   "alignmentRestrictions": ["good"],
   "equipmentRestrictions": {
-    "weapons": [],
-    "armor": [],
-    "shields": [],
-    "helmets": []
+    "weapons": ["all"],
+    "armor": ["cloth", "leather", "chain", "plate"],
+    "shields": ["small", "large"],
+    "helmets": ["leather", "iron", "steel"]
   },
+  "hitDice": "1d10",
   "spellAccess": {
     "priest": {
-      "minLevel": 1,
+      "minLevel": 4,
       "maxLevel": 6
     }
   },
-  "specialAbilities": ["spellcasting_priest", "dispel_undead", "critical_hit"],
-  "hitDice": "1d10",
   "attacksPerLevel": {
     "1-4": 1,
     "5-9": 2,
-    "10-12": 3,
-    "13+": 4
+    "10+": 3
   },
+  "xpTable": [3750, 7500, 15000, 30000, 60000, 120000, 240000, 480000, 960000, 1440000, 1920000],
+  "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (max level 6)", "Can dispel undead"],
   "canIdentifyItems": false,
   "canDispelUndead": true,
   "canCriticalHit": true

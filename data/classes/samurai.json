@@ -1,8 +1,7 @@
 {
   "id": "samurai",
   "name": "Samurai",
-  "type": "elite",
-  "description": "Fighter with mage spells. Excellent combat with magical support.",
+  "description": "Noble warrior with mage magic. Excellent combat with magical support.",
   "requirements": {
     "str": 15,
     "int": 11,
@@ -12,25 +11,25 @@
   },
   "alignmentRestrictions": ["good", "neutral"],
   "equipmentRestrictions": {
-    "weapons": [],
-    "armor": [],
-    "shields": [],
-    "helmets": []
+    "weapons": ["all"],
+    "armor": ["cloth", "leather", "chain", "plate"],
+    "shields": ["small", "large"],
+    "helmets": ["leather", "iron", "steel"]
   },
+  "hitDice": "1d10",
   "spellAccess": {
     "mage": {
-      "minLevel": 1,
+      "minLevel": 4,
       "maxLevel": 6
     }
   },
-  "specialAbilities": ["spellcasting_mage", "critical_hit"],
-  "hitDice": "1d10",
   "attacksPerLevel": {
     "1-4": 1,
     "5-9": 2,
-    "10-12": 3,
-    "13+": 4
+    "10+": 3
   },
+  "xpTable": [3500, 7000, 14000, 28000, 56000, 112000, 224000, 450000, 900000, 1350000, 1800000],
+  "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (max level 6)"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
   "canCriticalHit": true

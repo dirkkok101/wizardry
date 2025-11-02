@@ -1,24 +1,26 @@
 {
   "id": "thief",
   "name": "Thief",
-  "type": "basic",
-  "description": "Expert at disarming traps and backstabbing enemies. Poor combat otherwise.",
+  "description": "Skilled at disarming traps and opening chests. Can backstab for critical hits.",
   "requirements": {
     "agi": 11
   },
   "alignmentRestrictions": ["neutral", "evil"],
   "equipmentRestrictions": {
-    "weapons": ["dagger", "short_sword", "club"],
-    "armor": ["leather", "none"],
-    "shields": ["small"],
+    "weapons": ["dagger", "short_sword"],
+    "armor": ["leather"],
+    "shields": [],
     "helmets": ["leather"]
   },
-  "spellAccess": null,
-  "specialAbilities": ["disarm_traps", "backstab"],
   "hitDice": "1d8",
+  "spellAccess": null,
   "attacksPerLevel": {
-    "1+": 1
+    "1-4": 1,
+    "5-9": 2,
+    "10+": 3
   },
+  "xpTable": [1250, 2500, 5000, 10000, 20000, 40000, 75000, 150000, 300000, 600000, 900000],
+  "specialAbilities": ["Disarm traps", "Open locked chests", "Critical hit backstab"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
   "canCriticalHit": true
