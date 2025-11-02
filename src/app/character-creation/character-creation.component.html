@@ -47,23 +47,23 @@
       <div class="alignment-options">
         <button
           class="alignment-button"
-          [class.selected]="selectedAlignment() === 'GOOD'"
+          [class.selected]="selectedAlignment() === Alignment.GOOD"
           [disabled]="!selectedRace()"
-          (click)="selectAlignment('GOOD')">
+          (click)="selectAlignment(Alignment.GOOD)">
           [G] GOOD
         </button>
         <button
           class="alignment-button"
-          [class.selected]="selectedAlignment() === 'NEUTRAL'"
+          [class.selected]="selectedAlignment() === Alignment.NEUTRAL"
           [disabled]="!selectedRace()"
-          (click)="selectAlignment('NEUTRAL')">
+          (click)="selectAlignment(Alignment.NEUTRAL)">
           [N] NEUTRAL
         </button>
         <button
           class="alignment-button"
-          [class.selected]="selectedAlignment() === 'EVIL'"
+          [class.selected]="selectedAlignment() === Alignment.EVIL"
           [disabled]="!selectedRace()"
-          (click)="selectAlignment('EVIL')">
+          (click)="selectAlignment(Alignment.EVIL)">
           [E] EVIL
         </button>
       </div>

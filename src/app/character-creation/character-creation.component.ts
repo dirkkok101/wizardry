@@ -57,6 +57,9 @@ export class CharacterCreationComponent implements OnInit {
   readonly allClasses = computed(() => ClassService.getAllClasses());
   readonly allAlignments = [Alignment.GOOD, Alignment.NEUTRAL, Alignment.EVIL];
 
+  // Expose Alignment enum to template
+  readonly Alignment = Alignment;
+
   // Computed signals (derived state)
   readonly raceData = computed(() => {
     const race = this.selectedRace();
