@@ -405,15 +405,12 @@ describe('Character Creation Integration Tests', () => {
 
         expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
 
-        // Step 5: Enter name
-        component.characterName.set('IntegrationTest');
-        fixture.detectChanges();
+        // Step 5: Accept character (will show modal in real usage)
+        expect(component.canAccept()).toBe(true);
 
-        expect(component.canSave()).toBe(true);
-
-        // Step 6: Save character
+        // Step 6: Simulate modal save flow
         const initialRosterSize = gameStateService.state().roster.size;
-        component.saveCharacter();
+        component.handleNameSave('IntegrationTest');
         fixture.detectChanges();
 
         // Step 7: Verify character in roster
@@ -446,7 +443,6 @@ describe('Character Creation Integration Tests', () => {
         expect(component.selectedAlignment()).toBeNull();
         expect(component.rolledStats()).toBeNull();
         expect(component.selectedClass()).toBeNull();
-        expect(component.characterName()).toBe('');
         expect(component.successMessage()).toBeNull();
       } else {
         // If Fighter not eligible (unlikely), just verify we can check eligibility
@@ -464,10 +460,9 @@ describe('Character Creation Integration Tests', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('FirstHero');
 
         const initialSize = gameStateService.state().roster.size;
-        component.saveCharacter();
+        component.handleNameSave('FirstHero');
         fixture.detectChanges();
 
         expect(gameStateService.state().roster.size).toBe(initialSize + 1);
@@ -490,9 +485,8 @@ describe('Character Creation Integration Tests', () => {
         const eligibleClasses = component.eligibleClasses();
         if (eligibleClasses.length > 0) {
           component.selectClass(eligibleClasses[0]);
-          component.characterName.set('SecondHero');
 
-          component.saveCharacter();
+          component.handleNameSave('SecondHero');
           fixture.detectChanges();
 
           expect(gameStateService.state().roster.size).toBe(initialSize + 2);
@@ -514,82 +508,62 @@ describe('Character Creation Integration Tests', () => {
 
   describe('Progressive Enabling Logic', () => {
     it('should enforce progressive enabling through the workflow', fakeAsync(() => {
-      // Initially, can't save
-      expect(component.canSave()).toBe(false);
+      // Initially, can't accept
+      expect(component.canAccept()).toBe(false);
 
-      // Select race - still can't save
+      // Select race - still can't accept
       component.selectRace(Race.HUMAN);
       fixture.detectChanges();
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
-      // Select alignment - still can't save
+      // Select alignment - still can't accept
       component.selectAlignment(Alignment.GOOD);
       fixture.detectChanges();
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
-      // Roll stats - still can't save
+      // Roll stats - still can't accept
       component.rollStats();
       tick(300);
       fixture.detectChanges();
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
-      // Select class - still can't save
+      // Select class - now can accept (will show name modal)
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
         fixture.detectChanges();
-        expect(component.canSave()).toBe(false);
-
-        // Enter name - now can save
-        component.characterName.set('TestChar');
-        fixture.detectChanges();
-        expect(component.canSave()).toBe(true);
+        expect(component.canAccept()).toBe(true);
       }
     }));
 
-    it('should reset downstream selections when race changes', fakeAsync(() => {
-      // Setup complete form
+    it('should reset downstream selections when race changes (before locking)', fakeAsync(() => {
+      // Setup partial form (before stats rolled = before locked)
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(300);
       fixture.detectChanges();
 
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-        fixture.detectChanges();
+      // Change race before rolling stats - should reset alignment
+      component.selectRace(Race.ELF);
+      fixture.detectChanges();
 
-        expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
-        expect(component.rolledStats()).toBeDefined();
-
-        // Change race - should reset stats and class
-        component.selectRace(Race.ELF);
-        fixture.detectChanges();
-
-        expect(component.rolledStats()).toBeNull();
-        expect(component.selectedClass()).toBeNull();
-      }
+      expect(component.selectedRace()).toBe(Race.ELF);
+      // Stats not yet rolled, so nothing to reset
+      expect(component.rolledStats()).toBeNull();
+      expect(component.selectedClass()).toBeNull();
     }));
 
-    it('should reset downstream selections when alignment changes', fakeAsync(() => {
+    it('should reset downstream selections when alignment changes (before locking)', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(300);
       fixture.detectChanges();
 
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-        fixture.detectChanges();
+      // Change alignment before rolling stats - allowed
+      component.selectAlignment(Alignment.NEUTRAL);
+      fixture.detectChanges();
 
-        expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
-
-        // Change alignment - should reset stats and class
-        component.selectAlignment(Alignment.NEUTRAL);
-        fixture.detectChanges();
-
-        expect(component.rolledStats()).toBeNull();
-        expect(component.selectedClass()).toBeNull();
-      }
+      expect(component.selectedAlignment()).toBe(Alignment.NEUTRAL);
+      // Stats not yet rolled, so nothing to reset
+      expect(component.rolledStats()).toBeNull();
+      expect(component.selectedClass()).toBeNull();
     }));
 
     it('should reset class when rerolling stats', fakeAsync(() => {
@@ -663,25 +637,22 @@ describe('Character Creation Integration Tests', () => {
       expect(component.eligibleClasses().length).toBeGreaterThan(0);
     }));
 
-    it('should disable save button until all fields complete', fakeAsync(() => {
-      expect(component.canSave()).toBe(false);
+    it('should disable accept button until all fields complete', fakeAsync(() => {
+      expect(component.canAccept()).toBe(false);
 
       component.selectRace(Race.HUMAN);
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
       component.selectAlignment(Alignment.GOOD);
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
       component.rollStats();
       tick(300);
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        expect(component.canSave()).toBe(false);
-
-        component.characterName.set('Test');
-        expect(component.canSave()).toBe(true);
+        expect(component.canAccept()).toBe(true);
       }
     }));
   });
@@ -796,9 +767,8 @@ describe('Character Creation Integration Tests', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('SuccessTest');
 
-        component.saveCharacter();
+        component.handleNameSave('SuccessTest');
         fixture.detectChanges();
 
         expect(component.successMessage()).toBe('SuccessTest created successfully!');
@@ -813,9 +783,8 @@ describe('Character Creation Integration Tests', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('TimeoutTest');
 
-        component.saveCharacter();
+        component.handleNameSave('TimeoutTest');
         fixture.detectChanges();
 
         expect(component.successMessage()).toBeTruthy();
@@ -836,9 +805,8 @@ describe('Character Creation Integration Tests', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('ResetTest');
 
-        component.saveCharacter();
+        component.handleNameSave('ResetTest');
         fixture.detectChanges();
 
         // Wait for timeout
@@ -850,7 +818,6 @@ describe('Character Creation Integration Tests', () => {
         expect(component.selectedAlignment()).toBeNull();
         expect(component.rolledStats()).toBeNull();
         expect(component.selectedClass()).toBeNull();
-        expect(component.characterName()).toBe('');
       }
     }));
   });
@@ -861,8 +828,8 @@ describe('Character Creation Integration Tests', () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
     });
 
-    it('should handle footer action for back button', () => {
-      component.handleFooterAction('back');
+    it('should handle footer action for quit button', () => {
+      component.handleFooterAction('quit');
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
     });
   });
