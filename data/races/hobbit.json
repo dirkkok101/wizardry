@@ -10,9 +10,11 @@
     "luc": 15
   },
   "statTotal": 50,
-  "description": "Lucky rogue with extreme LUC advantage. Hardest race to qualify for elite classes but highest stat total.",
-  "strengths": ["Highest LUC by far (15)", "High AGI (10)", "Highest stat total (50)"],
-  "weaknesses": ["Lowest STR (5)", "Low VIT (6)", "Low stats overall"],
-  "bestClasses": ["thief", "ninja"],
-  "savingThrowBonus": {}
+  "savingThrowBonus": {
+    "spell": -3
+  },
+  "description": "Hobbits are incredibly lucky and nimble, making them excellent thieves. They are the weakest physically.",
+  "strengths": ["Exceptional luck", "High agility", "Excellent spell resistance"],
+  "weaknesses": ["Very low strength", "Very fragile"],
+  "bestClasses": ["Thief", "Ninja"]
 }

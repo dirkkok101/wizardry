@@ -1,8 +1,7 @@
 {
   "id": "ninja",
   "name": "Ninja",
-  "type": "elite",
-  "description": "Ultimate assassin. Requires all stats at 17. Can decapitate enemies instantly.",
+  "description": "Master of stealth and martial arts. Requires exceptional stats. Gains AC bonus when unarmored.",
   "requirements": {
     "str": 17,
     "int": 17,
@@ -13,17 +12,21 @@
   },
   "alignmentRestrictions": ["evil"],
   "equipmentRestrictions": {
-    "weapons": ["dagger", "short_sword", "shuriken"],
-    "armor": ["leather", "chain", "none"],
-    "shields": ["small"],
-    "helmets": ["leather"]
+    "weapons": ["dagger", "short_sword", "shuriken", "staff", "nunchaku"],
+    "armor": ["none"],
+    "shields": [],
+    "helmets": []
   },
-  "spellAccess": null,
-  "specialAbilities": ["critical_hit", "decapitate", "disarm_traps"],
   "hitDice": "1d8",
+  "spellAccess": null,
   "attacksPerLevel": {
-    "1+": 2
+    "1-4": 2,
+    "5-9": 3,
+    "10-14": 4,
+    "15+": 5
   },
+  "xpTable": [4000, 8000, 16000, 32000, 64000, 128000, 256000, 500000, 1000000, 1500000, 2000000],
+  "specialAbilities": ["Critical hits", "AC bonus when unarmored", "Fast attacks"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
   "canCriticalHit": true

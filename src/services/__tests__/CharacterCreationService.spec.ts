@@ -1,7 +1,101 @@
 import { CharacterCreationService } from '../CharacterCreationService'
 import { Race } from '../../types/Race'
+import { RaceService } from '../RaceService'
 
 describe('CharacterCreationService', () => {
+  beforeAll(async () => {
+    // Mock fetch for race data files
+    global.fetch = jest.fn((url: string) => {
+      const path = url.toString()
+
+      if (path.includes('/assets/races/human.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 'human',
+            name: 'Human',
+            baseStats: { str: 8, int: 8, pie: 8, vit: 8, agi: 8, luc: 8 },
+            savingThrowBonus: {},
+            statTotal: 48,
+            description: 'Humans are versatile',
+            strengths: ['Balanced'],
+            weaknesses: ['None'],
+            bestClasses: ['Any']
+          })
+        } as Response)
+      }
+      if (path.includes('/assets/races/elf.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 'elf',
+            name: 'Elf',
+            baseStats: { str: 7, int: 9, pie: 9, vit: 6, agi: 9, luc: 8 },
+            savingThrowBonus: {},
+            statTotal: 48,
+            description: 'Elves are magical',
+            strengths: ['High INT, PIE'],
+            weaknesses: ['Low VIT'],
+            bestClasses: ['Mage', 'Priest']
+          })
+        } as Response)
+      }
+      if (path.includes('/assets/races/dwarf.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 'dwarf',
+            name: 'Dwarf',
+            baseStats: { str: 10, int: 7, pie: 8, vit: 10, agi: 7, luc: 8 },
+            savingThrowBonus: {},
+            statTotal: 50,
+            description: 'Dwarves are tough',
+            strengths: ['High STR, VIT'],
+            weaknesses: ['Low AGI'],
+            bestClasses: ['Fighter', 'Priest']
+          })
+        } as Response)
+      }
+      if (path.includes('/assets/races/gnome.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 'gnome',
+            name: 'Gnome',
+            baseStats: { str: 7, int: 7, pie: 10, vit: 8, agi: 10, luc: 7 },
+            savingThrowBonus: {},
+            statTotal: 49,
+            description: 'Gnomes are clever',
+            strengths: ['Balanced'],
+            weaknesses: ['Low STR'],
+            bestClasses: ['Thief', 'Mage']
+          })
+        } as Response)
+      }
+      if (path.includes('/assets/races/hobbit.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 'hobbit',
+            name: 'Hobbit',
+            baseStats: { str: 5, int: 7, pie: 6, vit: 6, agi: 10, luc: 12 },
+            savingThrowBonus: {},
+            statTotal: 46,
+            description: 'Hobbits are lucky',
+            strengths: ['High LUC, AGI'],
+            weaknesses: ['Low STR, VIT'],
+            bestClasses: ['Thief']
+          })
+        } as Response)
+      }
+
+      return Promise.reject(new Error(`Not found: ${path}`))
+    }) as jest.Mock
+
+    // Initialize RaceService for tests
+    await RaceService.initialize()
+  })
+
   describe('rollStats', () => {
     it('rolls 3d6 for each attribute', () => {
       const stats = CharacterCreationService.rollStats()
@@ -30,7 +124,7 @@ describe('CharacterCreationService', () => {
   })
 
   describe('applyRaceModifiers', () => {
-    it('applies human modifiers (no changes)', () => {
+    it('applies human modifiers using RaceService (8 base stats)', () => {
       const baseStats = {
         strength: 10,
         intelligence: 10,
@@ -42,15 +136,16 @@ describe('CharacterCreationService', () => {
 
       const result = CharacterCreationService.applyRaceModifiers(baseStats, Race.HUMAN)
 
-      expect(result.strength).toBe(10)
-      expect(result.intelligence).toBe(10)
-      expect(result.piety).toBe(10)
-      expect(result.vitality).toBe(10)
-      expect(result.agility).toBe(10)
-      expect(result.luck).toBe(10)
+      // Human base stats are 8 across the board, so 8 + 10 = 18
+      expect(result.strength).toBe(18)
+      expect(result.intelligence).toBe(18)
+      expect(result.piety).toBe(18)
+      expect(result.vitality).toBe(18)
+      expect(result.agility).toBe(18)
+      expect(result.luck).toBe(18)
     })
 
-    it('applies elf modifiers (-1 STR, +1 INT, +1 PIE, -2 VIT, +1 AGI)', () => {
+    it('applies elf modifiers using RaceService (7/9/9/6/9/8)', () => {
       const baseStats = {
         strength: 10,
         intelligence: 10,
@@ -62,15 +157,16 @@ describe('CharacterCreationService', () => {
 
       const result = CharacterCreationService.applyRaceModifiers(baseStats, Race.ELF)
 
-      expect(result.strength).toBe(9)
-      expect(result.intelligence).toBe(11)
-      expect(result.piety).toBe(11)
-      expect(result.vitality).toBe(8)
-      expect(result.agility).toBe(11)
-      expect(result.luck).toBe(10)
+      // Elf: STR 7, INT 9, PIE 9, VIT 6, AGI 9, LUCK 8
+      expect(result.strength).toBe(17)   // 7 + 10
+      expect(result.intelligence).toBe(19) // 9 + 10
+      expect(result.piety).toBe(19)       // 9 + 10
+      expect(result.vitality).toBe(16)    // 6 + 10
+      expect(result.agility).toBe(19)     // 9 + 10
+      expect(result.luck).toBe(18)        // 8 + 10
     })
 
-    it('applies dwarf modifiers (+2 STR, +2 VIT, -1 AGI)', () => {
+    it('applies dwarf modifiers using RaceService (10/7/8/10/7/8)', () => {
       const baseStats = {
         strength: 10,
         intelligence: 10,
@@ -82,12 +178,13 @@ describe('CharacterCreationService', () => {
 
       const result = CharacterCreationService.applyRaceModifiers(baseStats, Race.DWARF)
 
-      expect(result.strength).toBe(12)
-      expect(result.intelligence).toBe(10)
-      expect(result.piety).toBe(10)
-      expect(result.vitality).toBe(12)
-      expect(result.agility).toBe(9)
-      expect(result.luck).toBe(10)
+      // Dwarf: STR 10, INT 7, PIE 8, VIT 10, AGI 7, LUCK 8
+      expect(result.strength).toBe(20)    // 10 + 10
+      expect(result.intelligence).toBe(17) // 7 + 10
+      expect(result.piety).toBe(18)       // 8 + 10
+      expect(result.vitality).toBe(20)    // 10 + 10
+      expect(result.agility).toBe(17)     // 7 + 10
+      expect(result.luck).toBe(18)        // 8 + 10
     })
   })
 

@@ -1,27 +1,27 @@
 {
   "id": "fighter",
   "name": "Fighter",
-  "type": "basic",
-  "description": "Master of weapons and armor. Can use any weapon and armor in the game.",
+  "description": "Master of weapons and combat. Can use all weapons and armor.",
   "requirements": {
     "str": 11
   },
   "alignmentRestrictions": [],
   "equipmentRestrictions": {
-    "weapons": [],
-    "armor": [],
-    "shields": [],
-    "helmets": []
+    "weapons": ["all"],
+    "armor": ["cloth", "leather", "chain", "plate"],
+    "shields": ["small", "large"],
+    "helmets": ["leather", "iron", "steel"]
   },
-  "spellAccess": null,
-  "specialAbilities": [],
   "hitDice": "1d10",
+  "spellAccess": null,
   "attacksPerLevel": {
     "1-4": 1,
     "5-9": 2,
-    "10-12": 3,
-    "13+": 4
+    "10-14": 3,
+    "15+": 4
   },
+  "xpTable": [2000, 4000, 8000, 16000, 32000, 64000, 128000, 250000, 500000, 1000000, 1500000],
+  "specialAbilities": ["Can use all weapons and armor"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
   "canCriticalHit": false

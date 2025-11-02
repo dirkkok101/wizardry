@@ -1,4 +1,5 @@
-import { Race, RACE_MODIFIERS } from '../types/Race'
+import { Race } from '../types/Race'
+import { RaceService } from './RaceService'
 
 export interface BaseStats {
   strength: number
@@ -18,7 +19,7 @@ export interface RolledStats extends BaseStats {
  *
  * Features:
  * - Roll random stats (3d6 per attribute)
- * - Apply race modifiers
+ * - Apply race base stats (data-driven via RaceService)
  * - Allocate bonus points
  * - Calculate eligible classes
  */
@@ -71,18 +72,22 @@ export class CharacterCreationService {
   }
 
   /**
-   * Apply race modifiers to base stats.
+   * Apply race base stats to rolled stats.
+   *
+   * NEW FORMULA: finalStat = RaceService.getRaceData(race).baseStats[stat] + rolled_amount
+   * Example: Human STR 8 + roll 7 = 15 final STR
    */
   static applyRaceModifiers(stats: BaseStats, race: Race): BaseStats {
-    const modifiers = RACE_MODIFIERS[race]
+    const raceData = RaceService.getRaceData(race)
+    const baseStats = raceData.baseStats
 
     return {
-      strength: stats.strength + modifiers.strength,
-      intelligence: stats.intelligence + modifiers.intelligence,
-      piety: stats.piety + modifiers.piety,
-      vitality: stats.vitality + modifiers.vitality,
-      agility: stats.agility + modifiers.agility,
-      luck: stats.luck + modifiers.luck
+      strength: baseStats.str + stats.strength,
+      intelligence: baseStats.int + stats.intelligence,
+      piety: baseStats.pie + stats.piety,
+      vitality: baseStats.vit + stats.vitality,
+      agility: baseStats.agi + stats.agility,
+      luck: baseStats.luc + stats.luck
     }
   }
 

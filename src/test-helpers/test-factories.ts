@@ -12,7 +12,7 @@ import { CharacterStatus } from '../types/CharacterStatus'
  */
 export function createTestCharacter(overrides: Partial<Character> = {}): Character {
   const id = overrides.id || `char-${Math.random().toString(36).substr(2, 9)}`
-  const timestamp = Date.now()
+  const vitality = overrides.vitality !== undefined ? overrides.vitality : 10
 
   return {
     id,
@@ -24,18 +24,21 @@ export function createTestCharacter(overrides: Partial<Character> = {}): Charact
     strength: 10,
     intelligence: 10,
     piety: 10,
-    vitality: 10,
+    vitality,
     agility: 10,
     luck: 10,
     level: 1,
     experience: 0,
+    age: 15,
     hp: 10,
     maxHp: 10,
     ac: 10,
+    vim: {
+      max: vitality,
+      current: vitality
+    },
+    knownSpells: [],
     inventory: [],
-    password: 'test',
-    createdAt: timestamp,
-    lastModified: timestamp,
     ...overrides
   }
 }

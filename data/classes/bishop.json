@@ -1,20 +1,19 @@
 {
   "id": "bishop",
   "name": "Bishop",
-  "type": "elite",
   "description": "Master of both divine and arcane magic. Can identify cursed items. Slower spell progression.",
   "requirements": {
-    "str": 12,
     "int": 12,
     "pie": 12
   },
-  "alignmentRestrictions": [],
+  "alignmentRestrictions": ["good", "evil"],
   "equipmentRestrictions": {
     "weapons": ["mace", "flail", "staff"],
-    "armor": [],
-    "shields": [],
-    "helmets": ["none"]
+    "armor": ["cloth", "leather", "chain", "plate"],
+    "shields": ["small", "large"],
+    "helmets": []
   },
+  "hitDice": "1d6",
   "spellAccess": {
     "mage": {
       "minLevel": 1,
@@ -25,12 +24,12 @@
       "maxLevel": 7
     }
   },
-  "specialAbilities": ["spellcasting_mage", "spellcasting_priest", "identify_items", "dispel_undead"],
-  "hitDice": "1d6",
   "attacksPerLevel": {
     "1+": 1
   },
+  "xpTable": [3000, 6000, 12000, 24000, 48000, 96000, 190000, 380000, 760000, 1140000, 1520000],
+  "specialAbilities": ["Can cast both mage and priest spells", "Can identify cursed items"],
   "canIdentifyItems": true,
-  "canDispelUndead": true,
+  "canDispelUndead": false,
   "canCriticalHit": false
 }

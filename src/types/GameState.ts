@@ -49,6 +49,7 @@ export interface GameState {
 
 export interface SaveData {
   version: string
+  schemaVersion: number
   timestamp: number
   state: GameState
 }
