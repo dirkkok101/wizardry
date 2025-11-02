@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { CharacterCreationComponent, WizardStep } from './training-grounds.component'
+import { CharacterCreationComponent, WizardStep } from './character-creation.component'
 import { GameStateService } from '../../services/GameStateService'
 import { CharacterCreationService, BaseStats } from '../../services/CharacterCreationService'
 import { SceneType } from '../../types/SceneType'

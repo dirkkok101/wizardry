@@ -1,7 +1,7 @@
 // src/app/__tests__/integration/character-creation.integration.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { TrainingGroundsComponent } from '../../training-grounds/training-grounds.component'
+import { CharacterCreationComponent } from '../../training-grounds/training-grounds.component'
 import { GameStateService } from '../../../services/GameStateService'
 import { Race } from '../../../types/Race'
 import { Alignment } from '../../../types/Alignment'
@@ -9,13 +9,13 @@ import { CharacterClass } from '../../../types/CharacterClass'
 import { CharacterStatus } from '../../../types/CharacterStatus'
 
 describe('Integration: Character Creation Flow', () => {
-  let component: TrainingGroundsComponent
-  let fixture: ComponentFixture<TrainingGroundsComponent>
+  let component: CharacterCreationComponent
+  let fixture: ComponentFixture<CharacterCreationComponent>
   let gameState: GameStateService
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [TrainingGroundsComponent],
+      imports: [CharacterCreationComponent],
       providers: [
         {
           provide: Router,
@@ -26,7 +26,7 @@ describe('Integration: Character Creation Flow', () => {
       ]
     })
 
-    fixture = TestBed.createComponent(TrainingGroundsComponent)
+    fixture = TestBed.createComponent(CharacterCreationComponent)
     component = fixture.componentInstance
     gameState = TestBed.inject(GameStateService)
 
