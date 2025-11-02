@@ -145,8 +145,37 @@ export class CharacterCreationComponent implements OnInit {
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = [];
 
-    items.push({ id: 'reset', label: 'RESET', shortcut: 'ESC', enabled: true });
-    items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+    switch(this.currentStep()) {
+      case CreationStep.SELECT_RACE:
+        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedRace() !== null });
+        items.push({ id: 'cancel', label: 'CANCEL', shortcut: 'ESC', enabled: true });
+        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+        break;
+
+      case CreationStep.SELECT_ALIGNMENT:
+        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedAlignment() !== null });
+        items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
+        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+        break;
+
+      case CreationStep.ROLL_STATS:
+        items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
+        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+        break;
+
+      case CreationStep.SELECT_CLASS:
+        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedClass() !== null });
+        items.push({ id: 'reroll', label: 'REROLL STATS', shortcut: 'R', enabled: true });
+        items.push({ id: 'reset', label: 'START OVER', shortcut: 'ESC', enabled: true });
+        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+        break;
+
+      case CreationStep.NAME_CHARACTER:
+        items.push({ id: 'create', label: 'CREATE CHARACTER', shortcut: 'ENTER', enabled: this.characterName().trim().length > 0 });
+        items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
+        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+        break;
+    }
 
     return items;
   });
