@@ -19,7 +19,7 @@
                 @for (race of races; track race) {
                   <button
                     [class.selected]="selectedRace() === race.id"
-                    (click)="selectedRace.set(race.id)"
+                    (click)="selectRace(race.id)"
                   >
                     <span class="shortcut">{{ race.shortcut }}</span>: {{ race.name }}
                   </button>
@@ -50,19 +50,19 @@
               <div class="button-grid alignments">
                 <button
                   [class.selected]="selectedAlignment() === 'GOOD'"
-                  (click)="selectedAlignment.set('GOOD')"
+                  (click)="selectAlignment('GOOD')"
                 >
                   <span class="shortcut">G</span>: Good
                 </button>
                 <button
                   [class.selected]="selectedAlignment() === 'NEUTRAL'"
-                  (click)="selectedAlignment.set('NEUTRAL')"
+                  (click)="selectAlignment('NEUTRAL')"
                 >
                   <span class="shortcut">N</span>: Neutral
                 </button>
                 <button
                   [class.selected]="selectedAlignment() === 'EVIL'"
-                  (click)="selectedAlignment.set('EVIL')"
+                  (click)="selectAlignment('EVIL')"
                 >
                   <span class="shortcut">E</span>: Evil
                 </button>
