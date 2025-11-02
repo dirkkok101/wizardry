@@ -1417,4 +1417,74 @@ describe('CharacterCreationComponent', () => {
       expect(component.showNameModal()).toBe(false);
     });
   });
+
+  describe('Complete character creation flow', () => {
+    it('should complete full workflow with keyboard only', () => {
+      jest.useFakeTimers();
+
+      // Step 1: Select race with keyboard
+      const event1 = new KeyboardEvent('keydown', { key: '1' });
+      component.handleKeyPress(event1);
+      expect(component.selectedRace()).toBe(Race.HUMAN);
+      expect(component.isLocked()).toBe(false);
+
+      // Step 2: Select alignment with keyboard
+      const event2 = new KeyboardEvent('keydown', { key: 'g' });
+      component.handleKeyPress(event2);
+      expect(component.selectedAlignment()).toBe(Alignment.GOOD);
+      expect(component.isLocked()).toBe(false);
+
+      // Step 3: Roll stats (locks race/alignment)
+      const event3 = new KeyboardEvent('keydown', { key: 'r' });
+      component.handleKeyPress(event3);
+      jest.advanceTimersByTime(300);
+      expect(component.rolledStats()).toBeTruthy();
+      expect(component.isLocked()).toBe(true);
+
+      // Step 4: Try to change race (should fail - locked)
+      const event4 = new KeyboardEvent('keydown', { key: '2' });
+      component.handleKeyPress(event4);
+      expect(component.selectedRace()).toBe(Race.HUMAN); // Still HUMAN
+
+      // Step 5: Select class with keyboard
+      const event5 = new KeyboardEvent('keydown', { key: 'f' });
+      component.handleKeyPress(event5);
+      expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+
+      // Step 6: Accept character (open name modal)
+      const event6 = new KeyboardEvent('keydown', { key: 'Enter' });
+      component.handleKeyPress(event6);
+      expect(component.showNameModal()).toBe(true);
+
+      // Step 7: Try to reroll while modal open (should be blocked)
+      const statsBeforeBlock = component.rolledStats();
+      const event7 = new KeyboardEvent('keydown', { key: 'r' });
+      component.handleKeyPress(event7);
+      jest.advanceTimersByTime(300);
+      expect(component.rolledStats()).toBe(statsBeforeBlock); // No change
+
+      // Step 8: Save character with name
+      component.handleNameSave('TestHero');
+      expect(component.showNameModal()).toBe(false);
+      expect(component.successMessage()).toContain('TestHero');
+
+      // Step 9: Wait for reset
+      jest.advanceTimersByTime(2000);
+      expect(component.selectedRace()).toBeNull();
+      expect(component.isLocked()).toBe(false);
+      expect(component.successMessage()).toBeNull();
+
+      // Verify character in roster
+      const state = gameStateService.state();
+      const characters = Array.from(state.roster.values());
+      expect(characters.length).toBeGreaterThan(0);
+      const testHero = characters.find(c => c.name === 'TestHero');
+      expect(testHero).toBeDefined();
+      expect(testHero!.race).toBe(Race.HUMAN);
+      expect(testHero!.alignment).toBe(Alignment.GOOD);
+      expect(testHero!.class).toBe(CharacterClass.FIGHTER);
+
+      jest.useRealTimers();
+    });
+  });
 });
