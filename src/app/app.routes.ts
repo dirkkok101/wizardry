@@ -8,6 +8,7 @@ import { TempleComponent } from './temple/temple.component';
 import { ShopComponent } from './shop/shop.component';
 import { TrainingGroundsComponent } from './training-grounds/training-grounds.component';
 import { CharacterInspectionComponent } from './character-inspection/character-inspection.component';
+import { UtilitiesComponent } from '../components/utilities/utilities.component';
 
 export const routes: Routes = [
   {
@@ -45,6 +46,10 @@ export const routes: Routes = [
   {
     path: 'character-inspection',
     component: CharacterInspectionComponent
+  },
+  {
+    path: 'utilities',
+    component: UtilitiesComponent
   },
   {
     path: '**',
