@@ -7,7 +7,8 @@
     <div
       class="menu__item"
       [class.menu__item--selected]="i === selectedIndex"
-      [class.menu__item--disabled]="!item.enabled">
+      [class.menu__item--disabled]="!item.enabled"
+      (click)="selectItemByIndex(i)">
 
       @if (item.shortcut) {
         <span class="menu__shortcut">[{{ item.shortcut }}]</span>

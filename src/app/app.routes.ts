@@ -7,6 +7,7 @@ import { InnComponent } from './inn/inn.component';
 import { TempleComponent } from './temple/temple.component';
 import { ShopComponent } from './shop/shop.component';
 import { TrainingGroundsComponent } from './training-grounds/training-grounds.component';
+import { CharacterCreationComponent } from './character-creation/character-creation.component';
 import { CharacterInspectionComponent } from './character-inspection/character-inspection.component';
 import { UtilitiesComponent } from '../components/utilities/utilities.component';
 
@@ -42,6 +43,10 @@ export const routes: Routes = [
   {
     path: 'training-grounds',
     component: TrainingGroundsComponent
+  },
+  {
+    path: 'character-creation',
+    component: CharacterCreationComponent
   },
   {
     path: 'character-inspection',

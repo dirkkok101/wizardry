@@ -114,7 +114,7 @@ export class MenuComponent implements OnInit {
     }
   }
 
-  private selectItemByIndex(index: number) {
+  selectItemByIndex(index: number) {
     if (index >= 0 && index < this.items.length) {
       const item = this.items[index];
       if (item.enabled) {
