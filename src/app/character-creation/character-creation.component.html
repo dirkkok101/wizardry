@@ -12,7 +12,138 @@
       </div>
 
       <div class="step-content">
-        <!-- Dynamic content based on currentStep (next task) -->
+        @switch (currentStep()) {
+          @case (CreationStep.SELECT_RACE) {
+            <div class="race-selection">
+              <div class="button-grid">
+                @for (race of races; track race) {
+                  <button
+                    [class.selected]="selectedRace() === race.id"
+                    (click)="selectedRace.set(race.id)"
+                  >
+                    <span class="shortcut">{{ race.shortcut }}</span>: {{ race.name }}
+                  </button>
+                }
+              </div>
+
+              @if (raceData()) {
+                <div class="race-description">
+                  <p>{{ raceData()!.description }}</p>
+                  <div class="base-stats">
+                    <strong>Base Stats:</strong>
+                    <div class="stat-grid">
+                      <span>STR: {{ raceData()!.baseStats.str }}</span>
+                      <span>INT: {{ raceData()!.baseStats.int }}</span>
+                      <span>PIE: {{ raceData()!.baseStats.pie }}</span>
+                      <span>VIT: {{ raceData()!.baseStats.vit }}</span>
+                      <span>AGI: {{ raceData()!.baseStats.agi }}</span>
+                      <span>LUC: {{ raceData()!.baseStats.luc }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @case (CreationStep.SELECT_ALIGNMENT) {
+            <div class="alignment-selection">
+              <div class="button-grid alignments">
+                <button
+                  [class.selected]="selectedAlignment() === 'GOOD'"
+                  (click)="selectedAlignment.set('GOOD')"
+                >
+                  <span class="shortcut">G</span>: Good
+                </button>
+                <button
+                  [class.selected]="selectedAlignment() === 'NEUTRAL'"
+                  (click)="selectedAlignment.set('NEUTRAL')"
+                >
+                  <span class="shortcut">N</span>: Neutral
+                </button>
+                <button
+                  [class.selected]="selectedAlignment() === 'EVIL'"
+                  (click)="selectedAlignment.set('EVIL')"
+                >
+                  <span class="shortcut">E</span>: Evil
+                </button>
+              </div>
+
+              @if (selectedAlignment()) {
+                <div class="alignment-description">
+                  <p>{{ getAlignmentDescription(selectedAlignment()!) }}</p>
+                </div>
+              }
+            </div>
+          }
+
+          @case (CreationStep.ROLL_STATS) {
+            <div class="roll-stats">
+              <button
+                class="roll-button"
+                [disabled]="isRolling()"
+                (click)="rollStats()"
+              >
+                {{ isRolling() ? 'Rolling...' : 'ROLL DICE' }} <span class="shortcut">(R)</span>
+              </button>
+
+              <div class="roll-explanation">
+                <p>Roll 3d6 for each attribute. Your race's base stats will be added to the roll.</p>
+              </div>
+            </div>
+          }
+
+          @case (CreationStep.SELECT_CLASS) {
+            <div class="class-selection">
+              <button
+                class="reroll-button"
+                (click)="rerollStats()"
+              >
+                REROLL STATS <span class="shortcut">(R)</span>
+              </button>
+
+              <hr class="section-divider" />
+
+              <div class="button-grid classes">
+                @for (classOption of allClasses; track classOption.id) {
+                  <button
+                    [class.selected]="selectedClass() === classOption.id"
+                    [disabled]="!isClassEligible(classOption.id)"
+                    (click)="selectClass(classOption.id)"
+                  >
+                    <span class="shortcut">{{ classOption.shortcut }}</span>: {{ classOption.name }}
+                    @if (!isClassEligible(classOption.id)) {
+                      <span class="ineligible-marker">✗</span>
+                    }
+                  </button>
+                }
+              </div>
+
+              @if (selectedClass()) {
+                <div class="class-description">
+                  <p>{{ getClassDescription(selectedClass()!) }}</p>
+                </div>
+              }
+            </div>
+          }
+
+          @case (CreationStep.NAME_CHARACTER) {
+            <div class="name-character">
+              <form (submit)="onNameSubmit($event)">
+                <label for="character-name">Character Name</label>
+                <input
+                  id="character-name"
+                  type="text"
+                  [(ngModel)]="characterName"
+                  name="characterName"
+                  maxlength="15"
+                  placeholder="Enter name..."
+                  autofocus
+                />
+                <div class="char-count">{{ characterName().length }} / 15</div>
+              </form>
+            </div>
+          }
+        }
       </div>
 
       <div class="step-hints">

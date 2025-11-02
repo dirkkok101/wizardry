@@ -96,6 +96,27 @@ export class CharacterCreationComponent implements OnInit {
   // Expose CreationStep enum to template
   readonly CreationStep = CreationStep;
 
+  readonly races = [
+    { id: 'HUMAN' as Race, name: 'Human', shortcut: '1' },
+    { id: 'ELF' as Race, name: 'Elf', shortcut: '2' },
+    { id: 'DWARF' as Race, name: 'Dwarf', shortcut: '3' },
+    { id: 'GNOME' as Race, name: 'Gnome', shortcut: '4' },
+    { id: 'HOBBIT' as Race, name: 'Hobbit', shortcut: '5' }
+  ];
+
+  readonly allClasses = [
+    { id: 'FIGHTER' as CharacterClass, name: 'Fighter', shortcut: 'F' },
+    { id: 'MAGE' as CharacterClass, name: 'Mage', shortcut: 'M' },
+    { id: 'PRIEST' as CharacterClass, name: 'Priest', shortcut: 'P' },
+    { id: 'THIEF' as CharacterClass, name: 'Thief', shortcut: 'T' },
+    { id: 'BISHOP' as CharacterClass, name: 'Bishop', shortcut: 'B' },
+    { id: 'SAMURAI' as CharacterClass, name: 'Samurai', shortcut: 'A' },
+    { id: 'LORD' as CharacterClass, name: 'Lord', shortcut: 'L' },
+    { id: 'NINJA' as CharacterClass, name: 'Ninja', shortcut: 'J' }
+  ];
+
+  characterName = signal<string>('');
+
   // Computed signals (derived state)
   readonly raceData = computed(() => {
     const race = this.selectedRace();
@@ -218,6 +239,29 @@ export class CharacterCreationComponent implements OnInit {
   selectClass(charClass: CharacterClass) {
     if (this.isClassEligible(charClass)) {
       this.selectedClass.set(charClass);
+    }
+  }
+
+  getAlignmentDescription(alignment: Alignment): string {
+    const descriptions = {
+      GOOD: 'Good characters are selfless and work for the benefit of others.',
+      NEUTRAL: 'Neutral characters are balanced and pragmatic.',
+      EVIL: 'Evil characters are selfish and pursue their own interests.'
+    };
+    return descriptions[alignment];
+  }
+
+  getClassDescription(classId: CharacterClass): string {
+    // Use ClassService to get description
+    const classData = ClassService.getClassData(classId);
+    return classData.description;
+  }
+
+  onNameSubmit(event: Event) {
+    event.preventDefault();
+    const name = this.characterName().trim();
+    if (name) {
+      this.submitCharacter(name);
     }
   }
 
