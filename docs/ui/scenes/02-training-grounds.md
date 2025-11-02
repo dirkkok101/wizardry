@@ -558,3 +558,58 @@ interface TrainingGroundsState {
 - [Character System](../../systems/character-system.md) - Character mechanics
 - [Character Classes](../../systems/character-classes.md) - Class requirements
 - [Navigation Map](../navigation-map.md) - Complete navigation flow
+
+---
+
+## Current Implementation (Card-Based UI)
+
+### Architecture
+- **Smart Component**: TrainingGrounds orchestrates workflows
+- **Presentational Component**: CharacterCard displays character data
+- **Event-Driven**: Cards emit events, parent handles state updates
+- **Immutable State**: All updates via CharacterService pure functions
+
+### UI Layout
+```
+┌─────────────────────────────────────┐
+│       TRAINING GROUNDS       [TITLE]│
+├─────────────────────────────────────┤
+│  ┌──────────┐  ┌──────────┐        │
+│  │Character │  │Character │  [GRID]│
+│  │  Card 1  │  │  Card 2  │        │
+│  └──────────┘  └──────────┘        │
+├─────────────────────────────────────┤
+│ [Create] [Return to Castle]  [NAV] │
+└─────────────────────────────────────┘
+```
+
+### Character Card
+- **Display**: Name, Race, Class, Level, Status Badge
+- **Actions**: Inspect button, Delete button
+- **Status Colors**:
+  - Green (OK) - Available for recruitment
+  - Yellow (IN_MAZE) - Currently in party
+  - Red (DEAD) - Needs resurrection
+  - Dark Red (ASHES) - Critical state
+
+### Workflows
+1. **Create Character**: Navigate to /character-creation wizard
+2. **Inspect Character**: Navigate to /character-inspection with returnTo param
+3. **Delete Character**: Show confirmation dialog → Call CharacterService → Update state
+4. **Return to Castle**: Navigate to /castle-menu
+
+### Keyboard Shortcuts
+- **C** - Create new character
+- **L** - Leave (return to castle menu)
+
+### Component Responsibilities
+- **TrainingGrounds**: Filter roster, compute status, handle events, coordinate navigation
+- **CharacterCard**: Display data, emit user actions
+- **CharacterService**: Delete character (validation, immutable update)
+- **GameStateService**: State management and persistence
+
+### Reactivity
+- Uses Angular computed signals for `availableCharacters`
+- Automatically updates when GameState changes
+- New characters appear immediately after creation
+- Deleted characters disappear immediately from grid
