@@ -268,6 +268,27 @@ export class CharacterCreationComponent implements OnInit {
     this.showNameModal.set(false);
   }
 
+  // Navigation: Advance to next step
+  advanceToAlignment() {
+    if (!this.selectedRace()) return;
+    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  advanceToRollStats() {
+    if (!this.selectedAlignment()) return;
+    this.currentStep.set(CreationStep.ROLL_STATS);
+  }
+
+  advanceToSelectClass() {
+    // Auto-advance after rolling (no validation needed)
+    this.currentStep.set(CreationStep.SELECT_CLASS);
+  }
+
+  advanceToNameCharacter() {
+    if (!this.selectedClass()) return;
+    this.currentStep.set(CreationStep.NAME_CHARACTER);
+  }
+
   // Navigation: Go back (with clearing logic)
   goBackFromAlignment() {
     this.selectedAlignment.set(null);
