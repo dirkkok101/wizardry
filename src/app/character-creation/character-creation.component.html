@@ -94,15 +94,6 @@
 
           @case (CreationStep.SELECT_CLASS) {
             <div class="class-selection">
-              <button
-                class="reroll-button"
-                (click)="rerollStats()"
-              >
-                REROLL STATS <span class="shortcut">(R)</span>
-              </button>
-
-              <hr class="section-divider" />
-
               <div class="button-grid classes">
                 @for (classOption of allClasses; track classOption.id) {
                   <button
