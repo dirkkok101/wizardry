@@ -595,9 +595,51 @@ export class CharacterCreationComponent implements OnInit {
   // Footer menu handler
   handleFooterAction(itemId: string) {
     switch(itemId) {
-      case 'reset':
-        this.resetWizard();
+      case 'continue':
+        // Context-aware continue based on current step
+        if (this.currentStep() === CreationStep.SELECT_RACE) {
+          this.advanceToAlignment();
+        } else if (this.currentStep() === CreationStep.SELECT_ALIGNMENT) {
+          this.advanceToRollStats();
+        } else if (this.currentStep() === CreationStep.SELECT_CLASS) {
+          this.advanceToNameCharacter();
+        }
         break;
+
+      case 'cancel':
+        // Step 1 only: cancel to training grounds
+        this.cancelToTrainingGrounds();
+        break;
+
+      case 'back':
+        // Context-aware back based on current step
+        if (this.currentStep() === CreationStep.SELECT_ALIGNMENT) {
+          this.goBackFromAlignment();
+        } else if (this.currentStep() === CreationStep.ROLL_STATS) {
+          this.goBackFromRollStats();
+        } else if (this.currentStep() === CreationStep.NAME_CHARACTER) {
+          this.goBackFromNameCharacter();
+        }
+        break;
+
+      case 'reset':
+        // Step 4 only: start over (nuclear reset)
+        this.goBackFromSelectClass();
+        break;
+
+      case 'reroll':
+        // Step 4 only: reroll stats
+        this.rerollStats();
+        break;
+
+      case 'create':
+        // Step 5 only: create character
+        const name = this.characterName().trim();
+        if (name) {
+          this.submitCharacter(name);
+        }
+        break;
+
       case 'quit':
         this.navigateToTrainingGrounds();
         break;
