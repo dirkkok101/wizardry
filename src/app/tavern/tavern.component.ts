@@ -68,11 +68,13 @@ export class TavernComponent implements OnInit {
     return Array.from(state.roster.values());
   });
 
-  // Characters available to add (not in party)
+  // Characters available to add (not in party, status OK only)
   readonly availableCharacters = computed(() => {
     const party = this.currentParty();
     const partyMemberIds = new Set(party.members);
-    return this.allCharacters().filter(char => !partyMemberIds.has(char.id));
+    return this.allCharacters().filter(
+      char => !partyMemberIds.has(char.id) && char.status === 'OK'
+    );
   });
 
   // Characters in party (for removal)
