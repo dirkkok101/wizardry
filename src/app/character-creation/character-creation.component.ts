@@ -221,40 +221,43 @@ export class CharacterCreationComponent implements OnInit {
 
   // Handle name modal save
   handleNameSave(name: string) {
-    if (!this.canAccept()) return;
+    try {
+      const stats = this.finalStats()!;
+      // Create character
+      const character = CharacterService.createCharacterFromStats({
+        name: name.trim(),
+        password: '', // password (deprecated, empty string)
+        race: this.selectedRace()!,
+        alignment: this.selectedAlignment()!,
+        selectedClass: this.selectedClass()!,
+        stats: {
+          strength: stats.strength,
+          intelligence: stats.intelligence,
+          piety: stats.piety,
+          vitality: stats.vitality,
+          agility: stats.agility,
+          luck: stats.luck
+        }
+      });
 
-    const stats = this.finalStats()!;
-    const character = CharacterService.createCharacterFromStats({
-      name: name.trim(),
-      password: '', // Password field removed per plan, but required by interface
-      race: this.selectedRace()!,
-      alignment: this.selectedAlignment()!,
-      selectedClass: this.selectedClass()!,
-      stats: {
-        strength: stats.strength,
-        intelligence: stats.intelligence,
-        piety: stats.piety,
-        vitality: stats.vitality,
-        agility: stats.agility,
-        luck: stats.luck
-      }
-    });
+      // Add to roster
+      this.gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set(character.id, character)
+      }));
 
-    // Add to roster
-    this.gameState.updateState(state => ({
-      ...state,
-      roster: new Map(state.roster).set(character.id, character)
-    }));
+      // Close modal
+      this.showNameModal.set(false);
 
-    // Close modal
-    this.showNameModal.set(false);
+      // Success feedback
+      this.successMessage.set(`${character.name} created successfully!`);
 
-    // Show success and reset
-    this.successMessage.set(`${character.name} created successfully!`);
-    setTimeout(() => {
-      this.resetForm();
-      this.successMessage.set(null);
-    }, 2000);
+      // Immediate reset (no delay)
+      this.resetWizard();
+
+    } catch (error) {
+      this.errorMessage.set(error instanceof Error ? error.message : 'Failed to create character');
+    }
   }
 
   // Handle name modal cancel
@@ -262,15 +265,15 @@ export class CharacterCreationComponent implements OnInit {
     this.showNameModal.set(false);
   }
 
-  // Reset form
-  resetForm() {
+  // Reset wizard
+  resetWizard() {
+    this.currentStep.set(CreationStep.SELECT_RACE);
     this.selectedRace.set(null);
     this.selectedAlignment.set(null);
     this.rolledStats.set(null);
     this.selectedClass.set(null);
+    this.successMessage.set(null);
     this.errorMessage.set(null);
-    this.isLocked.set(false);
-    this.showNameModal.set(false);
   }
 
   // Navigation: Advance to next step
@@ -356,10 +359,10 @@ export class CharacterCreationComponent implements OnInit {
       return;
     }
 
-    // Priority 1: Reset form (ESC)
+    // Priority 1: Reset wizard (ESC)
     if (key === 'escape') {
       event.preventDefault();
-      this.resetForm();
+      this.resetWizard();
       return;
     }
 
@@ -443,7 +446,7 @@ export class CharacterCreationComponent implements OnInit {
         this.acceptCharacter();
         break;
       case 'reset':
-        this.resetForm();
+        this.resetWizard();
         break;
       case 'quit':
         this.navigateToTrainingGrounds();
