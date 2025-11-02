@@ -56,30 +56,31 @@ const loadErrorHandlers: Array<(error: AssetLoadError) => void> = []
 
 /**
  * Load title screen assets (critical path)
+ * NOTE: Images are not used - this returns minimal placeholder data
  */
 async function loadTitleAssets(): Promise<TitleAssets> {
-  // Load title bitmap
-  const titleBitmap = await loadImage('title_bitmap', '/assets/images/scenes/scene-title-screen.png')
-
-  // For now, return minimal assets (fonts can be added later)
+  // Return minimal assets without loading images
+  // Images are not used in this text-based implementation
   return {
-    titleBitmap,
+    titleBitmap: new Image(), // Placeholder - not actually used
     fonts: []
   }
 }
 
 /**
  * Load castle menu background image
+ * NOTE: Images are not used - returns placeholder
  */
 async function loadCastleMenuAssets(): Promise<HTMLImageElement> {
-  return await loadImage('castle_menu_bg', '/assets/images/scenes/scene-castle-menu.png')
+  return new Image() // Placeholder - not actually used
 }
 
 /**
  * Load training grounds background image
+ * NOTE: Images are not used - returns placeholder
  */
 async function loadTrainingGroundsAssets(): Promise<HTMLImageElement> {
-  return await loadImage('training_grounds_bg', '/assets/images/scenes/scene-training-grounds.png')
+  return new Image() // Placeholder - not actually used
 }
 
 /**
@@ -114,31 +115,11 @@ async function loadGameAssets(): Promise<GameAssets> {
 
 /**
  * Load an image asset
+ * NOTE: Deprecated - images are not used in this text-based implementation
  */
 async function loadImage(assetId: string, path: string): Promise<HTMLImageElement> {
-  // Check cache first
-  if (assetCache.has(assetId)) {
-    return assetCache.get(assetId)
-  }
-
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-
-    img.onload = () => {
-      assetCache.set(assetId, img)
-      resolve(img)
-    }
-
-    img.onerror = () => {
-      reject(new AssetLoadError(
-        assetId,
-        'image',
-        `Failed to load image from ${path}`
-      ))
-    }
-
-    img.src = path
-  })
+  console.warn('loadImage is deprecated and should not be used')
+  return new Image()
 }
 
 /**
