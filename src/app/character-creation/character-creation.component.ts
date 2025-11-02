@@ -47,6 +47,8 @@ interface FinalStats {
   styleUrl: './character-creation.component.scss'
 })
 export class CharacterCreationComponent implements OnInit {
+  private readonly ROLL_ANIMATION_DURATION_MS = 300;
+
   // Form state signals
   readonly selectedRace = signal<Race | null>(null);
   readonly selectedAlignment = signal<Alignment | null>(null);
@@ -200,8 +202,8 @@ export class CharacterCreationComponent implements OnInit {
   async rollStats() {
     this.isRolling.set(true);
 
-    // Simulate dice roll animation (300ms)
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Simulate dice roll animation
+    await new Promise(resolve => setTimeout(resolve, this.ROLL_ANIMATION_DURATION_MS));
 
     const rolled = CharacterCreationService.rollStats();
     this.rolledStats.set(rolled);
