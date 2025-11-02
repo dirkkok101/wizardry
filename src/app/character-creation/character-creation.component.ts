@@ -9,7 +9,6 @@ import { CharacterService } from '../../services/CharacterService';
 import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 import { NameModalComponent } from '../components/name-modal/name-modal.component';
 import { Race, parseRace } from '../../types/Race';
 import { CharacterClass, parseClass } from '../../types/CharacterClass';
@@ -34,7 +33,6 @@ interface FinalStats {
     FormsModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    ConfirmationDialogComponent,
     NameModalComponent
   ],
   templateUrl: './character-creation.component.html',
@@ -51,7 +49,6 @@ export class CharacterCreationComponent implements OnInit {
   readonly isRolling = signal<boolean>(false);
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
-  readonly showCancelConfirmation = signal<boolean>(false);
   readonly isLocked = signal<boolean>(false);
   readonly showNameModal = signal<boolean>(false);
 
@@ -234,22 +231,8 @@ export class CharacterCreationComponent implements OnInit {
     this.rolledStats.set(null);
     this.selectedClass.set(null);
     this.errorMessage.set(null);
-    this.showCancelConfirmation.set(false);
     this.isLocked.set(false);
     this.showNameModal.set(false);
-  }
-
-  // Cancel with confirmation
-  confirmCancel() {
-    // Only confirm if form has data
-    const hasData = this.selectedRace() || this.selectedAlignment() ||
-                    this.rolledStats();
-
-    if (hasData) {
-      this.showCancelConfirmation.set(true);
-    } else {
-      this.resetForm();
-    }
   }
 
   // Navigation

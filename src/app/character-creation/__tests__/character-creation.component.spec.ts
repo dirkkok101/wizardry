@@ -125,7 +125,6 @@ describe('CharacterCreationComponent', () => {
       expect(component.isRolling()).toBe(false);
       expect(component.successMessage()).toBeNull();
       expect(component.errorMessage()).toBeNull();
-      expect(component.showCancelConfirmation()).toBe(false);
     });
 
     it('should initialize data arrays', () => {
@@ -550,51 +549,14 @@ describe('CharacterCreationComponent', () => {
 
     it('should reset UI state', () => {
       component.errorMessage.set('Error');
-      component.showCancelConfirmation.set(true);
       component.showNameModal.set(true);
       component.isLocked.set(true);
 
       component.resetForm();
 
       expect(component.errorMessage()).toBeNull();
-      expect(component.showCancelConfirmation()).toBe(false);
       expect(component.showNameModal()).toBe(false);
       expect(component.isLocked()).toBe(false);
-    });
-  });
-
-  describe('confirmCancel()', () => {
-    it('should show confirmation when form has data', () => {
-      component.selectRace(Race.HUMAN);
-
-      component.confirmCancel();
-
-      expect(component.showCancelConfirmation()).toBe(true);
-    });
-
-    it('should show confirmation when alignment selected', () => {
-      component.selectAlignment(Alignment.GOOD);
-
-      component.confirmCancel();
-
-      expect(component.showCancelConfirmation()).toBe(true);
-    });
-
-    it('should show confirmation when stats rolled', fakeAsync(() => {
-      component.selectRace(Race.HUMAN);
-      component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
-
-      component.confirmCancel();
-
-      expect(component.showCancelConfirmation()).toBe(true);
-    }));
-
-    it('should not show confirmation when form is empty', () => {
-      component.confirmCancel();
-
-      expect(component.showCancelConfirmation()).toBe(false);
     });
   });
 

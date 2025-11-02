@@ -200,17 +200,6 @@
     (itemSelected)="handleFooterAction($event)"
   />
 
-  @if (showCancelConfirmation()) {
-    <app-confirmation-dialog
-      [visible]="showCancelConfirmation()"
-      [message]="'Discard current character creation?'"
-      [yesLabel]="'DISCARD'"
-      [noLabel]="'CONTINUE'"
-      (confirmed)="resetForm()"
-      (cancelled)="showCancelConfirmation.set(false)"
-    />
-  }
-
   <app-name-modal
     [visible]="showNameModal()"
     (save)="handleNameSave($event)"
