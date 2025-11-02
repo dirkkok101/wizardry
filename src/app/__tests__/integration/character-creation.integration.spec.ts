@@ -113,7 +113,7 @@ describe('Integration: Character Creation Flow', () => {
     expect(component.successMessage()).toContain('created successfully')
   })
 
-  it('persists characters across wizard resets', () => {
+  it('persists characters across wizard resets', async () => {
     // Create first character
     component.selectRace(Race.ELF)
     component.selectAlignment(Alignment.GOOD)
@@ -129,6 +129,9 @@ describe('Integration: Character Creation Flow', () => {
     component.setPassword('elf123') // Password must be 4-8 characters
     component.finishNamePassword()
     component.confirmCharacterCreation()
+    await fixture.whenStable()
+    fixture.detectChanges()
+    await fixture.whenStable()
 
     // Verify first character created and wizard reset
     const rosterAfterFirst = gameState.state().roster
@@ -153,6 +156,9 @@ describe('Integration: Character Creation Flow', () => {
     component.setPassword('dwarf123') // Password must be 4-8 characters
     component.finishNamePassword()
     component.confirmCharacterCreation()
+    await fixture.whenStable()
+    fixture.detectChanges()
+    await fixture.whenStable()
 
     // Verify both characters in roster
     const finalRoster = gameState.state().roster
