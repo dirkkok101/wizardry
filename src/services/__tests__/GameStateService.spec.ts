@@ -3,6 +3,20 @@ import { GameStateService } from '../GameStateService';
 import { SaveService } from '../SaveService';
 import { SceneType } from '../../types/SceneType';
 
+/**
+ * Wait for a condition to become true with polling
+ * More reliable than arbitrary setTimeout delays
+ */
+async function waitFor(condition: () => boolean, timeout = 1000, interval = 10): Promise<void> {
+  const startTime = Date.now();
+  while (!condition()) {
+    if (Date.now() - startTime > timeout) {
+      throw new Error(`waitFor timeout after ${timeout}ms`);
+    }
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+}
+
 describe('GameStateService', () => {
   let service: GameStateService;
   let saveService: SaveService;
@@ -120,8 +134,8 @@ describe('GameStateService', () => {
       });
       const newService = TestBed.inject(GameStateService);
 
-      // Wait for async initialization
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait for async initialization - poll until state is loaded
+      await waitFor(() => newService.state().party.members.includes('auto-loaded-character'));
 
       // Verify state was auto-loaded
       expect(newService.state().party.members).toContain('auto-loaded-character');
@@ -139,12 +153,78 @@ describe('GameStateService', () => {
       });
       const freshService = TestBed.inject(GameStateService);
 
-      // Wait for async initialization
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Wait for queueMicrotask and any async initialization to complete
+      await waitFor(() => true, 100);
 
       // Verify starts with fresh state when no save
       expect(freshService.state().party.members).toEqual([]);
       expect(freshService.currentScene()).toBe(SceneType.TITLE_SCREEN);
+    });
+  });
+
+  describe('character persistence across reload', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('persists created character after service reload', async () => {
+      // Create a character in the roster
+      const testCharacterId = 'test-character-123';
+      service.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set(testCharacterId, {
+          id: testCharacterId,
+          name: 'Test Hero',
+          race: 'HUMAN' as any,
+          class: 'FIGHTER' as any,
+          alignment: 'GOOD' as any,
+          age: 18,
+          level: 1,
+          experience: 0,
+          maxHp: 10,
+          hp: 10,
+          vim: 5,
+          strength: 15,
+          intelligence: 10,
+          piety: 10,
+          vitality: 14,
+          agility: 12,
+          luck: 8,
+          armorClass: 10,
+          spellPoints: new Map(),
+          knownSpells: new Set(),
+          equipment: {
+            weapon: null,
+            armor: null,
+            shield: null,
+            helmet: null,
+            gauntlet: null,
+            accessory: null
+          },
+          inventory: [],
+          status: 'OK' as any,
+          gold: 100
+        })
+      }));
+
+      // Wait for auto-save to complete (500ms debounce + margin)
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      // Simulate page reload by recreating service
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [GameStateService, SaveService]
+      });
+      const reloadedService = TestBed.inject(GameStateService);
+
+      // Wait for auto-load to complete
+      await waitFor(() => reloadedService.state().roster.has(testCharacterId));
+
+      // Verify character persisted
+      const loadedCharacter = reloadedService.state().roster.get(testCharacterId);
+      expect(loadedCharacter).toBeDefined();
+      expect(loadedCharacter?.name).toBe('Test Hero');
+      expect(loadedCharacter?.gold).toBe(100);
     });
   });
 

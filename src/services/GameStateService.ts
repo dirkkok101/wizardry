@@ -3,6 +3,7 @@ import { GameState } from '../types/GameState';
 import { SceneType } from '../types/SceneType';
 import { GameInitializationService } from './GameInitializationService';
 import { SaveService } from './SaveService';
+import { LoggerService } from './LoggerService';
 
 /**
  * GameStateService manages the global game state using Angular signals.
@@ -40,7 +41,10 @@ export class GameStateService {
   // Debounce timer for auto-save
   private saveDebounceTimer?: ReturnType<typeof setTimeout>;
 
-  constructor(private saveService: SaveService) {
+  constructor(
+    private saveService: SaveService,
+    private logger: LoggerService
+  ) {
     // Auto-load from slot 1 on initialization
     this.initializeFromSave();
 
@@ -63,18 +67,31 @@ export class GameStateService {
 
   /**
    * Initialize state from save slot 1 if it exists.
-   * Called automatically on service construction.
+   *
+   * Called automatically on service construction. Uses queueMicrotask to ensure
+   * the auto-save effect is fully registered before any state updates occur,
+   * preventing race conditions where auto-save might capture and persist the
+   * initial empty state before the saved state loads.
+   *
+   * If no save exists or loading fails, keeps the initial state (new game).
+   * Automatically persists characters across page reloads.
+   *
    * @private
    */
   private initializeFromSave(): void {
-    this.saveService.loadGame(1).then(savedState => {
-      if (savedState) {
-        this._state.set(savedState);
-      }
-      // If no save exists, keep the initial state (new game)
-    }).catch(error => {
-      console.error('Failed to load saved game:', error);
-      // Keep initial state on error
+    // Use queueMicrotask to ensure effect() registration completes first
+    // This prevents race condition where auto-save effect might capture
+    // the initial state before saved state loads
+    queueMicrotask(() => {
+      this.saveService.loadGame(1).then(savedState => {
+        if (savedState) {
+          this._state.set(savedState);
+        }
+        // If no save exists, keep the initial state (new game)
+      }).catch(error => {
+        this.logger.error('Failed to load saved game:', error);
+        // Keep initial state on error
+      });
     });
   }
 
