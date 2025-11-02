@@ -229,7 +229,7 @@ export class CharacterCreationComponent implements OnInit {
       'MAGE': 'M',
       'PRIEST': 'P',
       'THIEF': 'T',
-      'BISHOP': 'B',
+      'BISHOP': 'I',
       'SAMURAI': 'S',
       'LORD': 'L',
       'NINJA': 'N'
@@ -276,6 +276,7 @@ export class CharacterCreationComponent implements OnInit {
     }
 
     // Priority 5: Alignment selection (G, N, E)
+    // Only active after race selected AND before rolling stats (prevents conflict with class keys)
     if (this.selectedRace() && !this.rolledStats()) {
       switch(key) {
         case 'g':
@@ -293,14 +294,15 @@ export class CharacterCreationComponent implements OnInit {
       }
     }
 
-    // Priority 6: Class selection (F, M, P, T, B, S, L, N) - only if stats rolled and not ready to save
+    // Priority 6: Class selection (F, M, P, T, I, S, L, N)
+    // Only active when stats rolled (so alignment keys won't conflict) AND form not complete (so Save key takes precedence)
     if (this.rolledStats() && !this.canSave()) {
       const classMap: { [key: string]: CharacterClass } = {
         'f': CharacterClass.FIGHTER,
         'm': CharacterClass.MAGE,
         'p': CharacterClass.PRIEST,
         't': CharacterClass.THIEF,
-        'b': CharacterClass.BISHOP,
+        'i': CharacterClass.BISHOP,
         's': CharacterClass.SAMURAI,
         'l': CharacterClass.LORD,
         'n': CharacterClass.NINJA
@@ -312,6 +314,13 @@ export class CharacterCreationComponent implements OnInit {
         this.selectClass(charClass);
         return;
       }
+    }
+
+    // Priority 7: Back to training grounds (B)
+    if (key === 'b') {
+      event.preventDefault();
+      this.navigateToTrainingGrounds();
+      return;
     }
   }
 

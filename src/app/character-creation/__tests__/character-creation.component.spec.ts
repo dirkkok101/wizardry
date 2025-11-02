@@ -741,6 +741,343 @@ describe('CharacterCreationComponent', () => {
 
       expect(component.showCancelConfirmation()).toBe(true);
     });
+
+    // New comprehensive keyboard shortcut tests
+    describe('Race selection (1-5 keys)', () => {
+      it('should select first race on key "1"', () => {
+        const event = new KeyboardEvent('keydown', { key: '1' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedRace()).toBe(Race.HUMAN);
+      });
+
+      it('should select second race on key "2"', () => {
+        const event = new KeyboardEvent('keydown', { key: '2' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedRace()).toBe(Race.ELF);
+      });
+
+      it('should ignore invalid race keys', () => {
+        const event = new KeyboardEvent('keydown', { key: '9' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedRace()).toBeNull();
+      });
+
+      it('should reset downstream selections when changing race via keyboard', () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+
+        const event = new KeyboardEvent('keydown', { key: '2' }); // Select Elf
+        component.handleKeyPress(event);
+
+        expect(component.selectedRace()).toBe(Race.ELF);
+        expect(component.selectedAlignment()).toBe(Alignment.GOOD); // Not reset
+      });
+    });
+
+    describe('Alignment selection (G, N, E keys)', () => {
+      beforeEach(() => {
+        component.selectRace(Race.HUMAN);
+      });
+
+      it('should select GOOD on "g" key when race selected and stats not rolled', () => {
+        const event = new KeyboardEvent('keydown', { key: 'g' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedAlignment()).toBe(Alignment.GOOD);
+      });
+
+      it('should select NEUTRAL on "n" key when race selected and stats not rolled', () => {
+        const event = new KeyboardEvent('keydown', { key: 'n' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedAlignment()).toBe(Alignment.NEUTRAL);
+      });
+
+      it('should select EVIL on "e" key when race selected and stats not rolled', () => {
+        const event = new KeyboardEvent('keydown', { key: 'e' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedAlignment()).toBe(Alignment.EVIL);
+      });
+
+      it('should select GOOD on uppercase "G" key', () => {
+        const event = new KeyboardEvent('keydown', { key: 'G' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedAlignment()).toBe(Alignment.GOOD);
+      });
+
+      it('should NOT select alignment when race not selected', () => {
+        component.selectedRace.set(null); // Clear race
+
+        const event = new KeyboardEvent('keydown', { key: 'g' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedAlignment()).toBeNull();
+      });
+
+      it('should NOT change alignment after stats rolled', fakeAsync(() => {
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+
+        const event = new KeyboardEvent('keydown', { key: 'e' });
+        component.handleKeyPress(event);
+
+        // Should remain GOOD (alignment locked after rolling)
+        expect(component.selectedAlignment()).toBe(Alignment.GOOD);
+      }));
+    });
+
+    describe('Class selection (F, M, P, T, I, S, L, N keys)', () => {
+      beforeEach(fakeAsync(() => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+      }));
+
+      it('should select FIGHTER on "f" key when eligible', () => {
+        if (component.isClassEligible(CharacterClass.FIGHTER)) {
+          const event = new KeyboardEvent('keydown', { key: 'f' });
+          component.handleKeyPress(event);
+
+          expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+        }
+      });
+
+      it('should select MAGE on "m" key when eligible', () => {
+        if (component.isClassEligible(CharacterClass.MAGE)) {
+          const event = new KeyboardEvent('keydown', { key: 'm' });
+          component.handleKeyPress(event);
+
+          expect(component.selectedClass()).toBe(CharacterClass.MAGE);
+        }
+      });
+
+      it('should select BISHOP on "i" key when eligible (not "b")', () => {
+        // Verify BISHOP uses 'I' key, not 'B' (which is for Back button)
+        const shortcut = component.getClassShortcut('BISHOP');
+        expect(shortcut).toBe('I');
+      });
+
+      it('should NOT select class when stats not rolled', () => {
+        component.rolledStats.set(null); // Clear rolled stats
+
+        const event = new KeyboardEvent('keydown', { key: 'f' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedClass()).toBeNull();
+      });
+
+      it('should NOT select ineligible class via keyboard', () => {
+        // Mock all classes as ineligible
+        jest.spyOn(component, 'isClassEligible').mockReturnValue(false);
+
+        const event = new KeyboardEvent('keydown', { key: 'f' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedClass()).toBeNull();
+      });
+
+      it('should select class on uppercase keys', () => {
+        if (component.isClassEligible(CharacterClass.FIGHTER)) {
+          const event = new KeyboardEvent('keydown', { key: 'F' });
+          component.handleKeyPress(event);
+
+          expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+        }
+      });
+    });
+
+    describe('Back navigation (B key)', () => {
+      it('should navigate to training grounds on "b" key', () => {
+        const event = new KeyboardEvent('keydown', { key: 'b' });
+        component.handleKeyPress(event);
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
+      });
+
+      it('should navigate to training grounds on uppercase "B" key', () => {
+        const event = new KeyboardEvent('keydown', { key: 'B' });
+        component.handleKeyPress(event);
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
+      });
+    });
+
+    describe('Priority conflict resolution', () => {
+      it('should prioritize Save (S) over SAMURAI when form complete', fakeAsync(() => {
+        // Setup complete form
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+
+        if (component.isClassEligible(CharacterClass.FIGHTER)) {
+          component.selectClass(CharacterClass.FIGHTER);
+          component.characterName.set('Test');
+
+          const initialSize = gameStateService.state().roster.size;
+
+          // Press 'S' - should SAVE, not select Samurai
+          const event = new KeyboardEvent('keydown', { key: 's' });
+          component.handleKeyPress(event);
+
+          // Verify saved
+          expect(gameStateService.state().roster.size).toBe(initialSize + 1);
+          // Verify class didn't change
+          expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+        }
+      }));
+
+      it('should select SAMURAI (S) when form incomplete', fakeAsync(() => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+
+        if (component.isClassEligible(CharacterClass.SAMURAI)) {
+          // Form is NOT complete (no name), so 'S' should select Samurai
+          const event = new KeyboardEvent('keydown', { key: 's' });
+          component.handleKeyPress(event);
+
+          expect(component.selectedClass()).toBe(CharacterClass.SAMURAI);
+        }
+      }));
+
+      it('should prioritize Alignment (N) over NINJA class', fakeAsync(() => {
+        // Setup: race selected, no stats
+        component.selectRace(Race.HUMAN);
+
+        // Press 'N' - should select NEUTRAL alignment, not Ninja class
+        const event = new KeyboardEvent('keydown', { key: 'n' });
+        component.handleKeyPress(event);
+
+        expect(component.selectedAlignment()).toBe(Alignment.NEUTRAL);
+        expect(component.selectedClass()).toBeNull();
+      }));
+
+      it('should select NINJA (N) when stats rolled and alignment set', fakeAsync(() => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.EVIL); // NINJA requires EVIL
+        component.rollStats();
+        tick(350);
+
+        if (component.isClassEligible(CharacterClass.NINJA)) {
+          // Now 'N' should select Ninja (alignment already set)
+          const event = new KeyboardEvent('keydown', { key: 'n' });
+          component.handleKeyPress(event);
+
+          expect(component.selectedClass()).toBe(CharacterClass.NINJA);
+        }
+      }));
+
+      it('should prioritize Cancel (Escape) over other keys', fakeAsync(() => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+
+        // Escape should always show confirmation, regardless of state
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        component.handleKeyPress(event);
+
+        expect(component.showCancelConfirmation()).toBe(true);
+      }));
+    });
+
+    describe('preventDefault() verification', () => {
+      it('should call preventDefault on race selection', () => {
+        const event = new KeyboardEvent('keydown', { key: '1' });
+        const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+        component.handleKeyPress(event);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+      });
+
+      it('should call preventDefault on alignment selection', () => {
+        component.selectRace(Race.HUMAN);
+
+        const event = new KeyboardEvent('keydown', { key: 'g' });
+        const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+        component.handleKeyPress(event);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+      });
+
+      it('should call preventDefault on roll stats', () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+
+        const event = new KeyboardEvent('keydown', { key: 'r' });
+        const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+        component.handleKeyPress(event);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+      });
+
+      it('should call preventDefault on class selection', fakeAsync(() => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+
+        if (component.isClassEligible(CharacterClass.FIGHTER)) {
+          const event = new KeyboardEvent('keydown', { key: 'f' });
+          const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+          component.handleKeyPress(event);
+
+          expect(preventDefaultSpy).toHaveBeenCalled();
+        }
+      }));
+
+      it('should call preventDefault on save', fakeAsync(() => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+
+        if (component.isClassEligible(CharacterClass.FIGHTER)) {
+          component.selectClass(CharacterClass.FIGHTER);
+          component.characterName.set('Test');
+
+          const event = new KeyboardEvent('keydown', { key: 's' });
+          const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+          component.handleKeyPress(event);
+
+          expect(preventDefaultSpy).toHaveBeenCalled();
+        }
+      }));
+
+      it('should call preventDefault on cancel', () => {
+        component.selectRace(Race.HUMAN);
+
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+        component.handleKeyPress(event);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+      });
+
+      it('should call preventDefault on back navigation', () => {
+        const event = new KeyboardEvent('keydown', { key: 'b' });
+        const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
+
+        component.handleKeyPress(event);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('handleFooterAction()', () => {
