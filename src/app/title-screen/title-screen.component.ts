@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AssetLoadingService } from '../../services/AssetLoadingService';
 import { SaveService } from '../../services/SaveService';
 import { LoggerService } from '../../services/LoggerService';
+import { GameInitializationService } from '../../services/GameInitializationService';
 import { KeystrokeInputDirective } from '../../directives/keystroke-input.directive';
 
 /**
@@ -38,6 +39,9 @@ export class TitleScreenComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
+      // Initialize game data (race and class services)
+      await GameInitializationService.initializeGame();
+
       // Load title screen assets
       await this.assetService.loadTitleScreenAssets();
 

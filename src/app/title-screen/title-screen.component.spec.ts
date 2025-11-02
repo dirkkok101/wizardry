@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { TitleScreenComponent } from './title-screen.component';
 import { AssetLoadingService } from '../../services/AssetLoadingService';
 import { SaveService } from '../../services/SaveService';
+import { GameInitializationService } from '../../services/GameInitializationService';
 
 describe('TitleScreenComponent', () => {
   let component: TitleScreenComponent;
@@ -22,6 +23,9 @@ describe('TitleScreenComponent', () => {
     assetService = TestBed.inject(AssetLoadingService);
     saveService = TestBed.inject(SaveService);
     router = TestBed.inject(Router);
+
+    // Mock game initialization to resolve immediately
+    jest.spyOn(GameInitializationService, 'initializeGame').mockResolvedValue(undefined);
 
     // Mock asset loading to resolve immediately
     jest.spyOn(assetService, 'loadTitleScreenAssets').mockResolvedValue({
