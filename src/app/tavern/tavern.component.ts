@@ -190,6 +190,24 @@ export class TavernComponent implements OnInit {
     this.successMessage.set(`Gold distributed: ${sharePerMember} gold per member`);
   }
 
+  handleInspectCharacter(charId: string): void {
+    const party = this.currentParty();
+
+    // Validate character is in party
+    if (!party.members.includes(charId)) {
+      this.errorMessage.set('Character not found in party');
+      return;
+    }
+
+    // Navigate to character inspection with return context
+    this.router.navigate(['/character-inspection'], {
+      queryParams: {
+        characterId: charId,
+        returnTo: 'tavern'
+      }
+    });
+  }
+
   cancelView(): void {
     this.currentView.set('main');
     this.errorMessage.set(null);

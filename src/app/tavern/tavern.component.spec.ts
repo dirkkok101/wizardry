@@ -348,6 +348,48 @@ describe('TavernComponent', () => {
     });
   });
 
+  describe('handleInspectCharacter', () => {
+    it('navigates to character inspection for valid party member', () => {
+      const character = createTestCharacter({ id: 'char-1' });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]]),
+        party: {
+          ...state.party,
+          members: [character.id]
+        }
+      }));
+      const navigateSpy = jest.spyOn(router, 'navigate');
+
+      component.handleInspectCharacter(character.id);
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/character-inspection'], {
+        queryParams: { characterId: character.id, returnTo: 'tavern' }
+      });
+    });
+
+    it('shows error when character not in party', () => {
+      component.handleInspectCharacter('non-existent-id');
+
+      expect(component.errorMessage()).toBe('Character not found in party');
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows error when party is empty', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          members: []
+        }
+      }));
+
+      component.handleInspectCharacter('char-1');
+
+      expect(component.errorMessage()).toBe('Character not found in party');
+    });
+  });
+
   describe('navigation', () => {
     it('returns to castle menu when selected', () => {
       component.handleMenuSelect('castle');
