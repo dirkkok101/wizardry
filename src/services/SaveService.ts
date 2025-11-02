@@ -8,6 +8,18 @@ import { GameState, SaveData } from '../types/GameState'
 const SAVE_KEY = 'wizardry_save'
 const SAVE_VERSION = '1.0.0'
 
+/**
+ * Metadata about a save slot without loading the full game state
+ */
+export interface SaveSlotMetadata {
+  slotId: number
+  timestamp: number
+  partySize: number
+  partyGold: number
+  currentScene: string
+  partyLevel: number // Average party level
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -121,5 +133,64 @@ export class SaveService {
    */
   async deleteSave(saveSlot: number = 1): Promise<void> {
     localStorage.removeItem(`${SAVE_KEY}_${saveSlot}`)
+  }
+
+  /**
+   * Get metadata for a save slot without loading the full game state.
+   * Returns null if the slot is empty.
+   */
+  async getSlotMetadata(slotId: number): Promise<SaveSlotMetadata | null> {
+    const saved = localStorage.getItem(`${SAVE_KEY}_${slotId}`)
+
+    if (!saved) {
+      return null
+    }
+
+    try {
+      const saveData: any = JSON.parse(saved)
+
+      // Validate structure
+      if (!saveData.state || !saveData.version || !saveData.timestamp) {
+        return null
+      }
+
+      const state = saveData.state
+
+      // Calculate party size
+      const partySize = state.party?.members?.length || 0
+
+      // Calculate party gold
+      const partyGold = state.party?.gold || 0
+
+      // Get current scene
+      const currentScene = state.currentScene || 'UNKNOWN'
+
+      // Calculate average party level
+      let partyLevel = 0
+      if (partySize > 0 && state.roster) {
+        const roster = new Map(state.roster)
+        const partyMembers = state.party.members || []
+        const levels = partyMembers
+          .map((memberId: string) => roster.get(memberId)?.level || 1)
+          .filter((level: number) => level > 0)
+
+        if (levels.length > 0) {
+          const sum = levels.reduce((acc: number, level: number) => acc + level, 0)
+          partyLevel = Math.round(sum / levels.length)
+        }
+      }
+
+      return {
+        slotId,
+        timestamp: saveData.timestamp,
+        partySize,
+        partyGold,
+        currentScene,
+        partyLevel
+      }
+    } catch (error) {
+      // If parsing fails, treat as empty slot
+      return null
+    }
   }
 }
