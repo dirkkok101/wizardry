@@ -213,6 +213,58 @@ function onLoadError(callback: (error: AssetLoadError) => void): () => void {
 }
 
 /**
+ * Load all JSON data files from a directory
+ * @param directory - Directory name under /assets/ (e.g., 'races', 'classes')
+ * @returns Map of data objects keyed by their 'id' property
+ */
+async function loadDataFiles<T extends { id: string }>(directory: string): Promise<Map<string, T>> {
+  const dataMap = new Map<string, T>()
+
+  // Determine file list based on directory
+  const files = getDataFileList(directory)
+
+  // Load each file
+  for (const filename of files) {
+    const path = `/assets/${directory}/${filename}`
+    try {
+      const response = await fetch(path)
+      if (!response.ok) {
+        throw new Error(`Failed to load ${path}: ${response.statusText}`)
+      }
+      const data: T = await response.json()
+      dataMap.set(data.id, data)
+    } catch (error) {
+      console.error(`Error loading ${path}:`, error)
+      throw error
+    }
+  }
+
+  return dataMap
+}
+
+/**
+ * Get list of data files for a directory
+ */
+function getDataFileList(directory: string): string[] {
+  switch (directory) {
+    case 'races':
+      return ['human.json', 'elf.json', 'dwarf.json', 'gnome.json', 'hobbit.json']
+    case 'classes':
+      return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
+    case 'spells':
+      return ['mage-spells.json', 'priest-spells.json']
+    case 'items':
+      return ['weapons.json', 'armor.json', 'consumables.json']
+    case 'monsters':
+      return ['monsters.json']
+    case 'maps':
+      return Array.from({ length: 10 }, (_, i) => `level-${String(i + 1).padStart(2, '0')}.json`)
+    default:
+      throw new Error(`Unknown data directory: ${directory}`)
+  }
+}
+
+/**
  * Clear all cached assets
  */
 function clearCache(): void {
@@ -316,5 +368,14 @@ export class AssetLoadingService {
    */
   clearCache(): void {
     clearCache();
+  }
+
+  /**
+   * Load all JSON data files from a directory
+   * @param directory - Directory name under /assets/ (e.g., 'races', 'classes')
+   * @returns Map of data objects keyed by their 'id' property
+   */
+  async loadDataFiles<T extends { id: string }>(directory: string): Promise<Map<string, T>> {
+    return loadDataFiles<T>(directory);
   }
 }
