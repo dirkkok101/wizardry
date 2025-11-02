@@ -178,21 +178,26 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   // Roll stats (NEW FORMULA)
-  rollStats() {
+  async rollStats() {
     this.isRolling.set(true);
 
-    // Simulate dice rolling animation
-    setTimeout(() => {
-      const rolled = CharacterCreationService.rollStats();
-      this.rolledStats.set(rolled);
-      this.selectedClass.set(null); // Reset class when rerolling
-      this.isRolling.set(false);
+    // Simulate dice roll animation (300ms)
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Lock race and alignment after first roll
-      if (!this.isLocked()) {
-        this.isLocked.set(true);
-      }
-    }, 300);
+    const rolled = CharacterCreationService.rollStats();
+    this.rolledStats.set(rolled);
+    this.isRolling.set(false);
+
+    // Auto-advance to class selection
+    this.advanceToSelectClass();
+  }
+
+  rerollStats() {
+    // Clear class selection
+    this.selectedClass.set(null);
+
+    // Roll again (which auto-advances back to SELECT_CLASS)
+    this.rollStats();
   }
 
   // Class eligibility check
