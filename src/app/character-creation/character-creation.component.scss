@@ -1,282 +1,167 @@
-@import '../../styles/variables.scss';
-
-.character-creation {
+.character-creation-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: $color-bg-black;
-  color: $color-text-green;
-  font-family: $font-mono;
+  background: var(--background-color, #1a1a1a);
+  color: var(--text-color, #ffffff);
+}
 
-  main.creation-form {
-    flex: 1;
+.wizard-content {
+  display: flex;
+  flex: 1;
+  gap: 2rem;
+  padding: 1rem;
+  overflow: hidden;
+
+  .controls-column,
+  .character-display-column {
+    flex: 1; // 50/50 split
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
-    padding: $spacing-lg $spacing-xl;
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-    box-sizing: border-box;
+    padding: 1.5rem;
+    border-radius: 8px;
   }
 
-  .form-section {
-    border: $border-width $border-style $border-color;
-    padding: $spacing-md $spacing-lg;
-    margin-bottom: $spacing-lg;
+  .controls-column {
+    border-right: 2px solid var(--border-color, #444);
+    background: rgba(0, 0, 0, 0.2);
 
-    &.disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    h2 {
-      color: $color-text-bright;
-      margin-bottom: $spacing-md;
-      border-bottom: 1px solid $border-color;
-      padding-bottom: $spacing-sm;
-      font-size: $font-size-base;
-    }
-  }
-
-  // Race/Alignment/Class button grids
-  .race-options,
-  .alignment-options,
-  .class-grid {
-    display: grid;
-    gap: $spacing-sm;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
-
-  .race-button,
-  .alignment-button,
-  .class-button {
-    background: $color-bg-black;
-    border: $border-width $border-style $border-color;
-    color: $color-text-green;
-    padding: $spacing-md $spacing-lg;
-    cursor: pointer;
-    font-family: $font-mono;
-    font-size: $font-size-base;
-    text-transform: uppercase;
-
-    &:hover:not(:disabled) {
-      background: $color-text-green;
-      color: $color-bg-black;
-    }
-
-    &.selected {
-      background: $color-text-bright;
-      color: $color-bg-black;
-      border-color: $color-text-bright;
-    }
-
-    &.ineligible {
-      color: $color-text-dim;
-      border-color: $color-text-dim;
-    }
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  .class-button {
-    position: relative;
-
-    .ineligible-indicator {
-      position: absolute;
-      top: $spacing-xs;
-      right: $spacing-xs;
-      color: $color-error;
-      font-weight: bold;
-    }
-  }
-
-  // Race and class details
-  .race-details,
-  .class-details {
-    margin-top: $spacing-md;
-    padding: $spacing-md;
-    border-top: 1px solid $border-color;
-
-    .description {
-      margin-bottom: $spacing-sm;
-      color: $color-text-green;
-      line-height: 1.5;
-    }
-
-    .base-stats,
-    .hit-dice,
-    .strengths,
-    .weaknesses {
-      margin-bottom: $spacing-xs;
-      font-size: $font-size-small;
-      line-height: 1.5;
-    }
-
-    .strengths {
-      color: $color-success;
-    }
-
-    .weaknesses {
-      color: $color-text-dim;
-    }
-  }
-
-  // Stats display (3-column: base + rolled = final)
-  .roll-button {
-    background: $color-bg-black;
-    border: $border-width $border-style $border-color;
-    color: $color-text-green;
-    padding: $spacing-md $spacing-lg;
-    cursor: pointer;
-    font-family: $font-mono;
-    font-size: $font-size-base;
-    width: 100%;
-    margin-bottom: $spacing-md;
-
-    &:hover:not(:disabled) {
-      background: $color-text-green;
-      color: $color-bg-black;
-    }
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  .stats-display {
-    margin-top: $spacing-md;
-
-    .stat-row {
-      display: grid;
-      grid-template-columns: 60px 40px 20px 40px 20px 60px;
-      gap: $spacing-xs;
-      padding: $spacing-xs 0;
+    .step-header {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color, #444);
 
-      &:last-child {
-        border-bottom: none;
+      h2 {
+        font-size: 1.5rem;
+        margin: 0;
+        color: var(--accent-color, #4a9eff);
       }
 
-      .stat-label {
-        font-weight: bold;
-        color: $color-text-bright;
-      }
-
-      .stat-base {
-        color: $color-text-dim;
-        text-align: right;
-      }
-
-      .stat-plus,
-      .stat-equals {
-        color: $color-text-green;
-        text-align: center;
-      }
-
-      .stat-rolled {
-        color: $color-text-green;
-        text-align: right;
-      }
-
-      .stat-final {
-        color: $color-text-bright;
-        font-weight: bold;
-        text-align: right;
+      .step-indicator {
+        color: var(--text-muted, #888);
+        font-size: 0.875rem;
       }
     }
 
-    .bonus-points {
-      margin-top: $spacing-md;
-      padding-top: $spacing-md;
-      border-top: 1px solid $border-color;
-      color: $color-amber;
-      font-weight: bold;
-    }
-  }
-
-  // Form inputs
-  .input-group {
-    margin-bottom: $spacing-md;
-
-    label {
-      display: block;
-      margin-bottom: $spacing-xs;
-      color: $color-text-bright;
-      font-weight: bold;
+    .step-content {
+      flex: 1;
+      margin-bottom: 1.5rem;
     }
 
-    input {
-      width: 100%;
-      background: $color-bg-black;
-      border: $border-width $border-style $border-color;
-      color: $color-text-green;
-      padding: $spacing-sm $spacing-md;
-      font-family: $font-mono;
-      font-size: $font-size-base;
+    .step-hints {
+      margin-top: auto;
+      padding: 1rem;
+      background: rgba(74, 158, 255, 0.1);
+      border-left: 3px solid var(--accent-color, #4a9eff);
+      border-radius: 4px;
+      font-size: 0.875rem;
 
-      &:focus {
-        outline: none;
-        border-color: $color-text-bright;
+      p {
+        margin: 0;
+
+        strong {
+          color: var(--accent-color, #4a9eff);
+        }
       }
 
-      &:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
+      .success-message {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(0, 255, 0, 0.2);
+        border-left: 3px solid #00ff00;
+        color: #00ff00;
       }
 
-      &::placeholder {
-        color: $color-text-dim;
+      .error-message {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(255, 0, 0, 0.2);
+        border-left: 3px solid #ff0000;
+        color: #ff0000;
       }
     }
   }
 
-  // Success/error messages
-  .success-message {
-    padding: $spacing-md;
-    background: rgba(0, 255, 136, 0.1);
-    border: $border-width $border-style $color-success;
-    color: $color-success;
-    text-align: center;
-    font-weight: bold;
-  }
+  .character-display-column {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color, #444);
 
-  .error-message {
-    padding: $spacing-md;
-    background: rgba(255, 0, 0, 0.1);
-    border: $border-width $border-style $color-error;
-    color: $color-error;
-    text-align: center;
-    font-weight: bold;
-  }
+    .character-sheet {
+      h3 {
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--accent-color, #4a9eff);
+        font-size: 1.25rem;
+        color: var(--accent-color, #4a9eff);
+      }
 
-  // Locked state styles
-  .locked {
-    background-color: #3a3a3a !important;
-    cursor: not-allowed !important;
-    opacity: 0.7;
+      .sheet-section {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        animation: slideInRight 0.3s ease-out;
 
-    .lock-icon {
-      margin-left: 0.5rem;
-      font-size: 0.9rem;
+        label {
+          display: block;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
+          color: var(--label-color, #aaa);
+          font-size: 0.875rem;
+          text-transform: uppercase;
+        }
+
+        .value {
+          font-size: 1.125rem;
+          color: var(--text-color, #fff);
+        }
+
+        &.stats {
+          .stat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-family: 'Courier New', monospace;
+
+            .stat-row {
+              display: flex;
+              gap: 0.5rem;
+
+              .stat-name {
+                font-weight: bold;
+                min-width: 3rem;
+                color: var(--label-color, #aaa);
+              }
+
+              .stat-formula {
+                color: var(--text-color, #fff);
+              }
+            }
+
+            .bonus-points {
+              margin-top: 0.5rem;
+              padding-top: 0.5rem;
+              border-top: 1px solid var(--border-color, #444);
+              color: var(--accent-color, #4a9eff);
+            }
+          }
+        }
+      }
     }
   }
+}
 
-  .lock-hint {
-    color: #ffa500;
-    font-size: 0.9rem;
-    font-style: italic;
-    margin-top: 0.5rem;
-    text-align: center;
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
   }
-
-  button {
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
