@@ -10,6 +10,16 @@ import { Race } from '../../../types/Race';
 import { CharacterClass } from '../../../types/CharacterClass';
 import { Alignment } from '../../../types/Alignment';
 
+// Access CreationStep from component class
+type CreationStep = 'SELECT_RACE' | 'SELECT_ALIGNMENT' | 'ROLL_STATS' | 'SELECT_CLASS' | 'NAME_CHARACTER';
+const CreationStep = {
+  SELECT_RACE: 'SELECT_RACE' as CreationStep,
+  SELECT_ALIGNMENT: 'SELECT_ALIGNMENT' as CreationStep,
+  ROLL_STATS: 'ROLL_STATS' as CreationStep,
+  SELECT_CLASS: 'SELECT_CLASS' as CreationStep,
+  NAME_CHARACTER: 'NAME_CHARACTER' as CreationStep
+};
+
 describe('CharacterCreationComponent', () => {
   let component: CharacterCreationComponent;
   let fixture: ComponentFixture<CharacterCreationComponent>;
@@ -1485,6 +1495,66 @@ describe('CharacterCreationComponent', () => {
       expect(testHero!.class).toBe(CharacterClass.FIGHTER);
 
       jest.useRealTimers();
+    });
+  });
+
+  describe('State Machine', () => {
+    describe('initialization', () => {
+      it('starts at SELECT_RACE step', () => {
+        expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
+      });
+
+      it('shows step 1 of 5', () => {
+        expect(component.stepNumber()).toBe(1);
+        expect(component.stepTitle()).toBe('Choose Your Race');
+      });
+    });
+
+    describe('forward navigation', () => {
+      it('advances from SELECT_RACE to SELECT_ALIGNMENT', () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.advanceToAlignment();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
+        expect(component.stepNumber()).toBe(2);
+      });
+
+      it('does not advance from SELECT_RACE without race selected', () => {
+        component.advanceToAlignment();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
+      });
+
+      it('advances from SELECT_ALIGNMENT to ROLL_STATS', () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.advanceToRollStats();
+
+        expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
+        expect(component.stepNumber()).toBe(3);
+      });
+
+      it('auto-advances from ROLL_STATS to SELECT_CLASS after rolling', async () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.advanceToRollStats();
+
+        await component.rollStats();
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
+        expect(component.stepNumber()).toBe(4);
+        expect(component.rolledStats()).toBeTruthy();
+      });
+
+      it('advances from SELECT_CLASS to NAME_CHARACTER', () => {
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.selectedClass.set(CharacterClass.FIGHTER);
+        component.advanceToNameCharacter();
+
+        expect(component.currentStep()).toBe(CreationStep.NAME_CHARACTER);
+        expect(component.stepNumber()).toBe(5);
+      });
     });
   });
 });
