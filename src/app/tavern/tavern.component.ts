@@ -43,6 +43,12 @@ export class TavernComponent implements OnInit {
       shortcut: 'R'
     },
     {
+      id: 'divvy-gold',
+      label: 'DIVVY GOLD',
+      enabled: true,
+      shortcut: 'D'
+    },
+    {
       id: 'castle',
       label: 'RETURN TO CASTLE',
       enabled: true,
@@ -53,6 +59,7 @@ export class TavernComponent implements OnInit {
   // View state
   readonly currentView = signal<TavernView>('main');
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
 
   // Party and roster
   readonly currentParty = computed(() => this.gameState.party());
@@ -91,6 +98,7 @@ export class TavernComponent implements OnInit {
 
   handleMenuSelect(itemId: string): void {
     this.errorMessage.set(null);
+    this.successMessage.set(null);
 
     switch (itemId) {
       case 'add-character':
@@ -99,6 +107,10 @@ export class TavernComponent implements OnInit {
 
       case 'remove-character':
         this.currentView.set('remove');
+        break;
+
+      case 'divvy-gold':
+        this.handleDivvyGold();
         break;
 
       case 'castle':
@@ -148,6 +160,34 @@ export class TavernComponent implements OnInit {
     }));
 
     this.currentView.set('main');
+  }
+
+  handleDivvyGold(): void {
+    const state = this.gameState.state();
+    const party = this.currentParty();
+
+    // Clear previous messages
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    // Divvy gold using PartyService
+    const result = PartyService.divvyGold(party, state.roster);
+
+    if (!result.success) {
+      this.errorMessage.set(result.error || 'Failed to distribute gold');
+      return;
+    }
+
+    // Update game state with new roster and party
+    this.gameState.updateState(state => ({
+      ...state,
+      roster: result.updatedRoster!,
+      party: result.updatedParty!
+    }));
+
+    // Calculate share per member for success message
+    const sharePerMember = Math.floor(party.gold! / party.members.length);
+    this.successMessage.set(`Gold distributed: ${sharePerMember} gold per member`);
   }
 
   cancelView(): void {

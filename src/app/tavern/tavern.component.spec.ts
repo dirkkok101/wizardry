@@ -59,10 +59,11 @@ describe('TavernComponent', () => {
 
     it('shows menu options', () => {
       fixture.detectChanges();
-      expect(component.menuItems.length).toBe(3);
+      expect(component.menuItems.length).toBe(4);
       expect(component.menuItems[0].id).toBe('add-character');
       expect(component.menuItems[1].id).toBe('remove-character');
-      expect(component.menuItems[2].id).toBe('castle');
+      expect(component.menuItems[2].id).toBe('divvy-gold');
+      expect(component.menuItems[3].id).toBe('castle');
     });
   });
 
@@ -264,6 +265,86 @@ describe('TavernComponent', () => {
     it('returns to main view after removal', () => {
       component.handleRemoveCharacter('char-1');
       expect(component.currentView()).toBe('main');
+    });
+  });
+
+  describe('handleDivvyGold', () => {
+    it('distributes gold equally to all party members', () => {
+      const char1 = createTestCharacter({ id: 'char-1', gold: 10 });
+      const char2 = createTestCharacter({ id: 'char-2', gold: 20 });
+      const char3 = createTestCharacter({ id: 'char-3', gold: 5 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([
+          [char1.id, char1],
+          [char2.id, char2],
+          [char3.id, char3]
+        ]),
+        party: {
+          ...state.party,
+          members: [char1.id, char2.id, char3.id],
+          gold: 99
+        }
+      }));
+
+      component.handleDivvyGold();
+
+      const updatedState = gameState.state();
+      expect(updatedState.party.gold).toBe(0);
+      expect(updatedState.roster.get('char-1')!.gold).toBe(43); // 10 + 33
+      expect(updatedState.roster.get('char-2')!.gold).toBe(53); // 20 + 33
+      expect(updatedState.roster.get('char-3')!.gold).toBe(38); // 5 + 33
+    });
+
+    it('shows success message after divvy', () => {
+      const char1 = createTestCharacter({ id: 'char-1', gold: 0 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char1.id, char1]]),
+        party: {
+          ...state.party,
+          members: [char1.id],
+          gold: 50
+        }
+      }));
+
+      component.handleDivvyGold();
+
+      expect(component.successMessage()).toBe('Gold distributed: 50 gold per member');
+      expect(component.errorMessage()).toBeNull();
+    });
+
+    it('shows error when party has no gold', () => {
+      const char1 = createTestCharacter({ id: 'char-1' });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char1.id, char1]]),
+        party: {
+          ...state.party,
+          members: [char1.id],
+          gold: 0
+        }
+      }));
+
+      component.handleDivvyGold();
+
+      expect(component.errorMessage()).toBe('No gold to distribute');
+      expect(component.successMessage()).toBeNull();
+    });
+
+    it('shows error when party is empty', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          members: [],
+          gold: 100
+        }
+      }));
+
+      component.handleDivvyGold();
+
+      expect(component.errorMessage()).toBe('No party members to distribute gold to');
     });
   });
 
