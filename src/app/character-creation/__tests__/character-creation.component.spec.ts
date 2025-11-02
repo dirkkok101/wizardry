@@ -119,7 +119,6 @@ describe('CharacterCreationComponent', () => {
       expect(component.selectedAlignment()).toBeNull();
       expect(component.rolledStats()).toBeNull();
       expect(component.selectedClass()).toBeNull();
-      expect(component.characterName()).toBe('');
     });
 
     it('should initialize UI state signals', () => {
@@ -204,20 +203,20 @@ describe('CharacterCreationComponent', () => {
       }));
     });
 
-    describe('canSave', () => {
+    describe('canAccept', () => {
       it('should be false initially', () => {
-        expect(component.canSave()).toBe(false);
+        expect(component.canAccept()).toBe(false);
       });
 
       it('should be false with only race selected', () => {
         component.selectRace(Race.HUMAN);
-        expect(component.canSave()).toBe(false);
+        expect(component.canAccept()).toBe(false);
       });
 
       it('should be false with race and alignment selected', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
-        expect(component.canSave()).toBe(false);
+        expect(component.canAccept()).toBe(false);
       });
 
       it('should be false with race, alignment, and stats', fakeAsync(() => {
@@ -226,10 +225,10 @@ describe('CharacterCreationComponent', () => {
         component.rollStats();
         tick(350);
 
-        expect(component.canSave()).toBe(false);
+        expect(component.canAccept()).toBe(false);
       }));
 
-      it('should be false with race, alignment, stats, and class', fakeAsync(() => {
+      it('should be true with race, alignment, stats, and class', fakeAsync(() => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.rollStats();
@@ -237,33 +236,7 @@ describe('CharacterCreationComponent', () => {
 
         if (component.isClassEligible(CharacterClass.FIGHTER)) {
           component.selectClass(CharacterClass.FIGHTER);
-          expect(component.canSave()).toBe(false);
-        }
-      }));
-
-      it('should be true when all fields are filled', fakeAsync(() => {
-        component.selectRace(Race.HUMAN);
-        component.selectAlignment(Alignment.GOOD);
-        component.rollStats();
-        tick(350);
-
-        if (component.isClassEligible(CharacterClass.FIGHTER)) {
-          component.selectClass(CharacterClass.FIGHTER);
-          component.characterName.set('TestCharacter');
-          expect(component.canSave()).toBe(true);
-        }
-      }));
-
-      it('should be false if name is only whitespace', fakeAsync(() => {
-        component.selectRace(Race.HUMAN);
-        component.selectAlignment(Alignment.GOOD);
-        component.rollStats();
-        tick(350);
-
-        if (component.isClassEligible(CharacterClass.FIGHTER)) {
-          component.selectClass(CharacterClass.FIGHTER);
-          component.characterName.set('   ');
-          expect(component.canSave()).toBe(false);
+          expect(component.canAccept()).toBe(true);
         }
       }));
     });
@@ -271,27 +244,26 @@ describe('CharacterCreationComponent', () => {
     describe('footerMenuItems', () => {
       it('should return menu items with correct structure', () => {
         const items = component.footerMenuItems();
-        expect(items.length).toBe(3);
-        expect(items[0].id).toBe('save');
-        expect(items[1].id).toBe('cancel');
-        expect(items[2].id).toBe('back');
+        expect(items.length).toBe(2); // Only reset and quit initially
+        expect(items[0].id).toBe('reset');
+        expect(items[1].id).toBe('quit');
       });
 
-      it('should have save disabled initially', () => {
+      it('should not have accept button initially', () => {
         const items = component.footerMenuItems();
-        const saveItem = items.find(i => i.id === 'save');
-        expect(saveItem!.enabled).toBe(false);
+        const acceptItem = items.find(i => i.id === 'accept');
+        expect(acceptItem).toBeUndefined();
       });
 
-      it('should have cancel and back always enabled', () => {
+      it('should have reset and quit always enabled', () => {
         const items = component.footerMenuItems();
-        const cancelItem = items.find(i => i.id === 'cancel');
-        const backItem = items.find(i => i.id === 'back');
-        expect(cancelItem!.enabled).toBe(true);
-        expect(backItem!.enabled).toBe(true);
+        const resetItem = items.find(i => i.id === 'reset');
+        const quitItem = items.find(i => i.id === 'quit');
+        expect(resetItem!.enabled).toBe(true);
+        expect(quitItem!.enabled).toBe(true);
       });
 
-      it('should enable save when form is complete', fakeAsync(() => {
+      it('should show accept button when form is complete', fakeAsync(() => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.rollStats();
@@ -299,11 +271,12 @@ describe('CharacterCreationComponent', () => {
 
         if (component.isClassEligible(CharacterClass.FIGHTER)) {
           component.selectClass(CharacterClass.FIGHTER);
-          component.characterName.set('Test');
 
           const items = component.footerMenuItems();
-          const saveItem = items.find(i => i.id === 'save');
-          expect(saveItem!.enabled).toBe(true);
+          const acceptItem = items.find(i => i.id === 'accept');
+          expect(acceptItem).toBeDefined();
+          expect(acceptItem!.enabled).toBe(true);
+          expect(items.length).toBe(3); // accept, reset, quit
         }
       }));
     });
@@ -453,16 +426,13 @@ describe('CharacterCreationComponent', () => {
     }));
   });
 
-  describe('saveCharacter()', () => {
-    it('should not save when form incomplete', () => {
-      const updateStateSpy = jest.spyOn(gameStateService, 'updateState');
-
-      component.saveCharacter();
-
-      expect(updateStateSpy).not.toHaveBeenCalled();
+  describe('acceptCharacter()', () => {
+    it('should not accept when form incomplete', () => {
+      component.acceptCharacter();
+      expect(component.showNameModal()).toBe(false);
     });
 
-    it('should create character and add to roster when complete', fakeAsync(() => {
+    it('should show name modal when form complete', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.rollStats();
@@ -470,10 +440,26 @@ describe('CharacterCreationComponent', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('TestHero');
+
+        component.acceptCharacter();
+
+        expect(component.showNameModal()).toBe(true);
+      }
+    }));
+  });
+
+  describe('handleNameSave()', () => {
+    it('should create character and add to roster', fakeAsync(() => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      tick(350);
+
+      if (component.isClassEligible(CharacterClass.FIGHTER)) {
+        component.selectClass(CharacterClass.FIGHTER);
 
         const initialRosterSize = gameStateService.state().roster.size;
-        component.saveCharacter();
+        component.handleNameSave('TestHero');
 
         const newRosterSize = gameStateService.state().roster.size;
         expect(newRosterSize).toBe(initialRosterSize + 1);
@@ -487,7 +473,7 @@ describe('CharacterCreationComponent', () => {
       }
     }));
 
-    it('should show success message after saving', fakeAsync(() => {
+    it('should close modal and show success message', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.rollStats();
@@ -495,10 +481,10 @@ describe('CharacterCreationComponent', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('TestHero');
 
-        component.saveCharacter();
+        component.handleNameSave('TestHero');
 
+        expect(component.showNameModal()).toBe(false);
         expect(component.successMessage()).toContain('created successfully');
         expect(component.successMessage()).toContain('TestHero');
       }
@@ -512,16 +498,14 @@ describe('CharacterCreationComponent', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('TestHero');
 
-        component.saveCharacter();
+        component.handleNameSave('TestHero');
         tick(2100);
 
         expect(component.selectedRace()).toBeNull();
         expect(component.selectedAlignment()).toBeNull();
         expect(component.rolledStats()).toBeNull();
         expect(component.selectedClass()).toBeNull();
-        expect(component.characterName()).toBe('');
         expect(component.successMessage()).toBeNull();
       }
     }));
@@ -534,9 +518,8 @@ describe('CharacterCreationComponent', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('  TestHero  ');
 
-        component.saveCharacter();
+        component.handleNameSave('  TestHero  ');
 
         const roster = Array.from(gameStateService.state().roster.values());
         const addedChar = roster.find(c => c.name === 'TestHero');
@@ -556,7 +539,6 @@ describe('CharacterCreationComponent', () => {
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
       }
-      component.characterName.set('Test');
 
       component.resetForm();
 
@@ -564,17 +546,20 @@ describe('CharacterCreationComponent', () => {
       expect(component.selectedAlignment()).toBeNull();
       expect(component.rolledStats()).toBeNull();
       expect(component.selectedClass()).toBeNull();
-      expect(component.characterName()).toBe('');
     }));
 
     it('should reset UI state', () => {
       component.errorMessage.set('Error');
       component.showCancelConfirmation.set(true);
+      component.showNameModal.set(true);
+      component.isLocked.set(true);
 
       component.resetForm();
 
       expect(component.errorMessage()).toBeNull();
       expect(component.showCancelConfirmation()).toBe(false);
+      expect(component.showNameModal()).toBe(false);
+      expect(component.isLocked()).toBe(false);
     });
   });
 
@@ -605,14 +590,6 @@ describe('CharacterCreationComponent', () => {
 
       expect(component.showCancelConfirmation()).toBe(true);
     }));
-
-    it('should show confirmation when name entered', () => {
-      component.characterName.set('Test');
-
-      component.confirmCancel();
-
-      expect(component.showCancelConfirmation()).toBe(true);
-    });
 
     it('should not show confirmation when form is empty', () => {
       component.confirmCancel();
@@ -665,7 +642,7 @@ describe('CharacterCreationComponent', () => {
       expect(component.rolledStats()).toBeNull();
     }));
 
-    it('should save character on S key when form complete', fakeAsync(() => {
+    it('should open name modal on Enter key when form complete', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.rollStats();
@@ -673,63 +650,39 @@ describe('CharacterCreationComponent', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('Test');
 
-        const initialSize = gameStateService.state().roster.size;
-
-        const event = new KeyboardEvent('keydown', { key: 's' });
+        const event = new KeyboardEvent('keydown', { key: 'Enter' });
         component.handleKeyPress(event);
 
-        expect(gameStateService.state().roster.size).toBe(initialSize + 1);
+        expect(component.showNameModal()).toBe(true);
       }
     }));
 
-    it('should save character on uppercase S key', fakeAsync(() => {
-      component.selectRace(Race.HUMAN);
-      component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
-
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('Test');
-
-        const initialSize = gameStateService.state().roster.size;
-
-        const event = new KeyboardEvent('keydown', { key: 'S' });
-        component.handleKeyPress(event);
-
-        expect(gameStateService.state().roster.size).toBe(initialSize + 1);
-      }
-    }));
-
-    it('should not save when form incomplete', () => {
+    it('should not open name modal when form incomplete', () => {
       component.selectRace(Race.HUMAN);
 
-      const initialSize = gameStateService.state().roster.size;
-
-      const event = new KeyboardEvent('keydown', { key: 's' });
+      const event = new KeyboardEvent('keydown', { key: 'Enter' });
       component.handleKeyPress(event);
 
-      expect(gameStateService.state().roster.size).toBe(initialSize);
+      expect(component.showNameModal()).toBe(false);
     });
 
-    it('should show cancel confirmation on Escape key', () => {
+    it('should reset form on Escape key', () => {
       component.selectRace(Race.HUMAN);
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       component.handleKeyPress(event);
 
-      expect(component.showCancelConfirmation()).toBe(true);
+      expect(component.selectedRace()).toBeNull();
     });
 
-    it('should show cancel confirmation on lowercase escape', () => {
+    it('should reset form on lowercase escape', () => {
       component.selectRace(Race.HUMAN);
 
       const event = new KeyboardEvent('keydown', { key: 'escape' });
       component.handleKeyPress(event);
 
-      expect(component.showCancelConfirmation()).toBe(true);
+      expect(component.selectedRace()).toBeNull();
     });
 
     // New comprehensive keyboard shortcut tests
@@ -883,16 +836,16 @@ describe('CharacterCreationComponent', () => {
       });
     });
 
-    describe('Back navigation (B key)', () => {
-      it('should navigate to training grounds on "b" key', () => {
-        const event = new KeyboardEvent('keydown', { key: 'b' });
+    describe('Quit navigation (Q key)', () => {
+      it('should navigate to training grounds on "q" key', () => {
+        const event = new KeyboardEvent('keydown', { key: 'q' });
         component.handleKeyPress(event);
 
         expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
       });
 
-      it('should navigate to training grounds on uppercase "B" key', () => {
-        const event = new KeyboardEvent('keydown', { key: 'B' });
+      it('should navigate to training grounds on uppercase "Q" key', () => {
+        const event = new KeyboardEvent('keydown', { key: 'Q' });
         component.handleKeyPress(event);
 
         expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
@@ -900,7 +853,7 @@ describe('CharacterCreationComponent', () => {
     });
 
     describe('Priority conflict resolution', () => {
-      it('should prioritize Save (S) over SAMURAI when form complete', fakeAsync(() => {
+      it('should open name modal with Enter when form complete', fakeAsync(() => {
         // Setup complete form
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
@@ -909,16 +862,13 @@ describe('CharacterCreationComponent', () => {
 
         if (component.isClassEligible(CharacterClass.FIGHTER)) {
           component.selectClass(CharacterClass.FIGHTER);
-          component.characterName.set('Test');
 
-          const initialSize = gameStateService.state().roster.size;
-
-          // Press 'S' - should SAVE, not select Samurai
-          const event = new KeyboardEvent('keydown', { key: 's' });
+          // Press Enter - should open name modal
+          const event = new KeyboardEvent('keydown', { key: 'Enter' });
           component.handleKeyPress(event);
 
-          // Verify saved
-          expect(gameStateService.state().roster.size).toBe(initialSize + 1);
+          // Verify modal opened
+          expect(component.showNameModal()).toBe(true);
           // Verify class didn't change
           expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
         }
@@ -931,7 +881,7 @@ describe('CharacterCreationComponent', () => {
         tick(350);
 
         if (component.isClassEligible(CharacterClass.SAMURAI)) {
-          // Form is NOT complete (no name), so 'A' should select Samurai (changed from 'S')
+          // Form is NOT complete (no class), so 'A' should select Samurai
           const event = new KeyboardEvent('keydown', { key: 'a' });
           component.handleKeyPress(event);
 
@@ -940,10 +890,10 @@ describe('CharacterCreationComponent', () => {
       }));
 
       it('should prioritize Alignment (N) over NINJA class', fakeAsync(() => {
-        // Setup: race selected, no stats
+        // Setup: race selected, no stats (not locked)
         component.selectRace(Race.HUMAN);
 
-        // Press 'N' - should select NEUTRAL alignment, not Ninja class
+        // Press 'N' - should select NEUTRAL alignment, not Ninja class (not locked yet)
         const event = new KeyboardEvent('keydown', { key: 'n' });
         component.handleKeyPress(event);
 
@@ -958,7 +908,7 @@ describe('CharacterCreationComponent', () => {
         tick(350);
 
         if (component.isClassEligible(CharacterClass.NINJA)) {
-          // Now 'J' should select Ninja (changed from 'N', alignment already set)
+          // Now 'J' should select Ninja (form is locked, alignment already set)
           const event = new KeyboardEvent('keydown', { key: 'j' });
           component.handleKeyPress(event);
 
@@ -966,17 +916,17 @@ describe('CharacterCreationComponent', () => {
         }
       }));
 
-      it('should prioritize Cancel (Escape) over other keys', fakeAsync(() => {
+      it('should prioritize Reset (Escape) over other keys', fakeAsync(() => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.rollStats();
         tick(350);
 
-        // Escape should always show confirmation, regardless of state
+        // Escape should always reset form, regardless of state
         const event = new KeyboardEvent('keydown', { key: 'Escape' });
         component.handleKeyPress(event);
 
-        expect(component.showCancelConfirmation()).toBe(true);
+        expect(component.selectedRace()).toBeNull();
       }));
     });
 
@@ -1029,7 +979,7 @@ describe('CharacterCreationComponent', () => {
         }
       }));
 
-      it('should call preventDefault on save', fakeAsync(() => {
+      it('should call preventDefault on accept (Enter)', fakeAsync(() => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.rollStats();
@@ -1037,9 +987,8 @@ describe('CharacterCreationComponent', () => {
 
         if (component.isClassEligible(CharacterClass.FIGHTER)) {
           component.selectClass(CharacterClass.FIGHTER);
-          component.characterName.set('Test');
 
-          const event = new KeyboardEvent('keydown', { key: 's' });
+          const event = new KeyboardEvent('keydown', { key: 'Enter' });
           const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
 
           component.handleKeyPress(event);
@@ -1059,8 +1008,8 @@ describe('CharacterCreationComponent', () => {
         expect(preventDefaultSpy).toHaveBeenCalled();
       });
 
-      it('should call preventDefault on back navigation', () => {
-        const event = new KeyboardEvent('keydown', { key: 'b' });
+      it('should call preventDefault on quit navigation', () => {
+        const event = new KeyboardEvent('keydown', { key: 'q' });
         const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
 
         component.handleKeyPress(event);
@@ -1071,7 +1020,7 @@ describe('CharacterCreationComponent', () => {
   });
 
   describe('handleFooterAction()', () => {
-    it('should save character when save action triggered', fakeAsync(() => {
+    it('should show name modal when accept action triggered', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.rollStats();
@@ -1079,26 +1028,23 @@ describe('CharacterCreationComponent', () => {
 
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        component.characterName.set('Test');
 
-        const initialSize = gameStateService.state().roster.size;
+        component.handleFooterAction('accept');
 
-        component.handleFooterAction('save');
-
-        expect(gameStateService.state().roster.size).toBe(initialSize + 1);
+        expect(component.showNameModal()).toBe(true);
       }
     }));
 
-    it('should show cancel confirmation when cancel action triggered', () => {
+    it('should reset form when reset action triggered', () => {
       component.selectRace(Race.HUMAN);
 
-      component.handleFooterAction('cancel');
+      component.handleFooterAction('reset');
 
-      expect(component.showCancelConfirmation()).toBe(true);
+      expect(component.selectedRace()).toBeNull();
     });
 
-    it('should navigate to training grounds when back action triggered', () => {
-      component.handleFooterAction('back');
+    it('should navigate to training grounds when quit action triggered', () => {
+      component.handleFooterAction('quit');
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
     });
@@ -1125,29 +1071,25 @@ describe('CharacterCreationComponent', () => {
   describe('Progressive Enabling', () => {
     it('should follow correct enabling sequence', fakeAsync(() => {
       // Initially: race always enabled, nothing else
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
       // Step 1: Select race
       component.selectRace(Race.HUMAN);
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
       // Step 2: Select alignment
       component.selectAlignment(Alignment.GOOD);
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
       // Step 3: Roll stats
       component.rollStats();
       tick(350);
-      expect(component.canSave()).toBe(false);
+      expect(component.canAccept()).toBe(false);
 
-      // Step 4: Select class
+      // Step 4: Select class - now canAccept becomes true
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
-        expect(component.canSave()).toBe(false);
-
-        // Step 5: Enter name
-        component.characterName.set('Test');
-        expect(component.canSave()).toBe(true);
+        expect(component.canAccept()).toBe(true);
       }
     }));
   });
@@ -1308,6 +1250,8 @@ describe('CharacterCreationComponent', () => {
     });
 
     it('should select Priest with P key', () => {
+      // Reset selectedClass to ensure canAccept() is false
+      component.selectedClass.set(null);
       const event = new KeyboardEvent('keydown', { key: 'p' });
       component.handleKeyPress(event);
       expect(component.selectedClass()).toBe(CharacterClass.PRIEST);
@@ -1409,6 +1353,106 @@ describe('CharacterCreationComponent', () => {
       component.handleKeyPress(event);
 
       expect(component.selectedClass()).not.toBe(CharacterClass.NINJA);
+    });
+  });
+
+  describe('name modal integration', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should show name modal when Enter pressed after class selection', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+      component.selectClass(CharacterClass.FIGHTER);
+
+      expect(component.showNameModal()).toBe(false);
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' });
+      component.handleKeyPress(event);
+
+      expect(component.showNameModal()).toBe(true);
+    });
+
+    it('should not show name modal when Enter pressed without class', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' });
+      component.handleKeyPress(event);
+
+      expect(component.showNameModal()).toBe(false);
+    });
+
+    it('should block keyboard shortcuts when name modal is open', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+      component.selectClass(CharacterClass.FIGHTER);
+      component.showNameModal.set(true);
+
+      const currentStats = component.rolledStats();
+
+      // Try to reroll (should not work)
+      const event = new KeyboardEvent('keydown', { key: 'r' });
+      component.handleKeyPress(event);
+      jest.advanceTimersByTime(300);
+
+      // Stats should not change
+      expect(component.rolledStats()).toBe(currentStats);
+    });
+
+    it('should save character when name modal emits save', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+      component.selectClass(CharacterClass.FIGHTER);
+
+      component.handleNameSave('Conan');
+
+      const state = component['gameState'].state();
+      const characters = Array.from(state.roster.values());
+      expect(characters.length).toBe(1);
+      expect(characters[0].name).toBe('Conan');
+    });
+
+    it('should close modal and return to form when name modal emits cancel', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+      component.selectClass(CharacterClass.FIGHTER);
+      component.showNameModal.set(true);
+
+      component.handleNameCancel();
+
+      expect(component.showNameModal()).toBe(false);
+      expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
+    });
+
+    it('should reset form after successful save', () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.rollStats();
+      jest.advanceTimersByTime(300);
+      component.selectClass(CharacterClass.FIGHTER);
+
+      component.handleNameSave('Gandalf');
+
+      // Wait for success message timeout
+      jest.advanceTimersByTime(2000);
+
+      expect(component.selectedRace()).toBeNull();
+      expect(component.isLocked()).toBe(false);
+      expect(component.showNameModal()).toBe(false);
     });
   });
 });

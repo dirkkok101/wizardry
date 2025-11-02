@@ -163,24 +163,6 @@
         </div>
       }
     </section>
-
-    <!-- Section 5: Name Character -->
-    <section class="form-section" [class.disabled]="!selectedClass()">
-      <h2>5. NAME CHARACTER</h2>
-      <div class="form-inputs">
-        <div class="input-group">
-          <label for="char-name">Name:</label>
-          <input
-            id="char-name"
-            type="text"
-            [disabled]="!selectedClass()"
-            [(ngModel)]="characterName"
-            maxlength="15"
-            placeholder="Enter name"
-          />
-        </div>
-      </div>
-    </section>
   </main>
 
   @if (successMessage(); as message) {
@@ -205,4 +187,10 @@
       (cancelled)="showCancelConfirmation.set(false)"
     />
   }
+
+  <app-name-modal
+    [visible]="showNameModal()"
+    (save)="handleNameSave($event)"
+    (cancel)="handleNameCancel()"
+  />
 </div>
