@@ -80,7 +80,7 @@
           <app-character-list
             [characters]="availableCharacters()"
             [selectable]="true"
-            (select)="handleAddCharacter($event)"
+            (characterSelected)="handleAddCharacter($event)"
           />
         }
 
@@ -104,7 +104,7 @@
           <app-character-list
             [characters]="partyCharacters()"
             [selectable]="true"
-            (select)="handleRemoveCharacter($event)"
+            (characterSelected)="handleRemoveCharacter($event)"
           />
         }
 

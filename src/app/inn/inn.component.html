@@ -36,7 +36,7 @@
         <app-character-list
           [characters]="allCharacters()"
           [selectable]="true"
-          (select)="selectCharacterToRest($event)"
+          (characterSelected)="selectCharacterToRest($event)"
         />
 
         <button class="cancel-btn" (click)="returnToCastle()">

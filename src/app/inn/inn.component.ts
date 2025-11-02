@@ -269,7 +269,7 @@ export class InnComponent implements OnInit {
         this.levelUpData.set({
           newLevel: levelUpResult.levelUpData.newLevel,
           hpIncrease: levelUpResult.levelUpData.hpIncrease,
-          statIncreases: levelUpResult.levelUpData.statIncreases,
+          statIncreases: levelUpResult.levelUpData.statIncreases as Record<string, number>,
           newSpells: spellResult.newSpells.map(s => ({ id: s.id, name: s.name }))
         });
         this.currentView.set('level-up');

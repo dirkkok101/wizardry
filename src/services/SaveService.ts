@@ -173,7 +173,7 @@ export class SaveService {
         const partyMembers = state.party.members || []
         const levels = partyMembers
           .map((memberId: string) => {
-            const character: Character | undefined = roster.get(memberId)
+            const character = roster.get(memberId) as Character | undefined
             return character?.level || 1
           })
           .filter((level: number) => level > 0)

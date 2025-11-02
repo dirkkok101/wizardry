@@ -34,15 +34,15 @@ export class CharacterInspectionComponent {
 
   // Query params (auto-managed with toSignal)
   private readonly queryParams = toSignal(this.route.queryParams, {
-    initialValue: {}
+    initialValue: {} as Record<string, string>
   });
 
   readonly characterId = computed(() =>
-    this.queryParams()?.['characterId'] || null
+    this.queryParams()['characterId'] || null
   );
 
   readonly returnTo = computed(() =>
-    this.queryParams()?.['returnTo'] || 'castle-menu'
+    this.queryParams()['returnTo'] || 'castle-menu'
   );
 
   // Character data
@@ -71,7 +71,13 @@ export class CharacterInspectionComponent {
     const char = this.character();
     if (!char) return false;
 
-    const casterClasses: CharacterClass[] = ['MAGE', 'PRIEST', 'BISHOP', 'SAMURAI', 'LORD'];
+    const casterClasses: CharacterClass[] = [
+      CharacterClass.MAGE,
+      CharacterClass.PRIEST,
+      CharacterClass.BISHOP,
+      CharacterClass.SAMURAI,
+      CharacterClass.LORD
+    ];
     return casterClasses.includes(char.class);
   });
 
@@ -79,14 +85,14 @@ export class CharacterInspectionComponent {
   readonly hasMageSpells = computed(() => {
     const char = this.character();
     if (!char) return false;
-    return ['MAGE', 'BISHOP', 'SAMURAI'].includes(char.class);
+    return [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(char.class);
   });
 
   // Check if character has priest spells
   readonly hasPriestSpells = computed(() => {
     const char = this.character();
     if (!char) return false;
-    return ['PRIEST', 'BISHOP', 'LORD'].includes(char.class);
+    return [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(char.class);
   });
 
 
