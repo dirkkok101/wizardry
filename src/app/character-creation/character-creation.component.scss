@@ -11,7 +11,7 @@
   main.creation-form {
     flex: 1;
     overflow-y: auto;
-    padding: $spacing-xl * 1.5;
+    padding: $spacing-lg;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
@@ -19,8 +19,8 @@
 
   .form-section {
     border: $border-width $border-style $border-color;
-    padding: $spacing-lg * 1.5;
-    margin-bottom: $spacing-xl * 1.5;
+    padding: $spacing-md $spacing-lg;
+    margin-bottom: $spacing-lg;
 
     &.disabled {
       opacity: 0.4;
@@ -29,9 +29,9 @@
 
     h2 {
       color: $color-text-bright;
-      margin-bottom: $spacing-lg;
+      margin-bottom: $spacing-md;
       border-bottom: 1px solid $border-color;
-      padding-bottom: $spacing-md;
+      padding-bottom: $spacing-sm;
       font-size: $font-size-base;
     }
   }
@@ -41,7 +41,7 @@
   .alignment-options,
   .class-grid {
     display: grid;
-    gap: $spacing-md;
+    gap: $spacing-sm;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
 
@@ -51,7 +51,7 @@
     background: $color-bg-black;
     border: $border-width $border-style $border-color;
     color: $color-text-green;
-    padding: $spacing-lg;
+    padding: $spacing-md $spacing-lg;
     cursor: pointer;
     font-family: $font-mono;
     font-size: $font-size-base;
@@ -94,23 +94,23 @@
   // Race and class details
   .race-details,
   .class-details {
-    margin-top: $spacing-lg;
-    padding: $spacing-lg;
+    margin-top: $spacing-md;
+    padding: $spacing-md;
     border-top: 1px solid $border-color;
 
     .description {
-      margin-bottom: $spacing-md;
+      margin-bottom: $spacing-sm;
       color: $color-text-green;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .base-stats,
     .hit-dice,
     .strengths,
     .weaknesses {
-      margin-bottom: $spacing-sm;
+      margin-bottom: $spacing-xs;
       font-size: $font-size-small;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .strengths {
@@ -127,12 +127,12 @@
     background: $color-bg-black;
     border: $border-width $border-style $border-color;
     color: $color-text-green;
-    padding: $spacing-lg;
+    padding: $spacing-md $spacing-lg;
     cursor: pointer;
     font-family: $font-mono;
     font-size: $font-size-base;
     width: 100%;
-    margin-bottom: $spacing-lg;
+    margin-bottom: $spacing-md;
 
     &:hover:not(:disabled) {
       background: $color-text-green;
@@ -146,13 +146,13 @@
   }
 
   .stats-display {
-    margin-top: $spacing-lg;
+    margin-top: $spacing-md;
 
     .stat-row {
       display: grid;
       grid-template-columns: 60px 40px 20px 40px 20px 60px;
-      gap: $spacing-sm;
-      padding: $spacing-sm 0;
+      gap: $spacing-xs;
+      padding: $spacing-xs 0;
       align-items: center;
       border-bottom: 1px solid rgba(0, 255, 0, 0.2);
 
@@ -189,8 +189,8 @@
     }
 
     .bonus-points {
-      margin-top: $spacing-lg;
-      padding-top: $spacing-lg;
+      margin-top: $spacing-md;
+      padding-top: $spacing-md;
       border-top: 1px solid $border-color;
       color: $color-amber;
       font-weight: bold;
@@ -203,7 +203,7 @@
 
     label {
       display: block;
-      margin-bottom: $spacing-sm;
+      margin-bottom: $spacing-xs;
       color: $color-text-bright;
       font-weight: bold;
     }
@@ -213,7 +213,7 @@
       background: $color-bg-black;
       border: $border-width $border-style $border-color;
       color: $color-text-green;
-      padding: $spacing-md;
+      padding: $spacing-sm $spacing-md;
       font-family: $font-mono;
       font-size: $font-size-base;
 
