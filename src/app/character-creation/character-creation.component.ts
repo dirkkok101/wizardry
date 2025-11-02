@@ -219,28 +219,96 @@ export class CharacterCreationComponent implements OnInit {
     this.router.navigate(['/training-grounds']);
   }
 
+  // Get keyboard shortcut for class
+  getClassShortcut(classId: string): string {
+    const shortcuts: { [key: string]: string } = {
+      'FIGHTER': 'F',
+      'MAGE': 'M',
+      'PRIEST': 'P',
+      'THIEF': 'T',
+      'BISHOP': 'B',
+      'SAMURAI': 'S',
+      'LORD': 'L',
+      'NINJA': 'N'
+    };
+    return shortcuts[classId] || '?';
+  }
+
   // Keyboard shortcuts
   @HostListener('window:keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
 
-    switch(key) {
-      case 'r':
-        if (this.selectedAlignment()) {
-          event.preventDefault();
-          this.rollStats();
-        }
-        break;
-      case 's':
-        if (this.canSave()) {
-          event.preventDefault();
-          this.saveCharacter();
-        }
-        break;
-      case 'escape':
+    // Priority 1: Save character (S) - takes precedence when form is complete
+    if (key === 's' && this.canSave()) {
+      event.preventDefault();
+      this.saveCharacter();
+      return;
+    }
+
+    // Priority 2: Cancel (Escape)
+    if (key === 'escape') {
+      event.preventDefault();
+      this.confirmCancel();
+      return;
+    }
+
+    // Priority 3: Race selection (1-5)
+    if (key >= '1' && key <= '5') {
+      const races = this.allRaces();
+      const index = parseInt(key) - 1;
+      if (index < races.length) {
         event.preventDefault();
-        this.confirmCancel();
-        break;
+        const raceId = this.parseRaceId(races[index].id);
+        if (raceId) this.selectRace(raceId);
+      }
+      return;
+    }
+
+    // Priority 4: Roll stats (R)
+    if (key === 'r' && this.selectedAlignment()) {
+      event.preventDefault();
+      this.rollStats();
+      return;
+    }
+
+    // Priority 5: Alignment selection (G, N, E)
+    if (this.selectedRace() && !this.rolledStats()) {
+      switch(key) {
+        case 'g':
+          event.preventDefault();
+          this.selectAlignment(Alignment.GOOD);
+          return;
+        case 'n':
+          event.preventDefault();
+          this.selectAlignment(Alignment.NEUTRAL);
+          return;
+        case 'e':
+          event.preventDefault();
+          this.selectAlignment(Alignment.EVIL);
+          return;
+      }
+    }
+
+    // Priority 6: Class selection (F, M, P, T, B, S, L, N) - only if stats rolled and not ready to save
+    if (this.rolledStats() && !this.canSave()) {
+      const classMap: { [key: string]: CharacterClass } = {
+        'f': CharacterClass.FIGHTER,
+        'm': CharacterClass.MAGE,
+        'p': CharacterClass.PRIEST,
+        't': CharacterClass.THIEF,
+        'b': CharacterClass.BISHOP,
+        's': CharacterClass.SAMURAI,
+        'l': CharacterClass.LORD,
+        'n': CharacterClass.NINJA
+      };
+
+      const charClass = classMap[key];
+      if (charClass && this.isClassEligible(charClass)) {
+        event.preventDefault();
+        this.selectClass(charClass);
+        return;
+      }
     }
   }
 

@@ -6,12 +6,12 @@
     <section class="form-section">
       <h2>1. CHOOSE RACE</h2>
       <div class="race-options">
-        @for (race of allRaces(); track race.id) {
+        @for (race of allRaces(); track race.id; let i = $index) {
           <button
             class="race-button"
             [class.selected]="selectedRace() === parseRaceId(race.id)"
             (click)="selectRace(parseRaceId(race.id)!)">
-            {{ race.name }}
+            [{{ i + 1 }}] {{ race.name }}
           </button>
         }
       </div>
@@ -45,15 +45,27 @@
     <section class="form-section" [class.disabled]="!selectedRace()">
       <h2>2. CHOOSE ALIGNMENT</h2>
       <div class="alignment-options">
-        @for (alignment of allAlignments; track alignment) {
-          <button
-            class="alignment-button"
-            [class.selected]="selectedAlignment() === alignment"
-            [disabled]="!selectedRace()"
-            (click)="selectAlignment(alignment)">
-            {{ alignment }}
-          </button>
-        }
+        <button
+          class="alignment-button"
+          [class.selected]="selectedAlignment() === 'GOOD'"
+          [disabled]="!selectedRace()"
+          (click)="selectAlignment('GOOD')">
+          [G] GOOD
+        </button>
+        <button
+          class="alignment-button"
+          [class.selected]="selectedAlignment() === 'NEUTRAL'"
+          [disabled]="!selectedRace()"
+          (click)="selectAlignment('NEUTRAL')">
+          [N] NEUTRAL
+        </button>
+        <button
+          class="alignment-button"
+          [class.selected]="selectedAlignment() === 'EVIL'"
+          [disabled]="!selectedRace()"
+          (click)="selectAlignment('EVIL')">
+          [E] EVIL
+        </button>
       </div>
     </section>
 
@@ -135,7 +147,7 @@
             [class.ineligible]="!isClassEligible(parseClassId(classData.id)!)"
             [disabled]="!rolledStats() || !isClassEligible(parseClassId(classData.id)!)"
             (click)="selectClass(parseClassId(classData.id)!)">
-            <div class="class-name">{{ classData.name }}</div>
+            <div class="class-name">[{{ getClassShortcut(classData.id) }}] {{ classData.name }}</div>
             @if (!isClassEligible(parseClassId(classData.id)!)) {
               <div class="ineligible-indicator">✗</div>
             }
