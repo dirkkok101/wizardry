@@ -230,8 +230,7 @@
   }
 }
 
-.roll-button,
-.reroll-button {
+.roll-button {
   width: 100%;
   padding: 1.5rem;
   font-size: 1.25rem;
@@ -256,12 +255,6 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
-}
-
-.reroll-button {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  font-size: 1rem;
 }
 
 .section-divider {
