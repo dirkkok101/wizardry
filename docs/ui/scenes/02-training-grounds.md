@@ -1,5 +1,23 @@
 # Training Grounds
 
+## Recent Update: Two-Column Wizard Redesign
+
+**Date:** 2025-11-02
+
+The character creation scene has been redesigned with a two-column wizard-state layout:
+
+- **Left Column (50%)**: Step-by-step controls, only current step visible
+- **Right Column (50%)**: Progressive character display (builds like a receipt)
+- **5 Steps**: SELECT_RACE → SELECT_ALIGNMENT → ROLL_STATS → SELECT_CLASS → NAME_CHARACTER
+- **Navigation**: Enter advances, Escape goes back (with data clearing)
+- **Reroll**: Available on class selection step, unlimited attempts
+- **Auto-advance**: Rolling dice automatically shows class selection
+- **Immediate Reset**: No delay after character creation
+
+See `docs/plans/2025-11-02-character-creation-wizard-redesign.md` for complete design details.
+
+---
+
 ## Overview
 
 **Description:** Character creation and roster management center. The only place to create new characters, inspect existing ones, and permanently delete characters from the roster.

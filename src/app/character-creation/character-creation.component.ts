@@ -15,6 +15,14 @@ import { CharacterClass, parseClass } from '../../types/CharacterClass';
 import { Alignment } from '../../types/Alignment';
 import { MenuItem } from '../../components/menu/menu.component';
 
+enum CreationStep {
+  SELECT_RACE = 'SELECT_RACE',
+  SELECT_ALIGNMENT = 'SELECT_ALIGNMENT',
+  ROLL_STATS = 'ROLL_STATS',
+  SELECT_CLASS = 'SELECT_CLASS',
+  NAME_CHARACTER = 'NAME_CHARACTER'
+}
+
 interface FinalStats {
   strength: number;
   intelligence: number;
@@ -39,6 +47,8 @@ interface FinalStats {
   styleUrl: './character-creation.component.scss'
 })
 export class CharacterCreationComponent implements OnInit {
+  private readonly ROLL_ANIMATION_DURATION_MS = 300;
+
   // Form state signals
   readonly selectedRace = signal<Race | null>(null);
   readonly selectedAlignment = signal<Alignment | null>(null);
@@ -52,13 +62,57 @@ export class CharacterCreationComponent implements OnInit {
   readonly isLocked = signal<boolean>(false);
   readonly showNameModal = signal<boolean>(false);
 
-  // Data arrays for template
-  readonly allRaces = computed(() => RaceService.getAllRaces());
-  readonly allClasses = computed(() => ClassService.getAllClasses());
-  readonly allAlignments = [Alignment.GOOD, Alignment.NEUTRAL, Alignment.EVIL];
+  // Wizard state machine
+  currentStep = signal<CreationStep>(CreationStep.SELECT_RACE);
+
+  // Step metadata
+  stepTitle = computed(() => {
+    switch(this.currentStep()) {
+      case CreationStep.SELECT_RACE: return 'Choose Your Race';
+      case CreationStep.SELECT_ALIGNMENT: return 'Choose Your Alignment';
+      case CreationStep.ROLL_STATS: return 'Roll Your Attributes';
+      case CreationStep.SELECT_CLASS: return 'Choose Your Class';
+      case CreationStep.NAME_CHARACTER: return 'Name Your Character';
+    }
+  });
+
+  stepNumber = computed(() => {
+    const steps = [
+      CreationStep.SELECT_RACE,
+      CreationStep.SELECT_ALIGNMENT,
+      CreationStep.ROLL_STATS,
+      CreationStep.SELECT_CLASS,
+      CreationStep.NAME_CHARACTER
+    ];
+    return steps.indexOf(this.currentStep()) + 1;
+  });
 
   // Expose Alignment enum to template
   readonly Alignment = Alignment;
+
+  // Expose CreationStep enum to template
+  readonly CreationStep = CreationStep;
+
+  readonly races = [
+    { id: 'HUMAN' as Race, name: 'Human', shortcut: '1' },
+    { id: 'ELF' as Race, name: 'Elf', shortcut: '2' },
+    { id: 'DWARF' as Race, name: 'Dwarf', shortcut: '3' },
+    { id: 'GNOME' as Race, name: 'Gnome', shortcut: '4' },
+    { id: 'HOBBIT' as Race, name: 'Hobbit', shortcut: '5' }
+  ];
+
+  readonly allClasses = [
+    { id: 'FIGHTER' as CharacterClass, name: 'Fighter', shortcut: 'F' },
+    { id: 'MAGE' as CharacterClass, name: 'Mage', shortcut: 'M' },
+    { id: 'PRIEST' as CharacterClass, name: 'Priest', shortcut: 'P' },
+    { id: 'THIEF' as CharacterClass, name: 'Thief', shortcut: 'T' },
+    { id: 'BISHOP' as CharacterClass, name: 'Bishop', shortcut: 'B' },
+    { id: 'SAMURAI' as CharacterClass, name: 'Samurai', shortcut: 'A' },
+    { id: 'LORD' as CharacterClass, name: 'Lord', shortcut: 'L' },
+    { id: 'NINJA' as CharacterClass, name: 'Ninja', shortcut: 'J' }
+  ];
+
+  characterName = signal<string>('');
 
   // Computed signals (derived state)
   readonly raceData = computed(() => {
@@ -145,21 +199,31 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   // Roll stats (NEW FORMULA)
-  rollStats() {
+  async rollStats() {
     this.isRolling.set(true);
 
-    // Simulate dice rolling animation
-    setTimeout(() => {
-      const rolled = CharacterCreationService.rollStats();
-      this.rolledStats.set(rolled);
-      this.selectedClass.set(null); // Reset class when rerolling
-      this.isRolling.set(false);
+    // Simulate dice roll animation
+    await new Promise(resolve => setTimeout(resolve, this.ROLL_ANIMATION_DURATION_MS));
 
-      // Lock race and alignment after first roll
-      if (!this.isLocked()) {
-        this.isLocked.set(true);
-      }
-    }, 300);
+    const rolled = CharacterCreationService.rollStats();
+    this.rolledStats.set(rolled);
+    this.isRolling.set(false);
+
+    // Lock race and alignment after first roll
+    if (!this.isLocked()) {
+      this.isLocked.set(true);
+    }
+
+    // Auto-advance to class selection
+    this.advanceToSelectClass();
+  }
+
+  rerollStats() {
+    // Clear class selection
+    this.selectedClass.set(null);
+
+    // Roll again (which auto-advances back to SELECT_CLASS)
+    this.rollStats();
   }
 
   // Class eligibility check
@@ -175,48 +239,109 @@ export class CharacterCreationComponent implements OnInit {
     }
   }
 
+  getAlignmentDescription(alignment: Alignment): string {
+    const descriptions = {
+      GOOD: 'Good characters are selfless and work for the benefit of others.',
+      NEUTRAL: 'Neutral characters are balanced and pragmatic.',
+      EVIL: 'Evil characters are selfish and pursue their own interests.'
+    };
+    return descriptions[alignment];
+  }
+
+  getClassDescription(classId: CharacterClass): string {
+    // Use ClassService to get description
+    const classData = ClassService.getClassData(classId);
+    return classData.description;
+  }
+
+  onNameSubmit(event: Event) {
+    event.preventDefault();
+    const name = this.characterName().trim();
+    if (name) {
+      this.submitCharacter(name);
+    }
+  }
+
+  getRaceName(race: Race): string {
+    const names: Record<Race, string> = {
+      HUMAN: 'Human',
+      ELF: 'Elf',
+      DWARF: 'Dwarf',
+      GNOME: 'Gnome',
+      HOBBIT: 'Hobbit'
+    };
+    return names[race];
+  }
+
+  getAlignmentName(alignment: Alignment): string {
+    const names: Record<Alignment, string> = {
+      GOOD: 'Good',
+      NEUTRAL: 'Neutral',
+      EVIL: 'Evil'
+    };
+    return names[alignment];
+  }
+
+  getClassName(classId: CharacterClass): string {
+    const classData = ClassService.getClassData(classId);
+    return classData.name;
+  }
+
   // Accept character and show name modal
   acceptCharacter() {
     if (!this.canAccept()) return;
     this.showNameModal.set(true);
   }
 
-  // Handle name modal save
+  // Submit character (formerly handleNameSave)
+  async submitCharacter(name: string) {
+    try {
+      const stats = this.finalStats()!;
+      // Create character
+      const character = CharacterService.createCharacterFromStats({
+        name: name.trim(),
+        password: '', // password (deprecated, empty string)
+        race: this.selectedRace()!,
+        alignment: this.selectedAlignment()!,
+        selectedClass: this.selectedClass()!,
+        stats: {
+          strength: stats.strength,
+          intelligence: stats.intelligence,
+          piety: stats.piety,
+          vitality: stats.vitality,
+          agility: stats.agility,
+          luck: stats.luck
+        }
+      });
+
+      // Add to roster
+      this.gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set(character.id, character)
+      }));
+
+      // Close modal
+      this.showNameModal.set(false);
+
+      // Success feedback
+      this.successMessage.set(`${character.name} created successfully!`);
+
+      // Immediate reset (no delay)
+      this.resetWizard();
+
+    } catch (error) {
+      this.errorMessage.set(error instanceof Error ? error.message : 'Failed to create character');
+    }
+  }
+
+  /**
+   * Wrapper method for test backward compatibility.
+   * Note: The template uses submitCharacter() directly via (nameSubmitted) event.
+   * This method exists solely for existing test code that calls handleNameSave().
+   * @param name - Character name entered by user
+   */
   handleNameSave(name: string) {
-    if (!this.canAccept()) return;
-
-    const stats = this.finalStats()!;
-    const character = CharacterService.createCharacterFromStats({
-      name: name.trim(),
-      password: '', // Password field removed per plan, but required by interface
-      race: this.selectedRace()!,
-      alignment: this.selectedAlignment()!,
-      selectedClass: this.selectedClass()!,
-      stats: {
-        strength: stats.strength,
-        intelligence: stats.intelligence,
-        piety: stats.piety,
-        vitality: stats.vitality,
-        agility: stats.agility,
-        luck: stats.luck
-      }
-    });
-
-    // Add to roster
-    this.gameState.updateState(state => ({
-      ...state,
-      roster: new Map(state.roster).set(character.id, character)
-    }));
-
-    // Close modal
-    this.showNameModal.set(false);
-
-    // Show success and reset
-    this.successMessage.set(`${character.name} created successfully!`);
-    setTimeout(() => {
-      this.resetForm();
-      this.successMessage.set(null);
-    }, 2000);
+    this.submitCharacter(name);
   }
 
   // Handle name modal cancel
@@ -224,15 +349,98 @@ export class CharacterCreationComponent implements OnInit {
     this.showNameModal.set(false);
   }
 
-  // Reset form
-  resetForm() {
+  // Reset wizard
+  resetWizard() {
+    this.currentStep.set(CreationStep.SELECT_RACE);
     this.selectedRace.set(null);
     this.selectedAlignment.set(null);
     this.rolledStats.set(null);
     this.selectedClass.set(null);
+    this.successMessage.set(null);
     this.errorMessage.set(null);
     this.isLocked.set(false);
-    this.showNameModal.set(false);
+  }
+
+  // Navigation: Advance to next step
+  /**
+   * Advances wizard from race selection to alignment selection.
+   * Guards against advancing without a selected race.
+   */
+  advanceToAlignment() {
+    if (!this.selectedRace()) return;
+    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  /**
+   * Advances wizard from alignment selection to roll stats.
+   * Guards against advancing without a selected alignment.
+   */
+  advanceToRollStats() {
+    if (!this.selectedAlignment()) return;
+    this.currentStep.set(CreationStep.ROLL_STATS);
+  }
+
+  /**
+   * Advances wizard from roll stats to class selection.
+   * No validation needed - called automatically after rolling.
+   */
+  advanceToSelectClass() {
+    this.currentStep.set(CreationStep.SELECT_CLASS);
+  }
+
+  /**
+   * Advances wizard from class selection to name character.
+   * Guards against advancing without a selected class.
+   */
+  advanceToNameCharacter() {
+    if (!this.selectedClass()) return;
+    this.currentStep.set(CreationStep.NAME_CHARACTER);
+  }
+
+  // Navigation: Go back (with clearing logic)
+  /**
+   * Goes back from alignment selection to race selection.
+   * Clears alignment selection but preserves race.
+   */
+  goBackFromAlignment() {
+    this.selectedAlignment.set(null);
+    this.currentStep.set(CreationStep.SELECT_RACE);
+  }
+
+  /**
+   * Goes back from roll stats to alignment selection.
+   * Clears rolled stats but preserves alignment.
+   */
+  goBackFromRollStats() {
+    this.rolledStats.set(null);
+    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  /**
+   * Goes back from class selection to alignment selection (nuclear option).
+   * Clears BOTH rolled stats AND selected class to prevent stat fishing.
+   */
+  goBackFromSelectClass() {
+    this.rolledStats.set(null);
+    this.selectedClass.set(null);
+    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  /**
+   * Goes back from name character to class selection.
+   * Preserves all selections including stats and class.
+   */
+  goBackFromNameCharacter() {
+    this.currentStep.set(CreationStep.SELECT_CLASS);
+  }
+
+  cancelToTrainingGrounds() {
+    // Navigate back to training grounds scene
+    this.router.navigate(['/training-grounds']);
+  }
+
+  quitToTrainingGrounds() {
+    this.cancelToTrainingGrounds();
   }
 
   // Navigation
@@ -259,90 +467,131 @@ export class CharacterCreationComponent implements OnInit {
   @HostListener('window:keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
+    let handled = false;
 
-    // Priority 0: Block all shortcuts if name modal is open
-    if (this.showNameModal()) {
-      return;
+    // Route by current step
+    switch(this.currentStep()) {
+      case CreationStep.SELECT_RACE:
+        handled = this.handleRaceStepKeys(key);
+        break;
+
+      case CreationStep.SELECT_ALIGNMENT:
+        handled = this.handleAlignmentStepKeys(key);
+        break;
+
+      case CreationStep.ROLL_STATS:
+        handled = this.handleRollStatsStepKeys(key);
+        break;
+
+      case CreationStep.SELECT_CLASS:
+        handled = this.handleSelectClassStepKeys(key);
+        break;
+
+      case CreationStep.NAME_CHARACTER:
+        handled = this.handleNameCharacterStepKeys(key);
+        break;
     }
 
-    // Priority 1: Reset form (ESC)
-    if (key === 'escape') {
-      event.preventDefault();
-      this.resetForm();
-      return;
-    }
-
-    // Priority 2: Quit to Training Grounds (Q)
+    // Global shortcuts (work on any step)
     if (key === 'q') {
       event.preventDefault();
-      this.navigateToTrainingGrounds();
+      this.quitToTrainingGrounds();
       return;
     }
 
-    // Priority 3: Race selection (1-5) - only if not locked
-    if (key >= '1' && key <= '5' && !this.isLocked()) {
-      const races = this.allRaces();
+    if (handled) {
+      event.preventDefault();
+    }
+  }
+
+  private handleRaceStepKeys(key: string): boolean {
+    if (['1','2','3','4','5'].includes(key)) {
+      const races: Race[] = [Race.HUMAN, Race.ELF, Race.DWARF, Race.GNOME, Race.HOBBIT];
       const index = parseInt(key) - 1;
-      if (index < races.length) {
-        event.preventDefault();
-        const raceId = this.parseRaceId(races[index].id);
-        if (raceId) this.selectRace(raceId);
-      }
-      return;
+      this.selectedRace.set(races[index]);
+      return true;
+    } else if (key === 'enter' && this.selectedRace()) {
+      this.advanceToAlignment();
+      return true;
+    } else if (key === 'escape') {
+      this.cancelToTrainingGrounds();
+      return true;
     }
+    return false;
+  }
 
-    // Priority 4: Alignment selection (G, N, E) - only if race selected and not locked
-    if (this.selectedRace() && !this.isLocked()) {
-      switch(key) {
-        case 'g':
-          event.preventDefault();
-          this.selectAlignment(Alignment.GOOD);
-          return;
-        case 'n':
-          event.preventDefault();
-          this.selectAlignment(Alignment.NEUTRAL);
-          return;
-        case 'e':
-          event.preventDefault();
-          this.selectAlignment(Alignment.EVIL);
-          return;
-      }
+  private handleAlignmentStepKeys(key: string): boolean {
+    if (key === 'g') {
+      this.selectedAlignment.set(Alignment.GOOD);
+      return true;
+    } else if (key === 'n') {
+      this.selectedAlignment.set(Alignment.NEUTRAL);
+      return true;
+    } else if (key === 'e') {
+      this.selectedAlignment.set(Alignment.EVIL);
+      return true;
+    } else if (key === 'enter' && this.selectedAlignment()) {
+      this.advanceToRollStats();
+      return true;
+    } else if (key === 'escape') {
+      this.goBackFromAlignment();
+      return true;
     }
+    return false;
+  }
 
-    // Priority 5: Roll stats (R)
-    if (key === 'r' && this.selectedAlignment()) {
-      event.preventDefault();
+  private handleRollStatsStepKeys(key: string): boolean {
+    if (key === 'r' && !this.isRolling()) {
       this.rollStats();
-      return;
+      return true;
+    } else if (key === 'escape') {
+      this.goBackFromRollStats();
+      return true;
     }
+    return false;
+  }
 
-    // Priority 6: Class selection (F, M, P, T, B, A, L, J) - only when locked
-    if (this.rolledStats() && this.isLocked() && !this.canAccept()) {
-      const classMap: { [key: string]: CharacterClass } = {
-        'f': CharacterClass.FIGHTER,
-        'm': CharacterClass.MAGE,
-        'p': CharacterClass.PRIEST,
-        't': CharacterClass.THIEF,
-        'b': CharacterClass.BISHOP,
-        'a': CharacterClass.SAMURAI,
-        'l': CharacterClass.LORD,
-        'j': CharacterClass.NINJA
-      };
+  private handleSelectClassStepKeys(key: string): boolean {
+    const classMap: Record<string, CharacterClass> = {
+      'f': CharacterClass.FIGHTER,
+      'm': CharacterClass.MAGE,
+      'p': CharacterClass.PRIEST,
+      't': CharacterClass.THIEF,
+      'b': CharacterClass.BISHOP,
+      'a': CharacterClass.SAMURAI,
+      'l': CharacterClass.LORD,
+      'j': CharacterClass.NINJA
+    };
 
-      const charClass = classMap[key];
-      if (charClass && this.isClassEligible(charClass)) {
-        event.preventDefault();
-        this.selectClass(charClass);
-        return;
+    if (key === 'r') {
+      this.rerollStats();
+      return true;
+    } else if (key in classMap) {
+      const selectedClass = classMap[key];
+      // Only allow selecting eligible classes
+      const eligible = this.eligibleClasses();
+      if (eligible.includes(selectedClass)) {
+        this.selectedClass.set(selectedClass);
       }
+      return true;
+    } else if (key === 'enter' && this.selectedClass()) {
+      this.advanceToNameCharacter();
+      return true;
+    } else if (key === 'escape') {
+      this.goBackFromSelectClass();
+      return true;
     }
+    return false;
+  }
 
-    // Priority 7: Accept character (Enter) - only when class selected
-    if (key === 'enter' && this.canAccept()) {
-      event.preventDefault();
-      this.acceptCharacter();
-      return;
+  private handleNameCharacterStepKeys(key: string): boolean {
+    // Let the input field handle typing
+    // Only intercept Escape (Enter handled by form submit)
+    if (key === 'escape') {
+      this.goBackFromNameCharacter();
+      return true;
     }
+    return false;
   }
 
   // Footer menu handler
@@ -352,7 +601,7 @@ export class CharacterCreationComponent implements OnInit {
         this.acceptCharacter();
         break;
       case 'reset':
-        this.resetForm();
+        this.resetWizard();
         break;
       case 'quit':
         this.navigateToTrainingGrounds();
