@@ -8,6 +8,13 @@ interface ValidationResult {
   reason?: string
 }
 
+interface DivvyGoldResult {
+  success: boolean
+  error?: string
+  updatedParty?: Party
+  updatedRoster?: Map<string, Character>
+}
+
 const MAX_PARTY_SIZE = 6
 
 export class PartyService {
@@ -52,5 +59,54 @@ export class PartyService {
     }
 
     return { allowed: true }
+  }
+
+  /**
+   * Distribute party's pooled gold equally among all members
+   * Remainder distributed to first N members
+   */
+  static divvyGold(
+    party: Party,
+    roster: Map<string, Character>
+  ): DivvyGoldResult {
+    // Validate party has members
+    if (party.members.length === 0) {
+      return { success: false, error: 'No party members to distribute gold to' }
+    }
+
+    // Validate party has gold
+    if (!party.gold || party.gold === 0) {
+      return { success: false, error: 'No gold to distribute' }
+    }
+
+    const totalGold = party.gold
+    const partySize = party.members.length
+    const sharePerMember = Math.floor(totalGold / partySize)
+    const remainder = totalGold % partySize
+
+    // Create new roster with updated gold
+    const updatedRoster = new Map(roster)
+    party.members.forEach((memberId, index) => {
+      const character = updatedRoster.get(memberId)
+      if (character) {
+        const bonusGold = index < remainder ? 1 : 0
+        updatedRoster.set(memberId, {
+          ...character,
+          gold: (character.gold || 0) + sharePerMember + bonusGold
+        })
+      }
+    })
+
+    // Create new party with zero gold
+    const updatedParty: Party = {
+      ...party,
+      gold: 0
+    }
+
+    return {
+      success: true,
+      updatedParty,
+      updatedRoster
+    }
   }
 }
