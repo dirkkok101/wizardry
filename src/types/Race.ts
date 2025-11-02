@@ -71,11 +71,11 @@ export function parseRace(id: string): Race | null {
  */
 export function parseSavingThrowBonus(data: Record<string, number>): SavingThrowBonus {
   return {
-    death: data.death,
-    wand: data.wand,
-    breath: data.breath,
-    petrify: data.petrify,
-    spell: data.spell
+    death: data['death'],
+    wand: data['wand'],
+    breath: data['breath'],
+    petrify: data['petrify'],
+    spell: data['spell']
   }
 }
 

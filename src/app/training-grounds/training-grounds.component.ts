@@ -154,10 +154,8 @@ export class TrainingGroundsComponent implements OnInit {
    * Get character status for display
    */
   private getCharacterStatus(char: Character, party: Party): CharacterStatus {
-    if (party.members.includes(char.id)) return CharacterStatus.IN_MAZE;
-    if (char.status === CharacterStatus.DEAD) return CharacterStatus.DEAD;
-    if (char.status === CharacterStatus.ASHES) return CharacterStatus.ASHES;
-    return CharacterStatus.OK;
+    // Return actual character status (being in party doesn't change it)
+    return char.status;
   }
 
   /**

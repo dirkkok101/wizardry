@@ -356,10 +356,11 @@ export class ShopComponent implements OnInit {
     const charId = this.selectedCharacterId()!
 
     this.gameState.updateState(state => {
+      // Update inventory items - handle both string IDs and Item objects
       const updatedInventory = character.inventory.map(invItem => {
-        // Handle both Item objects and string IDs
-        if (typeof invItem === 'object') {
-          return invItem.id === itemId ? { ...invItem, identified: true } : invItem
+        // If it's an Item object with matching ID, mark as identified
+        if (typeof invItem === 'object' && 'id' in invItem && invItem.id === itemId) {
+          return { ...invItem, identified: true }
         }
         return invItem
       })

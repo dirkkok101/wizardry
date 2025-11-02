@@ -10,6 +10,17 @@ const SAVE_KEY = 'wizardry_save'
 const SAVE_VERSION = '1.0.0'
 
 /**
+ * Schema version for save data structure.
+ * Increment this when making breaking changes to Character or other core types.
+ *
+ * Version History:
+ * - v1: Original schema with Character having: password, gold, createdAt, lastModified
+ * - v2: Character refactor - removed password, gold, createdAt, lastModified;
+ *       added age, vim, spellPoints (Map), knownSpells (Set), equipment slots
+ */
+const SAVE_SCHEMA_VERSION = 2
+
+/**
  * Metadata about a save slot without loading the full game state
  */
 export interface SaveSlotMetadata {
@@ -79,6 +90,7 @@ export class SaveService {
   async saveGame(gameState: GameState, saveSlot: number = 1): Promise<void> {
     const saveData: SaveData = {
       version: SAVE_VERSION,
+      schemaVersion: SAVE_SCHEMA_VERSION,
       timestamp: Date.now(),
       state: gameState
     }
@@ -106,6 +118,15 @@ export class SaveService {
       // Validate structure
       if (!saveData.state || !saveData.version) {
         throw new Error('Save data corrupted - missing required fields')
+      }
+
+      // Validate schema version
+      if (saveData.schemaVersion !== SAVE_SCHEMA_VERSION) {
+        console.log(
+          `Save file schema mismatch (expected ${SAVE_SCHEMA_VERSION}, got ${saveData.schemaVersion}), clearing incompatible save`
+        )
+        await this.deleteSave(saveSlot)
+        return null
       }
 
       return this.deserializeGameState(saveData.state)
@@ -152,6 +173,11 @@ export class SaveService {
 
       // Validate structure
       if (!saveData.state || !saveData.version || !saveData.timestamp) {
+        return null
+      }
+
+      // Check schema version - return null for incompatible saves
+      if (saveData.schemaVersion !== SAVE_SCHEMA_VERSION) {
         return null
       }
 

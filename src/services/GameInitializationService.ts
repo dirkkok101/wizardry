@@ -4,6 +4,8 @@
 
 import { GameState } from '../types/GameState'
 import { SceneType } from '../types/SceneType'
+import { RaceService } from './RaceService'
+import { ClassService } from './ClassService'
 
 let gameState: GameState | null = null
 
@@ -43,9 +45,23 @@ function createNewGame(): GameState {
 }
 
 /**
- * Initialize game state
+ * Initialize game state and load game data
+ *
+ * Loads race and class data in parallel for optimal startup performance.
+ * Must be called before character creation functionality is used.
+ *
+ * @throws {Error} If race or class data fails to load
  */
 async function initializeGame(): Promise<void> {
+  console.log('Initializing game data...')
+
+  // Initialize data services in parallel
+  await Promise.all([
+    RaceService.initialize(),
+    ClassService.initialize()
+  ])
+
+  console.log('Game data initialized successfully')
   gameState = createNewGame()
 }
 

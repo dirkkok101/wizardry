@@ -24,14 +24,17 @@ describe('CharacterCardComponent', () => {
     vitality: 12,
     agility: 14,
     luck: 13,
+    age: 15,
     hp: 25,
     maxHp: 25,
     ac: 10,
+    vim: {
+      max: 12,
+      current: 12
+    },
     experience: 5000,
-    inventory: [],
-    password: 'test',
-    createdAt: Date.now(),
-    lastModified: Date.now()
+    knownSpells: [],
+    inventory: []
   };
 
   beforeEach(async () => {

@@ -172,4 +172,114 @@ describe('SaveService', () => {
       ).rejects.toThrow('corrupted')
     })
   })
+
+  describe('schema version validation', () => {
+    it('should save game with current schema version', async () => {
+      const gameState = GameInitializationService.createNewGame()
+      await service.saveGame(gameState, 1)
+
+      const saved = localStorage.getItem('wizardry_save_1')
+      const saveData = JSON.parse(saved!)
+
+      expect(saveData.schemaVersion).toBe(2)
+    })
+
+    it('should automatically clear save with incompatible schema version', async () => {
+      // Create a save with old schema version (v1)
+      const gameState = GameInitializationService.createNewGame()
+      const oldSaveData = {
+        version: '1.0.0',
+        schemaVersion: 1,
+        timestamp: Date.now(),
+        state: {
+          ...gameState,
+          roster: Array.from(gameState.roster.entries()),
+          dungeon: {
+            ...gameState.dungeon,
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles.entries())
+          }
+        }
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
+
+      // Spy on console.log to verify logging
+      const consoleSpy = jest.spyOn(console, 'log')
+
+      const loaded = await service.loadGame(1)
+
+      // Should return null and clear the save
+      expect(loaded).toBeNull()
+      expect(await service.hasSaveData(1)).toBe(false)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Save file schema mismatch (expected 2, got 1), clearing incompatible save'
+      )
+
+      consoleSpy.mockRestore()
+    })
+
+    it('should load save with current schema version', async () => {
+      const gameState = GameInitializationService.createNewGame()
+      await service.saveGame(gameState, 1)
+
+      const loaded = await service.loadGame(1)
+
+      expect(loaded).toEqual(gameState)
+      expect(await service.hasSaveData(1)).toBe(true)
+    })
+
+    it('should handle missing schemaVersion field as incompatible', async () => {
+      // Create a save without schemaVersion field (very old save)
+      const gameState = GameInitializationService.createNewGame()
+      const oldSaveData = {
+        version: '1.0.0',
+        timestamp: Date.now(),
+        state: {
+          ...gameState,
+          roster: Array.from(gameState.roster.entries()),
+          dungeon: {
+            ...gameState.dungeon,
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles.entries())
+          }
+        }
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
+
+      const consoleSpy = jest.spyOn(console, 'log')
+
+      const loaded = await service.loadGame(1)
+
+      // Should return null and clear the save
+      expect(loaded).toBeNull()
+      expect(await service.hasSaveData(1)).toBe(false)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Save file schema mismatch (expected 2, got undefined), clearing incompatible save'
+      )
+
+      consoleSpy.mockRestore()
+    })
+
+    it('should return null metadata for saves with incompatible schema version', async () => {
+      // Create a save with old schema version (v1)
+      const gameState = GameInitializationService.createNewGame()
+      const oldSaveData = {
+        version: '1.0.0',
+        schemaVersion: 1,
+        timestamp: Date.now(),
+        state: {
+          ...gameState,
+          roster: Array.from(gameState.roster.entries()),
+          dungeon: {
+            ...gameState.dungeon,
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles.entries())
+          }
+        }
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
+
+      const metadata = await service.getSlotMetadata(1)
+
+      // Should return null for incompatible schema
+      expect(metadata).toBeNull()
+    })
+  })
 })

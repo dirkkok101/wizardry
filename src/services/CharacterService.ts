@@ -2,9 +2,13 @@ import { GameState } from '../types/GameState'
 import { Character, CreateCharacterParams } from '../types/Character'
 import { CharacterClass, CLASS_REQUIREMENTS } from '../types/CharacterClass'
 import { CharacterStatus } from '../types/CharacterStatus'
-import { Race, RACE_MODIFIERS } from '../types/Race'
+import { Race } from '../types/Race'
 import { Alignment } from '../types/Alignment'
 import { BaseStats } from './CharacterCreationService'
+import { CharacterSpellPoints } from '../types/SpellPoints'
+import { MaxCurrent } from '../types/MaxCurrent'
+import { ClassService } from './ClassService'
+import { RaceService } from './RaceService'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface ValidationResult {
@@ -72,6 +76,68 @@ function rollStat(): number {
 }
 
 /**
+ * Roll hit dice based on hit dice string (e.g., "1d8", "1d10")
+ */
+function rollHitDice(hitDice: string): number {
+  const match = hitDice.match(/^(\d+)d(\d+)$/)
+  if (!match) {
+    throw new Error(`Invalid hit dice format: ${hitDice}`)
+  }
+
+  const numDice = parseInt(match[1], 10)
+  const diceSize = parseInt(match[2], 10)
+
+  let total = 0
+  for (let i = 0; i < numDice; i++) {
+    total += Math.floor(Math.random() * diceSize) + 1
+  }
+
+  return total
+}
+
+/**
+ * Initialize spell points for caster classes
+ * Returns undefined for non-casters, appropriate pools for Mage/Priest/Bishop
+ */
+function initializeSpellPoints(characterClass: CharacterClass): CharacterSpellPoints | undefined {
+  const classData = ClassService.getClassData(characterClass)
+
+  // Non-casters have no spell access
+  if (!classData.spellAccess) {
+    return undefined
+  }
+
+  const spellPoints: CharacterSpellPoints = {}
+  const emptyPool = {
+    level1: { current: 0, max: 0 },
+    level2: { current: 0, max: 0 },
+    level3: { current: 0, max: 0 },
+    level4: { current: 0, max: 0 },
+    level5: { current: 0, max: 0 },
+    level6: { current: 0, max: 0 },
+    level7: { current: 0, max: 0 }
+  }
+
+  // Initialize pools based on spell access
+  if (classData.spellAccess.mage) {
+    spellPoints.mage = { ...emptyPool }
+  }
+
+  if (classData.spellAccess.priest) {
+    spellPoints.priest = { ...emptyPool }
+  }
+
+  return spellPoints
+}
+
+/**
+ * Generate random age (14-16, original Wizardry range)
+ */
+function generateAge(): number {
+  return 14 + Math.floor(Math.random() * 3)
+}
+
+/**
  * Generate unique character ID
  */
 function generateCharacterId(): string {
@@ -93,17 +159,31 @@ function createCharacter(
   const baseAgility = rollStat()
   const baseLuck = rollStat()
 
-  // Apply race modifiers
-  const raceModifiers = RACE_MODIFIERS[params.race]
-  const strength = baseStrength + raceModifiers.strength
-  const intelligence = baseIntelligence + raceModifiers.intelligence
-  const piety = basePiety + raceModifiers.piety
-  const vitality = baseVitality + raceModifiers.vitality
-  const agility = baseAgility + raceModifiers.agility
-  const luck = baseLuck + raceModifiers.luck
+  // Apply race modifiers using RaceService
+  const raceData = RaceService.getRaceData(params.race)
+  const raceModifiers = raceData.baseStats
+  const strength = baseStrength + raceModifiers.str
+  const intelligence = baseIntelligence + raceModifiers.int
+  const piety = basePiety + raceModifiers.pie
+  const vitality = baseVitality + raceModifiers.vit
+  const agility = baseAgility + raceModifiers.agi
+  const luck = baseLuck + raceModifiers.luc
 
-  // Calculate starting HP (vitality-based)
-  const maxHp = Math.max(1, vitality + Math.floor(Math.random() * 8) + 1)
+  // Calculate starting HP using ClassService hit dice
+  const classData = ClassService.getClassData(params.class)
+  const maxHp = rollHitDice(classData.hitDice)
+
+  // Initialize VIM (vitality for resurrection)
+  const vim: MaxCurrent = {
+    current: vitality,
+    max: vitality
+  }
+
+  // Generate age (14-16)
+  const age = generateAge()
+
+  // Initialize spell points for caster classes
+  const spellPoints = initializeSpellPoints(params.class)
 
   const character: Character = {
     id: generateCharacterId(),
@@ -120,9 +200,13 @@ function createCharacter(
     luck,
     level: 1,
     experience: 0,
+    age,
     hp: maxHp,
     maxHp,
     ac: 10, // Base AC, improved by armor
+    vim,
+    spellPoints,
+    knownSpells: [],
     inventory: [],
     password: params.password,
     createdAt: Date.now(),
@@ -319,32 +403,13 @@ function validatePassword(password: string): ValidationResult {
 }
 
 /**
- * Calculate starting HP based on class and vitality.
+ * Calculate starting HP based on class hit dice.
  *
- * Formula (authentic Wizardry):
- * - Base HP varies by class
- * - Modified by vitality bonus
+ * Uses ClassService.getClassData().hitDice (e.g., "1d10", "1d8")
  */
-function calculateStartingHP(
-  characterClass: CharacterClass,
-  vitality: number
-): { hp: number; maxHp: number } {
-  // Base HP by class (from original Wizardry)
-  const baseHP: Record<CharacterClass, number> = {
-    [CharacterClass.FIGHTER]: 10,
-    [CharacterClass.MAGE]: 4,
-    [CharacterClass.PRIEST]: 8,
-    [CharacterClass.THIEF]: 6,
-    [CharacterClass.BISHOP]: 4,
-    [CharacterClass.SAMURAI]: 10,
-    [CharacterClass.LORD]: 10,
-    [CharacterClass.NINJA]: 8
-  }
-
-  // Vitality bonus: (VIT - 10) / 3, minimum 0
-  const vitalityBonus = Math.max(0, Math.floor((vitality - 10) / 3))
-
-  const maxHp = baseHP[characterClass] + vitalityBonus
+function calculateStartingHP(characterClass: CharacterClass): { hp: number; maxHp: number } {
+  const classData = ClassService.getClassData(characterClass)
+  const maxHp = rollHitDice(classData.hitDice)
 
   return { hp: maxHp, maxHp }
 }
@@ -365,8 +430,20 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     )
   }
 
-  // Calculate starting HP based on class and vitality
-  const { hp, maxHp } = calculateStartingHP(selectedClass, stats.vitality)
+  // Calculate starting HP based on class hit dice
+  const { hp, maxHp } = calculateStartingHP(selectedClass)
+
+  // Initialize VIM (vitality for resurrection)
+  const vim: MaxCurrent = {
+    current: stats.vitality,
+    max: stats.vitality
+  }
+
+  // Generate age (14-16)
+  const age = generateAge()
+
+  // Initialize spell points for caster classes
+  const spellPoints = initializeSpellPoints(selectedClass)
 
   // Create character
   const character: Character = {
@@ -378,6 +455,7 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     class: selectedClass,
     level: 1,
     experience: 0,
+    age,
 
     // Stats
     strength: stats.strength,
@@ -394,15 +472,23 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     // AC (base 10, improved by armor)
     ac: 10,
 
-    // Status
+    // Status & Vitality
     status: CharacterStatus.OK,
+    vim,
+
+    // Spell System
+    spellPoints,
+    knownSpells: [],
+
+    // Equipment
+    equippedWeapon: undefined,
+    equippedArmor: undefined,
+    equippedShield: undefined,
+    equippedHelmet: undefined,
+    equippedGauntlets: undefined,
 
     // Inventory
-    inventory: [],
-
-    // Metadata
-    createdAt: Date.now(),
-    lastModified: Date.now()
+    inventory: []
   }
 
   return character

@@ -52,7 +52,17 @@ export interface Character {
   equippedGauntlets?: string   // Gauntlet slot (item ID)
 
   // Inventory
-  inventory: string[]  // Item IDs (max 8 items)
+  inventory: (string | any)[]  // Item IDs or Item objects (max 8 items)
+
+  // Gold (individual character gold)
+  gold?: number  // Individual gold (party gold managed separately)
+
+  // Password (for character access protection)
+  password?: string  // Password for character deletion/access
+
+  // Metadata
+  createdAt?: number  // Timestamp of character creation
+  lastModified?: number  // Timestamp of last modification
 }
 
 /**
