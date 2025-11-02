@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { TrainingGroundsComponent, WizardStep } from './training-grounds.component'
+import { CharacterCreationComponent, WizardStep } from './training-grounds.component'
 import { GameStateService } from '../../services/GameStateService'
 import { CharacterCreationService, BaseStats } from '../../services/CharacterCreationService'
 import { SceneType } from '../../types/SceneType'
@@ -8,18 +8,18 @@ import { Race } from '../../types/Race'
 import { Alignment } from '../../types/Alignment'
 import { CharacterClass } from '../../types/CharacterClass'
 
-describe('TrainingGroundsComponent', () => {
-  let component: TrainingGroundsComponent
-  let fixture: ComponentFixture<TrainingGroundsComponent>
+describe('CharacterCreationComponent', () => {
+  let component: CharacterCreationComponent
+  let fixture: ComponentFixture<CharacterCreationComponent>
   let gameState: GameStateService
   let router: Router
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [TrainingGroundsComponent]
+      imports: [CharacterCreationComponent]
     })
 
-    fixture = TestBed.createComponent(TrainingGroundsComponent)
+    fixture = TestBed.createComponent(CharacterCreationComponent)
     component = fixture.componentInstance
     gameState = TestBed.inject(GameStateService)
     router = TestBed.inject(Router)
