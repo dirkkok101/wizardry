@@ -599,8 +599,10 @@ interface TrainingGroundsState {
 4. **Return to Castle**: Navigate to /castle-menu
 
 ### Keyboard Shortcuts
-- **C** - Create new character
+- **C** - Create new character (transitions to Character Creation scene)
 - **L** - Leave (return to castle menu)
+
+For detailed character creation keyboard shortcuts, see: [Character Creation Keyboard Shortcuts](../keyboard-shortcuts-character-creation.md)
 
 ### Component Responsibilities
 - **TrainingGrounds**: Filter roster, compute status, handle events, coordinate navigation

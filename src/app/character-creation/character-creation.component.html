@@ -10,8 +10,13 @@
           <button
             class="race-button"
             [class.selected]="selectedRace() === parseRaceId(race.id)"
+            [class.locked]="isLocked() && selectedRace() === parseRaceId(race.id)"
+            [disabled]="isLocked()"
             (click)="selectRace(parseRaceId(race.id)!)">
             [{{ i + 1 }}] {{ race.name }}
+            @if (isLocked() && selectedRace() === parseRaceId(race.id)) {
+              <span class="lock-icon">🔒</span>
+            }
           </button>
         }
       </div>
@@ -39,6 +44,9 @@
           }
         </div>
       }
+      @if (isLocked()) {
+        <p class="lock-hint">Press ESC to unlock and change race</p>
+      }
     </section>
 
     <!-- Section 2: Alignment Selection -->
@@ -48,25 +56,40 @@
         <button
           class="alignment-button"
           [class.selected]="selectedAlignment() === Alignment.GOOD"
-          [disabled]="!selectedRace()"
+          [class.locked]="isLocked() && selectedAlignment() === Alignment.GOOD"
+          [disabled]="!selectedRace() || isLocked()"
           (click)="selectAlignment(Alignment.GOOD)">
           [G] GOOD
+          @if (isLocked() && selectedAlignment() === Alignment.GOOD) {
+            <span class="lock-icon">🔒</span>
+          }
         </button>
         <button
           class="alignment-button"
           [class.selected]="selectedAlignment() === Alignment.NEUTRAL"
-          [disabled]="!selectedRace()"
+          [class.locked]="isLocked() && selectedAlignment() === Alignment.NEUTRAL"
+          [disabled]="!selectedRace() || isLocked()"
           (click)="selectAlignment(Alignment.NEUTRAL)">
           [N] NEUTRAL
+          @if (isLocked() && selectedAlignment() === Alignment.NEUTRAL) {
+            <span class="lock-icon">🔒</span>
+          }
         </button>
         <button
           class="alignment-button"
           [class.selected]="selectedAlignment() === Alignment.EVIL"
-          [disabled]="!selectedRace()"
+          [class.locked]="isLocked() && selectedAlignment() === Alignment.EVIL"
+          [disabled]="!selectedRace() || isLocked()"
           (click)="selectAlignment(Alignment.EVIL)">
           [E] EVIL
+          @if (isLocked() && selectedAlignment() === Alignment.EVIL) {
+            <span class="lock-icon">🔒</span>
+          }
         </button>
       </div>
+      @if (isLocked()) {
+        <p class="lock-hint">Press ESC to unlock and change alignment</p>
+      }
     </section>
 
     <!-- Section 3: Roll Stats -->
@@ -163,24 +186,6 @@
         </div>
       }
     </section>
-
-    <!-- Section 5: Name Character -->
-    <section class="form-section" [class.disabled]="!selectedClass()">
-      <h2>5. NAME CHARACTER</h2>
-      <div class="form-inputs">
-        <div class="input-group">
-          <label for="char-name">Name:</label>
-          <input
-            id="char-name"
-            type="text"
-            [disabled]="!selectedClass()"
-            [(ngModel)]="characterName"
-            maxlength="15"
-            placeholder="Enter name"
-          />
-        </div>
-      </div>
-    </section>
   </main>
 
   @if (successMessage(); as message) {
@@ -195,14 +200,9 @@
     (itemSelected)="handleFooterAction($event)"
   />
 
-  @if (showCancelConfirmation()) {
-    <app-confirmation-dialog
-      [visible]="showCancelConfirmation()"
-      [message]="'Discard current character creation?'"
-      [yesLabel]="'DISCARD'"
-      [noLabel]="'CONTINUE'"
-      (confirmed)="resetForm()"
-      (cancelled)="showCancelConfirmation.set(false)"
-    />
-  }
+  <app-name-modal
+    [visible]="showNameModal()"
+    (save)="handleNameSave($event)"
+    (cancel)="handleNameCancel()"
+  />
 </div>

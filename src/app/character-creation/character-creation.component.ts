@@ -9,7 +9,7 @@ import { CharacterService } from '../../services/CharacterService';
 import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { NameModalComponent } from '../components/name-modal/name-modal.component';
 import { Race, parseRace } from '../../types/Race';
 import { CharacterClass, parseClass } from '../../types/CharacterClass';
 import { Alignment } from '../../types/Alignment';
@@ -33,7 +33,7 @@ interface FinalStats {
     FormsModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    ConfirmationDialogComponent
+    NameModalComponent
   ],
   templateUrl: './character-creation.component.html',
   styleUrl: './character-creation.component.scss'
@@ -44,13 +44,13 @@ export class CharacterCreationComponent implements OnInit {
   readonly selectedAlignment = signal<Alignment | null>(null);
   readonly rolledStats = signal<RolledStats | null>(null);
   readonly selectedClass = signal<CharacterClass | null>(null);
-  readonly characterName = signal<string>('');
 
   // UI state signals
   readonly isRolling = signal<boolean>(false);
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
-  readonly showCancelConfirmation = signal<boolean>(false);
+  readonly isLocked = signal<boolean>(false);
+  readonly showNameModal = signal<boolean>(false);
 
   // Data arrays for template
   readonly allRaces = computed(() => RaceService.getAllRaces());
@@ -91,18 +91,24 @@ export class CharacterCreationComponent implements OnInit {
     return CharacterService.getEligibleClasses(stats, alignment);
   });
 
-  readonly canSave = computed(() => {
+  readonly canAccept = computed(() => {
     return this.selectedRace() !== null &&
            this.selectedAlignment() !== null &&
-           this.selectedClass() !== null &&
-           this.characterName().trim().length > 0;
+           this.selectedClass() !== null;
   });
 
-  readonly footerMenuItems = computed((): MenuItem[] => [
-    { id: 'save', label: 'SAVE CHARACTER', shortcut: 'S', enabled: this.canSave() },
-    { id: 'cancel', label: 'CANCEL', shortcut: 'ESC', enabled: true },
-    { id: 'back', label: 'BACK TO TRAINING GROUNDS', shortcut: 'B', enabled: true }
-  ]);
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const items: MenuItem[] = [];
+
+    if (this.canAccept()) {
+      items.push({ id: 'accept', label: 'ACCEPT & NAME CHARACTER', shortcut: 'ENTER', enabled: true });
+    }
+
+    items.push({ id: 'reset', label: 'RESET', shortcut: 'ESC', enabled: true });
+    items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
+
+    return items;
+  });
 
   constructor(
     private gameState: GameStateService,
@@ -118,6 +124,9 @@ export class CharacterCreationComponent implements OnInit {
 
   // Race selection
   selectRace(race: Race) {
+    // Prevent selection if locked
+    if (this.isLocked()) return;
+
     this.selectedRace.set(race);
     // Reset downstream selections
     this.rolledStats.set(null);
@@ -126,6 +135,9 @@ export class CharacterCreationComponent implements OnInit {
 
   // Alignment selection
   selectAlignment(alignment: Alignment) {
+    // Prevent selection if locked
+    if (this.isLocked()) return;
+
     this.selectedAlignment.set(alignment);
     // Reset downstream selections
     this.rolledStats.set(null);
@@ -142,6 +154,11 @@ export class CharacterCreationComponent implements OnInit {
       this.rolledStats.set(rolled);
       this.selectedClass.set(null); // Reset class when rerolling
       this.isRolling.set(false);
+
+      // Lock race and alignment after first roll
+      if (!this.isLocked()) {
+        this.isLocked.set(true);
+      }
     }, 300);
   }
 
@@ -158,13 +175,19 @@ export class CharacterCreationComponent implements OnInit {
     }
   }
 
-  // Save character
-  saveCharacter() {
-    if (!this.canSave()) return;
+  // Accept character and show name modal
+  acceptCharacter() {
+    if (!this.canAccept()) return;
+    this.showNameModal.set(true);
+  }
+
+  // Handle name modal save
+  handleNameSave(name: string) {
+    if (!this.canAccept()) return;
 
     const stats = this.finalStats()!;
     const character = CharacterService.createCharacterFromStats({
-      name: this.characterName().trim(),
+      name: name.trim(),
       password: '', // Password field removed per plan, but required by interface
       race: this.selectedRace()!,
       alignment: this.selectedAlignment()!,
@@ -185,6 +208,9 @@ export class CharacterCreationComponent implements OnInit {
       roster: new Map(state.roster).set(character.id, character)
     }));
 
+    // Close modal
+    this.showNameModal.set(false);
+
     // Show success and reset
     this.successMessage.set(`${character.name} created successfully!`);
     setTimeout(() => {
@@ -193,28 +219,20 @@ export class CharacterCreationComponent implements OnInit {
     }, 2000);
   }
 
+  // Handle name modal cancel
+  handleNameCancel() {
+    this.showNameModal.set(false);
+  }
+
   // Reset form
   resetForm() {
     this.selectedRace.set(null);
     this.selectedAlignment.set(null);
     this.rolledStats.set(null);
     this.selectedClass.set(null);
-    this.characterName.set('');
     this.errorMessage.set(null);
-    this.showCancelConfirmation.set(false);
-  }
-
-  // Cancel with confirmation
-  confirmCancel() {
-    // Only confirm if form has data
-    const hasData = this.selectedRace() || this.selectedAlignment() ||
-                    this.rolledStats() || this.characterName();
-
-    if (hasData) {
-      this.showCancelConfirmation.set(true);
-    } else {
-      this.resetForm();
-    }
+    this.isLocked.set(false);
+    this.showNameModal.set(false);
   }
 
   // Navigation
@@ -229,10 +247,10 @@ export class CharacterCreationComponent implements OnInit {
       'MAGE': 'M',
       'PRIEST': 'P',
       'THIEF': 'T',
-      'BISHOP': 'I',
-      'SAMURAI': 'S',
+      'BISHOP': 'B',    // Changed from 'I'
+      'SAMURAI': 'A',   // Changed from 'S'
       'LORD': 'L',
-      'NINJA': 'N'
+      'NINJA': 'J'      // Changed from 'N'
     };
     return shortcuts[classId] || '?';
   }
@@ -242,22 +260,27 @@ export class CharacterCreationComponent implements OnInit {
   handleKeyPress(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
 
-    // Priority 1: Save character (S) - takes precedence when form is complete
-    if (key === 's' && this.canSave()) {
-      event.preventDefault();
-      this.saveCharacter();
+    // Priority 0: Block all shortcuts if name modal is open
+    if (this.showNameModal()) {
       return;
     }
 
-    // Priority 2: Cancel (Escape)
+    // Priority 1: Reset form (ESC)
     if (key === 'escape') {
       event.preventDefault();
-      this.confirmCancel();
+      this.resetForm();
       return;
     }
 
-    // Priority 3: Race selection (1-5)
-    if (key >= '1' && key <= '5') {
+    // Priority 2: Quit to Training Grounds (Q)
+    if (key === 'q') {
+      event.preventDefault();
+      this.navigateToTrainingGrounds();
+      return;
+    }
+
+    // Priority 3: Race selection (1-5) - only if not locked
+    if (key >= '1' && key <= '5' && !this.isLocked()) {
       const races = this.allRaces();
       const index = parseInt(key) - 1;
       if (index < races.length) {
@@ -268,16 +291,8 @@ export class CharacterCreationComponent implements OnInit {
       return;
     }
 
-    // Priority 4: Roll stats (R)
-    if (key === 'r' && this.selectedAlignment()) {
-      event.preventDefault();
-      this.rollStats();
-      return;
-    }
-
-    // Priority 5: Alignment selection (G, N, E)
-    // Only active after race selected AND before rolling stats (prevents conflict with class keys)
-    if (this.selectedRace() && !this.rolledStats()) {
+    // Priority 4: Alignment selection (G, N, E) - only if race selected and not locked
+    if (this.selectedRace() && !this.isLocked()) {
       switch(key) {
         case 'g':
           event.preventDefault();
@@ -294,18 +309,24 @@ export class CharacterCreationComponent implements OnInit {
       }
     }
 
-    // Priority 6: Class selection (F, M, P, T, I, S, L, N)
-    // Only active when stats rolled (so alignment keys won't conflict) AND form not complete (so Save key takes precedence)
-    if (this.rolledStats() && !this.canSave()) {
+    // Priority 5: Roll stats (R)
+    if (key === 'r' && this.selectedAlignment()) {
+      event.preventDefault();
+      this.rollStats();
+      return;
+    }
+
+    // Priority 6: Class selection (F, M, P, T, B, A, L, J) - only when locked
+    if (this.rolledStats() && this.isLocked() && !this.canAccept()) {
       const classMap: { [key: string]: CharacterClass } = {
         'f': CharacterClass.FIGHTER,
         'm': CharacterClass.MAGE,
         'p': CharacterClass.PRIEST,
         't': CharacterClass.THIEF,
-        'i': CharacterClass.BISHOP,
-        's': CharacterClass.SAMURAI,
+        'b': CharacterClass.BISHOP,
+        'a': CharacterClass.SAMURAI,
         'l': CharacterClass.LORD,
-        'n': CharacterClass.NINJA
+        'j': CharacterClass.NINJA
       };
 
       const charClass = classMap[key];
@@ -316,10 +337,10 @@ export class CharacterCreationComponent implements OnInit {
       }
     }
 
-    // Priority 7: Back to training grounds (B)
-    if (key === 'b') {
+    // Priority 7: Accept character (Enter) - only when class selected
+    if (key === 'enter' && this.canAccept()) {
       event.preventDefault();
-      this.navigateToTrainingGrounds();
+      this.acceptCharacter();
       return;
     }
   }
@@ -327,13 +348,13 @@ export class CharacterCreationComponent implements OnInit {
   // Footer menu handler
   handleFooterAction(itemId: string) {
     switch(itemId) {
-      case 'save':
-        this.saveCharacter();
+      case 'accept':
+        this.acceptCharacter();
         break;
-      case 'cancel':
-        this.confirmCancel();
+      case 'reset':
+        this.resetForm();
         break;
-      case 'back':
+      case 'quit':
         this.navigateToTrainingGrounds();
         break;
     }

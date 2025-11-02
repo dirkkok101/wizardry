@@ -1,0 +1,35 @@
+<!-- src/app/components/name-modal/name-modal.component.html -->
+@if (visible) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+    <div class="name-modal" (click)="$event.stopPropagation()">
+      <h2>Name Your Character</h2>
+
+      <div class="form-group">
+        <label for="character-name">Character Name:</label>
+        <input
+          id="character-name"
+          type="text"
+          class="name-input"
+          [value]="characterName()"
+          (input)="characterName.set($any($event.target).value)"
+          maxlength="15"
+          placeholder="Enter character name"
+          autofocus
+        />
+      </div>
+
+      <div class="button-group">
+        <button
+          class="save-button"
+          (click)="onSaveClick()"
+          [disabled]="characterName().trim().length === 0"
+        >
+          [ENTER] Save
+        </button>
+        <button class="cancel-button" (click)="onCancelClick()">
+          [ESC] Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+}
