@@ -4,6 +4,7 @@
 
 import { Injectable } from '@angular/core';
 import { GameState, SaveData } from '../types/GameState'
+import { Character } from '../types/Character'
 
 const SAVE_KEY = 'wizardry_save'
 const SAVE_VERSION = '1.0.0'
@@ -171,7 +172,10 @@ export class SaveService {
         const roster = new Map(state.roster)
         const partyMembers = state.party.members || []
         const levels = partyMembers
-          .map((memberId: string) => roster.get(memberId)?.level || 1)
+          .map((memberId: string) => {
+            const character: Character | undefined = roster.get(memberId)
+            return character?.level || 1
+          })
           .filter((level: number) => level > 0)
 
         if (levels.length > 0) {

@@ -39,6 +39,9 @@ export interface Character {
   // Gold
   gold?: number // Character's individual gold (separate from party gold pool)
 
+  // Spells (for caster classes: Mage, Priest, Bishop)
+  knownSpells?: string[] // Spell IDs that character has learned
+
   // Password protection
   password: string
 
