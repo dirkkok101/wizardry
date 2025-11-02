@@ -62,15 +62,17 @@ describe('CastleMenuComponent', () => {
       expect(compiled.querySelector('h1')?.textContent).toContain('CASTLE');
     });
 
-    it('shows all 5 service options', () => {
+    it('shows all 7 service options', () => {
       fixture.detectChanges();
 
-      expect(component.menuItems().length).toBe(5);
+      expect(component.menuItems().length).toBe(7);
       expect(component.menuItems()[0].label).toContain('TAVERN');
-      expect(component.menuItems()[1].label).toContain('TEMPLE');
-      expect(component.menuItems()[2].label).toContain('TRADING POST');
-      expect(component.menuItems()[3].label).toContain('INN');
-      expect(component.menuItems()[4].label).toContain('EDGE OF TOWN');
+      expect(component.menuItems()[1].label).toContain('TRAINING GROUNDS');
+      expect(component.menuItems()[2].label).toContain('INN');
+      expect(component.menuItems()[3].label).toContain('SHOP');
+      expect(component.menuItems()[4].label).toContain('TEMPLE');
+      expect(component.menuItems()[5].label).toContain('UTILITIES');
+      expect(component.menuItems()[6].label).toContain('EDGE OF TOWN');
     });
 
     it('updates game state to CASTLE_MENU on init', () => {
@@ -87,10 +89,16 @@ describe('CastleMenuComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/tavern']);
     });
 
-    it('navigates to temple when selected', () => {
-      component.handleMenuSelect('temple');
+    it('navigates to training grounds when selected', () => {
+      component.handleMenuSelect('training');
 
-      expect(router.navigate).toHaveBeenCalledWith(['/temple']);
+      expect(router.navigate).toHaveBeenCalledWith(['/training']);
+    });
+
+    it('navigates to inn when selected', () => {
+      component.handleMenuSelect('inn');
+
+      expect(router.navigate).toHaveBeenCalledWith(['/inn']);
     });
 
     it('navigates to shop when selected', () => {
@@ -99,10 +107,16 @@ describe('CastleMenuComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/shop']);
     });
 
-    it('navigates to inn when selected', () => {
-      component.handleMenuSelect('inn');
+    it('navigates to temple when selected', () => {
+      component.handleMenuSelect('temple');
 
-      expect(router.navigate).toHaveBeenCalledWith(['/inn']);
+      expect(router.navigate).toHaveBeenCalledWith(['/temple']);
+    });
+
+    it('navigates to utilities when selected', () => {
+      component.handleMenuSelect('utilities');
+
+      expect(router.navigate).toHaveBeenCalledWith(['/utilities']);
     });
 
     it('navigates to edge of town when selected', () => {
@@ -113,24 +127,32 @@ describe('CastleMenuComponent', () => {
   });
 
   describe('keyboard shortcuts', () => {
-    it('supports (G) for tavern', () => {
-      expect(component.menuItems()[0].shortcut).toBe('G');
+    it('supports (T) for tavern', () => {
+      expect(component.menuItems()[0].shortcut).toBe('T');
     });
 
-    it('supports (T) for temple', () => {
-      expect(component.menuItems()[1].shortcut).toBe('T');
+    it('supports (G) for training grounds', () => {
+      expect(component.menuItems()[1].shortcut).toBe('G');
     });
 
-    it('supports (B) for shop', () => {
-      expect(component.menuItems()[2].shortcut).toBe('B');
+    it('supports (I) for inn', () => {
+      expect(component.menuItems()[2].shortcut).toBe('I');
     });
 
-    it('supports (A) for inn', () => {
-      expect(component.menuItems()[3].shortcut).toBe('A');
+    it('supports (S) for shop', () => {
+      expect(component.menuItems()[3].shortcut).toBe('S');
+    });
+
+    it('supports (M) for temple', () => {
+      expect(component.menuItems()[4].shortcut).toBe('M');
+    });
+
+    it('supports (U) for utilities', () => {
+      expect(component.menuItems()[5].shortcut).toBe('U');
     });
 
     it('supports (E) for edge of town', () => {
-      expect(component.menuItems()[4].shortcut).toBe('E');
+      expect(component.menuItems()[6].shortcut).toBe('E');
     });
   });
 
@@ -331,14 +353,18 @@ describe('CastleMenuComponent', () => {
       fixture.detectChanges();
 
       const tavernItem = component.menuItems().find(item => item.id === 'tavern');
-      const templeItem = component.menuItems().find(item => item.id === 'temple');
-      const shopItem = component.menuItems().find(item => item.id === 'shop');
+      const trainingItem = component.menuItems().find(item => item.id === 'training');
       const innItem = component.menuItems().find(item => item.id === 'inn');
+      const shopItem = component.menuItems().find(item => item.id === 'shop');
+      const templeItem = component.menuItems().find(item => item.id === 'temple');
+      const utilitiesItem = component.menuItems().find(item => item.id === 'utilities');
 
       expect(tavernItem?.enabled).toBe(true);
-      expect(templeItem?.enabled).toBe(true);
-      expect(shopItem?.enabled).toBe(true);
+      expect(trainingItem?.enabled).toBe(true);
       expect(innItem?.enabled).toBe(true);
+      expect(shopItem?.enabled).toBe(true);
+      expect(templeItem?.enabled).toBe(true);
+      expect(utilitiesItem?.enabled).toBe(true);
     });
 
     it('Menu item shortcut keys work', () => {
@@ -347,7 +373,7 @@ describe('CastleMenuComponent', () => {
       const tavernItem = component.menuItems().find(item => item.id === 'tavern');
       const edgeItem = component.menuItems().find(item => item.id === 'edge-of-town');
 
-      expect(tavernItem?.shortcut).toBe('G');
+      expect(tavernItem?.shortcut).toBe('T');
       expect(edgeItem?.shortcut).toBe('E');
     });
 

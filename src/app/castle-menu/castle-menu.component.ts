@@ -36,10 +36,12 @@ export class CastleMenuComponent implements OnInit {
 
   readonly menuItems = computed(() => {
     const baseItems: MenuItem[] = [
-      { id: 'tavern', label: "GILGAMESH'S TAVERN", enabled: true, shortcut: 'G' },
-      { id: 'temple', label: 'TEMPLE OF CANT', enabled: true, shortcut: 'T' },
-      { id: 'shop', label: "BOLTAC'S TRADING POST", enabled: true, shortcut: 'B' },
-      { id: 'inn', label: "ADVENTURER'S INN", enabled: true, shortcut: 'A' },
+      { id: 'tavern', label: "GILGAMESH'S TAVERN", enabled: true, shortcut: 'T' },
+      { id: 'training', label: 'TRAINING GROUNDS', enabled: true, shortcut: 'G' },
+      { id: 'inn', label: "ADVENTURER'S INN", enabled: true, shortcut: 'I' },
+      { id: 'shop', label: "BOLTAC'S SHOP", enabled: true, shortcut: 'S' },
+      { id: 'temple', label: 'TEMPLE OF CANT', enabled: true, shortcut: 'M' },
+      { id: 'utilities', label: 'UTILITIES', enabled: true, shortcut: 'U' },
       { id: 'edge-of-town', label: 'EDGE OF TOWN', enabled: this.hasParty(), shortcut: 'E' }
     ];
     return baseItems;

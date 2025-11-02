@@ -6,6 +6,14 @@ $color-text-dim: #008800;
 $color-amber: #ffaa00;
 $color-error: #ff0000;
 
+// Additional color aliases
+$color-border: $color-text-green;
+$color-text-normal: $color-text-bright;
+$color-gold: $color-amber;
+$color-success: #00ff88;
+$color-danger: $color-error;
+$color-red: $color-error;
+
 // Typography
 $font-mono: 'Courier New', 'Courier', monospace;
 $font-size-base: 16px;
