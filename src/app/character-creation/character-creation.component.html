@@ -148,33 +148,13 @@
         }
       </div>
 
-      <div class="step-hints">
-        @switch (currentStep()) {
-          @case (CreationStep.SELECT_RACE) {
-            <p><strong>ENTER:</strong> Continue | <strong>ESC:</strong> Cancel | <strong>Q:</strong> Quit</p>
-          }
-          @case (CreationStep.SELECT_ALIGNMENT) {
-            <p><strong>ENTER:</strong> Continue | <strong>ESC:</strong> Go back | <strong>Q:</strong> Quit</p>
-          }
-          @case (CreationStep.ROLL_STATS) {
-            <p><strong>R:</strong> Roll dice | <strong>ESC:</strong> Go back | <strong>Q:</strong> Quit</p>
-          }
-          @case (CreationStep.SELECT_CLASS) {
-            <p><strong>ENTER:</strong> Continue | <strong>R:</strong> Reroll stats | <strong>ESC:</strong> Start over | <strong>Q:</strong> Quit</p>
-          }
-          @case (CreationStep.NAME_CHARACTER) {
-            <p><strong>ENTER:</strong> Create character | <strong>ESC:</strong> Go back | <strong>Q:</strong> Quit</p>
-          }
-        }
+      @if (successMessage()) {
+        <div class="success-message">{{ successMessage() }}</div>
+      }
 
-        @if (successMessage()) {
-          <div class="success-message">{{ successMessage() }}</div>
-        }
-
-        @if (errorMessage()) {
-          <div class="error-message">{{ errorMessage() }}</div>
-        }
-      </div>
+      @if (errorMessage()) {
+        <div class="error-message">{{ errorMessage() }}</div>
+      }
     </div>
 
     <!-- RIGHT: Character Display Column (50%) -->
