@@ -143,13 +143,27 @@ function createCharacter(
 }
 
 /**
- * Delete character from roster
+ * Delete a character from the roster
+ *
+ * @param state - Current game state
+ * @param characterId - ID of character to delete
+ * @returns New game state with character removed
+ * @throws Error if character is in party
  */
 function deleteCharacter(state: GameState, characterId: string): GameState {
-  if (!state.roster.has(characterId)) {
+  const character = state.roster.get(characterId)
+
+  // Character doesn't exist - return unchanged state
+  if (!character) {
     return state
   }
 
+  // Validate: character must not be in party
+  if (state.party.members.includes(characterId)) {
+    throw new Error('Cannot delete character: character is in party')
+  }
+
+  // Create new roster without the character (immutable update)
   const newRoster = new Map(state.roster)
   newRoster.delete(characterId)
 
