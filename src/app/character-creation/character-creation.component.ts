@@ -357,46 +357,75 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   // Navigation: Advance to next step
+  /**
+   * Advances wizard from race selection to alignment selection.
+   * Guards against advancing without a selected race.
+   */
   advanceToAlignment() {
     if (!this.selectedRace()) return;
     this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
   }
 
+  /**
+   * Advances wizard from alignment selection to roll stats.
+   * Guards against advancing without a selected alignment.
+   */
   advanceToRollStats() {
     if (!this.selectedAlignment()) return;
     this.currentStep.set(CreationStep.ROLL_STATS);
   }
 
+  /**
+   * Advances wizard from roll stats to class selection.
+   * No validation needed - called automatically after rolling.
+   */
   advanceToSelectClass() {
-    // Auto-advance after rolling (no validation needed)
     this.currentStep.set(CreationStep.SELECT_CLASS);
   }
 
+  /**
+   * Advances wizard from class selection to name character.
+   * Guards against advancing without a selected class.
+   */
   advanceToNameCharacter() {
     if (!this.selectedClass()) return;
     this.currentStep.set(CreationStep.NAME_CHARACTER);
   }
 
   // Navigation: Go back (with clearing logic)
+  /**
+   * Goes back from alignment selection to race selection.
+   * Clears alignment selection but preserves race.
+   */
   goBackFromAlignment() {
     this.selectedAlignment.set(null);
     this.currentStep.set(CreationStep.SELECT_RACE);
   }
 
+  /**
+   * Goes back from roll stats to alignment selection.
+   * Clears rolled stats but preserves alignment.
+   */
   goBackFromRollStats() {
     this.rolledStats.set(null);
     this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
   }
 
+  /**
+   * Goes back from class selection to alignment selection (nuclear option).
+   * Clears BOTH rolled stats AND selected class to prevent stat fishing.
+   */
   goBackFromSelectClass() {
-    // Nuclear option: lose stats AND class
     this.rolledStats.set(null);
     this.selectedClass.set(null);
     this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
   }
 
+  /**
+   * Goes back from name character to class selection.
+   * Preserves all selections including stats and class.
+   */
   goBackFromNameCharacter() {
-    // Just go back, keep stats and class
     this.currentStep.set(CreationStep.SELECT_CLASS);
   }
 
