@@ -251,43 +251,111 @@ describe('CharacterCreationComponent', () => {
     });
 
     describe('footerMenuItems', () => {
-      it('should return menu items with correct structure', () => {
-        const items = component.footerMenuItems();
-        expect(items.length).toBe(2); // Only reset and quit initially
-        expect(items[0].id).toBe('reset');
-        expect(items[1].id).toBe('quit');
-      });
+      describe('Step 1: SELECT_RACE', () => {
+        it('should show continue (disabled), cancel, and quit', () => {
+          component.currentStep.set(CreationStep.SELECT_RACE);
+          const items = component.footerMenuItems();
 
-      it('should not have accept button initially', () => {
-        const items = component.footerMenuItems();
-        const acceptItem = items.find(i => i.id === 'accept');
-        expect(acceptItem).toBeUndefined();
-      });
+          expect(items.length).toBe(3);
+          expect(items.find(i => i.id === 'continue')).toBeDefined();
+          expect(items.find(i => i.id === 'cancel')).toBeDefined();
+          expect(items.find(i => i.id === 'quit')).toBeDefined();
 
-      it('should have reset and quit always enabled', () => {
-        const items = component.footerMenuItems();
-        const resetItem = items.find(i => i.id === 'reset');
-        const quitItem = items.find(i => i.id === 'quit');
-        expect(resetItem!.enabled).toBe(true);
-        expect(quitItem!.enabled).toBe(true);
-      });
+          // Continue disabled when no race selected
+          expect(items.find(i => i.id === 'continue')!.enabled).toBe(false);
+        });
 
-      it('should show accept button when form is complete', fakeAsync(() => {
-        component.selectRace(Race.HUMAN);
-        component.selectAlignment(Alignment.GOOD);
-        component.rollStats();
-        tick(350);
-
-        if (component.isClassEligible(CharacterClass.FIGHTER)) {
-          component.selectClass(CharacterClass.FIGHTER);
+        it('should enable continue after race selection', () => {
+          component.currentStep.set(CreationStep.SELECT_RACE);
+          component.selectedRace.set(Race.HUMAN);
 
           const items = component.footerMenuItems();
-          const acceptItem = items.find(i => i.id === 'accept');
-          expect(acceptItem).toBeDefined();
-          expect(acceptItem!.enabled).toBe(true);
-          expect(items.length).toBe(3); // accept, reset, quit
-        }
-      }));
+          expect(items.find(i => i.id === 'continue')!.enabled).toBe(true);
+        });
+      });
+
+      describe('Step 2: SELECT_ALIGNMENT', () => {
+        it('should show continue (disabled), back, and quit', () => {
+          component.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+          const items = component.footerMenuItems();
+
+          expect(items.length).toBe(3);
+          expect(items.find(i => i.id === 'continue')).toBeDefined();
+          expect(items.find(i => i.id === 'back')).toBeDefined();
+          expect(items.find(i => i.id === 'quit')).toBeDefined();
+
+          // Continue disabled when no alignment selected
+          expect(items.find(i => i.id === 'continue')!.enabled).toBe(false);
+        });
+
+        it('should enable continue after alignment selection', () => {
+          component.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+          component.selectedAlignment.set(Alignment.GOOD);
+
+          const items = component.footerMenuItems();
+          expect(items.find(i => i.id === 'continue')!.enabled).toBe(true);
+        });
+      });
+
+      describe('Step 3: ROLL_STATS', () => {
+        it('should show only back and quit (no continue)', () => {
+          component.currentStep.set(CreationStep.ROLL_STATS);
+          const items = component.footerMenuItems();
+
+          expect(items.length).toBe(2);
+          expect(items.find(i => i.id === 'back')).toBeDefined();
+          expect(items.find(i => i.id === 'quit')).toBeDefined();
+          expect(items.find(i => i.id === 'continue')).toBeUndefined();
+        });
+      });
+
+      describe('Step 4: SELECT_CLASS', () => {
+        it('should show continue, reroll, reset, and quit', () => {
+          component.currentStep.set(CreationStep.SELECT_CLASS);
+          const items = component.footerMenuItems();
+
+          expect(items.length).toBe(4);
+          expect(items.find(i => i.id === 'continue')).toBeDefined();
+          expect(items.find(i => i.id === 'reroll')).toBeDefined();
+          expect(items.find(i => i.id === 'reset')).toBeDefined();
+          expect(items.find(i => i.id === 'quit')).toBeDefined();
+
+          // Continue disabled when no class selected
+          expect(items.find(i => i.id === 'continue')!.enabled).toBe(false);
+        });
+
+        it('should enable continue after class selection', () => {
+          component.currentStep.set(CreationStep.SELECT_CLASS);
+          component.selectedClass.set(CharacterClass.FIGHTER);
+
+          const items = component.footerMenuItems();
+          expect(items.find(i => i.id === 'continue')!.enabled).toBe(true);
+        });
+      });
+
+      describe('Step 5: NAME_CHARACTER', () => {
+        it('should show create (disabled), back, and quit', () => {
+          component.currentStep.set(CreationStep.NAME_CHARACTER);
+          component.characterName.set('');
+          const items = component.footerMenuItems();
+
+          expect(items.length).toBe(3);
+          expect(items.find(i => i.id === 'create')).toBeDefined();
+          expect(items.find(i => i.id === 'back')).toBeDefined();
+          expect(items.find(i => i.id === 'quit')).toBeDefined();
+
+          // Create disabled when name is empty
+          expect(items.find(i => i.id === 'create')!.enabled).toBe(false);
+        });
+
+        it('should enable create after name entered', () => {
+          component.currentStep.set(CreationStep.NAME_CHARACTER);
+          component.characterName.set('TestHero');
+
+          const items = component.footerMenuItems();
+          expect(items.find(i => i.id === 'create')!.enabled).toBe(true);
+        });
+      });
     });
   });
 
@@ -992,33 +1060,133 @@ describe('CharacterCreationComponent', () => {
   });
 
   describe('handleFooterAction()', () => {
-    it('should show name modal when accept action triggered', fakeAsync(() => {
-      component.selectRace(Race.HUMAN);
-      component.selectAlignment(Alignment.GOOD);
-      component.rollStats();
-      tick(350);
+    describe('continue action', () => {
+      it('should advance from SELECT_RACE to SELECT_ALIGNMENT', () => {
+        component.currentStep.set(CreationStep.SELECT_RACE);
+        component.selectedRace.set(Race.HUMAN);
 
-      if (component.isClassEligible(CharacterClass.FIGHTER)) {
-        component.selectClass(CharacterClass.FIGHTER);
+        component.handleFooterAction('continue');
 
-        component.handleFooterAction('accept');
+        expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
+      });
 
-        expect(component.showNameModal()).toBe(true);
-      }
-    }));
+      it('should advance from SELECT_ALIGNMENT to ROLL_STATS', () => {
+        component.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+        component.selectedAlignment.set(Alignment.GOOD);
 
-    it('should reset form when reset action triggered', () => {
-      component.selectRace(Race.HUMAN);
+        component.handleFooterAction('continue');
 
-      component.handleFooterAction('reset');
+        expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
+      });
 
-      expect(component.selectedRace()).toBeNull();
+      it('should advance from SELECT_CLASS to NAME_CHARACTER', fakeAsync(() => {
+        component.currentStep.set(CreationStep.SELECT_CLASS);
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.rollStats();
+        tick(350);
+        if (component.isClassEligible(CharacterClass.FIGHTER)) {
+          component.selectClass(CharacterClass.FIGHTER);
+
+          component.handleFooterAction('continue');
+
+          expect(component.currentStep()).toBe(CreationStep.NAME_CHARACTER);
+        }
+      }));
     });
 
-    it('should navigate to training grounds when quit action triggered', () => {
-      component.handleFooterAction('quit');
+    describe('cancel action', () => {
+      it('should navigate to training grounds from SELECT_RACE', () => {
+        component.currentStep.set(CreationStep.SELECT_RACE);
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
+        component.handleFooterAction('cancel');
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
+      });
+    });
+
+    describe('back action', () => {
+      it('should go back from SELECT_ALIGNMENT to SELECT_RACE', () => {
+        component.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+        component.selectedAlignment.set(Alignment.GOOD);
+
+        component.handleFooterAction('back');
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
+      });
+
+      it('should go back from ROLL_STATS to SELECT_ALIGNMENT', () => {
+        component.currentStep.set(CreationStep.ROLL_STATS);
+
+        component.handleFooterAction('back');
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
+      });
+
+      it('should go back from NAME_CHARACTER to SELECT_CLASS', () => {
+        component.currentStep.set(CreationStep.NAME_CHARACTER);
+
+        component.handleFooterAction('back');
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
+      });
+    });
+
+    describe('reset action (Step 4 only)', () => {
+      it('should reset to SELECT_ALIGNMENT and clear stats', () => {
+        component.currentStep.set(CreationStep.SELECT_CLASS);
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+
+        component.handleFooterAction('reset');
+
+        expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
+        expect(component.rolledStats()).toBeNull();
+        expect(component.selectedClass()).toBeNull();
+      });
+    });
+
+    describe('reroll action (Step 4 only)', () => {
+      it('should reroll stats', fakeAsync(() => {
+        component.currentStep.set(CreationStep.SELECT_CLASS);
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+
+        component.handleFooterAction('reroll');
+        tick(350);
+
+        expect(component.rolledStats()).toBeDefined();
+      }));
+    });
+
+    describe('create action (Step 5 only)', () => {
+      it('should create character when name is valid', fakeAsync(() => {
+        component.currentStep.set(CreationStep.NAME_CHARACTER);
+        component.selectedRace.set(Race.HUMAN);
+        component.selectedAlignment.set(Alignment.GOOD);
+        component.characterName.set('TestHero');
+
+        component.handleFooterAction('create');
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
+      }));
+
+      it('should not create character when name is empty', () => {
+        component.currentStep.set(CreationStep.NAME_CHARACTER);
+        component.characterName.set('');
+
+        component.handleFooterAction('create');
+
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('quit action', () => {
+      it('should navigate to training grounds', () => {
+        component.handleFooterAction('quit');
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
+      });
     });
   });
 
