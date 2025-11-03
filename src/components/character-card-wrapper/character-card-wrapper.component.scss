@@ -1,8 +1,0 @@
-@use '../../styles/variables' as *;
-
-.character-card-wrapper {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid $color-text-green;
-  background: $color-bg-black;
-}
