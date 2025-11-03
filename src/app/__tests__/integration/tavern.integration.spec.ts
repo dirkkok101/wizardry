@@ -43,7 +43,7 @@ describe('Tavern Integration Tests', () => {
 
       // Add all characters
       characters.forEach(char => {
-        component.handleAddCharacter(char.id);
+        component.onAddCharacter(char.id);
       });
 
       // Verify all added
@@ -67,7 +67,7 @@ describe('Tavern Integration Tests', () => {
       }));
 
       // Attempt to add 7th
-      component.handleAddCharacter('char-6');
+      component.onAddCharacter('char-6');
 
       expect(component.errorMessage()).toBe('Party is full (maximum 6 members)');
       expect(gameStateService.party().members.length).toBe(6);
@@ -90,11 +90,11 @@ describe('Tavern Integration Tests', () => {
       }));
 
       // Add Good character
-      component.handleAddCharacter(goodChar.id);
+      component.onAddCharacter(goodChar.id);
       expect(gameStateService.party().members).toContain(goodChar.id);
 
       // Attempt to add Evil character
-      component.handleAddCharacter(evilChar.id);
+      component.onAddCharacter(evilChar.id);
       expect(component.errorMessage()).toBe('Good and Evil cannot party together');
       expect(gameStateService.party().members).not.toContain(evilChar.id);
     });
@@ -113,8 +113,8 @@ describe('Tavern Integration Tests', () => {
         roster: new Map([[goodChar.id, goodChar], [neutralChar.id, neutralChar]])
       }));
 
-      component.handleAddCharacter(goodChar.id);
-      component.handleAddCharacter(neutralChar.id);
+      component.onAddCharacter(goodChar.id);
+      component.onAddCharacter(neutralChar.id);
 
       const party = gameStateService.party();
       expect(party.members).toContain(goodChar.id);
@@ -123,34 +123,8 @@ describe('Tavern Integration Tests', () => {
     });
   });
 
-  describe('Gold Distribution Flow', () => {
-    it('distributes gold equally with remainder', () => {
-      const characters = [
-        createTestCharacter({ id: 'char-1', gold: 10 }),
-        createTestCharacter({ id: 'char-2', gold: 20 }),
-        createTestCharacter({ id: 'char-3', gold: 5 })
-      ];
-      gameStateService.updateState(state => ({
-        ...state,
-        roster: new Map(characters.map(c => [c.id, c])),
-        party: {
-          ...state.party,
-          members: characters.map(c => c.id),
-          gold: 100
-        }
-      }));
-
-      component.handleDivvyGold();
-
-      const updatedState = gameStateService.state();
-      expect(updatedState.party.gold).toBe(0);
-      // 100 / 3 = 33 per member, remainder 1 to first
-      expect(updatedState.roster.get('char-1')!.gold).toBe(44); // 10 + 33 + 1
-      expect(updatedState.roster.get('char-2')!.gold).toBe(53); // 20 + 33
-      expect(updatedState.roster.get('char-3')!.gold).toBe(38); // 5 + 33
-      expect(component.successMessage()).toBe('Gold distributed: 33 gold per member');
-    });
-  });
+  // NOTE: Gold distribution feature was removed in the redesign
+  // Party gold is now displayed but not distributed from the tavern UI
 
   describe('Character Inspection Navigation', () => {
     it('navigates to character inspection with correct params', () => {
@@ -165,7 +139,7 @@ describe('Tavern Integration Tests', () => {
       }));
       const navigateSpy = jest.spyOn(router, 'navigate');
 
-      component.handleInspectCharacter(character.id);
+      component.onInspect(character.id);
 
       expect(navigateSpy).toHaveBeenCalledWith(['/character-inspection'], {
         queryParams: {
@@ -215,7 +189,7 @@ describe('Tavern Integration Tests', () => {
         roster: new Map([[deadChar.id, deadChar]])
       }));
 
-      component.handleAddCharacter(deadChar.id);
+      component.onAddCharacter(deadChar.id);
 
       expect(component.errorMessage()).toContain('not available');
       expect(gameStateService.party().members).not.toContain(deadChar.id);
