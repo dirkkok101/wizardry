@@ -353,5 +353,11 @@ describe('GameInitializationService', () => {
       // Restore original method
       RaceService.initialize = originalRaceInit
     })
+
+    it('initializes party with zero gold', () => {
+      const state = GameInitializationService.createNewGame()
+
+      expect(state.party.gold).toBe(0)
+    })
   })
 })
