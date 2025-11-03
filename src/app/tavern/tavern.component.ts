@@ -5,6 +5,7 @@ import { GameStateService } from '../../services/GameStateService';
 import { CharacterCardWrapperComponent } from '../../components/character-card-wrapper/character-card-wrapper.component';
 import { ActionType } from '../../components/character-card-actions/character-card-actions.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
+import { CharacterStatus } from '../../types/CharacterStatus';
 
 @Component({
   selector: 'app-tavern',
@@ -26,7 +27,7 @@ export class TavernComponent {
     const state = this.gameState();
     return Array.from(state.roster.values())
       .filter(char => !state.party.members.includes(char.id))
-      .filter(char => char.status === 'OK');
+      .filter(char => char.status === CharacterStatus.OK);
   });
 
   frontRowCharacters = computed(() => {
