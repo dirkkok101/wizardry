@@ -1756,17 +1756,16 @@ describe('CharacterCreationComponent', () => {
         expect(component.stepNumber()).toBe(3);
       }));
 
-      it('auto-advances from ROLL_STATS to SELECT_CLASS after rolling', fakeAsync(() => {
+      it('auto-advances from ROLL_STATS to SELECT_CLASS after rolling', async () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        component.rollStats();
-        flush();
+        await component.rollStats();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
         expect(component.stepNumber()).toBe(4);
         expect(component.rolledStats()).toBeTruthy();
-      }));
+      });
 
       it('advances from SELECT_CLASS to NAME_CHARACTER', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
@@ -1818,13 +1817,12 @@ describe('CharacterCreationComponent', () => {
         expect(component.selectedAlignment()).toBe(Alignment.GOOD); // alignment persists
       }));
 
-      it('goes back from SELECT_CLASS to SELECT_ALIGNMENT (nuclear option)', fakeAsync(() => {
+      it('goes back from SELECT_CLASS to SELECT_ALIGNMENT (nuclear option)', async () => {
         // Setup: reach class selection
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        component.rollStats();
-        flush();
+        await component.rollStats();
         component.selectedClass.set(CharacterClass.FIGHTER);
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
@@ -1833,13 +1831,12 @@ describe('CharacterCreationComponent', () => {
 
         // Go back (nuclear option)
         component.goBackFromSelectClass();
-        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
         expect(component.rolledStats()).toBeNull(); // stats cleared
         expect(component.selectedClass()).toBeNull(); // class cleared
         expect(component.selectedAlignment()).toBe(Alignment.GOOD); // alignment persists
-      }));
+      });
 
       it('goes back from NAME_CHARACTER to SELECT_CLASS', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
@@ -1856,21 +1853,19 @@ describe('CharacterCreationComponent', () => {
     });
 
     describe('reroll behavior', () => {
-      it('rerolls stats and stays on SELECT_CLASS step', fakeAsync(() => {
+      it('rerolls stats and stays on SELECT_CLASS step', async () => {
         // Setup: reach class selection
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        component.rollStats();
-        flush();
+        await component.rollStats();
         const firstRollStr = JSON.stringify(component.rolledStats());
         component.selectedClass.set(CharacterClass.FIGHTER);
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
 
         // Reroll
-        component.rerollStats();
-        flush();
+        await component.rerollStats();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
         expect(component.rolledStats()).toBeTruthy();
@@ -1878,14 +1873,13 @@ describe('CharacterCreationComponent', () => {
         const secondRollStr = JSON.stringify(component.rolledStats());
         // At minimum, verify the roll happened and class was cleared
         expect(component.selectedClass()).toBeNull(); // class cleared
-      }));
+      });
 
-      it('updates eligible classes after reroll', fakeAsync(() => {
+      it('updates eligible classes after reroll', async () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        component.rollStats();
-        flush();
+        await component.rollStats();
         const firstEligible = [...component.eligibleClasses()];
 
         // Reroll until we get different eligible classes (or max 10 tries)
@@ -1893,8 +1887,7 @@ describe('CharacterCreationComponent', () => {
         let differentEligibility = false;
 
         while (attempts < 10 && !differentEligibility) {
-          component.rerollStats();
-          flush();
+          await component.rerollStats();
           const newEligible = [...component.eligibleClasses()];
 
           if (JSON.stringify(firstEligible) !== JSON.stringify(newEligible)) {
@@ -1905,7 +1898,7 @@ describe('CharacterCreationComponent', () => {
 
         // This test verifies eligibility recalculates (may need multiple rolls)
         expect(component.eligibleClasses().length).toBeGreaterThan(0);
-      }));
+      });
 
     describe('complete character creation flow', () => {
       it('creates character and resets immediately', fakeAsync(() => {
