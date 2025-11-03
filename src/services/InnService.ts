@@ -1,4 +1,6 @@
 import { Character } from '../types/Character'
+import { GameState } from '../types/GameState'
+import * as PartyService from './PartyService'
 
 export enum RoomType {
   STABLES = 'STABLES',
@@ -15,6 +17,7 @@ interface ValidationResult {
 
 interface RestResult {
   updatedCharacter: Character
+  updatedState: GameState
   isFullyHealed: boolean
   goldSpent: number
   hpRecovered: number
@@ -52,21 +55,21 @@ export class InnService {
   }
 
   /**
-   * Check if character can afford room
+   * Check if party can afford room
    */
-  static canAffordRoom(character: Character, roomType: RoomType): ValidationResult {
+  static canAffordRoom(state: GameState, roomType: RoomType): ValidationResult {
     const cost = this.getRoomCost(roomType)
 
     if (cost === 0) {
       return { allowed: true }
     }
 
-    const characterGold = character.gold || 0
+    const partyGold = state.party.gold
 
-    if (characterGold < cost) {
+    if (!PartyService.hasEnoughGold(state, cost)) {
       return {
         allowed: false,
-        reason: `Not enough gold. Need ${cost}, have ${characterGold}.`
+        reason: `Not enough gold. Need ${cost}, have ${partyGold}.`
       }
     }
 
@@ -75,23 +78,24 @@ export class InnService {
 
   /**
    * Rest character for one week
-   * Heals HP, deducts gold, returns updated character
+   * Heals HP, deducts gold from party, returns updated character and state
    */
-  static restOneWeek(character: Character, roomType: RoomType): RestResult {
+  static restOneWeek(state: GameState, character: Character, roomType: RoomType): RestResult {
     const cost = this.getRoomCost(roomType)
     const healRate = this.getRoomHealRate(roomType)
 
     const newHp = Math.min(character.hp + healRate, character.maxHp)
-    const newGold = (character.gold || 0) - cost
 
     const updatedCharacter: Character = {
       ...character,
-      hp: newHp,
-      gold: newGold
+      hp: newHp
     }
+
+    const updatedState = PartyService.removePartyGold(state, cost)
 
     return {
       updatedCharacter,
+      updatedState,
       isFullyHealed: newHp === character.maxHp,
       goldSpent: cost,
       hpRecovered: newHp - character.hp

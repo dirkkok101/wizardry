@@ -84,13 +84,14 @@ describe('Town Services Flow Integration Tests', () => {
 
       // Step 4: Use InnService to rest and heal
       const charToRest = gameStateService.roster().get(character.id)!;
-      const restResult = InnService.restOneWeek(charToRest, RoomType.STABLES);
+      const currentState = gameStateService.state();
+      const restResult = InnService.restOneWeek(currentState, charToRest, RoomType.STABLES);
       expect(restResult.updatedCharacter).toBeDefined();
       expect(restResult.hpRecovered).toBeGreaterThanOrEqual(0);
 
-      // Update state with healing result
+      // Update state with healing result and updated state (party gold)
       gameStateService.updateState(state => ({
-        ...state,
+        ...restResult.updatedState,
         roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
       }));
 

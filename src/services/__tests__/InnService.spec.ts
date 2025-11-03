@@ -1,5 +1,6 @@
 import { InnService, RoomType } from '../InnService'
-import { createTestCharacter } from '../../test-helpers/test-factories'
+import { createTestCharacter, createTestGameState } from '../../test-helpers/test-factories'
+import { GameState } from '../../types/GameState'
 
 describe('InnService', () => {
   describe('getRoomCost', () => {
@@ -47,27 +48,45 @@ describe('InnService', () => {
   })
 
   describe('canAffordRoom', () => {
-    it('returns true when character has enough gold', () => {
-      const character = createTestCharacter({ gold: 100 })
+    it('returns true when party has enough gold', () => {
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
 
-      const result = InnService.canAffordRoom(character, RoomType.BARRACKS)
+      const result = InnService.canAffordRoom(state, RoomType.BARRACKS)
 
       expect(result.allowed).toBe(true)
     })
 
-    it('returns false when character lacks gold', () => {
-      const character = createTestCharacter({ gold: 5 })
+    it('returns false when party lacks gold', () => {
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 5
+        }
+      }
 
-      const result = InnService.canAffordRoom(character, RoomType.BARRACKS)
+      const result = InnService.canAffordRoom(state, RoomType.BARRACKS)
 
       expect(result.allowed).toBe(false)
       expect(result.reason).toBe('Not enough gold. Need 10, have 5.')
     })
 
     it('always allows STABLES (free)', () => {
-      const character = createTestCharacter({ gold: 0 })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 0
+        }
+      }
 
-      const result = InnService.canAffordRoom(character, RoomType.STABLES)
+      const result = InnService.canAffordRoom(state, RoomType.STABLES)
 
       expect(result.allowed).toBe(true)
     })
@@ -77,11 +96,17 @@ describe('InnService', () => {
     it('heals character by room heal rate', () => {
       const character = createTestCharacter({
         hp: 10,
-        maxHp: 20,
-        gold: 100
+        maxHp: 20
       })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
 
-      const result = InnService.restOneWeek(character, RoomType.BARRACKS)
+      const result = InnService.restOneWeek(state, character, RoomType.BARRACKS)
 
       expect(result.updatedCharacter.hp).toBe(11) // 10 + 1 (barracks)
     })
@@ -89,35 +114,53 @@ describe('InnService', () => {
     it('does not exceed max HP', () => {
       const character = createTestCharacter({
         hp: 19,
-        maxHp: 20,
-        gold: 100
+        maxHp: 20
       })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
 
-      const result = InnService.restOneWeek(character, RoomType.DOUBLE)
+      const result = InnService.restOneWeek(state, character, RoomType.DOUBLE)
 
       expect(result.updatedCharacter.hp).toBe(20) // Capped at max HP
     })
 
-    it('deducts room cost from gold', () => {
+    it('deducts room cost from party gold', () => {
       const character = createTestCharacter({
         hp: 10,
-        maxHp: 20,
-        gold: 100
+        maxHp: 20
       })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
 
-      const result = InnService.restOneWeek(character, RoomType.BARRACKS)
+      const result = InnService.restOneWeek(state, character, RoomType.BARRACKS)
 
-      expect(result.updatedCharacter.gold).toBe(90) // 100 - 10
+      expect(result.updatedState.party.gold).toBe(90) // 100 - 10
     })
 
     it('returns isFullyHealed true when HP reaches max', () => {
       const character = createTestCharacter({
         hp: 19,
-        maxHp: 20,
-        gold: 100
+        maxHp: 20
       })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
 
-      const result = InnService.restOneWeek(character, RoomType.BARRACKS)
+      const result = InnService.restOneWeek(state, character, RoomType.BARRACKS)
 
       expect(result.isFullyHealed).toBe(true)
     })
@@ -125,11 +168,17 @@ describe('InnService', () => {
     it('returns isFullyHealed false when HP not at max', () => {
       const character = createTestCharacter({
         hp: 10,
-        maxHp: 20,
-        gold: 100
+        maxHp: 20
       })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
 
-      const result = InnService.restOneWeek(character, RoomType.BARRACKS)
+      const result = InnService.restOneWeek(state, character, RoomType.BARRACKS)
 
       expect(result.isFullyHealed).toBe(false)
     })

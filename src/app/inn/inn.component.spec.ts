@@ -22,7 +22,6 @@ describe('InnComponent', () => {
     hp: 15,
     maxHp: 25,
     status: 'OK',
-    gold: 100,
     experience: 10000
   } as Character;
 
@@ -38,13 +37,14 @@ describe('InnComponent', () => {
 
     jest.spyOn(router, 'navigate');
 
-    // Setup party with character
+    // Setup party with character and party gold
     gameState.updateState(state => ({
       ...state,
       roster: new Map(state.roster).set('char-1', mockCharacter),
       party: {
         ...state.party,
-        members: ['char-1']
+        members: ['char-1'],
+        gold: 100
       }
     }));
   });
@@ -203,32 +203,39 @@ describe('InnComponent', () => {
       const character = createTestCharacter({
         id: 'char-1',
         hp: 10,
-        maxHp: 20,
-        gold: 100
+        maxHp: 20
       });
       gameState.updateState(state => ({
         ...state,
-        roster: new Map([[character.id, character]])
+        roster: new Map([[character.id, character]]),
+        party: {
+          ...state.party,
+          gold: 100
+        }
       }));
       component.selectCharacterToRest(character.id);
 
       await component.restInRoom(RoomType.BARRACKS);
 
-      const updatedChar = gameState.state().roster.get('char-1')!;
+      const state = gameState.state();
+      const updatedChar = state.roster.get('char-1')!;
       expect(updatedChar.hp).toBe(11); // 10 + 1
-      expect(updatedChar.gold).toBe(90); // 100 - 10
+      expect(state.party.gold).toBe(90); // 100 - 10 (deducted from party)
     });
 
     it('shows error when character cannot afford room', async () => {
       const character = createTestCharacter({
         id: 'char-1',
         hp: 10,
-        maxHp: 20,
-        gold: 5
+        maxHp: 20
       });
       gameState.updateState(state => ({
         ...state,
-        roster: new Map([[character.id, character]])
+        roster: new Map([[character.id, character]]),
+        party: {
+          ...state.party,
+          gold: 5
+        }
       }));
       component.selectCharacterToRest(character.id);
 
@@ -242,14 +249,17 @@ describe('InnComponent', () => {
         id: 'char-1',
         hp: 19,
         maxHp: 20,
-        gold: 100,
         level: 1,
         experience: 3000,
         class: CharacterClass.FIGHTER
       });
       gameState.updateState(state => ({
         ...state,
-        roster: new Map([[character.id, character]])
+        roster: new Map([[character.id, character]]),
+        party: {
+          ...state.party,
+          gold: 100
+        }
       }));
       component.selectCharacterToRest(character.id);
 

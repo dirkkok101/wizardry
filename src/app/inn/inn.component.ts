@@ -229,19 +229,21 @@ export class InnComponent implements OnInit {
       return;
     }
 
+    const currentState = this.gameState.state();
+
     // Check affordability
-    const validation = InnService.canAffordRoom(character, roomType);
+    const validation = InnService.canAffordRoom(currentState, roomType);
     if (!validation.allowed) {
       this.errorMessage.set(validation.reason || 'Cannot afford room');
       return;
     }
 
     // Rest one week
-    const restResult = InnService.restOneWeek(character, roomType);
+    const restResult = InnService.restOneWeek(currentState, character, roomType);
 
-    // Update character in roster
+    // Update character in roster and party gold
     this.gameState.updateState(state => ({
-      ...state,
+      ...restResult.updatedState,
       roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
     }));
 
