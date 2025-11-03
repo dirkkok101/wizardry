@@ -4,13 +4,15 @@ import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { TavernCharacterCardComponent } from '../components/tavern-character-card/tavern-character-card.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { MenuItem } from '../../components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 import { CharacterStatus } from '../../types/CharacterStatus';
 
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, TavernCharacterCardComponent, SceneTitleComponent],
+  imports: [CommonModule, TavernCharacterCardComponent, SceneTitleComponent, SceneFooterComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
@@ -45,6 +47,11 @@ export class TavernComponent {
   });
 
   partyGold = computed(() => this.gameState().party.gold);
+
+  // Footer menu items
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    { id: 'leave', label: 'Return to Castle', shortcut: 'L', enabled: true }
+  ]);
 
   // Helper methods for character card inputs
   canCharacterMoveUp(characterId: string): boolean {
@@ -142,6 +149,14 @@ export class TavernComponent {
     this.router.navigate(['/character-inspection'], {
       queryParams: { characterId, returnTo: 'tavern' }
     });
+  }
+
+  handleFooterAction(itemId: string): void {
+    switch(itemId) {
+      case 'leave':
+        this.router.navigate(['/castle-menu']);
+        break;
+    }
   }
 
   @HostListener('window:keydown.escape')

@@ -73,3 +73,8 @@
     </div>
   </div>
 </div>
+
+<app-scene-footer
+  [menuItems]="footerMenuItems()"
+  (itemSelected)="handleFooterAction($event)"
+/>
