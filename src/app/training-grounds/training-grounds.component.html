@@ -37,10 +37,10 @@
   <!-- Confirmation Dialog -->
   @if (showDeleteConfirmation()) {
     <app-confirmation-dialog
-      [title]="'Delete Character?'"
+      [visible]="showDeleteConfirmation()"
       [message]="deleteConfirmationMessage()"
-      (confirm)="confirmDelete()"
-      (cancel)="cancelDelete()">
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()">
     </app-confirmation-dialog>
   }
 </div>
