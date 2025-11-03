@@ -45,48 +45,52 @@ interface TavernEntryState {
 ### Screen Regions
 
 **2-Column Grid Layout:**
+- **Header:** Scene title with party gold display
 - **Left Column:** Available characters (scrollable grid)
 - **Right Column:** Party members with formation sections
-- **Header:** Party gold display
+- **Footer:** Horizontal navigation menu
 - **Messages:** Toast notifications for actions (success/error)
 
 ### ASCII Mockup
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  GILGAMESH'S TAVERN                                     │
+│  GILGAMESH'S TAVERN        PARTY GOLD: 150 GP           │  ← Header
 ├──────────────────────────┬──────────────────────────────┤
-│  AVAILABLE CHARACTERS    │  PARTY GOLD: 150 GP          │
+│  AVAILABLE CHARACTERS    │  FRONT ROW:                  │
 │                          │                              │
-│  ┌────────────────────┐  │  FRONT ROW:                  │
-│  │ Gandalf (Mage 5)   │  │  ┌────────────────────────┐  │
-│  │ STR:12 INT:18      │  │  │ Corak (Fighter 4)      │  │
-│  │ [Inspect] [Add]    │  │  │ STR:18 INT:10          │  │
+│  ┌────────────────────┐  │  ┌────────────────────────┐  │
+│  │ Gandalf (Mage 5)   │  │  │ Corak (Fighter 4)      │  │
+│  │ STR:12 INT:18      │  │  │ STR:18 INT:10          │  │
+│  │ [Inspect] [Add]    │  │  │ [Inspect] [Remove]     │  │
+│  └────────────────────┘  │  │ [▲ Move Up] [▼ Down]   │  │
+│                          │  └────────────────────────┘  │
+│  ┌────────────────────┐  │                              │
+│  │ Thief (Thief 3)    │  │  ┌────────────────────────┐  │
+│  │ STR:14 INT:12      │  │  │ Gandalf (Mage 5)       │  │
+│  │ [Inspect] [Add]    │  │  │ STR:12 INT:18          │  │
 │  └────────────────────┘  │  │ [Inspect] [Remove]     │  │
 │                          │  │ [▲ Move Up] [▼ Down]   │  │
 │  ┌────────────────────┐  │  └────────────────────────┘  │
-│  │ Thief (Thief 3)    │  │                              │
-│  │ STR:14 INT:12      │  │  ┌────────────────────────┐  │
-│  │ [Inspect] [Add]    │  │  │ Gandalf (Mage 5)       │  │
-│  └────────────────────┘  │  │ STR:12 INT:18          │  │
-│                          │  │ [Inspect] [Remove]     │  │
-│  ┌────────────────────┐  │  │ [▲ Move Up] [▼ Down]   │  │
-│  │ PriestBob (Priest) │  │  └────────────────────────┘  │
-│  │ Status: DEAD       │  │                              │
-│  │ [Inspect] [Add ✗]  │  │  BACK ROW:                   │
-│  └────────────────────┘  │  (Empty)                     │
+│  │ PriestBob (Priest) │  │                              │
+│  │ Status: DEAD       │  │  BACK ROW:                   │
+│  │ [Inspect] [Add ✗]  │  │  (Empty)                     │
+│  └────────────────────┘  │                              │
 │                          │                              │
-└──────────────────────────┴──────────────────────────────┘
+├──────────────────────────┴──────────────────────────────┤
+│  L: Return to Castle                                    │  ← Footer
+└─────────────────────────────────────────────────────────┘
 ```
 
 **Visual Notes:**
+- Header displays scene title and party gold (shared pool)
 - Left column shows all available characters (not in party, status OK)
 - Right column shows party members organized by formation (front/back row)
 - Each character card shows key stats and available actions
 - Actions displayed as buttons (no letter commands)
 - Move up/down buttons disabled for first/last positions
 - Add button disabled for characters with non-OK status
-- Party gold displayed prominently in right column header
+- Footer provides horizontal navigation menu
 - Toast messages appear at top for 3 seconds
 
 ---
@@ -377,6 +381,23 @@ interface TavernComponentState {
 
 ## Implementation Notes
 
+### Header and Footer Components
+
+**Header:**
+- Uses `<app-scene-title>` with `title="GILGAMESH'S TAVERN"` and `[showPartyGold]="true"`
+- Displays party's shared gold pool (not individual character gold)
+- Gold format: "PARTY GOLD: X GP"
+
+**Footer:**
+- Uses `<app-scene-footer>` with horizontal menu
+- Single action: "L: Return to Castle"
+- Future: Could add contextual actions (e.g., "I: Inspect" when character selected)
+
+**Party Gold System:**
+- The game uses a **shared gold pool** for all party members
+- All transactions affect the party total directly
+- There is no individual character gold or "divvy gold" functionality
+
 ### Services Used
 
 - `PartyService.canAddCharacterToParty(party, character, roster)` - Validate add
@@ -388,6 +409,8 @@ interface TavernComponentState {
 ### Components
 
 - `TavernComponent` - Main tavern scene component
+- `SceneTitleComponent` - Header with title and party gold display
+- `SceneFooterComponent` - Footer with horizontal navigation menu
 - `CharacterCardWrapperComponent` - Wraps CharacterCard with actions
 - `CharacterCardComponent` - Base character display (reusable)
 - `CharacterCardActionsComponent` - Action buttons for cards
