@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { TavernCharacterCardComponent } from '../components/tavern-character-card/tavern-character-card.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 import { CharacterStatus } from '../../types/CharacterStatus';
 
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, TavernCharacterCardComponent],
+  imports: [CommonModule, TavernCharacterCardComponent, SceneTitleComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
