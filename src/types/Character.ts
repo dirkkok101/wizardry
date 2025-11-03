@@ -54,9 +54,6 @@ export interface Character {
   // Inventory
   inventory: (string | any)[]  // Item IDs or Item objects (max 8 items)
 
-  // Gold (individual character gold)
-  gold?: number  // Individual gold (party gold managed separately)
-
   // Password (for character access protection)
   password?: string  // Password for character deletion/access
 
