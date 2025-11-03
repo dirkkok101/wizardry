@@ -62,6 +62,36 @@ describe('CharacterCardWrapperComponent', () => {
     expect(emitSpy).toHaveBeenCalled();
   });
 
+  it('emits remove event when actions component emits removeClick', () => {
+    component.actions = ['remove'];
+    fixture.detectChanges();
+
+    const emitSpy = jest.spyOn(component.remove, 'emit');
+    component.onRemove();
+
+    expect(emitSpy).toHaveBeenCalled();
+  });
+
+  it('emits moveUp event when actions component emits moveUpClick', () => {
+    component.actions = ['moveUp'];
+    fixture.detectChanges();
+
+    const emitSpy = jest.spyOn(component.moveUp, 'emit');
+    component.onMoveUp();
+
+    expect(emitSpy).toHaveBeenCalled();
+  });
+
+  it('emits moveDown event when actions component emits moveDownClick', () => {
+    component.actions = ['moveDown'];
+    fixture.detectChanges();
+
+    const emitSpy = jest.spyOn(component.moveDown, 'emit');
+    component.onMoveDown();
+
+    expect(emitSpy).toHaveBeenCalled();
+  });
+
   it('passes disabledActions to CharacterCardActionsComponent', () => {
     component.actions = ['moveUp', 'moveDown'];
     component.disabledActions = ['moveUp'];
