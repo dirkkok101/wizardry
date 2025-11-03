@@ -824,16 +824,4 @@ describe.skip('Character Creation Integration Tests (Legacy)', () => {
       }
     }));
   });
-
-  describe('Navigation', () => {
-    it('should navigate back to training grounds', () => {
-      component.navigateToTrainingGrounds();
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
-    });
-
-    it('should handle footer action for quit button', () => {
-      component.handleFooterAction('quit');
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
-    });
-  });
 });

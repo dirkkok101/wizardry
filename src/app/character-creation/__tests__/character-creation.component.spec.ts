@@ -221,14 +221,13 @@ describe('CharacterCreationComponent', () => {
 
     describe('footerMenuItems', () => {
       describe('Step 1: SELECT_RACE', () => {
-        it('should show continue (disabled), cancel, and quit', () => {
+        it('should show continue (disabled) and cancel', () => {
           component.currentStep.set(CreationStep.SELECT_RACE);
           const items = component.footerMenuItems();
 
-          expect(items.length).toBe(3);
+          expect(items.length).toBe(2);
           expect(items.find(i => i.id === 'continue')).toBeDefined();
           expect(items.find(i => i.id === 'cancel')).toBeDefined();
-          expect(items.find(i => i.id === 'quit')).toBeDefined();
 
           // Continue disabled when no race selected
           expect(items.find(i => i.id === 'continue')!.enabled).toBe(false);
@@ -244,14 +243,13 @@ describe('CharacterCreationComponent', () => {
       });
 
       describe('Step 2: SELECT_ALIGNMENT', () => {
-        it('should show continue (disabled), back, and quit', () => {
+        it('should show continue (disabled) and back', () => {
           component.currentStep.set(CreationStep.SELECT_ALIGNMENT);
           const items = component.footerMenuItems();
 
-          expect(items.length).toBe(3);
+          expect(items.length).toBe(2);
           expect(items.find(i => i.id === 'continue')).toBeDefined();
           expect(items.find(i => i.id === 'back')).toBeDefined();
-          expect(items.find(i => i.id === 'quit')).toBeDefined();
 
           // Continue disabled when no alignment selected
           expect(items.find(i => i.id === 'continue')!.enabled).toBe(false);
@@ -267,27 +265,25 @@ describe('CharacterCreationComponent', () => {
       });
 
       describe('Step 3: ROLL_STATS', () => {
-        it('should show only back and quit (no continue)', () => {
+        it('should show only back (no continue)', () => {
           component.currentStep.set(CreationStep.ROLL_STATS);
           const items = component.footerMenuItems();
 
-          expect(items.length).toBe(2);
+          expect(items.length).toBe(1);
           expect(items.find(i => i.id === 'back')).toBeDefined();
-          expect(items.find(i => i.id === 'quit')).toBeDefined();
           expect(items.find(i => i.id === 'continue')).toBeUndefined();
         });
       });
 
       describe('Step 4: SELECT_CLASS', () => {
-        it('should show continue, reroll, reset, and quit', () => {
+        it('should show continue, reroll, and reset', () => {
           component.currentStep.set(CreationStep.SELECT_CLASS);
           const items = component.footerMenuItems();
 
-          expect(items.length).toBe(4);
+          expect(items.length).toBe(3);
           expect(items.find(i => i.id === 'continue')).toBeDefined();
           expect(items.find(i => i.id === 'reroll')).toBeDefined();
           expect(items.find(i => i.id === 'reset')).toBeDefined();
-          expect(items.find(i => i.id === 'quit')).toBeDefined();
 
           // Continue disabled when no class selected
           expect(items.find(i => i.id === 'continue')!.enabled).toBe(false);
@@ -303,15 +299,14 @@ describe('CharacterCreationComponent', () => {
       });
 
       describe('Step 5: NAME_CHARACTER', () => {
-        it('should show create (disabled), back, and quit', () => {
+        it('should show create (disabled) and back', () => {
           component.currentStep.set(CreationStep.NAME_CHARACTER);
           component.characterName.set('');
           const items = component.footerMenuItems();
 
-          expect(items.length).toBe(3);
+          expect(items.length).toBe(2);
           expect(items.find(i => i.id === 'create')).toBeDefined();
           expect(items.find(i => i.id === 'back')).toBeDefined();
-          expect(items.find(i => i.id === 'quit')).toBeDefined();
 
           // Create disabled when name is empty
           expect(items.find(i => i.id === 'create')!.enabled).toBe(false);
@@ -573,14 +568,6 @@ describe('CharacterCreationComponent', () => {
 
   // resetForm() API was renamed to resetWizard() - tested in other sections
 
-  describe('navigateToTrainingGrounds()', () => {
-    it('should navigate to training grounds', () => {
-      component.navigateToTrainingGrounds();
-
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
-    });
-  });
-
   describe('handleKeyPress()', () => {
     it('should roll stats on R key when on ROLL_STATS step', async () => {
       component.selectRace(Race.HUMAN);
@@ -833,22 +820,6 @@ describe('CharacterCreationComponent', () => {
       });
     });
 
-    describe('Quit navigation (Q key)', () => {
-      it('should navigate to training grounds on "q" key', () => {
-        const event = new KeyboardEvent('keydown', { key: 'q' });
-        component.handleKeyPress(event);
-
-        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
-      });
-
-      it('should navigate to training grounds on uppercase "Q" key', () => {
-        const event = new KeyboardEvent('keydown', { key: 'Q' });
-        component.handleKeyPress(event);
-
-        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
-      });
-    });
-
     describe('Priority conflict resolution', () => {
       it('should advance to NAME_CHARACTER with Enter when form complete', async () => {
         // Setup complete form
@@ -1036,15 +1007,6 @@ describe('CharacterCreationComponent', () => {
 
         expect(preventDefaultSpy).toHaveBeenCalled();
       });
-
-      it('should call preventDefault on quit navigation', () => {
-        const event = new KeyboardEvent('keydown', { key: 'q' });
-        const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
-
-        component.handleKeyPress(event);
-
-        expect(preventDefaultSpy).toHaveBeenCalled();
-      });
     });
   });
 
@@ -1181,14 +1143,6 @@ describe('CharacterCreationComponent', () => {
         component.handleFooterAction('create');
 
         expect(mockRouter.navigate).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('quit action', () => {
-      it('should navigate to training grounds', () => {
-        component.handleFooterAction('quit');
-
-        expect(mockRouter.navigate).toHaveBeenCalledWith(['/training-grounds']);
       });
     });
   });
