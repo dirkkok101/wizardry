@@ -114,6 +114,9 @@ export class InnComponent implements OnInit {
       .filter((char): char is Character => char !== undefined);
   });
 
+  // Party gold
+  readonly partyGold = computed(() => this.gameState.state().party.gold);
+
   // Roster
   readonly allCharacters = computed(() => {
     const state = this.gameState.state();

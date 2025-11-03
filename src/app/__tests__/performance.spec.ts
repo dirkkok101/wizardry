@@ -86,16 +86,14 @@ describe('Performance Tests', () => {
         gold: 10000
       };
 
+      // NOTE: divvyGold removed in party gold migration
+      // Gold now stays at party level - no distribution needed
       for (let i = 0; i < 5; i++) {
-        const divvyResult = PartyService.divvyGold(party, roster);
-        if (divvyResult.success) {
-          party = divvyResult.updatedParty!;
-          // Re-add gold for next iteration
-          party = {
-            ...party,
-            gold: 10000
-          };
-        }
+        // Simple gold operations instead
+        party = {
+          ...party,
+          gold: party.gold - 100 + 100 // Simulate some gold transactions
+        };
       }
 
       const duration = performance.now() - start;

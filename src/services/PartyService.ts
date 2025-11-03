@@ -63,53 +63,10 @@ export class PartyService {
   }
 
   /**
-   * Distribute party's pooled gold equally among all members
-   * Remainder distributed to first N members
+   * NOTE: divvyGold function removed in party gold migration.
+   * In the new architecture, gold remains at party level and is not distributed to individual characters.
+   * All town services (shop, temple, inn) now deduct from party.gold directly.
    */
-  static divvyGold(
-    party: Party,
-    roster: Map<string, Character>
-  ): DivvyGoldResult {
-    // Validate party has members
-    if (party.members.length === 0) {
-      return { success: false, error: 'No party members to distribute gold to' }
-    }
-
-    // Validate party has gold
-    if (!party.gold || party.gold === 0) {
-      return { success: false, error: 'No gold to distribute' }
-    }
-
-    const totalGold = party.gold
-    const partySize = party.members.length
-    const sharePerMember = Math.floor(totalGold / partySize)
-    const remainder = totalGold % partySize
-
-    // Create new roster with updated gold
-    const updatedRoster = new Map(roster)
-    party.members.forEach((memberId, index) => {
-      const character = updatedRoster.get(memberId)
-      if (character) {
-        const bonusGold = index < remainder ? 1 : 0
-        updatedRoster.set(memberId, {
-          ...character,
-          gold: (character.gold || 0) + sharePerMember + bonusGold
-        })
-      }
-    })
-
-    // Create new party with zero gold
-    const updatedParty: Party = {
-      ...party,
-      gold: 0
-    }
-
-    return {
-      success: true,
-      updatedParty,
-      updatedRoster
-    }
-  }
 }
 
 // Gold Management Functions

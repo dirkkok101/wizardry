@@ -157,11 +157,10 @@ describe('CharacterInspectionComponent', () => {
       expect(compiled.textContent).toContain('15');
     });
 
-    it('displays HP, gold, experience', () => {
+    it('displays HP and experience', () => {
       const compiled = fixture.nativeElement;
 
       expect(compiled.textContent).toContain('20 / 25'); // HP
-      expect(compiled.textContent).toContain('150'); // Gold
       expect(compiled.textContent).toContain('5000'); // XP
     });
 
