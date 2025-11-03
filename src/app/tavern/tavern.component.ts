@@ -1,217 +1,163 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, computed, signal, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
-import { PartyService } from '../../services/PartyService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
-import { CharacterListComponent } from '../../components/character-list/character-list.component';
-import { SceneType } from '../../types/SceneType';
-import { Character } from '../../types/Character';
+import { CharacterCardWrapperComponent } from '../../components/character-card-wrapper/character-card-wrapper.component';
+import { ActionType } from '../../components/character-card-actions/character-card-actions.component';
+import { PartyService, moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 
-type TavernView = 'main' | 'add' | 'remove';
-
-const MAX_PARTY_SIZE = 6;
-
-/**
- * Tavern Component (Gilgamesh's Tavern)
- *
- * Party formation hub where players:
- * - Add characters to party (max 6)
- * - Remove characters from party
- * - Inspect character details
- * - Return to castle
- */
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, MenuComponent, CharacterListComponent],
+  imports: [CommonModule, CharacterCardWrapperComponent],
   templateUrl: './tavern.component.html',
-  styleUrls: ['./tavern.component.scss']
+  styleUrl: './tavern.component.scss'
 })
-export class TavernComponent implements OnInit {
-  readonly menuItems: MenuItem[] = [
-    {
-      id: 'add-character',
-      label: 'ADD TO PARTY',
-      enabled: true,
-      shortcut: 'A'
-    },
-    {
-      id: 'remove-character',
-      label: 'REMOVE FROM PARTY',
-      enabled: true,
-      shortcut: 'R'
-    },
-    {
-      id: 'divvy-gold',
-      label: 'DIVVY GOLD',
-      enabled: true,
-      shortcut: 'D'
-    },
-    {
-      id: 'castle',
-      label: 'RETURN TO CASTLE',
-      enabled: true,
-      shortcut: 'C'
-    }
-  ];
+export class TavernComponent {
+  private gameStateService = inject(GameStateService);
+  private router = inject(Router);
 
-  // View state
-  readonly currentView = signal<TavernView>('main');
-  readonly errorMessage = signal<string | null>(null);
-  readonly successMessage = signal<string | null>(null);
+  gameState = this.gameStateService.state;
+  errorMessage = signal<string | null>(null);
+  successMessage = signal<string | null>(null);
 
-  // Party and roster
-  readonly currentParty = computed(() => this.gameState.party());
-  readonly allCharacters = computed(() => {
-    const state = this.gameState.state();
-    return Array.from(state.roster.values());
+  // Computed properties
+  availableCharacters = computed(() => {
+    const state = this.gameState();
+    return Array.from(state.roster.values())
+      .filter(char => !state.party.members.includes(char.id))
+      .filter(char => char.status === 'OK');
   });
 
-  // Characters available to add (not in party, status OK only)
-  readonly availableCharacters = computed(() => {
-    const party = this.currentParty();
-    const partyMemberIds = new Set(party.members);
-    return this.allCharacters().filter(
-      char => !partyMemberIds.has(char.id) && char.status === 'OK'
-    );
-  });
-
-  // Characters in party (for removal)
-  readonly partyCharacters = computed(() => {
-    const party = this.currentParty();
-    const state = this.gameState.state();
-    return party.members
+  frontRowCharacters = computed(() => {
+    const state = this.gameState();
+    return state.party.formation.frontRow
       .map(id => state.roster.get(id))
-      .filter((char): char is Character => char !== undefined);
+      .filter(char => char !== undefined);
   });
 
-  constructor(
-    private gameState: GameStateService,
-    private router: Router
-  ) {}
+  backRowCharacters = computed(() => {
+    const state = this.gameState();
+    return state.party.formation.backRow
+      .map(id => state.roster.get(id))
+      .filter(char => char !== undefined);
+  });
 
-  ngOnInit(): void {
-    this.gameState.updateState(state => ({
-      ...state,
-      currentScene: SceneType.TAVERN
-    }));
+  partyGold = computed(() => this.gameState().party.gold);
+
+  // Action configurations
+  availableCharacterActions: ActionType[] = ['inspect', 'add'];
+
+  partyCharacterActions: ActionType[] = ['inspect', 'remove', 'moveUp', 'moveDown'];
+
+  getDisabledActionsForPartyMember(characterId: string): ActionType[] {
+    const state = this.gameState();
+    const index = state.party.members.indexOf(characterId);
+    const disabled: ActionType[] = [];
+
+    if (index === 0) disabled.push('moveUp');
+    if (index === state.party.members.length - 1) disabled.push('moveDown');
+
+    return disabled;
   }
 
-  handleMenuSelect(itemId: string): void {
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    switch (itemId) {
-      case 'add-character':
-        this.currentView.set('add');
-        break;
-
-      case 'remove-character':
-        this.currentView.set('remove');
-        break;
-
-      case 'divvy-gold':
-        this.handleDivvyGold();
-        break;
-
-      case 'castle':
-        this.router.navigate(['/castle-menu']);
-        break;
-    }
-  }
-
-  handleAddCharacter(charId: string): void {
-    const state = this.gameState.state();
-    const party = this.currentParty();
-    const character = state.roster.get(charId);
+  // Action handlers
+  onAddCharacter(characterId: string): void {
+    const state = this.gameState();
+    const character = state.roster.get(characterId);
 
     if (!character) {
-      this.errorMessage.set('Character not found');
+      this.showError('Character not found');
       return;
     }
 
     // Validate using PartyService
-    const validation = PartyService.canAddCharacterToParty(party, character, state.roster);
+    const validation = PartyService.canAddCharacterToParty(
+      state.party,
+      character,
+      state.roster
+    );
 
     if (!validation.allowed) {
-      this.errorMessage.set(validation.reason || 'Cannot add character');
+      this.showError(validation.reason || 'Cannot add character');
       return;
     }
 
     // Add character to party (immutable update)
-    this.gameState.updateState(state => ({
+    this.gameStateService.updateState(state => ({
       ...state,
       party: {
         ...state.party,
-        members: [...state.party.members, charId]
+        members: [...state.party.members, characterId],
+        formation: {
+          ...state.party.formation,
+          // Add to back row if front row is full, otherwise front row
+          frontRow: state.party.formation.frontRow.length < 3
+            ? [...state.party.formation.frontRow, characterId]
+            : state.party.formation.frontRow,
+          backRow: state.party.formation.frontRow.length >= 3
+            ? [...state.party.formation.backRow, characterId]
+            : state.party.formation.backRow
+        }
       }
     }));
 
-    this.currentView.set('main');
+    this.showSuccess(`${character.name} joined the party`);
   }
 
-  handleRemoveCharacter(charId: string): void {
-    // Remove character from party
-    this.gameState.updateState(state => ({
+  onRemoveCharacter(characterId: string): void {
+    const state = this.gameState();
+    const character = state.roster.get(characterId);
+
+    if (!character) {
+      this.showError('Character not found');
+      return;
+    }
+
+    // Remove character from party (immutable update)
+    this.gameStateService.updateState(state => ({
       ...state,
       party: {
         ...state.party,
-        members: state.party.members.filter(id => id !== charId)
+        members: state.party.members.filter(id => id !== characterId),
+        formation: {
+          frontRow: state.party.formation.frontRow.filter(id => id !== characterId),
+          backRow: state.party.formation.backRow.filter(id => id !== characterId)
+        }
       }
     }));
 
-    this.currentView.set('main');
+    this.showSuccess(`${character.name} left the party`);
   }
 
-  handleDivvyGold(): void {
-    const state = this.gameState.state();
-    const party = this.currentParty();
-
-    // Clear previous messages
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    // Divvy gold using PartyService
-    const result = PartyService.divvyGold(party, state.roster);
-
-    if (!result.success) {
-      this.errorMessage.set(result.error || 'Failed to distribute gold');
-      return;
-    }
-
-    // Update game state with new roster and party
-    this.gameState.updateState(state => ({
-      ...state,
-      roster: result.updatedRoster!,
-      party: result.updatedParty!
-    }));
-
-    // Calculate share per member for success message
-    const sharePerMember = Math.floor(party.gold! / party.members.length);
-    this.successMessage.set(`Gold distributed: ${sharePerMember} gold per member`);
+  onMoveUp(characterId: string): void {
+    const newState = moveCharacterUp(this.gameState(), characterId);
+    this.gameStateService.updateState(() => newState);
   }
 
-  handleInspectCharacter(charId: string): void {
-    const party = this.currentParty();
+  onMoveDown(characterId: string): void {
+    const newState = moveCharacterDown(this.gameState(), characterId);
+    this.gameStateService.updateState(() => newState);
+  }
 
-    // Validate character is in party
-    if (!party.members.includes(charId)) {
-      this.errorMessage.set('Character not found in party');
-      return;
-    }
-
-    // Navigate to character inspection with return context
+  onInspect(characterId: string): void {
     this.router.navigate(['/character-inspection'], {
-      queryParams: {
-        characterId: charId,
-        returnTo: 'tavern'
-      }
+      queryParams: { characterId, returnTo: 'tavern' }
     });
   }
 
-  cancelView(): void {
-    this.currentView.set('main');
-    this.errorMessage.set(null);
+  @HostListener('window:keydown.escape')
+  handleEscape(): void {
+    this.router.navigate(['/castle-menu']);
+  }
+
+  private showError(message: string): void {
+    this.errorMessage.set(message);
+    setTimeout(() => this.errorMessage.set(null), 3000);
+  }
+
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    setTimeout(() => this.successMessage.set(null), 3000);
   }
 }

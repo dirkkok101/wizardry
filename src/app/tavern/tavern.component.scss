@@ -1,150 +1,88 @@
 @use '../../styles/variables' as *;
 
-.tavern {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.tavern-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+  height: 100%;
   padding: $spacing-md;
-
-  header {
-    margin-bottom: $spacing-xl;
-
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0 0 $spacing-sm 0;
-      text-align: center;
-    }
-
-    .party-gold {
-      font-size: 14px;
-      color: $color-amber;
-      text-align: center;
-      font-weight: bold;
-    }
-  }
-
-  main {
-    flex: 1;
-  }
-}
-
-.main-view {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xl;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.party-roster,
-.available-characters {
-  h2 {
-    font-size: 16px;
-    color: $color-text-green;
-    margin-bottom: $spacing-md;
-    text-transform: uppercase;
-  }
-}
-
-.character-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-
-  .character-item {
-    display: flex;
-    gap: $spacing-md;
-    padding: $spacing-sm;
-    border: 1px solid $color-text-dim;
-    margin-bottom: $spacing-xs;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      border-color: $color-text-green;
-      background-color: rgba($color-text-green, 0.1);
-    }
-
-    .position {
-      color: $color-text-dim;
-      width: 20px;
-    }
-
-    .name {
-      color: $color-text-bright;
-      flex: 1;
-      font-weight: bold;
-    }
-
-    .class,
-    .level,
-    .alignment {
-      color: $color-text-dim;
-      min-width: 80px;
-    }
-
-    .status {
-      color: $color-text-green;
-      min-width: 80px;
-
-      &.dead {
-        color: $color-red;
-      }
-    }
-  }
-}
-
-.empty-message {
-  color: $color-text-dim;
-  font-style: italic;
-  text-align: center;
-  padding: $spacing-lg;
 }
 
 .error-message {
-  color: $color-red;
-  background-color: rgba($color-red, 0.1);
-  border: 1px solid $color-red;
-  padding: $spacing-sm $spacing-md;
-  margin: $spacing-md 0;
+  grid-column: 1 / -1;
+  background: $color-error;
+  color: $color-bg-black;
+  padding: $spacing-md;
+  border: 2px solid $color-error;
   text-align: center;
+  font-weight: bold;
 }
 
 .success-message {
-  color: $color-text-green;
-  background-color: rgba($color-text-green, 0.1);
-  border: 1px solid $color-text-green;
-  padding: $spacing-sm $spacing-md;
-  margin: $spacing-md 0;
+  grid-column: 1 / -1;
+  background: $color-text-green;
+  color: $color-bg-black;
+  padding: $spacing-md;
+  border: 2px solid $color-text-green;
   text-align: center;
+  font-weight: bold;
 }
 
-.add-view,
-.remove-view {
-  max-width: 600px;
-  margin: 0 auto;
+.available-characters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
 
   h2 {
-    font-size: 18px;
-    color: $color-text-bright;
-    margin-bottom: $spacing-lg;
-    text-align: center;
+    color: $color-text-green;
+    border-bottom: 1px solid $color-text-green;
+    padding-bottom: $spacing-sm;
+    margin: 0;
   }
 
-  .cancel-btn {
-    background: none;
-    border: 1px solid $color-text-dim;
-    color: $color-text-dim;
-    font-family: $font-mono;
-    padding: $spacing-sm $spacing-md;
-    cursor: pointer;
-    display: block;
-    margin: $spacing-lg auto 0;
-
-    &:hover {
-      border-color: $color-text-green;
-      color: $color-text-green;
-    }
+  .character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: $spacing-md;
+    overflow-y: auto;
+    max-height: calc(100vh - 250px);
+    padding-right: $spacing-sm;
   }
+}
+
+.party-column {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.party-gold-header {
+  background: $color-bg-black;
+  border: 1px solid $color-text-green;
+  padding: $spacing-md;
+  text-align: center;
+  font-size: 1.2rem;
+  color: $color-text-green;
+  font-weight: bold;
+}
+
+.formation-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  h3 {
+    color: $color-text-green;
+    border-bottom: 1px solid $color-text-green;
+    padding-bottom: $spacing-xs;
+    margin: 0;
+  }
+}
+
+.empty-state {
+  color: $color-text-dim;
+  font-style: italic;
+  padding: $spacing-md;
+  text-align: center;
+  border: 1px dashed $color-text-dim;
 }

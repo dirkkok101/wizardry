@@ -1,117 +1,75 @@
-<div class="tavern">
-  <header>
-    <h1>GILGAMESH'S TAVERN</h1>
-    @if (currentParty().gold !== undefined) {
-      <div class="party-gold">PARTY GOLD: {{ currentParty().gold }}</div>
-    }
-  </header>
+<div class="tavern-container">
+  <!-- Error/Success Messages -->
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+  @if (successMessage()) {
+    <div class="success-message">{{ successMessage() }}</div>
+  }
 
-  <main>
-    @if (currentView() === 'main') {
-      <!-- Main Menu View -->
-      <div class="main-view">
-        <!-- Party Roster -->
-        <section class="party-roster">
-          <h2>CURRENT PARTY ({{ partyCharacters().length }}/6)</h2>
-          @if (partyCharacters().length === 0) {
-            <p class="empty-message">No party members</p>
-          } @else {
-            <ul class="character-list">
-              @for (character of partyCharacters(); track character.id; let i = $index) {
-                <li class="character-item" (click)="handleInspectCharacter(character.id)">
-                  <span class="position">{{ i + 1 }}.</span>
-                  <span class="name">{{ character.name }}</span>
-                  <span class="class">{{ character.class }}</span>
-                  <span class="level">Lv {{ character.level }}</span>
-                  <span class="status" [class.dead]="character.status !== 'OK'">
-                    {{ character.status }}
-                  </span>
-                </li>
-              }
-            </ul>
-          }
-        </section>
-
-        <!-- Available Characters -->
-        <section class="available-characters">
-          <h2>AVAILABLE CHARACTERS ({{ availableCharacters().length }})</h2>
-          @if (availableCharacters().length === 0) {
-            <p class="empty-message">No characters available</p>
-          } @else {
-            <ul class="character-list">
-              @for (character of availableCharacters(); track character.id) {
-                <li class="character-item">
-                  <span class="name">{{ character.name }}</span>
-                  <span class="class">{{ character.class }}</span>
-                  <span class="level">Lv {{ character.level }}</span>
-                  <span class="alignment">{{ character.alignment }}</span>
-                  <span class="status" [class.dead]="character.status !== 'OK'">
-                    {{ character.status }}
-                  </span>
-                </li>
-              }
-            </ul>
-          }
-        </section>
-
-        <!-- Messages -->
-        @if (errorMessage()) {
-          <div class="error-message">{{ errorMessage() }}</div>
+  <!-- Left Column: Available Characters -->
+  <div class="available-characters">
+    <h2>Available Characters</h2>
+    @if (availableCharacters().length === 0) {
+      <div class="empty-state">No characters available to join the party</div>
+    } @else {
+      <div class="character-grid">
+        @for (character of availableCharacters(); track character.id) {
+          <app-character-card-wrapper
+            [character]="character"
+            [actions]="availableCharacterActions"
+            (inspect)="onInspect(character.id)"
+            (add)="onAddCharacter(character.id)"
+          ></app-character-card-wrapper>
         }
-        @if (successMessage()) {
-          <div class="success-message">{{ successMessage() }}</div>
-        }
-
-        <!-- Menu -->
-        <app-menu
-          [items]="menuItems"
-          (select)="handleMenuSelect($event)"
-        />
       </div>
     }
+  </div>
 
-    @if (currentView() === 'add') {
-      <!-- Add Character View -->
-      <div class="add-view">
-        <h2>SELECT CHARACTER TO ADD</h2>
-        @if (availableCharacters().length === 0) {
-          <p class="empty-message">No characters available to add</p>
-        } @else {
-          <app-character-list
-            [characters]="availableCharacters()"
-            [selectable]="true"
-            (characterSelected)="handleAddCharacter($event)"
-          />
+  <!-- Right Column: Party Members -->
+  <div class="party-column">
+    <div class="party-gold-header">
+      Party Gold: {{ partyGold() }} GP
+    </div>
+
+    <!-- Front Row -->
+    <div class="formation-section">
+      <h3>Front Row</h3>
+      @if (frontRowCharacters().length === 0) {
+        <div class="empty-state">Front row is empty</div>
+      } @else {
+        @for (character of frontRowCharacters(); track character.id) {
+          <app-character-card-wrapper
+            [character]="character"
+            [actions]="partyCharacterActions"
+            [disabledActions]="getDisabledActionsForPartyMember(character.id)"
+            (inspect)="onInspect(character.id)"
+            (remove)="onRemoveCharacter(character.id)"
+            (moveUp)="onMoveUp(character.id)"
+            (moveDown)="onMoveDown(character.id)"
+          ></app-character-card-wrapper>
         }
+      }
+    </div>
 
-        @if (errorMessage()) {
-          <div class="error-message">{{ errorMessage() }}</div>
+    <!-- Back Row -->
+    <div class="formation-section">
+      <h3>Back Row</h3>
+      @if (backRowCharacters().length === 0) {
+        <div class="empty-state">Back row is empty</div>
+      } @else {
+        @for (character of backRowCharacters(); track character.id) {
+          <app-character-card-wrapper
+            [character]="character"
+            [actions]="partyCharacterActions"
+            [disabledActions]="getDisabledActionsForPartyMember(character.id)"
+            (inspect)="onInspect(character.id)"
+            (remove)="onRemoveCharacter(character.id)"
+            (moveUp)="onMoveUp(character.id)"
+            (moveDown)="onMoveDown(character.id)"
+          ></app-character-card-wrapper>
         }
-
-        <button class="cancel-btn" (click)="cancelView()">
-          CANCEL
-        </button>
-      </div>
-    }
-
-    @if (currentView() === 'remove') {
-      <!-- Remove Character View -->
-      <div class="remove-view">
-        <h2>SELECT CHARACTER TO REMOVE</h2>
-        @if (partyCharacters().length === 0) {
-          <p class="empty-message">Party is empty</p>
-        } @else {
-          <app-character-list
-            [characters]="partyCharacters()"
-            [selectable]="true"
-            (characterSelected)="handleRemoveCharacter($event)"
-          />
-        }
-
-        <button class="cancel-btn" (click)="cancelView()">
-          CANCEL
-        </button>
-      </div>
-    }
-  </main>
+      }
+    </div>
+  </div>
 </div>
