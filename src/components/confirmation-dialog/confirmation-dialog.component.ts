@@ -8,10 +8,11 @@ import { CommonModule } from '@angular/common';
  *
  * Features:
  * - Modal overlay (blocks interaction with background)
- * - Keyboard shortcuts (Y/N/Escape)
+ * - Keyboard shortcuts (Enter/Y for Yes, Escape/N for No)
  * - Click handlers for buttons
  * - Customizable labels
  * - Emits confirmed or cancelled events
+ * - Stops event propagation to prevent underlying components from handling keys
  *
  * @example
  * <app-confirmation-dialog
@@ -31,8 +32,8 @@ import { CommonModule } from '@angular/common';
 export class ConfirmationDialogComponent implements AfterViewChecked {
   @Input() visible: boolean = false;
   @Input() message: string = 'Are you sure?';
-  @Input() yesLabel: string = '(Y)es';
-  @Input() noLabel: string = '(N)o';
+  @Input() yesLabel: string = '(Enter) OK';
+  @Input() noLabel: string = '(Esc) Cancel';
 
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
@@ -43,6 +44,13 @@ export class ConfirmationDialogComponent implements AfterViewChecked {
   /**
    * Handle keyboard shortcuts (component-level to prevent memory leaks).
    * The overlay element is made focusable for keyboard event capture.
+   *
+   * Supported keys:
+   * - Enter or Y: Confirm
+   * - Escape or N: Cancel
+   *
+   * Events are stopped from propagating to prevent underlying components
+   * (like MenuComponent) from handling the same keys.
    */
   @HostListener('keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent): void {
@@ -50,12 +58,14 @@ export class ConfirmationDialogComponent implements AfterViewChecked {
 
     const key = event.key.toLowerCase();
 
-    if (key === 'y') {
+    if (key === 'enter' || key === 'y') {
       this.confirm();
       event.preventDefault();
+      event.stopPropagation(); // Prevent window-level listeners from firing
     } else if (key === 'n' || key === 'escape') {
       this.cancel();
       event.preventDefault();
+      event.stopPropagation(); // Prevent window-level listeners from firing
     }
   }
 
