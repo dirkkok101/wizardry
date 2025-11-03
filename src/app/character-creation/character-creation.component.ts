@@ -149,31 +149,26 @@ export class CharacterCreationComponent implements OnInit {
       case CreationStep.SELECT_RACE:
         items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedRace() !== null });
         items.push({ id: 'cancel', label: 'CANCEL', shortcut: 'ESC', enabled: true });
-        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
         break;
 
       case CreationStep.SELECT_ALIGNMENT:
         items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedAlignment() !== null });
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
-        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
         break;
 
       case CreationStep.ROLL_STATS:
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
-        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
         break;
 
       case CreationStep.SELECT_CLASS:
         items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedClass() !== null });
         items.push({ id: 'reroll', label: 'REROLL STATS', shortcut: 'R', enabled: true });
         items.push({ id: 'reset', label: 'START OVER', shortcut: 'ESC', enabled: true });
-        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
         break;
 
       case CreationStep.NAME_CHARACTER:
         items.push({ id: 'create', label: 'CREATE CHARACTER', shortcut: 'ENTER', enabled: this.characterName().trim().length > 0 });
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
-        items.push({ id: 'quit', label: 'QUIT TO TRAINING GROUNDS', shortcut: 'Q', enabled: true });
         break;
     }
 
@@ -431,15 +426,6 @@ export class CharacterCreationComponent implements OnInit {
     this.router.navigate(['/training-grounds']);
   }
 
-  quitToTrainingGrounds() {
-    this.cancelToTrainingGrounds();
-  }
-
-  // Navigation
-  navigateToTrainingGrounds() {
-    this.router.navigate(['/training-grounds']);
-  }
-
   // Get keyboard shortcut for class
   getClassShortcut(classId: string): string {
     const shortcuts: { [key: string]: string } = {
@@ -482,13 +468,6 @@ export class CharacterCreationComponent implements OnInit {
       case CreationStep.NAME_CHARACTER:
         handled = this.handleNameCharacterStepKeys(key);
         break;
-    }
-
-    // Global shortcuts (work on any step)
-    if (key === 'q') {
-      event.preventDefault();
-      this.quitToTrainingGrounds();
-      return;
     }
 
     if (handled) {
@@ -638,10 +617,6 @@ export class CharacterCreationComponent implements OnInit {
         if (name) {
           this.submitCharacter(name);
         }
-        break;
-
-      case 'quit':
-        this.navigateToTrainingGrounds();
         break;
     }
   }
