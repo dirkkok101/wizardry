@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { TempleService } from '../../services/TempleService';
-import { ResurrectionService } from '../../services/ResurrectionService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
@@ -109,68 +108,36 @@ export class TempleComponent implements OnInit {
   executeService(charId: string, service: ServiceType): void {
     const state = this.gameState.state();
     const character = state.roster.get(charId);
-    const party = this.currentParty();
 
     if (!character) {
       this.errorMessage.set('Character not found');
       return;
     }
 
-    // Calculate tithe (cost)
+    // Check if party can afford (for better error message)
     const tithe = TempleService.calculateTithe(character, service);
+    const party = this.currentParty();
     const partyGold = party.gold || 0;
 
-    // Check if party can afford
     if (partyGold < tithe) {
       this.errorMessage.set(`Cannot afford service. Need ${tithe} gold.`);
       return;
     }
 
-    // Attempt service
-    const success = ResurrectionService.attemptService(character, service);
+    // Perform service using TempleService
+    const result = TempleService.performService(state, charId, service);
 
-    // Update character status based on service and result
-    let newStatus = character.status;
-    let message = '';
-
-    if (success) {
-      switch (service) {
-        case ServiceType.CURE_POISON:
-        case ServiceType.CURE_PARALYSIS:
-        case ServiceType.RESURRECT:
-        case ServiceType.RESTORE:
-          newStatus = CharacterStatus.OK;
-          message = `${character.name} has been cured!`;
-          break;
-      }
+    if (result.success && result.state) {
+      // Service succeeded
+      this.gameState.updateState(() => result.state!);
+      this.successMessage.set(`${character.name} has been cured!`);
+    } else if (result.error && result.state) {
+      // Service failed but character status changed (resurrection/restoration failure)
+      this.gameState.updateState(() => result.state!);
+      this.errorMessage.set(result.error);
     } else {
-      // Handle failures
-      if (service === ServiceType.RESURRECT) {
-        newStatus = CharacterStatus.ASHES;
-        message = `Resurrection failed. ${character.name} has turned to ashes.`;
-      } else if (service === ServiceType.RESTORE) {
-        newStatus = CharacterStatus.LOST;
-        message = `Restoration failed. ${character.name} is lost forever.`;
-      }
-    }
-
-    // Update game state
-    this.gameState.updateState(state => ({
-      ...state,
-      roster: new Map(state.roster).set(charId, {
-        ...character,
-        status: newStatus
-      }),
-      party: {
-        ...state.party,
-        gold: partyGold - tithe
-      }
-    }));
-
-    if (success) {
-      this.successMessage.set(message);
-    } else {
-      this.errorMessage.set(message);
+      // Service error (shouldn't happen since we pre-check gold)
+      this.errorMessage.set(result.error || 'Service failed');
     }
 
     this.currentView.set('main');
