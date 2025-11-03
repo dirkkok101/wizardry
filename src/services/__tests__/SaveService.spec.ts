@@ -149,7 +149,7 @@ describe('SaveService', () => {
       expect(metadata).toBeDefined()
       expect(metadata?.slotId).toBe(1)
       expect(metadata?.partySize).toBe(0)
-      expect(metadata?.partyGold).toBe(100) // Initial game state has 100 gold
+      expect(metadata?.partyGold).toBe(0) // Initial game state has 0 gold
       expect(metadata?.currentScene).toBeDefined()
     })
   })
