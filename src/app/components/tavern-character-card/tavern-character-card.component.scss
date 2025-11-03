@@ -48,7 +48,8 @@
     flex-direction: column;
     justify-content: center;
     gap: $spacing-xs;
-    padding-right: $spacing-xs;
+    padding-right: $spacing-sm;
+    padding-bottom: $spacing-sm;
 
     .action-button {
       font-family: $font-mono;
