@@ -145,6 +145,93 @@ Show party gold in header for:
 - Temple (healing, resurrection services with cost)
 - Inn (room rental costs)
 
+### Footer Components
+
+**Purpose:** Provide consistent horizontal interactive menu with contextual actions across all screens.
+
+**Standard Footer Layout:**
+
+Minimal (single action):
+```
+┌─────────────────────────────────────────┐
+│  [Main Content]                         │
+├─────────────────────────────────────────┤
+│  ESC: Return to Castle                  │
+└─────────────────────────────────────────┘
+```
+
+Multiple contextual actions:
+```
+┌─────────────────────────────────────────┐
+│  [Main Content]                         │
+├─────────────────────────────────────────┤
+│  ESC: Leave  |  I: Inspect  |  ?: Help  │
+└─────────────────────────────────────────┘
+```
+
+**Key Design Rules:**
+
+1. **Horizontal layout** - All actions in single row, separated by ` | `
+2. **ESC/back action first** (leftmost position)
+3. **Interactive** - Items are selectable via shortcuts or mouse clicking
+4. **Contextual** - Items change or enable/disable based on scene state
+5. **Format**: `KEY: Action Label` (e.g., "D: Divvy Gold", "ESC: Leave")
+6. **State-aware** - Disabled items shown dimmed or omitted entirely
+
+**Implementation:**
+
+All scenes MUST use `SceneFooterComponent` for horizontal interactive menu.
+
+Import in component:
+```typescript
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { MenuItem } from '../../components/menu/menu.component';
+
+@Component({
+  // ...
+  imports: [CommonModule, SceneFooterComponent, /* other imports */]
+})
+```
+
+Define menu items as computed signal:
+```typescript
+readonly footerMenuItems = computed((): MenuItem[] => [
+  { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true },
+  { id: 'action', label: 'Contextual Action', shortcut: 'KEY',
+    enabled: this.canPerformAction() },
+  { id: 'help', label: 'Help', shortcut: '?', enabled: true }
+]);
+
+handleFooterAction(itemId: string): void {
+  switch(itemId) {
+    case 'leave':
+      this.navigateBack();
+      break;
+    case 'action':
+      this.performAction();
+      break;
+    case 'help':
+      this.showHelp();
+      break;
+  }
+}
+```
+
+Template usage:
+```html
+<app-scene-footer
+  [menuItems]="footerMenuItems()"
+  (itemSelected)="handleFooterAction($event)"
+/>
+```
+
+**Contextual Menu Design:**
+
+- Return/Leave action typically uses 'L' or 'ESC' shortcut
+- Scene-specific actions use intuitive letters (I for Inspect, ? for Help)
+- Menu items can be conditionally enabled based on state
+- Use computed signals for reactivity to state changes
+
 ---
 
 ## Available Actions
