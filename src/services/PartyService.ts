@@ -141,3 +141,48 @@ export function removePartyGold(state: GameState, amount: number): GameState {
 export function hasEnoughGold(state: GameState, amount: number): boolean {
   return state.party.gold >= amount;
 }
+
+// Formation Movement Functions
+
+export function moveCharacterUp(state: GameState, characterId: string): GameState {
+  const currentIndex = state.party.members.indexOf(characterId);
+  if (currentIndex <= 0) {
+    return state; // Already at top or not found
+  }
+
+  const newMembers = [...state.party.members];
+  // Swap with previous
+  [newMembers[currentIndex - 1], newMembers[currentIndex]] =
+    [newMembers[currentIndex], newMembers[currentIndex - 1]];
+
+  return updateFormationFromMembers(state, newMembers);
+}
+
+export function moveCharacterDown(state: GameState, characterId: string): GameState {
+  const currentIndex = state.party.members.indexOf(characterId);
+  if (currentIndex === -1 || currentIndex >= state.party.members.length - 1) {
+    return state; // Not found or already at bottom
+  }
+
+  const newMembers = [...state.party.members];
+  // Swap with next
+  [newMembers[currentIndex], newMembers[currentIndex + 1]] =
+    [newMembers[currentIndex + 1], newMembers[currentIndex]];
+
+  return updateFormationFromMembers(state, newMembers);
+}
+
+// Helper function to recalculate formation from members array
+function updateFormationFromMembers(state: GameState, members: string[]): GameState {
+  return {
+    ...state,
+    party: {
+      ...state.party,
+      members,
+      formation: {
+        frontRow: members.slice(0, 3),
+        backRow: members.slice(3, 6)
+      }
+    }
+  };
+}
