@@ -1,0 +1,11 @@
+<div class="character-card-actions">
+  @for (action of actions; track action) {
+    <button
+      [disabled]="isDisabled(action)"
+      (click)="handleClick(action)"
+      class="action-button"
+    >
+      {{ getButtonLabel(action) }}
+    </button>
+  }
+</div>
