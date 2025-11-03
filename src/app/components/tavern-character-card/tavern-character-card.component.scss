@@ -5,7 +5,7 @@
   display: grid;
   grid-template-columns: 60% 40%;
   gap: $spacing-sm;
-  height: 60px;
+  height: 70px;
   padding: $spacing-sm;
   background-color: $color-bg-black;
   border: $border-width $border-style $border-color;
@@ -46,7 +46,7 @@
   .character-actions {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
     gap: $spacing-xs;
     padding-right: $spacing-sm;
     padding-bottom: $spacing-sm;
