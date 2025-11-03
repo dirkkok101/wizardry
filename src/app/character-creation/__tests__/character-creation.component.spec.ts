@@ -164,13 +164,11 @@ describe('CharacterCreationComponent', () => {
         expect(component.finalStats()).toBeNull();
       });
 
-      it('should calculate final stats using NEW FORMULA: raceBase + rolled', fakeAsync(() => {
+      it('should calculate final stats using NEW FORMULA: raceBase + rolled', async () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        component.rollStats();
-        tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+        await component.rollStats();
 
         const raceData = RaceService.getRaceData(Race.HUMAN);
         const rolled = component.rolledStats()!;
@@ -184,7 +182,7 @@ describe('CharacterCreationComponent', () => {
         expect(finalStats.agility).toBe(raceData.baseStats.agi + rolled.agility);
         expect(finalStats.luck).toBe(raceData.baseStats.luc + rolled.luck);
         expect(finalStats.bonusPoints).toBe(rolled.bonusPoints);
-      }));
+      });
     });
 
     describe('eligibleClasses', () => {
@@ -435,20 +433,18 @@ describe('CharacterCreationComponent', () => {
       expect(component.isRolling()).toBe(false);
     }));
 
-    it('should generate rolled stats', fakeAsync(() => {
+    it('should generate rolled stats', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      component.rollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
       const rolled = component.rolledStats();
       expect(rolled).toBeDefined();
       expect(rolled!.strength).toBeGreaterThanOrEqual(3);
       expect(rolled!.strength).toBeLessThanOrEqual(18);
       expect(rolled!.bonusPoints).toBeGreaterThanOrEqual(7);
-    }));
+    });
 
     it('should reset class when rerolling stats', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
@@ -1300,26 +1296,24 @@ describe('CharacterCreationComponent', () => {
       expect(component.selectedClass()).toBeNull(); // Still null
     }));
 
-    it('should cascade reset when rerolling stats', fakeAsync(() => {
+    it('should cascade reset when rerolling stats', async () => {
       // Set up form through class selection
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-        component.rollStats();
-      flush();
+      await component.rollStats();
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
       }
 
       // Reroll stats should reset class
-      component.rerollStats();
-      flush();
+      await component.rerollStats();
 
       expect(component.selectedRace()).toBe(Race.HUMAN); // Not reset
       expect(component.selectedAlignment()).toBe(Alignment.GOOD); // Not reset
       expect(component.rolledStats()).toBeTruthy(); // New stats
       expect(component.selectedClass()).toBeNull(); // Reset
-    }));
+    });
   });
 
   describe('state locking', () => {
@@ -1328,7 +1322,7 @@ describe('CharacterCreationComponent', () => {
       expect(component.isLocked()).toBe(false);
     }));
 
-    it('should lock race and alignment after first stats roll', fakeAsync(() => {
+    it('should lock race and alignment after first stats roll', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
@@ -1336,78 +1330,65 @@ describe('CharacterCreationComponent', () => {
 
       expect(component.isLocked()).toBe(false);
 
-      component.rollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
       expect(component.isLocked()).toBe(true);
       expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS); // Should auto-advance
-    }));
+    });
 
-    it('should remain locked after rerolling stats', fakeAsync(() => {
+    it('should remain locked after rerolling stats', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      component.rollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
-      component.rerollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rerollStats();
 
       expect(component.isLocked()).toBe(true);
-    }));
+    });
 
-    it('should unlock when form is reset', fakeAsync(() => {
+    it('should unlock when form is reset', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      component.rollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
       expect(component.isLocked()).toBe(true);
 
       component.resetWizard();
-      tick(); // Process microtasks
 
       expect(component.isLocked()).toBe(false);
-    }));
+    });
 
-    it('should prevent race selection when locked', fakeAsync(() => {
+    it('should prevent race selection when locked', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      component.rollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
       // Try to select different race
       component.selectRace(Race.ELF);
 
       // Should still be HUMAN
       expect(component.selectedRace()).toBe(Race.HUMAN);
-    }));
+    });
 
-    it('should prevent alignment selection when locked', fakeAsync(() => {
+    it('should prevent alignment selection when locked', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      component.rollStats();
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
       // Try to select different alignment
       component.selectAlignment(Alignment.EVIL);
 
       // Should still be GOOD
       expect(component.selectedAlignment()).toBe(Alignment.GOOD);
-    }));
+    });
   });
 
   describe('class selection keyboard shortcuts', () => {
