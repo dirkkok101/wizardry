@@ -68,6 +68,83 @@ interface EntryState {
 └─────────────────────────────────────┘
 ```
 
+### Header Components
+
+**Purpose:** Provide consistent scene identification and context across all game screens.
+
+**Standard Header Layout:**
+
+Minimal (title only):
+```
+┌─────────────────────────────────────────┐
+│  SCENE TITLE                            │
+└─────────────────────────────────────────┘
+```
+
+With metadata (title + party gold):
+```
+┌─────────────────────────────────────────┐
+│  SCENE TITLE        PARTY GOLD: 150 GP  │
+└─────────────────────────────────────────┘
+```
+
+With location context (dungeon scenes):
+```
+┌─────────────────────────────────────────┐
+│  MAZE LEVEL 1            N              │
+│  (5,8)                   Facing North   │
+└─────────────────────────────────────────┘
+```
+
+**Three Variants:**
+
+1. **Minimal Header** - Title only
+   - Use for: Castle Menu, Edge of Town, Title Screen
+   - Component: `<app-scene-title title="CASTLE" />`
+
+2. **Header with Metadata** - Title + party gold
+   - Use for: Tavern, Shop, Temple, Inn (any scene with commerce/services)
+   - Component: `<app-scene-title title="GILGAMESH'S TAVERN" [showPartyGold]="true" />`
+   - Party gold appears right-aligned
+   - Format: "PARTY GOLD: X GP"
+
+3. **Header with Location Context** - Title + position + facing
+   - Use for: Maze, Camp, Combat
+   - Shows dungeon level, coordinates, facing direction
+   - Updates in real-time as party moves
+
+**Implementation:**
+
+All scenes MUST use `SceneTitleComponent` - no hardcoded headers in templates.
+
+Import in component:
+```typescript
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+
+@Component({
+  // ...
+  imports: [CommonModule, SceneTitleComponent, /* other imports */]
+})
+```
+
+Template usage:
+```html
+<app-scene-title
+  title="SCENE NAME"
+  [showPartyGold]="true"  <!-- Optional: for commerce scenes -->
+/>
+```
+
+**Party Gold Display:**
+
+The party gold system uses a **shared gold pool** for all party members. There is no individual character gold or "divvy gold" functionality. Gold transactions affect the party total directly.
+
+Show party gold in header for:
+- Tavern (party formation, adding/removing characters)
+- Shop (buying/selling equipment)
+- Temple (healing, resurrection services with cost)
+- Inn (room rental costs)
+
 ---
 
 ## Available Actions
