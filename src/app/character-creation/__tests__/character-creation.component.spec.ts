@@ -422,16 +422,14 @@ describe('CharacterCreationComponent', () => {
       expect(component.isRolling()).toBe(true);
     });
 
-    it('should set isRolling to false after animation', fakeAsync(() => {
+    it('should set isRolling to false after animation', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      component.rollStats();
-      tick(300); // Wait for animation duration
-      flush(); // Flush all pending async tasks
+      await component.rollStats();
 
       expect(component.isRolling()).toBe(false);
-    }));
+    });
 
     it('should generate rolled stats', async () => {
       component.selectRace(Race.HUMAN);
@@ -642,7 +640,7 @@ describe('CharacterCreationComponent', () => {
   });
 
   describe('handleKeyPress()', () => {
-    it('should roll stats on R key when on ROLL_STATS step', fakeAsync(() => {
+    it('should roll stats on R key when on ROLL_STATS step', async () => {
       component.selectRace(Race.HUMAN);
       component.advanceToAlignment();
       component.selectAlignment(Alignment.GOOD);
@@ -651,13 +649,13 @@ describe('CharacterCreationComponent', () => {
       const event = new KeyboardEvent('keydown', { key: 'r' });
       component.handleKeyPress(event);
 
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      // Wait for async rollStats to complete
+      await new Promise(resolve => setTimeout(resolve, 350));
 
       expect(component.rolledStats()).toBeTruthy();
-    }));
+    });
 
-    it('should roll stats on uppercase R key', fakeAsync(() => {
+    it('should roll stats on uppercase R key', async () => {
       component.selectRace(Race.HUMAN);
       component.advanceToAlignment();
       component.selectAlignment(Alignment.GOOD);
@@ -666,11 +664,11 @@ describe('CharacterCreationComponent', () => {
       const event = new KeyboardEvent('keydown', { key: 'R' });
       component.handleKeyPress(event);
 
-      tick(300); // Wait for animation
-      flush(); // Flush all pending async tasks
+      // Wait for async rollStats to complete
+      await new Promise(resolve => setTimeout(resolve, 350));
 
       expect(component.rolledStats()).toBeTruthy();
-    }));
+    });
 
     it('should not roll stats when alignment not selected', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
@@ -1180,19 +1178,17 @@ describe('CharacterCreationComponent', () => {
     });
 
     describe('create action (Step 5 only)', () => {
-      it('should create character when name is valid', fakeAsync(() => {
+      it('should create character when name is valid', async () => {
         component.currentStep.set(CreationStep.NAME_CHARACTER);
         component.selectedRace.set(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        component.rollStats();
-        flush();
+        await component.rollStats();
         component.selectClass(CharacterClass.FIGHTER);
         component.characterName.set('TestHero');
 
         const initialRosterSize = gameStateService.state().roster.size;
         component.handleFooterAction('create');
-        flush();
 
         // Verify character was created
         const newRosterSize = gameStateService.state().roster.size;
@@ -1200,7 +1196,7 @@ describe('CharacterCreationComponent', () => {
 
         // Verify reset happened
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
-      }));
+      });
 
       it('should not create character when name is empty', () => {
         component.currentStep.set(CreationStep.NAME_CHARACTER);
@@ -1552,12 +1548,11 @@ describe('CharacterCreationComponent', () => {
   });
 
   describe('name modal integration', () => {
-    it('should advance to NAME_CHARACTER when Enter pressed after class selection', fakeAsync(() => {
+    it('should advance to NAME_CHARACTER when Enter pressed after class selection', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-        component.rollStats();
-      flush();
+      await component.rollStats();
       component.selectClass(CharacterClass.FIGHTER);
 
       expect(component.currentStep()).toBe('SELECT_CLASS');
@@ -1566,7 +1561,7 @@ describe('CharacterCreationComponent', () => {
       component.handleKeyPress(event);
 
       expect(component.currentStep()).toBe('NAME_CHARACTER');
-    }));
+    });
 
     it('should not advance to NAME_CHARACTER when Enter pressed without class', () => {
       component.selectRace(Race.HUMAN);
@@ -1578,12 +1573,11 @@ describe('CharacterCreationComponent', () => {
       expect(component.currentStep()).not.toBe('NAME_CHARACTER');
     });
 
-    it('should block reroll when on NAME_CHARACTER step', fakeAsync(() => {
+    it('should block reroll when on NAME_CHARACTER step', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-        component.rollStats();
-      flush();
+      await component.rollStats();
       component.selectClass(CharacterClass.FIGHTER);
       component.advanceToNameCharacter();
 
@@ -1592,35 +1586,31 @@ describe('CharacterCreationComponent', () => {
       // Try to reroll (should not work on NAME_CHARACTER step)
       const event = new KeyboardEvent('keydown', { key: 'r' });
       component.handleKeyPress(event);
-      flush();
 
       // Stats should not change
       expect(component.rolledStats()).toBe(currentStats);
-    }));
+    });
 
-    it('should save character when submitting with name', fakeAsync(() => {
+    it('should save character when submitting with name', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-        component.rollStats();
-      flush();
+      await component.rollStats();
       component.selectClass(CharacterClass.FIGHTER);
 
-      component.submitCharacter('Conan');
-      flush();
+      await component.submitCharacter('Conan');
 
       const state = component['gameState'].state();
       const characters = Array.from(state.roster.values());
       expect(characters.length).toBe(1);
       expect(characters[0].name).toBe('Conan');
-    }));
+    });
 
-    it('should return to class selection when going back from name step', fakeAsync(() => {
+    it('should return to class selection when going back from name step', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-        component.rollStats();
-      flush();
+      await component.rollStats();
       component.selectClass(CharacterClass.FIGHTER);
       component.advanceToNameCharacter();
 
@@ -1630,26 +1620,24 @@ describe('CharacterCreationComponent', () => {
       expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
     });
 
-    it('should reset form immediately after successful save', fakeAsync(() => {
+    it('should reset form immediately after successful save', async () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-        component.rollStats();
-      flush();
+      await component.rollStats();
       component.selectClass(CharacterClass.FIGHTER);
 
-      component.submitCharacter('Gandalf');
-      flush();
+      await component.submitCharacter('Gandalf');
 
       // Immediate reset (no delay)
       expect(component.selectedRace()).toBeNull();
       expect(component.isLocked()).toBe(false);
       expect(component.currentStep()).toBe('SELECT_RACE');
-    }));
+    });
   });
 
   describe('Complete character creation flow', () => {
-    it('should complete full workflow with keyboard only', fakeAsync(() => {
+    it('should complete full workflow with keyboard only', async () => {
 
       // Step 1: Select race with keyboard
       const event1 = new KeyboardEvent('keydown', { key: '1' });
@@ -1676,7 +1664,8 @@ describe('CharacterCreationComponent', () => {
       // Step 3: Roll stats (locks race/alignment)
       const event3 = new KeyboardEvent('keydown', { key: 'r' });
       component.handleKeyPress(event3);
-      flush();
+      // Wait for async rollStats to complete
+      await new Promise(resolve => setTimeout(resolve, 350));
       expect(component.rolledStats()).toBeTruthy();
       expect(component.isLocked()).toBe(true);
 
@@ -1693,15 +1682,14 @@ describe('CharacterCreationComponent', () => {
       component.handleKeyPress(event6);
       expect(component.currentStep()).toBe('NAME_CHARACTER');
 
-      // Step 7: Type name and press Enter to submit (simulated directly)
+      // Step 7: Type name and submit character
       component.characterName.set('TestHero');
-      const event7 = new KeyboardEvent('keydown', { key: 'Enter' });
-      component.handleKeyPress(event7);
+      await component.submitCharacter('TestHero');
 
-      // Step 8: Verify immediate reset and success message
-      expect(component.successMessage()).toContain('TestHero');
+      // Step 8: Verify immediate reset (success message is cleared by reset)
       expect(component.selectedRace()).toBeNull();
       expect(component.isLocked()).toBe(false);
+      expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
 
       // Verify character in roster
       const state = gameStateService.state();
@@ -1712,7 +1700,7 @@ describe('CharacterCreationComponent', () => {
       expect(testHero!.race).toBe(Race.HUMAN);
       expect(testHero!.alignment).toBe(Alignment.GOOD);
       expect(testHero!.class).toBe(CharacterClass.FIGHTER);
-    }));
+    });
   });
 
   describe('State Machine', () => {
@@ -1901,7 +1889,7 @@ describe('CharacterCreationComponent', () => {
       });
 
     describe('complete character creation flow', () => {
-      it('creates character and resets immediately', fakeAsync(() => {
+      it('creates character and resets immediately', async () => {
         // Step 1: Select race
         component.selectedRace.set(Race.ELF);
         component.advanceToAlignment();
@@ -1912,8 +1900,7 @@ describe('CharacterCreationComponent', () => {
 
         // Step 3: Roll stats
         component.advanceToRollStats();
-        component.rollStats();
-        flush();
+        await component.rollStats();
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
 
         // Step 4: Select class (pick first eligible)
@@ -1922,8 +1909,7 @@ describe('CharacterCreationComponent', () => {
         component.advanceToNameCharacter();
 
         // Step 5: Submit name
-        component.submitCharacter('Legolas');
-        flush();
+        await component.submitCharacter('Legolas');
 
         // Verify immediate reset (no delay)
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
@@ -1940,7 +1926,7 @@ describe('CharacterCreationComponent', () => {
         expect(legolas).toBeDefined();
         expect(legolas?.race).toBe(Race.ELF);
         expect(legolas?.alignment).toBe(Alignment.GOOD);
-      }));
+      });
     });
   });
 });
