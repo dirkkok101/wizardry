@@ -81,6 +81,26 @@ describe('NameModalComponent', () => {
 
       expect(saveSpy).not.toHaveBeenCalled();
     });
+
+    it('should stop event propagation on Enter key press', () => {
+      component.characterName.set('Gandalf');
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+      const stopPropagationSpy = jest.spyOn(event, 'stopPropagation');
+
+      component.handleKeyPress(event);
+
+      expect(stopPropagationSpy).toHaveBeenCalled();
+    });
+
+    it('should stop event propagation on Escape key press', () => {
+      const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+      const stopPropagationSpy = jest.spyOn(event, 'stopPropagation');
+
+      component.handleKeyPress(event);
+
+      expect(stopPropagationSpy).toHaveBeenCalled();
+    });
   });
 
   describe('user interactions', () => {

@@ -18,6 +18,7 @@ export interface MenuItem {
  * - Explicit keyboard shortcuts (defined in MenuItem.shortcut)
  * - Enter to select
  * - Disabled items support
+ * - Modal-aware: Ignores keyboard input when a modal dialog is active
  *
  * @example
  * <app-menu
@@ -50,6 +51,11 @@ export class MenuComponent implements OnInit {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyPress(event: KeyboardEvent) {
+    // Don't handle keys if a modal dialog is active (defense-in-depth)
+    if (this.isModalActive()) {
+      return;
+    }
+
     switch (event.key) {
       case 'ArrowUp':
         this.moveToPreviousItem();
@@ -114,5 +120,30 @@ export class MenuComponent implements OnInit {
         this.select.emit(item.id);
       }
     }
+  }
+
+  /**
+   * Check if a modal dialog is currently active.
+   * This provides defense-in-depth against modal dialogs that don't
+   * properly stop event propagation.
+   *
+   * Checks for multiple modal types:
+   * - .dialog-overlay: ConfirmationDialogComponent
+   * - .modal-backdrop: NameModalComponent and other modals
+   * - .name-modal: NameModalComponent
+   *
+   * @returns true if any modal overlay is present in the DOM
+   */
+  private isModalActive(): boolean {
+    // Check for various modal overlay selectors
+    const modalSelectors = [
+      '.dialog-overlay',   // ConfirmationDialogComponent
+      '.modal-backdrop',   // NameModalComponent
+      '.name-modal'        // NameModalComponent inner
+    ];
+
+    return modalSelectors.some(selector =>
+      document.querySelector(selector) !== null
+    );
   }
 }

@@ -95,35 +95,65 @@ describe('ConfirmationDialogComponent', () => {
       expect(component.cancelled.emit).toHaveBeenCalled();
     });
 
-    it('confirms on Y key press', () => {
+    it('confirms on Enter key press', () => {
       jest.spyOn(component.confirmed, 'emit');
 
-      const event = new KeyboardEvent('keydown', { key: 'y' });
+      const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+      const stopPropagationSpy = jest.spyOn(event, 'stopPropagation');
+
       component.handleKeyPress(event);
 
       expect(component.confirmed.emit).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
+    });
+
+    it('confirms on Y key press', () => {
+      jest.spyOn(component.confirmed, 'emit');
+
+      const event = new KeyboardEvent('keydown', { key: 'y', bubbles: true });
+      const stopPropagationSpy = jest.spyOn(event, 'stopPropagation');
+
+      component.handleKeyPress(event);
+
+      expect(component.confirmed.emit).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
     });
 
     it('cancels on N key press', () => {
       jest.spyOn(component.cancelled, 'emit');
 
-      const event = new KeyboardEvent('keydown', { key: 'n' });
+      const event = new KeyboardEvent('keydown', { key: 'n', bubbles: true });
+      const stopPropagationSpy = jest.spyOn(event, 'stopPropagation');
+
       component.handleKeyPress(event);
 
       expect(component.cancelled.emit).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
     });
 
     it('cancels on Escape key press', () => {
       jest.spyOn(component.cancelled, 'emit');
 
-      const event = new KeyboardEvent('keydown', { key: 'Escape' });
+      const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+      const stopPropagationSpy = jest.spyOn(event, 'stopPropagation');
+
       component.handleKeyPress(event);
 
       expect(component.cancelled.emit).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
     });
   });
 
   describe('customization', () => {
+    it('uses default button labels with keyboard shortcuts', () => {
+      component.visible = true;
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      expect(compiled.querySelector('.btn-yes').textContent).toContain('(Enter) OK');
+      expect(compiled.querySelector('.btn-no').textContent).toContain('(Esc) Cancel');
+    });
+
     it('uses custom button labels', () => {
       component.visible = true;
       component.yesLabel = 'Confirm';
