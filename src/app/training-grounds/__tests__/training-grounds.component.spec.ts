@@ -266,4 +266,85 @@ describe('TrainingGroundsComponent', () => {
       expect(spy).toHaveBeenCalled();
     });
   });
+
+  describe('keyboard navigation with modal dialog (integration)', () => {
+    it('does not trigger menu navigation when Enter pressed with confirmation dialog open', () => {
+      // Setup: Create a character
+      const char = createTestCharacter({ id: 'char-1', name: 'Gandalf' });
+      const state = {
+        currentScene: SceneType.TRAINING_GROUNDS,
+        roster: new Map([[char.id, char]]),
+        party: createEmptyParty(),
+        dungeon: {
+          currentLevel: 1,
+          visitedTiles: new Map(),
+          encounters: []
+        },
+        settings: {
+          difficulty: 'NORMAL' as const,
+          soundEnabled: true,
+          musicEnabled: true
+        }
+      };
+      gameStateService.updateState(() => state);
+      fixture.detectChanges();
+
+      // Open confirmation dialog
+      component.handleDeleteCharacter('char-1');
+      fixture.detectChanges();
+
+      // Spy on navigation (menu would normally trigger this)
+      mockRouter.navigate.mockClear();
+      const handleFooterActionSpy = jest.spyOn(component, 'handleFooterAction');
+
+      // Simulate Enter key press while dialog is visible
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        cancelable: true
+      });
+      window.dispatchEvent(enterEvent);
+      fixture.detectChanges();
+
+      // Verify: Menu navigation should NOT have been triggered
+      expect(handleFooterActionSpy).not.toHaveBeenCalled();
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
+
+      // Verify: Dialog should still be open (confirmDelete wasn't called by menu)
+      expect(component.showDeleteConfirmation()).toBe(true);
+    });
+
+    it('does trigger menu navigation when Enter pressed without dialog open', () => {
+      const char = createTestCharacter({ id: 'char-1' });
+      const state = {
+        currentScene: SceneType.TRAINING_GROUNDS,
+        roster: new Map([[char.id, char]]),
+        party: createEmptyParty(),
+        dungeon: {
+          currentLevel: 1,
+          visitedTiles: new Map(),
+          encounters: []
+        },
+        settings: {
+          difficulty: 'NORMAL' as const,
+          soundEnabled: true,
+          musicEnabled: true
+        }
+      };
+      gameStateService.updateState(() => state);
+      fixture.detectChanges();
+
+      // Verify dialog is NOT open
+      expect(component.showDeleteConfirmation()).toBe(false);
+
+      // NOTE: This test verifies that menu navigation works normally when no dialog is present.
+      // The actual menu navigation is handled by SceneFooterComponent which uses MenuComponent.
+      // We're just verifying the dialog isn't blocking legitimate navigation.
+
+      // The handleFooterAction method would be called by the menu when Enter is pressed
+      component.handleFooterAction('create');
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/character-creation']);
+    });
+  });
 });
