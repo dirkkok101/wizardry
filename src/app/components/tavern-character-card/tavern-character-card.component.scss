@@ -1,0 +1,111 @@
+// src/app/components/tavern-character-card/tavern-character-card.component.scss
+@use '../../../styles/variables' as *;
+
+.tavern-character-card {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  gap: $spacing-sm;
+  height: 80px;
+  padding: $spacing-sm;
+  background-color: $color-bg-black;
+  border: $border-width $border-style $border-color;
+  font-family: $font-mono;
+  color: $color-text-green;
+  margin-bottom: $spacing-sm;
+
+  // Left side: Character Info
+  .character-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: $spacing-xs;
+
+    .character-name {
+      font-size: $font-size-large;
+      font-weight: bold;
+      color: $color-text-bright;
+    }
+
+    .character-details {
+      font-size: $font-size-small;
+      color: $color-text-green;
+
+      .separator {
+        margin: 0 $spacing-xs;
+        color: $color-text-dim;
+      }
+    }
+
+    .character-status {
+      font-size: $font-size-small;
+      color: $color-text-dim;
+    }
+  }
+
+  // Right side: Actions
+  .character-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: $spacing-xs;
+
+    .action-button {
+      font-family: $font-mono;
+      font-size: $font-size-small;
+      padding: $spacing-xs;
+      background-color: $color-bg-black;
+      color: $color-text-green;
+      border: $border-width $border-style $border-color;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        background-color: $color-text-green;
+        color: $color-bg-black;
+      }
+
+      &:disabled {
+        color: $color-text-dim;
+        border-color: $color-text-dim;
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+    }
+
+    .move-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: $spacing-xs;
+    }
+
+    .add-button {
+      color: $color-success;
+      border-color: $color-success;
+
+      &:hover {
+        background-color: $color-success;
+        color: $color-bg-black;
+      }
+    }
+
+    .remove-button {
+      color: $color-danger;
+      border-color: $color-danger;
+
+      &:hover {
+        background-color: $color-danger;
+        color: $color-bg-black;
+      }
+    }
+
+    .inspect-button {
+      color: $color-amber;
+      border-color: $color-amber;
+
+      &:hover {
+        background-color: $color-amber;
+        color: $color-bg-black;
+      }
+    }
+  }
+}

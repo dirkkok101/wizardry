@@ -1,0 +1,61 @@
+<!-- src/app/components/tavern-character-card/tavern-character-card.component.html -->
+<div class="tavern-character-card">
+  <!-- Left side: Character Info (60%) -->
+  <div class="character-info">
+    <div class="character-name">{{ character.name }}</div>
+    <div class="character-details">
+      <span class="character-class">Level {{ character.level }} {{ character.class }}</span>
+      <span class="separator"> | </span>
+      <span class="character-race">{{ character.race }} {{ character.alignment }}</span>
+    </div>
+    <div class="character-status">Status: {{ character.status }}</div>
+  </div>
+
+  <!-- Right side: Actions (40%) -->
+  <div class="character-actions">
+    <!-- Add/Remove button (mutually exclusive) -->
+    @if (!isInParty) {
+      <button
+        class="action-button add-button"
+        data-action="add"
+        (click)="onAddClick()">
+        Add to Party
+      </button>
+    } @else {
+      <button
+        class="action-button remove-button"
+        data-action="remove"
+        (click)="onRemoveClick()">
+        Remove
+      </button>
+    }
+
+    <!-- Move Up/Down buttons (only when in party) -->
+    @if (isInParty) {
+      <div class="move-buttons">
+        <button
+          class="action-button move-button"
+          data-action="move-up"
+          [disabled]="!canMoveUp"
+          (click)="onMoveUpClick()">
+          Move Up
+        </button>
+        <button
+          class="action-button move-button"
+          data-action="move-down"
+          [disabled]="!canMoveDown"
+          (click)="onMoveDownClick()">
+          Move Down
+        </button>
+      </div>
+    }
+
+    <!-- Inspect button (always visible) -->
+    <button
+      class="action-button inspect-button"
+      data-action="inspect"
+      (click)="onInspectClick()">
+      Inspect
+    </button>
+  </div>
+</div>
