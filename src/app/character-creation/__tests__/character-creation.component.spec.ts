@@ -168,7 +168,6 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        component.advanceToRollStats();
         component.rollStats();
         flush();
 
@@ -462,8 +461,7 @@ describe('CharacterCreationComponent', () => {
         expect(component.selectedClass()).toBe(CharacterClass.FIGHTER);
 
         // Reroll stats
-        component.advanceToRollStats();
-        component.rollStats();
+        component.rerollStats();
         flush();
 
         expect(component.selectedClass()).toBeNull();
@@ -703,13 +701,13 @@ describe('CharacterCreationComponent', () => {
       }
     }));
 
-    it('should not open name modal when form incomplete', () => {
+    it('should not advance to NAME_CHARACTER when form incomplete', () => {
       component.selectRace(Race.HUMAN);
 
       const event = new KeyboardEvent('keydown', { key: 'Enter' });
       component.handleKeyPress(event);
 
-      expect(component.showNameModal()).toBe(false);
+      expect(component.currentStep()).not.toBe('NAME_CHARACTER');
     });
 
     it('should reset form on Escape key', () => {
@@ -1306,8 +1304,7 @@ describe('CharacterCreationComponent', () => {
       }
 
       // Reroll stats should reset class
-      component.advanceToRollStats();
-        component.rollStats();
+      component.rerollStats();
       flush();
 
       expect(component.selectedRace()).toBe(Race.HUMAN); // Not reset
@@ -1318,38 +1315,34 @@ describe('CharacterCreationComponent', () => {
   });
 
   describe('state locking', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('should not be locked initially', () => {
+    it('should not be locked initially', fakeAsync(() => {
+      flush();
       expect(component.isLocked()).toBe(false);
-    });
+    }));
 
     it('should lock race and alignment after first stats roll', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
+      component.advanceToAlignment();
+      component.advanceToRollStats();
 
       expect(component.isLocked()).toBe(false);
 
-      component.advanceToRollStats();
-        component.rollStats();
+      component.rollStats();
 
       // Wait for animation
       flush();
 
       expect(component.isLocked()).toBe(true);
+      expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS); // Should auto-advance
     }));
 
     it('should remain locked after rerolling stats', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
+      component.advanceToAlignment();
       component.advanceToRollStats();
-        component.rollStats();
+      component.rollStats();
       flush();
 
       component.rerollStats();
@@ -1361,13 +1354,15 @@ describe('CharacterCreationComponent', () => {
     it('should unlock when form is reset', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
+      component.advanceToAlignment();
       component.advanceToRollStats();
-        component.rollStats();
+      component.rollStats();
       flush();
 
       expect(component.isLocked()).toBe(true);
 
       component.resetWizard();
+      flush();
 
       expect(component.isLocked()).toBe(false);
     }));
@@ -1375,8 +1370,9 @@ describe('CharacterCreationComponent', () => {
     it('should prevent race selection when locked', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
+      component.advanceToAlignment();
       component.advanceToRollStats();
-        component.rollStats();
+      component.rollStats();
       flush();
 
       // Try to select different race
@@ -1389,8 +1385,9 @@ describe('CharacterCreationComponent', () => {
     it('should prevent alignment selection when locked', fakeAsync(() => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
+      component.advanceToAlignment();
       component.advanceToRollStats();
-        component.rollStats();
+      component.rollStats();
       flush();
 
       // Try to select different alignment
@@ -1727,45 +1724,48 @@ describe('CharacterCreationComponent', () => {
 
   describe('State Machine', () => {
     describe('initialization', () => {
-      it('starts at SELECT_RACE step', () => {
+      it('starts at SELECT_RACE step', fakeAsync(() => {
+        flush();
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
-      });
+      }));
 
-      it('shows step 1 of 5', () => {
+      it('shows step 1 of 5', fakeAsync(() => {
+        flush();
         expect(component.stepNumber()).toBe(1);
         expect(component.stepTitle()).toBe('Choose Your Race');
-      });
+      }));
     });
 
     describe('forward navigation', () => {
-      it('advances from SELECT_RACE to SELECT_ALIGNMENT', () => {
+      it('advances from SELECT_RACE to SELECT_ALIGNMENT', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.advanceToAlignment();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
         expect(component.stepNumber()).toBe(2);
-      });
+      }));
 
-      it('does not advance from SELECT_RACE without race selected', () => {
+      it('does not advance from SELECT_RACE without race selected', fakeAsync(() => {
         component.advanceToAlignment();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
-      });
+      }));
 
-      it('advances from SELECT_ALIGNMENT to ROLL_STATS', () => {
+      it('advances from SELECT_ALIGNMENT to ROLL_STATS', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
         expect(component.stepNumber()).toBe(3);
-      });
+      }));
 
       it('auto-advances from ROLL_STATS to SELECT_CLASS after rolling', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
-        component.advanceToRollStats();
-
         component.advanceToRollStats();
         component.rollStats();
         flush();
@@ -1775,11 +1775,12 @@ describe('CharacterCreationComponent', () => {
         expect(component.rolledStats()).toBeTruthy();
       }));
 
-      it('advances from SELECT_CLASS to NAME_CHARACTER', () => {
+      it('advances from SELECT_CLASS to NAME_CHARACTER', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.selectedClass.set(CharacterClass.FIGHTER);
         component.advanceToNameCharacter();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.NAME_CHARACTER);
         expect(component.stepNumber()).toBe(5);
@@ -1787,22 +1788,25 @@ describe('CharacterCreationComponent', () => {
     });
 
     describe('backward navigation', () => {
-      it('goes back from SELECT_ALIGNMENT to SELECT_RACE and clears alignment', () => {
+      it('goes back from SELECT_ALIGNMENT to SELECT_RACE and clears alignment', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToAlignment();
+        flush();
 
         component.goBackFromAlignment();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
         expect(component.selectedAlignment()).toBeNull();
         expect(component.selectedRace()).toBe(Race.HUMAN); // race persists
-      });
+      }));
 
-      it('goes back from ROLL_STATS to SELECT_ALIGNMENT and clears stats', () => {
+      it('goes back from ROLL_STATS to SELECT_ALIGNMENT and clears stats', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
+        flush();
         component.rolledStats.set({
           strength: 10,
           intelligence: 12,
@@ -1814,17 +1818,17 @@ describe('CharacterCreationComponent', () => {
         });
 
         component.goBackFromRollStats();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
         expect(component.rolledStats()).toBeNull();
         expect(component.selectedAlignment()).toBe(Alignment.GOOD); // alignment persists
-      });
+      }));
 
       it('goes back from SELECT_CLASS to SELECT_ALIGNMENT (nuclear option)', fakeAsync(() => {
         // Setup: reach class selection
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
-        component.advanceToRollStats();
         component.advanceToRollStats();
         component.rollStats();
         flush();
@@ -1836,6 +1840,7 @@ describe('CharacterCreationComponent', () => {
 
         // Go back (nuclear option)
         component.goBackFromSelectClass();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
         expect(component.rolledStats()).toBeNull(); // stats cleared
@@ -1843,16 +1848,18 @@ describe('CharacterCreationComponent', () => {
         expect(component.selectedAlignment()).toBe(Alignment.GOOD); // alignment persists
       }));
 
-      it('goes back from NAME_CHARACTER to SELECT_CLASS', () => {
+      it('goes back from NAME_CHARACTER to SELECT_CLASS', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedClass.set(CharacterClass.FIGHTER);
         component.currentStep.set(CreationStep.NAME_CHARACTER);
+        flush();
 
         component.goBackFromNameCharacter();
+        flush();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
         expect(component.selectedClass()).toBe(CharacterClass.FIGHTER); // class persists
-      });
+      }));
     });
 
     describe('reroll behavior', () => {
@@ -1860,7 +1867,6 @@ describe('CharacterCreationComponent', () => {
         // Setup: reach class selection
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
-        component.advanceToRollStats();
         component.advanceToRollStats();
         component.rollStats();
         flush();
@@ -1884,7 +1890,6 @@ describe('CharacterCreationComponent', () => {
       it('updates eligible classes after reroll', fakeAsync(() => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
-        component.advanceToRollStats();
         component.advanceToRollStats();
         component.rollStats();
         flush();
