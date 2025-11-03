@@ -1,7 +1,7 @@
 // src/app/components/tavern-character-card/__tests__/tavern-character-card.component.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TavernCharacterCardComponent } from '../tavern-character-card.component';
-import { Character } from '../../../../types/character';
+import { Character } from '../../../../types/Character';
 import { Race } from '../../../../types/Race';
 import { CharacterClass } from '../../../../types/CharacterClass';
 import { Alignment } from '../../../../types/Alignment';

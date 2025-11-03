@@ -1,7 +1,7 @@
 // src/app/components/tavern-character-card/tavern-character-card.component.ts
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Character } from '../../../types/character';
+import { Character } from '../../../types/Character';
 
 @Component({
   selector: 'app-tavern-character-card',
