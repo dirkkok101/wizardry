@@ -5,7 +5,7 @@
   display: grid;
   grid-template-columns: 60% 40%;
   gap: $spacing-sm;
-  height: 80px;
+  height: 60px;
   padding: $spacing-sm;
   background-color: $color-bg-black;
   border: $border-width $border-style $border-color;
@@ -72,40 +72,16 @@
       }
     }
 
-    .move-buttons {
+    .button-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: $spacing-xs;
     }
 
-    .add-button {
-      color: $color-success;
-      border-color: $color-success;
-
-      &:hover {
-        background-color: $color-success;
-        color: $color-bg-black;
-      }
-    }
-
-    .remove-button {
-      color: $color-danger;
-      border-color: $color-danger;
-
-      &:hover {
-        background-color: $color-danger;
-        color: $color-bg-black;
-      }
-    }
-
-    .inspect-button {
-      color: $color-amber;
-      border-color: $color-amber;
-
-      &:hover {
-        background-color: $color-amber;
-        color: $color-bg-black;
-      }
+    .move-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: $spacing-xs;
     }
   }
 }

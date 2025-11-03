@@ -13,25 +13,39 @@
 
   <!-- Right side: Actions (40%) -->
   <div class="character-actions">
-    <!-- Add/Remove button (mutually exclusive) -->
+    <!-- Add/Remove and Inspect buttons (on same row) -->
     @if (!isInParty) {
-      <button
-        class="action-button add-button"
-        data-action="add"
-        (click)="onAddClick()">
-        Add to Party
-      </button>
+      <div class="button-row">
+        <button
+          class="action-button add-button"
+          data-action="add"
+          (click)="onAddClick()">
+          Add
+        </button>
+        <button
+          class="action-button inspect-button"
+          data-action="inspect"
+          (click)="onInspectClick()">
+          Inspect
+        </button>
+      </div>
     } @else {
-      <button
-        class="action-button remove-button"
-        data-action="remove"
-        (click)="onRemoveClick()">
-        Remove
-      </button>
-    }
+      <div class="button-row">
+        <button
+          class="action-button remove-button"
+          data-action="remove"
+          (click)="onRemoveClick()">
+          Remove
+        </button>
+        <button
+          class="action-button inspect-button"
+          data-action="inspect"
+          (click)="onInspectClick()">
+          Inspect
+        </button>
+      </div>
 
-    <!-- Move Up/Down buttons (only when in party) -->
-    @if (isInParty) {
+      <!-- Move Up/Down buttons (only when in party) -->
       <div class="move-buttons">
         <button
           class="action-button move-button"
@@ -49,13 +63,5 @@
         </button>
       </div>
     }
-
-    <!-- Inspect button (always visible) -->
-    <button
-      class="action-button inspect-button"
-      data-action="inspect"
-      (click)="onInspectClick()">
-      Inspect
-    </button>
   </div>
 </div>
