@@ -1,7 +1,9 @@
 .scene-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--spacing-lg);
   border-bottom: 2px solid var(--color-border);
-  text-align: center;
   background: var(--color-bg-black);
 
   h1 {
@@ -9,5 +11,15 @@
     color: var(--color-text-primary);
     margin: 0;
     text-transform: uppercase;
+    flex: 1;
+    text-align: center;
+  }
+
+  .party-gold {
+    font-size: var(--font-size-md);
+    color: var(--color-gold);
+    font-weight: bold;
+    white-space: nowrap;
+    margin-left: var(--spacing-md);
   }
 }
