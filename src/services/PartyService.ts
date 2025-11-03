@@ -1,4 +1,4 @@
-import { Party } from '../types/GameState'
+import { Party, GameState } from '../types/GameState'
 import { Character } from '../types/Character'
 import { Alignment } from '../types/Alignment'
 import { CharacterStatus } from '../types/CharacterStatus'
@@ -110,4 +110,34 @@ export class PartyService {
       updatedRoster
     }
   }
+}
+
+// Gold Management Functions
+
+export function getPartyGold(state: GameState): number {
+  return state.party.gold;
+}
+
+export function addPartyGold(state: GameState, amount: number): GameState {
+  return {
+    ...state,
+    party: {
+      ...state.party,
+      gold: state.party.gold + amount
+    }
+  };
+}
+
+export function removePartyGold(state: GameState, amount: number): GameState {
+  return {
+    ...state,
+    party: {
+      ...state.party,
+      gold: Math.max(0, state.party.gold - amount)
+    }
+  };
+}
+
+export function hasEnoughGold(state: GameState, amount: number): boolean {
+  return state.party.gold >= amount;
 }

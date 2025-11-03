@@ -1,10 +1,11 @@
 // src/test-helpers/test-factories.ts
 import { Character } from '../types/Character'
-import { Party } from '../types/GameState'
+import { Party, GameState } from '../types/GameState'
 import { Race } from '../types/Race'
 import { CharacterClass } from '../types/CharacterClass'
 import { Alignment } from '../types/Alignment'
 import { CharacterStatus } from '../types/CharacterStatus'
+import { SceneType } from '../types/SceneType'
 
 /**
  * Test factory: Create a test character with default values
@@ -92,4 +93,27 @@ export function createPartyWithMembers(memberIds: string[]): Party {
 export function createFullParty(): Party {
   const memberIds = Array.from({ length: 6 }, (_, i) => `char-${i}`)
   return createPartyWithMembers(memberIds)
+}
+
+/**
+ * Test factory: Create a minimal GameState for testing
+ * @param overrides - Partial GameState properties to override defaults
+ */
+export function createTestGameState(overrides?: Partial<GameState>): GameState {
+  return {
+    currentScene: SceneType.CASTLE_MENU,
+    roster: new Map(),
+    party: createEmptyParty(),
+    dungeon: {
+      currentLevel: 1,
+      visitedTiles: new Map(),
+      encounters: []
+    },
+    settings: {
+      difficulty: 'NORMAL',
+      soundEnabled: true,
+      musicEnabled: true
+    },
+    ...overrides
+  }
 }
