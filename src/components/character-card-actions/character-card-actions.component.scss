@@ -2,24 +2,24 @@
 
 .character-card-actions {
   display: flex;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm);
-  background: var(--color-background-darker);
-  border-top: 1px solid var(--color-primary);
+  gap: $spacing-xs;
+  padding: $spacing-sm;
+  background: $color-bg-black;
+  border-top: 1px solid $color-text-green;
 
   .action-button {
     flex: 1;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: $spacing-xs $spacing-sm;
     background: transparent;
-    color: var(--color-primary);
-    border: 1px solid var(--color-primary);
+    color: $color-text-green;
+    border: 1px solid $color-text-green;
     cursor: pointer;
-    font-family: var(--font-family-mono);
+    font-family: $font-mono;
     font-size: 0.875rem;
 
     &:hover:not(:disabled) {
-      background: var(--color-primary);
-      color: var(--color-background);
+      background: $color-text-green;
+      color: $color-bg-black;
     }
 
     &:disabled {
