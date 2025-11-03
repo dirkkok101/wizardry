@@ -48,6 +48,18 @@ if (!validation.allowed) {
 
 Gold is now managed at the party level. Individual characters no longer have a `gold` field. All town services (Shop, Temple, Inn) deduct from and add to the party's shared gold pool.
 
+**Party Gold System:**
+
+The game uses a **shared gold pool** for all party members. Key points:
+
+- Gold is stored at the party level (`party.gold`)
+- All party members share the same gold amount
+- There is NO individual character gold
+- There is NO "divvy gold" or "split gold" functionality
+- Gold transactions (shop purchases, temple services, inn costs) affect party total directly
+
+This differs from the original Wizardry which allowed individual character gold. Our implementation simplifies gold management and prevents edge cases with character death/removal.
+
 ### getPartyGold
 
 Get current party gold amount.
