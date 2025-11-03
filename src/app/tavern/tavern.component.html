@@ -15,12 +15,12 @@
     } @else {
       <div class="character-grid">
         @for (character of availableCharacters(); track character.id) {
-          <app-character-card-wrapper
+          <app-tavern-character-card
             [character]="character"
-            [actions]="availableCharacterActions"
-            (inspect)="onInspect(character.id)"
-            (add)="onAddCharacter(character.id)"
-          ></app-character-card-wrapper>
+            [isInParty]="false"
+            (inspect)="onInspect($event)"
+            (add)="onAddCharacter($event)"
+          ></app-tavern-character-card>
         }
       </div>
     }
@@ -39,15 +39,16 @@
         <div class="empty-state">Front row is empty</div>
       } @else {
         @for (character of frontRowCharacters(); track character.id) {
-          <app-character-card-wrapper
+          <app-tavern-character-card
             [character]="character"
-            [actions]="partyCharacterActions"
-            [disabledActions]="getDisabledActionsForPartyMember(character.id)"
-            (inspect)="onInspect(character.id)"
-            (remove)="onRemoveCharacter(character.id)"
-            (moveUp)="onMoveUp(character.id)"
-            (moveDown)="onMoveDown(character.id)"
-          ></app-character-card-wrapper>
+            [isInParty]="true"
+            [canMoveUp]="canCharacterMoveUp(character.id)"
+            [canMoveDown]="canCharacterMoveDown(character.id)"
+            (inspect)="onInspect($event)"
+            (remove)="onRemoveCharacter($event)"
+            (moveUp)="onMoveUp($event)"
+            (moveDown)="onMoveDown($event)"
+          ></app-tavern-character-card>
         }
       }
     </div>
@@ -59,15 +60,16 @@
         <div class="empty-state">Back row is empty</div>
       } @else {
         @for (character of backRowCharacters(); track character.id) {
-          <app-character-card-wrapper
+          <app-tavern-character-card
             [character]="character"
-            [actions]="partyCharacterActions"
-            [disabledActions]="getDisabledActionsForPartyMember(character.id)"
-            (inspect)="onInspect(character.id)"
-            (remove)="onRemoveCharacter(character.id)"
-            (moveUp)="onMoveUp(character.id)"
-            (moveDown)="onMoveDown(character.id)"
-          ></app-character-card-wrapper>
+            [isInParty]="true"
+            [canMoveUp]="canCharacterMoveUp(character.id)"
+            [canMoveDown]="canCharacterMoveDown(character.id)"
+            (inspect)="onInspect($event)"
+            (remove)="onRemoveCharacter($event)"
+            (moveUp)="onMoveUp($event)"
+            (moveDown)="onMoveDown($event)"
+          ></app-tavern-character-card>
         }
       }
     </div>

@@ -5,7 +5,6 @@ import { GameStateService } from '../../services/GameStateService';
 import { CharacterStatus } from '../../types/CharacterStatus';
 import { Alignment } from '../../types/Alignment';
 import { createTestCharacter, createTestGameState } from '../../test-helpers/test-factories';
-import { ActionType } from '../../components/character-card-actions/character-card-actions.component';
 
 describe('TavernComponent (redesigned)', () => {
   let component: TavernComponent;
@@ -34,11 +33,6 @@ describe('TavernComponent (redesigned)', () => {
     it('should initialize signals', () => {
       expect(component.errorMessage()).toBeNull();
       expect(component.successMessage()).toBeNull();
-    });
-
-    it('should define action configurations', () => {
-      expect(component.availableCharacterActions).toEqual(['inspect', 'add']);
-      expect(component.partyCharacterActions).toEqual(['inspect', 'remove', 'moveUp', 'moveDown']);
     });
   });
 
@@ -227,7 +221,7 @@ describe('TavernComponent (redesigned)', () => {
     });
   });
 
-  describe('getDisabledActionsForPartyMember()', () => {
+  describe('canCharacterMoveUp() and canCharacterMoveDown()', () => {
     beforeEach(() => {
       const char1 = createTestCharacter({ id: 'char-1' });
       const char2 = createTestCharacter({ id: 'char-2' });
@@ -251,25 +245,22 @@ describe('TavernComponent (redesigned)', () => {
       }));
     });
 
-    it('should disable moveUp for first character', () => {
-      const disabled = component.getDisabledActionsForPartyMember('char-1');
-      expect(disabled).toContain('moveUp');
-      expect(disabled).not.toContain('moveDown');
+    it('should not allow first character to move up', () => {
+      expect(component.canCharacterMoveUp('char-1')).toBe(false);
+      expect(component.canCharacterMoveDown('char-1')).toBe(true);
     });
 
-    it('should disable moveDown for last character', () => {
-      const disabled = component.getDisabledActionsForPartyMember('char-3');
-      expect(disabled).toContain('moveDown');
-      expect(disabled).not.toContain('moveUp');
+    it('should not allow last character to move down', () => {
+      expect(component.canCharacterMoveUp('char-3')).toBe(true);
+      expect(component.canCharacterMoveDown('char-3')).toBe(false);
     });
 
-    it('should not disable any moves for middle character', () => {
-      const disabled = component.getDisabledActionsForPartyMember('char-2');
-      expect(disabled).not.toContain('moveUp');
-      expect(disabled).not.toContain('moveDown');
+    it('should allow middle character to move both ways', () => {
+      expect(component.canCharacterMoveUp('char-2')).toBe(true);
+      expect(component.canCharacterMoveDown('char-2')).toBe(true);
     });
 
-    it('should disable both moves for single character in party', () => {
+    it('should not allow single character to move either way', () => {
       gameStateService.updateState(state => ({
         ...state,
         party: {
@@ -282,9 +273,8 @@ describe('TavernComponent (redesigned)', () => {
         }
       }));
 
-      const disabled = component.getDisabledActionsForPartyMember('char-1');
-      expect(disabled).toContain('moveUp');
-      expect(disabled).toContain('moveDown');
+      expect(component.canCharacterMoveUp('char-1')).toBe(false);
+      expect(component.canCharacterMoveDown('char-1')).toBe(false);
     });
   });
 

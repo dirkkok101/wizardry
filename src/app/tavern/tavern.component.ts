@@ -2,15 +2,14 @@ import { Component, computed, signal, HostListener, inject } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
-import { CharacterCardWrapperComponent } from '../../components/character-card-wrapper/character-card-wrapper.component';
-import { ActionType } from '../../components/character-card-actions/character-card-actions.component';
+import { TavernCharacterCardComponent } from '../components/tavern-character-card/tavern-character-card.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 import { CharacterStatus } from '../../types/CharacterStatus';
 
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, CharacterCardWrapperComponent],
+  imports: [CommonModule, TavernCharacterCardComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
@@ -46,20 +45,17 @@ export class TavernComponent {
 
   partyGold = computed(() => this.gameState().party.gold);
 
-  // Action configurations
-  availableCharacterActions: ActionType[] = ['inspect', 'add'];
-
-  partyCharacterActions: ActionType[] = ['inspect', 'remove', 'moveUp', 'moveDown'];
-
-  getDisabledActionsForPartyMember(characterId: string): ActionType[] {
+  // Helper methods for character card inputs
+  canCharacterMoveUp(characterId: string): boolean {
     const state = this.gameState();
     const index = state.party.members.indexOf(characterId);
-    const disabled: ActionType[] = [];
+    return index > 0;
+  }
 
-    if (index === 0) disabled.push('moveUp');
-    if (index === state.party.members.length - 1) disabled.push('moveDown');
-
-    return disabled;
+  canCharacterMoveDown(characterId: string): boolean {
+    const state = this.gameState();
+    const index = state.party.members.indexOf(characterId);
+    return index < state.party.members.length - 1;
   }
 
   // Action handlers
