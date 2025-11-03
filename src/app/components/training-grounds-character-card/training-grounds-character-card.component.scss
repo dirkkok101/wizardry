@@ -1,0 +1,95 @@
+// src/app/components/training-grounds-character-card/training-grounds-character-card.component.scss
+@use '../../../styles/variables' as *;
+
+.training-grounds-character-card {
+  display: grid;
+  grid-template-columns: 70% 30%;
+  gap: $spacing-sm;
+  height: 70px;
+  padding: $spacing-sm;
+  background-color: $color-bg-black;
+  border: $border-width $border-style $color-border;
+  font-family: $font-mono;
+  color: $color-text-green;
+
+  &:hover {
+    border-color: $color-text-bright;
+  }
+}
+
+.character-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: $spacing-xs;
+}
+
+.character-name {
+  font-size: $font-size-base;
+  font-weight: bold;
+  color: $color-text-bright;
+}
+
+.character-details {
+  display: flex;
+  gap: $spacing-sm;
+  font-size: $font-size-small;
+  color: $color-text-green;
+
+  .character-race,
+  .character-class {
+    text-transform: uppercase;
+  }
+
+  .character-level {
+    color: $color-amber;
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px $spacing-xs;
+  font-size: $font-size-small;
+  background-color: $color-text-dim;
+  color: $color-bg-black;
+  border-radius: 2px;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.character-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  justify-content: center;
+
+  button {
+    padding: $spacing-xs $spacing-sm;
+    background-color: $color-bg-black;
+    color: $color-text-green;
+    border: 1px $border-style $color-border;
+    font-family: $font-mono;
+    font-size: $font-size-small;
+    cursor: pointer;
+    text-transform: uppercase;
+
+    &:hover {
+      background-color: $color-text-dim;
+      color: $color-bg-black;
+    }
+
+    &:active {
+      background-color: $color-text-bright;
+    }
+  }
+
+  .delete-button {
+    border-color: $color-error;
+    color: $color-error;
+
+    &:hover {
+      background-color: $color-error;
+      color: $color-bg-black;
+    }
+  }
+}
