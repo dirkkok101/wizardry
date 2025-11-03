@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { CharacterService } from '../../services/CharacterService';
-import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { TrainingGroundsCharacterCardComponent } from '../components/training-grounds-character-card/training-grounds-character-card.component';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
@@ -33,7 +33,7 @@ interface CharacterWithStatus {
   standalone: true,
   imports: [
     CommonModule,
-    CharacterCardComponent,
+    TrainingGroundsCharacterCardComponent,
     ConfirmationDialogComponent,
     SceneTitleComponent,
     SceneFooterComponent

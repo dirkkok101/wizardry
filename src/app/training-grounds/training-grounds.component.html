@@ -11,12 +11,12 @@
       </div>
     } @else {
       @for (item of availableCharacters(); track item.character.id) {
-        <app-character-card
+        <app-training-grounds-character-card
           [character]="item.character"
           [status]="item.status"
           (inspect)="handleInspectCharacter($event)"
           (delete)="handleDeleteCharacter($event)">
-        </app-character-card>
+        </app-training-grounds-character-card>
       }
     }
   </main>
