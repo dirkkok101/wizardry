@@ -8,11 +8,16 @@ import { CommonModule } from '@angular/common';
  *
  * Features:
  * - Modal overlay (blocks interaction with background)
- * - Keyboard shortcuts (Enter/Y for Yes, Escape/N for No)
+ * - Keyboard shortcuts:
+ *   - Confirm: Enter (primary) or Y (alternate)
+ *   - Cancel: Escape (primary) or N (alternate)
  * - Click handlers for buttons
- * - Customizable labels
+ * - Customizable labels (default: "(Enter) OK" and "(Esc) Cancel")
  * - Emits confirmed or cancelled events
  * - Stops event propagation to prevent underlying components from handling keys
+ *
+ * Note: While button labels show Enter/Escape as the primary shortcuts,
+ * the traditional Y/N keys are still supported for user convenience.
  *
  * @example
  * <app-confirmation-dialog
@@ -20,6 +25,17 @@ import { CommonModule } from '@angular/common';
  *   [message]="'Delete character?'"
  *   (confirmed)="onConfirm()"
  *   (cancelled)="onCancel()">
+ * </app-confirmation-dialog>
+ *
+ * @example
+ * // Custom labels
+ * <app-confirmation-dialog
+ *   [visible]="showDialog"
+ *   [message]="'Save changes?'"
+ *   [yesLabel]="'(Enter/Y) Save'"
+ *   [noLabel]="'(Esc/N) Discard'"
+ *   (confirmed)="onSave()"
+ *   (cancelled)="onDiscard()">
  * </app-confirmation-dialog>
  */
 @Component({

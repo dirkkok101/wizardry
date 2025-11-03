@@ -23,9 +23,11 @@ export class NameModalComponent {
 
     if (event.key === 'Enter' && this.characterName().trim().length > 0) {
       event.preventDefault();
+      event.stopPropagation(); // Prevent underlying components from handling this event
       this.save.emit(this.characterName().trim());
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation(); // Prevent underlying components from handling this event
       this.cancel.emit();
     }
   }

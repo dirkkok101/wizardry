@@ -127,11 +127,23 @@ export class MenuComponent implements OnInit {
    * This provides defense-in-depth against modal dialogs that don't
    * properly stop event propagation.
    *
-   * @returns true if a dialog overlay is present in the DOM
+   * Checks for multiple modal types:
+   * - .dialog-overlay: ConfirmationDialogComponent
+   * - .modal-backdrop: NameModalComponent and other modals
+   * - .name-modal: NameModalComponent
+   *
+   * @returns true if any modal overlay is present in the DOM
    */
   private isModalActive(): boolean {
-    // Check if dialog overlay exists and is visible
-    const dialogOverlay = document.querySelector('.dialog-overlay');
-    return dialogOverlay !== null;
+    // Check for various modal overlay selectors
+    const modalSelectors = [
+      '.dialog-overlay',   // ConfirmationDialogComponent
+      '.modal-backdrop',   // NameModalComponent
+      '.name-modal'        // NameModalComponent inner
+    ];
+
+    return modalSelectors.some(selector =>
+      document.querySelector(selector) !== null
+    );
   }
 }
