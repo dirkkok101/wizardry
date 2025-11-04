@@ -50,7 +50,7 @@ export class TavernComponent {
 
   // Footer menu items
   readonly footerMenuItems = computed((): MenuItem[] => [
-    { id: 'leave', label: 'Return to Castle', shortcut: 'L', enabled: true }
+    { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true }
   ]);
 
   // Helper methods for character card inputs
