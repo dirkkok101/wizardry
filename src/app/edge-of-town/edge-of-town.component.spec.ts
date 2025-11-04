@@ -137,6 +137,19 @@ describe('EdgeOfTownComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/camp']);
     });
 
+    it('shows error message when entering maze without party', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, members: [] }
+      }));
+
+      component.handleFooterAction('maze');
+
+      expect(router.navigate).not.toHaveBeenCalled();
+      expect(component.messageText()).toBe('You need a party to enter the maze (visit Tavern)');
+      expect(component.messageType()).toBe('error');
+    });
+
     it('shows error when entering maze without party', () => {
       gameState.updateState(state => ({
         ...state,

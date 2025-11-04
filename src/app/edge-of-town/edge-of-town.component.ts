@@ -181,7 +181,8 @@ export class EdgeOfTownComponent implements OnInit {
 
     // Validate party exists
     if (party.members.length === 0) {
-      this.errorMessage.set('You need a party to enter the maze (visit Tavern)');
+      this.messageText.set('You need a party to enter the maze (visit Tavern)');
+      this.messageType.set('error');
       return;
     }
 
