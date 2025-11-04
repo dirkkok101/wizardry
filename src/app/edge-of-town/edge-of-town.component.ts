@@ -121,6 +121,20 @@ export class EdgeOfTownComponent implements OnInit {
     }));
   }
 
+  /**
+   * Handle character card action clicks
+   */
+  handleCharacterAction(event: CharacterActionEvent): void {
+    if (event.actionType === 'inspect') {
+      this.router.navigate(['/character-inspection'], {
+        queryParams: {
+          characterId: event.characterId,
+          returnTo: 'edge-of-town'
+        }
+      });
+    }
+  }
+
   handleFooterAction(itemId: string): void {
     // Clear previous messages
     this.messageText.set(null);

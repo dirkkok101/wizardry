@@ -193,6 +193,20 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('character actions', () => {
+    it('navigates to character inspection when inspect action clicked', () => {
+      component.handleCharacterAction({
+        characterId: 'char-1',
+        actionType: 'inspect'
+      });
+
+      expect(router.navigate).toHaveBeenCalledWith(
+        ['/character-inspection'],
+        { queryParams: { characterId: 'char-1', returnTo: 'edge-of-town' } }
+      );
+    });
+  });
+
   describe('leave game confirmation', () => {
     it('shows confirmation dialog via footer action', () => {
       component.handleFooterAction('leave-game');
