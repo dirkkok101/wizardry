@@ -94,7 +94,15 @@ export class EdgeOfTownComponent implements OnInit {
       .filter((char): char is Character => char !== undefined);
   });
 
-  // Error and confirmation state
+  // Message display state (unified for error/info/success)
+  readonly messageText = signal<string | null>(null);
+  readonly messageType = signal<'error' | 'info' | 'success'>('info');
+
+  // Confirmation dialog state
+  readonly showLeaveConfirmation = signal(false);
+  readonly leaveConfirmationMessage = signal('Save and quit the game?');
+
+  // Keep old signals for backward compatibility (will be removed in later tasks)
   readonly errorMessage = signal<string | null>(null);
   readonly infoMessage = signal<string | null>(null);
   readonly showExitConfirmation = signal(false);

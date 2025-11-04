@@ -141,6 +141,24 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('message display', () => {
+    it('shows error message when set', () => {
+      component.messageText.set('Test error message');
+      component.messageType.set('error');
+      fixture.detectChanges();
+
+      expect(component.messageText()).toBe('Test error message');
+      expect(component.messageType()).toBe('error');
+    });
+
+    it('clears message when set to null', () => {
+      component.messageText.set('Test message');
+      component.messageText.set(null);
+
+      expect(component.messageText()).toBeNull();
+    });
+  });
+
   describe('leave game', () => {
     it('shows confirmation dialog', () => {
       component.handleMenuSelect('leave-game');
