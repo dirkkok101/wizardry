@@ -1,27 +1,26 @@
 <div class="castle-menu">
   <app-scene-title title="CASTLE" [showPartyGold]="true" />
 
-  <aside class="party-panel">
-    <h2>PARTY</h2>
-    <div class="party-members">
-      @for (char of partyCharacters(); track char.id) {
-        <app-castle-menu-character-card
-          [character]="char"
-          (inspect)="handleInspectCharacter($event)"
-        />
-      }
-      @empty {
-        <p class="no-party">No party members</p>
-      }
-    </div>
-  </aside>
+  <div class="castle-layout">
+    <aside class="party-panel">
+      <h2>PARTY</h2>
+      <div class="party-members">
+        @for (char of partyCharacters(); track char.id) {
+          <app-castle-menu-character-card
+            [character]="char"
+            (inspect)="handleInspectCharacter($event)"
+          />
+        }
+        @empty {
+          <p class="no-party">No party members</p>
+        }
+      </div>
+    </aside>
 
-  <main>
-    <app-menu
-      [items]="menuItems()"
-      (select)="handleMenuSelect($event)"
-    />
-  </main>
+    <main class="content-area">
+      <!-- Main content area -->
+    </main>
+  </div>
 
   <app-scene-footer
     [menuItems]="footerMenuItems()"

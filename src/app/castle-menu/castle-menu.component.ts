@@ -2,7 +2,7 @@ import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
+import { MenuItem } from '../../components/menu/menu.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { CastleMenuCharacterCardComponent } from '../components/castle-menu-character-card/castle-menu-character-card.component';
@@ -24,7 +24,6 @@ import { Character } from '../../types/Character';
   standalone: true,
   imports: [
     CommonModule,
-    MenuComponent,
     SceneTitleComponent,
     SceneFooterComponent,
     CastleMenuCharacterCardComponent
@@ -43,19 +42,6 @@ export class CastleMenuComponent implements OnInit {
       .filter((char): char is Character => char !== undefined);
   });
 
-  readonly menuItems = computed(() => {
-    const baseItems: MenuItem[] = [
-      { id: 'tavern', label: "GILGAMESH'S TAVERN", enabled: true, shortcut: 'T' },
-      { id: 'training-grounds', label: 'TRAINING GROUNDS', enabled: true, shortcut: 'G' },
-      { id: 'inn', label: "ADVENTURER'S INN", enabled: true, shortcut: 'I' },
-      { id: 'shop', label: "BOLTAC'S SHOP", enabled: true, shortcut: 'S' },
-      { id: 'temple', label: 'TEMPLE OF CANT', enabled: true, shortcut: 'M' },
-      { id: 'utilities', label: 'UTILITIES', enabled: true, shortcut: 'U' },
-      { id: 'edge-of-town', label: 'EDGE OF TOWN', enabled: this.hasParty(), shortcut: 'E' }
-    ];
-    return baseItems;
-  });
-
   readonly footerMenuItems = computed((): MenuItem[] => {
     const hasParty = (this.currentParty().members?.length ?? 0) > 0;
 
@@ -68,10 +54,6 @@ export class CastleMenuComponent implements OnInit {
     ];
   });
 
-  private hasParty(): boolean {
-    return this.currentParty().members.length > 0;
-  }
-
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -83,11 +65,6 @@ export class CastleMenuComponent implements OnInit {
       ...state,
       currentScene: SceneType.CASTLE_MENU
     }));
-  }
-
-  handleMenuSelect(itemId: string): void {
-    // Navigate to selected service
-    this.router.navigate([`/${itemId}`]);
   }
 
   handleInspectCharacter(charId: string): void {
