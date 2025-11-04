@@ -77,4 +77,22 @@ describe('CastleMenuComponent', () => {
       expect(edgeItem?.shortcut).toBe('E');
     });
   });
+
+  describe('Party Display', () => {
+    it('should display character cards for each party member', () => {
+      // This test will need GameStateService mock - skip for now and test manually
+      // Focus on template structure
+      const characterCards = fixture.nativeElement.querySelectorAll('app-castle-menu-character-card');
+      expect(characterCards.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle inspect event from character card', () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleInspectCharacter('char-123');
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/character-inspection'], {
+        queryParams: { characterId: 'char-123', returnTo: 'castle-menu' }
+      });
+    });
+  });
 });

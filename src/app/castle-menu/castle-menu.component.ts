@@ -5,6 +5,7 @@ import { GameStateService } from '../../services/GameStateService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { CastleMenuCharacterCardComponent } from '../components/castle-menu-character-card/castle-menu-character-card.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -21,7 +22,13 @@ import { Character } from '../../types/Character';
 @Component({
   selector: 'app-castle-menu',
   standalone: true,
-  imports: [CommonModule, MenuComponent, SceneTitleComponent, SceneFooterComponent],
+  imports: [
+    CommonModule,
+    MenuComponent,
+    SceneTitleComponent,
+    SceneFooterComponent,
+    CastleMenuCharacterCardComponent
+  ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
 })
