@@ -190,6 +190,28 @@ export class EdgeOfTownComponent implements OnInit {
     this.router.navigate(['/camp']);
   }
 
+  async confirmLeaveGame(): Promise<void> {
+    // Save game state
+    const state = this.gameState.state();
+    await this.saveService.saveGame(state);
+
+    // Close browser window/tab
+    // Note: window.close() only works if window was opened by script
+    // For user-opened tabs, this will have no effect
+    window.close();
+
+    // If window.close() fails (most browsers), show a message
+    // informing the user they can safely close the tab
+    this.showLeaveConfirmation.set(false);
+    this.messageText.set('Game saved successfully. You can now close this window.');
+    this.messageType.set('success');
+  }
+
+  cancelLeaveGame(): void {
+    this.showLeaveConfirmation.set(false);
+  }
+
+  // Keep old methods for backward compatibility (will be removed in later tasks)
   async confirmExit(): Promise<void> {
     // Save game state
     const state = this.gameState.state();

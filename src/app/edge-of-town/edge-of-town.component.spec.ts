@@ -193,6 +193,30 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('leave game confirmation', () => {
+    it('shows confirmation dialog via footer action', () => {
+      component.handleFooterAction('leave-game');
+
+      expect(component.showLeaveConfirmation()).toBe(true);
+    });
+
+    it('hides dialog when user cancels', () => {
+      component.showLeaveConfirmation.set(true);
+      component.cancelLeaveGame();
+
+      expect(component.showLeaveConfirmation()).toBe(false);
+    });
+
+    it('shows success message after save (when window.close fails)', async () => {
+      await component.confirmLeaveGame();
+
+      // window.close() will fail in test environment
+      expect(component.showLeaveConfirmation()).toBe(false);
+      expect(component.messageText()).toBe('Game saved successfully. You can now close this window.');
+      expect(component.messageType()).toBe('success');
+    });
+  });
+
   describe('leave game', () => {
     it('shows confirmation dialog', () => {
       component.handleMenuSelect('leave-game');
