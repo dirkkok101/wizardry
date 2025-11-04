@@ -56,30 +56,50 @@ interface CastleMenuEntryState {
 ### ASCII Mockup
 
 ```
-┌─────────────────────────────────────┐
-│  CASTLE                             │
-├─────────────────────────────────────┤
-│                                     │
-│                                     │
-│                                     │
-│                                     │
-│                                     │
-│                                     │
-│                                     │
-├─────────────────────────────────────┤
-│  (G)ILGAMESH'S TAVERN               │
-│  (T)EMPLE OF CANT                   │
-│  (B)OLTAC'S TRADING POST            │
-│  (A)DVENTURER'S INN                 │
-│  (E)DGE OF TOWN                     │
-└─────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ CASTLE                              PARTY GOLD: 1234 GP      │
+├────────────────────┬─────────────────────────────────────────┤
+│ PARTY              │                                         │
+│                    │                                         │
+│ ┌────────────────┐ │                                         │
+│ │ Gandalf        │ │         (Main Content Area)            │
+│ │ ELF MAGE Lv 5  │ │                                         │
+│ │ HP: 25/40      │ │                                         │
+│ │ [OK]  [Inspect]│ │                                         │
+│ └────────────────┘ │                                         │
+│                    │                                         │
+│ ┌────────────────┐ │                                         │
+│ │ Aragorn        │ │                                         │
+│ │ HUMAN LORD 7   │ │                                         │
+│ │ HP: 45/50      │ │                                         │
+│ │ [OK]  [Inspect]│ │                                         │
+│ └────────────────┘ │                                         │
+│                    │                                         │
+├────────────────────┴─────────────────────────────────────────┤
+│ G: Tavern | T: Temple | B: Shop | A: Inn | E: Edge of Town  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 **Visual Notes:**
-- Minimal design (very clean)
-- No party roster shown (unlike Tavern/Camp)
-- Menu-only interface
+- Header/Footer standardized layout
+- Party display in left sidebar with character cards
+- Party gold shown in header
+- Footer provides navigation to all town services
 - Single-keystroke selection (no Enter needed)
+
+---
+
+## Components Used
+
+- `SceneTitleComponent` - Header with party gold display
+- `CastleMenuCharacterCardComponent` - Party member cards with Inspect action
+- `SceneFooterComponent` - Footer navigation menu
+
+---
+
+## Character Actions
+
+- **Inspect** - View full character sheet (navigates to Character Inspection scene)
 
 ---
 
@@ -95,7 +115,7 @@ interface CastleMenuEntryState {
 - None (always available)
 
 **Flow:**
-1. User presses 'G'
+1. User presses 'G' or clicks Tavern in footer
 2. Validate key (always succeeds)
 3. Transition to Tavern scene
 
