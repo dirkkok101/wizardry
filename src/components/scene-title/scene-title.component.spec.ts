@@ -1,17 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SceneTitleComponent } from './scene-title.component';
+import { GameStateService } from '../../services/GameStateService';
+import { signal } from '@angular/core';
+import { GameState } from '../../types/GameState';
 
 describe('SceneTitleComponent', () => {
   let component: SceneTitleComponent;
   let fixture: ComponentFixture<SceneTitleComponent>;
+  let gameStateService: GameStateService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SceneTitleComponent]
+      imports: [SceneTitleComponent],
+      providers: [GameStateService]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SceneTitleComponent);
     component = fixture.componentInstance;
+    gameStateService = TestBed.inject(GameStateService);
   });
 
   it('should create', () => {
@@ -24,5 +30,94 @@ describe('SceneTitleComponent', () => {
 
     const h1 = fixture.nativeElement.querySelector('h1');
     expect(h1.textContent).toBe('TEST TITLE');
+  });
+
+  describe('party gold display', () => {
+    beforeEach(() => {
+      // Set up game state with party gold
+      gameStateService.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 1500
+        }
+      }));
+    });
+
+    it('displays party gold when showPartyGold is true', () => {
+      fixture.componentRef.setInput('title', 'TEST SCENE');
+      fixture.componentRef.setInput('showPartyGold', true);
+      fixture.detectChanges();
+
+      const partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement).toBeTruthy();
+      expect(partyGoldElement.textContent).toContain('PARTY GOLD: 1500 GP');
+    });
+
+    it('hides party gold when showPartyGold is false', () => {
+      fixture.componentRef.setInput('title', 'TEST SCENE');
+      fixture.componentRef.setInput('showPartyGold', false);
+      fixture.detectChanges();
+
+      const partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement).toBeNull();
+    });
+
+    it('hides party gold when showPartyGold is not provided (defaults to false)', () => {
+      fixture.componentRef.setInput('title', 'TEST SCENE');
+      fixture.detectChanges();
+
+      const partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement).toBeNull();
+    });
+
+    it('displays correct gold amount from GameStateService', () => {
+      // Update gold to different amount
+      gameStateService.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 42
+        }
+      }));
+
+      fixture.componentRef.setInput('title', 'TEST SCENE');
+      fixture.componentRef.setInput('showPartyGold', true);
+      fixture.detectChanges();
+
+      const partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement.textContent).toContain('PARTY GOLD: 42 GP');
+    });
+
+    it('uses correct format "PARTY GOLD: X GP"', () => {
+      fixture.componentRef.setInput('title', 'TEST SCENE');
+      fixture.componentRef.setInput('showPartyGold', true);
+      fixture.detectChanges();
+
+      const partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement.textContent).toMatch(/^PARTY GOLD: \d+ GP$/);
+    });
+
+    it('updates party gold display when game state changes', () => {
+      fixture.componentRef.setInput('title', 'TEST SCENE');
+      fixture.componentRef.setInput('showPartyGold', true);
+      fixture.detectChanges();
+
+      let partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement.textContent).toContain('PARTY GOLD: 1500 GP');
+
+      // Update gold amount
+      gameStateService.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          gold: 2500
+        }
+      }));
+      fixture.detectChanges();
+
+      partyGoldElement = fixture.nativeElement.querySelector('.party-gold');
+      expect(partyGoldElement.textContent).toContain('PARTY GOLD: 2500 GP');
+    });
   });
 });

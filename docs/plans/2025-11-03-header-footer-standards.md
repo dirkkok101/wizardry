@@ -335,9 +335,11 @@ In `TavernComponent` class, add:
 
 ```typescript
 readonly footerMenuItems = computed((): MenuItem[] => [
-  { id: 'leave', label: 'Return to Castle', shortcut: 'L', enabled: true }
+  { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true }
 ]);
 ```
+
+**Note:** The shortcut uses 'ESC' to match the existing `@HostListener('window:keydown.escape')` handler in the Tavern component, ensuring consistency.
 
 **Step 3: Add footer action handler**
 
@@ -418,7 +420,7 @@ Find the "Screen Regions" section in `docs/ui/scenes/03-gilgameshs-tavern.md` an
 │                              6. (empty)         │
 │                                                 │
 ├─────────────────────────────────────────────────┤
-│  L: Return to Castle                            │  ← Footer
+│  ESC: Return to Castle                          │  ← Footer
 └─────────────────────────────────────────────────┘
 ```
 ```
@@ -434,7 +436,7 @@ Find or create "Implementation" section and add:
 
 **Footer:**
 - Uses `<app-scene-footer>` with horizontal menu
-- Single action: "L: Return to Castle"
+- Single action: "ESC: Return to Castle"
 - Future: Could add contextual actions (e.g., "I: Inspect" when character selected)
 ```
 
@@ -473,8 +475,8 @@ Expected: Build succeeds with no errors
 1. Start dev server: `npm start`
 2. Navigate to Tavern scene
 3. Verify header shows "GILGAMESH'S TAVERN" and party gold
-4. Verify footer shows "L: Return to Castle"
-5. Test footer action works (pressing L or clicking returns to Castle)
+4. Verify footer shows "ESC: Return to Castle"
+5. Test footer action works (pressing ESC or clicking returns to Castle)
 
 ---
 
