@@ -91,4 +91,31 @@ describe('CastleMenuCharacterCardComponent', () => {
       expect(statusElement?.classList.contains('ashes-status')).toBe(true);
     });
   });
+
+  describe('Inspect Event', () => {
+    it('should emit inspect event with character ID when inspect button clicked', () => {
+      const character = createTestCharacter({ id: 'char-123' });
+      component.character = character;
+      fixture.detectChanges();
+
+      let emittedId: string | undefined;
+      component.inspect.subscribe((id: string) => {
+        emittedId = id;
+      });
+
+      const inspectButton = fixture.nativeElement.querySelector('.inspect-button');
+      inspectButton?.click();
+
+      expect(emittedId).toBe('char-123');
+    });
+
+    it('should have Inspect button label', () => {
+      const character = createTestCharacter();
+      component.character = character;
+      fixture.detectChanges();
+
+      const inspectButton = fixture.nativeElement.querySelector('.inspect-button');
+      expect(inspectButton?.textContent?.trim()).toBe('Inspect');
+    });
+  });
 });
