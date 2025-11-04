@@ -42,8 +42,8 @@ export class EdgeOfTownComponent implements OnInit {
     return [
       { id: 'training-grounds', label: 'Training Grounds', shortcut: 'T', enabled: true },
       { id: 'maze', label: 'Maze', shortcut: 'M', enabled: hasParty },
-      { id: 'castle', label: 'Castle', shortcut: 'C', enabled: true },
       { id: 'utilities', label: 'Utilities', shortcut: 'U', enabled: true },
+      { id: 'castle', label: 'Return to Castle', shortcut: 'ESC', enabled: true },
       { id: 'leave-game', label: 'Leave Game', shortcut: 'L', enabled: true }
     ];
   });
@@ -121,12 +121,12 @@ export class EdgeOfTownComponent implements OnInit {
         this.enterMaze();
         break;
 
-      case 'castle':
-        this.router.navigate(['/castle-menu']);
-        break;
-
       case 'utilities':
         this.router.navigate(['/utilities']);
+        break;
+
+      case 'castle':
+        this.router.navigate(['/castle-menu']);
         break;
 
       case 'leave-game':

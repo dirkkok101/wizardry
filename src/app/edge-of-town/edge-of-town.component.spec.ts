@@ -51,8 +51,9 @@ describe('EdgeOfTownComponent', () => {
       expect(menuItems.length).toBe(5);
       expect(menuItems[0].label).toContain('Training Grounds');
       expect(menuItems[1].label).toContain('Maze');
-      expect(menuItems[2].label).toContain('Castle');
-      expect(menuItems[3].label).toContain('Utilities');
+      expect(menuItems[2].label).toContain('Utilities');
+      expect(menuItems[3].label).toContain('Return to Castle');
+      expect(menuItems[3].shortcut).toBe('ESC');
       expect(menuItems[4].label).toContain('Leave Game');
     });
 
@@ -124,6 +125,12 @@ describe('EdgeOfTownComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/training-grounds']);
     });
 
+    it('navigates to castle menu via footer action', () => {
+      component.handleFooterAction('castle');
+
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+
     it('shows leave confirmation dialog via footer action', () => {
       component.handleFooterAction('leave-game');
 
@@ -132,7 +139,7 @@ describe('EdgeOfTownComponent', () => {
 
     it('clears messages before navigation', () => {
       component.messageText.set('Previous error');
-      component.handleFooterAction('castle');
+      component.handleFooterAction('utilities');
 
       expect(component.messageText()).toBeNull();
     });
@@ -167,12 +174,6 @@ describe('EdgeOfTownComponent', () => {
       expect(router.navigate).not.toHaveBeenCalled();
       expect(component.messageText()).toBe('You need a party to enter the maze (visit Tavern)');
       expect(component.messageType()).toBe('error');
-    });
-
-    it('navigates to castle when selected', () => {
-      component.handleFooterAction('castle');
-
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
 
     it('navigates to utilities when selected', () => {
