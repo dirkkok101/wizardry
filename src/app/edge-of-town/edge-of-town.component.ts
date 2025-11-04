@@ -48,40 +48,6 @@ export class EdgeOfTownComponent implements OnInit {
     ];
   });
 
-  // Keep old menuItems for backward compatibility (will be removed in later tasks)
-  readonly menuItems: MenuItem[] = [
-    {
-      id: 'training-grounds',
-      label: 'TRAINING GROUNDS',
-      enabled: true,
-      shortcut: 'T'
-    },
-    {
-      id: 'maze',
-      label: 'MAZE',
-      enabled: true,
-      shortcut: 'M'
-    },
-    {
-      id: 'castle',
-      label: 'CASTLE',
-      enabled: true,
-      shortcut: 'C'
-    },
-    {
-      id: 'utilities',
-      label: 'UTILITIES',
-      enabled: true,
-      shortcut: 'U'
-    },
-    {
-      id: 'leave-game',
-      label: 'LEAVE GAME',
-      enabled: true,
-      shortcut: 'L'
-    }
-  ];
-
   // Party display
   readonly currentParty = computed(() => this.gameState.party());
 
@@ -101,11 +67,6 @@ export class EdgeOfTownComponent implements OnInit {
   // Confirmation dialog state
   readonly showLeaveConfirmation = signal(false);
   readonly leaveConfirmationMessage = signal('Save and quit the game?');
-
-  // Keep old signals for backward compatibility (will be removed in later tasks)
-  readonly errorMessage = signal<string | null>(null);
-  readonly infoMessage = signal<string | null>(null);
-  readonly showExitConfirmation = signal(false);
 
   constructor(
     private gameState: GameStateService,
@@ -162,34 +123,6 @@ export class EdgeOfTownComponent implements OnInit {
     }
   }
 
-  // Keep old method for backward compatibility (will be removed in later tasks)
-  handleMenuSelect(itemId: string): void {
-    // Clear previous errors
-    this.errorMessage.set(null);
-
-    switch (itemId) {
-      case 'training-grounds':
-        this.router.navigate(['/training-grounds']);
-        break;
-
-      case 'maze':
-        this.enterMaze();
-        break;
-
-      case 'castle':
-        this.router.navigate(['/castle-menu']);
-        break;
-
-      case 'utilities':
-        this.router.navigate(['/utilities']);
-        break;
-
-      case 'leave-game':
-        this.showExitConfirmation.set(true);
-        break;
-    }
-  }
-
   private enterMaze(): void {
     const party = this.currentParty();
 
@@ -223,26 +156,5 @@ export class EdgeOfTownComponent implements OnInit {
 
   cancelLeaveGame(): void {
     this.showLeaveConfirmation.set(false);
-  }
-
-  // Keep old methods for backward compatibility (will be removed in later tasks)
-  async confirmExit(): Promise<void> {
-    // Save game state
-    const state = this.gameState.state();
-    await this.saveService.saveGame(state);
-
-    // Close browser window/tab
-    // Note: window.close() only works if window was opened by script
-    // For user-opened tabs, this will have no effect
-    window.close();
-
-    // If window.close() fails (most browsers), show a message
-    // informing the user they can safely close the tab
-    this.showExitConfirmation.set(false);
-    this.infoMessage.set('Game saved successfully. You can now close this window.');
-  }
-
-  cancelExit(): void {
-    this.showExitConfirmation.set(false);
   }
 }
