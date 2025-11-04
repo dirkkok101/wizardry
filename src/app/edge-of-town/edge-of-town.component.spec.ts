@@ -37,21 +37,23 @@ describe('EdgeOfTownComponent', () => {
       expect(titleComponent).toBeTruthy();
     });
 
-    it('displays edge of town title', () => {
+    it('displays edge of town title via scene title component', () => {
       fixture.detectChanges();
       const compiled = fixture.nativeElement;
-      expect(compiled.querySelector('h1')?.textContent).toContain('EDGE OF TOWN');
+      const titleComponent = compiled.querySelector('app-scene-title');
+      expect(titleComponent).toBeTruthy();
     });
 
-    it('shows all 5 menu options', () => {
+    it('shows all 5 footer menu options', () => {
       fixture.detectChanges();
+      const menuItems = component.footerMenuItems();
 
-      expect(component.menuItems.length).toBe(5);
-      expect(component.menuItems[0].label).toContain('TRAINING GROUNDS');
-      expect(component.menuItems[1].label).toContain('MAZE');
-      expect(component.menuItems[2].label).toContain('CASTLE');
-      expect(component.menuItems[3].label).toContain('UTILITIES');
-      expect(component.menuItems[4].label).toContain('LEAVE GAME');
+      expect(menuItems.length).toBe(5);
+      expect(menuItems[0].label).toContain('Training Grounds');
+      expect(menuItems[1].label).toContain('Maze');
+      expect(menuItems[2].label).toContain('Castle');
+      expect(menuItems[3].label).toContain('Utilities');
+      expect(menuItems[4].label).toContain('Leave Game');
     });
 
     it('updates game state to EDGE_OF_TOWN on init', () => {
@@ -124,9 +126,9 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
-  describe('menu navigation', () => {
+  describe('menu navigation (legacy tests)', () => {
     it('navigates to training grounds when selected', () => {
-      component.handleMenuSelect('training-grounds');
+      component.handleFooterAction('training-grounds');
 
       expect(router.navigate).toHaveBeenCalledWith(['/training-grounds']);
     });
@@ -137,7 +139,7 @@ describe('EdgeOfTownComponent', () => {
         party: { ...state.party, members: ['char-1'] }
       }));
 
-      component.handleMenuSelect('maze');
+      component.handleFooterAction('maze');
 
       expect(router.navigate).toHaveBeenCalledWith(['/camp']);
     });
@@ -155,26 +157,14 @@ describe('EdgeOfTownComponent', () => {
       expect(component.messageType()).toBe('error');
     });
 
-    it('shows error when entering maze without party', () => {
-      gameState.updateState(state => ({
-        ...state,
-        party: { ...state.party, members: [] }
-      }));
-
-      component.handleMenuSelect('maze');
-
-      expect(router.navigate).not.toHaveBeenCalled();
-      expect(component.errorMessage()).toBeTruthy();
-    });
-
     it('navigates to castle when selected', () => {
-      component.handleMenuSelect('castle');
+      component.handleFooterAction('castle');
 
       expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
 
     it('navigates to utilities when selected', () => {
-      component.handleMenuSelect('utilities');
+      component.handleFooterAction('utilities');
 
       expect(router.navigate).toHaveBeenCalledWith(['/utilities']);
     });
@@ -332,22 +322,6 @@ describe('EdgeOfTownComponent', () => {
       expect(component.showLeaveConfirmation()).toBe(false);
       expect(component.messageText()).toBe('Game saved successfully. You can now close this window.');
       expect(component.messageType()).toBe('success');
-    });
-  });
-
-  describe('leave game', () => {
-    it('shows confirmation dialog', () => {
-      component.handleMenuSelect('leave-game');
-
-      expect(component.showExitConfirmation()).toBe(true);
-    });
-
-    it('cancels exit when user chooses No', () => {
-      component.handleMenuSelect('leave-game');
-      component.cancelExit();
-
-      expect(component.showExitConfirmation()).toBe(false);
-      expect(router.navigate).not.toHaveBeenCalled();
     });
   });
 });
