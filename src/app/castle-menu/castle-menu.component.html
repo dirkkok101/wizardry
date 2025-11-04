@@ -5,10 +5,13 @@
     <h2>PARTY</h2>
     <div class="party-members">
       @for (char of partyCharacters(); track char.id) {
-        <app-castle-menu-character-card
+        <app-character-card
           [character]="char"
-          (inspect)="handleInspectCharacter($event)"
-        />
+          [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
+          [actions]="[{ type: 'inspect' }]"
+          variant="default"
+          (actionClick)="handleActionClick($event)">
+        </app-character-card>
       }
       @empty {
         <p class="no-party">No party members</p>

@@ -1,0 +1,54 @@
+@use '../../styles/variables' as *;
+
+.character-card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  background-color: $color-bg-black;
+  border: 1px solid $color-border;
+  padding: $spacing-md;
+  font-family: $font-mono;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &.default {
+    min-height: 120px;
+  }
+
+  &.compact {
+    min-height: 80px;
+  }
+
+  &:hover {
+    background-color: lighten($color-bg-black, 5%);
+    border-color: $color-text-bright;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.character-name {
+  font-size: $font-size-large;
+  font-weight: bold;
+  color: $color-text-bright;
+}
+
+.card-divider {
+  height: 1px;
+  background-color: $color-border;
+  margin: 0;
+}
+
+.card-stats {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+}

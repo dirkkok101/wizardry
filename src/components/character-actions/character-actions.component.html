@@ -1,0 +1,10 @@
+<div class="character-actions">
+  <button
+    *ngFor="let action of actions"
+    class="action-btn"
+    [ngClass]="getVariant(action)"
+    [disabled]="!isEnabled(action)"
+    (click)="handleClick(action)">
+    {{ getButtonLabel(action) }}
+  </button>
+</div>

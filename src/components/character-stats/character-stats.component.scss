@@ -1,0 +1,40 @@
+@use '../../styles/variables' as *;
+
+.character-stats {
+  font-family: $font-mono;
+  font-size: $font-size-base;
+
+  &.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &.horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm $spacing-md;
+  }
+}
+
+.stat-item {
+  display: flex;
+  gap: $spacing-xs;
+
+  .horizontal & {
+    white-space: nowrap;
+  }
+}
+
+.stat-label {
+  color: $color-text-green;
+  font-weight: normal;
+}
+
+.stat-value {
+  color: $color-text-bright;
+
+  &.amber {
+    color: $color-amber;
+  }
+}

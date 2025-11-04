@@ -5,7 +5,8 @@ import { GameStateService } from '../../services/GameStateService';
 import { MenuItem } from '../../components/menu/menu.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { CastleMenuCharacterCardComponent } from '../components/castle-menu-character-card/castle-menu-character-card.component';
+import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -26,7 +27,7 @@ import { Character } from '../../types/Character';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CastleMenuCharacterCardComponent
+    CharacterCardComponent
   ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
@@ -65,6 +66,12 @@ export class CastleMenuComponent implements OnInit {
       ...state,
       currentScene: SceneType.CASTLE_MENU
     }));
+  }
+
+  handleActionClick(event: CharacterActionEvent): void {
+    if (event.actionType === 'inspect') {
+      this.handleInspectCharacter(event.characterId);
+    }
   }
 
   handleInspectCharacter(charId: string): void {

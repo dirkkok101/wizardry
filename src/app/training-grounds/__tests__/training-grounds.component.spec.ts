@@ -241,11 +241,11 @@ describe('TrainingGroundsComponent', () => {
     });
   });
 
-  describe('returnToCastle', () => {
-    it('navigates to castle-menu', () => {
-      component.returnToCastle();
+  describe('returnToEdgeOfTown', () => {
+    it('navigates to edge-of-town', () => {
+      component.returnToEdgeOfTown();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/edge-of-town']);
     });
   });
 
@@ -258,12 +258,50 @@ describe('TrainingGroundsComponent', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('calls returnToCastle when return action selected', () => {
-      const spy = jest.spyOn(component, 'returnToCastle');
+    it('calls returnToEdgeOfTown when return action selected', () => {
+      const spy = jest.spyOn(component, 'returnToEdgeOfTown');
 
       component.handleFooterAction('return');
 
       expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleEscape', () => {
+    it('navigates to edge-of-town when ESC key pressed', () => {
+      component.handleEscape();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/edge-of-town']);
+    });
+
+    it('does not navigate when confirmation dialog is open', () => {
+      const char = createTestCharacter({ id: 'char-1', name: 'Gandalf' });
+      const state = {
+        currentScene: SceneType.TRAINING_GROUNDS,
+        roster: new Map([[char.id, char]]),
+        party: createEmptyParty(),
+        dungeon: {
+          currentLevel: 1,
+          visitedTiles: new Map(),
+          encounters: []
+        },
+        settings: {
+          difficulty: 'NORMAL' as const,
+          soundEnabled: true,
+          musicEnabled: true
+        }
+      };
+      gameStateService.updateState(() => state);
+
+      // Open confirmation dialog
+      component.handleDeleteCharacter('char-1');
+      mockRouter.navigate.mockClear();
+
+      // Try to escape
+      component.handleEscape();
+
+      // Should NOT navigate when dialog is open
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
   });
 

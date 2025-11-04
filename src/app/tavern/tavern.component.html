@@ -17,12 +17,13 @@
     } @else {
       <div class="character-grid">
         @for (character of availableCharacters(); track character.id) {
-          <app-tavern-character-card
+          <app-character-card
             [character]="character"
-            [isInParty]="false"
-            (inspect)="onInspect($event)"
-            (add)="onAddCharacter($event)"
-          ></app-tavern-character-card>
+            [visibleFields]="['class', 'level', 'race', 'alignment']"
+            [actions]="getCharacterActions(character.id, false)"
+            variant="compact"
+            (actionClick)="handleActionClick($event)">
+          </app-character-card>
         }
       </div>
     }
@@ -37,16 +38,13 @@
         <div class="empty-state">Front row is empty</div>
       } @else {
         @for (character of frontRowCharacters(); track character.id) {
-          <app-tavern-character-card
+          <app-character-card
             [character]="character"
-            [isInParty]="true"
-            [canMoveUp]="canCharacterMoveUp(character.id)"
-            [canMoveDown]="canCharacterMoveDown(character.id)"
-            (inspect)="onInspect($event)"
-            (remove)="onRemoveCharacter($event)"
-            (moveUp)="onMoveUp($event)"
-            (moveDown)="onMoveDown($event)"
-          ></app-tavern-character-card>
+            [visibleFields]="['class', 'level', 'race', 'alignment']"
+            [actions]="getCharacterActions(character.id, true)"
+            variant="compact"
+            (actionClick)="handleActionClick($event)">
+          </app-character-card>
         }
       }
     </div>
@@ -58,16 +56,13 @@
         <div class="empty-state">Back row is empty</div>
       } @else {
         @for (character of backRowCharacters(); track character.id) {
-          <app-tavern-character-card
+          <app-character-card
             [character]="character"
-            [isInParty]="true"
-            [canMoveUp]="canCharacterMoveUp(character.id)"
-            [canMoveDown]="canCharacterMoveDown(character.id)"
-            (inspect)="onInspect($event)"
-            (remove)="onRemoveCharacter($event)"
-            (moveUp)="onMoveUp($event)"
-            (moveDown)="onMoveDown($event)"
-          ></app-tavern-character-card>
+            [visibleFields]="['class', 'level', 'race', 'alignment']"
+            [actions]="getCharacterActions(character.id, true)"
+            variant="compact"
+            (actionClick)="handleActionClick($event)">
+          </app-character-card>
         }
       }
     </div>
