@@ -9,18 +9,10 @@
   font-family: $font-mono;
 }
 
-.castle-layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  flex: 1;
-  overflow: hidden;
-}
-
-.party-panel {
+.party-section {
   background-color: rgba(0, 0, 0, 0.3);
-  border-right: $border-width $border-style $color-border;
+  border-bottom: $border-width $border-style $color-border;
   padding: $padding-standard;
-  overflow-y: auto;
 
   h2 {
     font-size: $font-size-large;
@@ -33,9 +25,15 @@
 }
 
 .party-members {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: $spacing-sm;
+  max-width: 100%;
+
+  // Limit to 3 columns max for better card sizing
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .no-party {
@@ -43,9 +41,11 @@
   color: $color-text-dim;
   font-style: italic;
   margin-top: $spacing-lg;
+  grid-column: 1 / -1;
 }
 
 .content-area {
+  flex: 1;
   padding: $padding-standard;
   overflow-y: auto;
   display: flex;
@@ -56,14 +56,12 @@
 
 // Mobile responsive
 @media (max-width: 768px) {
-  .castle-layout {
+  .party-members {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
   }
 
-  .party-panel {
-    border-right: none;
-    border-bottom: $border-width $border-style $color-border;
+  .party-section {
     max-height: 40vh;
+    overflow-y: auto;
   }
 }

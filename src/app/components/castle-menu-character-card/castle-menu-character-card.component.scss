@@ -1,12 +1,13 @@
 @use '../../../styles/variables' as *;
 
 .character-card {
-  display: grid;
-  grid-template-columns: 70% 30%;
-  height: 70px;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  height: 90px;
   background-color: rgba(0, 0, 0, 0.3);
   border: $border-width $border-style $color-border;
-  padding: $padding-small;
+  padding: $spacing-md;
   cursor: pointer;
   transition: background-color 0.2s;
 
@@ -20,6 +21,8 @@
   flex-direction: column;
   justify-content: space-between;
   gap: $spacing-xs;
+  flex: 1;
+  padding-right: $spacing-lg;
 }
 
 .character-name {
@@ -40,12 +43,13 @@
 
 .status-badge {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 4px 8px;
   font-size: $font-size-small;
   border-radius: 4px;
   font-weight: bold;
   text-align: center;
   width: fit-content;
+  height: fit-content;
 
   &.ok-status {
     background-color: rgba(0, 255, 0, 0.2);
@@ -69,14 +73,13 @@
 .character-actions {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: $spacing-sm;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: $spacing-lg;
 }
 
 .inspect-button {
-  width: 100%;
-  padding: $padding-small;
+  padding: $spacing-sm $spacing-lg;
   background-color: transparent;
   color: $color-text-green;
   border: $border-width $border-style $color-border;
@@ -84,6 +87,7 @@
   font-family: $font-mono;
   font-size: $font-size-base;
   transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
 
   &:hover {
     background-color: $color-text-green;
