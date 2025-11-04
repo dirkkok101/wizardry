@@ -2,7 +2,8 @@ import { Component, computed, signal, HostListener, inject } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
-import { TavernCharacterCardComponent } from '../components/tavern-character-card/tavern-character-card.component';
+import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { MenuItem } from '../../components/menu/menu.component';
@@ -12,7 +13,7 @@ import { CharacterStatus } from '../../types/CharacterStatus';
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, TavernCharacterCardComponent, SceneTitleComponent, SceneFooterComponent],
+  imports: [CommonModule, CharacterCardComponent, SceneTitleComponent, SceneFooterComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
@@ -64,6 +65,25 @@ export class TavernComponent {
     const state = this.gameState();
     const index = state.party.members.indexOf(characterId);
     return index < state.party.members.length - 1;
+  }
+
+  getCharacterActions(characterId: string, isInParty: boolean): CharacterAction[] {
+    if (isInParty) {
+      const canMoveUp = this.canCharacterMoveUp(characterId);
+      const canMoveDown = this.canCharacterMoveDown(characterId);
+
+      return [
+        { type: 'remove' },
+        { type: 'inspect' },
+        { type: 'moveUp', enabled: canMoveUp },
+        { type: 'moveDown', enabled: canMoveDown }
+      ];
+    } else {
+      return [
+        { type: 'add' },
+        { type: 'inspect' }
+      ];
+    }
   }
 
   // Action handlers
@@ -149,6 +169,26 @@ export class TavernComponent {
     this.router.navigate(['/character-inspection'], {
       queryParams: { characterId, returnTo: 'tavern' }
     });
+  }
+
+  handleActionClick(event: CharacterActionEvent): void {
+    switch (event.actionType) {
+      case 'add':
+        this.onAddCharacter(event.characterId);
+        break;
+      case 'remove':
+        this.onRemoveCharacter(event.characterId);
+        break;
+      case 'moveUp':
+        this.onMoveUp(event.characterId);
+        break;
+      case 'moveDown':
+        this.onMoveDown(event.characterId);
+        break;
+      case 'inspect':
+        this.onInspect(event.characterId);
+        break;
+    }
   }
 
   handleFooterAction(itemId: string): void {

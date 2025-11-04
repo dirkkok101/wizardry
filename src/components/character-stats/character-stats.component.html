@@ -1,0 +1,8 @@
+<div class="character-stats" [ngClass]="{ 'vertical': layout === 'vertical', 'horizontal': layout === 'horizontal' }">
+  <div class="stat-item" *ngFor="let field of fields">
+    <span class="stat-label">{{ getFieldLabel(field) }}:</span>
+    <span class="stat-value" [ngClass]="{ 'amber': isAmberField(field) }">
+      {{ getFieldValue(field) }}
+    </span>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+@use '../../styles/variables' as *;
+
+.character-actions {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  font-family: $font-mono;
+  font-size: $font-size-base;
+  padding: $spacing-xs $spacing-md;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  border: 1px solid $color-border;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: lighten($color-bg-black, 5%);
+    border-color: $color-text-bright;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.default {
+    // Default styling already applied above
+  }
+
+  &.danger {
+    color: $color-error;
+    border-color: $color-error;
+
+    &:hover:not(:disabled) {
+      border-color: lighten($color-error, 10%);
+    }
+  }
+}

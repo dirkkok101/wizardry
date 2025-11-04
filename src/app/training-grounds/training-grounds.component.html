@@ -11,12 +11,16 @@
       </div>
     } @else {
       @for (item of availableCharacters(); track item.character.id) {
-        <app-training-grounds-character-card
+        <app-character-card
           [character]="item.character"
-          [status]="item.status"
-          (inspect)="handleInspectCharacter($event)"
-          (delete)="handleDeleteCharacter($event)">
-        </app-training-grounds-character-card>
+          [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
+          [actions]="[
+            { type: 'inspect' },
+            { type: 'delete', variant: 'danger' }
+          ]"
+          variant="default"
+          (actionClick)="handleActionClick($event)">
+        </app-character-card>
       }
     }
   </main>

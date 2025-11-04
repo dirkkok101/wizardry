@@ -1,0 +1,29 @@
+<div class="character-card" [ngClass]="{ 'default': variant === 'default', 'compact': variant === 'compact' }">
+  <!-- Header: Name + Status -->
+  <div class="card-header">
+    <div class="character-name">{{ character.name }}</div>
+    <app-status-badge [status]="character.status" variant="badge"></app-status-badge>
+  </div>
+
+  <div class="card-divider"></div>
+
+  <!-- Stats Section -->
+  <div class="card-stats" *ngIf="hasStats">
+    <app-character-stats
+      [character]="character"
+      [fields]="displayFields"
+      [layout]="variant === 'compact' ? 'horizontal' : 'vertical'">
+    </app-character-stats>
+  </div>
+
+  <div class="card-divider" *ngIf="hasActions"></div>
+
+  <!-- Actions Section -->
+  <div class="card-actions" *ngIf="hasActions">
+    <app-character-actions
+      [actions]="actions!"
+      [characterId]="character.id"
+      (actionClick)="handleActionClick($event)">
+    </app-character-actions>
+  </div>
+</div>

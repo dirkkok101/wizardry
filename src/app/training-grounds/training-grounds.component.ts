@@ -1,9 +1,10 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, HostListener, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { CharacterService } from '../../services/CharacterService';
-import { TrainingGroundsCharacterCardComponent } from '../components/training-grounds-character-card/training-grounds-character-card.component';
+import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
@@ -33,7 +34,7 @@ interface CharacterWithStatus {
   standalone: true,
   imports: [
     CommonModule,
-    TrainingGroundsCharacterCardComponent,
+    CharacterCardComponent,
     ConfirmationDialogComponent,
     SceneTitleComponent,
     SceneFooterComponent
@@ -66,7 +67,7 @@ export class TrainingGroundsComponent implements OnInit {
   // Footer menu items
   readonly footerMenuItems = computed((): MenuItem[] => [
     { id: 'create', label: 'CREATE CHARACTER', shortcut: 'C', enabled: true },
-    { id: 'return', label: 'RETURN TO CASTLE', shortcut: 'L', enabled: true }
+    { id: 'return', label: 'RETURN TO EDGE OF TOWN', shortcut: 'ESC', enabled: true }
   ]);
 
   constructor(
@@ -143,10 +144,10 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
-   * Return to castle menu
+   * Return to edge of town
    */
-  returnToCastle(): void {
-    this.router.navigate(['/castle-menu']);
+  returnToEdgeOfTown(): void {
+    this.router.navigate(['/edge-of-town']);
   }
 
   /**
@@ -158,8 +159,27 @@ export class TrainingGroundsComponent implements OnInit {
         this.handleCreateCharacter();
         break;
       case 'return':
-        this.returnToCastle();
+        this.returnToEdgeOfTown();
         break;
+    }
+  }
+
+  @HostListener('window:keydown.escape')
+  handleEscape(): void {
+    // Don't navigate if confirmation dialog is open
+    if (!this.showDeleteConfirmation()) {
+      this.returnToEdgeOfTown();
+    }
+  }
+
+  /**
+   * Handle actions from character cards
+   */
+  handleActionClick(event: CharacterActionEvent): void {
+    if (event.actionType === 'inspect') {
+      this.handleInspectCharacter(event.characterId);
+    } else if (event.actionType === 'delete') {
+      this.handleDeleteCharacter(event.characterId);
     }
   }
 

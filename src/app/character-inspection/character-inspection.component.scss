@@ -1,33 +1,35 @@
+@use '../../styles/variables' as *;
+
 .character-inspection {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
-  background-color: #000;
-  color: #0f0;
-  font-family: 'Courier New', monospace;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
 }
 
 .character-sheet {
   max-width: 800px;
   width: 100%;
-  background-color: #111;
-  border: 2px solid #0f0;
+  background-color: lighten($color-bg-black, 7%);
+  border: 2px solid $color-border;
   padding: 2rem;
 }
 
 .section {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #0f0;
+  border-bottom: 1px solid $color-border;
 
   &:last-child {
     border-bottom: none;
   }
 
   h2, h3, h4 {
-    color: #0f0;
+    color: $color-text-green;
     margin: 0 0 1rem 0;
     text-transform: uppercase;
   }
@@ -59,7 +61,7 @@
     font-size: 0.9rem;
 
     span {
-      color: #0f0;
+      color: $color-text-green;
     }
   }
 }
@@ -75,15 +77,15 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem;
-  background-color: #000;
-  border: 1px solid #0f0;
+  background-color: $color-bg-black;
+  border: 1px solid $color-border;
 
   .stat-label {
     font-weight: bold;
   }
 
   .stat-value {
-    color: #ff0;
+    color: $color-amber;
   }
 }
 
@@ -98,26 +100,26 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem;
-  background-color: #000;
-  border: 1px solid #0f0;
+  background-color: $color-bg-black;
+  border: 1px solid $color-border;
 
   .status-label {
     font-weight: bold;
   }
 
   .status-value {
-    color: #ff0;
+    color: $color-amber;
 
     &.status-ok {
-      color: #0f0;
+      color: $color-text-green;
     }
 
     &.status-dead {
-      color: #f00;
+      color: $color-error;
     }
 
     &.status-afflicted {
-      color: #fa0;
+      color: $color-amber;
     }
   }
 }
@@ -133,15 +135,15 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem;
-  background-color: #000;
-  border: 1px solid #0f0;
+  background-color: $color-bg-black;
+  border: 1px solid $color-border;
 
   .equipment-label {
     font-weight: bold;
   }
 
   .equipment-value {
-    color: #ff0;
+    color: $color-amber;
   }
 }
 
@@ -155,8 +157,8 @@
 .inventory-slot {
   display: flex;
   padding: 0.5rem;
-  background-color: #000;
-  border: 1px solid #0f0;
+  background-color: $color-bg-black;
+  border: 1px solid $color-border;
 
   .slot-number {
     font-weight: bold;
@@ -164,7 +166,7 @@
   }
 
   .slot-item {
-    color: #ff0;
+    color: $color-amber;
   }
 }
 
@@ -173,7 +175,7 @@
   margin-bottom: 1rem;
 
   .spell-placeholder {
-    color: #888;
+    color: $color-text-dim;
     font-style: italic;
     margin: 0.5rem 0;
   }
@@ -188,19 +190,19 @@
 }
 
 .btn-back {
-  background-color: #000;
-  color: #0f0;
-  border: 2px solid #0f0;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  border: 2px solid $color-border;
   padding: 0.75rem 2rem;
-  font-family: 'Courier New', monospace;
+  font-family: $font-mono;
   font-size: 1rem;
   cursor: pointer;
   text-transform: uppercase;
   transition: all 0.2s;
 
   &:hover {
-    background-color: #0f0;
-    color: #000;
+    background-color: $color-text-green;
+    color: $color-bg-black;
   }
 
   &:active {
@@ -214,7 +216,7 @@
   padding: 2rem;
 
   p {
-    color: #f00;
+    color: $color-error;
     font-size: 1.2rem;
     margin-bottom: 2rem;
   }
