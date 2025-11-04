@@ -92,49 +92,19 @@
   }
 }
 
-  .confirmation-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+// Mobile responsive
+@media (max-width: 768px) {
+  .party-members {
+    grid-template-columns: 1fr;
+  }
 
-    .dialog-content {
-      background: $color-bg-black;
-      border: 2px solid $color-text-bright;
-      padding: $spacing-xl;
-      text-align: center;
+  .party-section {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
 
-      p {
-        font-size: 18px;
-        color: $color-text-bright;
-        margin: 0 0 $spacing-lg 0;
-      }
-
-      .dialog-actions {
-        display: flex;
-        gap: $spacing-md;
-        justify-content: center;
-
-        button {
-          background: none;
-          border: 1px solid $color-text-green;
-          color: $color-text-green;
-          font-family: $font-mono;
-          font-size: 14px;
-          padding: $spacing-sm $spacing-lg;
-          cursor: pointer;
-
-          &:hover {
-            background: $color-text-green;
-            color: $color-bg-black;
-          }
-        }
-      }
-    }
+  .message-area {
+    padding: $spacing-sm;
+    font-size: $font-size-small;
   }
 }
