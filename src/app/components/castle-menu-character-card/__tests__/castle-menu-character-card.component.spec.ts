@@ -18,4 +18,48 @@ describe('CastleMenuCharacterCardComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  describe('Character Information Rendering', () => {
+    it('should display character name', () => {
+      const character = createTestCharacter({ name: 'Gandalf' });
+      component.character = character;
+      fixture.detectChanges();
+
+      const nameElement = fixture.nativeElement.querySelector('.character-name');
+      expect(nameElement?.textContent).toBe('Gandalf');
+    });
+
+    it('should display race, class, and level', () => {
+      const character = createTestCharacter({
+        race: 'ELF',
+        class: 'MAGE',
+        level: 5
+      });
+      component.character = character;
+      fixture.detectChanges();
+
+      const detailsElement = fixture.nativeElement.querySelector('.character-details');
+      expect(detailsElement?.textContent).toContain('ELF');
+      expect(detailsElement?.textContent).toContain('MAGE');
+      expect(detailsElement?.textContent).toContain('5');
+    });
+
+    it('should display HP as current/max', () => {
+      const character = createTestCharacter({ hp: 25, maxHp: 40 });
+      component.character = character;
+      fixture.detectChanges();
+
+      const hpElement = fixture.nativeElement.querySelector('.character-hp');
+      expect(hpElement?.textContent).toBe('HP: 25/40');
+    });
+
+    it('should display status badge', () => {
+      const character = createTestCharacter({ status: 'OK' });
+      component.character = character;
+      fixture.detectChanges();
+
+      const statusElement = fixture.nativeElement.querySelector('.status-badge');
+      expect(statusElement?.textContent).toBe('OK');
+    });
+  });
 });
