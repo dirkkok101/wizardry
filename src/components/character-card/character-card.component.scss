@@ -1,5 +1,9 @@
 @use '../../styles/variables' as *;
 
+// Character card dimensions
+$card-min-height-default: 120px;
+$card-min-height-compact: 80px;
+
 .character-card {
   display: flex;
   flex-direction: column;
@@ -11,11 +15,11 @@
   transition: background-color 0.2s, border-color 0.2s;
 
   &.default {
-    min-height: 120px;
+    min-height: $card-min-height-default;
   }
 
   &.compact {
-    min-height: 80px;
+    min-height: $card-min-height-compact;
   }
 
   &:hover {

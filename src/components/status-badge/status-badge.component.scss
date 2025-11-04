@@ -36,11 +36,11 @@
   }
 
   &.status-ashes {
-    color: #666666;
+    color: $color-text-gray;
 
     &.badge {
       background-color: rgba(102, 102, 102, 0.1);
-      border: 1px solid #666666;
+      border: 1px solid $color-text-gray;
     }
   }
 
