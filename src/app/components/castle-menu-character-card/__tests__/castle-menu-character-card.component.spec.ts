@@ -62,4 +62,33 @@ describe('CastleMenuCharacterCardComponent', () => {
       expect(statusElement?.textContent).toBe('OK');
     });
   });
+
+  describe('Status Badge Styling', () => {
+    it('should apply ok-status class when status is OK', () => {
+      const character = createTestCharacter({ status: 'OK' });
+      component.character = character;
+      fixture.detectChanges();
+
+      const statusElement = fixture.nativeElement.querySelector('.status-badge');
+      expect(statusElement?.classList.contains('ok-status')).toBe(true);
+    });
+
+    it('should apply dead-status class when status is DEAD', () => {
+      const character = createTestCharacter({ status: 'DEAD' });
+      component.character = character;
+      fixture.detectChanges();
+
+      const statusElement = fixture.nativeElement.querySelector('.status-badge');
+      expect(statusElement?.classList.contains('dead-status')).toBe(true);
+    });
+
+    it('should apply ashes-status class when status is ASHES', () => {
+      const character = createTestCharacter({ status: 'ASHES' });
+      component.character = character;
+      fixture.detectChanges();
+
+      const statusElement = fixture.nativeElement.querySelector('.status-badge');
+      expect(statusElement?.classList.contains('ashes-status')).toBe(true);
+    });
+  });
 });

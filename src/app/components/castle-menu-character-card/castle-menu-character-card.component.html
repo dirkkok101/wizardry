@@ -5,7 +5,11 @@
       {{ character.race }} {{ character.class }} Level {{ character.level }}
     </div>
     <div class="character-hp">HP: {{ character.hp }}/{{ character.maxHp }}</div>
-    <div class="status-badge">{{ character.status }}</div>
+    <div class="status-badge" [ngClass]="{
+      'ok-status': character.status === 'OK',
+      'dead-status': character.status === 'DEAD',
+      'ashes-status': character.status === 'ASHES'
+    }">{{ character.status }}</div>
   </div>
   <div class="character-actions">
     <button class="inspect-button" (click)="onInspect()">Inspect</button>
