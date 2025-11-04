@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -19,7 +20,7 @@ import { Character } from '../../types/Character';
 @Component({
   selector: 'app-castle-menu',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [CommonModule, MenuComponent, SceneTitleComponent],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
 })
