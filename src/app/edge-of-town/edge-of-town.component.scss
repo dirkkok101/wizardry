@@ -3,36 +3,11 @@
 .edge-of-town {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: $padding-standard;
-
-  header {
-    margin-bottom: $spacing-xl;
-
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0;
-      text-align: center;
-    }
-  }
-
-  main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $spacing-xl;
-
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .menu-section {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-  }
+  height: 100vh;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
+}
 
   .party-section {
     border-left: 1px solid $color-text-dim;
