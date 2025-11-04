@@ -105,6 +105,18 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('keyboard shortcuts', () => {
+    it('navigates to castle menu when ESC is pressed', () => {
+      const event = new KeyboardEvent('keydown', { key: 'Escape' });
+      jest.spyOn(event, 'preventDefault');
+
+      component.handleKeyboardEvent(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+  });
+
   describe('footer navigation', () => {
     it('navigates to training grounds via footer action', () => {
       component.handleFooterAction('training-grounds');

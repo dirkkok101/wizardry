@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MenuItem } from '../../components/menu/menu.component';
@@ -80,6 +80,18 @@ export class EdgeOfTownComponent implements OnInit {
       ...state,
       currentScene: SceneType.EDGE_OF_TOWN
     }));
+  }
+
+  /**
+   * Handle keyboard shortcuts
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // ESC - Go back to castle menu
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.router.navigate(['/castle-menu']);
+    }
   }
 
   /**
