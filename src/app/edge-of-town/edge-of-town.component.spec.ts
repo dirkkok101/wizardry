@@ -98,6 +98,27 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('footer navigation', () => {
+    it('navigates to training grounds via footer action', () => {
+      component.handleFooterAction('training-grounds');
+
+      expect(router.navigate).toHaveBeenCalledWith(['/training-grounds']);
+    });
+
+    it('shows leave confirmation dialog via footer action', () => {
+      component.handleFooterAction('leave-game');
+
+      expect(component.showLeaveConfirmation()).toBe(true);
+    });
+
+    it('clears messages before navigation', () => {
+      component.messageText.set('Previous error');
+      component.handleFooterAction('castle');
+
+      expect(component.messageText()).toBeNull();
+    });
+  });
+
   describe('menu navigation', () => {
     it('navigates to training grounds when selected', () => {
       component.handleMenuSelect('training-grounds');

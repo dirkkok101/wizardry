@@ -121,6 +121,34 @@ export class EdgeOfTownComponent implements OnInit {
     }));
   }
 
+  handleFooterAction(itemId: string): void {
+    // Clear previous messages
+    this.messageText.set(null);
+
+    switch (itemId) {
+      case 'training-grounds':
+        this.router.navigate(['/training-grounds']);
+        break;
+
+      case 'maze':
+        this.enterMaze();
+        break;
+
+      case 'castle':
+        this.router.navigate(['/castle-menu']);
+        break;
+
+      case 'utilities':
+        this.router.navigate(['/utilities']);
+        break;
+
+      case 'leave-game':
+        this.showLeaveConfirmation.set(true);
+        break;
+    }
+  }
+
+  // Keep old method for backward compatibility (will be removed in later tasks)
   handleMenuSelect(itemId: string): void {
     // Clear previous errors
     this.errorMessage.set(null);
