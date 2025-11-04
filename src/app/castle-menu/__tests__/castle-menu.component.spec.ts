@@ -27,4 +27,54 @@ describe('CastleMenuComponent', () => {
       expect(titleComponent).toBeTruthy();
     });
   });
+
+  describe('Footer Navigation', () => {
+    it('should display SceneFooterComponent', () => {
+      const footerComponent = fixture.nativeElement.querySelector('app-scene-footer');
+      expect(footerComponent).toBeTruthy();
+    });
+
+    it('should have 5 navigation items in footer', () => {
+      expect(component.footerMenuItems().length).toBe(5);
+    });
+
+    it('should have Tavern option with G shortcut', () => {
+      const tavernItem = component.footerMenuItems().find(item => item.id === 'tavern');
+      expect(tavernItem).toBeTruthy();
+      expect(tavernItem?.label).toBe('Tavern');
+      expect(tavernItem?.shortcut).toBe('G');
+      expect(tavernItem?.enabled).toBe(true);
+    });
+
+    it('should have Temple option with T shortcut', () => {
+      const templeItem = component.footerMenuItems().find(item => item.id === 'temple');
+      expect(templeItem).toBeTruthy();
+      expect(templeItem?.label).toBe('Temple');
+      expect(templeItem?.shortcut).toBe('T');
+      expect(templeItem?.enabled).toBe(true);
+    });
+
+    it('should have Shop option with B shortcut', () => {
+      const shopItem = component.footerMenuItems().find(item => item.id === 'shop');
+      expect(shopItem).toBeTruthy();
+      expect(shopItem?.label).toBe('Shop');
+      expect(shopItem?.shortcut).toBe('B');
+      expect(shopItem?.enabled).toBe(true);
+    });
+
+    it('should have Inn option with A shortcut', () => {
+      const innItem = component.footerMenuItems().find(item => item.id === 'inn');
+      expect(innItem).toBeTruthy();
+      expect(innItem?.label).toBe('Inn');
+      expect(innItem?.shortcut).toBe('A');
+      expect(innItem?.enabled).toBe(true);
+    });
+
+    it('should have Edge of Town option with E shortcut', () => {
+      const edgeItem = component.footerMenuItems().find(item => item.id === 'edge');
+      expect(edgeItem).toBeTruthy();
+      expect(edgeItem?.label).toBe('Edge of Town');
+      expect(edgeItem?.shortcut).toBe('E');
+    });
+  });
 });

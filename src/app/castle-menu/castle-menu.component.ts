@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -20,7 +21,7 @@ import { Character } from '../../types/Character';
 @Component({
   selector: 'app-castle-menu',
   standalone: true,
-  imports: [CommonModule, MenuComponent, SceneTitleComponent],
+  imports: [CommonModule, MenuComponent, SceneTitleComponent, SceneFooterComponent],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
 })
@@ -46,6 +47,18 @@ export class CastleMenuComponent implements OnInit {
       { id: 'edge-of-town', label: 'EDGE OF TOWN', enabled: this.hasParty(), shortcut: 'E' }
     ];
     return baseItems;
+  });
+
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const hasParty = (this.currentParty().members?.length ?? 0) > 0;
+
+    return [
+      { id: 'tavern', label: 'Tavern', shortcut: 'G', enabled: true },
+      { id: 'temple', label: 'Temple', shortcut: 'T', enabled: true },
+      { id: 'shop', label: 'Shop', shortcut: 'B', enabled: true },
+      { id: 'inn', label: 'Inn', shortcut: 'A', enabled: true },
+      { id: 'edge', label: 'Edge of Town', shortcut: 'E', enabled: hasParty }
+    ];
   });
 
   private hasParty(): boolean {
@@ -74,5 +87,27 @@ export class CastleMenuComponent implements OnInit {
     this.router.navigate(['/character-inspection'], {
       queryParams: { characterId: charId, returnTo: 'castle-menu' }
     });
+  }
+
+  handleFooterAction(itemId: string): void {
+    switch(itemId) {
+      case 'tavern':
+        this.router.navigate(['/tavern']);
+        break;
+      case 'temple':
+        this.router.navigate(['/temple']);
+        break;
+      case 'shop':
+        this.router.navigate(['/shop']);
+        break;
+      case 'inn':
+        this.router.navigate(['/inn']);
+        break;
+      case 'edge':
+        if ((this.currentParty().members?.length ?? 0) > 0) {
+          this.router.navigate(['/edge-of-town']);
+        }
+        break;
+    }
   }
 }
