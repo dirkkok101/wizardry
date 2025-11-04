@@ -2,4 +2,23 @@
   padding: var(--spacing-md);
   border-top: 2px solid var(--color-border);
   background: var(--color-bg-black);
+
+  // Force horizontal layout for footer menus
+  ::ng-deep app-menu {
+    .menu {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      border: none;
+      margin: 0;
+      padding: 0;
+      justify-content: center;
+
+      &__item {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+    }
+  }
 }

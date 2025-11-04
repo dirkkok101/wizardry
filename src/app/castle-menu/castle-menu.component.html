@@ -1,36 +1,27 @@
 <div class="castle-menu">
-  <header>
-    <h1>CASTLE MENU</h1>
-  </header>
+  <app-scene-title title="CASTLE" [showPartyGold]="true" />
 
-  <aside class="party-panel">
-    <h2>CURRENT PARTY</h2>
-    @if (partyCharacters().length === 0) {
-      <p class="no-party">No party formed</p>
-      <p class="hint">Visit Tavern to form a party</p>
-    } @else {
-      <div class="party-gold">GOLD: {{ currentParty().gold || 0 }}</div>
-      <ul class="party-list">
-        @for (char of partyCharacters(); track char.id; let i = $index) {
-          <li class="party-member" (click)="handleInspectCharacter(char.id)">
-            <span class="position">{{ i + 1 }}.</span>
-            <span class="name">{{ char.name }}</span>
-            <span class="class">{{ char.class }}</span>
-            <span class="level">Lv {{ char.level }}</span>
-            <span class="hp">{{ char.hp }}/{{ char.maxHp }}</span>
-            <span class="status" [class.dead]="char.status !== 'OK'">
-              {{ char.status }}
-            </span>
-          </li>
-        }
-      </ul>
-    }
-  </aside>
+  <section class="party-section">
+    <h2>PARTY</h2>
+    <div class="party-members">
+      @for (char of partyCharacters(); track char.id) {
+        <app-castle-menu-character-card
+          [character]="char"
+          (inspect)="handleInspectCharacter($event)"
+        />
+      }
+      @empty {
+        <p class="no-party">No party members</p>
+      }
+    </div>
+  </section>
 
-  <main>
-    <app-menu
-      [items]="menuItems()"
-      (select)="handleMenuSelect($event)"
-    />
+  <main class="content-area">
+    <!-- Main content area -->
   </main>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
 </div>

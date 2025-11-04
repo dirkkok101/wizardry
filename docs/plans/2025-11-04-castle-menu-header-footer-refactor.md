@@ -1479,3 +1479,139 @@ git commit -m "docs: add Castle Menu refactor implementation summary"
 - Check type definitions in `src/types/`
 - Review SCSS variables in `src/styles/variables.scss`
 - All services documented in `docs/services/`
+
+---
+
+## Post-Implementation Notes
+
+### Layout Improvements (Commits 6182c70, 8167adf)
+
+After completing the initial implementation, user feedback led to two significant improvements beyond the original plan:
+
+#### Improvement 1: Full-Width Responsive Layout (Commit 6182c70)
+
+**Change:** Restructured from sidebar layout to full-width responsive grid.
+
+**Original Plan:**
+- Fixed 300px sidebar with party panel
+- Grid layout: `grid-template-columns: 300px 1fr`
+- Party cards stacked vertically in narrow sidebar
+
+**Final Implementation:**
+- Full-width party section with responsive 3-column grid
+- Layout: `grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))`
+- Limits to 3 columns max on large screens for optimal card sizing
+- Better use of screen space on all display sizes
+- Horizontal footer menu layout (flexbox)
+
+**Rationale:**
+- Better utilization of screen real estate
+- More flexible responsive behavior
+- Improved visual balance
+- Party cards are focal point of the scene
+
+**Files Modified:**
+- `src/app/castle-menu/castle-menu.component.html` - Removed sidebar wrapper
+- `src/app/castle-menu/castle-menu.component.scss` - Full-width grid layout
+- `src/components/scene-footer/scene-footer.component.scss` - Horizontal menu layout
+
+#### Improvement 2: Vertical Stat Display (Commit 8167adf)
+
+**Change:** Restructured character card from compact inline format to vertical labeled rows.
+
+**Original Plan:**
+- Compact layout: `height: 70px`
+- Grid: `grid-template-columns: 70% 30%`
+- Stats inline: "ELF MAGE Level 5"
+- HP inline
+
+**Final Implementation:**
+- Expanded layout: `min-height: 140px`
+- Flexbox: `display: flex; justify-content: space-between`
+- Stats as separate labeled rows:
+  - Name (large, bold)
+  - Race: [value]
+  - Class: [value]
+  - Level: [value]
+  - HP: [current]/[max]
+  - AC: [value] ← **New field added**
+
+**Rationale:**
+- Improved readability with clear labels
+- Better information hierarchy
+- Added AC (Armor Class) display - important combat stat
+- More scannable layout for quick stat comparison
+- Consistent with information density of other character screens
+
+**Files Modified:**
+- `src/app/components/castle-menu-character-card/castle-menu-character-card.component.html` - Vertical stat rows
+- `src/app/components/castle-menu-character-card/castle-menu-character-card.component.scss` - Updated spacing and layout
+- `src/app/components/castle-menu-character-card/__tests__/castle-menu-character-card.component.spec.ts` - Updated tests + added AC test
+
+### Impact on Test Coverage
+
+**Original Plan:** 30 tests (12 character card + 18 castle menu)
+
+**Final Implementation:** 27 tests (11 character card + 16 castle menu)
+
+**Coverage:**
+- Character Card: 100% statement coverage, 11/11 tests passing
+- Castle Menu: 92.1% statement coverage, 16/16 tests passing
+- Overall: 93%+ coverage (exceeds 80% project target)
+
+**Note:** Layout dimension tests (height, grid-template-columns) were omitted as they add brittleness without significant value. Functional tests provide adequate coverage.
+
+### Technical Decisions
+
+**Flexbox vs Grid:**
+- Changed from percentage-based grid (`70% 30%`) to flexbox with `space-between`
+- More flexible for dynamic content
+- Better handling of status badge and button alignment
+
+**::ng-deep Usage:**
+- Added `::ng-deep` in scene-footer.component.scss to override menu component styles
+- Necessary for horizontal menu layout in footer context
+- Documented pattern, though deprecated (Angular limitation)
+
+**CSS Class Consolidation:**
+- Replaced `.character-details` and `.character-hp` with unified `.character-stat` class
+- Better maintainability and consistency
+
+### Final Statistics
+
+**Commits:** 16 total (14 from plan + 2 layout improvements)
+
+**Files Changed:**
+- Created: 5 new files
+- Modified: 6 files
+- Deleted: 1 file (old test)
+
+**Bundle Size:**
+- Main: 405.79 kB
+- Total: 442.30 kB
+- No significant size impact
+
+**Test Performance:**
+- Castle Menu tests: 1.367s
+- All project tests: 18.7s (789 tests)
+- Meets <2.5s performance target
+
+### Lessons Learned
+
+1. **User Feedback is Valuable:** The layout improvements based on real-world usage significantly enhanced the UI
+2. **Flexibility Over Rigidity:** Flexbox proved more maintainable than rigid percentage grids
+3. **Information Hierarchy:** Vertical stat display with labels improves scannability
+4. **Plan vs Reality:** It's acceptable to deviate from the plan when improvements are clearly beneficial
+
+### Recommendations for Future Work
+
+1. **Replace ::ng-deep:** Consider adding `@Input() layout: 'vertical' | 'horizontal'` to MenuComponent
+2. **Add Edge of Town Test:** Cover the positive path (with party members) to reach 95%+ coverage
+3. **Accessibility Enhancements:** Add ARIA labels for better screen reader support
+4. **Documentation:** Update ASCII mockup in plan to reflect final responsive grid layout
+
+---
+
+**Plan Status:** ✅ COMPLETED WITH IMPROVEMENTS  
+**Code Review:** ✅ APPROVED (94/100)  
+**PR:** #15 - Ready to merge

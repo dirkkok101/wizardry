@@ -1,136 +1,67 @@
 @use '../../styles/variables' as *;
 
 .castle-menu {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  grid-template-rows: auto 1fr;
-  gap: $spacing-lg;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
+}
+
+.party-section {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-bottom: $border-width $border-style $color-border;
   padding: $padding-standard;
 
-  header {
-    grid-column: 1 / -1;
-
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0;
-      text-align: center;
-    }
+  h2 {
+    font-size: $font-size-large;
+    margin-bottom: $spacing-md;
+    color: $color-text-bright;
+    text-align: center;
+    border-bottom: $border-width $border-style $color-border;
+    padding-bottom: $spacing-sm;
   }
+}
 
-  .party-panel {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid $color-border;
-    padding: $padding-standard;
-    border-radius: 4px;
+.party-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: $spacing-sm;
+  max-width: 100%;
 
-    h2 {
-      font-size: 16px;
-      color: $color-text-bright;
-      margin: 0 0 $spacing-md 0;
-      border-bottom: 1px solid $color-border;
-      padding-bottom: $spacing-sm;
-    }
-
-    .no-party {
-      color: $color-text-dim;
-      font-style: italic;
-      margin: $spacing-md 0;
-    }
-
-    .hint {
-      color: $color-text-dim;
-      font-size: 14px;
-      margin: $spacing-sm 0;
-    }
-
-    .party-gold {
-      color: $color-gold;
-      font-weight: bold;
-      margin-bottom: $spacing-md;
-      padding: $spacing-sm;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 3px;
-    }
-
-    .party-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .party-member {
-      display: grid;
-      grid-template-columns: 30px 1fr auto auto auto auto;
-      gap: $spacing-sm;
-      padding: $spacing-sm;
-      margin-bottom: $spacing-xs;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 3px;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .position {
-        color: $color-text-dim;
-      }
-
-      .name {
-        color: $color-text-bright;
-        font-weight: bold;
-      }
-
-      .class {
-        color: $color-text-normal;
-        font-size: 14px;
-      }
-
-      .level {
-        color: $color-text-dim;
-        font-size: 14px;
-      }
-
-      .hp {
-        color: $color-text-normal;
-        font-size: 14px;
-      }
-
-      .status {
-        color: $color-success;
-        font-size: 12px;
-        font-weight: bold;
-
-        &.dead {
-          color: $color-danger;
-        }
-      }
-    }
+  // Limit to 3 columns max for better card sizing
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
   }
+}
 
-  main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+.no-party {
+  text-align: center;
+  color: $color-text-dim;
+  font-style: italic;
+  margin-top: $spacing-lg;
+  grid-column: 1 / -1;
+}
+
+.content-area {
+  flex: 1;
+  padding: $padding-standard;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 // Mobile responsive
 @media (max-width: 768px) {
-  .castle-menu {
+  .party-members {
     grid-template-columns: 1fr;
-    padding: $padding-small;
+  }
 
-    .party-panel {
-      grid-column: 1;
-      max-width: 100%;
-    }
-
-    header h1 {
-      font-size: 20px;
-    }
+  .party-section {
+    max-height: 40vh;
+    overflow-y: auto;
   }
 }

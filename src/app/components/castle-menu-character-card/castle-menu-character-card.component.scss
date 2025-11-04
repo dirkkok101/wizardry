@@ -1,0 +1,97 @@
+@use '../../../styles/variables' as *;
+
+.character-card {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  min-height: 140px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: $border-width $border-style $color-border;
+  padding: $spacing-md;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 50, 0, 0.3);
+  }
+}
+
+.character-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: $spacing-xs;
+  flex: 1;
+  padding-right: $spacing-lg;
+}
+
+.character-name {
+  font-size: $font-size-large;
+  font-weight: bold;
+  color: $color-text-bright;
+  margin-bottom: $spacing-xs;
+}
+
+.character-stat {
+  font-size: $font-size-small;
+  color: $color-text-green;
+  line-height: 1.4;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: $font-size-small;
+  border-radius: 4px;
+  font-weight: bold;
+  text-align: center;
+  width: fit-content;
+  height: fit-content;
+
+  &.ok-status {
+    background-color: rgba(0, 255, 0, 0.2);
+    color: $color-success;
+    border: 1px solid $color-success;
+  }
+
+  &.dead-status {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: $color-danger;
+    border: 1px solid $color-danger;
+  }
+
+  &.ashes-status {
+    background-color: rgba(128, 128, 128, 0.2);
+    color: #888888;
+    border: 1px solid #888888;
+  }
+}
+
+.character-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: $spacing-lg;
+}
+
+.inspect-button {
+  padding: $spacing-sm $spacing-lg;
+  background-color: transparent;
+  color: $color-text-green;
+  border: $border-width $border-style $color-border;
+  cursor: pointer;
+  font-family: $font-mono;
+  font-size: $font-size-base;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $color-text-green;
+    color: $color-bg-black;
+  }
+
+  &:active {
+    background-color: $color-text-bright;
+  }
+}
