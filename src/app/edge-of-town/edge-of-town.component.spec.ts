@@ -266,6 +266,51 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('message area', () => {
+    it('displays error message when type is error', () => {
+      component.messageText.set('Test error');
+      component.messageType.set('error');
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const messageArea = compiled.querySelector('.message-area.error');
+
+      expect(messageArea).toBeTruthy();
+      expect(messageArea.textContent).toContain('Test error');
+    });
+
+    it('displays info message when type is info', () => {
+      component.messageText.set('Test info');
+      component.messageType.set('info');
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const messageArea = compiled.querySelector('.message-area.info');
+
+      expect(messageArea).toBeTruthy();
+    });
+
+    it('hides message area when messageText is null', () => {
+      component.messageText.set(null);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const messageArea = compiled.querySelector('.message-area');
+
+      expect(messageArea).toBeFalsy();
+    });
+  });
+
+  describe('footer component', () => {
+    it('displays scene footer with menu items', () => {
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      const footer = compiled.querySelector('app-scene-footer');
+
+      expect(footer).toBeTruthy();
+    });
+  });
+
   describe('leave game confirmation', () => {
     it('shows confirmation dialog via footer action', () => {
       component.handleFooterAction('leave-game');

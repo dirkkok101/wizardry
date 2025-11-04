@@ -19,24 +19,34 @@
     </div>
   </section>
 
-  <!-- Error message -->
-  <div class="error-message" *ngIf="errorMessage()">
-    <p>{{ errorMessage() }}</p>
-  </div>
+  <main class="content-area">
+    <!-- Main content area (empty for this scene) -->
+  </main>
 
-  <!-- Info message -->
-  <div class="info-message" *ngIf="infoMessage()">
-    <p>{{ infoMessage() }}</p>
-  </div>
-
-  <!-- Exit confirmation -->
-  <div class="confirmation-dialog" *ngIf="showExitConfirmation()">
-    <div class="dialog-content">
-      <p>Save and quit?</p>
-      <div class="dialog-actions">
-        <button (click)="confirmExit()">(Y)es</button>
-        <button (click)="cancelExit()">(N)o</button>
-      </div>
+  <!-- Message Display Area -->
+  @if (messageText()) {
+    <div class="message-area" [class.error]="messageType() === 'error'"
+         [class.info]="messageType() === 'info'"
+         [class.success]="messageType() === 'success'">
+      <p>{{ messageText() }}</p>
     </div>
-  </div>
+  }
+
+  <!-- Footer Navigation -->
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Leave Game Confirmation Dialog -->
+  @if (showLeaveConfirmation()) {
+    <app-confirmation-dialog
+      [visible]="showLeaveConfirmation()"
+      [message]="leaveConfirmationMessage()"
+      [yesLabel]="'(Enter/Y) Yes'"
+      [noLabel]="'(Esc/N) No'"
+      (confirmed)="confirmLeaveGame()"
+      (cancelled)="cancelLeaveGame()">
+    </app-confirmation-dialog>
+  }
 </div>
