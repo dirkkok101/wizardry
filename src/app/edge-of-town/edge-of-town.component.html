@@ -1,26 +1,23 @@
 <div class="edge-of-town">
   <app-scene-title title="EDGE OF TOWN" [showPartyGold]="true" />
 
-  <main>
-    <div class="menu-section">
-      <app-menu
-        [items]="menuItems"
-        (select)="handleMenuSelect($event)"
-      />
+  <section class="party-section">
+    <h2>PARTY</h2>
+    <div class="party-members">
+      @for (char of partyCharacters(); track char.id) {
+        <app-character-card
+          [character]="char"
+          [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
+          [actions]="[{ type: 'inspect' }]"
+          variant="default"
+          (actionClick)="handleCharacterAction($event)">
+        </app-character-card>
+      }
+      @empty {
+        <p class="no-party">No party members</p>
+      }
     </div>
-
-    <div class="party-section">
-      <h2>CURRENT PARTY:</h2>
-      <ul *ngIf="partyCharacters().length > 0; else noParty">
-        <li *ngFor="let char of partyCharacters(); let i = index">
-          {{ i + 1 }}. {{ char.name }} - {{ char.class }} (Lv{{ char.level }})
-        </li>
-      </ul>
-      <ng-template #noParty>
-        <p class="no-party">No party formed</p>
-      </ng-template>
-    </div>
-  </main>
+  </section>
 
   <!-- Error message -->
   <div class="error-message" *ngIf="errorMessage()">

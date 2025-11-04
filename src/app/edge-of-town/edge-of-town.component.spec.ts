@@ -3,6 +3,11 @@ import { Router } from '@angular/router';
 import { EdgeOfTownComponent } from './edge-of-town.component';
 import { GameStateService } from '../../services/GameStateService';
 import { SceneType } from '../../types/SceneType';
+import { Character } from '../../types/Character';
+import { Race } from '../../types/Race';
+import { CharacterClass } from '../../types/CharacterClass';
+import { CharacterStatus } from '../../types/CharacterStatus';
+import { Alignment } from '../../types/Alignment';
 
 describe('EdgeOfTownComponent', () => {
   let component: EdgeOfTownComponent;
@@ -190,6 +195,60 @@ describe('EdgeOfTownComponent', () => {
       component.messageText.set(null);
 
       expect(component.messageText()).toBeNull();
+    });
+  });
+
+  describe('party display', () => {
+    it('displays character cards for party members', () => {
+      // Create test character
+      const testChar: Character = {
+        id: 'char-1',
+        name: 'Gandalf',
+        race: Race.HUMAN,
+        class: CharacterClass.MAGE,
+        level: 5,
+        hp: 20,
+        maxHp: 25,
+        attributes: { strength: 10, intelligence: 18, piety: 12, vitality: 10, agility: 10, luck: 10 },
+        status: CharacterStatus.OK,
+        alignment: Alignment.GOOD,
+        age: 30,
+        gold: 0,
+        inventory: [],
+        equippedArmor: null,
+        equippedWeapon: null,
+        equippedShield: null,
+        ac: 10,
+        experiencePoints: 1000,
+        spellsKnown: [],
+        spellPointsByLevel: [0,0,0,0,0,0,0]
+      };
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([['char-1', testChar]]),
+        party: { ...state.party, members: ['char-1'] }
+      }));
+
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      const characterCards = compiled.querySelectorAll('app-character-card');
+
+      expect(characterCards.length).toBe(1);
+    });
+
+    it('shows empty state when no party members', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, members: [] }
+      }));
+
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      const emptyState = compiled.querySelector('.no-party');
+
+      expect(emptyState).toBeTruthy();
+      expect(emptyState.textContent).toContain('No party members');
     });
   });
 
