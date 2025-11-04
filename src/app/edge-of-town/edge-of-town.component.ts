@@ -1,9 +1,14 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { MenuItem } from '../../components/menu/menu.component';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { CharacterActionEvent } from '../../types/CharacterCardTypes';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -20,7 +25,13 @@ import { Character } from '../../types/Character';
 @Component({
   selector: 'app-edge-of-town',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    SceneFooterComponent,
+    CharacterCardComponent,
+    ConfirmationDialogComponent
+  ],
   templateUrl: './edge-of-town.component.html',
   styleUrls: ['./edge-of-town.component.scss']
 })

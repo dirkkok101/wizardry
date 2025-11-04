@@ -24,6 +24,14 @@ describe('EdgeOfTownComponent', () => {
   });
 
   describe('initialization', () => {
+    it('displays scene title component with party gold', () => {
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      const titleComponent = compiled.querySelector('app-scene-title');
+
+      expect(titleComponent).toBeTruthy();
+    });
+
     it('displays edge of town title', () => {
       fixture.detectChanges();
       const compiled = fixture.nativeElement;
