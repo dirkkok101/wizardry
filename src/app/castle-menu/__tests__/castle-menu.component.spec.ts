@@ -95,4 +95,36 @@ describe('CastleMenuComponent', () => {
       });
     });
   });
+
+  describe('Footer Navigation Integration', () => {
+    it('should navigate to Tavern when G shortcut pressed', () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleFooterAction('tavern');
+      expect(navigateSpy).toHaveBeenCalledWith(['/tavern']);
+    });
+
+    it('should navigate to Temple when T shortcut pressed', () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleFooterAction('temple');
+      expect(navigateSpy).toHaveBeenCalledWith(['/temple']);
+    });
+
+    it('should navigate to Shop when B shortcut pressed', () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleFooterAction('shop');
+      expect(navigateSpy).toHaveBeenCalledWith(['/shop']);
+    });
+
+    it('should navigate to Inn when A shortcut pressed', () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleFooterAction('inn');
+      expect(navigateSpy).toHaveBeenCalledWith(['/inn']);
+    });
+
+    it('should not navigate to Edge of Town when party is empty', () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleFooterAction('edge');
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+  });
 });
