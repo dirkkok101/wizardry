@@ -4,7 +4,7 @@
   position: relative;
   display: flex;
   justify-content: space-between;
-  height: 90px;
+  min-height: 140px;
   background-color: rgba(0, 0, 0, 0.3);
   border: $border-width $border-style $color-border;
   padding: $spacing-md;
@@ -19,7 +19,7 @@
 .character-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: $spacing-xs;
   flex: 1;
   padding-right: $spacing-lg;
@@ -29,16 +29,13 @@
   font-size: $font-size-large;
   font-weight: bold;
   color: $color-text-bright;
+  margin-bottom: $spacing-xs;
 }
 
-.character-details {
+.character-stat {
   font-size: $font-size-small;
   color: $color-text-green;
-}
-
-.character-hp {
-  font-size: $font-size-small;
-  color: $color-text-green;
+  line-height: 1.4;
 }
 
 .status-badge {

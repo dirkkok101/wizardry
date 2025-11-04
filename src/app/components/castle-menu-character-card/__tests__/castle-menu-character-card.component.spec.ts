@@ -38,10 +38,11 @@ describe('CastleMenuCharacterCardComponent', () => {
       component.character = character;
       fixture.detectChanges();
 
-      const detailsElement = fixture.nativeElement.querySelector('.character-details');
-      expect(detailsElement?.textContent).toContain('ELF');
-      expect(detailsElement?.textContent).toContain('MAGE');
-      expect(detailsElement?.textContent).toContain('5');
+      const statElements = fixture.nativeElement.querySelectorAll('.character-stat');
+      const allText = Array.from(statElements).map((el: any) => el.textContent).join(' ');
+      expect(allText).toContain('ELF');
+      expect(allText).toContain('MAGE');
+      expect(allText).toContain('5');
     });
 
     it('should display HP as current/max', () => {
@@ -49,8 +50,19 @@ describe('CastleMenuCharacterCardComponent', () => {
       component.character = character;
       fixture.detectChanges();
 
-      const hpElement = fixture.nativeElement.querySelector('.character-hp');
+      const statElements = fixture.nativeElement.querySelectorAll('.character-stat');
+      const hpElement = Array.from(statElements).find((el: any) => el.textContent.includes('HP:'));
       expect(hpElement?.textContent).toBe('HP: 25/40');
+    });
+
+    it('should display AC (Armor Class)', () => {
+      const character = createTestCharacter({ ac: 5 });
+      component.character = character;
+      fixture.detectChanges();
+
+      const statElements = fixture.nativeElement.querySelectorAll('.character-stat');
+      const acElement = Array.from(statElements).find((el: any) => el.textContent.includes('AC:'));
+      expect(acElement?.textContent).toBe('AC: 5');
     });
 
     it('should display status badge', () => {

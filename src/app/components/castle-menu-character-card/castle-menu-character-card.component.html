@@ -1,10 +1,11 @@
 <div class="character-card">
   <div class="character-info">
     <div class="character-name">{{ character.name }}</div>
-    <div class="character-details">
-      {{ character.race }} {{ character.class }} Level {{ character.level }}
-    </div>
-    <div class="character-hp">HP: {{ character.hp }}/{{ character.maxHp }}</div>
+    <div class="character-stat">Race: {{ character.race }}</div>
+    <div class="character-stat">Class: {{ character.class }}</div>
+    <div class="character-stat">Level: {{ character.level }}</div>
+    <div class="character-stat">HP: {{ character.hp }}/{{ character.maxHp }}</div>
+    <div class="character-stat">AC: {{ character.ac }}</div>
   </div>
   <div class="character-actions">
     <div class="status-badge" [ngClass]="{
