@@ -70,6 +70,34 @@ describe('EdgeOfTownComponent', () => {
     });
   });
 
+  describe('footer menu items', () => {
+    it('disables maze option when no party exists', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, members: [] }
+      }));
+
+      fixture.detectChanges();
+      const menuItems = component.footerMenuItems();
+      const mazeItem = menuItems.find(item => item.id === 'maze');
+
+      expect(mazeItem?.enabled).toBe(false);
+    });
+
+    it('enables maze option when party exists', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, members: ['char-1'] }
+      }));
+
+      fixture.detectChanges();
+      const menuItems = component.footerMenuItems();
+      const mazeItem = menuItems.find(item => item.id === 'maze');
+
+      expect(mazeItem?.enabled).toBe(true);
+    });
+  });
+
   describe('menu navigation', () => {
     it('navigates to training grounds when selected', () => {
       component.handleMenuSelect('training-grounds');

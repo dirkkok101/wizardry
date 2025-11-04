@@ -36,6 +36,19 @@ import { Character } from '../../types/Character';
   styleUrls: ['./edge-of-town.component.scss']
 })
 export class EdgeOfTownComponent implements OnInit {
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const hasParty = (this.currentParty().members?.length ?? 0) > 0;
+
+    return [
+      { id: 'training-grounds', label: 'Training Grounds', shortcut: 'T', enabled: true },
+      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: hasParty },
+      { id: 'castle', label: 'Castle', shortcut: 'C', enabled: true },
+      { id: 'utilities', label: 'Utilities', shortcut: 'U', enabled: true },
+      { id: 'leave-game', label: 'Leave Game', shortcut: 'L', enabled: true }
+    ];
+  });
+
+  // Keep old menuItems for backward compatibility (will be removed in later tasks)
   readonly menuItems: MenuItem[] = [
     {
       id: 'training-grounds',
