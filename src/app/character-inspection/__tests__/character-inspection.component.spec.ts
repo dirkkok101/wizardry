@@ -128,4 +128,104 @@ describe('CharacterInspectionComponent', () => {
     expect(members.length).toBe(1);
     expect(members[0].id).toBe('char-456');
   });
+
+  it('displays success message on successful equip', () => {
+    const mockItem = {
+      id: 'test-sword',
+      name: 'Test Sword',
+      type: 'WEAPON' as any,
+      slot: 'WEAPON' as any,
+      price: 100,
+      cursed: false,
+      identified: true,
+      equipped: false
+    };
+
+    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(mockItem as any);
+
+    gameState.updateState(state => {
+      const char = state.roster.get('char-123')!;
+      return {
+        ...state,
+        roster: new Map(state.roster).set('char-123', {
+          ...char,
+          inventory: ['test-sword']
+        })
+      };
+    });
+
+    fixture.detectChanges();
+
+    component.handleItemAction({ type: 'equip', item: mockItem as any });
+
+    const message = component.message();
+    expect(message).toBeTruthy();
+    expect(message?.type).toBe('success');
+    expect(message?.text).toContain('Equipped');
+  });
+
+  it('displays error message on failed equip', () => {
+    const mockItem = {
+      id: 'test-sword',
+      name: 'Test Sword',
+      type: 'WEAPON' as any,
+      slot: 'WEAPON' as any,
+      price: 100,
+      cursed: false,
+      identified: true,
+      equipped: false,
+      classRestrictions: ['NINJA'] as any[]
+    };
+
+    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(mockItem as any);
+
+    fixture.detectChanges();
+
+    component.handleItemAction({ type: 'equip', item: mockItem as any });
+
+    const message = component.message();
+    expect(message).toBeTruthy();
+    expect(message?.type).toBe('error');
+  });
+
+  it('clears message after 3 seconds', (done) => {
+    jest.useFakeTimers();
+
+    const mockItem = {
+      id: 'test-sword',
+      name: 'Test Sword',
+      type: 'WEAPON' as any,
+      slot: 'WEAPON' as any,
+      price: 100,
+      cursed: false,
+      identified: true,
+      equipped: false
+    };
+
+    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(mockItem as any);
+
+    gameState.updateState(state => {
+      const char = state.roster.get('char-123')!;
+      return {
+        ...state,
+        roster: new Map(state.roster).set('char-123', {
+          ...char,
+          inventory: ['test-sword']
+        })
+      };
+    });
+
+    fixture.detectChanges();
+
+    component.handleItemAction({ type: 'equip', item: mockItem as any });
+
+    expect(component.message()).toBeTruthy();
+
+    jest.advanceTimersByTime(3000);
+
+    expect(component.message()).toBeNull();
+
+    jest.useRealTimers();
+    done();
+  });
 });

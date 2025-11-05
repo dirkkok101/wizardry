@@ -1,6 +1,13 @@
 <div class="character-inspection">
   @if (character(); as char) {
     <div class="character-sheet">
+      <!-- Message Banner -->
+      @if (message(); as msg) {
+        <div class="message" [ngClass]="'message-' + msg.type">
+          {{ msg.text }}
+        </div>
+      }
+
       <!-- Header -->
       <div class="section header">
         <h2>{{ char.name }}</h2>

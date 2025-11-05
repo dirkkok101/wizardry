@@ -89,6 +89,9 @@ export class CharacterInspectionComponent {
   showDropDialog = signal(false);
   pendingAction = signal<{ action: string; item: Item } | null>(null);
 
+  // User feedback
+  message = signal<{ text: string; type: 'success' | 'error' } | null>(null);
+
   readonly ItemSlot = ItemSlot;
 
   private getEquipmentSlot(slot: ItemSlot): Item | null {
@@ -141,8 +144,9 @@ export class CharacterInspectionComponent {
     try {
       const updated = EquipmentService.equipItem(char, item.id);
       this.updateCharacter(updated);
+      this.showMessage(`Equipped ${item.name}`, 'success');
     } catch (error: any) {
-      console.error('Failed to equip item:', error.message);
+      this.showMessage(error.message || 'Failed to equip item', 'error');
     }
   }
 
@@ -150,8 +154,9 @@ export class CharacterInspectionComponent {
     try {
       const updated = EquipmentService.unequipItem(char, item.slot);
       this.updateCharacter(updated);
+      this.showMessage(`Unequipped ${item.name}`, 'success');
     } catch (error: any) {
-      console.error('Failed to unequip item:', error.message);
+      this.showMessage(error.message || 'Failed to unequip item', 'error');
     }
   }
 
@@ -169,8 +174,9 @@ export class CharacterInspectionComponent {
       this.updateRosterCharacter(result.to);
       this.showTradeDialog.set(false);
       this.pendingAction.set(null);
+      this.showMessage(`Traded ${pending.item.name} to ${recipient.name}`, 'success');
     } catch (error: any) {
-      console.error('Failed to trade item:', error.message);
+      this.showMessage(error.message || 'Failed to trade item', 'error');
     }
   }
 
@@ -184,8 +190,9 @@ export class CharacterInspectionComponent {
       this.updateCharacter(updated);
       this.showDropDialog.set(false);
       this.pendingAction.set(null);
+      this.showMessage(`Dropped ${pending.item.name}`, 'success');
     } catch (error: any) {
-      console.error('Failed to drop item:', error.message);
+      this.showMessage(error.message || 'Failed to drop item', 'error');
     }
   }
 
@@ -211,6 +218,14 @@ export class CharacterInspectionComponent {
 
   returnToPrevious(): void {
     this.router.navigate([`/${this.returnTo()}`]);
+  }
+
+  private showMessage(text: string, type: 'success' | 'error'): void {
+    this.message.set({ text, type });
+    // Auto-clear after 3 seconds
+    setTimeout(() => {
+      this.message.set(null);
+    }, 3000);
   }
 
   // Check if character is a spellcaster
