@@ -162,4 +162,50 @@ describe('EquipmentService', () => {
       expect(result.equippedArmor).toBe('plate_mail');
     });
   });
+
+  describe('unequipItem', () => {
+    beforeEach(() => {
+      fighter.equippedWeapon = 'long_sword';
+      fighter.inventory = [];
+    });
+
+    it('moves item from slot to inventory', () => {
+      const result = EquipmentService.unequipItem(fighter, ItemSlot.WEAPON);
+
+      expect(result.equippedWeapon).toBeUndefined();
+      expect(result.inventory).toContain('long_sword');
+    });
+
+    it('throws error if no item in slot', () => {
+      fighter.equippedWeapon = undefined;
+
+      expect(() => EquipmentService.unequipItem(fighter, ItemSlot.WEAPON))
+        .toThrow('No item in slot');
+    });
+
+    it('throws error if item is cursed', () => {
+      longSword.cursed = true;
+
+      expect(() => EquipmentService.unequipItem(fighter, ItemSlot.WEAPON))
+        .toThrow('Cannot unequip cursed item');
+    });
+
+    it('throws error if inventory full', () => {
+      fighter.inventory = new Array(8).fill('potion');
+
+      expect(() => EquipmentService.unequipItem(fighter, ItemSlot.WEAPON))
+        .toThrow('Inventory full');
+    });
+
+    it('recalculates AC after unequipping armor', () => {
+      fighter.equippedArmor = 'plate_mail';
+      fighter.ac = 5;
+      fighter.inventory = [];
+
+      const result = EquipmentService.unequipItem(fighter, ItemSlot.ARMOR);
+
+      expect(result.ac).toBeGreaterThan(5);
+      expect(result.equippedArmor).toBeUndefined();
+    });
+  });
 });

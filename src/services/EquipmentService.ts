@@ -2,6 +2,7 @@ import { Character } from '../types/Character';
 import { Item } from '../types/Item';
 import { ItemSlot } from '../types/ItemType';
 import { ItemDataService } from './ItemDataService';
+import { InventoryService } from './InventoryService';
 
 /**
  * EquipmentService - Equipment management and validation
@@ -140,5 +141,46 @@ export class EquipmentService {
     ac -= agiMod;
 
     return Math.max(ac, -10); // Cap at -10
+  }
+
+  /**
+   * Unequip item from slot to inventory
+   */
+  static unequipItem(
+    character: Character,
+    slot: ItemSlot
+  ): Character {
+    const slotField = this.getSlotFieldName(slot);
+    if (!slotField) {
+      throw new Error('Invalid slot');
+    }
+
+    const itemId = character[slotField] as string | undefined;
+    if (!itemId) {
+      throw new Error('No item in slot');
+    }
+
+    // Check if cursed
+    const item = ItemDataService.getItem(itemId);
+    if (item?.cursed) {
+      throw new Error('Cannot unequip cursed item');
+    }
+
+    // Check inventory space
+    if (!InventoryService.hasSpace(character)) {
+      throw new Error('Inventory full');
+    }
+
+    // Move to inventory
+    const updatedChar = {
+      ...character,
+      inventory: [...character.inventory, itemId],
+      [slotField]: undefined
+    };
+
+    // Recalculate AC
+    updatedChar.ac = this.calculateAC(updatedChar);
+
+    return updatedChar;
   }
 }
