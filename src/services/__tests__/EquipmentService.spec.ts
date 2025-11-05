@@ -208,4 +208,127 @@ describe('EquipmentService', () => {
       expect(result.equippedArmor).toBeUndefined();
     });
   });
+
+  describe('AC Calculation Integration', () => {
+    it('calculates AC correctly with full equipment set from transformation layer', () => {
+      // Mock ItemDataService to return transformed items
+      jest.spyOn(ItemDataService, 'getItem').mockImplementation((id: string) => {
+        const items: Record<string, Item> = {
+          'plate_mail': {
+            id: 'plate_mail',
+            name: 'Plate Mail',
+            type: ItemType.ARMOR,
+            slot: ItemSlot.ARMOR,
+            price: 750,
+            defense: 7, // Transformed from JSON ac: 7
+            cursed: false,
+            identified: true,
+            equipped: false,
+            // JSON fields preserved
+            category: 'armor',
+            armorType: 'body',
+            ac: 7,
+            cost: 750
+          },
+          'large_shield': {
+            id: 'large_shield',
+            name: 'Large Shield',
+            type: ItemType.SHIELD,
+            slot: ItemSlot.SHIELD,
+            price: 40,
+            defense: 4, // Transformed from JSON ac: 4
+            cursed: false,
+            identified: true,
+            equipped: false,
+            category: 'shield',
+            ac: 4,
+            cost: 40
+          },
+          'steel_helm': {
+            id: 'steel_helm',
+            name: 'Steel Helm',
+            type: ItemType.HELMET,
+            slot: ItemSlot.HEAD,
+            price: 100,
+            defense: 2, // Transformed from JSON ac: 2
+            cursed: false,
+            identified: true,
+            equipped: false,
+            category: 'helmet',
+            ac: 2,
+            cost: 100
+          },
+          'gauntlets': {
+            id: 'gauntlets',
+            name: 'Gauntlets',
+            type: ItemType.GAUNTLET,
+            slot: ItemSlot.HANDS,
+            price: 50,
+            defense: 2, // Transformed from JSON ac: 2
+            cursed: false,
+            identified: true,
+            equipped: false,
+            category: 'gauntlet',
+            ac: 2,
+            cost: 50
+          }
+        };
+        return items[id] || null;
+      });
+
+      // Start with base AC 10
+      fighter.ac = 10;
+      fighter.agility = 15; // +2 AGI modifier
+
+      // Equip full armor set
+      fighter.inventory = ['plate_mail', 'large_shield', 'steel_helm', 'gauntlets'];
+
+      let char = fighter;
+      char = EquipmentService.equipItem(char, 'plate_mail');
+      char = EquipmentService.equipItem(char, 'large_shield');
+      char = EquipmentService.equipItem(char, 'steel_helm');
+      char = EquipmentService.equipItem(char, 'gauntlets');
+
+      // Expected AC: 10 (base) - 7 (armor) - 4 (shield) - 2 (helm) - 2 (gauntlets) - 2 (AGI) = -7
+      expect(char.ac).toBe(-7);
+      expect(char.equippedArmor).toBe('plate_mail');
+      expect(char.equippedShield).toBe('large_shield');
+      expect(char.equippedHelmet).toBe('steel_helm');
+      expect(char.equippedGauntlets).toBe('gauntlets');
+    });
+
+    it('confirms weapons do not contribute to AC', () => {
+      jest.spyOn(ItemDataService, 'getItem').mockImplementation((id: string) => {
+        if (id === 'long_sword') {
+          return {
+            id: 'long_sword',
+            name: 'Long Sword',
+            type: ItemType.WEAPON,
+            slot: ItemSlot.WEAPON,
+            price: 25,
+            damage: 8, // Transformed from damageRoll.max
+            defense: 0, // Weapons have no defense
+            cursed: false,
+            identified: true,
+            equipped: false,
+            category: 'weapon',
+            weaponType: 'sword',
+            damageRoll: { dice: '1d8', min: 1, max: 8 },
+            cost: 25
+          };
+        }
+        return null;
+      });
+
+      fighter.ac = 10;
+      fighter.agility = 10; // 0 AGI modifier
+      fighter.inventory = ['long_sword'];
+
+      const result = EquipmentService.equipItem(fighter, 'long_sword');
+
+      // AC should remain 10 - weapon doesn't contribute to AC
+      expect(result.ac).toBe(10);
+      expect(result.equippedWeapon).toBe('long_sword');
+    });
+  });
 });
