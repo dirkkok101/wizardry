@@ -24,7 +24,7 @@ See `docs/plans/2025-11-02-character-creation-wizard-redesign.md` for complete d
 
 **Scene Type:** Safe Zone (auto-saves after character changes)
 
-**Location in Game Flow:** Accessed via Edge of Town - manages all characters in the game
+**Location in Game Flow:** Accessed directly from Castle Menu - manages all characters in the game
 
 ---
 
@@ -33,16 +33,16 @@ See `docs/plans/2025-11-02-character-creation-wizard-redesign.md` for complete d
 ### From Where
 
 **Parent Scene(s):**
-- Edge of Town → (T)raining Grounds → Training Grounds
+- Castle Menu → (G) Training Grounds → Training Grounds
 
 **Access Pattern:**
-- Castle Menu → (E)dge of Town → (T)raining Grounds
-- Cannot access directly from Castle (must go through Edge of Town)
+- Castle Menu → (G) Training Grounds
+- Direct access from Castle Menu
 
 ### Requirements
 
 **State Requirements:**
-- [ ] None (always accessible from Edge of Town)
+- [ ] None (always accessible from Castle Menu)
 
 **Note:** Training Grounds can be accessed with or without existing characters.
 
@@ -338,17 +338,17 @@ function canShowRoster(roster: Character[]): { allowed: boolean; reason?: string
 
 ### (L) Leave
 
-**Description:** Return to Edge of Town
+**Description:** Return to Castle Menu
 
-**Key Binding:** L (case-insensitive)
+**Key Binding:** L (case-insensitive) or ESC
 
 **Requirements:**
 - None (always available)
 
 **Flow:**
-1. User presses 'L'
+1. User presses 'L' or ESC
 2. Validate no unsaved changes
-3. Transition to Edge of Town
+3. Transition to Castle Menu
 
 **Validation:**
 
@@ -359,14 +359,14 @@ function canLeaveTrainingGrounds(state: GameState): { allowed: boolean; reason?:
 ```
 
 **State Changes:**
-- `state.currentScene = SceneType.EDGE_OF_TOWN`
+- `state.currentScene = SceneType.CASTLE_MENU`
 - Auto-save before transition (if changes made)
 
 **UI Feedback:**
 - No feedback message (instant transition)
 
 **Transitions:**
-- → Edge of Town
+- → Castle Menu
 
 ---
 
@@ -390,18 +390,18 @@ function canLeaveTrainingGrounds(state: GameState): { allowed: boolean; reason?:
 | Create Character | (C) | Creation Wizard | Roster not full |
 | Inspect Character | (I) | Character Inspection | Character exists |
 | Roster | (R) | Roster Display | Always |
-| Leave | (L) | Edge of Town | Always |
+| Leave | (L) or ESC | Castle Menu | Always |
 
 ### Parent Scene
 
-- Edge of Town → (T) → Training Grounds
+- Castle Menu → (G) → Training Grounds
 
 ### Child Scenes
 
 - Training Grounds → (C) → Character Creation Wizard
 - Training Grounds → (I) → Character Inspection (Training Grounds mode)
 - Training Grounds → (R) → Roster Display (sub-screen)
-- Training Grounds → (L) → Edge of Town
+- Training Grounds → (L) → Castle Menu
 
 ---
 
@@ -469,7 +469,7 @@ interface TrainingGroundsState {
 - `DeleteCharacterCommand` - Remove character (requires password)
 - `ChangeClassCommand` - Change character class
 - `AlterPasswordCommand` - Update password
-- `LeaveTrainingGroundsCommand` - Return to Edge of Town
+- `LeaveTrainingGroundsCommand` - Return to Castle Menu
 
 ### Edge Cases
 
@@ -517,7 +517,7 @@ interface TrainingGroundsState {
 ### Test 1: Create New Character
 
 ```
-1. From Edge of Town, press (T)
+1. From Castle Menu, press (G)
 2. Verify Training Grounds loads
 3. Press (C) to create character
 4. Select race: Human
@@ -571,7 +571,7 @@ interface TrainingGroundsState {
 
 ## Related Documentation
 
-- [Edge of Town](./07-edge-of-town.md) - Parent scene
+- [Castle Menu](./01-castle-menu.md) - Parent scene
 - [Character Inspection](./13-character-inspection.md) - Detail view
 - [Character System](../../systems/character-system.md) - Character mechanics
 - [Character Classes](../../systems/character-classes.md) - Class requirements
