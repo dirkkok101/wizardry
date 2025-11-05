@@ -1,4 +1,24 @@
 <div class="camp-container">
   <app-scene-title title="CAMP" />
-  <p>Camp scene placeholder</p>
+
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+
+  <section class="party-section">
+    <h2>PARTY</h2>
+    <div class="party-members">
+      @for (char of partyCharacters(); track char.id) {
+        <app-character-card
+          [character]="char"
+          [visibleFields]="['class', 'level', 'hp', 'ac']"
+          [actions]="[]"
+          variant="default">
+        </app-character-card>
+      }
+      @empty {
+        <p class="no-party">No party members</p>
+      }
+    </div>
+  </section>
 </div>

@@ -26,6 +26,16 @@ import { MenuItem } from '../../components/scene-footer/scene-footer.component';
 export class CampComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
 
+  readonly currentParty = computed(() => this.gameState.party());
+
+  readonly partyCharacters = computed(() => {
+    const party = this.currentParty();
+    const state = this.gameState.state();
+    return party.members
+      .map(id => state.roster.get(id))
+      .filter((char): char is Character => char !== undefined);
+  });
+
   constructor(
     private readonly gameState: GameStateService,
     private readonly saveService: SaveService,
