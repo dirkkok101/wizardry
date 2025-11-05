@@ -257,7 +257,7 @@ describe('EdgeOfTownComponent', () => {
 
   describe('character actions', () => {
     it('navigates to character inspection when inspect action clicked', () => {
-      component.handleCharacterAction({
+      component.handleActionClick({
         characterId: 'char-1',
         actionType: 'inspect'
       });

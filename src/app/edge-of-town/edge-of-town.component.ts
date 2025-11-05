@@ -97,15 +97,19 @@ export class EdgeOfTownComponent implements OnInit {
   /**
    * Handle character card action clicks
    */
-  handleCharacterAction(event: CharacterActionEvent): void {
+  handleActionClick(event: CharacterActionEvent): void {
     if (event.actionType === 'inspect') {
-      this.router.navigate(['/character-inspection'], {
-        queryParams: {
-          characterId: event.characterId,
-          returnTo: 'edge-of-town'
-        }
-      });
+      this.handleInspectCharacter(event.characterId);
     }
+  }
+
+  private handleInspectCharacter(charId: string): void {
+    this.router.navigate(['/character-inspection'], {
+      queryParams: {
+        characterId: charId,
+        returnTo: 'edge-of-town'
+      }
+    });
   }
 
   handleFooterAction(itemId: string): void {

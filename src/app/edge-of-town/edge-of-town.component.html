@@ -10,7 +10,7 @@
           [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
           [actions]="[{ type: 'inspect' }]"
           variant="default"
-          (actionClick)="handleCharacterAction($event)">
+          (actionClick)="handleActionClick($event)">
         </app-character-card>
       }
       @empty {
