@@ -48,9 +48,9 @@ interface CastleMenuEntryState {
 ### Screen Regions
 
 - **Header:** "CASTLE" title
-- **Main:** Empty area (no party display in original)
-- **Menu:** Service options (G/T/B/A/E)
-- **Status:** Not shown (optional in remake)
+- **Main:** Party display with character cards
+- **Menu:** Service options (A/T/S/I/G/M)
+- **Status:** Party gold displayed in header
 - **Messages:** Feedback for invalid selections
 
 ### ASCII Mockup
@@ -76,7 +76,7 @@ interface CastleMenuEntryState {
 │ └────────────────┘ │                                         │
 │                    │                                         │
 ├────────────────────┴─────────────────────────────────────────┤
-│ G: Tavern | T: Temple | B: Shop | A: Inn | E: Edge of Town  │
+│ A: Tavern | T: Temple | S: Shop | I: Inn | G: Training | M: Maze │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -105,17 +105,17 @@ interface CastleMenuEntryState {
 
 ## Available Actions
 
-### (G) Gilgamesh's Tavern
+### (A) Gilgamesh's Tavern
 
 **Description:** Form and manage party roster
 
-**Key Binding:** G (case-insensitive)
+**Key Binding:** A (case-insensitive)
 
 **Requirements:**
 - None (always available)
 
 **Flow:**
-1. User presses 'G' or clicks Tavern in footer
+1. User presses 'A' or clicks Tavern in footer
 2. Validate key (always succeeds)
 3. Transition to Tavern scene
 
@@ -173,17 +173,17 @@ function canEnterTemple(state: GameState): { allowed: boolean; reason?: string }
 
 ---
 
-### (B) Boltac's Trading Post
+### (S) Boltac's Trading Post
 
 **Description:** Buy and sell equipment
 
-**Key Binding:** B (case-insensitive)
+**Key Binding:** S (case-insensitive)
 
 **Requirements:**
 - None (always available)
 
 **Flow:**
-1. User presses 'B'
+1. User presses 'S'
 2. Validate key (always succeeds)
 3. Transition to Shop scene
 
@@ -207,17 +207,17 @@ function canEnterShop(state: GameState): { allowed: boolean; reason?: string } {
 
 ---
 
-### (A) Adventurer's Inn
+### (I) Adventurer's Inn
 
 **Description:** Rest to restore spell points and level up characters
 
-**Key Binding:** A (case-insensitive)
+**Key Binding:** I (case-insensitive)
 
 **Requirements:**
 - None (always available)
 
 **Flow:**
-1. User presses 'A'
+1. User presses 'I'
 2. Validate key (always succeeds)
 3. Transition to Inn scene
 
@@ -241,37 +241,78 @@ function canEnterInn(state: GameState): { allowed: boolean; reason?: string } {
 
 ---
 
-### (E) Edge of Town
+### (G) Training Grounds
 
-**Description:** Gateway to Training Grounds, dungeon, and system utilities
+**Description:** Create new characters
 
-**Key Binding:** E (case-insensitive)
+**Key Binding:** G (case-insensitive)
 
 **Requirements:**
 - None (always available)
 
 **Flow:**
-1. User presses 'E'
+1. User presses 'G'
 2. Validate key (always succeeds)
-3. Transition to Edge of Town scene
+3. Transition to Training Grounds scene
 
 **Validation:**
 
 ```typescript
-function canEnterEdgeOfTown(state: GameState): { allowed: boolean; reason?: string } {
+function canEnterTrainingGrounds(state: GameState): { allowed: boolean; reason?: string } {
   return { allowed: true }
 }
 ```
 
 **State Changes:**
-- `state.currentScene = SceneType.EDGE_OF_TOWN`
+- `state.currentScene = SceneType.TRAINING_GROUNDS`
 - Auto-save before transition
 
 **UI Feedback:**
 - No feedback message (instant transition)
 
 **Transitions:**
-- → Edge of Town
+- → Training Grounds
+
+---
+
+### (M) Maze
+
+**Description:** Enter the dungeon (requires party, triggers auto-save)
+
+**Key Binding:** M (case-insensitive)
+
+**Requirements:**
+- Party must have at least 1 member
+
+**Flow:**
+1. User presses 'M'
+2. Validate party exists and has members
+3. If invalid, show warning and remain in Castle Menu
+4. If valid, trigger auto-save
+5. Transition to Camp scene
+
+**Validation:**
+
+```typescript
+function canEnterMaze(state: GameState): { allowed: boolean; reason?: string } {
+  const party = state.party;
+  if (!party || party.members.length === 0) {
+    return { allowed: false, reason: 'Cannot enter maze without party members' }
+  }
+  return { allowed: true }
+}
+```
+
+**State Changes:**
+- Auto-save to save slot 1
+- `state.currentScene = SceneType.CAMP`
+
+**UI Feedback:**
+- Console warning if party is empty
+- No visual feedback message
+
+**Transitions:**
+- → Camp (pre-dungeon staging area)
 
 ---
 
@@ -292,11 +333,12 @@ function canEnterEdgeOfTown(state: GameState): { allowed: boolean; reason?: stri
 
 | Action | Key | Destination | Condition |
 |--------|-----|-------------|-----------|
-| Gilgamesh's Tavern | (G) | Tavern | Always |
+| Gilgamesh's Tavern | (A) | Tavern | Always |
 | Temple of Cant | (T) | Temple | Always |
-| Boltac's Trading Post | (B) | Shop | Always |
-| Adventurer's Inn | (A) | Inn | Always |
-| Edge of Town | (E) | Edge of Town | Always |
+| Boltac's Trading Post | (S) | Shop | Always |
+| Adventurer's Inn | (I) | Inn | Always |
+| Training Grounds | (G) | Training Grounds | Always |
+| Maze | (M) | Camp/Maze | Party has members |
 
 **Note:** No (L)eave option - Castle Menu has no parent scene except Title Screen (which is one-way)
 
