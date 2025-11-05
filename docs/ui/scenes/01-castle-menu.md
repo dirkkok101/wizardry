@@ -17,7 +17,7 @@
 **Parent Scene(s):**
 - Title Screen → (S)tart Game → Castle Menu
 - Any Town Service → (L)eave → Castle Menu
-- Edge of Town → (C)astle → Castle Menu
+- Training Grounds → (L)eave → Castle Menu
 
 **On First Launch:**
 - New game starts here

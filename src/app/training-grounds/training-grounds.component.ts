@@ -67,7 +67,7 @@ export class TrainingGroundsComponent implements OnInit {
   // Footer menu items
   readonly footerMenuItems = computed((): MenuItem[] => [
     { id: 'create', label: 'CREATE CHARACTER', shortcut: 'C', enabled: true },
-    { id: 'return', label: 'RETURN TO EDGE OF TOWN', shortcut: 'ESC', enabled: true }
+    { id: 'return', label: 'Return to Castle (ESC)', shortcut: 'ESC', enabled: true }
   ]);
 
   constructor(
