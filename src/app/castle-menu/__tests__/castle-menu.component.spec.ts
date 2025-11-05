@@ -34,15 +34,15 @@ describe('CastleMenuComponent', () => {
       expect(footerComponent).toBeTruthy();
     });
 
-    it('should have 5 navigation items in footer', () => {
-      expect(component.footerMenuItems().length).toBe(5);
+    it('should have 6 navigation items in footer', () => {
+      expect(component.footerMenuItems().length).toBe(6);
     });
 
-    it('should have Tavern option with G shortcut', () => {
+    it('should have Tavern option with A shortcut', () => {
       const tavernItem = component.footerMenuItems().find(item => item.id === 'tavern');
       expect(tavernItem).toBeTruthy();
       expect(tavernItem?.label).toBe('Tavern');
-      expect(tavernItem?.shortcut).toBe('G');
+      expect(tavernItem?.shortcut).toBe('A');
       expect(tavernItem?.enabled).toBe(true);
     });
 
@@ -54,27 +54,35 @@ describe('CastleMenuComponent', () => {
       expect(templeItem?.enabled).toBe(true);
     });
 
-    it('should have Shop option with B shortcut', () => {
+    it('should have Shop option with S shortcut', () => {
       const shopItem = component.footerMenuItems().find(item => item.id === 'shop');
       expect(shopItem).toBeTruthy();
       expect(shopItem?.label).toBe('Shop');
-      expect(shopItem?.shortcut).toBe('B');
+      expect(shopItem?.shortcut).toBe('S');
       expect(shopItem?.enabled).toBe(true);
     });
 
-    it('should have Inn option with A shortcut', () => {
+    it('should have Inn option with I shortcut', () => {
       const innItem = component.footerMenuItems().find(item => item.id === 'inn');
       expect(innItem).toBeTruthy();
       expect(innItem?.label).toBe('Inn');
-      expect(innItem?.shortcut).toBe('A');
+      expect(innItem?.shortcut).toBe('I');
       expect(innItem?.enabled).toBe(true);
     });
 
-    it('should have Edge of Town option with E shortcut', () => {
-      const edgeItem = component.footerMenuItems().find(item => item.id === 'edge');
-      expect(edgeItem).toBeTruthy();
-      expect(edgeItem?.label).toBe('Edge of Town');
-      expect(edgeItem?.shortcut).toBe('E');
+    it('should have Training Grounds option with G shortcut', () => {
+      const trainingItem = component.footerMenuItems().find(item => item.id === 'training');
+      expect(trainingItem).toBeTruthy();
+      expect(trainingItem?.label).toBe('Training Grounds');
+      expect(trainingItem?.shortcut).toBe('G');
+      expect(trainingItem?.enabled).toBe(true);
+    });
+
+    it('should have Maze option with M shortcut', () => {
+      const mazeItem = component.footerMenuItems().find(item => item.id === 'maze');
+      expect(mazeItem).toBeTruthy();
+      expect(mazeItem?.label).toBe('Maze');
+      expect(mazeItem?.shortcut).toBe('M');
     });
   });
 
@@ -97,33 +105,40 @@ describe('CastleMenuComponent', () => {
   });
 
   describe('Footer Navigation Integration', () => {
-    it('should navigate to Tavern when G shortcut pressed', () => {
+    it('should navigate to Tavern when tavern action triggered', () => {
       const navigateSpy = jest.spyOn(component['router'], 'navigate');
       component.handleFooterAction('tavern');
       expect(navigateSpy).toHaveBeenCalledWith(['/tavern']);
     });
 
-    it('should navigate to Temple when T shortcut pressed', () => {
+    it('should navigate to Temple when temple action triggered', () => {
       const navigateSpy = jest.spyOn(component['router'], 'navigate');
       component.handleFooterAction('temple');
       expect(navigateSpy).toHaveBeenCalledWith(['/temple']);
     });
 
-    it('should navigate to Shop when B shortcut pressed', () => {
+    it('should navigate to Shop when shop action triggered', () => {
       const navigateSpy = jest.spyOn(component['router'], 'navigate');
       component.handleFooterAction('shop');
       expect(navigateSpy).toHaveBeenCalledWith(['/shop']);
     });
 
-    it('should navigate to Inn when A shortcut pressed', () => {
+    it('should navigate to Inn when inn action triggered', () => {
       const navigateSpy = jest.spyOn(component['router'], 'navigate');
       component.handleFooterAction('inn');
       expect(navigateSpy).toHaveBeenCalledWith(['/inn']);
     });
 
-    it('should not navigate to Edge of Town when party is empty', () => {
+    it('should navigate to Training Grounds when training action triggered', () => {
       const navigateSpy = jest.spyOn(component['router'], 'navigate');
-      component.handleFooterAction('edge');
+      component.handleFooterAction('training');
+      expect(navigateSpy).toHaveBeenCalledWith(['/training-grounds']);
+    });
+
+    it('should not navigate to Maze when party is empty', async () => {
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      component.handleFooterAction('maze');
+      await fixture.whenStable();
       expect(navigateSpy).not.toHaveBeenCalled();
     });
   });

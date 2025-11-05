@@ -1,5 +1,7 @@
 # Edge of Town
 
+> **DEPRECATED (2025-11-05):** This scene was removed in the Castle Menu Navigation Simplification refactor. Training Grounds and Maze are now accessed directly from Castle Menu. This documentation is preserved for historical reference only.
+
 ## Overview
 
 **Description:** Gateway menu providing access to Training Grounds, dungeon entry, utilities, and game exit. Serves as the intermediate navigation hub between Castle and external locations.

@@ -8,7 +8,6 @@ export enum SceneType {
   // Castle/Town Scenes
   CASTLE_MENU = 'CASTLE_MENU',
   TRAINING_GROUNDS = 'TRAINING_GROUNDS',
-  EDGE_OF_TOWN = 'EDGE_OF_TOWN',
   TEMPLE = 'TEMPLE',
   SHOP = 'SHOP',
   TAVERN = 'TAVERN',

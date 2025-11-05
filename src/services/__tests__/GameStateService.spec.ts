@@ -55,12 +55,12 @@ describe('GameStateService', () => {
     it('preserves other properties when updating', () => {
       service.updateState(state => ({
         ...state,
-        currentScene: SceneType.EDGE_OF_TOWN
+        currentScene: SceneType.CASTLE_MENU
       }));
 
       const state = service.state();
       expect(state.roster).toBeDefined();
-      expect(state.currentScene).toBe(SceneType.EDGE_OF_TOWN);
+      expect(state.currentScene).toBe(SceneType.CASTLE_MENU);
     });
   });
 
@@ -68,10 +68,10 @@ describe('GameStateService', () => {
     it('currentScene computed signal works', () => {
       service.updateState(state => ({
         ...state,
-        currentScene: SceneType.EDGE_OF_TOWN
+        currentScene: SceneType.CASTLE_MENU
       }));
 
-      expect(service.currentScene()).toBe(SceneType.EDGE_OF_TOWN);
+      expect(service.currentScene()).toBe(SceneType.CASTLE_MENU);
     });
 
     it('isInMaze computed signal detects maze scenes', () => {

@@ -241,11 +241,11 @@ describe('TrainingGroundsComponent', () => {
     });
   });
 
-  describe('returnToEdgeOfTown', () => {
-    it('navigates to edge-of-town', () => {
-      component.returnToEdgeOfTown();
+  describe('returnToCastleMenu', () => {
+    it('navigates to castle-menu', () => {
+      component.returnToCastleMenu();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/edge-of-town']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
   });
 
@@ -258,8 +258,8 @@ describe('TrainingGroundsComponent', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('calls returnToEdgeOfTown when return action selected', () => {
-      const spy = jest.spyOn(component, 'returnToEdgeOfTown');
+    it('calls returnToCastleMenu when return action selected', () => {
+      const spy = jest.spyOn(component, 'returnToCastleMenu');
 
       component.handleFooterAction('return');
 
@@ -268,10 +268,10 @@ describe('TrainingGroundsComponent', () => {
   });
 
   describe('handleEscape', () => {
-    it('navigates to edge-of-town when ESC key pressed', () => {
+    it('navigates to castle-menu when ESC key pressed', () => {
       component.handleEscape();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/edge-of-town']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
 
     it('does not navigate when confirmation dialog is open', () => {

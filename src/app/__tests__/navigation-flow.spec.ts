@@ -27,20 +27,20 @@ describe('Navigation Flow Integration', () => {
     });
   });
 
-  describe('Castle Menu → Edge of Town', () => {
-    it('navigates from castle menu to edge of town', async () => {
+  describe('Castle Menu → Training Grounds', () => {
+    it('navigates from castle menu to training grounds', async () => {
       await router.navigate(['/castle-menu']);
       expect(location.path()).toBe('/castle-menu');
 
-      await router.navigate(['/edge-of-town']);
-      expect(location.path()).toBe('/edge-of-town');
+      await router.navigate(['/training-grounds']);
+      expect(location.path()).toBe('/training-grounds');
     });
   });
 
-  describe('Edge of Town → Castle Menu (round trip)', () => {
-    it('navigates back to castle menu from edge of town', async () => {
-      await router.navigate(['/edge-of-town']);
-      expect(location.path()).toBe('/edge-of-town');
+  describe('Training Grounds → Castle Menu (round trip)', () => {
+    it('navigates back to castle menu from training grounds', async () => {
+      await router.navigate(['/training-grounds']);
+      expect(location.path()).toBe('/training-grounds');
 
       await router.navigate(['/castle-menu']);
       expect(location.path()).toBe('/castle-menu');

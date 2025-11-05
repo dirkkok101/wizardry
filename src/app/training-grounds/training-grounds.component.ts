@@ -67,7 +67,7 @@ export class TrainingGroundsComponent implements OnInit {
   // Footer menu items
   readonly footerMenuItems = computed((): MenuItem[] => [
     { id: 'create', label: 'CREATE CHARACTER', shortcut: 'C', enabled: true },
-    { id: 'return', label: 'RETURN TO EDGE OF TOWN', shortcut: 'ESC', enabled: true }
+    { id: 'return', label: 'Return to Castle (ESC)', shortcut: 'ESC', enabled: true }
   ]);
 
   constructor(
@@ -144,10 +144,10 @@ export class TrainingGroundsComponent implements OnInit {
   }
 
   /**
-   * Return to edge of town
+   * Return to castle menu
    */
-  returnToEdgeOfTown(): void {
-    this.router.navigate(['/edge-of-town']);
+  returnToCastleMenu(): void {
+    this.router.navigate(['/castle-menu']);
   }
 
   /**
@@ -159,7 +159,7 @@ export class TrainingGroundsComponent implements OnInit {
         this.handleCreateCharacter();
         break;
       case 'return':
-        this.returnToEdgeOfTown();
+        this.returnToCastleMenu();
         break;
     }
   }
@@ -168,7 +168,7 @@ export class TrainingGroundsComponent implements OnInit {
   handleEscape(): void {
     // Don't navigate if confirmation dialog is open
     if (!this.showDeleteConfirmation()) {
-      this.returnToEdgeOfTown();
+      this.returnToCastleMenu();
     }
   }
 
