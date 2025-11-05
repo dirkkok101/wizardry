@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { TempleService } from '../../services/TempleService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { MenuItem } from '../../components/menu/menu.component';
+import { CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterStatus } from '../../types/CharacterStatus';
@@ -23,7 +28,13 @@ type TempleView = 'main' | 'select-character' | 'select-service';
 @Component({
   selector: 'app-temple',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    SceneFooterComponent,
+    CharacterCardComponent,
+    ConfirmationDialogComponent
+  ],
   templateUrl: './temple.component.html',
   styleUrls: ['./temple.component.scss']
 })
@@ -180,6 +191,17 @@ export class TempleComponent implements OnInit {
     }
 
     this.cancelService();
+  }
+
+  handleCharacterAction(event: CharacterActionEvent): void {
+    if (event.actionType === 'inspect') {
+      this.router.navigate(['/character-inspection'], {
+        queryParams: {
+          characterId: event.characterId,
+          returnTo: 'temple'
+        }
+      });
+    }
   }
 
   private getServiceTypeFromId(id: string): ServiceType | null {

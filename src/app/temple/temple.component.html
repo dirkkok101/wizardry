@@ -1,18 +1,44 @@
-<div class="temple">
-  <header>
-    <h1>TEMPLE OF CANT</h1>
-  </header>
+<div class="temple-scene">
+  <!-- Header -->
+  <app-scene-title title="TEMPLE OF CANT" />
 
-  <main>
-    @if (currentView() === 'main') {
-      <div class="main-view">
-        <app-menu
-          [items]="menuItems"
-          (select)="handleMenuSelect($event)"
-        />
+  <!-- Content: Afflicted Characters -->
+  <div class="temple-content">
+    @if (afflictedCharacters().length > 0) {
+      <div class="character-grid">
+        @for (char of afflictedCharacters(); track char.id) {
+          <app-character-card
+            [character]="char"
+            [actions]="[{type: 'inspect'}]"
+            (actionClick)="handleCharacterAction($event)"
+          />
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <p>Your party is in good health.</p>
+        <p>No one requires the temple's services at this time.</p>
       </div>
     }
 
-    <!-- Additional views (select-character, select-service, confirm-service) are rendered by character-list component -->
-  </main>
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <div class="error-message">{{ errorMessage() }}</div>
+    }
+  </div>
+
+  <!-- Footer: Service Menu -->
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Confirmation Dialog -->
+  @if (showConfirmation()) {
+    <app-confirmation-dialog
+      [message]="confirmationMessage()"
+      (confirm)="confirmService()"
+      (cancel)="cancelService()"
+    />
+  }
 </div>

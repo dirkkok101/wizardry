@@ -62,6 +62,9 @@ describe('TempleComponent', () => {
         gold: 500
       }
     }));
+
+    // Initialize component to set scene type
+    component.ngOnInit();
   });
 
   describe('initialization', () => {
@@ -297,6 +300,26 @@ describe('TempleComponent', () => {
       component.confirmService();
 
       expect(component.errorMessage()).toContain('Cannot afford');
+    });
+  });
+
+  describe('template structure', () => {
+    it('renders SceneTitleComponent', () => {
+      fixture.detectChanges();
+      const title = fixture.nativeElement.querySelector('app-scene-title');
+      expect(title).toBeTruthy();
+    });
+
+    it('renders SceneFooterComponent with menu items', () => {
+      fixture.detectChanges();
+      const footer = fixture.nativeElement.querySelector('app-scene-footer');
+      expect(footer).toBeTruthy();
+    });
+
+    it('renders character cards for afflicted characters', () => {
+      fixture.detectChanges();
+      const cards = fixture.nativeElement.querySelectorAll('app-character-card');
+      expect(cards.length).toBe(1); // One POISONED character
     });
   });
 });
