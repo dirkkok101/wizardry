@@ -1,29 +1,39 @@
-@use '../../styles/variables' as *;
-
-.temple {
+.temple-scene {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: $spacing-md;
+  height: 100vh;
+}
 
-  header {
-    margin-bottom: $spacing-xl;
+.temple-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
 
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0;
-      text-align: center;
-    }
-  }
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
 
-  main {
-    flex: 1;
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary, #888);
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
   }
 }
 
-.main-view {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+.error-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--error-bg, #fee);
+  color: var(--error-text, #c00);
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
 }
