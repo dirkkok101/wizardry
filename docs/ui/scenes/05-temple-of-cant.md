@@ -45,43 +45,56 @@ interface TempleEntryState {
 ### Screen Regions
 
 - **Header:** "TEMPLE OF CANT" title
-- **Main:** List of afflicted characters
-- **Sidebar:** Service costs and payer selection
-- **Status:** Character condition details
-- **Messages:** Service results (success/failure)
+- **Content:** Grid of character cards showing afflicted characters
+- **Footer:** Service menu with keyboard shortcuts
+- **Dialog:** Confirmation dialog for service execution
 
 ### ASCII Mockup
 
 ```
-┌─────────────────────────────────────┐
-│  TEMPLE OF CANT                     │
-├─────────────────────────────────────┤
-│  CHARACTERS NEEDING HELP:           │
-│                                     │
-│  1. Gandalf    POISONED             │
-│  2. Corak      DEAD                 │
-│  3. PriestBob  ASHES                │
-│                                     │
-│  Select character (1-3):            │
-│                                     │
-├─────────────────────────────────────┤
-│  Service: RESURRECTION              │
-│  Tithe Required: 500 gold           │
-│                                     │
-│  Who will pay?                      │
-│  1. Gandalf  (300 gp)               │
-│  2. Thief    (150 gp)               │
-│  3. Party Pool (200 gp)             │
-│                                     │
-│  Select payer (1-3):                │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  TEMPLE OF CANT                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │ Gandalf     │  │ Corak       │  │ PriestBob   │        │
+│  │ POISONED    │  │ DEAD        │  │ ASHES       │        │
+│  │ Lvl 5       │  │ Lvl 3       │  │ Lvl 7       │        │
+│  │ HP: 15/25   │  │ HP: 0/20    │  │ HP: 0/30    │        │
+│  │             │  │             │  │             │        │
+│  │ [Inspect]   │  │ [Inspect]   │  │ [Inspect]   │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+│                                                             │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  (P) Cure Poison  (A) Cure Paralysis  (R) Resurrect        │
+│  (S) Restore  (ESC) Return to Castle                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Empty State (when no afflicted characters):**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TEMPLE OF CANT                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│                                                             │
+│              Your party is in good health.                  │
+│        No one requires the temple's services at this time.  │
+│                                                             │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  (P) Cure Poison  (A) Cure Paralysis  (R) Resurrect        │
+│  (S) Restore  (ESC) Return to Castle                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 **Visual Notes:**
-- Automatically filters to only show afflicted characters
-- Tithe cost displayed before service
-- Payer selection shows available gold for each option
-- Success/failure results shown prominently
+- Character cards automatically filter to show only afflicted characters
+- Service menu items are enabled/disabled based on character afflictions
+- Services are selected by single keypress (P/A/R/S)
+- Confirmation dialog shows before executing service
 
 ---
 
@@ -89,14 +102,19 @@ interface TempleEntryState {
 
 ### Overall Process
 
-1. **Entry:** Temple displays afflicted characters
-2. **Selection:** Player selects character to help
-3. **Service Identification:** Temple determines required service
-4. **Tithe Calculation:** Cost based on service and character level
-5. **Payer Selection:** Choose who pays (party member or party pool)
-6. **Service Attempt:** Roll for success (resurrection only)
-7. **Result:** Success message or failure consequences
-8. **Return:** Automatic return to Castle Menu
+1. **Entry:** Temple displays afflicted characters in grid
+2. **Service Selection:** Player presses service key (P/A/R/S)
+3. **Auto-Character Selection:** If only one character needs that service, automatically selected
+4. **Confirmation Dialog:** Shows character name and service action
+5. **Service Execution:** Deducts party gold and performs service
+6. **Result Display:** Success or error message shown
+7. **Menu Update:** Service menu items re-enabled based on updated party status
+
+**Key Simplifications:**
+- No multi-step view machine (single state)
+- Auto-selects character when only one needs service
+- Uses party gold pool only (no payer selection)
+- Service keys are enabled/disabled based on party needs
 
 ---
 
@@ -395,60 +413,58 @@ function canRestore(character: Character, payer: Character | Party): { allowed: 
 
 ## Additional Actions
 
-### (L) Leave Temple
+### Return to Castle (ESC)
 
-**Description:** Return to Castle Menu (if no service selected)
+**Description:** Navigate back to Castle Menu
 
-**Key Binding:** L (case-insensitive) or ESC
+**Key Binding:** ESC
 
 **Requirements:**
-- None (always available before service selection)
+- None (always available)
 
 **Flow:**
-1. User presses 'L' or ESC
-2. Cancel service selection
-3. Return to Castle Menu
+1. User presses ESC
+2. Navigate to Castle Menu via Angular Router
+3. Scene transition handled by SceneNavigationService
 
-**Validation:**
+**Implementation:**
 
 ```typescript
-function canLeaveTemple(state: GameState): { allowed: boolean; reason?: string } {
-  return { allowed: true }  // Always allowed
+handleFooterAction(itemId: string): void {
+  if (itemId === 'return') {
+    this.router.navigate(['/castle-menu']);
+    return;
+  }
+  // ... service selection logic
 }
 ```
 
 **State Changes:**
-- `state.currentScene = SceneType.CASTLE_MENU`
-- No changes saved (service not performed)
-
-**UI Feedback:**
-- No feedback message (instant transition)
+- Scene navigation handled by router
+- No state changes (services only modify state on confirmation)
 
 **Transitions:**
 - → Castle Menu
 
 ---
 
-### Invalid Key
-
-**Description:** User presses any other key
-
-**Behavior:**
-- Beep sound (optional)
-- Error message: "INVALID SELECTION"
-- Remain in Temple
-
----
-
 ## Navigation
+
+### Keyboard Shortcuts
+
+| Action | Key | Enabled When | Effect |
+|--------|-----|--------------|--------|
+| Cure Poison | P | Any party member is POISONED | Select and confirm service |
+| Cure Paralysis | A | Any party member is PARALYZED | Select and confirm service |
+| Resurrect | R | Any party member is DEAD | Select and confirm service |
+| Restore | S | Any party member is ASHES | Select and confirm service |
+| Return to Castle | ESC | Always | Navigate to Castle Menu |
 
 ### Exits
 
 | Action | Key | Destination | Condition |
 |--------|-----|-------------|-----------|
-| Select Character | 1-N | Service Flow | Character needs help |
-| Leave | (L)/ESC | Castle Menu | Before service |
-| Auto-return | N/A | Castle Menu | After service |
+| Return | ESC | Castle Menu | Always available |
 
 ### Parent Scene
 
@@ -456,23 +472,26 @@ function canLeaveTemple(state: GameState): { allowed: boolean; reason?: string }
 
 ### Child Scenes
 
-- Temple → Service → Temple (result display)
-- Temple → Auto-return → Castle Menu
+- None (single-scene flow with confirmation dialog)
 
 ---
 
 ## State Management
 
-### Scene State
+### Component Signals
 
 ```typescript
-interface TempleState {
-  mode: 'CHARACTER_SELECT' | 'PAYER_SELECT' | 'SERVICE_RESULT'
-  selectedCharacter: Character | null
-  requiredService: ServiceType | null
-  tithe: number
-  payer: Character | Party | null
-  serviceSuccess: boolean | null
+interface TempleComponentState {
+  // Confirmation dialog state
+  showConfirmation: signal<boolean>
+  confirmationMessage: signal<string>
+  pendingService: signal<{ type: ServiceType; characterId: string } | null>
+  errorMessage: signal<string | null>
+
+  // Computed properties
+  currentParty: computed<Party>
+  afflictedCharacters: computed<Character[]>
+  footerMenuItems: computed<MenuItem[]>
 }
 
 enum ServiceType {
@@ -484,9 +503,10 @@ enum ServiceType {
 ```
 
 **Notes:**
-- Automatic service type detection based on character status
-- Multi-step flow: select character → select payer → perform service
-- Auto-return to Castle Menu after service
+- Single-state architecture (no view machine modes)
+- Service menu items enabled/disabled via computed signal
+- Confirmation dialog for service execution
+- Error messages displayed inline
 
 ### Global State Changes
 
@@ -519,22 +539,27 @@ enum ServiceType {
 
 ## Implementation Notes
 
-### Services Used
+### Component Architecture
 
-- `TempleService.getAfflictedCharacters(roster)`
-- `TempleService.calculateTithe(character, serviceType)`
-- `TempleService.curePoison(character)`
-- `TempleService.cureParalysis(character)`
-- `TempleService.attemptResurrection(character)`
-- `TempleService.attemptRestoration(character)`
-- `SaveService.autoSave(state)`
+**Component:** `TempleComponent` (Angular standalone component)
 
-### Commands
+**Imports:**
+- `SceneTitleComponent` - Header with scene title
+- `SceneFooterComponent` - Footer menu with keyboard shortcuts
+- `CharacterCardComponent` - Display afflicted characters
+- `ConfirmationDialogComponent` - Service confirmation
 
-- `SelectCharacterCommand` - Choose character to help
-- `SelectPayerCommand` - Choose who pays
-- `PerformServiceCommand` - Execute service
-- `LeaveTempleCommand` - Return to Castle
+**Services Used:**
+- `GameStateService` - Reactive game state management
+- `TempleService.performService()` - Execute service with state updates
+- `TempleService.calculateTithe()` - Calculate service cost
+- `Router` - Navigation to Castle Menu and Character Inspection
+
+**Key Methods:**
+- `handleFooterAction(itemId)` - Process service selection
+- `confirmService()` - Execute service via TempleService
+- `cancelService()` - Close confirmation dialog
+- `handleCharacterAction(event)` - Navigate to character inspection
 
 ### Edge Cases
 
