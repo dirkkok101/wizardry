@@ -206,4 +206,40 @@ describe('TempleComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
   });
+
+  describe('footerMenuItems', () => {
+    it('has 5 menu items with correct shortcuts', () => {
+      fixture.detectChanges();
+      const items = component.footerMenuItems();
+
+      expect(items.length).toBe(5);
+      expect(items[0]).toEqual({ id: 'cure-poison', label: 'Cure Poison', shortcut: 'P', enabled: expect.any(Boolean) });
+      expect(items[1]).toEqual({ id: 'cure-paralysis', label: 'Cure Paralysis', shortcut: 'A', enabled: expect.any(Boolean) });
+      expect(items[2]).toEqual({ id: 'resurrect', label: 'Resurrect', shortcut: 'R', enabled: expect.any(Boolean) });
+      expect(items[3]).toEqual({ id: 'restore', label: 'Restore', shortcut: 'S', enabled: expect.any(Boolean) });
+      expect(items[4]).toEqual({ id: 'return', label: 'Return to Castle (ESC)', shortcut: 'ESC', enabled: true });
+    });
+
+    it('enables Cure Poison when character is POISONED', () => {
+      fixture.detectChanges();
+      const items = component.footerMenuItems();
+      const curePoison = items.find(i => i.id === 'cure-poison');
+      expect(curePoison?.enabled).toBe(true);
+    });
+
+    it('disables Cure Poison when no character is POISONED', () => {
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', {
+          ...mockCharacter,
+          status: CharacterStatus.DEAD
+        })
+      }));
+      fixture.detectChanges();
+
+      const items = component.footerMenuItems();
+      const curePoison = items.find(i => i.id === 'cure-poison');
+      expect(curePoison?.enabled).toBe(false);
+    });
+  });
 });

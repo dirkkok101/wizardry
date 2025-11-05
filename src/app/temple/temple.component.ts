@@ -52,6 +52,43 @@ export class TempleComponent implements OnInit {
       .filter(char => char.status !== CharacterStatus.OK);
   });
 
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const afflicted = this.afflictedCharacters();
+
+    return [
+      {
+        id: 'cure-poison',
+        label: 'Cure Poison',
+        shortcut: 'P',
+        enabled: afflicted.some(c => c.status === CharacterStatus.POISONED)
+      },
+      {
+        id: 'cure-paralysis',
+        label: 'Cure Paralysis',
+        shortcut: 'A',
+        enabled: afflicted.some(c => c.status === CharacterStatus.PARALYZED)
+      },
+      {
+        id: 'resurrect',
+        label: 'Resurrect',
+        shortcut: 'R',
+        enabled: afflicted.some(c => c.status === CharacterStatus.DEAD)
+      },
+      {
+        id: 'restore',
+        label: 'Restore',
+        shortcut: 'S',
+        enabled: afflicted.some(c => c.status === CharacterStatus.ASHES)
+      },
+      {
+        id: 'return',
+        label: 'Return to Castle (ESC)',
+        shortcut: 'ESC',
+        enabled: true
+      }
+    ];
+  });
+
   constructor(
     private gameState: GameStateService,
     private router: Router
