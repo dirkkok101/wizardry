@@ -12,7 +12,7 @@ import { GameStateService } from '../../services/GameStateService';
   styleUrls: ['./spell-casting.component.scss']
 })
 export class SpellCastingComponent implements OnInit {
-  private readonly queryParams = toSignal(this.route.queryParams);
+  private readonly queryParams;
 
   readonly characterId = computed(() =>
     this.queryParams()?.['characterId'] || null
@@ -26,7 +26,9 @@ export class SpellCastingComponent implements OnInit {
     private readonly gameState: GameStateService,
     private readonly router: Router,
     private readonly route: ActivatedRoute
-  ) {}
+  ) {
+    this.queryParams = toSignal(this.route.queryParams);
+  }
 
   ngOnInit(): void {
     // No scene update - this is a temporary stub

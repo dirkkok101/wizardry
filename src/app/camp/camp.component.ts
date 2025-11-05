@@ -9,8 +9,8 @@ import { CharacterCardComponent } from '../../components/character-card/characte
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterStatus } from '../../types/CharacterStatus';
-import { CharacterAction, CharacterActionEvent } from '../../components/character-card/character-card.component';
-import { MenuItem } from '../../components/scene-footer/scene-footer.component';
+import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
+import { MenuItem } from '../../components/menu/menu.component';
 import { moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 
 @Component({
