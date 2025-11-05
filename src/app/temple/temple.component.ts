@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, HostListener, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
@@ -188,6 +188,14 @@ export class TempleComponent implements OnInit {
           returnTo: 'temple'
         }
       });
+    }
+  }
+
+  @HostListener('window:keydown.escape')
+  handleEscape(): void {
+    // Don't navigate if confirmation dialog is open
+    if (!this.showConfirmation()) {
+      this.router.navigate(['/castle-menu']);
     }
   }
 

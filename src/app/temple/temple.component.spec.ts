@@ -223,4 +223,23 @@ describe('TempleComponent', () => {
       expect(updatedCurePoison?.enabled).toBe(false);
     });
   });
+
+  describe('handleEscape', () => {
+    it('navigates to castle menu when no confirmation dialog is open', () => {
+      expect(component.showConfirmation()).toBe(false);
+
+      component.handleEscape();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+
+    it('does not navigate when confirmation dialog is open', () => {
+      component.handleFooterAction('cure-poison');
+      expect(component.showConfirmation()).toBe(true);
+
+      component.handleEscape();
+
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+  });
 });
