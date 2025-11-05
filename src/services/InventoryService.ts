@@ -78,4 +78,60 @@ export class InventoryService {
 
     return true
   }
+
+  /**
+   * Transfer item between characters
+   */
+  static transferItem(
+    fromCharacter: Character,
+    toCharacter: Character,
+    itemId: string
+  ): { from: Character; to: Character } {
+    if (!fromCharacter.inventory.includes(itemId)) {
+      throw new Error('Item not found in donor inventory')
+    }
+
+    if (!this.hasSpace(toCharacter)) {
+      throw new Error('Recipient inventory full')
+    }
+
+    const from = {
+      ...fromCharacter,
+      inventory: fromCharacter.inventory.filter(id => id !== itemId)
+    }
+
+    const to = {
+      ...toCharacter,
+      inventory: [...toCharacter.inventory, itemId]
+    }
+
+    return { from, to }
+  }
+
+  /**
+   * Drop item from inventory (permanent removal)
+   */
+  static dropItem(
+    character: Character,
+    itemId: string
+  ): Character {
+    if (!character.inventory.includes(itemId)) {
+      throw new Error('Item not in inventory')
+    }
+
+    return {
+      ...character,
+      inventory: character.inventory.filter(id => id !== itemId)
+    }
+  }
+
+  /**
+   * Get inventory count
+   */
+  static getInventoryCount(character: Character): { current: number; max: number } {
+    return {
+      current: character.inventory.length,
+      max: MAX_INVENTORY_SIZE
+    }
+  }
 }

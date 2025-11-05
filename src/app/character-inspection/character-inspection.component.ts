@@ -1,38 +1,45 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { GameStateService } from '../../services/GameStateService';
+import { ItemDataService } from '../../services/ItemDataService';
+import { EquipmentService } from '../../services/EquipmentService';
+import { InventoryService } from '../../services/InventoryService';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
+import { Item } from '../../types/Item';
+import { ItemSlot } from '../../types/ItemType';
+import { ItemCardComponent, ItemAction } from '../components/item-card/item-card.component';
+import { TradeItemDialogComponent } from '../components/trade-item-dialog/trade-item-dialog.component';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 
 /**
- * Character Inspection Component
+ * Character Inspection Component - Modernized with inline item actions
  *
- * Displays full character sheet including:
- * - Basic info (name, class, level, alignment)
- * - Stats (STR, INT, PIE, VIT, AGI, LUK)
- * - Status (HP/MaxHP, Gold, XP, Status)
- * - Equipment (weapon, armor)
- * - Inventory (8 slots)
- * - Spells (for casters only)
- *
- * Context-aware: Returns to correct scene (tavern, castle-menu, etc.)
+ * Features:
+ * - Equipment slots with inline Equip/Unequip actions
+ * - Inventory with Trade/Drop actions
+ * - Confirmation dialogs for destructive actions
+ * - Party member selection for trades
  */
 @Component({
   selector: 'app-character-inspection',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    ItemCardComponent,
+    TradeItemDialogComponent,
+    ConfirmationDialogComponent
+  ],
   templateUrl: './character-inspection.component.html',
   styleUrls: ['./character-inspection.component.scss']
 })
 export class CharacterInspectionComponent {
-  // Inject dependencies using inject() for use in field initializers
   private readonly gameState = inject(GameStateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  // Query params (auto-managed with toSignal)
   private readonly queryParams = toSignal(this.route.queryParams, {
     initialValue: {} as Record<string, string>
   });
@@ -45,26 +52,174 @@ export class CharacterInspectionComponent {
     this.queryParams()['returnTo'] || 'castle-menu'
   );
 
-  // Character data
   readonly character = computed(() => {
     const id = this.characterId();
     if (!id) return null;
     return this.gameState.state().roster.get(id) || null;
   });
 
-  // Inventory slots (8 max)
-  readonly inventorySlots = computed(() => {
+  // Get party members for trading
+  readonly partyMembers = computed(() => {
+    const state = this.gameState.state();
+    const currentId = this.characterId();
+    return state.party.members
+      .map(id => state.roster.get(id))
+      .filter((char): char is Character => char !== undefined && char.id !== currentId);
+  });
+
+  // Equipment slots
+  readonly weaponSlot = computed(() => this.getEquipmentSlot(ItemSlot.WEAPON));
+  readonly armorSlot = computed(() => this.getEquipmentSlot(ItemSlot.ARMOR));
+  readonly shieldSlot = computed(() => this.getEquipmentSlot(ItemSlot.SHIELD));
+  readonly helmetSlot = computed(() => this.getEquipmentSlot(ItemSlot.HELMET));
+  readonly gauntletsSlot = computed(() => this.getEquipmentSlot(ItemSlot.GAUNTLETS));
+
+  // Inventory items
+  readonly inventoryItems = computed(() => {
     const char = this.character();
     if (!char) return [];
 
-    const slots = new Array(8).fill(null);
-    char.inventory.forEach((item, index) => {
-      if (index < 8) {
-        slots[index] = item;
-      }
-    });
-    return slots;
+    return char.inventory
+      .map(id => ItemDataService.getItem(id))
+      .filter((item): item is Item => item !== null);
   });
+
+  // Dialog state
+  showTradeDialog = signal(false);
+  showDropDialog = signal(false);
+  pendingAction = signal<{ action: string; item: Item } | null>(null);
+
+  // User feedback
+  message = signal<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  readonly ItemSlot = ItemSlot;
+
+  private getEquipmentSlot(slot: ItemSlot): Item | null {
+    const char = this.character();
+    if (!char) return null;
+
+    const slotField = this.getSlotField(slot);
+    if (!slotField) return null;
+
+    const itemId = char[slotField] as string | undefined;
+    if (!itemId) return null;
+
+    return ItemDataService.getItem(itemId);
+  }
+
+  private getSlotField(slot: ItemSlot): keyof Character | null {
+    switch (slot) {
+      case ItemSlot.WEAPON: return 'equippedWeapon';
+      case ItemSlot.ARMOR: return 'equippedArmor';
+      case ItemSlot.SHIELD: return 'equippedShield';
+      case ItemSlot.HELMET: return 'equippedHelmet';
+      case ItemSlot.GAUNTLETS: return 'equippedGauntlets';
+      default: return null;
+    }
+  }
+
+  handleItemAction(action: ItemAction): void {
+    const char = this.character();
+    if (!char) return;
+
+    switch (action.type) {
+      case 'equip':
+        this.equipItem(char, action.item);
+        break;
+      case 'unequip':
+        this.unequipItem(char, action.item);
+        break;
+      case 'trade':
+        this.pendingAction.set({ action: 'trade', item: action.item });
+        this.showTradeDialog.set(true);
+        break;
+      case 'drop':
+        this.pendingAction.set({ action: 'drop', item: action.item });
+        this.showDropDialog.set(true);
+        break;
+    }
+  }
+
+  private equipItem(char: Character, item: Item): void {
+    try {
+      const updated = EquipmentService.equipItem(char, item.id);
+      this.updateCharacter(updated);
+      this.showMessage(`Equipped ${item.name}`, 'success');
+    } catch (error: any) {
+      this.showMessage(error.message || 'Failed to equip item', 'error');
+    }
+  }
+
+  private unequipItem(char: Character, item: Item): void {
+    try {
+      const updated = EquipmentService.unequipItem(char, item.slot);
+      this.updateCharacter(updated);
+      this.showMessage(`Unequipped ${item.name}`, 'success');
+    } catch (error: any) {
+      this.showMessage(error.message || 'Failed to unequip item', 'error');
+    }
+  }
+
+  confirmTrade(recipientId: string): void {
+    const pending = this.pendingAction();
+    const char = this.character();
+    if (!pending || !char || pending.action !== 'trade') return;
+
+    const recipient = this.gameState.state().roster.get(recipientId);
+    if (!recipient) return;
+
+    try {
+      const result = InventoryService.transferItem(char, recipient, pending.item.id);
+      this.updateCharacter(result.from);
+      this.updateCharacter(result.to);
+      this.showTradeDialog.set(false);
+      this.pendingAction.set(null);
+      this.showMessage(`Traded ${pending.item.name} to ${recipient.name}`, 'success');
+    } catch (error: any) {
+      this.showMessage(error.message || 'Failed to trade item', 'error');
+    }
+  }
+
+  confirmDrop(): void {
+    const pending = this.pendingAction();
+    const char = this.character();
+    if (!pending || !char || pending.action !== 'drop') return;
+
+    try {
+      const updated = InventoryService.dropItem(char, pending.item.id);
+      this.updateCharacter(updated);
+      this.showDropDialog.set(false);
+      this.pendingAction.set(null);
+      this.showMessage(`Dropped ${pending.item.name}`, 'success');
+    } catch (error: any) {
+      this.showMessage(error.message || 'Failed to drop item', 'error');
+    }
+  }
+
+  cancelDialog(): void {
+    this.showTradeDialog.set(false);
+    this.showDropDialog.set(false);
+    this.pendingAction.set(null);
+  }
+
+  private updateCharacter(updated: Character): void {
+    this.gameState.updateState(state => ({
+      ...state,
+      roster: new Map(state.roster).set(updated.id, updated)
+    }));
+  }
+
+  returnToPrevious(): void {
+    this.router.navigate([`/${this.returnTo()}`]);
+  }
+
+  private showMessage(text: string, type: 'success' | 'error'): void {
+    this.message.set({ text, type });
+    // Auto-clear after 3 seconds
+    setTimeout(() => {
+      this.message.set(null);
+    }, 3000);
+  }
 
   // Check if character is a spellcaster
   readonly isSpellcaster = computed(() => {
@@ -81,31 +236,6 @@ export class CharacterInspectionComponent {
     return casterClasses.includes(char.class);
   });
 
-  // Check if character has mage spells
-  readonly hasMageSpells = computed(() => {
-    const char = this.character();
-    if (!char) return false;
-    return [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(char.class);
-  });
-
-  // Check if character has priest spells
-  readonly hasPriestSpells = computed(() => {
-    const char = this.character();
-    if (!char) return false;
-    return [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(char.class);
-  });
-
-
-  /**
-   * Navigate back to the previous scene
-   */
-  returnToPrevious(): void {
-    this.router.navigate([`/${this.returnTo()}`]);
-  }
-
-  /**
-   * Get status color based on character status
-   */
   getStatusColor(status: string): string {
     switch (status) {
       case 'OK':
@@ -122,14 +252,5 @@ export class CharacterInspectionComponent {
       default:
         return '';
     }
-  }
-
-  /**
-   * Format item display (handles both string IDs and Item objects)
-   */
-  formatItem(item: string | any): string {
-    if (!item) return 'Empty';
-    if (typeof item === 'string') return item;
-    return item.name || 'Unknown Item';
   }
 }

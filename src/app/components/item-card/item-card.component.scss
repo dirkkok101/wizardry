@@ -1,0 +1,85 @@
+.item-card {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: #fff;
+
+  &.equipped {
+    background: #f0f8ff;
+    border-color: #4a90e2;
+  }
+
+  &.empty {
+    opacity: 0.5;
+    font-style: italic;
+  }
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.item-name {
+  font-weight: bold;
+}
+
+.cursed-badge {
+  color: red;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.item-type {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.item-stats {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-equip {
+    background: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+  }
+
+  .btn-unequip {
+    background: #f0f0f0;
+  }
+
+  .btn-trade {
+    background: #52c41a;
+    color: white;
+    border-color: #52c41a;
+  }
+
+  .btn-drop {
+    background: #ff4d4f;
+    color: white;
+    border-color: #ff4d4f;
+  }
+}

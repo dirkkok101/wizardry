@@ -1,0 +1,47 @@
+<div class="dialog-overlay" (click)="onCancel()">
+  <div class="dialog-content" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h2>TRADE ITEM: {{ item.name }}</h2>
+    </div>
+
+    <div class="dialog-body">
+      <p>Select party member to receive item:</p>
+
+      @for (member of partyMembers; track member.id) {
+        <label class="member-option" [class.disabled]="!canReceive(member)">
+          <input
+            type="radio"
+            name="recipient"
+            [value]="member.id"
+            [(ngModel)]="selectedCharacterId"
+            [disabled]="!canReceive(member)"
+          />
+          <div class="member-info">
+            <span class="member-name">{{ member.name }}</span>
+            <span class="member-class">({{ member.class }}, Lvl {{ member.level }})</span>
+            <span class="member-inventory" [class.full]="!canReceive(member)">
+              Inventory: {{ getInventoryDisplay(member) }}
+              @if (!canReceive(member)) {
+                <span class="full-badge">[FULL]</span>
+              }
+            </span>
+          </div>
+        </label>
+      }
+
+      @if (partyMembers.length === 0) {
+        <p class="no-recipients">No other party members available</p>
+      }
+    </div>
+
+    <div class="dialog-footer">
+      <button
+        class="btn-confirm"
+        (click)="onConfirm()"
+        [disabled]="!selectedCharacterId">
+        Confirm
+      </button>
+      <button class="btn-cancel" (click)="onCancel()">Cancel</button>
+    </div>
+  </div>
+</div>

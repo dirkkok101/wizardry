@@ -1,0 +1,39 @@
+<div class="item-card" [class.equipped]="isEquipped" [class.empty]="!item">
+  <div class="item-header">
+    <span class="item-name">{{ displayName }}</span>
+    @if (item?.cursed && isEquipped) {
+      <span class="cursed-badge">CURSED</span>
+    }
+  </div>
+
+  <div class="item-type">{{ displayType }}</div>
+
+  @if (displayStats) {
+    <div class="item-stats">{{ displayStats }}</div>
+  }
+
+  @if (showActions && item) {
+    <div class="item-actions">
+      @if (showEquipButton) {
+        <button class="btn-equip" (click)="handleAction('equip')">Equip</button>
+      }
+
+      @if (showUnequipButton) {
+        <button
+          class="btn-unequip"
+          (click)="handleAction('unequip')"
+          [disabled]="item.cursed">
+          {{ item.cursed ? 'Cannot Unequip' : 'Unequip' }}
+        </button>
+      }
+
+      @if (showTradeButton) {
+        <button class="btn-trade" (click)="handleAction('trade')">Trade</button>
+      }
+
+      @if (showDropButton) {
+        <button class="btn-drop" (click)="handleAction('drop')">Drop</button>
+      }
+    </div>
+  }
+</div>

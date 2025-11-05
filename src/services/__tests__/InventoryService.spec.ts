@@ -141,4 +141,88 @@ describe('InventoryService', () => {
       expect(InventoryService.canEquip(mockCharacter, mockItem)).toBe(true)
     })
   })
+
+  describe('transferItem', () => {
+    let fromChar: Character
+    let toChar: Character
+
+    beforeEach(() => {
+      fromChar = {
+        ...mockCharacter,
+        id: 'char-1',
+        name: 'Fighter',
+        inventory: ['potion', 'sword']
+      }
+
+      toChar = {
+        ...mockCharacter,
+        id: 'char-2',
+        name: 'Mage',
+        inventory: ['staff']
+      }
+    })
+
+    it('transfers item between characters', () => {
+      const result = InventoryService.transferItem(fromChar, toChar, 'potion')
+
+      expect(result.from.inventory).not.toContain('potion')
+      expect(result.to.inventory).toContain('potion')
+      expect(result.from.inventory).toContain('sword')
+    })
+
+    it('throws error if item not in donor inventory', () => {
+      expect(() => InventoryService.transferItem(fromChar, toChar, 'unknown'))
+        .toThrow('Item not found in donor inventory')
+    })
+
+    it('throws error if recipient inventory full', () => {
+      toChar.inventory = new Array(8).fill('item')
+
+      expect(() => InventoryService.transferItem(fromChar, toChar, 'potion'))
+        .toThrow('Recipient inventory full')
+    })
+  })
+
+  describe('dropItem', () => {
+    let character: Character
+
+    beforeEach(() => {
+      character = {
+        ...mockCharacter,
+        id: 'char-1',
+        name: 'Fighter',
+        inventory: ['potion', 'sword', 'shield']
+      }
+    })
+
+    it('removes item from inventory', () => {
+      const result = InventoryService.dropItem(character, 'potion')
+
+      expect(result.inventory).toHaveLength(2)
+      expect(result.inventory).not.toContain('potion')
+      expect(result.inventory).toContain('sword')
+    })
+
+    it('throws error if item not in inventory', () => {
+      expect(() => InventoryService.dropItem(character, 'unknown'))
+        .toThrow('Item not in inventory')
+    })
+  })
+
+  describe('getInventoryCount', () => {
+    it('returns current and max inventory count', () => {
+      const char = { ...mockCharacter, inventory: ['item-1', 'item-2', 'item-3'] }
+      const result = InventoryService.getInventoryCount(char)
+
+      expect(result.current).toBe(3)
+      expect(result.max).toBe(8)
+    })
+
+    it('returns 0 for empty inventory', () => {
+      const result = InventoryService.getInventoryCount(mockCharacter)
+
+      expect(result.current).toBe(0)
+      expect(result.max).toBe(8)
+    })
+  })
 })
