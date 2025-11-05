@@ -172,10 +172,10 @@ describe('LevelUpService', () => {
 
       const result = LevelUpService.performLevelUp(character)
 
-      // d10 + 2 VIT = 3-12 increase
+      // d10 + 3 VIT (16 = +3) = 4-13 increase
       const hpIncrease = result.updatedCharacter.maxHp - 15
-      expect(hpIncrease).toBeGreaterThanOrEqual(3)
-      expect(hpIncrease).toBeLessThanOrEqual(12)
+      expect(hpIncrease).toBeGreaterThanOrEqual(4)
+      expect(hpIncrease).toBeLessThanOrEqual(13)
       expect(result.levelUpData.hpIncrease).toBe(hpIncrease)
     })
 
