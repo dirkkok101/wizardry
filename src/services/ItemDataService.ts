@@ -47,6 +47,7 @@ const ITEM_IDS = [
 export class ItemDataService {
   private static itemsCache: Map<string, Item> = new Map();
   private static loaded = false;
+  private static loading = false;
   private static loadError: Error | null = null;
 
   /**
@@ -55,6 +56,10 @@ export class ItemDataService {
    */
   static async loadAllItems(): Promise<void> {
     if (this.loaded) return;
+    if (this.loading) return; // Prevent duplicate loads
+
+    this.loading = true;
+    this.loadError = null;
 
     try {
       const loadPromises = ITEM_IDS.map(async (itemId) => {
@@ -79,6 +84,8 @@ export class ItemDataService {
     } catch (error) {
       this.loadError = error as Error;
       throw error;
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -213,5 +220,26 @@ export class ItemDataService {
   static getItemsByType(type: ItemType): Item[] {
     return Array.from(this.itemsCache.values())
       .filter(item => item.type === type);
+  }
+
+  /**
+   * Check if items are currently being loaded
+   */
+  static isLoading(): boolean {
+    return this.loading;
+  }
+
+  /**
+   * Check if items have been successfully loaded
+   */
+  static isLoaded(): boolean {
+    return this.loaded;
+  }
+
+  /**
+   * Get any error that occurred during loading
+   */
+  static getError(): Error | null {
+    return this.loadError;
   }
 }

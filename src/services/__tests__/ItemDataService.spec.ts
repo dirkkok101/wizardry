@@ -171,4 +171,64 @@ describe('ItemDataService', () => {
       expect(items).toEqual([]);
     });
   });
+
+  describe('State Accessors', () => {
+    beforeEach(() => {
+      // Reset state
+      ItemDataService['itemsCache'].clear();
+      ItemDataService['loaded'] = false;
+      ItemDataService['loading'] = false;
+      ItemDataService['loadError'] = null;
+    });
+
+    it('reports not loaded initially', () => {
+      expect(ItemDataService.isLoaded()).toBe(false);
+      expect(ItemDataService.isLoading()).toBe(false);
+      expect(ItemDataService.getError()).toBeNull();
+    });
+
+    it('reports loading state during load', async () => {
+      const loadPromise = ItemDataService.loadAllItems();
+
+      // Should be loading immediately after starting
+      expect(ItemDataService.isLoading()).toBe(true);
+      expect(ItemDataService.isLoaded()).toBe(false);
+
+      await loadPromise;
+
+      // Should be loaded and not loading after completion
+      expect(ItemDataService.isLoading()).toBe(false);
+      expect(ItemDataService.isLoaded()).toBe(true);
+      expect(ItemDataService.getError()).toBeNull();
+    });
+
+    it('prevents duplicate concurrent loads', async () => {
+      const load1 = ItemDataService.loadAllItems();
+      const load2 = ItemDataService.loadAllItems(); // Should return immediately
+
+      await Promise.all([load1, load2]);
+
+      expect(ItemDataService.isLoaded()).toBe(true);
+      expect(ItemDataService.isLoading()).toBe(false);
+    });
+
+    it('stores error on catastrophic load failure', async () => {
+      // Mock Promise.all to throw error (simulates catastrophic failure)
+      const originalPromiseAll = Promise.all;
+      jest.spyOn(Promise, 'all').mockRejectedValueOnce(new Error('Catastrophic failure'));
+
+      try {
+        await ItemDataService.loadAllItems();
+      } catch (error) {
+        // Expected to throw
+      }
+
+      expect(ItemDataService.getError()).toBeInstanceOf(Error);
+      expect(ItemDataService.getError()?.message).toBe('Catastrophic failure');
+      expect(ItemDataService.isLoading()).toBe(false);
+
+      // Restore
+      jest.spyOn(Promise, 'all').mockRestore();
+    });
+  });
 });
