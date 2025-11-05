@@ -105,8 +105,8 @@ export class EquipmentService {
       case ItemSlot.WEAPON: return 'equippedWeapon';
       case ItemSlot.ARMOR: return 'equippedArmor';
       case ItemSlot.SHIELD: return 'equippedShield';
-      case ItemSlot.HEAD: return 'equippedHelmet';
-      case ItemSlot.HANDS: return 'equippedGauntlets';
+      case ItemSlot.HELMET: return 'equippedHelmet';
+      case ItemSlot.GAUNTLETS: return 'equippedGauntlets';
       default: return null;
     }
   }

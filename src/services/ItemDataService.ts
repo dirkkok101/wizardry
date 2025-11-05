@@ -167,8 +167,8 @@ export class ItemDataService {
     if (json.category === 'weapon') return ItemSlot.WEAPON;
     if (json.category === 'armor' && json.armorType === 'body') return ItemSlot.ARMOR;
     if (json.category === 'shield') return ItemSlot.SHIELD;
-    if (json.category === 'helmet') return ItemSlot.HEAD;
-    if (json.category === 'gauntlet') return ItemSlot.HANDS;
+    if (json.category === 'helmet') return ItemSlot.HELMET;
+    if (json.category === 'gauntlet') return ItemSlot.GAUNTLETS;
     return ItemSlot.NONE;  // Consumables and misc items
   }
 

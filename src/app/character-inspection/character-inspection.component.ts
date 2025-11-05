@@ -71,8 +71,8 @@ export class CharacterInspectionComponent {
   readonly weaponSlot = computed(() => this.getEquipmentSlot(ItemSlot.WEAPON));
   readonly armorSlot = computed(() => this.getEquipmentSlot(ItemSlot.ARMOR));
   readonly shieldSlot = computed(() => this.getEquipmentSlot(ItemSlot.SHIELD));
-  readonly helmetSlot = computed(() => this.getEquipmentSlot(ItemSlot.HEAD));
-  readonly gauntletsSlot = computed(() => this.getEquipmentSlot(ItemSlot.HANDS));
+  readonly helmetSlot = computed(() => this.getEquipmentSlot(ItemSlot.HELMET));
+  readonly gauntletsSlot = computed(() => this.getEquipmentSlot(ItemSlot.GAUNTLETS));
 
   // Inventory items
   readonly inventoryItems = computed(() => {
@@ -112,8 +112,8 @@ export class CharacterInspectionComponent {
       case ItemSlot.WEAPON: return 'equippedWeapon';
       case ItemSlot.ARMOR: return 'equippedArmor';
       case ItemSlot.SHIELD: return 'equippedShield';
-      case ItemSlot.HEAD: return 'equippedHelmet';
-      case ItemSlot.HANDS: return 'equippedGauntlets';
+      case ItemSlot.HELMET: return 'equippedHelmet';
+      case ItemSlot.GAUNTLETS: return 'equippedGauntlets';
       default: return null;
     }
   }

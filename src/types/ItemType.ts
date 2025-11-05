@@ -13,12 +13,13 @@ export enum ItemType {
 
 /**
  * ItemSlot - Equipment slots for items
+ * Uses item names (not body parts) for consistency with ItemType and Character fields
  */
 export enum ItemSlot {
   WEAPON = 'WEAPON',
   ARMOR = 'ARMOR',
   SHIELD = 'SHIELD',
-  HEAD = 'HEAD',
-  HANDS = 'HANDS',
+  HELMET = 'HELMET',  // Was HEAD
+  GAUNTLETS = 'GAUNTLETS',  // Was HANDS
   NONE = 'NONE'
 }

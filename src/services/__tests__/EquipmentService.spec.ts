@@ -248,7 +248,7 @@ describe('EquipmentService', () => {
             id: 'steel_helm',
             name: 'Steel Helm',
             type: ItemType.HELMET,
-            slot: ItemSlot.HEAD,
+            slot: ItemSlot.HELMET,
             price: 100,
             defense: 2, // Transformed from JSON ac: 2
             cursed: false,
@@ -262,7 +262,7 @@ describe('EquipmentService', () => {
             id: 'gauntlets',
             name: 'Gauntlets',
             type: ItemType.GAUNTLET,
-            slot: ItemSlot.HANDS,
+            slot: ItemSlot.GAUNTLETS,
             price: 50,
             defense: 2, // Transformed from JSON ac: 2
             cursed: false,
