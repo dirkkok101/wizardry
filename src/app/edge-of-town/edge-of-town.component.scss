@@ -3,134 +3,108 @@
 .edge-of-town {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
+}
+
+.party-section {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-bottom: $border-width $border-style $color-border;
   padding: $padding-standard;
 
-  header {
-    margin-bottom: $spacing-xl;
-
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0;
-      text-align: center;
-    }
-  }
-
-  main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $spacing-xl;
-
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .menu-section {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-  }
-
-  .party-section {
-    border-left: 1px solid $color-text-dim;
-    padding-left: $spacing-lg;
-
-    @media (max-width: 640px) {
-      border-left: none;
-      border-top: 1px solid $color-text-dim;
-      padding-left: 0;
-      padding-top: $spacing-lg;
-    }
-
-    h2 {
-      font-size: 16px;
-      color: $color-text-green;
-      margin: 0 0 $spacing-md 0;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-
-      li {
-        color: $color-text-green;
-        margin-bottom: $spacing-sm;
-      }
-    }
-
-    .no-party {
-      color: $color-text-dim;
-      font-style: italic;
-    }
-  }
-
-  .error-message {
-    margin-top: $spacing-lg;
+  h2 {
+    font-size: $font-size-large;
+    margin-bottom: $spacing-md;
+    color: $color-text-bright;
     text-align: center;
+    border-bottom: $border-width $border-style $color-border;
+    padding-bottom: $spacing-sm;
+  }
+}
+
+.party-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: $spacing-sm;
+  max-width: 100%;
+
+  // Limit to 3 columns max for better card sizing
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.no-party {
+  text-align: center;
+  color: $color-text-dim;
+  font-style: italic;
+  margin-top: $spacing-lg;
+  grid-column: 1 / -1;
+}
+
+.content-area {
+  flex: 1;
+  padding: $padding-standard;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-area {
+  padding: $spacing-md $padding-standard;
+  text-align: center;
+  border-top: $border-width $border-style $color-border;
+
+  p {
+    margin: 0;
+    font-weight: bold;
+  }
+
+  &.error {
+    background-color: rgba(139, 0, 0, 0.2);
+    border-color: $color-error;
 
     p {
       color: $color-error;
-      font-weight: bold;
     }
   }
 
-  .info-message {
-    margin-top: $spacing-lg;
-    text-align: center;
+  &.info {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: $color-text-dim;
 
     p {
       color: $color-text-bright;
-      font-weight: bold;
     }
   }
 
-  .confirmation-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  &.success {
+    background-color: rgba(0, 100, 0, 0.2);
+    border-color: $color-text-green;
 
-    .dialog-content {
-      background: $color-bg-black;
-      border: 2px solid $color-text-bright;
-      padding: $spacing-xl;
-      text-align: center;
-
-      p {
-        font-size: 18px;
-        color: $color-text-bright;
-        margin: 0 0 $spacing-lg 0;
-      }
-
-      .dialog-actions {
-        display: flex;
-        gap: $spacing-md;
-        justify-content: center;
-
-        button {
-          background: none;
-          border: 1px solid $color-text-green;
-          color: $color-text-green;
-          font-family: $font-mono;
-          font-size: 14px;
-          padding: $spacing-sm $spacing-lg;
-          cursor: pointer;
-
-          &:hover {
-            background: $color-text-green;
-            color: $color-bg-black;
-          }
-        }
-      }
+    p {
+      color: $color-text-green;
     }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .party-members {
+    grid-template-columns: 1fr;
+  }
+
+  .party-section {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .message-area {
+    padding: $spacing-sm;
+    font-size: $font-size-small;
   }
 }

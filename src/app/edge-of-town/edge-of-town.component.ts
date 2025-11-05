@@ -1,9 +1,14 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { MenuItem } from '../../components/menu/menu.component';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { CharacterActionEvent } from '../../types/CharacterCardTypes';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -20,43 +25,28 @@ import { Character } from '../../types/Character';
 @Component({
   selector: 'app-edge-of-town',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    SceneFooterComponent,
+    CharacterCardComponent,
+    ConfirmationDialogComponent
+  ],
   templateUrl: './edge-of-town.component.html',
   styleUrls: ['./edge-of-town.component.scss']
 })
 export class EdgeOfTownComponent implements OnInit {
-  readonly menuItems: MenuItem[] = [
-    {
-      id: 'training-grounds',
-      label: 'TRAINING GROUNDS',
-      enabled: true,
-      shortcut: 'T'
-    },
-    {
-      id: 'maze',
-      label: 'MAZE',
-      enabled: true,
-      shortcut: 'M'
-    },
-    {
-      id: 'castle',
-      label: 'CASTLE',
-      enabled: true,
-      shortcut: 'C'
-    },
-    {
-      id: 'utilities',
-      label: 'UTILITIES',
-      enabled: true,
-      shortcut: 'U'
-    },
-    {
-      id: 'leave-game',
-      label: 'LEAVE GAME',
-      enabled: true,
-      shortcut: 'L'
-    }
-  ];
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const hasParty = (this.currentParty().members?.length ?? 0) > 0;
+
+    return [
+      { id: 'training-grounds', label: 'Training Grounds', shortcut: 'T', enabled: true },
+      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: hasParty },
+      { id: 'utilities', label: 'Utilities', shortcut: 'U', enabled: true },
+      { id: 'castle', label: 'Return to Castle', shortcut: 'ESC', enabled: true },
+      { id: 'leave-game', label: 'Leave Game', shortcut: 'L', enabled: true }
+    ];
+  });
 
   // Party display
   readonly currentParty = computed(() => this.gameState.party());
@@ -70,10 +60,13 @@ export class EdgeOfTownComponent implements OnInit {
       .filter((char): char is Character => char !== undefined);
   });
 
-  // Error and confirmation state
-  readonly errorMessage = signal<string | null>(null);
-  readonly infoMessage = signal<string | null>(null);
-  readonly showExitConfirmation = signal(false);
+  // Message display state (unified for error/info/success)
+  readonly messageText = signal<string | null>(null);
+  readonly messageType = signal<'error' | 'info' | 'success'>('info');
+
+  // Confirmation dialog state
+  readonly showLeaveConfirmation = signal(false);
+  readonly leaveConfirmationMessage = signal('Save and quit the game?');
 
   constructor(
     private gameState: GameStateService,
@@ -89,9 +82,39 @@ export class EdgeOfTownComponent implements OnInit {
     }));
   }
 
-  handleMenuSelect(itemId: string): void {
-    // Clear previous errors
-    this.errorMessage.set(null);
+  /**
+   * Handle keyboard shortcuts
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // ESC - Go back to castle menu
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.router.navigate(['/castle-menu']);
+    }
+  }
+
+  /**
+   * Handle character card action clicks
+   */
+  handleActionClick(event: CharacterActionEvent): void {
+    if (event.actionType === 'inspect') {
+      this.handleInspectCharacter(event.characterId);
+    }
+  }
+
+  private handleInspectCharacter(charId: string): void {
+    this.router.navigate(['/character-inspection'], {
+      queryParams: {
+        characterId: charId,
+        returnTo: 'edge-of-town'
+      }
+    });
+  }
+
+  handleFooterAction(itemId: string): void {
+    // Clear previous messages
+    this.messageText.set(null);
 
     switch (itemId) {
       case 'training-grounds':
@@ -102,16 +125,16 @@ export class EdgeOfTownComponent implements OnInit {
         this.enterMaze();
         break;
 
-      case 'castle':
-        this.router.navigate(['/castle-menu']);
-        break;
-
       case 'utilities':
         this.router.navigate(['/utilities']);
         break;
 
+      case 'castle':
+        this.router.navigate(['/castle-menu']);
+        break;
+
       case 'leave-game':
-        this.showExitConfirmation.set(true);
+        this.showLeaveConfirmation.set(true);
         break;
     }
   }
@@ -121,7 +144,8 @@ export class EdgeOfTownComponent implements OnInit {
 
     // Validate party exists
     if (party.members.length === 0) {
-      this.errorMessage.set('You need a party to enter the maze (visit Tavern)');
+      this.messageText.set('You need a party to enter the maze (visit Tavern)');
+      this.messageType.set('error');
       return;
     }
 
@@ -129,7 +153,7 @@ export class EdgeOfTownComponent implements OnInit {
     this.router.navigate(['/camp']);
   }
 
-  async confirmExit(): Promise<void> {
+  async confirmLeaveGame(): Promise<void> {
     // Save game state
     const state = this.gameState.state();
     await this.saveService.saveGame(state);
@@ -141,11 +165,12 @@ export class EdgeOfTownComponent implements OnInit {
 
     // If window.close() fails (most browsers), show a message
     // informing the user they can safely close the tab
-    this.showExitConfirmation.set(false);
-    this.infoMessage.set('Game saved successfully. You can now close this window.');
+    this.showLeaveConfirmation.set(false);
+    this.messageText.set('Game saved successfully. You can now close this window.');
+    this.messageType.set('success');
   }
 
-  cancelExit(): void {
-    this.showExitConfirmation.set(false);
+  cancelLeaveGame(): void {
+    this.showLeaveConfirmation.set(false);
   }
 }

@@ -1,47 +1,52 @@
 <div class="edge-of-town">
-  <header>
-    <h1>EDGE OF TOWN</h1>
-  </header>
+  <app-scene-title title="EDGE OF TOWN" [showPartyGold]="true" />
 
-  <main>
-    <div class="menu-section">
-      <app-menu
-        [items]="menuItems"
-        (select)="handleMenuSelect($event)"
-      />
+  <section class="party-section">
+    <h2>PARTY</h2>
+    <div class="party-members">
+      @for (char of partyCharacters(); track char.id) {
+        <app-character-card
+          [character]="char"
+          [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
+          [actions]="[{ type: 'inspect' }]"
+          variant="default"
+          (actionClick)="handleActionClick($event)">
+        </app-character-card>
+      }
+      @empty {
+        <p class="no-party">No party members</p>
+      }
     </div>
+  </section>
 
-    <div class="party-section">
-      <h2>CURRENT PARTY:</h2>
-      <ul *ngIf="partyCharacters().length > 0; else noParty">
-        <li *ngFor="let char of partyCharacters(); let i = index">
-          {{ i + 1 }}. {{ char.name }} - {{ char.class }} (Lv{{ char.level }})
-        </li>
-      </ul>
-      <ng-template #noParty>
-        <p class="no-party">No party formed</p>
-      </ng-template>
-    </div>
+  <main class="content-area">
+    <!-- Main content area (empty for this scene) -->
   </main>
 
-  <!-- Error message -->
-  <div class="error-message" *ngIf="errorMessage()">
-    <p>{{ errorMessage() }}</p>
-  </div>
-
-  <!-- Info message -->
-  <div class="info-message" *ngIf="infoMessage()">
-    <p>{{ infoMessage() }}</p>
-  </div>
-
-  <!-- Exit confirmation -->
-  <div class="confirmation-dialog" *ngIf="showExitConfirmation()">
-    <div class="dialog-content">
-      <p>Save and quit?</p>
-      <div class="dialog-actions">
-        <button (click)="confirmExit()">(Y)es</button>
-        <button (click)="cancelExit()">(N)o</button>
-      </div>
+  <!-- Message Display Area -->
+  @if (messageText()) {
+    <div class="message-area" [class.error]="messageType() === 'error'"
+         [class.info]="messageType() === 'info'"
+         [class.success]="messageType() === 'success'">
+      <p>{{ messageText() }}</p>
     </div>
-  </div>
+  }
+
+  <!-- Footer Navigation -->
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Leave Game Confirmation Dialog -->
+  @if (showLeaveConfirmation()) {
+    <app-confirmation-dialog
+      [visible]="showLeaveConfirmation()"
+      [message]="leaveConfirmationMessage()"
+      [yesLabel]="'(Enter/Y) Yes'"
+      [noLabel]="'(Esc/N) No'"
+      (confirmed)="confirmLeaveGame()"
+      (cancelled)="cancelLeaveGame()">
+    </app-confirmation-dialog>
+  }
 </div>
