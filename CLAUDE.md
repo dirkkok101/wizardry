@@ -302,6 +302,16 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
   - **89.07% code coverage** (exceeds 80% target)
   - See `docs/implementation/phase-6-summary.md` for full details
 
+- **Temple Scene Modernization** (Complete)
+  - **Architectural Updates**: Migrated to single-state architecture with SceneFooterComponent
+  - **Components**: SceneTitleComponent + character card grid + SceneFooterComponent + ConfirmationDialogComponent
+  - **State Management**: Removed multi-step view machine, uses computed signals for menu items
+  - **Service Integration**: Auto-selects character when only one needs service, uses party gold pool
+  - **Testing**: 14 component tests, 1 integration test for full service flow
+  - **Documentation**: Updated ASCII mockups, navigation tables, and state diagrams
+  - **791 total tests passing** in **20 seconds**
+  - See `docs/plans/2025-11-05-temple-scene-modernization.md` for implementation plan
+
 **Next Steps**:
 - **Phase 7**: Dungeon navigation and combat system
   - Camp scene (pre-dungeon staging)
