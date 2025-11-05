@@ -263,4 +263,40 @@ describe('TempleComponent', () => {
       expect(component.showConfirmation()).toBe(false);
     });
   });
+
+  describe('confirmService', () => {
+    it('executes Cure Poison service and updates state', () => {
+      component.handleFooterAction('cure-poison');
+      const initialStatus = gameState.state().roster.get('char-1')?.status;
+      expect(initialStatus).toBe(CharacterStatus.POISONED);
+
+      component.confirmService();
+
+      const updatedStatus = gameState.state().roster.get('char-1')?.status;
+      expect(updatedStatus).toBe(CharacterStatus.OK);
+      expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('deducts gold from party', () => {
+      const initialGold = gameState.state().party.gold;
+      component.handleFooterAction('cure-poison');
+
+      component.confirmService();
+
+      const finalGold = gameState.state().party.gold;
+      expect(finalGold).toBeLessThan(initialGold);
+    });
+
+    it('shows error when insufficient gold', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, gold: 0 }
+      }));
+
+      component.handleFooterAction('cure-poison');
+      component.confirmService();
+
+      expect(component.errorMessage()).toContain('Cannot afford');
+    });
+  });
 });

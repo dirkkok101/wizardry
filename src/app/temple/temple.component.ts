@@ -144,6 +144,44 @@ export class TempleComponent implements OnInit {
     this.pendingService.set(null);
   }
 
+  confirmService(): void {
+    const pending = this.pendingService();
+    if (!pending) return;
+
+    const state = this.gameState.state();
+    const character = state.roster.get(pending.characterId);
+    if (!character) {
+      this.errorMessage.set('Character not found');
+      this.cancelService();
+      return;
+    }
+
+    // Check gold
+    const tithe = TempleService.calculateTithe(character, pending.type);
+    const party = this.currentParty();
+    if (party.gold < tithe) {
+      this.errorMessage.set(`Cannot afford service. Need ${tithe} gold.`);
+      this.cancelService();
+      return;
+    }
+
+    // Execute service
+    const result = TempleService.performService(state, pending.characterId, pending.type);
+
+    if (result.success && result.state) {
+      this.gameState.updateState(() => result.state!);
+      this.errorMessage.set(null);
+    } else if (result.error && result.state) {
+      // Service failed but state changed (resurrection failure)
+      this.gameState.updateState(() => result.state!);
+      this.errorMessage.set(result.error);
+    } else {
+      this.errorMessage.set(result.error || 'Service failed');
+    }
+
+    this.cancelService();
+  }
+
   private getServiceTypeFromId(id: string): ServiceType | null {
     switch (id) {
       case 'cure-poison': return ServiceType.CURE_POISON;
