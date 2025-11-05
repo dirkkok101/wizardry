@@ -60,9 +60,11 @@ export class CharacterInspectionComponent {
 
   // Get party members for trading
   readonly partyMembers = computed(() => {
-    const party = this.gameState.party();
+    const state = this.gameState.state();
     const currentId = this.characterId();
-    return party.filter(c => c.id !== currentId);
+    return state.party.members
+      .map(id => state.roster.get(id))
+      .filter((char): char is Character => char !== undefined && char.id !== currentId);
   });
 
   // Equipment slots
