@@ -127,6 +127,14 @@ describe('TempleComponent', () => {
       expect(component.confirmationMessage()).toContain('poison');
     });
 
+    it('shows service cost in confirmation message', () => {
+      component.handleFooterAction('cure-poison');
+
+      // Character is level 5, cure poison base cost is 10
+      // Expected cost: 10 * 5 = 50 gold
+      expect(component.confirmationMessage()).toContain('50 gold');
+    });
+
     it('hides confirmation when cancelled', () => {
       component.handleFooterAction('cure-poison');
       expect(component.showConfirmation()).toBe(true);
@@ -134,6 +142,29 @@ describe('TempleComponent', () => {
       component.cancelService();
 
       expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('clears error message when selecting service', () => {
+      // Set insufficient gold to trigger an error
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, gold: 0 }
+      }));
+
+      component.handleFooterAction('cure-poison');
+      component.confirmService();
+
+      expect(component.errorMessage()).toContain('Cannot afford');
+
+      // Restore gold and select same service - error should be cleared
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, gold: 500 }
+      }));
+
+      component.handleFooterAction('cure-poison');
+
+      expect(component.errorMessage()).toBeNull();
     });
   });
 

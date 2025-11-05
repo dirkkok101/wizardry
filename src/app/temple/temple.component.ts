@@ -108,6 +108,9 @@ export class TempleComponent implements OnInit {
   }
 
   handleFooterAction(itemId: string): void {
+    // Clear previous error messages
+    this.errorMessage.set(null);
+
     if (itemId === 'return') {
       this.router.navigate(['/castle-menu']);
       return;
@@ -130,8 +133,9 @@ export class TempleComponent implements OnInit {
 
     if (matchingCharacters.length === 1) {
       const char = matchingCharacters[0];
+      const tithe = TempleService.calculateTithe(char, serviceType);
       this.pendingService.set({ type: serviceType, characterId: char.id });
-      this.confirmationMessage.set(`${this.getServiceActionText(serviceType)} ${char.name}?`);
+      this.confirmationMessage.set(`${this.getServiceActionText(serviceType)} ${char.name}? (Cost: ${tithe} gold)`);
       this.showConfirmation.set(true);
     }
   }
