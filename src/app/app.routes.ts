@@ -9,6 +9,7 @@ import { TrainingGroundsComponent } from './training-grounds/training-grounds.co
 import { CharacterCreationComponent } from './character-creation/character-creation.component';
 import { CharacterInspectionComponent } from './character-inspection/character-inspection.component';
 import { SpellCastingComponent } from './spell-casting/spell-casting.component';
+import { MazeComponent } from './maze/maze.component';
 
 export const routes: Routes = [
   {
@@ -50,6 +51,10 @@ export const routes: Routes = [
   {
     path: 'spell-casting',
     component: SpellCastingComponent
+  },
+  {
+    path: 'maze',
+    component: MazeComponent
   },
   {
     path: '**',
