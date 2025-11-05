@@ -6,6 +6,7 @@ import { GameState } from '../types/GameState'
 import { SceneType } from '../types/SceneType'
 import { RaceService } from './RaceService'
 import { ClassService } from './ClassService'
+import { ItemDataService } from './ItemDataService'
 
 let gameState: GameState | null = null
 
@@ -58,7 +59,8 @@ async function initializeGame(): Promise<void> {
   // Initialize data services in parallel
   await Promise.all([
     RaceService.initialize(),
-    ClassService.initialize()
+    ClassService.initialize(),
+    ItemDataService.loadAllItems()
   ])
 
   console.log('Game data initialized successfully')
