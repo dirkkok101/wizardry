@@ -242,4 +242,25 @@ describe('TempleComponent', () => {
       expect(curePoison?.enabled).toBe(false);
     });
   });
+
+  describe('confirmation dialog', () => {
+    it('shows confirmation when service selected', () => {
+      expect(component.showConfirmation()).toBe(false);
+
+      component.handleFooterAction('cure-poison');
+
+      expect(component.showConfirmation()).toBe(true);
+      expect(component.confirmationMessage()).toContain('Gandalf');
+      expect(component.confirmationMessage()).toContain('poison');
+    });
+
+    it('hides confirmation when cancelled', () => {
+      component.handleFooterAction('cure-poison');
+      expect(component.showConfirmation()).toBe(true);
+
+      component.cancelService();
+
+      expect(component.showConfirmation()).toBe(false);
+    });
+  });
 });

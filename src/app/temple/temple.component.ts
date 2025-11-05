@@ -33,7 +33,15 @@ export class TempleComponent implements OnInit {
     { id: 'castle', label: 'RETURN TO CASTLE', enabled: true, shortcut: 'C' }
   ];
 
-  // View state
+  // Confirmation dialog state
+  readonly showConfirmation = signal(false);
+  readonly confirmationMessage = signal('');
+  private pendingService = signal<{
+    type: ServiceType;
+    characterId: string;
+  } | null>(null);
+
+  // Temporary - will be removed in Task 6
   readonly currentView = signal<TempleView>('main');
   readonly selectedCharacterId = signal<string | null>(null);
   readonly selectedService = signal<ServiceType | null>(null);
@@ -99,6 +107,61 @@ export class TempleComponent implements OnInit {
       ...state,
       currentScene: SceneType.TEMPLE
     }));
+  }
+
+  handleFooterAction(itemId: string): void {
+    if (itemId === 'return') {
+      this.router.navigate(['/castle-menu']);
+      return;
+    }
+
+    // Service selection
+    const serviceType = this.getServiceTypeFromId(itemId);
+    if (!serviceType) return;
+
+    const afflicted = this.afflictedCharacters();
+    const matchingCharacters = afflicted.filter(c => {
+      switch (serviceType) {
+        case ServiceType.CURE_POISON: return c.status === CharacterStatus.POISONED;
+        case ServiceType.CURE_PARALYSIS: return c.status === CharacterStatus.PARALYZED;
+        case ServiceType.RESURRECT: return c.status === CharacterStatus.DEAD;
+        case ServiceType.RESTORE: return c.status === CharacterStatus.ASHES;
+        default: return false;
+      }
+    });
+
+    if (matchingCharacters.length === 1) {
+      const char = matchingCharacters[0];
+      this.pendingService.set({ type: serviceType, characterId: char.id });
+      this.confirmationMessage.set(`${this.getServiceActionText(serviceType)} ${char.name}?`);
+      this.showConfirmation.set(true);
+    }
+  }
+
+  cancelService(): void {
+    this.showConfirmation.set(false);
+    this.confirmationMessage.set('');
+    this.pendingService.set(null);
+  }
+
+  private getServiceTypeFromId(id: string): ServiceType | null {
+    switch (id) {
+      case 'cure-poison': return ServiceType.CURE_POISON;
+      case 'cure-paralysis': return ServiceType.CURE_PARALYSIS;
+      case 'resurrect': return ServiceType.RESURRECT;
+      case 'restore': return ServiceType.RESTORE;
+      default: return null;
+    }
+  }
+
+  private getServiceActionText(service: ServiceType): string {
+    switch (service) {
+      case ServiceType.CURE_POISON: return 'Cure poison for';
+      case ServiceType.CURE_PARALYSIS: return 'Cure paralysis for';
+      case ServiceType.RESURRECT: return 'Attempt to resurrect';
+      case ServiceType.RESTORE: return 'Attempt to restore';
+      default: return 'Service for';
+    }
   }
 
   handleMenuSelect(itemId: string): void {
