@@ -10,6 +10,7 @@ import { CharacterCreationComponent } from './character-creation/character-creat
 import { CharacterInspectionComponent } from './character-inspection/character-inspection.component';
 import { SpellCastingComponent } from './spell-casting/spell-casting.component';
 import { MazeComponent } from './maze/maze.component';
+import { CampComponent } from './camp/camp.component';
 
 export const routes: Routes = [
   {
@@ -55,6 +56,10 @@ export const routes: Routes = [
   {
     path: 'maze',
     component: MazeComponent
+  },
+  {
+    path: 'camp',
+    component: CampComponent
   },
   {
     path: '**',
