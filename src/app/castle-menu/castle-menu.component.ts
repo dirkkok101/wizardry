@@ -1,7 +1,8 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
+import { SaveService } from '../../services/SaveService';
 import { MenuItem } from '../../components/menu/menu.component';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
@@ -18,7 +19,8 @@ import { Character } from '../../types/Character';
  * - Temple (healing/resurrection)
  * - Shop (equipment)
  * - Inn (rest/level up)
- * - Edge of Town (dungeon access)
+ * - Training Grounds (character creation)
+ * - Maze (dungeon access, requires party, triggers auto-save)
  */
 @Component({
   selector: 'app-castle-menu',
@@ -47,11 +49,12 @@ export class CastleMenuComponent implements OnInit {
     const hasParty = (this.currentParty().members?.length ?? 0) > 0;
 
     return [
-      { id: 'tavern', label: 'Tavern', shortcut: 'G', enabled: true },
+      { id: 'tavern', label: 'Tavern', shortcut: 'A', enabled: true },
       { id: 'temple', label: 'Temple', shortcut: 'T', enabled: true },
-      { id: 'shop', label: 'Shop', shortcut: 'B', enabled: true },
-      { id: 'inn', label: 'Inn', shortcut: 'A', enabled: true },
-      { id: 'edge', label: 'Edge of Town', shortcut: 'E', enabled: hasParty }
+      { id: 'shop', label: 'Shop', shortcut: 'S', enabled: true },
+      { id: 'inn', label: 'Inn', shortcut: 'I', enabled: true },
+      { id: 'training', label: 'Training Grounds', shortcut: 'G', enabled: true },
+      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: hasParty }
     ];
   });
 
@@ -94,11 +97,29 @@ export class CastleMenuComponent implements OnInit {
       case 'inn':
         this.router.navigate(['/inn']);
         break;
-      case 'edge':
-        if ((this.currentParty().members?.length ?? 0) > 0) {
-          this.router.navigate(['/edge-of-town']);
-        }
+      case 'training':
+        this.router.navigate(['/training-grounds']);
+        break;
+      case 'maze':
+        this.navigateToMaze();
         break;
     }
+  }
+
+  async navigateToMaze(): Promise<void> {
+    const party = this.currentParty();
+
+    // Validate party exists and has members
+    if (!party || party.members.length === 0) {
+      console.warn('Cannot enter maze without party members');
+      return;
+    }
+
+    // Trigger auto-save before entering dungeon
+    const saveService = inject(SaveService);
+    await saveService.saveGame(this.gameState.state(), 1);
+
+    // Navigate to Camp (pre-dungeon staging area)
+    this.router.navigate(['/camp']);
   }
 }
