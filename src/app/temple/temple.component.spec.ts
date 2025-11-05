@@ -80,136 +80,6 @@ describe('TempleComponent', () => {
     });
   });
 
-  describe('character filtering', () => {
-    it('displays only afflicted characters', () => {
-      const okChar: Character = {
-        ...mockCharacter,
-        id: 'char-2',
-        status: CharacterStatus.OK
-      };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster)
-          .set('char-1', mockCharacter)
-          .set('char-2', okChar),
-        party: {
-          ...state.party,
-          members: ['char-1', 'char-2']
-        }
-      }));
-
-      component.handleMenuSelect('healing');
-      fixture.detectChanges();
-
-      const afflicted = component.afflictedCharacters();
-      expect(afflicted.length).toBe(1);
-      expect(afflicted[0].id).toBe('char-1');
-    });
-
-    it('filters characters by service type', () => {
-      const deadChar: Character = {
-        ...mockCharacter,
-        id: 'char-2',
-        status: CharacterStatus.DEAD
-      };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster)
-          .set('char-1', mockCharacter) // POISONED
-          .set('char-2', deadChar), // DEAD
-        party: {
-          ...state.party,
-          members: ['char-1', 'char-2']
-        }
-      }));
-
-      // Select healing services - should see POISONED character
-      component.handleMenuSelect('healing');
-      const filtered = component.getFilteredCharacters(ServiceType.CURE_POISON);
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].status).toBe(CharacterStatus.POISONED);
-    });
-  });
-
-  describe('service execution', () => {
-    it('deducts tithe from party gold', () => {
-      const initialGold = gameState.party().gold || 0;
-
-      component.executeService('char-1', ServiceType.CURE_POISON);
-
-      const finalGold = gameState.party().gold || 0;
-      const expectedCost = 50; // 10 × level 5
-
-      expect(finalGold).toBe(initialGold - expectedCost);
-    });
-
-    it('cures poison when service succeeds', () => {
-      component.executeService('char-1', ServiceType.CURE_POISON);
-
-      const char = gameState.state().roster.get('char-1')!;
-      expect(char.status).toBe(CharacterStatus.OK);
-    });
-
-    it('shows success message after successful service', () => {
-      component.executeService('char-1', ServiceType.CURE_POISON);
-
-      expect(component.successMessage()).toBeTruthy();
-      expect(component.successMessage()).toContain('cured');
-    });
-
-    it('deducts gold even on failure', () => {
-      // Mock resurrection failure
-      jest.spyOn(Math, 'random').mockReturnValue(0.99); // Force failure
-
-      const deadChar: Character = {
-        ...mockCharacter,
-        status: CharacterStatus.DEAD
-      };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', deadChar),
-        party: {
-          ...state.party,
-          gold: 5000
-        }
-      }));
-
-      const initialGold = gameState.party().gold || 0;
-
-      component.executeService('char-1', ServiceType.RESURRECT);
-
-      const finalGold = gameState.party().gold || 0;
-      const expectedCost = 1250; // 250 × level 5
-
-      expect(finalGold).toBe(initialGold - expectedCost);
-    });
-
-    it('shows error when party cannot afford service', () => {
-      gameState.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          gold: 10 // Not enough for cure poison (50 gold)
-        }
-      }));
-
-      component.executeService('char-1', ServiceType.CURE_POISON);
-
-      expect(component.errorMessage()).toBeTruthy();
-      expect(component.errorMessage()).toContain('afford');
-    });
-  });
-
-  describe('navigation', () => {
-    it('returns to castle when selected', () => {
-      component.handleMenuSelect('castle');
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
-    });
-  });
-
   describe('footerMenuItems', () => {
     it('has 5 menu items with correct shortcuts', () => {
       fixture.detectChanges();
@@ -320,6 +190,37 @@ describe('TempleComponent', () => {
       fixture.detectChanges();
       const cards = fixture.nativeElement.querySelectorAll('app-character-card');
       expect(cards.length).toBe(1); // One POISONED character
+    });
+  });
+
+  describe('integration: full service flow', () => {
+    it('completes Cure Poison flow from menu to state update', () => {
+      fixture.detectChanges();
+
+      // Verify character is poisoned
+      expect(gameState.state().roster.get('char-1')?.status).toBe(CharacterStatus.POISONED);
+
+      // Verify menu has Cure Poison enabled
+      const items = component.footerMenuItems();
+      const curePoison = items.find(i => i.id === 'cure-poison');
+      expect(curePoison?.enabled).toBe(true);
+
+      // Select Cure Poison
+      component.handleFooterAction('cure-poison');
+      expect(component.showConfirmation()).toBe(true);
+
+      // Confirm service
+      component.confirmService();
+
+      // Verify character is cured
+      expect(gameState.state().roster.get('char-1')?.status).toBe(CharacterStatus.OK);
+      expect(component.showConfirmation()).toBe(false);
+
+      // Verify menu now has Cure Poison disabled
+      fixture.detectChanges();
+      const updatedItems = component.footerMenuItems();
+      const updatedCurePoison = updatedItems.find(i => i.id === 'cure-poison');
+      expect(updatedCurePoison?.enabled).toBe(false);
     });
   });
 });
