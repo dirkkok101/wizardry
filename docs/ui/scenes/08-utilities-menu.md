@@ -1,5 +1,7 @@
 # Utilities Menu
 
+> **DEPRECATED (2025-11-05):** This scene was removed in the Castle Menu Navigation Simplification refactor. Save/load functionality has been removed in favor of auto-save system only. This documentation is preserved for historical reference only.
+
 ## Overview
 
 **Description:** System utilities for character name changes and party recovery. Provides administrative functions not available elsewhere.
