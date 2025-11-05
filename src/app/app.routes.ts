@@ -8,6 +8,7 @@ import { ShopComponent } from './shop/shop.component';
 import { TrainingGroundsComponent } from './training-grounds/training-grounds.component';
 import { CharacterCreationComponent } from './character-creation/character-creation.component';
 import { CharacterInspectionComponent } from './character-inspection/character-inspection.component';
+import { SpellCastingComponent } from './spell-casting/spell-casting.component';
 
 export const routes: Routes = [
   {
@@ -45,6 +46,10 @@ export const routes: Routes = [
   {
     path: 'character-inspection',
     component: CharacterInspectionComponent
+  },
+  {
+    path: 'spell-casting',
+    component: SpellCastingComponent
   },
   {
     path: '**',

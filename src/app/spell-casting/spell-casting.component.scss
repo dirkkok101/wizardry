@@ -1,0 +1,23 @@
+.spell-casting-stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 1rem;
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .character-id {
+    font-style: italic;
+    color: #666;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+}
