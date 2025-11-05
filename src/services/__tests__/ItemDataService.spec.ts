@@ -230,5 +230,40 @@ describe('ItemDataService', () => {
       // Restore
       jest.spyOn(Promise, 'all').mockRestore();
     });
+
+    it('tracks failed item loads', async () => {
+      await ItemDataService.loadAllItems();
+
+      const failedItems = ItemDataService.getFailedItems();
+      const loadedCount = ItemDataService.getLoadedCount();
+      const totalCount = ItemDataService.getTotalCount();
+
+      // We only mock 2 items, so most will fail
+      expect(loadedCount).toBe(2); // long_sword and plate_mail
+      expect(failedItems.size).toBeGreaterThan(0);
+      expect(totalCount).toBe(98); // Total items in manifest
+
+      // Check that failed items have error messages
+      for (const [itemId, errorMsg] of failedItems.entries()) {
+        expect(typeof itemId).toBe('string');
+        expect(typeof errorMsg).toBe('string');
+        expect(errorMsg.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('clears failed items on reload', async () => {
+      // First load with some failures
+      await ItemDataService.loadAllItems();
+      const firstFailCount = ItemDataService.getFailedItems().size;
+      expect(firstFailCount).toBeGreaterThan(0);
+
+      // Reset and reload
+      ItemDataService['loaded'] = false;
+      await ItemDataService.loadAllItems();
+
+      // Failed items should be cleared and recounted
+      const secondFailCount = ItemDataService.getFailedItems().size;
+      expect(secondFailCount).toBe(firstFailCount); // Same failures expected
+    });
   });
 });

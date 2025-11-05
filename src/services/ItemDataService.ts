@@ -49,6 +49,7 @@ export class ItemDataService {
   private static loaded = false;
   private static loading = false;
   private static loadError: Error | null = null;
+  private static failedItems: Map<string, string> = new Map(); // itemId → error message
 
   /**
    * Load all item data from individual JSON files in /assets/items/
@@ -60,6 +61,7 @@ export class ItemDataService {
 
     this.loading = true;
     this.loadError = null;
+    this.failedItems.clear();
 
     try {
       const loadPromises = ITEM_IDS.map(async (itemId) => {
@@ -73,14 +75,25 @@ export class ItemDataService {
           const item = this.transformJsonToItem(jsonData);
           this.itemsCache.set(item.id, item);
         } catch (error) {
-          console.warn(`Failed to load item ${itemId}:`, error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          this.failedItems.set(itemId, errorMessage);
+          console.warn(`Failed to load item ${itemId}:`, errorMessage);
           // Continue loading other items even if one fails
         }
       });
 
       await Promise.all(loadPromises);
       this.loaded = true;
-      console.log(`Loaded ${this.itemsCache.size}/${ITEM_IDS.length} items`);
+
+      const successCount = this.itemsCache.size;
+      const failCount = this.failedItems.size;
+      const totalCount = ITEM_IDS.length;
+
+      if (failCount > 0) {
+        console.warn(`Loaded ${successCount}/${totalCount} items (${failCount} failed)`);
+      } else {
+        console.log(`Loaded ${successCount}/${totalCount} items`)
+      }
     } catch (error) {
       this.loadError = error as Error;
       throw error;
@@ -241,5 +254,27 @@ export class ItemDataService {
    */
   static getError(): Error | null {
     return this.loadError;
+  }
+
+  /**
+   * Get map of failed item loads
+   * @returns Map of itemId → error message for items that failed to load
+   */
+  static getFailedItems(): ReadonlyMap<string, string> {
+    return this.failedItems;
+  }
+
+  /**
+   * Get count of successfully loaded items
+   */
+  static getLoadedCount(): number {
+    return this.itemsCache.size;
+  }
+
+  /**
+   * Get total count of items in manifest
+   */
+  static getTotalCount(): number {
+    return ITEM_IDS.length;
   }
 }
