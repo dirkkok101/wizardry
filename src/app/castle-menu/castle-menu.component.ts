@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
@@ -60,7 +60,8 @@ export class CastleMenuComponent implements OnInit {
 
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private saveService: SaveService
   ) {}
 
   ngOnInit(): void {
@@ -116,8 +117,7 @@ export class CastleMenuComponent implements OnInit {
     }
 
     // Trigger auto-save before entering dungeon
-    const saveService = inject(SaveService);
-    await saveService.saveGame(this.gameState.state(), 1);
+    await this.saveService.saveGame(this.gameState.state(), 1);
 
     // Navigate to Camp (pre-dungeon staging area)
     this.router.navigate(['/camp']);
