@@ -12,8 +12,9 @@
         <app-character-card
           [character]="char"
           [visibleFields]="['class', 'level', 'hp', 'ac']"
-          [actions]="[]"
-          variant="default">
+          [actions]="getActionsForCharacter(char)"
+          variant="default"
+          (actionClick)="handleActionClick($event)">
         </app-character-card>
       }
       @empty {
@@ -21,4 +22,8 @@
       }
     </div>
   </section>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)" />
 </div>
