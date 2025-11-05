@@ -171,7 +171,7 @@ export class CharacterInspectionComponent {
     try {
       const result = InventoryService.transferItem(char, recipient, pending.item.id);
       this.updateCharacter(result.from);
-      this.updateRosterCharacter(result.to);
+      this.updateCharacter(result.to);
       this.showTradeDialog.set(false);
       this.pendingAction.set(null);
       this.showMessage(`Traded ${pending.item.name} to ${recipient.name}`, 'success');
@@ -203,13 +203,6 @@ export class CharacterInspectionComponent {
   }
 
   private updateCharacter(updated: Character): void {
-    this.gameState.updateState(state => ({
-      ...state,
-      roster: new Map(state.roster).set(updated.id, updated)
-    }));
-  }
-
-  private updateRosterCharacter(updated: Character): void {
     this.gameState.updateState(state => ({
       ...state,
       roster: new Map(state.roster).set(updated.id, updated)

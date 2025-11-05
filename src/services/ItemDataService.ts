@@ -214,11 +214,4 @@ export class ItemDataService {
     return Array.from(this.itemsCache.values())
       .filter(item => item.type === type);
   }
-
-  /**
-   * Get inventory count for display
-   */
-  static getInventoryCount(current: number): { current: number; max: number } {
-    return { current, max: 8 };
-  }
 }
