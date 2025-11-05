@@ -118,8 +118,8 @@ export class ItemDataService {
       ? json.usableBy.map((cls: string) => this.mapClassString(cls))
       : undefined;
 
-    // Transform damage (use max value from damageRoll)
-    const damage = json.damageRoll?.max;
+    // Transform damage (use max value from damage roll)
+    const damage = json.damage?.max;
 
     // Transform defense (ac in JSON)
     const defense = json.ac;
@@ -151,7 +151,7 @@ export class ItemDataService {
       armorType: json.armorType,
       consumableType: json.consumableType,
       cost: json.cost,
-      damageRoll: json.damageRoll,
+      damageRoll: json.damage, // JSON uses "damage" field
       ac: json.ac,
       usableBy: json.usableBy,
       enhancement: json.enhancement,

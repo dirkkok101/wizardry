@@ -10,7 +10,7 @@ describe('ItemDataService', () => {
       name: 'Long Sword',
       category: 'weapon',
       weaponType: 'sword',
-      damageRoll: { dice: '1d8', min: 1, max: 8 },
+      damage: { dice: '1d8', min: 1, max: 8 }, // Real JSON uses "damage" not "damageRoll"
       cost: 25,
       usableBy: ['fighter', 'lord', 'samurai'],
       cursed: false
@@ -79,7 +79,7 @@ describe('ItemDataService', () => {
       expect(sword?.type).toBe(ItemType.WEAPON);
       expect(sword?.slot).toBe(ItemSlot.WEAPON);
       expect(sword?.price).toBe(25); // Transformed from cost
-      expect(sword?.damage).toBe(8); // Transformed from damageRoll.max
+      expect(sword?.damage).toBe(8); // Transformed from damage.max
 
       // Verify runtime defaults
       expect(sword?.identified).toBe(false);
