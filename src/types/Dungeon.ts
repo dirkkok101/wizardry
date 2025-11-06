@@ -1,0 +1,100 @@
+// Dungeon navigation and tile types
+
+export type Direction = 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
+export type WallType = 'open' | 'wall' | 'door' | 'secret'
+export type TileType =
+  | 'stairs_up'
+  | 'stairs_down'
+  | 'teleporter'
+  | 'spinner'
+  | 'chute'
+  | 'darkness_zone_start'
+  | 'anti_magic'
+  | 'searchable'
+  | 'fixed_encounter'
+  | 'message'
+  | 'elevator'
+
+export interface Position {
+  x: number          // 0-19
+  y: number          // 0-19
+  facing: Direction
+}
+
+export interface TileWalls {
+  north: WallType
+  east: WallType
+  south: WallType
+  west: WallType
+}
+
+export interface Destination {
+  type?: 'castle' | 'level'
+  level?: number
+  x?: number
+  y?: number
+}
+
+export interface TileData {
+  x: number
+  y: number
+  walls: TileWalls
+  type?: TileType
+  destination?: Destination
+  message?: string
+  item?: string
+  promptSearch?: boolean
+  encounterId?: string
+  repeatable?: boolean
+  cannotFlee?: boolean
+  isOneWay?: boolean
+  destinations?: Destination[]  // For elevator
+}
+
+export interface LevelData {
+  level: number
+  name: string
+  size: {
+    width: number
+    height: number
+  }
+  startPosition: {
+    x: number
+    y: number
+    facing: string  // lowercase in JSON, convert to Direction
+  }
+  edgeWrapping: boolean
+  tiles: TileData[]
+  encounterRate: number
+  encounterTable: string
+}
+
+export interface DungeonState {
+  currentLevel: number
+  position: Position
+  lightActive: boolean
+  lightRadius: number
+  visitedTiles: Set<string>        // "level-x-y"
+  defeatedEncounters: string[]     // encounter IDs
+}
+
+export interface EncounterTable {
+  levelId: string
+  encounterRate: number
+  monsters: MonsterEntry[]
+}
+
+export interface MonsterEntry {
+  monsterId: string
+  weight: number
+}
+
+export interface MovementValidation {
+  allowed: boolean
+  reason?: string
+}
+
+export interface SpecialTileResult {
+  newState: any  // GameState (avoid circular import)
+  messages: string[]
+}
