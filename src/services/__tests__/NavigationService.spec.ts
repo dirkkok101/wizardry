@@ -61,4 +61,47 @@ describe('NavigationService', () => {
       expect(newState.dungeon!.position.x).toBe(19)
     })
   })
+
+  describe('turnLeft', () => {
+    it('rotates from NORTH to WEST', () => {
+      const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
+      const newState = NavigationService.turnLeft(state)
+
+      expect(newState.dungeon!.position.facing).toBe('WEST')
+    })
+
+    it('rotates from WEST to SOUTH', () => {
+      const state = createTestGameState({ x: 10, y: 10, facing: 'WEST' })
+      const newState = NavigationService.turnLeft(state)
+
+      expect(newState.dungeon!.position.facing).toBe('SOUTH')
+    })
+  })
+
+  describe('turnRight', () => {
+    it('rotates from NORTH to EAST', () => {
+      const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
+      const newState = NavigationService.turnRight(state)
+
+      expect(newState.dungeon!.position.facing).toBe('EAST')
+    })
+
+    it('rotates from EAST to SOUTH', () => {
+      const state = createTestGameState({ x: 10, y: 10, facing: 'EAST' })
+      const newState = NavigationService.turnRight(state)
+
+      expect(newState.dungeon!.position.facing).toBe('SOUTH')
+    })
+  })
+
+  describe('strafeLeft', () => {
+    it('moves west when facing north', () => {
+      const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
+      const newState = NavigationService.strafeLeft(state)
+
+      expect(newState.dungeon!.position.x).toBe(9)
+      expect(newState.dungeon!.position.y).toBe(10)
+      expect(newState.dungeon!.position.facing).toBe('NORTH')
+    })
+  })
 })
