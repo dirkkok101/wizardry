@@ -68,4 +68,52 @@ export const DungeonService = {
       }
     }
   },
+
+  /**
+   * Check if movement is allowed from current position
+   */
+  canMove(level: LevelData, position: Position, moveDirection: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT'): MovementValidation {
+    const tile = this.getTile(level, position.x, position.y)
+
+    // Determine which wall to check based on facing and move direction
+    const wallDirection = this.getWallDirectionForMovement(position.facing, moveDirection)
+    const wallType = tile.walls[wallDirection]
+
+    if (wallType === 'wall') {
+      return {
+        allowed: false,
+        reason: 'You walk into a wall. Ouch!'
+      }
+    }
+
+    if (wallType === 'door') {
+      return {
+        allowed: false,
+        reason: 'A door blocks your way. Press K to kick it open.'
+      }
+    }
+
+    if (wallType === 'secret') {
+      return {
+        allowed: false,
+        reason: 'You walk into a wall. Ouch!' // Secret doors appear as walls
+      }
+    }
+
+    return { allowed: true }
+  },
+
+  /**
+   * Helper: determine which wall to check based on facing and movement
+   */
+  getWallDirectionForMovement(facing: Direction, moveDirection: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT'): keyof TileWalls {
+    const directionMap: Record<Direction, Record<string, keyof TileWalls>> = {
+      'NORTH': { FORWARD: 'north', BACKWARD: 'south', STRAFE_LEFT: 'west', STRAFE_RIGHT: 'east' },
+      'SOUTH': { FORWARD: 'south', BACKWARD: 'north', STRAFE_LEFT: 'east', STRAFE_RIGHT: 'west' },
+      'EAST': { FORWARD: 'east', BACKWARD: 'west', STRAFE_LEFT: 'north', STRAFE_RIGHT: 'south' },
+      'WEST': { FORWARD: 'west', BACKWARD: 'east', STRAFE_LEFT: 'south', STRAFE_RIGHT: 'north' }
+    }
+
+    return directionMap[facing][moveDirection]
+  },
 }
