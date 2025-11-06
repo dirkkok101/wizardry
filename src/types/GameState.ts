@@ -48,7 +48,7 @@ export interface GameState {
   currentScene: SceneType
   roster: Map<string, Character> // All created characters
   party: Party
-  dungeon: Dungeon // TODO: Migrate to DungeonState from Dungeon.ts
+  dungeon: Dungeon | DungeonState // Support both old (Dungeon) and new (DungeonState) for backward compatibility
   settings: Settings
 }
 
