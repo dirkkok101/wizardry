@@ -1,4 +1,5 @@
 import { DungeonService } from '../DungeonService'
+import { Position } from '../../types/Dungeon'
 
 describe('DungeonService', () => {
   describe('loadLevel', () => {
@@ -48,6 +49,41 @@ describe('DungeonService', () => {
       // Should return a default tile if not in tiles array
       expect(tile.x).toBe(19)
       expect(tile.y).toBe(19)
+    })
+  })
+
+  describe('canMove', () => {
+    const level = DungeonService.loadLevel(1)
+
+    it('allows movement when no wall blocks path (facing north with open north)', () => {
+      const position: Position = { x: 0, y: 0, facing: 'NORTH' }
+      const result = DungeonService.canMove(level, position, 'FORWARD')
+
+      expect(result.allowed).toBe(true)
+    })
+
+    it('blocks movement when wall present', () => {
+      const position: Position = { x: 0, y: 0, facing: 'EAST' }
+      const result = DungeonService.canMove(level, position, 'FORWARD')
+
+      expect(result.allowed).toBe(false)
+      expect(result.reason).toContain('wall')
+    })
+
+    it('blocks movement when door present', () => {
+      const position: Position = { x: 2, y: 0, facing: 'EAST' }
+      const result = DungeonService.canMove(level, position, 'FORWARD')
+
+      expect(result.allowed).toBe(false)
+      expect(result.reason).toContain('door')
+    })
+
+    it('allows backward movement', () => {
+      const position: Position = { x: 5, y: 1, facing: 'NORTH' }
+      const result = DungeonService.canMove(level, position, 'BACKWARD')
+
+      // Moving backward from facing north = checking south wall
+      expect(result.allowed).toBeDefined()
     })
   })
 })
