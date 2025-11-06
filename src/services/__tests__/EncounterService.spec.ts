@@ -47,4 +47,29 @@ describe('EncounterService', () => {
       expect(() => EncounterService.getEncounterTable(11)).toThrow()
     })
   })
+
+  describe('selectMonster', () => {
+    it('selects monster from level 1 table', () => {
+      const table = EncounterService.getEncounterTable(1)
+      const monsterId = EncounterService.selectMonster(table)
+
+      const validMonsters = table.monsters.map(m => m.monsterId)
+      expect(validMonsters).toContain(monsterId)
+    })
+
+    it('respects weight distribution over many selections', () => {
+      const table = EncounterService.getEncounterTable(1)
+
+      // Kobold has weight 20, Lvl 1 Mage has weight 1
+      // Over 1000 selections, kobold should appear much more frequently
+      const selections = Array.from({ length: 1000 }, () =>
+        EncounterService.selectMonster(table)
+      )
+
+      const koboldCount = selections.filter(id => id === 'kobold').length
+      const mageCount = selections.filter(id => id === 'lvl_1_mage').length
+
+      expect(koboldCount).toBeGreaterThan(mageCount)
+    })
+  })
 })

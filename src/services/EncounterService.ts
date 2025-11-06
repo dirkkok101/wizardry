@@ -48,4 +48,22 @@ export const EncounterService = {
 
     return table
   },
+
+  /**
+   * Select random monster from encounter table using weighted probability
+   */
+  selectMonster(table: EncounterTable): string {
+    const totalWeight = table.monsters.reduce((sum, m) => sum + m.weight, 0)
+    let random = Math.random() * totalWeight
+
+    for (const entry of table.monsters) {
+      random -= entry.weight
+      if (random <= 0) {
+        return entry.monsterId
+      }
+    }
+
+    // Fallback (should never reach here)
+    return table.monsters[0].monsterId
+  },
 }
