@@ -55,12 +55,17 @@ export class SaveService {
    * Serialize GameState to JSON-compatible format
    */
   private serializeGameState(state: GameState): any {
+    // Handle visitedTiles as either Map or Set
+    const visitedTilesArray = state.dungeon.visitedTiles instanceof Map
+      ? Array.from(state.dungeon.visitedTiles.entries())
+      : Array.from(state.dungeon.visitedTiles)
+
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
       dungeon: {
         ...state.dungeon,
-        visitedTiles: Array.from(state.dungeon.visitedTiles.entries())
+        visitedTiles: visitedTilesArray
       }
     }
   }
@@ -70,12 +75,26 @@ export class SaveService {
    * Handles backward compatibility with older save formats
    */
   private deserializeGameState(data: any): GameState {
+    // Determine if visitedTiles is Map format (array of [key, value] pairs) or Set format (array of strings)
+    const visitedTilesData = data.dungeon?.visitedTiles || []
+    let visitedTiles
+    if (visitedTilesData.length === 0) {
+      // Default to Map for backward compatibility with existing saves
+      visitedTiles = new Map()
+    } else if (Array.isArray(visitedTilesData[0])) {
+      // Old format: array of [key, value] pairs
+      visitedTiles = new Map(visitedTilesData)
+    } else {
+      // New format: array of strings
+      visitedTiles = new Set(visitedTilesData)
+    }
+
     return {
       ...data,
       roster: new Map(data.roster || []),
       dungeon: data.dungeon ? {
         ...data.dungeon,
-        visitedTiles: new Map(data.dungeon.visitedTiles || [])
+        visitedTiles
       } : {
         currentLevel: 1,
         visitedTiles: new Map(),

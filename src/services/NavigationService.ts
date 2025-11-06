@@ -1,13 +1,20 @@
 import { GameState } from '../types/GameState'
-import { Position, Direction } from '../types/Dungeon'
+import { Position, Direction, DungeonState } from '../types/Dungeon'
 
 export const NavigationService = {
+  /**
+   * Type guard to check if dungeon is DungeonState
+   */
+  isDungeonState(dungeon: any): dungeon is DungeonState {
+    return dungeon && 'position' in dungeon
+  },
+
   /**
    * Move party forward one tile (immutable state update)
    */
   moveForward(state: GameState): GameState {
-    if (!state.dungeon) {
-      throw new Error('Dungeon state not initialized')
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Dungeon state not initialized or not in maze')
     }
 
     const currentPos = state.dungeon.position
@@ -63,7 +70,9 @@ export const NavigationService = {
    * Turn party left 90 degrees
    */
   turnLeft(state: GameState): GameState {
-    if (!state.dungeon) throw new Error('Dungeon state not initialized')
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Dungeon state not initialized or not in maze')
+    }
 
     const newFacing = this.rotateDirection(state.dungeon.position.facing, 'LEFT')
 
@@ -83,7 +92,9 @@ export const NavigationService = {
    * Turn party right 90 degrees
    */
   turnRight(state: GameState): GameState {
-    if (!state.dungeon) throw new Error('Dungeon state not initialized')
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Dungeon state not initialized or not in maze')
+    }
 
     const newFacing = this.rotateDirection(state.dungeon.position.facing, 'RIGHT')
 
@@ -117,7 +128,9 @@ export const NavigationService = {
    * Move party left without changing facing
    */
   strafeLeft(state: GameState): GameState {
-    if (!state.dungeon) throw new Error('Dungeon state not initialized')
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Dungeon state not initialized or not in maze')
+    }
 
     const currentPos = state.dungeon.position
     const leftDirection = this.rotateDirection(currentPos.facing, 'LEFT')
@@ -139,7 +152,9 @@ export const NavigationService = {
    * Move party right without changing facing
    */
   strafeRight(state: GameState): GameState {
-    if (!state.dungeon) throw new Error('Dungeon state not initialized')
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Dungeon state not initialized or not in maze')
+    }
 
     const currentPos = state.dungeon.position
     const rightDirection = this.rotateDirection(currentPos.facing, 'RIGHT')
@@ -161,7 +176,9 @@ export const NavigationService = {
    * Move party backward one tile
    */
   moveBackward(state: GameState): GameState {
-    if (!state.dungeon) throw new Error('Dungeon state not initialized')
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Dungeon state not initialized or not in maze')
+    }
 
     const currentPos = state.dungeon.position
     const nextPos = this.getNextPosition(currentPos, currentPos.facing, true)
