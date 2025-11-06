@@ -1,0 +1,20 @@
+{
+  "levelId": "level_10_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "arch_mage_greater", "weight": 8 },
+    { "monsterId": "bleeb", "weight": 10 },
+    { "monsterId": "greater_demon", "weight": 5 },
+    { "monsterId": "high_priest_greater", "weight": 7 },
+    { "monsterId": "lvl_10_mage", "weight": 12 },
+    { "monsterId": "master_ninja", "weight": 8 },
+    { "monsterId": "master_thief_greater", "weight": 10 },
+    { "monsterId": "poison_giant", "weight": 5 },
+    { "monsterId": "raver_lord", "weight": 6 },
+    { "monsterId": "thief", "weight": 10 },
+    { "monsterId": "vampire", "weight": 7 },
+    { "monsterId": "vampire_lord", "weight": 5 },
+    { "monsterId": "will_o_wisp", "weight": 2 },
+    { "monsterId": "flack", "weight": 5 }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "levelId": "level_5_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "champ_samurai", "weight": 8 },
+    { "monsterId": "giant_spider", "weight": 12 },
+    { "monsterId": "killer_wolf", "weight": 10 },
+    { "monsterId": "lvl_7_mage", "weight": 8 },
+    { "monsterId": "minor_daimyo", "weight": 10 },
+    { "monsterId": "spirit", "weight": 8 },
+    { "monsterId": "swordsman", "weight": 12 },
+    { "monsterId": "weretiger", "weight": 10 },
+    { "monsterId": "wererat", "weight": 12 },
+    { "monsterId": "lifestealer", "weight": 10 }
+  ]
+}

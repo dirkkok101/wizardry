@@ -1,0 +1,16 @@
+{
+  "levelId": "level_3_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "capybara", "weight": 15 },
+    { "monsterId": "coyote", "weight": 15 },
+    { "monsterId": "dragon_fly", "weight": 10 },
+    { "monsterId": "giant_toad", "weight": 15 },
+    { "monsterId": "lvl_3_ninja", "weight": 8 },
+    { "monsterId": "lvl_3_priest", "weight": 10 },
+    { "monsterId": "lvl_3_samurai", "weight": 10 },
+    { "monsterId": "lvl_5_mage", "weight": 5 },
+    { "monsterId": "rotting_corpse", "weight": 7 },
+    { "monsterId": "were_bear", "weight": 5 }
+  ]
+}

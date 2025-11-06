@@ -1,0 +1,11 @@
+{
+  "levelId": "level_2_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "creeping_crud", "weight": 25 },
+    { "monsterId": "huge_spider", "weight": 20 },
+    { "monsterId": "gas_cloud", "weight": 20 },
+    { "monsterId": "vorpal_bunny", "weight": 15 },
+    { "monsterId": "creeping_coin", "weight": 20 }
+  ]
+}

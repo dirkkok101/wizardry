@@ -1,0 +1,12 @@
+{
+  "levelId": "level_8_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "dragon_zombie", "weight": 10 },
+    { "monsterId": "fire_dragon", "weight": 10 },
+    { "monsterId": "lvl_8_ninja", "weight": 15 },
+    { "monsterId": "lvl_10_fighter", "weight": 20 },
+    { "monsterId": "hatamoto", "weight": 20 },
+    { "monsterId": "high_master", "weight": 25 }
+  ]
+}
