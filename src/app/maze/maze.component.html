@@ -1,5 +1,39 @@
-<div class="maze-stub">
-  <h1>Maze</h1>
-  <p>Coming in Phase 7: Dungeon Navigation and Combat System</p>
-  <p>Press ESC to return to Camp</p>
+<div class="maze-scene">
+  <app-scene-title [title]="sceneTitle()" />
+
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+
+  <div class="maze-content">
+    <!-- Left: Canvas Placeholder -->
+    <div class="maze-viewport">
+      <div class="canvas-placeholder">
+        <p>3D Rendering</p>
+        <p>Coming in Phase 3</p>
+      </div>
+    </div>
+
+    <!-- Right: Party & Spells -->
+    <div class="maze-panel">
+      <!-- Active Spells -->
+      <app-active-spells [spells]="activeSpells()" />
+
+      <!-- Party Grid (2×3) -->
+      <div class="party-grid">
+        @for (char of partyCharacters(); track char.id) {
+          <app-character-card [character]="char" />
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Log -->
+  <app-message-log [messages]="messages()" />
+
+  <!-- Footer Actions -->
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
 </div>
