@@ -103,8 +103,49 @@ export class MazeComponent implements OnInit {
     this.router.navigate(['/camp']);
   }
 
+  @HostListener('window:keydown', ['$event'])
+  handleKeyPress(event: KeyboardEvent): void {
+    const key = event.key.toLowerCase();
+
+    switch(key) {
+      case 'w': this.moveForward(); break;
+      case 's': this.moveBackward(); break;
+      // More keys will be added in later tasks
+    }
+  }
+
+  moveForward(): void {
+    this.executeMovement('FORWARD', (state: GameState) => NavigationService.moveForward(state));
+  }
+
+  moveBackward(): void {
+    this.executeMovement('BACKWARD', (state: GameState) => NavigationService.moveBackward(state));
+  }
+
   handleFooterAction(action: string): void {
     // Will be implemented in later tasks
+  }
+
+  private executeMovement(
+    moveType: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT',
+    serviceFn: (state: GameState) => GameState
+  ): void {
+    const state = this.gameState.state();
+    const level = DungeonService.loadLevel(this.currentLevel());
+    const position = this.position()!;
+
+    // Validate movement
+    const validation = DungeonService.canMove(level, position, moveType);
+
+    if (!validation.allowed) {
+      this.addMessage(validation.reason!);
+      return;
+    }
+
+    // Execute movement
+    const newState = serviceFn(state);
+    this.gameState.updateState(() => newState);
+    this.addMessage('You move forward.');
   }
 
   private addMessage(message: string): void {
