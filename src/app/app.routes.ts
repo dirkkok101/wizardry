@@ -11,6 +11,7 @@ import { CharacterInspectionComponent } from './character-inspection/character-i
 import { SpellCastingComponent } from './spell-casting/spell-casting.component';
 import { MazeComponent } from './maze/maze.component';
 import { CampComponent } from './camp/camp.component';
+import { CombatStubComponent } from './combat-stub/combat-stub.component';
 
 export const routes: Routes = [
   {
@@ -60,6 +61,10 @@ export const routes: Routes = [
   {
     path: 'camp',
     component: CampComponent
+  },
+  {
+    path: 'combat-stub',
+    component: CombatStubComponent
   },
   {
     path: '**',
