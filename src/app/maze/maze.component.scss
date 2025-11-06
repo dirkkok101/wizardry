@@ -1,17 +1,66 @@
-.maze-stub {
+.maze-scene {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  background: #000;
+  color: #0f0;
+}
+
+.error-message {
+  background: #f00;
+  color: #fff;
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.maze-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  flex: 1;
+  padding: 1rem;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.maze-viewport {
+  display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  gap: 1rem;
+  background: #000;
+  border: 2px solid #0f0;
+  min-height: 400px;
+}
 
-  h1 {
-    font-size: 2rem;
-  }
+.canvas-placeholder {
+  text-align: center;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  opacity: 0.5;
 
   p {
-    font-size: 1.2rem;
-    color: #666;
+    margin: 0.5rem 0;
+  }
+}
+
+.maze-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.party-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
   }
 }
