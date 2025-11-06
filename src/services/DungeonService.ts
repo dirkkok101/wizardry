@@ -116,4 +116,54 @@ export const DungeonService = {
 
     return directionMap[facing][moveDirection]
   },
+
+  /**
+   * Get tiles visible from current position
+   * Returns array of tiles in front of player up to lightRadius distance
+   * @param level - Level data
+   * @param position - Current position and facing
+   * @param lightRadius - How many tiles ahead to return (1-3)
+   * @returns Array of TileData, ordered near to far
+   */
+  getVisibleTiles(
+    level: LevelData,
+    position: Position,
+    lightRadius: number
+  ): TileData[] {
+    const tiles: TileData[] = []
+    const maxDepth = Math.min(lightRadius, 3) // Cap at 3 tiles max
+
+    for (let depth = 1; depth <= maxDepth; depth++) {
+      const { x, y } = getPositionAhead(position, depth)
+      const tile = this.getTile(level, x, y)
+      tiles.push(tile)
+    }
+
+    return tiles
+  },
+}
+
+/**
+ * Calculate position ahead by given distance based on facing direction
+ */
+function getPositionAhead(position: Position, distance: number): { x: number; y: number } {
+  let x = position.x
+  let y = position.y
+
+  switch (position.facing) {
+    case 'NORTH':
+      y = (y + distance) % 20  // Wrap at 20
+      break
+    case 'SOUTH':
+      y = (y - distance + 20) % 20  // Wrap with negative handling
+      break
+    case 'EAST':
+      x = (x + distance) % 20
+      break
+    case 'WEST':
+      x = (x - distance + 20) % 20
+      break
+  }
+
+  return { x, y }
 }
