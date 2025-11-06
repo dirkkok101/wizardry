@@ -150,5 +150,25 @@ describe('DungeonService', () => {
       expect(tiles[1]).toMatchObject({ x: 8, y: 10 }) // Mid
       expect(tiles[2]).toMatchObject({ x: 7, y: 10 }) // Far
     })
+
+    it('handles edge wrapping when moving east from x=19', () => {
+      const position: Position = { x: 19, y: 10, facing: 'EAST' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 3)
+
+      expect(tiles).toHaveLength(3)
+      expect(tiles[0]).toMatchObject({ x: 0, y: 10 })  // Wraps to 0
+      expect(tiles[1]).toMatchObject({ x: 1, y: 10 })
+      expect(tiles[2]).toMatchObject({ x: 2, y: 10 })
+    })
+
+    it('handles edge wrapping when moving north from y=19', () => {
+      const position: Position = { x: 10, y: 19, facing: 'NORTH' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 3)
+
+      expect(tiles).toHaveLength(3)
+      expect(tiles[0]).toMatchObject({ x: 10, y: 0 })  // Wraps to 0
+      expect(tiles[1]).toMatchObject({ x: 10, y: 1 })
+      expect(tiles[2]).toMatchObject({ x: 10, y: 2 })
+    })
   })
 })
