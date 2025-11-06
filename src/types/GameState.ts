@@ -1,5 +1,6 @@
 import { Character } from './Character'
 import { SceneType } from './SceneType'
+import { DungeonState } from './Dungeon'
 
 /**
  * Party represents the player's adventuring party.
@@ -27,6 +28,10 @@ export interface Party {
   gold: number // Party's shared gold pool for services (inn, temple, shop)
 }
 
+/**
+ * @deprecated Use DungeonState from Dungeon.ts instead
+ * Keeping for backward compatibility during migration
+ */
 export interface Dungeon {
   currentLevel: number
   visitedTiles: Map<string, boolean>
@@ -43,7 +48,7 @@ export interface GameState {
   currentScene: SceneType
   roster: Map<string, Character> // All created characters
   party: Party
-  dungeon: Dungeon
+  dungeon: Dungeon // TODO: Migrate to DungeonState from Dungeon.ts
   settings: Settings
 }
 
