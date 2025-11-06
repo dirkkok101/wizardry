@@ -120,5 +120,35 @@ describe('DungeonService', () => {
       expect(tiles[0]).toMatchObject({ x: 10, y: 11 })
       expect(tiles[1]).toMatchObject({ x: 10, y: 12 })
     })
+
+    it('returns tiles ahead when facing EAST', () => {
+      const position: Position = { x: 10, y: 10, facing: 'EAST' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 3)
+
+      expect(tiles).toHaveLength(3)
+      expect(tiles[0]).toMatchObject({ x: 11, y: 10 }) // Near
+      expect(tiles[1]).toMatchObject({ x: 12, y: 10 }) // Mid
+      expect(tiles[2]).toMatchObject({ x: 13, y: 10 }) // Far
+    })
+
+    it('returns tiles ahead when facing SOUTH', () => {
+      const position: Position = { x: 10, y: 10, facing: 'SOUTH' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 3)
+
+      expect(tiles).toHaveLength(3)
+      expect(tiles[0]).toMatchObject({ x: 10, y: 9 }) // Near
+      expect(tiles[1]).toMatchObject({ x: 10, y: 8 }) // Mid
+      expect(tiles[2]).toMatchObject({ x: 10, y: 7 }) // Far
+    })
+
+    it('returns tiles ahead when facing WEST', () => {
+      const position: Position = { x: 10, y: 10, facing: 'WEST' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 3)
+
+      expect(tiles).toHaveLength(3)
+      expect(tiles[0]).toMatchObject({ x: 9, y: 10 }) // Near
+      expect(tiles[1]).toMatchObject({ x: 8, y: 10 }) // Mid
+      expect(tiles[2]).toMatchObject({ x: 7, y: 10 }) // Far
+    })
   })
 })
