@@ -1,0 +1,36 @@
+.message-log {
+  background: #000;
+  border: 2px solid #0f0;
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+  color: #0f0;
+}
+
+.message-log-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #0f0;
+  padding-bottom: 0.25rem;
+}
+
+.message-log-content {
+  height: 150px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #001100;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #0f0;
+  }
+}
+
+.message {
+  padding: 0.25rem 0;
+  line-height: 1.4;
+}
