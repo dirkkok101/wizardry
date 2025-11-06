@@ -1,0 +1,8 @@
+<div class="message-log">
+  <div class="message-log-title">Recent Events:</div>
+  <div class="message-log-content" #logContent>
+    @for (message of messages(); track $index) {
+      <div class="message">{{ message }}</div>
+    }
+  </div>
+</div>
