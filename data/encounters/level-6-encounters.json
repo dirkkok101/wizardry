@@ -1,0 +1,18 @@
+{
+  "levelId": "level_6_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "arch_mage_lesser", "weight": 8 },
+    { "monsterId": "chimera", "weight": 5 },
+    { "monsterId": "gaze_hound", "weight": 10 },
+    { "monsterId": "high_priest_lesser", "weight": 7 },
+    { "monsterId": "lvl_7_thief", "weight": 10 },
+    { "monsterId": "lvl_8_bishop", "weight": 6 },
+    { "monsterId": "lvl_8_priest", "weight": 8 },
+    { "monsterId": "master_thief_lesser", "weight": 10 },
+    { "monsterId": "medusalizard", "weight": 9 },
+    { "monsterId": "ogre_lord", "weight": 8 },
+    { "monsterId": "troll", "weight": 7 },
+    { "monsterId": "werewolf", "weight": 12 }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "levelId": "level_7_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "lvl_8_fighter", "weight": 15 },
+    { "monsterId": "major_daimyo", "weight": 12 },
+    { "monsterId": "nightstalker", "weight": 15 },
+    { "monsterId": "wyvern", "weight": 18 },
+    { "monsterId": "gorgon", "weight": 20 },
+    { "monsterId": "lesser_demon", "weight": 20 }
+  ]
+}

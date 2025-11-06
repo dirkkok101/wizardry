@@ -1,0 +1,9 @@
+{
+  "levelId": "level_9_monsters",
+  "encounterRate": 0.10,
+  "monsters": [
+    { "monsterId": "fire_giant", "weight": 30 },
+    { "monsterId": "frost_giant", "weight": 20 },
+    { "monsterId": "maelific", "weight": 50 }
+  ]
+}
