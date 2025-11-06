@@ -86,4 +86,39 @@ describe('DungeonService', () => {
       expect(result.allowed).toBeDefined()
     })
   })
+
+  describe('getVisibleTiles', () => {
+    let level: ReturnType<typeof DungeonService.loadLevel>
+
+    beforeEach(() => {
+      level = DungeonService.loadLevel(1)
+    })
+
+    it('returns 3 tiles ahead when facing NORTH with light radius 3', () => {
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 3)
+
+      expect(tiles).toHaveLength(3)
+      expect(tiles[0]).toMatchObject({ x: 10, y: 11 }) // Near
+      expect(tiles[1]).toMatchObject({ x: 10, y: 12 }) // Mid
+      expect(tiles[2]).toMatchObject({ x: 10, y: 13 }) // Far
+    })
+
+    it('returns 1 tile ahead when light radius is 1', () => {
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 1)
+
+      expect(tiles).toHaveLength(1)
+      expect(tiles[0]).toMatchObject({ x: 10, y: 11 })
+    })
+
+    it('returns 2 tiles ahead when light radius is 2', () => {
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' }
+      const tiles = DungeonService.getVisibleTiles(level, position, 2)
+
+      expect(tiles).toHaveLength(2)
+      expect(tiles[0]).toMatchObject({ x: 10, y: 11 })
+      expect(tiles[1]).toMatchObject({ x: 10, y: 12 })
+    })
+  })
 })
