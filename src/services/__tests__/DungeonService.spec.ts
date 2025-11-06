@@ -23,4 +23,31 @@ describe('DungeonService', () => {
       expect(() => DungeonService.loadLevel(11)).toThrow()
     })
   })
+
+  describe('getTile', () => {
+    it('returns tile at specific coordinates', () => {
+      const level = DungeonService.loadLevel(1)
+      const tile = DungeonService.getTile(level, 0, 0)
+
+      expect(tile.x).toBe(0)
+      expect(tile.y).toBe(0)
+      expect(tile.type).toBe('stairs_up')
+    })
+
+    it('returns tile with correct wall configuration', () => {
+      const level = DungeonService.loadLevel(1)
+      const tile = DungeonService.getTile(level, 2, 0)
+
+      expect(tile.walls.east).toBe('door')
+    })
+
+    it('returns default tile for coordinates with no tile data', () => {
+      const level = DungeonService.loadLevel(1)
+      const tile = DungeonService.getTile(level, 19, 19)
+
+      // Should return a default tile if not in tiles array
+      expect(tile.x).toBe(19)
+      expect(tile.y).toBe(19)
+    })
+  })
 })

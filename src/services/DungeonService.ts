@@ -44,4 +44,28 @@ export const DungeonService = {
       encounterTable: levelData.encounterTable
     }
   },
+
+  /**
+   * Get tile at specific coordinates
+   * Returns default empty tile if not found in data
+   */
+  getTile(level: LevelData, x: number, y: number): TileData {
+    const tile = level.tiles.find(t => t.x === x && t.y === y)
+
+    if (tile) {
+      return tile
+    }
+
+    // Return default tile (all walls)
+    return {
+      x,
+      y,
+      walls: {
+        north: 'wall',
+        east: 'wall',
+        south: 'wall',
+        west: 'wall'
+      }
+    }
+  },
 }
