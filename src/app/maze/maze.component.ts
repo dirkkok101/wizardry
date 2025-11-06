@@ -89,8 +89,7 @@ export class MazeComponent implements OnInit {
     // Validate dungeon state
     const dungeon = this.dungeonState();
     if (!dungeon) {
-      this.errorMessage.set('Dungeon not initialized. Returning to camp...');
-      setTimeout(() => this.router.navigate(['/camp']), 2000);
+      this.errorMessage.set('Error: No active dungeon. Return to camp to enter the dungeon.');
       return;
     }
 
@@ -110,8 +109,18 @@ export class MazeComponent implements OnInit {
     switch(key) {
       case 'w': this.moveForward(); break;
       case 's': this.moveBackward(); break;
+      case 'a': this.turnLeft(); break;
+      case 'd': this.turnRight(); break;
+      case 'q': this.strafeLeft(); break;
+      case 'e': this.strafeRight(); break;
+      case 'escape': this.returnToCamp(); break;
       // More keys will be added in later tasks
     }
+  }
+
+  returnToCamp(): void {
+    this.addMessage('Returning to camp...');
+    this.router.navigate(['/camp']);
   }
 
   moveForward(): void {
@@ -120,6 +129,28 @@ export class MazeComponent implements OnInit {
 
   moveBackward(): void {
     this.executeMovement('BACKWARD', (state: GameState) => NavigationService.moveBackward(state));
+  }
+
+  turnLeft(): void {
+    const state = this.gameState.state();
+    const newState = NavigationService.turnLeft(state);
+    this.gameState.updateState(() => newState);
+    this.addMessage('You turn left.');
+  }
+
+  turnRight(): void {
+    const state = this.gameState.state();
+    const newState = NavigationService.turnRight(state);
+    this.gameState.updateState(() => newState);
+    this.addMessage('You turn right.');
+  }
+
+  strafeLeft(): void {
+    this.executeMovement('STRAFE_LEFT', (state: GameState) => NavigationService.strafeLeft(state));
+  }
+
+  strafeRight(): void {
+    this.executeMovement('STRAFE_RIGHT', (state: GameState) => NavigationService.strafeRight(state));
   }
 
   handleFooterAction(action: string): void {
@@ -145,7 +176,52 @@ export class MazeComponent implements OnInit {
     // Execute movement
     const newState = serviceFn(state);
     this.gameState.updateState(() => newState);
-    this.addMessage('You move forward.');
+
+    // Dynamic messages based on moveType
+    const messages = {
+      'FORWARD': 'You move forward.',
+      'BACKWARD': 'You move backward.',
+      'STRAFE_LEFT': 'You strafe left.',
+      'STRAFE_RIGHT': 'You strafe right.'
+    };
+    this.addMessage(messages[moveType]);
+
+    // Check for encounter after successful movement
+    this.checkForEncounter();
+  }
+
+  private checkForEncounter(): void {
+    // Roll for random encounter
+    const encounterOccurs = EncounterService.rollRandomEncounter();
+
+    if (!encounterOccurs) {
+      return;
+    }
+
+    // Get encounter table for current level
+    const encounterTable = EncounterService.getEncounterTable(this.currentLevel());
+
+    // Select random monster from table
+    const monsterId = EncounterService.selectMonster(encounterTable);
+
+    // Format monster name for display (capitalize and replace underscores)
+    const monsterName = this.formatMonsterName(monsterId);
+
+    // Add encounter message
+    this.addMessage(`You encounter ${monsterName}!`);
+
+    // Navigate to combat using queueMicrotask for async handling
+    queueMicrotask(() => {
+      this.router.navigate(['/combat-stub']);
+    });
+  }
+
+  private formatMonsterName(monsterId: string): string {
+    // Convert "orc" -> "Orc", "lvl_1_mage" -> "Lvl 1 Mage"
+    return monsterId
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 
   private addMessage(message: string): void {
