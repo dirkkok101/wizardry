@@ -219,10 +219,41 @@ export function renderTile(
   return commands;
 }
 
+/**
+ * Generate complete view of maze from player perspective
+ * @param tiles - Array of visible tiles (near to far)
+ * @param facing - Direction player is facing
+ * @param config - Viewport configuration
+ * @returns Complete array of drawing commands
+ */
+export function generateView(
+  tiles: TileData[],
+  facing: Direction,
+  config: ViewportConfig
+): CanvasCommand[] {
+  if (tiles.length === 0) {
+    return [];
+  }
+
+  const commands: CanvasCommand[] = [];
+
+  // Render tiles from far to near for correct z-ordering
+  for (let i = tiles.length - 1; i >= 0; i--) {
+    const tile = tiles[i];
+    const depth = i + 1;  // Convert 0-based index to 1-based depth
+    const perspective = calculatePerspective(depth);
+
+    commands.push(...renderTile(tile, facing, perspective, config));
+  }
+
+  return commands;
+}
+
 export const MazeRenderingService = {
   calculatePerspective,
   getRelativeWalls,
   renderCorridor,
   renderWall,
-  renderTile
+  renderTile,
+  generateView
 };
