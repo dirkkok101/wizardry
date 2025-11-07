@@ -6,9 +6,11 @@ import { SceneFooterComponent } from '../../components/scene-footer/scene-footer
 import { CharacterCardComponent } from '../../components/character-card/character-card.component';
 import { MessageLogComponent } from '../../components/message-log/message-log.component';
 import { ActiveSpellsComponent } from '../../components/active-spells/active-spells.component';
+import { MazeViewComponent } from '../../components/maze-view/maze-view.component';
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
+import { MazeRenderingService } from '../../services/MazeRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
@@ -24,7 +26,8 @@ import { GameState } from '../../types/GameState';
     SceneFooterComponent,
     CharacterCardComponent,
     MessageLogComponent,
-    ActiveSpellsComponent
+    ActiveSpellsComponent,
+    MazeViewComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
@@ -58,6 +61,36 @@ export class MazeComponent implements OnInit {
     }
 
     return spells;
+  });
+
+  /**
+   * Tiles visible from current position based on light radius
+   */
+  readonly visibleTiles = computed(() => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return [];
+
+    const level = DungeonService.loadLevel(this.currentLevel());
+    const pos = this.position();
+    if (!pos) return [];
+
+    const lightRadius = dungeon.lightRadius;
+    return DungeonService.getVisibleTiles(level, pos, lightRadius);
+  });
+
+  /**
+   * Canvas drawing commands for 3D view
+   */
+  readonly drawCommands = computed(() => {
+    const tiles = this.visibleTiles();
+    const pos = this.position();
+    if (!pos || tiles.length === 0) return [];
+
+    return MazeRenderingService.generateView(
+      tiles,
+      pos.facing,
+      { width: 600, height: 600, tileDepth: 3 }
+    );
   });
 
   // Scene title
