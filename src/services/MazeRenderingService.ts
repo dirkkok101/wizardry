@@ -183,9 +183,46 @@ export function renderWall(
   return commands;
 }
 
+/**
+ * Render a single tile with all its walls
+ * @param tile - Tile data with walls
+ * @param facing - Direction player is facing
+ * @param perspective - Perspective scale parameters
+ * @param config - Viewport configuration
+ * @returns Array of drawing commands for the tile
+ */
+export function renderTile(
+  tile: TileData,
+  facing: Direction,
+  perspective: PerspectiveScale,
+  config: ViewportConfig
+): CanvasCommand[] {
+  const commands: CanvasCommand[] = [];
+
+  // Get walls relative to player facing
+  const walls = getRelativeWalls(tile.walls, facing);
+
+  // Always render corridor first (perspective lines)
+  commands.push(...renderCorridor(perspective, config));
+
+  // Render walls based on their type
+  if (walls.left !== 'open') {
+    commands.push(...renderWall('left', walls.left, perspective, config));
+  }
+  if (walls.right !== 'open') {
+    commands.push(...renderWall('right', walls.right, perspective, config));
+  }
+  if (walls.front !== 'open') {
+    commands.push(...renderWall('front', walls.front, perspective, config));
+  }
+
+  return commands;
+}
+
 export const MazeRenderingService = {
   calculatePerspective,
   getRelativeWalls,
   renderCorridor,
-  renderWall
+  renderWall,
+  renderTile
 };
