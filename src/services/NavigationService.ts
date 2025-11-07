@@ -215,6 +215,9 @@ export const NavigationService = {
       case 'chute':
         return this.handleChute(state)
 
+      case 'pit':
+        return this.handlePit(state)
+
       // More cases will be added in subsequent tasks
       default:
         return state
@@ -306,5 +309,36 @@ export const NavigationService = {
         currentLevel: newLevel,
       }
     }
+  },
+
+  /**
+   * Handle pit tile - AGI-based damage trap (no level change)
+   * Avoidance: (AGI - Level) × 4%
+   * Failure: 1d6 damage
+   */
+  handlePit(state: GameState): GameState {
+    const newRoster = new Map(state.roster);
+
+    for (const memberId of state.party.members) {
+      const character = newRoster.get(memberId)!;
+
+      // Calculate avoidance chance: (AGI - Level) × 4%
+      const avoidanceChance = (character.agility - state.dungeon!.currentLevel) * 4;
+      const roll = Math.random() * 100;
+
+      // Failed avoidance - take 1d6 damage
+      if (roll >= avoidanceChance) {
+        const damage = Math.floor(Math.random() * 6) + 1;
+        newRoster.set(memberId, {
+          ...character,
+          hp: Math.max(0, character.hp - damage),
+        });
+      }
+    }
+
+    return {
+      ...state,
+      roster: newRoster,
+    };
   },
 }
