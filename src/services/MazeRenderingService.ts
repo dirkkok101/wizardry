@@ -47,7 +47,76 @@ export function getRelativeWalls(
   };
 }
 
+/**
+ * Render corridor walls (perspective lines creating depth)
+ * @param perspective - Perspective scale parameters
+ * @param config - Viewport configuration
+ * @returns Array of line drawing commands
+ */
+export function renderCorridor(
+  perspective: PerspectiveScale,
+  config: ViewportConfig
+): CanvasCommand[] {
+  const commands: CanvasCommand[] = [];
+  const centerX = config.width / 2;
+  const centerY = config.height / 2;
+
+  const wallOffset = 200 * perspective.scale;  // Width of corridor
+  const depthY = centerY + perspective.offsetY;
+
+  // Left wall perspective line (top)
+  commands.push({
+    type: 'line',
+    x: centerX - wallOffset,
+    y: depthY - 100 * perspective.scale,
+    x2: centerX - wallOffset * 0.7,
+    y2: depthY,
+    color: '#0f0',
+    lineWidth: 2,
+    alpha: perspective.brightness
+  });
+
+  // Left wall perspective line (bottom)
+  commands.push({
+    type: 'line',
+    x: centerX - wallOffset,
+    y: depthY + 100 * perspective.scale,
+    x2: centerX - wallOffset * 0.7,
+    y2: depthY,
+    color: '#0f0',
+    lineWidth: 2,
+    alpha: perspective.brightness
+  });
+
+  // Right wall perspective line (top)
+  commands.push({
+    type: 'line',
+    x: centerX + wallOffset,
+    y: depthY - 100 * perspective.scale,
+    x2: centerX + wallOffset * 0.7,
+    y2: depthY,
+    color: '#0f0',
+    lineWidth: 2,
+    alpha: perspective.brightness
+  });
+
+  // Right wall perspective line (bottom)
+  commands.push({
+    type: 'line',
+    x: centerX + wallOffset,
+    y: depthY + 100 * perspective.scale,
+    x2: centerX + wallOffset * 0.7,
+    y2: depthY,
+    color: '#0f0',
+    lineWidth: 2,
+    alpha: perspective.brightness
+  });
+
+  return commands;
+}
+
 export const MazeRenderingService = {
   calculatePerspective,
-  getRelativeWalls
+  getRelativeWalls,
+  renderCorridor
 };
