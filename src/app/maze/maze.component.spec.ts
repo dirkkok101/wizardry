@@ -5,6 +5,7 @@ import { GameStateService } from '../../services/GameStateService';
 import { DungeonService } from '../../services/DungeonService';
 import { EncounterService } from '../../services/EncounterService';
 import { SceneType } from '../../types/SceneType';
+import { createTestCharacter } from '../../test-helpers/test-factories';
 
 function createTestDungeonState() {
   return {
@@ -603,6 +604,109 @@ describe('MazeComponent - Door Kicking', () => {
 
     // Should call kickDoor, which will show "No locked door ahead" message
     expect(kickSpy).toHaveBeenCalled();
+  });
+});
+
+describe('MazeComponent - Tile Inspection', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+
+    // Mock loadLevel to return searchable tile at (13, 3)
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map((_, y) =>
+        Array(20).fill(null).map((_, x) => ({
+          x,
+          y,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: (x === 13 && y === 3) ? 'searchable' : 'normal',
+          searchContent: (x === 13 && y === 3) ? { itemId: 'potion', message: 'You found a potion!' } : undefined
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+  });
+
+  it('triggers inspection on I key press when on searchable tile', () => {
+    const character = createTestCharacter({ id: 'char1', inventory: [] });
+    gameState.updateState(state => ({
+      ...state,
+      party: {
+        members: ['char1'],
+        formation: { front: ['char1'], back: [] },
+        gold: 0,
+      },
+      roster: new Map([['char1', character]]),
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 13, y: 3, facing: 'NORTH' }, // Searchable tile on Level 1
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+        visitedTiles: new Set<string>()
+      },
+    }));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const inspectSpy = jest.spyOn(component, 'inspectTile');
+
+    const event = new KeyboardEvent('keydown', { key: 'i' });
+    window.dispatchEvent(event);
+
+    expect(inspectSpy).toHaveBeenCalled();
+  });
+
+  it('adds discovered item to party inventory', () => {
+    const character = createTestCharacter({ id: 'char1', inventory: [] });
+    gameState.updateState(state => ({
+      ...state,
+      party: {
+        members: ['char1'],
+        formation: { front: ['char1'], back: [] },
+        gold: 0,
+      },
+      roster: new Map([['char1', character]]),
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 13, y: 3, facing: 'NORTH' },
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+        visitedTiles: new Set<string>()
+      },
+    }));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    component.inspectTile();
+
+    const state = gameState.state();
+    const charAfter = state.roster.get('char1')!;
+    expect(charAfter.inventory.length).toBeGreaterThan(0);
   });
 });
 
