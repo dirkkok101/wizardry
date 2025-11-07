@@ -212,6 +212,9 @@ export const NavigationService = {
       case 'spinner':
         return this.handleSpinner(state)
 
+      case 'chute':
+        return this.handleChute(state)
+
       // More cases will be added in subsequent tasks
       default:
         return state
@@ -260,6 +263,47 @@ export const NavigationService = {
           ...state.dungeon!.position,
           facing: randomDirection,
         }
+      }
+    }
+  },
+
+  /**
+   * Handle chute tile - fall 1-3 levels with 1d6 damage per level
+   * Research: docs/systems/dungeon-system.md:449-476
+   */
+  handleChute(state: GameState): GameState {
+    // Roll for fall distance (1-3 levels)
+    const levelsFallen = Math.floor(Math.random() * 3) + 1
+    const newLevel = Math.min(10, state.dungeon!.currentLevel + levelsFallen)
+
+    // Calculate damage (1d6 per level fallen)
+    const actualFall = newLevel - state.dungeon!.currentLevel
+    const damagePerCharacter: Map<string, number> = new Map()
+
+    for (const memberId of state.party.members) {
+      let totalDamage = 0
+      for (let i = 0; i < actualFall; i++) {
+        totalDamage += Math.floor(Math.random() * 6) + 1 // 1d6
+      }
+      damagePerCharacter.set(memberId, totalDamage)
+    }
+
+    // Apply damage to all party members
+    const newRoster = new Map(state.roster)
+    for (const [memberId, damage] of damagePerCharacter) {
+      const character = newRoster.get(memberId)!
+      newRoster.set(memberId, {
+        ...character,
+        hp: Math.max(0, character.hp - damage),
+      })
+    }
+
+    return {
+      ...state,
+      roster: newRoster,
+      dungeon: {
+        ...state.dungeon!,
+        currentLevel: newLevel,
       }
     }
   },
