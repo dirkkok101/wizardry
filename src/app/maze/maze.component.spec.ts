@@ -36,6 +36,26 @@ describe('MazeComponent - Initialization', () => {
 
     jest.spyOn(router, 'navigate');
 
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
     // Set up test state with dungeon
     gameState.updateState(state => ({
       ...state,
@@ -90,13 +110,21 @@ describe('MazeComponent - Forward/Backward Movement', () => {
     jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
       level: 1,
       name: 'Test Level',
-      size: 20,
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
       startPosition: { x: 0, y: 0, facing: 'NORTH' },
       edgeWrapping: true,
-      tiles: [],
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
       encounterRate: 0,
       encounterTable: []
-    });
+    } as any);
 
     jest.spyOn(DungeonService, 'getTile').mockReturnValue({
       x: 0,
@@ -210,6 +238,26 @@ describe('MazeComponent - Rotation', () => {
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
 
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
     // Set up test state with dungeon
     gameState.updateState(state => ({
       ...state,
@@ -293,6 +341,26 @@ describe('MazeComponent - Strafe Movement', () => {
       allowed: true
     });
 
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
     // Set up test state with dungeon at (5,5) facing NORTH
     gameState.updateState(state => ({
       ...state,
@@ -370,6 +438,26 @@ describe('MazeComponent - Encounter Detection', () => {
       allowed: true
     });
 
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
     // Set up test state with dungeon
     gameState.updateState(state => ({
       ...state,
@@ -427,6 +515,97 @@ describe('MazeComponent - Encounter Detection', () => {
   });
 });
 
+describe('MazeComponent - Door Kicking', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+  });
+
+  it('triggers door kick on K key press when facing locked door', () => {
+    // Setup state with locked door ahead
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 0, y: 0, facing: 'EAST' as const },
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+        visitedTiles: new Set<string>()
+      }
+    }));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const kickSpy = jest.spyOn(component, 'kickDoor');
+
+    // Simulate K key press
+    const event = new KeyboardEvent('keydown', { key: 'k' });
+    component.handleKeyPress(event);
+
+    expect(kickSpy).toHaveBeenCalled();
+  });
+
+  it('does not trigger kick when not facing locked door', () => {
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 5, y: 5, facing: 'NORTH' as const },
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+        visitedTiles: new Set<string>()
+      }
+    }));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const kickSpy = jest.spyOn(component, 'kickDoor');
+
+    const event = new KeyboardEvent('keydown', { key: 'k' });
+    component.handleKeyPress(event);
+
+    // Should call kickDoor, which will show "No locked door ahead" message
+    expect(kickSpy).toHaveBeenCalled();
+  });
+});
+
 describe('MazeComponent - Navigation & Error Handling', () => {
   let component: MazeComponent;
   let fixture: ComponentFixture<MazeComponent>;
@@ -444,6 +623,26 @@ describe('MazeComponent - Navigation & Error Handling', () => {
     router = TestBed.inject(Router);
 
     jest.spyOn(router, 'navigate');
+
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
 
     // Set up test state with dungeon
     gameState.updateState(state => ({
