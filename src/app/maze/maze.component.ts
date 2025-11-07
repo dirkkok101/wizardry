@@ -69,6 +69,7 @@ export class MazeComponent implements OnInit {
 
   /**
    * Tiles visible from current position based on light radius
+   * Darkness tiles override light spells (per-tile darkness)
    */
   readonly visibleTiles = computed(() => {
     const dungeon = this.dungeonState();
@@ -78,8 +79,11 @@ export class MazeComponent implements OnInit {
     const pos = this.position();
     if (!pos) return [];
 
-    const lightRadius = dungeon.lightRadius;
-    return DungeonService.getVisibleTiles(level, pos, lightRadius);
+    // Check if current tile is darkness
+    const currentTile = level.tiles[pos.y][pos.x];
+    const effectiveLightRadius = currentTile.type === 'darkness' ? 0 : dungeon.lightRadius;
+
+    return DungeonService.getVisibleTiles(level, pos, effectiveLightRadius);
   });
 
   /**

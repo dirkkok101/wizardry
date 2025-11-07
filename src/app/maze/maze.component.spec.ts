@@ -796,3 +796,81 @@ describe('MazeComponent - Navigation & Error Handling', () => {
     expect(component.messages().length).toBe(0);
   });
 });
+
+describe('MazeComponent - Darkness Tiles', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+
+    // Mock loadLevel with darkness tile at (9, 12)
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map((_, y) =>
+        Array(20).fill(null).map((_, x) => ({
+          x,
+          y,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: (x === 9 && y === 12) ? 'darkness' : 'normal'
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+  });
+
+  it('overrides light spell on darkness tile', () => {
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 9, y: 12, facing: 'NORTH' }, // Darkness tile on Level 1
+        lightActive: true,
+        lightRadius: 3,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+      },
+    }));
+
+    fixture.detectChanges();
+
+    // visibleTiles computed signal should use lightRadius = 0 (no tiles ahead visible)
+    const tiles = component.visibleTiles();
+    expect(tiles.length).toBe(0); // No tiles ahead visible (radius 0)
+  });
+
+  it('uses normal light radius on non-darkness tiles', () => {
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 5, y: 5, facing: 'NORTH' },
+        lightActive: true,
+        lightRadius: 3,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+      },
+    }));
+
+    fixture.detectChanges();
+
+    const tiles = component.visibleTiles();
+    expect(tiles.length).toBeGreaterThan(1); // Multiple tiles visible
+  });
+});
