@@ -115,8 +115,77 @@ export function renderCorridor(
   return commands;
 }
 
+/**
+ * Render a wall on specified side
+ * @param side - Which side (left, right, front)
+ * @param wallType - Type of wall
+ * @param perspective - Perspective scale parameters
+ * @param config - Viewport configuration
+ * @returns Array of drawing commands for the wall
+ */
+export function renderWall(
+  side: 'left' | 'right' | 'front',
+  wallType: 'open' | 'wall' | 'door' | 'secret',
+  perspective: PerspectiveScale,
+  config: ViewportConfig
+): CanvasCommand[] {
+  // Secret walls are invisible
+  if (wallType === 'secret' || wallType === 'open') {
+    return [];
+  }
+
+  const commands: CanvasCommand[] = [];
+  const centerX = config.width / 2;
+  const centerY = config.height / 2;
+
+  // Door uses darker green
+  const color = wallType === 'door' ? '#080' : '#0f0';
+
+  const wallOffset = 200 * perspective.scale;
+  const wallHeight = 200 * perspective.scale;
+  const depthY = centerY + perspective.offsetY;
+
+  if (side === 'left') {
+    // Left wall
+    commands.push({
+      type: 'fillRect',
+      x: centerX - wallOffset - 50,
+      y: depthY - wallHeight / 2,
+      width: 50,
+      height: wallHeight,
+      color,
+      alpha: perspective.brightness
+    });
+  } else if (side === 'right') {
+    // Right wall
+    commands.push({
+      type: 'fillRect',
+      x: centerX + wallOffset,
+      y: depthY - wallHeight / 2,
+      width: 50,
+      height: wallHeight,
+      color,
+      alpha: perspective.brightness
+    });
+  } else if (side === 'front') {
+    // Front wall (dead end) - full width
+    commands.push({
+      type: 'fillRect',
+      x: centerX - wallOffset,
+      y: depthY - wallHeight / 2,
+      width: wallOffset * 2,
+      height: wallHeight,
+      color,
+      alpha: perspective.brightness
+    });
+  }
+
+  return commands;
+}
+
 export const MazeRenderingService = {
   calculatePerspective,
   getRelativeWalls,
-  renderCorridor
+  renderCorridor,
+  renderWall
 };
