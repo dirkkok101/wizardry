@@ -192,5 +192,68 @@ describe('NavigationService', () => {
         expect(result.dungeon!.teleportCount).toBe(0)
       })
     })
+
+    describe('spinner', () => {
+      it('randomizes party facing direction', () => {
+        const tile: TileData = {
+          x: 5,
+          y: 5,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: 'spinner'
+        }
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 5, y: 5, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        }
+
+        const result = NavigationService.handleSpecialTile(state, tile)
+
+        // Facing should be one of the four directions
+        expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.dungeon!.position.facing)
+      })
+
+      it('can change facing to different direction', () => {
+        const tile: TileData = {
+          x: 5,
+          y: 5,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: 'spinner'
+        }
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 5, y: 5, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        }
+
+        // Run spinner 10 times, at least one should change facing
+        let facingChanged = false
+        for (let i = 0; i < 10; i++) {
+          const result = NavigationService.handleSpecialTile(state, tile)
+          if (result.dungeon!.position.facing !== 'NORTH') {
+            facingChanged = true
+            break
+          }
+        }
+
+        expect(facingChanged).toBe(true)
+      })
+    })
   })
 })
