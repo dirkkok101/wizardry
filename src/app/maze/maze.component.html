@@ -40,4 +40,24 @@
     [menuItems]="footerMenuItems()"
     (itemSelected)="handleFooterAction($event)"
   />
+
+  <!-- Elevator Dialog -->
+  @if (showElevatorDialog()) {
+    <div class="elevator-dialog-overlay">
+      <div class="elevator-dialog">
+        <h2>ELEVATOR</h2>
+        <p>Select destination level:</p>
+        <div class="elevator-buttons">
+          @for (level of elevatorDestinations(); track level) {
+            <button (click)="selectElevatorLevel(level)" class="elevator-button">
+              Level {{ level }}
+            </button>
+          }
+        </div>
+        <button (click)="cancelElevator()" class="elevator-cancel">
+          Cancel (ESC)
+        </button>
+      </div>
+    </div>
+  }
 </div>

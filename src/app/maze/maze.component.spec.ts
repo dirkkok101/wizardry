@@ -874,3 +874,80 @@ describe('MazeComponent - Darkness Tiles', () => {
     expect(tiles.length).toBeGreaterThan(1); // Multiple tiles visible
   });
 });
+
+describe('MazeComponent - Elevator', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+
+    // Mock loadLevel with elevator tile at (10, 8)
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map((_, y) =>
+        Array(20).fill(null).map((_, x) => ({
+          x,
+          y,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: (x === 10 && y === 8) ? 'elevator' : 'normal',
+          elevatorDestinations: (x === 10 && y === 8) ? [2, 3, 4] : undefined
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+  });
+
+  it('shows elevator dialog when on elevator tile', () => {
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 10, y: 8, facing: 'NORTH' }, // Elevator tile on Level 1
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+      },
+    }));
+
+    fixture.detectChanges();
+
+    expect(component.showElevatorDialog()).toBe(true);
+  });
+
+  it('changes level when elevator destination selected', () => {
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 10, y: 8, facing: 'NORTH' },
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        defeatedEncounters: [],
+        unlockedDoors: new Set(),
+      },
+    }));
+
+    component.selectElevatorLevel(3);
+
+    const state = gameState.state();
+    expect(state.dungeon.currentLevel).toBe(3);
+  });
+});
