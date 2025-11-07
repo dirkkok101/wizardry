@@ -11,8 +11,8 @@ export class TileInspectionService {
    * Check if current tile has searchable content
    */
   static hasSearchableContent(level: Level, position: Position): boolean {
-    // TODO: Implementation in Phase 5D
-    return false;
+    const tile = level.tiles[position.y][position.x];
+    return tile.type === 'searchable' && !!tile.searchContent;
   }
 
   /**
