@@ -12,6 +12,7 @@ import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
 import { MazeRenderingService } from '../../services/MazeRenderingService';
 import { EncounterService } from '../../services/EncounterService';
+import { DoorService } from '../../services/DoorService';
 import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
@@ -99,15 +100,26 @@ export class MazeComponent implements OnInit {
   readonly sceneTitle = computed(() => `MAZE - LEVEL ${this.currentLevel()}`);
 
   // Footer menu
-  readonly footerMenuItems = computed((): MenuItem[] => [
-    { id: 'forward', label: 'Forward (W)', shortcut: 'W', enabled: true },
-    { id: 'back', label: 'Backward (S)', shortcut: 'S', enabled: true },
-    { id: 'left', label: 'Turn Left (A)', shortcut: 'A', enabled: true },
-    { id: 'right', label: 'Turn Right (D)', shortcut: 'D', enabled: true },
-    { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
-    { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
-    { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
-  ]);
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const state = this.gameState.state();
+    let canKick = false;
+
+    if (state.dungeon?.position) {
+      const level = DungeonService.loadLevel(this.currentLevel());
+      canKick = DoorService.canKickDoor(level, state.dungeon.position);
+    }
+
+    return [
+      { id: 'forward', label: 'Forward (W)', shortcut: 'W', enabled: true },
+      { id: 'back', label: 'Backward (S)', shortcut: 'S', enabled: true },
+      { id: 'left', label: 'Turn Left (A)', shortcut: 'A', enabled: true },
+      { id: 'right', label: 'Turn Right (D)', shortcut: 'D', enabled: true },
+      { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
+      { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
+      { id: 'kick', label: 'Kick Door (K)', shortcut: 'K', enabled: canKick },
+      { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
+    ];
+  });
 
   constructor(
     private gameState: GameStateService,
@@ -148,6 +160,7 @@ export class MazeComponent implements OnInit {
       case 'd': this.turnRight(); break;
       case 'q': this.strafeLeft(); break;
       case 'e': this.strafeRight(); break;
+      case 'k': this.kickDoor(); break;
       case 'escape': this.returnToCamp(); break;
       // More keys will be added in later tasks
     }
@@ -186,6 +199,45 @@ export class MazeComponent implements OnInit {
 
   strafeRight(): void {
     this.executeMovement('STRAFE_RIGHT', (state: GameState) => NavigationService.strafeRight(state));
+  }
+
+  kickDoor(): void {
+    const state = this.gameState.state();
+    const level = DungeonService.loadLevel(this.currentLevel());
+
+    // Check if can kick door
+    if (!DoorService.canKickDoor(level, state.dungeon.position)) {
+      this.addMessage('No locked door ahead.');
+      return;
+    }
+
+    // Use first party member to kick (front row)
+    const kickerId = state.party.formation.front[0];
+    if (!kickerId) {
+      this.addMessage('No one in front row to kick door.');
+      return;
+    }
+
+    const newState = DoorService.kickDoor(state, kickerId);
+    this.gameState.updateState(() => newState);
+
+    // Check result
+    if (newState.encounterTriggered) {
+      this.addMessage('The door bursts open! You encounter a monster!');
+      queueMicrotask(() => {
+        this.router.navigate(['/combat-stub']);
+      });
+    } else {
+      const kicker = newState.roster.get(kickerId)!;
+      const originalHP = state.roster.get(kickerId)!.hp;
+
+      if (kicker.hp < originalHP) {
+        const damage = originalHP - kicker.hp;
+        this.addMessage(`Failed to kick door! ${kicker.name} takes ${damage} damage.`);
+      } else {
+        this.addMessage('The door bursts open!');
+      }
+    }
   }
 
   handleFooterAction(action: string): void {
