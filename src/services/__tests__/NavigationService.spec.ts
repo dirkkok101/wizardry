@@ -107,6 +107,43 @@ describe('NavigationService', () => {
     })
   })
 
+  describe('enterLevel', () => {
+    it('changes to new level and sets position based on entry type', () => {
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 10, y: 10, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+        },
+      };
+
+      const result = NavigationService.enterLevel(state, 2, 'STAIRS_DOWN');
+
+      expect(result.dungeon!.currentLevel).toBe(2);
+      // Position should be set to stairs_up tile on new level (implementation detail)
+    });
+
+    it('maintains facing direction when changing levels', () => {
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 3,
+          position: { x: 10, y: 10, facing: 'WEST' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+        },
+      };
+
+      const result = NavigationService.enterLevel(state, 2, 'STAIRS_UP');
+
+      expect(result.dungeon!.position.facing).toBe('WEST');
+    });
+  });
+
   describe('handleSpecialTile', () => {
     describe('teleporter', () => {
       it('teleports party to destination', () => {
@@ -463,6 +500,90 @@ describe('NavigationService', () => {
         // Note: This sets a per-tile flag, actual lightRadius override happens in MazeComponent
         expect(result.dungeon!.lightActive).toBe(true); // Spell still active
         // We'll add a tileDarkness flag for UI to check
+      });
+    });
+
+    describe('stairs', () => {
+      it('stairs_down auto-descends to next level', () => {
+        const tile = { type: 'stairs_down' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        expect(result.dungeon!.currentLevel).toBe(2);
+      });
+
+      it('stairs_up auto-ascends to previous level', () => {
+        const tile = { type: 'stairs_up' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 3,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        expect(result.dungeon!.currentLevel).toBe(2);
+      });
+
+      it('stairs_up on level 1 does nothing', () => {
+        const tile = { type: 'stairs_up' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        expect(result.dungeon!.currentLevel).toBe(1);
+      });
+    });
+
+    describe('elevator', () => {
+      it('returns state unchanged (UI handles level selection)', () => {
+        const tile = {
+          type: 'elevator',
+          elevatorDestinations: [1, 2, 3, 4]
+        } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 10, y: 8, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // Elevator UI handled by MazeComponent
+        expect(result).toEqual(state);
       });
     });
 

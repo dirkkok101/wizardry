@@ -1,5 +1,6 @@
 import { GameState } from '../types/GameState'
-import { Position, Direction, DungeonState, TileData } from '../types/Dungeon'
+import { Position, Direction, DungeonState, TileData, TileType, LevelData } from '../types/Dungeon'
+import { DungeonService } from './DungeonService'
 
 export const NavigationService = {
   /**
@@ -193,6 +194,65 @@ export const NavigationService = {
   },
 
   /**
+   * Change dungeon level (stairs, elevator, chute)
+   * Sets position to appropriate entry point on new level
+   */
+  enterLevel(
+    state: GameState,
+    newLevel: number,
+    entryType: 'STAIRS_UP' | 'STAIRS_DOWN' | 'ELEVATOR' | 'CHUTE'
+  ): GameState {
+    // Clamp level to 1-10
+    newLevel = Math.max(1, Math.min(10, newLevel))
+
+    // Load new level to find entry position
+    const level = DungeonService.loadLevel(newLevel)
+
+    // Find appropriate entry tile
+    let entryPosition: Position | undefined
+
+    if (entryType === 'STAIRS_DOWN' || entryType === 'CHUTE') {
+      // Find stairs_up tile on new level
+      entryPosition = this.findTileOfType(level, 'stairs_up')
+    } else if (entryType === 'STAIRS_UP') {
+      // Find stairs_down tile on new level
+      entryPosition = this.findTileOfType(level, 'stairs_down')
+    } else if (entryType === 'ELEVATOR') {
+      // Find elevator tile on new level
+      entryPosition = this.findTileOfType(level, 'elevator')
+    }
+
+    // If no entry tile found, use current position
+    if (!entryPosition) {
+      entryPosition = { ...state.dungeon!.position }
+    }
+
+    // Maintain facing direction
+    entryPosition.facing = state.dungeon!.position.facing
+
+    return {
+      ...state,
+      dungeon: {
+        ...state.dungeon!,
+        currentLevel: newLevel,
+        position: entryPosition,
+      }
+    }
+  },
+
+  /**
+   * Find first tile of given type in level
+   */
+  findTileOfType(level: LevelData, type: TileType): Position | undefined {
+    for (const tile of level.tiles) {
+      if (tile.type === type) {
+        return { x: tile.x, y: tile.y, facing: 'NORTH' }
+      }
+    }
+    return undefined
+  },
+
+  /**
    * Handle special tile effects (teleporters, spinners, chutes, etc.)
    * Called after every movement
    */
@@ -217,6 +277,22 @@ export const NavigationService = {
 
       case 'pit':
         return this.handlePit(state)
+
+      case 'stairs_up':
+        if (state.dungeon!.currentLevel > 1) {
+          return this.enterLevel(state, state.dungeon!.currentLevel - 1, 'STAIRS_UP')
+        }
+        return state
+
+      case 'stairs_down':
+        if (state.dungeon!.currentLevel < 10) {
+          return this.enterLevel(state, state.dungeon!.currentLevel + 1, 'STAIRS_DOWN')
+        }
+        return state
+
+      case 'elevator':
+        // UI handles level selection, MazeComponent calls enterLevel
+        return state
 
       case 'darkness':
       case 'anti_magic':
