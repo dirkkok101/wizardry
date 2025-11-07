@@ -24,7 +24,7 @@ describe('ActiveSpellsComponent', () => {
     fixture.componentRef.setInput('spells', spells);
     fixture.detectChanges();
 
-    const spellElements = fixture.nativeElement.querySelectorAll('.spell');
+    const spellElements = fixture.nativeElement.querySelectorAll('.spell-item');
     expect(spellElements.length).toBe(2);
     expect(spellElements[0].textContent).toContain('💡');
     expect(spellElements[0].textContent).toContain('MILWA');
@@ -36,7 +36,7 @@ describe('ActiveSpellsComponent', () => {
     fixture.componentRef.setInput('spells', []);
     fixture.detectChanges();
 
-    const emptyMessage = fixture.nativeElement.querySelector('.empty');
+    const emptyMessage = fixture.nativeElement.querySelector('.no-spells');
     expect(emptyMessage).toBeTruthy();
     expect(emptyMessage.textContent).toContain('No active spells');
   });
@@ -49,7 +49,7 @@ describe('ActiveSpellsComponent', () => {
     fixture.componentRef.setInput('spells', spells);
     fixture.detectChanges();
 
-    const description = fixture.nativeElement.querySelector('.desc');
+    const description = fixture.nativeElement.querySelector('.spell-description');
     expect(description.textContent).toContain('Light (Radius: 3)');
   });
 });

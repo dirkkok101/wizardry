@@ -1,14 +1,18 @@
 <div class="active-spells">
-  <div class="title">Active Spells:</div>
+  <div class="spells-title">Active Spells:</div>
   @if (spells().length === 0) {
-    <div class="empty">No active spells</div>
+    <div class="no-spells">No active spells</div>
   } @else {
-    @for (spell of spells(); track spell.name) {
-      <div class="spell">
-        <span class="icon">{{ spell.icon }}</span>
-        <span class="name">{{ spell.name }}</span>
-        <span class="desc">{{ spell.description }}</span>
-      </div>
-    }
+    <div class="spell-list">
+      @for (spell of spells(); track spell.name) {
+        <div class="spell-item">
+          <span class="spell-icon">{{ spell.icon }}</span>
+          <div class="spell-info">
+            <div class="spell-name">{{ spell.name }}</div>
+            <div class="spell-description">{{ spell.description }}</div>
+          </div>
+        </div>
+      }
+    </div>
   }
 </div>
