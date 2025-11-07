@@ -78,6 +78,7 @@ export interface DungeonState {
   teleportCount: number            // track consecutive teleports (max 3)
   visitedTiles: Set<string>        // "level-x-y"
   defeatedEncounters: string[]     // encounter IDs
+  unlockedDoors: Set<string>       // "level_y_x" - doors unlocked by kicking
 }
 
 export interface EncounterTable {

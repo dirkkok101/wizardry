@@ -50,6 +50,7 @@ export interface GameState {
   party: Party
   dungeon: Dungeon | DungeonState // Support both old (Dungeon) and new (DungeonState) for backward compatibility
   settings: Settings
+  encounterTriggered?: boolean // Set to true when an encounter is triggered (e.g., by kicking a door)
 }
 
 export interface SaveData {

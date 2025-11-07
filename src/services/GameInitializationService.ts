@@ -39,7 +39,8 @@ function createNewGame(): GameState {
       lightRadius: 0,
       teleportCount: 0,
       visitedTiles: new Set(),
-      defeatedEncounters: []
+      defeatedEncounters: [],
+      unlockedDoors: new Set()
     },
     settings: {
       difficulty: 'NORMAL',
