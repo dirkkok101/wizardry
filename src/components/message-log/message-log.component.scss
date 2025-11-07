@@ -1,36 +1,62 @@
 .message-log {
-  background: #000;
+  background: rgba(0, 20, 0, 0.8);
   border: 2px solid #0f0;
-  padding: 0.5rem;
+  border-radius: 4px;
+  padding: 0.75rem;
+  max-height: 150px;
+  overflow-y: auto;
   font-family: 'Courier New', monospace;
   color: #0f0;
-}
+  box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1),
+              0 2px 10px rgba(0, 255, 0, 0.2);
 
-.message-log-title {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid #0f0;
-  padding-bottom: 0.25rem;
-}
+  .message-log-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid rgba(0, 255, 0, 0.4);
+    text-shadow: 0 0 4px rgba(0, 255, 0, 0.6);
+  }
 
-.message-log-content {
-  height: 150px;
-  overflow-y: auto;
+  .message {
+    padding: 0.25rem 0;
+    line-height: 1.4;
+    text-shadow: 0 0 3px rgba(0, 255, 0, 0.5);
 
+    &:not(:last-child) {
+      border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+    }
+
+    // Fade older messages slightly
+    &:not(:nth-last-child(-n+3)) {
+      opacity: 0.7;
+    }
+  }
+
+  .empty-message {
+    font-style: italic;
+    opacity: 0.5;
+    text-align: center;
+  }
+
+  // Custom scrollbar for CRT aesthetic
   &::-webkit-scrollbar {
     width: 8px;
   }
 
   &::-webkit-scrollbar-track {
-    background: #001100;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #0f0;
-  }
-}
+    background: rgba(0, 255, 0, 0.5);
+    border-radius: 4px;
 
-.message {
-  padding: 0.25rem 0;
-  line-height: 1.4;
+    &:hover {
+      background: rgba(0, 255, 0, 0.7);
+    }
+  }
 }
