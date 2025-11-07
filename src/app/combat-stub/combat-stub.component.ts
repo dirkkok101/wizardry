@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { MenuItem } from '../../types/menu.types';
+import { MenuItem } from '../../components/menu/menu.component';
 
 @Component({
   selector: 'app-combat-stub',

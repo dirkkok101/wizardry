@@ -16,6 +16,7 @@ import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
+import { DungeonState } from '../../types/Dungeon';
 
 @Component({
   selector: 'app-maze',
@@ -38,7 +39,7 @@ export class MazeComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
 
   // Computed signals from GameStateService
-  readonly dungeonState = computed(() => this.gameState.state().dungeon);
+  readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
   readonly position = computed(() => this.dungeonState()?.position);
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly party = computed(() => this.gameState.state().party);
