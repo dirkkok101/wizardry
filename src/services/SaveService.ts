@@ -79,11 +79,11 @@ export class SaveService {
     const visitedTilesData = data.dungeon?.visitedTiles || []
     let visitedTiles
     if (visitedTilesData.length === 0) {
-      // Default to Map for backward compatibility with existing saves
-      visitedTiles = new Map()
+      // Default to Set (current format)
+      visitedTiles = new Set()
     } else if (Array.isArray(visitedTilesData[0])) {
-      // Old format: array of [key, value] pairs
-      visitedTiles = new Map(visitedTilesData)
+      // Old format: array of [key, value] pairs (convert to Set)
+      visitedTiles = new Set(visitedTilesData.map(([key]: [string, any]) => key))
     } else {
       // New format: array of strings
       visitedTiles = new Set(visitedTilesData)
@@ -94,11 +94,16 @@ export class SaveService {
       roster: new Map(data.roster || []),
       dungeon: data.dungeon ? {
         ...data.dungeon,
-        visitedTiles
+        visitedTiles,
+        defeatedEncounters: data.dungeon.defeatedEncounters || []
       } : {
         currentLevel: 1,
-        visitedTiles: new Map(),
-        encounters: []
+        position: { x: 0, y: 0, facing: 'NORTH' },
+        lightActive: false,
+        lightRadius: 0,
+        teleportCount: 0,
+        visitedTiles: new Set(),
+        defeatedEncounters: []
       }
     }
   }

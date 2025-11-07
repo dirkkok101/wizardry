@@ -304,6 +304,13 @@ export const NavigationService = {
         // - message: Display tile.message
         return state
 
+      case 'searchable':
+      case 'fixed_encounter':
+        // No auto-action - handled explicitly by MazeComponent
+        // searchable: Requires I key press
+        // fixed_encounter: MazeComponent checks defeatedEncounters list
+        return state
+
       // More cases will be added in subsequent tasks
       default:
         return state

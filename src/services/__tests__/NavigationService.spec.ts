@@ -633,5 +633,79 @@ describe('NavigationService', () => {
         expect(result).toEqual(state);
       });
     });
+
+    describe('searchable', () => {
+      it('does not auto-trigger search (requires I key)', () => {
+        const tile = {
+          type: 'searchable',
+          searchContent: { itemId: 'bronze_key' }
+        } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 13, y: 3, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // State unchanged - requires explicit inspect action
+        expect(result).toEqual(state);
+      });
+    });
+
+    describe('fixed_encounter', () => {
+      it('returns state unchanged if encounter not yet defeated', () => {
+        const tile = {
+          type: 'fixed_encounter',
+          encounterId: 'murphys_ghosts'
+        } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 13, y: 5, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // MazeComponent will check and trigger combat
+        expect(result).toEqual(state);
+      });
+
+      it('returns state unchanged if encounter already defeated', () => {
+        const tile = {
+          type: 'fixed_encounter',
+          encounterId: 'murphys_ghosts'
+        } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 13, y: 5, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: ['murphys_ghosts'],
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        expect(result).toEqual(state);
+      });
+    });
   })
 })
