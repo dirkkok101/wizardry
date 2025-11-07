@@ -101,3 +101,21 @@ export interface SpecialTileResult {
   newState: any  // GameState (avoid circular import)
   messages: string[]
 }
+
+// Simplified dungeon representation for testing
+export interface Tile {
+  type?: string
+  locked?: boolean
+  searchContent?: {
+    itemId: string
+    message?: string
+  }
+  [key: string]: any
+}
+
+export interface Level {
+  id: number
+  width: number
+  height: number
+  tiles: Tile[][]
+}
