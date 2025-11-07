@@ -20,6 +20,34 @@ export function calculatePerspective(depth: number): PerspectiveScale {
   };
 }
 
+/**
+ * Convert absolute wall directions to relative (front, left, right)
+ * @param walls - Tile walls in absolute directions
+ * @param facing - Direction player is facing
+ * @returns Walls relative to player perspective
+ */
+export function getRelativeWalls(
+  walls: { north: any; east: any; south: any; west: any },
+  facing: Direction
+): RelativeWalls {
+  // Define mapping for each facing direction
+  const directionMap = {
+    NORTH: { front: 'north', left: 'west', right: 'east' },
+    EAST: { front: 'east', left: 'north', right: 'south' },
+    SOUTH: { front: 'south', left: 'east', right: 'west' },
+    WEST: { front: 'west', left: 'south', right: 'north' }
+  } as const;
+
+  const mapping = directionMap[facing];
+
+  return {
+    front: walls[mapping.front],
+    left: walls[mapping.left],
+    right: walls[mapping.right]
+  };
+}
+
 export const MazeRenderingService = {
-  calculatePerspective
+  calculatePerspective,
+  getRelativeWalls
 };
