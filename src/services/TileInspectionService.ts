@@ -17,9 +17,21 @@ export class TileInspectionService {
 
   /**
    * Inspect current tile and return search results
+   * Returns item ID and message if found
    */
   static inspectTile(level: Level, position: Position): InspectionResult {
-    // TODO: Implementation in Phase 5D
-    return { found: false };
+    const tile = level.tiles[position.y][position.x];
+
+    if (tile.type !== 'searchable' || !tile.searchContent) {
+      return { found: false };
+    }
+
+    const { itemId, message } = tile.searchContent;
+
+    return {
+      found: true,
+      itemId,
+      message: message || `You found ${itemId}!`,
+    };
   }
 }
