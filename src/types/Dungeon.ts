@@ -8,6 +8,7 @@ export type TileType =
   | 'teleporter'
   | 'spinner'
   | 'chute'
+  | 'pit'
   | 'darkness_zone_start'
   | 'anti_magic'
   | 'searchable'
