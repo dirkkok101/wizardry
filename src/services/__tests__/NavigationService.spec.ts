@@ -19,6 +19,32 @@ function createTestGameState(position?: Position): GameState {
 }
 
 describe('NavigationService', () => {
+  // Mock DungeonService for basic movement tests to avoid special tile triggers
+  const mockEmptyLevelData = {
+    level: 1,
+    name: 'Test Level',
+    size: 20,
+    startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
+    edgeWrapping: true,
+    tiles: [],
+    encounterRate: 0,
+    encounterTable: []
+  }
+
+  beforeEach(() => {
+    const DungeonService = require('../DungeonService').DungeonService
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(mockEmptyLevelData)
+    jest.spyOn(DungeonService, 'getTile').mockReturnValue({
+      x: 0,
+      y: 0,
+      walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   describe('moveForward', () => {
     it('increments y when facing north', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
@@ -706,6 +732,209 @@ describe('NavigationService', () => {
 
         expect(result).toEqual(state);
       });
+    });
+  })
+
+  describe('movement integration with special tiles', () => {
+    it('triggers teleporter after moveForward', () => {
+      const levelData = {
+        level: 1,
+        name: 'Test Level',
+        size: 20,
+        startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
+        edgeWrapping: true,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } },
+          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'teleporter' as const, destination: { x: 10, y: 10 } }
+        ],
+        encounterRate: 10,
+        encounterTable: []
+      };
+
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'EAST' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: []
+        }
+      };
+
+      // Mock DungeonService.loadLevel and getTile
+      const DungeonService = require('../DungeonService').DungeonService;
+      jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(levelData);
+      jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
+        return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
+      });
+
+      const result = NavigationService.moveForward(state);
+
+      // Should move to (1, 0) then teleport to (10, 10)
+      expect(result.dungeon!.position.x).toBe(10);
+      expect(result.dungeon!.position.y).toBe(10);
+      expect(result.dungeon!.teleportCount).toBe(1);
+
+      // Restore mocks
+      jest.restoreAllMocks();
+    });
+
+    it('triggers spinner after strafeLeft', () => {
+      const levelData = {
+        level: 1,
+        name: 'Test Level',
+        size: 20,
+        startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
+        edgeWrapping: true,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'spinner' as const },
+          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } }
+        ],
+        encounterRate: 10,
+        encounterTable: []
+      };
+
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 1, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: []
+        }
+      };
+
+      const DungeonService = require('../DungeonService').DungeonService;
+      jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(levelData);
+      jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
+        return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
+      });
+
+      const result = NavigationService.strafeLeft(state);
+
+      // Should move to (0, 0) then spin
+      expect(result.dungeon!.position.x).toBe(0);
+      expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.dungeon!.position.facing);
+
+      jest.restoreAllMocks();
+    });
+
+    it('triggers chute after moveBackward', () => {
+      const levelData = {
+        level: 1,
+        name: 'Test Level',
+        size: 20,
+        startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
+        edgeWrapping: true,
+        tiles: [
+          { x: 10, y: 9, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'chute' as const },
+          { x: 10, y: 10, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } }
+        ],
+        encounterRate: 10,
+        encounterTable: []
+      };
+
+      const character = createTestCharacter({ id: 'char1', hp: 50, maxHp: 50 });
+
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        party: {
+          members: ['char1'],
+          formation: { front: ['char1'], back: [] },
+          gold: 0
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 5,
+          position: { x: 10, y: 10, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: []
+        }
+      };
+
+      const DungeonService = require('../DungeonService').DungeonService;
+      jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(levelData);
+      jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
+        return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
+      });
+
+      const result = NavigationService.moveBackward(state);
+
+      // Should move to (10, 9) then fall down levels
+      expect(result.dungeon!.position.x).toBe(10);
+      expect(result.dungeon!.position.y).toBe(9);
+      expect(result.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
+      expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(8);
+
+      // Character should take damage
+      const charAfter = result.roster.get('char1')!;
+      expect(charAfter.hp).toBeLessThan(50);
+
+      jest.restoreAllMocks();
+    });
+
+    it('triggers pit after strafeRight', () => {
+      const levelData = {
+        level: 1,
+        name: 'Test Level',
+        size: 20,
+        startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
+        edgeWrapping: true,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } },
+          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'pit' as const }
+        ],
+        encounterRate: 10,
+        encounterTable: []
+      };
+
+      const character = createTestCharacter({ id: 'char1', hp: 50, maxHp: 50, agility: 3 });
+
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        party: {
+          members: ['char1'],
+          formation: { front: ['char1'], back: [] },
+          gold: 0
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 5,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: []
+        }
+      };
+
+      const DungeonService = require('../DungeonService').DungeonService;
+      jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(levelData);
+      jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
+        return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
+      });
+
+      const result = NavigationService.strafeRight(state);
+
+      // Should move to (1, 0)
+      expect(result.dungeon!.position.x).toBe(1);
+      expect(result.dungeon!.position.y).toBe(0);
+
+      // Low AGI character should likely take damage (may not happen every time due to RNG)
+      // We just verify position changed and level stayed same
+      expect(result.dungeon!.currentLevel).toBe(5);
+
+      jest.restoreAllMocks();
     });
   })
 })

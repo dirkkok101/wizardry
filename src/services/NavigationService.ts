@@ -21,13 +21,20 @@ export const NavigationService = {
     const currentPos = state.dungeon.position
     const nextPos = this.getNextPosition(currentPos, currentPos.facing, false)
 
-    return {
+    let newState: GameState = {
       ...state,
       dungeon: {
         ...state.dungeon,
         position: nextPos
       }
     }
+
+    // Trigger special tile effects
+    const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
+    const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
+    newState = this.handleSpecialTile(newState, tile)
+
+    return newState
   },
 
   /**
@@ -137,7 +144,7 @@ export const NavigationService = {
     const leftDirection = this.rotateDirection(currentPos.facing, 'LEFT')
     const nextPos = this.getNextPosition(currentPos, leftDirection, false)
 
-    return {
+    let newState: GameState = {
       ...state,
       dungeon: {
         ...state.dungeon,
@@ -147,6 +154,13 @@ export const NavigationService = {
         }
       }
     }
+
+    // Trigger special tile effects
+    const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
+    const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
+    newState = this.handleSpecialTile(newState, tile)
+
+    return newState
   },
 
   /**
@@ -161,7 +175,7 @@ export const NavigationService = {
     const rightDirection = this.rotateDirection(currentPos.facing, 'RIGHT')
     const nextPos = this.getNextPosition(currentPos, rightDirection, false)
 
-    return {
+    let newState: GameState = {
       ...state,
       dungeon: {
         ...state.dungeon,
@@ -171,6 +185,13 @@ export const NavigationService = {
         }
       }
     }
+
+    // Trigger special tile effects
+    const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
+    const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
+    newState = this.handleSpecialTile(newState, tile)
+
+    return newState
   },
 
   /**
@@ -184,13 +205,20 @@ export const NavigationService = {
     const currentPos = state.dungeon.position
     const nextPos = this.getNextPosition(currentPos, currentPos.facing, true)
 
-    return {
+    let newState: GameState = {
       ...state,
       dungeon: {
         ...state.dungeon,
         position: nextPos
       }
     }
+
+    // Trigger special tile effects
+    const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
+    const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
+    newState = this.handleSpecialTile(newState, tile)
+
+    return newState
   },
 
   /**
