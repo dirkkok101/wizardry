@@ -1,6 +1,7 @@
 import { NavigationService } from '../NavigationService'
 import { GameState } from '../../types/GameState'
 import { Position, TileData } from '../../types/Dungeon'
+import { createTestCharacter, createTestGameState as createTestGameStateHelper } from '../../test-helpers/test-factories'
 
 // Test helper
 function createTestGameState(position?: Position): GameState {
@@ -254,6 +255,88 @@ describe('NavigationService', () => {
 
         expect(facingChanged).toBe(true)
       })
+    })
+
+    describe('chute', () => {
+      it('causes party to fall 1-3 levels', () => {
+        const tile = { type: 'chute' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 5,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // Should fall 1-3 levels
+        expect(result.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
+        expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(8);
+      });
+
+      it('deals 1d6 damage per level fallen to all party members', () => {
+        const tile = { type: 'chute' } as TileData;
+
+        const character1 = createTestCharacter({ id: 'char1', hp: 50, maxHp: 50 });
+        const character2 = createTestCharacter({ id: 'char2', hp: 50, maxHp: 50 });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1', 'char2'],
+            formation: { front: ['char1'], back: ['char2'] },
+            gold: 0,
+          },
+          roster: new Map([
+            ['char1', character1],
+            ['char2', character2],
+          ]),
+          dungeon: {
+            currentLevel: 5,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        const char1After = result.roster.get('char1')!;
+        const char2After = result.roster.get('char2')!;
+
+        // Both characters should take damage
+        expect(char1After.hp).toBeLessThan(50);
+        expect(char2After.hp).toBeLessThan(50);
+
+        // Damage should be reasonable (1-18 for 1-3 levels × 1-6 damage)
+        expect(char1After.hp).toBeGreaterThanOrEqual(50 - 18);
+        expect(char2After.hp).toBeGreaterThanOrEqual(50 - 18);
+      });
+
+      it('does not fall below level 10 (bottom)', () => {
+        const tile = { type: 'chute' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 9,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(10);
+      });
     })
   })
 })
