@@ -60,12 +60,18 @@ export class SaveService {
       ? Array.from(state.dungeon.visitedTiles.entries())
       : Array.from(state.dungeon.visitedTiles)
 
+    // Handle unlockedDoors Set (convert to array for JSON serialization)
+    const unlockedDoorsArray = (state.dungeon as any).unlockedDoors
+      ? Array.from((state.dungeon as any).unlockedDoors)
+      : []
+
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
       dungeon: {
         ...state.dungeon,
-        visitedTiles: visitedTilesArray
+        visitedTiles: visitedTilesArray,
+        unlockedDoors: unlockedDoorsArray
       }
     }
   }
@@ -89,13 +95,18 @@ export class SaveService {
       visitedTiles = new Set(visitedTilesData)
     }
 
+    // Deserialize unlockedDoors Set (from array)
+    const unlockedDoorsData = data.dungeon?.unlockedDoors || []
+    const unlockedDoors = new Set(unlockedDoorsData)
+
     return {
       ...data,
       roster: new Map(data.roster || []),
       dungeon: data.dungeon ? {
         ...data.dungeon,
         visitedTiles,
-        defeatedEncounters: data.dungeon.defeatedEncounters || []
+        defeatedEncounters: data.dungeon.defeatedEncounters || [],
+        unlockedDoors
       } : {
         currentLevel: 1,
         position: { x: 0, y: 0, facing: 'NORTH' },
@@ -103,7 +114,8 @@ export class SaveService {
         lightRadius: 0,
         teleportCount: 0,
         visitedTiles: new Set(),
-        defeatedEncounters: []
+        defeatedEncounters: [],
+        unlockedDoors: new Set()
       }
     }
   }
