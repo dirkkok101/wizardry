@@ -162,4 +162,68 @@ describe('MazeRenderingService', () => {
       expect(wallCmd?.width).toBeGreaterThan(300); // Should be near full width
     });
   });
+
+  describe('renderTile', () => {
+    const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
+
+    it('renders open corridor with corridor lines only', () => {
+      const tile = createTestTile(0, 0, {
+        north: 'open',
+        east: 'open',
+        south: 'open',
+        west: 'open'
+      });
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
+
+      // Should have corridor lines but no walls
+      expect(commands.length).toBeGreaterThan(0);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
+    });
+
+    it('renders wall on left when left has wall', () => {
+      const tile = createTestTile(0, 0, {
+        north: 'open',
+        east: 'open',
+        south: 'open',
+        west: 'wall'
+      });
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
+
+      // Should have corridor lines + left wall
+      const hasWall = commands.some(cmd => cmd.type === 'fillRect');
+      expect(hasWall).toBe(true);
+    });
+
+    it('renders front wall when facing wall', () => {
+      const tile = createTestTile(0, 0, {
+        north: 'wall',
+        east: 'open',
+        south: 'open',
+        west: 'open'
+      });
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
+
+      // Front wall should be present
+      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
+      expect(wallCmd).toBeDefined();
+      expect(wallCmd!.width).toBeGreaterThan(300); // Front wall is wide
+    });
+
+    it('renders door with darker color', () => {
+      const tile = createTestTile(0, 0, {
+        north: 'door',
+        east: 'open',
+        south: 'open',
+        west: 'open'
+      });
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
+
+      const doorCmd = commands.find(cmd => cmd.color === '#080');
+      expect(doorCmd).toBeDefined();
+    });
+  });
 });
