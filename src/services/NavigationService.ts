@@ -1,5 +1,5 @@
 import { GameState } from '../types/GameState'
-import { Position, Direction, DungeonState } from '../types/Dungeon'
+import { Position, Direction, DungeonState, TileData } from '../types/Dungeon'
 
 export const NavigationService = {
   /**
@@ -188,6 +188,56 @@ export const NavigationService = {
       dungeon: {
         ...state.dungeon,
         position: nextPos
+      }
+    }
+  },
+
+  /**
+   * Handle special tile effects (teleporters, spinners, chutes, etc.)
+   * Called after every movement
+   */
+  handleSpecialTile(state: GameState, tile: TileData): GameState {
+    // Reset teleport count for non-teleporter tiles
+    if (tile.type !== 'teleporter' && state.dungeon!.teleportCount > 0) {
+      state = {
+        ...state,
+        dungeon: { ...state.dungeon!, teleportCount: 0 }
+      }
+    }
+
+    switch (tile.type) {
+      case 'teleporter':
+        return this.handleTeleporter(state, tile)
+
+      // More cases will be added in subsequent tasks
+      default:
+        return state
+    }
+  },
+
+  /**
+   * Handle teleporter tile - instant transport with loop prevention
+   */
+  handleTeleporter(state: GameState, tile: TileData): GameState {
+    // Prevent infinite loops - max 3 consecutive teleports
+    if (state.dungeon!.teleportCount >= 3) {
+      return state
+    }
+
+    if (!tile.destination) {
+      return state
+    }
+
+    return {
+      ...state,
+      dungeon: {
+        ...state.dungeon!,
+        position: {
+          ...state.dungeon!.position,
+          x: tile.destination.x!,
+          y: tile.destination.y!,
+        },
+        teleportCount: state.dungeon!.teleportCount + 1,
       }
     }
   },
