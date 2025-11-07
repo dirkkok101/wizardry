@@ -70,6 +70,26 @@ describe('MazeComponent - Sequential Navigation Operations', () => {
 
     jest.spyOn(router, 'navigate');
 
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
     // Set up test state at position (5,5) facing NORTH
     gameState.updateState(state => ({
       ...state,
