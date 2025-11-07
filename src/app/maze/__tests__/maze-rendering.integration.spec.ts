@@ -10,6 +10,7 @@ function createTestDungeonState() {
     position: { x: 10, y: 10, facing: 'NORTH' as const },
     lightActive: false,
     lightRadius: 3,
+    teleportCount: 0,
     visitedTiles: new Set<string>(),
     defeatedEncounters: []
   };

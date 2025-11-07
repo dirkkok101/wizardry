@@ -10,6 +10,7 @@ function createTestGameState(position: Position): GameState {
       position,
       lightActive: false,
       lightRadius: 1,
+      teleportCount: 0,
       visitedTiles: new Set(),
       defeatedEncounters: []
     }
