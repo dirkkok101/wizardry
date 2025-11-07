@@ -1,5 +1,7 @@
 import { TileInspectionService } from '../TileInspectionService';
 import { Level, Position } from '../../types/Dungeon';
+import { GameState } from '../../types/GameState';
+import { createTestCharacter, createTestGameState } from '../../test-helpers/test-factories';
 
 describe('TileInspectionService', () => {
   describe('hasSearchableContent', () => {
@@ -60,6 +62,93 @@ describe('TileInspectionService', () => {
 
       expect(result.found).toBe(false);
       expect(result.itemId).toBeUndefined();
+    });
+  });
+
+  describe('inspectTileWithState', () => {
+    it('adds discovered item to first party member inventory', () => {
+      const level: Level = {
+        id: 1,
+        width: 20,
+        height: 20,
+        tiles: [
+          [
+            { type: 'searchable', searchContent: { itemId: 'bronze_key', message: 'You found a bronze key!' } },
+          ],
+        ],
+      };
+
+      const character = createTestCharacter({ id: 'char1', inventory: [] });
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          members: ['char1'],
+          formation: { frontRow: ['char1'], backRow: [] },
+          position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
+          light: false,
+          gold: 0,
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+        },
+      };
+
+      const result = TileInspectionService.inspectTileWithState(state, level);
+
+      expect(result.found).toBe(true);
+      expect(result.itemId).toBe('bronze_key');
+
+      // Check item added to inventory
+      const charAfter = result.state!.roster.get('char1')!;
+      expect(charAfter.inventory).toContainEqual({ itemId: 'bronze_key', equipped: false });
+    });
+
+    it('clears tile search content after discovery', () => {
+      const level: Level = {
+        id: 1,
+        width: 20,
+        height: 20,
+        tiles: [
+          [
+            { type: 'searchable', searchContent: { itemId: 'bronze_key' } },
+          ],
+        ],
+      };
+
+      const character = createTestCharacter({ id: 'char1', inventory: [] });
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          members: ['char1'],
+          formation: { frontRow: ['char1'], backRow: [] },
+          position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
+          light: false,
+          gold: 0,
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+        },
+      };
+
+      const result = TileInspectionService.inspectTileWithState(state, level);
+
+      // Second inspection should return nothing
+      const result2 = TileInspectionService.inspectTileWithState(result.state!, level);
+      expect(result2.found).toBe(false);
     });
   });
 });
