@@ -1,22 +1,29 @@
-<div class="character-inspection">
-  @if (character(); as char) {
-    <div class="character-sheet">
-      <!-- Message Banner -->
-      @if (message(); as msg) {
-        <div class="message" [ngClass]="'message-' + msg.type">
-          {{ msg.text }}
-        </div>
-      }
+@if (character(); as char) {
+  <app-scene-title
+    [title]="char.name"
+    [showPartyGold]="false"
+  />
 
-      <!-- Header -->
-      <div class="section header">
-        <h2>{{ char.name }}</h2>
-        <div class="header-info">
-          <span class="class">{{ char.class }}</span>
-          <span class="level">Level {{ char.level }}</span>
-          <span class="alignment">{{ char.alignment }}</span>
-        </div>
+  <div class="character-inspection">
+    <!-- Message Banner -->
+    @if (message(); as msg) {
+      <div class="message" [ngClass]="'message-' + msg.type">
+        {{ msg.text }}
       </div>
+    }
+
+    <!-- Character Header Info -->
+    <div class="character-header">
+      <span class="class">{{ char.class }}</span>
+      <span class="separator">•</span>
+      <span class="level">Level {{ char.level }}</span>
+      <span class="separator">•</span>
+      <span class="alignment">{{ char.alignment }}</span>
+      <span class="separator">•</span>
+      <span class="status" [ngClass]="getStatusColor(char.status)">
+        {{ char.status }}
+      </span>
+    </div>
 
       <!-- Stats -->
       <div class="section stats">
@@ -111,49 +118,59 @@
         </div>
       </div>
 
-      <!-- Inventory -->
-      <div class="section inventory">
-        <h3>Inventory ({{ inventoryItems().length }}/8)</h3>
-        <div class="inventory-grid">
-          @for (item of inventoryItems(); track item.id) {
-            <app-item-card
-              [item]="item"
-              [isEquipped]="false"
-              (actionClick)="handleItemAction($event)"
-            />
-          }
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="section actions">
-        <button class="btn-back" (click)="returnToPrevious()">Back</button>
+    <!-- Inventory -->
+    <div class="section inventory">
+      <h3>Inventory ({{ inventoryItems().length }}/8)</h3>
+      <div class="inventory-grid">
+        @for (item of inventoryItems(); track item.id) {
+          <app-item-card
+            [item]="item"
+            [isEquipped]="false"
+            (actionClick)="handleItemAction($event)"
+          />
+        }
       </div>
     </div>
+  </div>
 
-    <!-- Trade Dialog -->
-    @if (showTradeDialog() && pendingAction(); as pending) {
-      <app-trade-item-dialog
-        [item]="pending.item"
-        [partyMembers]="partyMembers()"
-        [currentCharacterId]="char.id"
-        (confirm)="confirmTrade($event)"
-        (cancel)="cancelDialog()"
-      />
-    }
+  <!-- Trade Dialog -->
+  @if (showTradeDialog() && pendingAction(); as pending) {
+    <app-trade-item-dialog
+      [item]="pending.item"
+      [partyMembers]="partyMembers()"
+      [currentCharacterId]="char.id"
+      (confirm)="confirmTrade($event)"
+      (cancel)="cancelDialog()"
+    />
+  }
 
-    <!-- Drop Confirmation Dialog -->
-    @if (showDropDialog() && pendingAction(); as pending) {
-      <app-confirmation-dialog
-        [message]="'Drop ' + pending.item.name + '? This cannot be undone.'"
-        (confirmed)="confirmDrop()"
-        (cancelled)="cancelDialog()"
-      />
-    }
-  } @else {
+  <!-- Drop Confirmation Dialog -->
+  @if (showDropDialog() && pendingAction(); as pending) {
+    <app-confirmation-dialog
+      [message]="'Drop ' + pending.item.name + '? This cannot be undone.'"
+      (confirmed)="confirmDrop()"
+      (cancelled)="cancelDialog()"
+    />
+  }
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+} @else {
+  <app-scene-title
+    title="CHARACTER NOT FOUND"
+    [showPartyGold]="false"
+  />
+
+  <div class="character-inspection">
     <div class="no-character">
       <p>Character not found</p>
-      <button (click)="returnToPrevious()">Return</button>
     </div>
-  }
-</div>
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+}

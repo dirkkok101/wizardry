@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -13,6 +13,9 @@ import { ItemSlot } from '../../types/ItemType';
 import { ItemCardComponent, ItemAction } from '../components/item-card/item-card.component';
 import { TradeItemDialogComponent } from '../components/trade-item-dialog/trade-item-dialog.component';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { MenuItem } from '../../components/menu/menu.component';
 
 /**
  * Character Inspection Component - Modernized with inline item actions
@@ -22,6 +25,7 @@ import { ConfirmationDialogComponent } from '../../components/confirmation-dialo
  * - Inventory with Trade/Drop actions
  * - Confirmation dialogs for destructive actions
  * - Party member selection for trades
+ * - Standard header/footer components for consistency
  */
 @Component({
   selector: 'app-character-inspection',
@@ -30,7 +34,9 @@ import { ConfirmationDialogComponent } from '../../components/confirmation-dialo
     CommonModule,
     ItemCardComponent,
     TradeItemDialogComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
+    SceneTitleComponent,
+    SceneFooterComponent
   ],
   templateUrl: './character-inspection.component.html',
   styleUrls: ['./character-inspection.component.scss']
@@ -83,6 +89,11 @@ export class CharacterInspectionComponent {
       .map(id => ItemDataService.getItem(id))
       .filter((item): item is Item => item !== null);
   });
+
+  // Footer menu items
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    { id: 'back', label: 'Return', shortcut: 'ESC', enabled: true }
+  ]);
 
   // Dialog state
   showTradeDialog = signal(false);
@@ -211,6 +222,21 @@ export class CharacterInspectionComponent {
 
   returnToPrevious(): void {
     this.router.navigate([`/${this.returnTo()}`]);
+  }
+
+  handleFooterAction(itemId: string): void {
+    if (itemId === 'back') {
+      this.returnToPrevious();
+    }
+  }
+
+  @HostListener('window:keydown.escape')
+  handleEscape(): void {
+    // Don't navigate if a dialog is open
+    if (this.showTradeDialog() || this.showDropDialog()) {
+      return;
+    }
+    this.returnToPrevious();
   }
 
   private showMessage(text: string, type: 'success' | 'error'): void {
