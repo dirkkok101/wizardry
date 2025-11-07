@@ -37,6 +37,7 @@ export class MazeComponent implements OnInit {
   // Local signals
   readonly messages = signal<string[]>([]);
   readonly errorMessage = signal<string | null>(null);
+  readonly isLoadingLevel = signal<boolean>(false);
 
   // Computed signals from GameStateService
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);

@@ -1,6 +1,13 @@
 <div class="maze-scene">
   <app-scene-title [title]="sceneTitle()" />
 
+  @if (isLoadingLevel()) {
+    <div class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading Level {{ currentLevel() }}...</p>
+    </div>
+  }
+
   @if (errorMessage()) {
     <div class="error-message">{{ errorMessage() }}</div>
   }
