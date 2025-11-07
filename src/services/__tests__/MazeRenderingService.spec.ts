@@ -89,4 +89,31 @@ describe('MazeRenderingService', () => {
       expect(result.right).toBe('wall');  // north
     });
   });
+
+  describe('renderCorridor', () => {
+    const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
+
+    it('returns corridor line commands', () => {
+      const commands = MazeRenderingService.renderCorridor(perspective, testConfig);
+
+      expect(commands.length).toBeGreaterThan(0);
+      expect(commands[0].type).toBe('line');
+      expect(commands[0].color).toBe('#0f0');
+    });
+
+    it('applies perspective brightness to lines', () => {
+      const fadedPerspective = { scale: 0.4, offsetY: 100, brightness: 0.5 };
+      const commands = MazeRenderingService.renderCorridor(fadedPerspective, testConfig);
+
+      expect(commands[0].alpha).toBe(0.5);
+    });
+
+    it('creates 4 lines for corridor walls (left/right perspective)', () => {
+      const commands = MazeRenderingService.renderCorridor(perspective, testConfig);
+
+      // 2 lines for left wall, 2 for right wall (creating depth)
+      expect(commands.length).toBe(4);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
+    });
+  });
 });
