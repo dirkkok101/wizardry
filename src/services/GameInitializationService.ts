@@ -34,8 +34,12 @@ function createNewGame(): GameState {
     },
     dungeon: {
       currentLevel: 1,
-      visitedTiles: new Map(),
-      encounters: []
+      position: { x: 0, y: 0, facing: 'NORTH' },
+      lightActive: false,
+      lightRadius: 0,
+      teleportCount: 0,
+      visitedTiles: new Set(),
+      defeatedEncounters: []
     },
     settings: {
       difficulty: 'NORMAL',
