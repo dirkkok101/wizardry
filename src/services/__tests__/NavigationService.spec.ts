@@ -337,6 +337,110 @@ describe('NavigationService', () => {
 
         expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(10);
       });
-    })
+    });
+
+    describe('pit', () => {
+      it('deals 1d6 damage to characters who fail AGI check', () => {
+        const tile = { type: 'pit' } as TileData;
+
+        const lowAgiChar = createTestCharacter({
+          id: 'char1',
+          hp: 50,
+          maxHp: 50,
+          agility: 3, // Very low AGI, should fail
+        });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1'],
+            formation: { front: ['char1'], back: [] },
+            gold: 0,
+          },
+          roster: new Map([['char1', lowAgiChar]]),
+          dungeon: {
+            currentLevel: 5,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        // Run multiple times to ensure damage occurs
+        let damageOccurred = false;
+        for (let i = 0; i < 10; i++) {
+          const result = NavigationService.handleSpecialTile(state, tile);
+          const charAfter = result.roster.get('char1')!;
+          if (charAfter.hp < 50) {
+            damageOccurred = true;
+            // Damage should be 1-6
+            expect(charAfter.hp).toBeGreaterThanOrEqual(50 - 6);
+            expect(charAfter.hp).toBeLessThan(50);
+            break;
+          }
+        }
+        expect(damageOccurred).toBe(true);
+      });
+
+      it('high AGI characters can avoid pit damage', () => {
+        const tile = { type: 'pit' } as TileData;
+
+        const highAgiChar = createTestCharacter({
+          id: 'char1',
+          hp: 50,
+          maxHp: 50,
+          agility: 18, // Max AGI, should usually succeed
+        });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1'],
+            formation: { front: ['char1'], back: [] },
+            gold: 0,
+          },
+          roster: new Map([['char1', highAgiChar]]),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        // Run multiple times to ensure avoidance occurs
+        let avoidanceOccurred = false;
+        for (let i = 0; i < 10; i++) {
+          const result = NavigationService.handleSpecialTile(state, tile);
+          const charAfter = result.roster.get('char1')!;
+          if (charAfter.hp === 50) {
+            avoidanceOccurred = true;
+            break;
+          }
+        }
+        expect(avoidanceOccurred).toBe(true);
+      });
+
+      it('does not change current level', () => {
+        const tile = { type: 'pit' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 5,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        expect(result.dungeon!.currentLevel).toBe(5);
+      });
+    });
   })
 })
