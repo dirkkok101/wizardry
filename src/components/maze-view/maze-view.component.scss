@@ -4,14 +4,14 @@
   height: 100%;
   max-width: 600px;
   max-height: 600px;
-  background: #000;
-  border: 2px solid #0f0;
+  background: var(--crt-black);
+  border: var(--crt-border);
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   cursor: crosshair;
 
   // CRT phosphor glow effect
-  filter: drop-shadow(0 0 3px rgba(0, 255, 0, 0.8))
+  filter: drop-shadow(0 0 3px var(--crt-green-glow))
           drop-shadow(0 0 8px rgba(0, 255, 0, 0.4));
 
   // Scanline overlay

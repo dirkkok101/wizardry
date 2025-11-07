@@ -1,6 +1,6 @@
 .scene-footer {
-  background: rgba(0, 20, 0, 0.9);
-  border-top: 2px solid #0f0;
+  background: var(--crt-bg-dark);
+  border-top: var(--crt-border);
   padding: 1rem;
   box-shadow: 0 -2px 10px rgba(0, 255, 0, 0.3);
 
@@ -21,18 +21,18 @@
         white-space: nowrap;
         background: rgba(0, 0, 0, 0.5);
         border: 2px solid rgba(0, 255, 0, 0.5);
-        color: #0f0;
+        color: var(--crt-green);
         padding: 0.5rem 1rem;
         border-radius: 4px;
         font-family: 'Courier New', monospace;
         font-size: 0.85rem;
         cursor: pointer;
         transition: all 0.2s ease;
-        text-shadow: 0 0 2px rgba(0, 255, 0, 0.6);
+        text-shadow: 0 0 2px var(--crt-green-dim);
 
         &:hover:not(.menu__item--disabled) {
           background: rgba(0, 255, 0, 0.1);
-          border-color: #0f0;
+          border-color: var(--crt-green);
           box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
           transform: translateY(-2px);
         }

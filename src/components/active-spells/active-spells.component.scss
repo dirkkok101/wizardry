@@ -1,6 +1,6 @@
 .active-spells {
-  background: rgba(0, 20, 0, 0.6);
-  border: 2px solid #0f0;
+  background: var(--crt-bg-medium);
+  border: var(--crt-border);
   border-radius: 4px;
   padding: 0.75rem;
   margin-bottom: 1rem;
@@ -8,12 +8,12 @@
               0 2px 5px rgba(0, 255, 0, 0.2);
 
   .spells-title {
-    color: #0f0;
+    color: var(--crt-green);
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
-    text-shadow: 0 0 3px rgba(0, 255, 0, 0.8);
+    text-shadow: var(--crt-glow-sm);
     text-transform: uppercase;
     letter-spacing: 1px;
   }
@@ -32,13 +32,13 @@
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(0, 255, 0, 0.3);
     border-radius: 2px;
-    color: #0f0;
+    color: var(--crt-green);
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
 
     .spell-icon {
       font-size: 1.2rem;
-      filter: drop-shadow(0 0 3px rgba(0, 255, 0, 0.8));
+      filter: drop-shadow(0 0 3px var(--crt-green-glow));
     }
 
     .spell-info {
@@ -46,7 +46,7 @@
 
       .spell-name {
         font-weight: bold;
-        text-shadow: 0 0 2px rgba(0, 255, 0, 0.6);
+        text-shadow: 0 0 2px var(--crt-green-dim);
       }
 
       .spell-description {
@@ -57,7 +57,7 @@
   }
 
   .no-spells {
-    color: #0f0;
+    color: var(--crt-green);
     font-family: 'Courier New', monospace;
     font-style: italic;
     opacity: 0.5;
