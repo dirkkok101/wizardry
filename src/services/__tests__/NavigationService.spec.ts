@@ -1,13 +1,13 @@
 import { NavigationService } from '../NavigationService'
 import { GameState } from '../../types/GameState'
-import { Position } from '../../types/Dungeon'
+import { Position, TileData } from '../../types/Dungeon'
 
 // Test helper
-function createTestGameState(position: Position): GameState {
+function createTestGameState(position?: Position): GameState {
   return {
     dungeon: {
       currentLevel: 1,
-      position,
+      position: position || { x: 0, y: 0, facing: 'NORTH' },
       lightActive: false,
       lightRadius: 1,
       teleportCount: 0,
@@ -103,6 +103,94 @@ describe('NavigationService', () => {
       expect(newState.dungeon!.position.x).toBe(9)
       expect(newState.dungeon!.position.y).toBe(10)
       expect(newState.dungeon!.position.facing).toBe('NORTH')
+    })
+  })
+
+  describe('handleSpecialTile', () => {
+    describe('teleporter', () => {
+      it('teleports party to destination', () => {
+        const tile: TileData = {
+          x: 1,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: 'teleporter',
+          destination: { x: 5, y: 5 }
+        }
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 1, y: 0, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        }
+
+        const result = NavigationService.handleSpecialTile(state, tile)
+
+        expect(result.dungeon!.position.x).toBe(5)
+        expect(result.dungeon!.position.y).toBe(5)
+        expect(result.dungeon!.teleportCount).toBe(1)
+      })
+
+      it('prevents infinite teleport loops after 3 consecutive', () => {
+        const tile: TileData = {
+          x: 1,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: 'teleporter',
+          destination: { x: 5, y: 5 }
+        }
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 1, y: 0, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 3,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        }
+
+        const result = NavigationService.handleSpecialTile(state, tile)
+
+        // Should NOT teleport
+        expect(result.dungeon!.position.x).toBe(1)
+        expect(result.dungeon!.position.y).toBe(0)
+        expect(result.dungeon!.teleportCount).toBe(3)
+      })
+
+      it('resets teleport count on non-teleporter tile', () => {
+        const tile: TileData = {
+          x: 1,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 1, y: 0, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 2,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        }
+
+        const result = NavigationService.handleSpecialTile(state, tile)
+
+        expect(result.dungeon!.teleportCount).toBe(0)
+      })
     })
   })
 })
