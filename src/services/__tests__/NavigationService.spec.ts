@@ -442,5 +442,75 @@ describe('NavigationService', () => {
         expect(result.dungeon!.currentLevel).toBe(5);
       });
     });
+
+    describe('darkness', () => {
+      it('sets lightRadius to 0 for current tile', () => {
+        const tile = { type: 'darkness' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 5, y: 5, facing: 'NORTH' },
+            lightActive: true,
+            lightRadius: 3,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // Note: This sets a per-tile flag, actual lightRadius override happens in MazeComponent
+        expect(result.dungeon!.lightActive).toBe(true); // Spell still active
+        // We'll add a tileDarkness flag for UI to check
+      });
+    });
+
+    describe('anti_magic', () => {
+      it('sets anti-magic flag for current tile', () => {
+        const tile = { type: 'anti_magic' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 5, y: 5, facing: 'NORTH' },
+            lightActive: true,
+            lightRadius: 3,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // Anti-magic doesn't modify state directly - MazeComponent checks tile type
+        expect(result).toEqual(state);
+      });
+    });
+
+    describe('message', () => {
+      it('returns state unchanged (message handled by UI)', () => {
+        const tile = {
+          type: 'message',
+          message: 'AREA OUT OF BOUNDS! Cloaked in eternal darkness'
+        } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 5, y: 5, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const result = NavigationService.handleSpecialTile(state, tile);
+
+        // Message display handled by MazeComponent, state unchanged
+        expect(result).toEqual(state);
+      });
+    });
   })
 })

@@ -218,6 +218,16 @@ export const NavigationService = {
       case 'pit':
         return this.handlePit(state)
 
+      case 'darkness':
+      case 'anti_magic':
+      case 'message':
+        // These tiles don't modify game state directly
+        // Their effects are checked by MazeComponent:
+        // - darkness: Override lightRadius in computed signal
+        // - anti_magic: Prevent spell casting
+        // - message: Display tile.message
+        return state
+
       // More cases will be added in subsequent tasks
       default:
         return state
