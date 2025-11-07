@@ -116,4 +116,50 @@ describe('MazeRenderingService', () => {
       expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
   });
+
+  describe('renderWall', () => {
+    const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
+
+    it('renders left wall as filled rectangle', () => {
+      const commands = MazeRenderingService.renderWall('left', 'wall', perspective, testConfig);
+
+      expect(commands.length).toBeGreaterThan(0);
+      expect(commands.some(cmd => cmd.type === 'fillRect')).toBe(true);
+    });
+
+    it('uses correct color for regular wall', () => {
+      const commands = MazeRenderingService.renderWall('left', 'wall', perspective, testConfig);
+
+      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
+      expect(wallCmd?.color).toBe('#0f0');
+    });
+
+    it('uses darker color for door', () => {
+      const commands = MazeRenderingService.renderWall('left', 'door', perspective, testConfig);
+
+      const doorCmd = commands.find(cmd => cmd.type === 'fillRect');
+      expect(doorCmd?.color).toBe('#080');
+    });
+
+    it('does not render secret walls (invisible)', () => {
+      const commands = MazeRenderingService.renderWall('left', 'secret', perspective, testConfig);
+
+      expect(commands).toHaveLength(0);
+    });
+
+    it('applies perspective brightness', () => {
+      const fadedPerspective = { scale: 0.4, offsetY: 100, brightness: 0.5 };
+      const commands = MazeRenderingService.renderWall('left', 'wall', fadedPerspective, testConfig);
+
+      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
+      expect(wallCmd?.alpha).toBe(0.5);
+    });
+
+    it('renders front wall at full width', () => {
+      const commands = MazeRenderingService.renderWall('front', 'wall', perspective, testConfig);
+
+      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
+      expect(wallCmd?.width).toBeGreaterThan(300); // Should be near full width
+    });
+  });
 });
