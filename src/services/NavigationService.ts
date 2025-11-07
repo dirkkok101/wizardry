@@ -38,6 +38,24 @@ export const NavigationService = {
   },
 
   /**
+   * Get direction delta for facing direction
+   * @param facing Current facing direction
+   * @returns {x, y} delta for movement in that direction
+   */
+  getFacingDelta(facing: Direction): { x: number; y: number } {
+    switch (facing) {
+      case 'NORTH':
+        return { x: 0, y: 1 }
+      case 'SOUTH':
+        return { x: 0, y: -1 }
+      case 'EAST':
+        return { x: 1, y: 0 }
+      case 'WEST':
+        return { x: -1, y: 0 }
+    }
+  },
+
+  /**
    * Calculate next position based on direction and movement
    * @param position Current position
    * @param direction Direction to move (NORTH/SOUTH/EAST/WEST)
