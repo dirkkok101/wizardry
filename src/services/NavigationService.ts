@@ -209,6 +209,9 @@ export const NavigationService = {
       case 'teleporter':
         return this.handleTeleporter(state, tile)
 
+      case 'spinner':
+        return this.handleSpinner(state)
+
       // More cases will be added in subsequent tasks
       default:
         return state
@@ -238,6 +241,25 @@ export const NavigationService = {
           y: tile.destination.y!,
         },
         teleportCount: state.dungeon!.teleportCount + 1,
+      }
+    }
+  },
+
+  /**
+   * Handle spinner tile - randomize facing direction
+   */
+  handleSpinner(state: GameState): GameState {
+    const directions: Direction[] = ['NORTH', 'SOUTH', 'EAST', 'WEST']
+    const randomDirection = directions[Math.floor(Math.random() * directions.length)]
+
+    return {
+      ...state,
+      dungeon: {
+        ...state.dungeon!,
+        position: {
+          ...state.dungeon!.position,
+          facing: randomDirection,
+        }
       }
     }
   },
