@@ -86,6 +86,24 @@ describe('MazeComponent - Forward/Backward Movement', () => {
       allowed: true
     });
 
+    // Mock loadLevel and getTile to avoid special tile side effects
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: [],
+      encounterRate: 0,
+      encounterTable: []
+    });
+
+    jest.spyOn(DungeonService, 'getTile').mockReturnValue({
+      x: 0,
+      y: 0,
+      walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+    });
+
     // Set up test state with dungeon
     gameState.updateState(state => ({
       ...state,
