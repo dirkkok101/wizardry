@@ -13,6 +13,7 @@ import { DungeonService } from '../../services/DungeonService';
 import { MazeRenderingService } from '../../services/MazeRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { DoorService } from '../../services/DoorService';
+import { TileInspectionService } from '../../services/TileInspectionService';
 import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
@@ -103,10 +104,12 @@ export class MazeComponent implements OnInit {
   readonly footerMenuItems = computed((): MenuItem[] => {
     const state = this.gameState.state();
     let canKick = false;
+    let canInspect = false;
 
     if (state.dungeon?.position) {
       const level = DungeonService.loadLevel(this.currentLevel());
       canKick = DoorService.canKickDoor(level, state.dungeon.position);
+      canInspect = TileInspectionService.hasSearchableContent(level, state.dungeon.position);
     }
 
     return [
@@ -117,6 +120,7 @@ export class MazeComponent implements OnInit {
       { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
       { id: 'kick', label: 'Kick Door (K)', shortcut: 'K', enabled: canKick },
+      { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect },
       { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
     ];
   });
@@ -161,6 +165,7 @@ export class MazeComponent implements OnInit {
       case 'q': this.strafeLeft(); break;
       case 'e': this.strafeRight(); break;
       case 'k': this.kickDoor(); break;
+      case 'i': this.inspectTile(); break;
       case 'escape': this.returnToCamp(); break;
       // More keys will be added in later tasks
     }
@@ -237,6 +242,26 @@ export class MazeComponent implements OnInit {
       } else {
         this.addMessage('The door bursts open!');
       }
+    }
+  }
+
+  inspectTile(): void {
+    const state = this.gameState.state();
+    const level = DungeonService.loadLevel(this.currentLevel());
+
+    // Check if current tile has searchable content
+    if (!TileInspectionService.hasSearchableContent(level, state.dungeon.position)) {
+      this.addMessage('Nothing to search here.');
+      return;
+    }
+
+    const result = TileInspectionService.inspectTileWithState(state, level);
+
+    if (result.found && result.state) {
+      this.gameState.updateState(() => result.state!);
+      this.addMessage(result.message || `You found ${result.itemId}!`);
+    } else {
+      this.addMessage('Nothing found.');
     }
   }
 
