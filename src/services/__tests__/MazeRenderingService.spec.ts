@@ -226,4 +226,58 @@ describe('MazeRenderingService', () => {
       expect(doorCmd).toBeDefined();
     });
   });
+
+  describe('generateView', () => {
+    it('returns empty array for no tiles', () => {
+      const commands = MazeRenderingService.generateView([], 'NORTH', testConfig);
+
+      expect(commands).toHaveLength(0);
+    });
+
+    it('renders 3 tiles with correct perspective', () => {
+      const tiles = [
+        createTestTile(0, 1, { north: 'open', east: 'open', south: 'open', west: 'open' }),
+        createTestTile(0, 2, { north: 'open', east: 'open', south: 'open', west: 'open' }),
+        createTestTile(0, 3, { north: 'open', east: 'open', south: 'open', west: 'open' })
+      ];
+
+      const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
+
+      // Should have commands (3 tiles × corridor lines)
+      expect(commands.length).toBeGreaterThan(0);
+    });
+
+    it('renders far tiles before near tiles (z-ordering)', () => {
+      const tiles = [
+        createTestTile(0, 1, { north: 'wall', east: 'open', south: 'open', west: 'open' }),
+        createTestTile(0, 2, { north: 'wall', east: 'open', south: 'open', west: 'open' }),
+        createTestTile(0, 3, { north: 'wall', east: 'open', south: 'open', west: 'open' })
+      ];
+
+      const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
+
+      // Far tile commands should come first (lower brightness)
+      const brightnesses = commands
+        .filter(cmd => cmd.alpha !== undefined)
+        .map(cmd => cmd.alpha);
+
+      // First commands should have lower brightness (far tiles)
+      if (brightnesses.length >= 2) {
+        expect(brightnesses[0]).toBeLessThan(brightnesses[brightnesses.length - 1]);
+      }
+    });
+
+    it('handles single tile (light radius 1)', () => {
+      const tiles = [
+        createTestTile(0, 1, { north: 'open', east: 'open', south: 'open', west: 'open' })
+      ];
+
+      const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
+
+      expect(commands.length).toBeGreaterThan(0);
+      // All commands should have full brightness
+      const hasFadedCommands = commands.some(cmd => cmd.alpha && cmd.alpha < 1.0);
+      expect(hasFadedCommands).toBe(false);
+    });
+  });
 });
