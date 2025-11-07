@@ -6,12 +6,9 @@
   }
 
   <div class="maze-content">
-    <!-- Left: Canvas Placeholder -->
+    <!-- Left: 3D Canvas View -->
     <div class="maze-viewport">
-      <div class="canvas-placeholder">
-        <p>3D Rendering</p>
-        <p>Coming in Phase 3</p>
-      </div>
+      <app-maze-view [commands]="drawCommands()" />
     </div>
 
     <!-- Right: Party & Spells -->
