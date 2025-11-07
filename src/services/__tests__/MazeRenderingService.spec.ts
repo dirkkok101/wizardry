@@ -48,4 +48,45 @@ describe('MazeRenderingService', () => {
       expect(result.brightness).toBe(0.5);
     });
   });
+
+  describe('getRelativeWalls', () => {
+    const walls = {
+      north: 'wall' as const,
+      east: 'door' as const,
+      south: 'open' as const,
+      west: 'wall' as const
+    };
+
+    it('returns correct relative walls when facing NORTH', () => {
+      const result = MazeRenderingService.getRelativeWalls(walls, 'NORTH');
+
+      expect(result.front).toBe('wall');  // north
+      expect(result.left).toBe('wall');   // west
+      expect(result.right).toBe('door');  // east
+    });
+
+    it('returns correct relative walls when facing EAST', () => {
+      const result = MazeRenderingService.getRelativeWalls(walls, 'EAST');
+
+      expect(result.front).toBe('door');  // east
+      expect(result.left).toBe('wall');   // north
+      expect(result.right).toBe('open');  // south
+    });
+
+    it('returns correct relative walls when facing SOUTH', () => {
+      const result = MazeRenderingService.getRelativeWalls(walls, 'SOUTH');
+
+      expect(result.front).toBe('open');  // south
+      expect(result.left).toBe('door');   // east
+      expect(result.right).toBe('wall');  // west
+    });
+
+    it('returns correct relative walls when facing WEST', () => {
+      const result = MazeRenderingService.getRelativeWalls(walls, 'WEST');
+
+      expect(result.front).toBe('wall');  // west
+      expect(result.left).toBe('open');   // south
+      expect(result.right).toBe('wall');  // north
+    });
+  });
 });
