@@ -75,6 +75,7 @@ export interface DungeonState {
   position: Position
   lightActive: boolean
   lightRadius: number
+  teleportCount: number            // track consecutive teleports (max 3)
   visitedTiles: Set<string>        // "level-x-y"
   defeatedEncounters: string[]     // encounter IDs
 }
