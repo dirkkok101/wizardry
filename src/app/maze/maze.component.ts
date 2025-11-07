@@ -101,6 +101,36 @@ export class MazeComponent implements OnInit {
     );
   });
 
+  /**
+   * Show elevator dialog when on elevator tile
+   */
+  readonly showElevatorDialog = computed(() => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return false;
+
+    const level = DungeonService.loadLevel(this.currentLevel());
+    const pos = this.position();
+    if (!pos) return false;
+
+    const currentTile = level.tiles[pos.y][pos.x];
+    return currentTile.type === 'elevator';
+  });
+
+  /**
+   * Available elevator destinations
+   */
+  readonly elevatorDestinations = computed(() => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return [];
+
+    const level = DungeonService.loadLevel(this.currentLevel());
+    const pos = this.position();
+    if (!pos) return [];
+
+    const currentTile = level.tiles[pos.y][pos.x];
+    return currentTile.elevatorDestinations || [];
+  });
+
   // Scene title
   readonly sceneTitle = computed(() => `MAZE - LEVEL ${this.currentLevel()}`);
 
@@ -154,6 +184,12 @@ export class MazeComponent implements OnInit {
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
+    // Check if elevator dialog is open
+    if (this.showElevatorDialog()) {
+      this.cancelElevator();
+      return;
+    }
+
     this.router.navigate(['/camp']);
   }
 
@@ -267,6 +303,19 @@ export class MazeComponent implements OnInit {
     } else {
       this.addMessage('Nothing found.');
     }
+  }
+
+  selectElevatorLevel(level: number): void {
+    const state = this.gameState.state();
+    const newState = NavigationService.enterLevel(state, level, 'ELEVATOR');
+    this.gameState.updateState(() => newState);
+    this.addMessage(`Elevator descends to Level ${level}...`);
+  }
+
+  cancelElevator(): void {
+    this.addMessage('You step away from the elevator.');
+    // Move back one tile (reverse last movement)
+    this.moveBackward();
   }
 
   handleFooterAction(action: string): void {
