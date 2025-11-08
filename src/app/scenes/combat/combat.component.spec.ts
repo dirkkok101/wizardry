@@ -5,6 +5,7 @@ import { GameStateService } from '../../../services/GameStateService'
 import { SceneType } from '../../../types/SceneType'
 import { createTestGameStateWithCombat, createTestCharacter } from '../../../test-helpers/test-factories'
 import { Router } from '@angular/router'
+import { VictoryService } from '../../../services/VictoryService'
 
 describe('CombatComponent', () => {
   let component: CombatComponent
@@ -156,6 +157,70 @@ describe('CombatComponent', () => {
 
       // After execution completes, flag should be false
       expect(component.isExecutingRound()).toBe(false)
+    })
+  })
+
+  describe('Victory Handling', () => {
+    beforeEach(() => {
+      // Setup victory scenario - all monsters dead
+      gameState.updateState(state => {
+        const combat = state.combat!
+        const deadMonsters = combat.monsters.map(m => ({
+          ...m,
+          hp: 0,
+          status: 'DEAD' as const
+        }))
+
+        return {
+          ...state,
+          combat: {
+            ...combat,
+            monsters: deadMonsters
+          }
+        }
+      })
+
+      fixture.detectChanges()
+    })
+
+    it('calculates victory rewards', () => {
+      const spyCalculate = jest.spyOn(VictoryService, 'calculateVictoryRewards')
+
+      component['handleVictory']()
+
+      expect(spyCalculate).toHaveBeenCalled()
+    })
+
+    it('distributes XP to party members', () => {
+      const initialXP = gameState.roster().get('c1')!.experience
+
+      component['handleVictory']()
+
+      const newXP = gameState.roster().get('c1')!.experience
+      expect(newXP).toBeGreaterThan(initialXP)
+    })
+
+    it('adds gold to party', () => {
+      const initialGold = gameState.party().gold
+
+      component['handleVictory']()
+
+      const newGold = gameState.party().gold
+      expect(newGold).toBeGreaterThanOrEqual(initialGold)
+    })
+
+    it('shows victory modal', () => {
+      component['handleVictory']()
+
+      expect(component.showVictoryModal()).toBe(true)
+    })
+
+    it('includes victory rewards in modal', () => {
+      component['handleVictory']()
+
+      const rewards = component.victoryRewards()
+      expect(rewards).toBeDefined()
+      expect(rewards?.totalXP).toBeGreaterThan(0)
     })
   })
 })

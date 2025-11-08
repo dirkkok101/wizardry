@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../../services/GameStateService'
 import { CombatService } from '../../../services/CombatService'
+import { VictoryService, VictoryRewards } from '../../../services/VictoryService'
 import { SceneType } from '../../../types/SceneType'
 import { CombatState, CombatCommand, Combatant, CombatActionType } from '../../../types/Combat'
 import { Character } from '../../../types/Character'
@@ -29,6 +30,8 @@ export class CombatComponent implements OnInit {
   // Local UI state
   readonly selectedActions = signal<Map<string, CombatCommand>>(new Map())
   readonly isExecutingRound = signal<boolean>(false)
+  readonly showVictoryModal = signal<boolean>(false)
+  readonly victoryRewards = signal<VictoryRewards | null>(null)
 
   // Computed party characters
   readonly partyCharacters = computed(() => {
@@ -155,8 +158,37 @@ export class CombatComponent implements OnInit {
   }
 
   private handleVictory(): void {
-    // TODO: Implement in next task
-    console.log('Victory!')
+    const combat = this.combatState()
+    if (!combat) return
+
+    const party = this.party()
+    const partySize = party.members.length
+
+    // Calculate rewards
+    const rewards = VictoryService.calculateVictoryRewards(combat.monsters, partySize)
+
+    // Distribute rewards to roster
+    const newRoster = VictoryService.distributeRewards(
+      this.roster(),
+      party.members,
+      rewards.xpPerCharacter,
+      rewards.totalGold
+    )
+
+    // Update game state
+    this.gameState.updateState(state => ({
+      ...state,
+      roster: newRoster,
+      party: {
+        ...state.party,
+        gold: state.party.gold + rewards.totalGold
+      },
+      combat: undefined  // Clear combat state
+    }))
+
+    // Show victory modal
+    this.victoryRewards.set(rewards)
+    this.showVictoryModal.set(true)
   }
 
   private handleDefeat(): void {
@@ -165,6 +197,7 @@ export class CombatComponent implements OnInit {
   }
 
   returnToMaze(): void {
-    // TODO: Implement in next task
+    this.showVictoryModal.set(false)
+    this.router.navigate(['/maze'])
   }
 }
