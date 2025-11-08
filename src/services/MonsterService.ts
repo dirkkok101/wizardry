@@ -1,6 +1,7 @@
 // src/services/MonsterService.ts
 import { MonsterInstance } from '../types/Combat'
 import koboldData from '../../data/monsters/kobold.json'
+import { v4 as uuidv4 } from 'uuid'
 
 interface MonsterTemplate {
   id: string
@@ -38,5 +39,31 @@ export class MonsterService {
     } catch (error) {
       throw new Error(`Monster not found: ${monsterId}`)
     }
+  }
+
+  static createMonsterInstance(monsterId: string): MonsterInstance {
+    const template = this.loadMonster(monsterId)
+
+    // Roll HP from min/max range
+    const hp = this.rollInRange(template.hp.min, template.hp.max)
+
+    return {
+      id: uuidv4(),
+      monsterId: template.id,
+      name: template.name,
+      hp,
+      maxHp: hp,
+      ac: template.ac,
+      damage: template.damage,
+      xp: template.xp,
+      gold: template.gold,
+      status: 'ALIVE',
+      level: template.level,
+      agility: 10  // Default monster agility
+    }
+  }
+
+  private static rollInRange(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min
   }
 }
