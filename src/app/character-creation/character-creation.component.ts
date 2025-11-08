@@ -343,6 +343,7 @@ export class CharacterCreationComponent implements OnInit {
     this.selectedAlignment.set(null);
     this.rolledStats.set(null);
     this.selectedClass.set(null);
+    this.characterName.set('');
     this.successMessage.set(null);
     this.errorMessage.set(null);
     this.isLocked.set(false);

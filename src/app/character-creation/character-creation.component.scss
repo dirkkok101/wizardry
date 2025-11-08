@@ -127,6 +127,25 @@
             gap: 0.5rem;
             font-family: 'Courier New', monospace;
 
+            .stat-header {
+              display: flex;
+              gap: 0.5rem;
+              padding-bottom: 0.5rem;
+              margin-bottom: 0.5rem;
+              border-bottom: 1px solid var(--border-color, #444);
+
+              .stat-name {
+                min-width: 3rem;
+              }
+
+              .stat-breakdown-label {
+                font-size: 0.75rem;
+                color: var(--text-muted, #888);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+            }
+
             .stat-row {
               display: flex;
               gap: 0.5rem;
@@ -140,6 +159,39 @@
               .stat-formula {
                 color: var(--text-color, #fff);
               }
+
+              .stat-breakdown {
+                display: flex;
+                gap: 0.25rem;
+                align-items: center;
+                color: var(--text-color, #fff);
+
+                .base {
+                  color: var(--text-muted, #aaa);
+                  min-width: 1.5rem;
+                  text-align: right;
+                }
+
+                .roll {
+                  color: var(--accent-color, #4a9eff);
+                  font-weight: bold;
+                  min-width: 1.5rem;
+                  text-align: right;
+                }
+
+                .bonus {
+                  color: #ffaa00;
+                  min-width: 1.5rem;
+                  text-align: right;
+                }
+
+                .total {
+                  color: #00ff00;
+                  font-weight: bold;
+                  min-width: 1.5rem;
+                  text-align: right;
+                }
+              }
             }
 
             .bonus-points {
@@ -147,6 +199,14 @@
               padding-top: 0.5rem;
               border-top: 1px solid var(--border-color, #444);
               color: var(--accent-color, #4a9eff);
+
+              .bonus-note {
+                display: block;
+                font-size: 0.75rem;
+                color: var(--text-muted, #888);
+                font-style: italic;
+                margin-top: 0.25rem;
+              }
             }
           }
         }

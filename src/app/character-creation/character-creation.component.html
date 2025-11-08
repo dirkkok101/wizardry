@@ -177,44 +177,67 @@
           <div class="sheet-section stats">
             <label>Attributes:</label>
             <div class="stat-list">
+              <div class="stat-header">
+                <span class="stat-name"></span>
+                <span class="stat-breakdown-label">Base + Roll + Bonus = Total</span>
+              </div>
               <div class="stat-row">
                 <span class="stat-name">STR:</span>
-                <span class="stat-formula">
-                  {{ raceData()!.baseStats.str }} + {{ rolledStats()!.strength }} = {{ finalStats()!.strength }}
+                <span class="stat-breakdown">
+                  <span class="base">{{ raceData()!.baseStats.str }}</span> +
+                  <span class="roll">{{ rolledStats()!.strength }}</span> +
+                  <span class="bonus">0</span> =
+                  <span class="total">{{ finalStats()!.strength }}</span>
                 </span>
               </div>
               <div class="stat-row">
                 <span class="stat-name">INT:</span>
-                <span class="stat-formula">
-                  {{ raceData()!.baseStats.int }} + {{ rolledStats()!.intelligence }} = {{ finalStats()!.intelligence }}
+                <span class="stat-breakdown">
+                  <span class="base">{{ raceData()!.baseStats.int }}</span> +
+                  <span class="roll">{{ rolledStats()!.intelligence }}</span> +
+                  <span class="bonus">0</span> =
+                  <span class="total">{{ finalStats()!.intelligence }}</span>
                 </span>
               </div>
               <div class="stat-row">
                 <span class="stat-name">PIE:</span>
-                <span class="stat-formula">
-                  {{ raceData()!.baseStats.pie }} + {{ rolledStats()!.piety }} = {{ finalStats()!.piety }}
+                <span class="stat-breakdown">
+                  <span class="base">{{ raceData()!.baseStats.pie }}</span> +
+                  <span class="roll">{{ rolledStats()!.piety }}</span> +
+                  <span class="bonus">0</span> =
+                  <span class="total">{{ finalStats()!.piety }}</span>
                 </span>
               </div>
               <div class="stat-row">
                 <span class="stat-name">VIT:</span>
-                <span class="stat-formula">
-                  {{ raceData()!.baseStats.vit }} + {{ rolledStats()!.vitality }} = {{ finalStats()!.vitality }}
+                <span class="stat-breakdown">
+                  <span class="base">{{ raceData()!.baseStats.vit }}</span> +
+                  <span class="roll">{{ rolledStats()!.vitality }}</span> +
+                  <span class="bonus">0</span> =
+                  <span class="total">{{ finalStats()!.vitality }}</span>
                 </span>
               </div>
               <div class="stat-row">
                 <span class="stat-name">AGI:</span>
-                <span class="stat-formula">
-                  {{ raceData()!.baseStats.agi }} + {{ rolledStats()!.agility }} = {{ finalStats()!.agility }}
+                <span class="stat-breakdown">
+                  <span class="base">{{ raceData()!.baseStats.agi }}</span> +
+                  <span class="roll">{{ rolledStats()!.agility }}</span> +
+                  <span class="bonus">0</span> =
+                  <span class="total">{{ finalStats()!.agility }}</span>
                 </span>
               </div>
               <div class="stat-row">
                 <span class="stat-name">LUC:</span>
-                <span class="stat-formula">
-                  {{ raceData()!.baseStats.luc }} + {{ rolledStats()!.luck }} = {{ finalStats()!.luck }}
+                <span class="stat-breakdown">
+                  <span class="base">{{ raceData()!.baseStats.luc }}</span> +
+                  <span class="roll">{{ rolledStats()!.luck }}</span> +
+                  <span class="bonus">0</span> =
+                  <span class="total">{{ finalStats()!.luck }}</span>
                 </span>
               </div>
               <div class="bonus-points">
-                <strong>Bonus Points:</strong> {{ rolledStats()!.bonusPoints }}
+                <strong>Bonus Points Available:</strong> {{ rolledStats()!.bonusPoints }}
+                <span class="bonus-note">(Not yet allocatable)</span>
               </div>
             </div>
           </div>
