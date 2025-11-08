@@ -63,6 +63,21 @@ export class MonsterService {
     }
   }
 
+  static generateMonsterGroup(monsterId: string): MonsterInstance[] {
+    const template = this.loadMonster(monsterId)
+
+    // Roll group size from numberAppearing range
+    const count = this.rollInRange(
+      template.numberAppearing.min,
+      template.numberAppearing.max
+    )
+
+    // Create that many instances
+    return Array.from({ length: count }, () =>
+      this.createMonsterInstance(monsterId)
+    )
+  }
+
   private static rollInRange(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
   }

@@ -49,4 +49,40 @@ describe('MonsterService', () => {
       expect(uniqueHP.size).toBeGreaterThan(1)
     })
   })
+
+  describe('generateMonsterGroup', () => {
+    it('generates group with correct size range', () => {
+      // Kobold: 3-5 monsters
+      const group = MonsterService.generateMonsterGroup('kobold')
+
+      expect(group.length).toBeGreaterThanOrEqual(3)
+      expect(group.length).toBeLessThanOrEqual(5)
+      expect(group.every(m => m.monsterId === 'kobold')).toBe(true)
+      expect(group.every(m => m.status === 'ALIVE')).toBe(true)
+    })
+
+    it('generates unique instances', () => {
+      const group = MonsterService.generateMonsterGroup('kobold')
+
+      // All IDs should be unique
+      const ids = group.map(m => m.id)
+      const uniqueIds = new Set(ids)
+      expect(uniqueIds.size).toBe(group.length)
+    })
+
+    it('rolls different HP for each monster', () => {
+      const runs = Array.from({ length: 20 }, () =>
+        MonsterService.generateMonsterGroup('kobold')
+      )
+
+      // At least one group should have variance
+      const hasVariance = runs.some(group => {
+        const hps = group.map(m => m.hp)
+        const unique = new Set(hps)
+        return unique.size > 1
+      })
+
+      expect(hasVariance).toBe(true)
+    })
+  })
 })
