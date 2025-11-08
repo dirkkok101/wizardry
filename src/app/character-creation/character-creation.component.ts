@@ -159,6 +159,15 @@ export class CharacterCreationComponent implements OnInit {
     };
   });
 
+  /**
+   * Check if all bonus points have been allocated.
+   * Required to advance from ALLOCATE_POINTS step.
+   */
+  readonly allPointsAllocated = computed(() => {
+    const stats = this.rolledStats();
+    return stats ? stats.bonusPoints === 0 : false;
+  });
+
   readonly eligibleClasses = computed(() => {
     const stats = this.finalStats();
     const alignment = this.selectedAlignment();
@@ -512,7 +521,7 @@ export class CharacterCreationComponent implements OnInit {
    * Get race base stat for specified attribute.
    * Used for 18 cap validation (base + allocated <= 18).
    */
-  private getRaceBaseStat(stat: keyof BaseStats): number {
+  getRaceBaseStat(stat: keyof BaseStats): number {
     const raceData = this.raceData();
     if (!raceData) return 0;
 
