@@ -137,7 +137,14 @@ describe('CharacterCreationComponent - Integration', () => {
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
+
+    // Mock allocated stats
+    component.rolledStats.set({
+      strength: 15, intelligence: 10, piety: 10,
+      vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+    });
+
     component.selectClass('FIGHTER' as CharacterClass);
     component.advanceToNameCharacter();
     await component.submitCharacter('Character1');
@@ -154,7 +161,14 @@ describe('CharacterCreationComponent - Integration', () => {
     component.advanceToAlignment();
     component.selectAlignment(Alignment.NEUTRAL);
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
+
+    // Mock allocated stats
+    component.rolledStats.set({
+      strength: 10, intelligence: 15, piety: 10,
+      vitality: 10, agility: 12, luck: 10, bonusPoints: 0
+    });
+
     component.selectClass('MAGE' as CharacterClass);
     component.advanceToNameCharacter();
     await component.submitCharacter('Character2');
@@ -189,7 +203,7 @@ describe('CharacterCreationComponent - Integration', () => {
     expect(component.selectedAlignment()).toBe(Alignment.GOOD);
 
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
     const originalStats = component.rolledStats();
     expect(originalStats).not.toBeNull();
 
@@ -201,7 +215,7 @@ describe('CharacterCreationComponent - Integration', () => {
 
     // Advance again and roll new stats
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
     const newStats = component.rolledStats();
 
     // Stats should be different (new roll) - may occasionally be equal by chance
@@ -221,8 +235,15 @@ describe('CharacterCreationComponent - Integration', () => {
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
+
+    // Mock allocated stats
+    component.rolledStats.set({
+      strength: 15, intelligence: 10, piety: 10,
+      vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+    });
     const stats = component.rolledStats();
+
     component.selectClass('FIGHTER' as CharacterClass);
     component.advanceToNameCharacter();
 
@@ -262,7 +283,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
     expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
 
     const firstStats = component.rolledStats();
@@ -299,7 +320,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
 
     // Fighter should almost always be eligible (low requirements)
     const isFighterEligible = component.isClassEligible('FIGHTER' as CharacterClass);
@@ -319,7 +340,7 @@ describe('CharacterCreationComponent - Integration', () => {
 
     expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
 
-    await component.rollStats();
+    await component.rollBonusPoints();
 
     // Should auto-advance to class selection
     expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
@@ -353,7 +374,14 @@ describe('CharacterCreationComponent - Integration', () => {
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
-    await component.rollStats();
+    await component.rollBonusPoints();
+
+    // Mock allocated stats
+    component.rolledStats.set({
+      strength: 10, intelligence: 15, piety: 10,
+      vitality: 10, agility: 12, luck: 10, bonusPoints: 0
+    });
+
     component.selectClass('MAGE' as CharacterClass);
     component.advanceToNameCharacter();
     await component.submitCharacter('TestMage');

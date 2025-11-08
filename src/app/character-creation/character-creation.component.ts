@@ -234,14 +234,14 @@ export class CharacterCreationComponent implements OnInit {
     this.selectedClass.set(null);
   }
 
-  // Roll stats (NEW FORMULA)
-  async rollStats() {
+  // Roll bonus points only (all stats start at 0)
+  async rollBonusPoints() {
     this.isRolling.set(true);
 
     // Simulate dice roll animation
     await new Promise(resolve => setTimeout(resolve, this.ROLL_ANIMATION_DURATION_MS));
 
-    const rolled = CharacterCreationService.rollStats();
+    const rolled = CharacterCreationService.rollBonusPointsOnly();
     this.rolledStats.set(rolled);
     this.isRolling.set(false);
 
@@ -259,7 +259,7 @@ export class CharacterCreationComponent implements OnInit {
     this.selectedClass.set(null);
 
     // Roll again (which auto-advances back to SELECT_CLASS)
-    this.rollStats();
+    this.rollBonusPoints();
   }
 
   // Class eligibility check
@@ -615,7 +615,7 @@ export class CharacterCreationComponent implements OnInit {
 
   private handleRollStatsStepKeys(key: string): boolean {
     if (key === 'r' && !this.isRolling()) {
-      this.rollStats();
+      this.rollBonusPoints();
       return true;
     } else if (key === 'escape') {
       this.goBackFromRollStats();

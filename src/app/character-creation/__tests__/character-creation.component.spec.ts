@@ -184,7 +184,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         const raceData = RaceService.getRaceData(Race.HUMAN);
         const rolled = component.rolledStats()!;
@@ -210,7 +210,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         component.selectedAlignment.set(null);
         expect(component.eligibleClasses()).toEqual([]);
@@ -220,7 +220,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         const eligible = component.eligibleClasses();
         expect(Array.isArray(eligible)).toBe(true);
@@ -383,12 +383,12 @@ describe('CharacterCreationComponent', () => {
     }));
   });
 
-  describe('rollStats()', () => {
+  describe('rollBonusPoints()', () => {
     it('should set isRolling to true during animation', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      const rollPromise = component.rollStats();
+      const rollPromise = component.rollBonusPoints();
 
       // Check immediately - should be rolling
       expect(component.isRolling()).toBe(true);
@@ -401,7 +401,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       expect(component.isRolling()).toBe(false);
     });
@@ -410,12 +410,16 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       const rolled = component.rolledStats();
       expect(rolled).toBeDefined();
-      expect(rolled!.strength).toBeGreaterThanOrEqual(3);
-      expect(rolled!.strength).toBeLessThanOrEqual(18);
+      expect(rolled!.strength).toBe(0);
+      expect(rolled!.intelligence).toBe(0);
+      expect(rolled!.piety).toBe(0);
+      expect(rolled!.vitality).toBe(0);
+      expect(rolled!.agility).toBe(0);
+      expect(rolled!.luck).toBe(0);
       expect(rolled!.bonusPoints).toBeGreaterThanOrEqual(7);
     });
 
@@ -423,7 +427,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -451,7 +455,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       const isEligible = component.isClassEligible(CharacterClass.FIGHTER);
       expect(typeof isEligible).toBe('boolean');
@@ -463,7 +467,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -480,7 +484,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock a class as ineligible
       jest.spyOn(component, 'isClassEligible').mockReturnValue(false);
@@ -497,7 +501,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -526,7 +530,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -557,7 +561,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -589,7 +593,7 @@ describe('CharacterCreationComponent', () => {
       const event = new KeyboardEvent('keydown', { key: 'r' });
       component.handleKeyPress(event);
 
-      // Wait for async rollStats to complete using proper timeout
+      // Wait for async rollBonusPoints to complete using proper timeout
       await new Promise(resolve => setTimeout(resolve, ROLL_ANIMATION_TIMEOUT_MS));
 
       expect(component.rolledStats()).toBeTruthy();
@@ -604,7 +608,7 @@ describe('CharacterCreationComponent', () => {
       const event = new KeyboardEvent('keydown', { key: 'R' });
       component.handleKeyPress(event);
 
-      // Wait for async rollStats to complete using proper timeout
+      // Wait for async rollBonusPoints to complete using proper timeout
       await new Promise(resolve => setTimeout(resolve, ROLL_ANIMATION_TIMEOUT_MS));
 
       expect(component.rolledStats()).toBeTruthy();
@@ -624,7 +628,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -742,7 +746,7 @@ describe('CharacterCreationComponent', () => {
       it('should NOT change alignment after stats rolled', async () => {
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         const event = new KeyboardEvent('keydown', { key: 'e' });
         component.handleKeyPress(event);
@@ -757,7 +761,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
       });
 
       it('should select FIGHTER on "f" key when eligible', () => {
@@ -837,7 +841,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Mock high stats to ensure Fighter is eligible
         component.rolledStats.set({
@@ -862,7 +866,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Mock high stats to ensure Samurai is eligible
         component.rolledStats.set({
@@ -896,7 +900,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.EVIL); // NINJA requires EVIL
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Mock very high stats to ensure Ninja is eligible (requires 17 in all stats)
         component.rolledStats.set({
@@ -917,7 +921,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Escape should go back from SELECT_CLASS to SELECT_ALIGNMENT (nuclear option)
         const event = new KeyboardEvent('keydown', { key: 'Escape' });
@@ -967,7 +971,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Mock high stats to ensure Fighter is eligible
         component.rolledStats.set({
@@ -989,7 +993,7 @@ describe('CharacterCreationComponent', () => {
         component.selectRace(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Mock high stats to ensure Fighter is eligible
         component.rolledStats.set({
@@ -1046,7 +1050,7 @@ describe('CharacterCreationComponent', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         // Mock high stats to ensure Fighter is eligible
         component.rolledStats.set({
@@ -1132,7 +1136,14 @@ describe('CharacterCreationComponent', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectAlignment(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
+
+        // Mock allocated stats to ensure Fighter is eligible
+        component.rolledStats.set({
+          strength: 15, intelligence: 10, piety: 10,
+          vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+        });
+
         component.selectClass(CharacterClass.FIGHTER);
         component.characterName.set('TestHero');
 
@@ -1213,7 +1224,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
       if (component.isClassEligible(CharacterClass.FIGHTER)) {
         component.selectClass(CharacterClass.FIGHTER);
       }
@@ -1241,7 +1252,7 @@ describe('CharacterCreationComponent', () => {
 
       expect(component.isLocked()).toBe(false);
 
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       expect(component.isLocked()).toBe(true);
       expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS); // Should auto-advance
@@ -1252,7 +1263,7 @@ describe('CharacterCreationComponent', () => {
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       await component.rerollStats();
 
@@ -1264,7 +1275,7 @@ describe('CharacterCreationComponent', () => {
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       expect(component.isLocked()).toBe(true);
 
@@ -1278,7 +1289,7 @@ describe('CharacterCreationComponent', () => {
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Try to select different race
       component.selectRace(Race.ELF);
@@ -1292,7 +1303,7 @@ describe('CharacterCreationComponent', () => {
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Try to select different alignment
       component.selectAlignment(Alignment.EVIL);
@@ -1454,7 +1465,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Stats that don't qualify for Ninja
       component.rolledStats.set({
@@ -1477,7 +1488,14 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
+
+      // Mock allocated stats to ensure Fighter is eligible
+      component.rolledStats.set({
+        strength: 15, intelligence: 10, piety: 10,
+        vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+      });
+
       component.selectClass(CharacterClass.FIGHTER);
 
       expect(component.currentStep()).toBe('SELECT_CLASS');
@@ -1502,7 +1520,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
       component.selectClass(CharacterClass.FIGHTER);
       component.advanceToNameCharacter();
 
@@ -1520,7 +1538,7 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock high stats to ensure Fighter is eligible
       component.rolledStats.set({
@@ -1545,7 +1563,14 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
+
+      // Mock allocated stats to ensure Fighter is eligible
+      component.rolledStats.set({
+        strength: 15, intelligence: 10, piety: 10,
+        vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+      });
+
       component.selectClass(CharacterClass.FIGHTER);
       component.advanceToNameCharacter();
 
@@ -1559,7 +1584,14 @@ describe('CharacterCreationComponent', () => {
       component.selectRace(Race.HUMAN);
       component.selectAlignment(Alignment.GOOD);
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
+
+      // Mock allocated stats to ensure Fighter is eligible
+      component.rolledStats.set({
+        strength: 15, intelligence: 10, piety: 10,
+        vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+      });
+
       component.selectClass(CharacterClass.FIGHTER);
 
       await component.submitCharacter('Gandalf');
@@ -1599,13 +1631,19 @@ describe('CharacterCreationComponent', () => {
       // Step 3: Roll stats (locks race/alignment)
       const event3 = new KeyboardEvent('keydown', { key: 'r' });
       component.handleKeyPress(event3);
-      // Wait for async rollStats to complete using proper timeout
+      // Wait for async rollBonusPoints to complete using proper timeout
       await new Promise(resolve => setTimeout(resolve, ROLL_ANIMATION_TIMEOUT_MS));
       expect(component.rolledStats()).toBeTruthy();
       expect(component.isLocked()).toBe(true);
 
       // Step 4: Roll stats should auto-advance to SELECT_CLASS
       expect(component.currentStep()).toBe('SELECT_CLASS');
+
+      // Mock allocated stats to ensure Fighter is eligible
+      component.rolledStats.set({
+        strength: 15, intelligence: 10, piety: 10,
+        vitality: 12, agility: 10, luck: 10, bonusPoints: 0
+      });
 
       // Step 5: Select class with keyboard
       const event5 = new KeyboardEvent('keydown', { key: 'f' });
@@ -1678,7 +1716,7 @@ describe('CharacterCreationComponent', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
         expect(component.stepNumber()).toBe(5);
@@ -1735,7 +1773,7 @@ describe('CharacterCreationComponent', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
         component.selectedClass.set(CharacterClass.FIGHTER);
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
@@ -1769,7 +1807,7 @@ describe('CharacterCreationComponent', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
         const firstRollStr = JSON.stringify(component.rolledStats());
         component.selectedClass.set(CharacterClass.FIGHTER);
 
@@ -1790,25 +1828,29 @@ describe('CharacterCreationComponent', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
+
+        // Mock allocated stats to create eligible classes (high STR, everything else minimal)
+        component.rolledStats.set({
+          strength: 15, intelligence: 0, piety: 0,
+          vitality: 6, agility: 0, luck: 0, bonusPoints: 0
+        });
+
         const firstEligible = [...component.eligibleClasses()];
 
-        // Reroll until we get different eligible classes (or max 10 tries)
-        let attempts = 0;
-        let differentEligibility = false;
+        // Reroll and allocate different stats (high INT/PIE, low STR)
+        await component.rerollStats();
+        component.rolledStats.set({
+          strength: 0, intelligence: 15, piety: 15,
+          vitality: 6, agility: 0, luck: 0, bonusPoints: 0
+        });
 
-        while (attempts < 10 && !differentEligibility) {
-          await component.rerollStats();
-          const newEligible = [...component.eligibleClasses()];
+        const newEligible = [...component.eligibleClasses()];
 
-          if (JSON.stringify(firstEligible) !== JSON.stringify(newEligible)) {
-            differentEligibility = true;
-          }
-          attempts++;
-        }
-
-        // This test verifies eligibility recalculates (may need multiple rolls)
+        // This test verifies eligibility recalculates with different allocations
         expect(component.eligibleClasses().length).toBeGreaterThan(0);
+        // Different allocations should produce different eligible class lists
+        expect(JSON.stringify(firstEligible)).not.toBe(JSON.stringify(newEligible));
       });
 
     describe('complete character creation flow', () => {
@@ -1823,8 +1865,14 @@ describe('CharacterCreationComponent', () => {
 
         // Step 3: Roll stats
         component.advanceToRollStats();
-        await component.rollStats();
+        await component.rollBonusPoints();
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
+
+        // Mock allocated stats to ensure classes are eligible
+        component.rolledStats.set({
+          strength: 12, intelligence: 15, piety: 12,
+          vitality: 10, agility: 13, luck: 10, bonusPoints: 0
+        });
 
         // Step 5: Select class (pick first eligible)
         const eligibleClass = component.eligibleClasses()[0];
@@ -1860,7 +1908,7 @@ describe('CharacterCreationComponent', () => {
       component.selectAlignment(Alignment.GOOD);
       component.advanceToAlignment();
       component.advanceToRollStats();
-      await component.rollStats();
+      await component.rollBonusPoints();
 
       // Mock specific stats for predictable testing
       // rolledStats contains ALLOCATED bonus points (starts at 0)
