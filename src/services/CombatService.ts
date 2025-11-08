@@ -223,7 +223,7 @@ export class CombatService {
       (a, b) => b.initiative - a.initiative
     )
 
-    let currentState = { ...state, commandQueue: [] }
+    let currentState: CombatState = { ...state, commandQueue: [] }
     const messages: string[] = []
 
     // Execute each command
@@ -253,9 +253,14 @@ export class CombatService {
   }
 
   private static isCombatantDead(combatant: Combatant): boolean {
-    if ('status' in combatant) {
-      return combatant.status === 'DEAD' || combatant.status === CharacterStatus.DEAD
+    // Check monster status
+    if ('monsterId' in combatant) {
+      return combatant.status === 'DEAD' || combatant.hp <= 0
     }
-    return combatant.hp <= 0
+    // Check character status
+    if ('class' in combatant) {
+      return combatant.status === CharacterStatus.DEAD || combatant.hp <= 0
+    }
+    return false
   }
 }

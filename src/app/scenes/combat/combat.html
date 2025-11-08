@@ -1,0 +1,10 @@
+<div class="combat-stub">
+  <h2>Combat - Round {{ roundNumber() }}</h2>
+  <p>Combat service layer complete. UI integration in progress.</p>
+  <div class="combat-log">
+    @for (msg of combatLog(); track $index) {
+      <div>{{ msg }}</div>
+    }
+  </div>
+  <button (click)="executeRound()">Execute Round (Stub)</button>
+</div>
