@@ -83,6 +83,34 @@
         }
       </button>
     </div>
+
+    <!-- Victory Modal -->
+    @if (showVictoryModal()) {
+      <div class="victory-modal-overlay">
+        <div class="victory-modal">
+          <h2>⚔️ VICTORY! ⚔️</h2>
+          @if (victoryRewards(); as rewards) {
+            <div class="victory-rewards">
+              <div class="reward-line">
+                <span class="label">Total XP Earned:</span>
+                <span class="value">{{ rewards.totalXP }}</span>
+              </div>
+              <div class="reward-line">
+                <span class="label">XP per Character:</span>
+                <span class="value">{{ rewards.xpPerCharacter }}</span>
+              </div>
+              <div class="reward-line">
+                <span class="label">Gold Found:</span>
+                <span class="value">{{ rewards.totalGold }}</span>
+              </div>
+            </div>
+          }
+          <button class="return-btn" (click)="returnToMaze()">
+            (Enter) Return to Maze
+          </button>
+        </div>
+      </div>
+    }
   } @else {
     <div class="no-combat">
       <p>No combat active. Returning to maze...</p>
