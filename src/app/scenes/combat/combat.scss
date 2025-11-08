@@ -254,3 +254,57 @@
     }
   }
 }
+
+.defeat-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.defeat-modal {
+  background: var(--color-panel-bg);
+  border: 3px solid var(--color-danger);
+  padding: 30px;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+
+  h2 {
+    font-family: 'VT323', monospace;
+    font-size: 2.5rem;
+    color: var(--color-danger);
+    margin: 0 0 20px 0;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  }
+
+  .defeat-message {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin: 20px 0;
+    color: var(--color-text);
+  }
+
+  .temple-btn {
+    margin-top: 20px;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    font-family: 'VT323', monospace;
+    background: var(--color-danger);
+    color: var(--color-bg);
+    border: 2px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--color-danger-light);
+      transform: scale(1.05);
+    }
+  }
+}
