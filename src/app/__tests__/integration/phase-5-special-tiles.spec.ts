@@ -4,7 +4,7 @@ import { TileInspectionService } from '../../../services/TileInspectionService';
 import { DungeonService } from '../../../services/DungeonService';
 import { createTestGameState, createTestCharacter } from '../../../test-helpers/test-factories';
 import { GameState } from '../../../types/GameState';
-import { Level, Position, Tile } from '../../../types/Dungeon';
+import { LevelData, Position } from '../../../types/Dungeon';
 
 /**
  * Phase 5: Special Tiles - E2E Integration Tests
@@ -126,14 +126,22 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       const character = createTestCharacter({ id: 'char1', strength: 18, hp: 50, maxHp: 50 });
 
       // Create test level with locked door
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
         tiles: [
-          [{ type: 'floor' }, { type: 'door', locked: true }, { type: 'floor' }],
-          [{ type: 'floor' }, { type: 'floor' }, { type: 'floor' }],
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: true },
+          { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 2, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
 
       const state: GameState = {
@@ -188,14 +196,22 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       // Create weak character for testing damage
       const character = createTestCharacter({ id: 'char1', strength: 3, hp: 50, maxHp: 50 });
 
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
         tiles: [
-          [{ type: 'floor' }, { type: 'door', locked: true }, { type: 'floor' }],
-          [{ type: 'floor' }, { type: 'floor' }, { type: 'floor' }],
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: true },
+          { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 2, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
 
       const state: GameState = {
@@ -246,21 +262,24 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       const character = createTestCharacter({ id: 'char1', inventory: [] });
 
       // Create test level with searchable tile
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
         tiles: [
-          [
-            {
-              type: 'searchable',
-              searchContent: {
-                itemId: 'bronze_key',
-                message: 'You found a bronze key!'
-              }
-            },
-          ],
+          {
+            x: 0,
+            y: 0,
+            walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' },
+            type: 'searchable',
+            item: 'bronze_key',
+            message: 'You found a bronze key!'
+          },
         ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
 
       const state: GameState = {

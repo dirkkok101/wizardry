@@ -48,9 +48,9 @@
         <h2>ELEVATOR</h2>
         <p>Select destination level:</p>
         <div class="elevator-buttons">
-          @for (level of elevatorDestinations(); track level) {
-            <button (click)="selectElevatorLevel(level)" class="elevator-button">
-              Level {{ level }}
+          @for (dest of elevatorDestinations(); track dest) {
+            <button (click)="selectElevatorLevel(dest.level!)" class="elevator-button">
+              Level {{ dest.level }}
             </button>
           }
         </div>

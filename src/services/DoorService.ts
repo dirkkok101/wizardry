@@ -1,6 +1,5 @@
 import { GameState } from '../types/GameState';
-import { Level, Position, Tile, DungeonState } from '../types/Dungeon';
-import { Character } from '../types/Character';
+import { LevelData, Position } from '../types/Dungeon';
 import { NavigationService } from './NavigationService';
 import { DungeonService } from './DungeonService';
 
@@ -8,18 +7,18 @@ export class DoorService {
   /**
    * Check if party can kick a door from current position
    */
-  static canKickDoor(level: Level, position: Position): boolean {
+  static canKickDoor(level: LevelData, position: Position): boolean {
     // Get tile in front of party
     const delta = NavigationService.getFacingDelta(position.facing);
     const targetX = position.x + delta.x;
     const targetY = position.y + delta.y;
 
     // Check bounds
-    if (targetX < 0 || targetX >= level.width || targetY < 0 || targetY >= level.height) {
+    if (targetX < 0 || targetX >= level.size.width || targetY < 0 || targetY >= level.size.height) {
       return false;
     }
 
-    const tile = level.tiles[targetY][targetX];
+    const tile = DungeonService.getTile(level, targetX, targetY);
 
     // Must be a locked door
     return tile.type === 'door' && tile.locked === true;
@@ -41,7 +40,7 @@ export class DoorService {
     }
 
     const level = DungeonService.loadLevel(state.dungeon.currentLevel);
-    const position = (state.dungeon as DungeonState).position;
+    const position = state.dungeon.position;
 
     // Get door location
     const delta = NavigationService.getFacingDelta(position.facing);
@@ -55,7 +54,7 @@ export class DoorService {
     if (roll < successChance) {
       // Success - unlock door
       const doorKey = `${state.dungeon.currentLevel}_${doorY}_${doorX}`;
-      const newUnlockedDoors = new Set((state.dungeon as DungeonState).unlockedDoors);
+      const newUnlockedDoors = new Set(state.dungeon.unlockedDoors);
       newUnlockedDoors.add(doorKey);
 
       // 12.5% encounter chance

@@ -1,18 +1,26 @@
 import { DoorService } from '../DoorService';
-import { Level, Position } from '../../types/Dungeon';
+import { LevelData, Position } from '../../types/Dungeon';
 import { createTestCharacter, createTestGameState } from '../../test-helpers/test-factories';
 import { GameState } from '../../types/GameState';
 
 describe('DoorService', () => {
   describe('canKickDoor', () => {
-    const level: Level = {
-      id: 1,
-      width: 20,
-      height: 20,
+    const level: LevelData = {
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      startPosition: { x: 0, y: 0, facing: 'north' },
+      edgeWrapping: false,
       tiles: [
-        [{ type: 'floor' }, { type: 'door', locked: true }, { type: 'floor' }],
-        [{ type: 'floor' }, { type: 'floor' }, { type: 'floor' }],
+        { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: true },
+        { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 2, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
       ],
+      encounterRate: 0.1,
+      encounterTable: 'level_1',
     };
 
     it('returns true when facing a locked door', () => {
@@ -28,11 +36,15 @@ describe('DoorService', () => {
     });
 
     it('returns false when facing an unlocked door', () => {
-      const levelUnlocked: Level = {
+      const levelUnlocked: LevelData = {
         ...level,
         tiles: [
-          [{ type: 'floor' }, { type: 'door', locked: false }, { type: 'floor' }],
-          [{ type: 'floor' }, { type: 'floor' }, { type: 'floor' }],
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: false },
+          { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+          { x: 2, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         ],
       };
       const position: Position = { x: 0, y: 0, facing: 'EAST' };
@@ -42,14 +54,22 @@ describe('DoorService', () => {
   });
 
   describe('kickDoor', () => {
-    const level: Level = {
-      id: 1,
-      width: 20,
-      height: 20,
+    const level: LevelData = {
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      startPosition: { x: 0, y: 0, facing: 'north' },
+      edgeWrapping: false,
       tiles: [
-        [{ type: 'floor' }, { type: 'door', locked: true }, { type: 'floor' }],
-        [{ type: 'floor' }, { type: 'floor' }, { type: 'floor' }],
+        { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: true },
+        { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 2, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
       ],
+      encounterRate: 0.1,
+      encounterTable: 'level_1',
     };
 
     it('unlocks door on successful kick (high STR)', () => {
@@ -58,7 +78,7 @@ describe('DoorService', () => {
         ...createTestGameState(),
         party: {
           members: ['char1'],
-          formation: { front: ['char1'], back: [] },
+          formation: { frontRow: ['char1'], backRow: [] },
           gold: 0,
         },
         roster: new Map([['char1', character]]),
@@ -70,6 +90,7 @@ describe('DoorService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          visitedTiles: new Set(),
         },
       };
 
@@ -102,7 +123,7 @@ describe('DoorService', () => {
         ...createTestGameState(),
         party: {
           members: ['char1'],
-          formation: { front: ['char1'], back: [] },
+          formation: { frontRow: ['char1'], backRow: [] },
           gold: 0,
         },
         roster: new Map([['char1', character]]),
@@ -114,6 +135,7 @@ describe('DoorService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          visitedTiles: new Set(),
         },
       };
 
@@ -140,7 +162,7 @@ describe('DoorService', () => {
         ...createTestGameState(),
         party: {
           members: ['char1'],
-          formation: { front: ['char1'], back: [] },
+          formation: { frontRow: ['char1'], backRow: [] },
           gold: 0,
         },
         roster: new Map([['char1', character]]),
@@ -152,6 +174,7 @@ describe('DoorService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          visitedTiles: new Set(),
         },
       };
 

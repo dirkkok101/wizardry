@@ -1,7 +1,7 @@
 // Dungeon navigation and tile types
 
 export type Direction = 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
-export type WallType = 'open' | 'wall' | 'door' | 'secret'
+export type WallType = 'open' | 'wall' | 'door' | 'secret' | 'locked_door'
 export type TileType =
   | 'stairs_up'
   | 'stairs_down'
@@ -10,11 +10,14 @@ export type TileType =
   | 'chute'
   | 'pit'
   | 'darkness_zone_start'
+  | 'darkness'
   | 'anti_magic'
   | 'searchable'
   | 'fixed_encounter'
   | 'message'
   | 'elevator'
+  | 'door'  // For tile-based door tests
+  | 'locked_tile'  // For locked tile areas
 
 export interface Position {
   x: number          // 0-19
@@ -50,6 +53,7 @@ export interface TileData {
   cannotFlee?: boolean
   isOneWay?: boolean
   destinations?: Destination[]  // For elevator
+  locked?: boolean  // For door tiles (test compatibility)
 }
 
 export interface LevelData {

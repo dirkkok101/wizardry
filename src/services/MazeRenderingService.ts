@@ -125,7 +125,7 @@ export function renderCorridor(
  */
 export function renderWall(
   side: 'left' | 'right' | 'front',
-  wallType: 'open' | 'wall' | 'door' | 'secret',
+  wallType: 'open' | 'wall' | 'door' | 'secret' | 'locked_door',
   perspective: PerspectiveScale,
   config: ViewportConfig
 ): CanvasCommand[] {
@@ -138,8 +138,8 @@ export function renderWall(
   const centerX = config.width / 2;
   const centerY = config.height / 2;
 
-  // Door uses darker green
-  const color = wallType === 'door' ? '#080' : '#0f0';
+  // Door uses darker green, locked door uses red
+  const color = wallType === 'locked_door' ? '#800' : wallType === 'door' ? '#080' : '#0f0';
 
   const wallOffset = 200 * perspective.scale;
   const wallHeight = 200 * perspective.scale;

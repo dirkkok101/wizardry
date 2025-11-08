@@ -80,7 +80,7 @@ export class MazeComponent implements OnInit {
     if (!pos) return [];
 
     // Check if current tile is darkness
-    const currentTile = level.tiles[pos.y][pos.x];
+    const currentTile = DungeonService.getTile(level, pos.x, pos.y);
     const effectiveLightRadius = currentTile.type === 'darkness' ? 0 : dungeon.lightRadius;
 
     return DungeonService.getVisibleTiles(level, pos, effectiveLightRadius);
@@ -112,7 +112,7 @@ export class MazeComponent implements OnInit {
     const pos = this.position();
     if (!pos) return false;
 
-    const currentTile = level.tiles[pos.y][pos.x];
+    const currentTile = DungeonService.getTile(level, pos.x, pos.y);
     return currentTile.type === 'elevator';
   });
 
@@ -127,8 +127,8 @@ export class MazeComponent implements OnInit {
     const pos = this.position();
     if (!pos) return [];
 
-    const currentTile = level.tiles[pos.y][pos.x];
-    return currentTile.elevatorDestinations || [];
+    const currentTile = DungeonService.getTile(level, pos.x, pos.y);
+    return currentTile.destinations || [];
   });
 
   // Scene title
@@ -257,7 +257,7 @@ export class MazeComponent implements OnInit {
     }
 
     // Use first party member to kick (front row)
-    const kickerId = state.party.formation.front[0];
+    const kickerId = state.party.formation.frontRow[0];
     if (!kickerId) {
       this.addMessage('No one in front row to kick door.');
       return;

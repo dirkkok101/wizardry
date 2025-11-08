@@ -28,16 +28,6 @@ export interface Party {
   gold: number // Party's shared gold pool for services (inn, temple, shop)
 }
 
-/**
- * @deprecated Use DungeonState from Dungeon.ts instead
- * Keeping for backward compatibility during migration
- */
-export interface Dungeon {
-  currentLevel: number
-  visitedTiles: Map<string, boolean>
-  encounters: any[]
-}
-
 export interface Settings {
   difficulty: 'EASY' | 'NORMAL' | 'HARD'
   soundEnabled: boolean
@@ -48,7 +38,7 @@ export interface GameState {
   currentScene: SceneType
   roster: Map<string, Character> // All created characters
   party: Party
-  dungeon: Dungeon | DungeonState // Support both old (Dungeon) and new (DungeonState) for backward compatibility
+  dungeon: DungeonState
   settings: Settings
   encounterTriggered?: boolean // Set to true when an encounter is triggered (e.g., by kicking a door)
 }
