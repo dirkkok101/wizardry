@@ -121,9 +121,61 @@ describe('CharacterCreationService', () => {
       expect(stats.bonusPoints).toBeGreaterThanOrEqual(7)
       expect(stats.bonusPoints).toBeLessThanOrEqual(29)
     })
+
+    describe('rollBonusPointsOnly', () => {
+      it('returns 0 for all stats', () => {
+        const result = CharacterCreationService.rollBonusPointsOnly()
+
+        expect(result.strength).toBe(0)
+        expect(result.intelligence).toBe(0)
+        expect(result.piety).toBe(0)
+        expect(result.vitality).toBe(0)
+        expect(result.agility).toBe(0)
+        expect(result.luck).toBe(0)
+      })
+
+      it('rolls bonus points between 7-29', () => {
+        const result = CharacterCreationService.rollBonusPointsOnly()
+
+        expect(result.bonusPoints).toBeGreaterThanOrEqual(7)
+        expect(result.bonusPoints).toBeLessThanOrEqual(29)
+      })
+
+      it('returns immutable RolledStats object', () => {
+        const result = CharacterCreationService.rollBonusPointsOnly()
+
+        expect(result).toHaveProperty('strength')
+        expect(result).toHaveProperty('bonusPoints')
+      })
+    })
   })
 
   describe('applyRaceModifiers', () => {
+    it('formula is raceBase + allocatedBonus (not raceBase + rolled)', () => {
+      // Document the NEW formula used by bonus point allocation system
+      // The stats parameter contains ALLOCATED bonus points (0-29 range)
+      // NOT rolled 3d6 values (3-18 range)
+      const allocatedBonuses = {
+        strength: 5,      // Player allocated 5 bonus points to STR
+        intelligence: 10, // Player allocated 10 bonus points to INT
+        piety: 3,         // Player allocated 3 bonus points to PIE
+        vitality: 7,      // Player allocated 7 bonus points to VIT
+        agility: 4,       // Player allocated 4 bonus points to AGI
+        luck: 0           // Player allocated 0 bonus points to LUCK
+      }
+
+      const result = CharacterCreationService.applyRaceModifiers(allocatedBonuses, Race.HUMAN)
+
+      // Human base stats: STR 8, INT 8, PIE 8, VIT 8, AGI 8, LUCK 8
+      // Formula: finalStat = raceBase + allocatedBonus
+      expect(result.strength).toBe(13)     // 8 + 5
+      expect(result.intelligence).toBe(18) // 8 + 10
+      expect(result.piety).toBe(11)        // 8 + 3
+      expect(result.vitality).toBe(15)     // 8 + 7
+      expect(result.agility).toBe(12)      // 8 + 4
+      expect(result.luck).toBe(8)          // 8 + 0
+    })
+
     it('applies human modifiers using RaceService (8 base stats)', () => {
       const baseStats = {
         strength: 10,
@@ -220,6 +272,65 @@ describe('CharacterCreationService', () => {
       expect(() => {
         CharacterCreationService.allocateBonusPoints(stats, 'strength', 5)
       }).toThrow('Not enough bonus points')
+    })
+  })
+
+  describe('resetAllocations', () => {
+    it('returns all allocated points to pool', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 3,
+        piety: 2,
+        vitality: 4,
+        agility: 1,
+        luck: 0,
+        bonusPoints: 7
+      }
+
+      const result = CharacterCreationService.resetAllocations(stats)
+
+      // 5 + 3 + 2 + 4 + 1 + 0 = 15 allocated
+      // 7 remaining + 15 allocated = 22 total
+      expect(result.bonusPoints).toBe(22)
+    })
+
+    it('zeros all stat allocations', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 3,
+        piety: 2,
+        vitality: 4,
+        agility: 1,
+        luck: 0,
+        bonusPoints: 7
+      }
+
+      const result = CharacterCreationService.resetAllocations(stats)
+
+      expect(result.strength).toBe(0)
+      expect(result.intelligence).toBe(0)
+      expect(result.piety).toBe(0)
+      expect(result.vitality).toBe(0)
+      expect(result.agility).toBe(0)
+      expect(result.luck).toBe(0)
+    })
+
+    it('returns new immutable RolledStats object', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 3,
+        piety: 2,
+        vitality: 4,
+        agility: 1,
+        luck: 0,
+        bonusPoints: 7
+      }
+
+      const result = CharacterCreationService.resetAllocations(stats)
+
+      expect(result).not.toBe(stats)
+      expect(result).toHaveProperty('strength')
+      expect(result).toHaveProperty('bonusPoints')
     })
   })
 })

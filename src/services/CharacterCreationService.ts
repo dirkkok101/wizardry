@@ -40,6 +40,27 @@ export class CharacterCreationService {
   }
 
   /**
+   * Roll ONLY bonus points (authentic Wizardry 1 system)
+   * No 3d6 rolls - all stats start at 0 (player allocates bonus points)
+   *
+   * Bonus Point Formula (authentic):
+   * - Base: 1d4 + 6 = 7-10 points (90% probability)
+   * - First bonus: 1/11 chance to add +10 → 17-20 points (9.25%)
+   * - Second bonus: If still <20, another 1/11 chance to add +10 → 27-29 points (0.75%)
+   */
+  static rollBonusPointsOnly(): RolledStats {
+    return {
+      strength: 0,
+      intelligence: 0,
+      piety: 0,
+      vitality: 0,
+      agility: 0,
+      luck: 0,
+      bonusPoints: this.rollBonusPoints()
+    }
+  }
+
+  /**
    * Roll 3d6 (sum of three 6-sided dice).
    */
   private static roll3d6(): number {
@@ -72,10 +93,15 @@ export class CharacterCreationService {
   }
 
   /**
-   * Apply race base stats to rolled stats.
+   * Apply race base stats to allocated bonus points.
    *
-   * NEW FORMULA: finalStat = RaceService.getRaceData(race).baseStats[stat] + rolled_amount
-   * Example: Human STR 8 + roll 7 = 15 final STR
+   * FORMULA: finalStat = raceBase + allocatedBonus
+   *
+   * The stats parameter contains ALLOCATED bonus points (0-29 range),
+   * NOT rolled 3d6 values (3-18 range).
+   *
+   * Example: Human (STR 8 base) + 5 allocated bonus points = 13 final STR
+   * Example: Elf (INT 9 base) + 10 allocated bonus points = 19 final INT
    */
   static applyRaceModifiers(stats: BaseStats, race: Race): BaseStats {
     const raceData = RaceService.getRaceData(race)
@@ -108,6 +134,31 @@ export class CharacterCreationService {
       ...stats,
       [stat]: stats[stat] + points,
       bonusPoints: stats.bonusPoints - points
+    }
+  }
+
+  /**
+   * Reset all bonus point allocations
+   * Returns all allocated points back to the bonus pool
+   * Used when player wants to re-allocate from scratch
+   */
+  static resetAllocations(currentStats: RolledStats): RolledStats {
+    const totalAllocated =
+      currentStats.strength +
+      currentStats.intelligence +
+      currentStats.piety +
+      currentStats.vitality +
+      currentStats.agility +
+      currentStats.luck
+
+    return {
+      strength: 0,
+      intelligence: 0,
+      piety: 0,
+      vitality: 0,
+      agility: 0,
+      luck: 0,
+      bonusPoints: currentStats.bonusPoints + totalAllocated
     }
   }
 }
