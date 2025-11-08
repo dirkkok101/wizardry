@@ -151,6 +151,31 @@ describe('CharacterCreationService', () => {
   })
 
   describe('applyRaceModifiers', () => {
+    it('formula is raceBase + allocatedBonus (not raceBase + rolled)', () => {
+      // Document the NEW formula used by bonus point allocation system
+      // The stats parameter contains ALLOCATED bonus points (0-29 range)
+      // NOT rolled 3d6 values (3-18 range)
+      const allocatedBonuses = {
+        strength: 5,      // Player allocated 5 bonus points to STR
+        intelligence: 10, // Player allocated 10 bonus points to INT
+        piety: 3,         // Player allocated 3 bonus points to PIE
+        vitality: 7,      // Player allocated 7 bonus points to VIT
+        agility: 4,       // Player allocated 4 bonus points to AGI
+        luck: 0           // Player allocated 0 bonus points to LUCK
+      }
+
+      const result = CharacterCreationService.applyRaceModifiers(allocatedBonuses, Race.HUMAN)
+
+      // Human base stats: STR 8, INT 8, PIE 8, VIT 8, AGI 8, LUCK 8
+      // Formula: finalStat = raceBase + allocatedBonus
+      expect(result.strength).toBe(13)     // 8 + 5
+      expect(result.intelligence).toBe(18) // 8 + 10
+      expect(result.piety).toBe(11)        // 8 + 3
+      expect(result.vitality).toBe(15)     // 8 + 7
+      expect(result.agility).toBe(12)      // 8 + 4
+      expect(result.luck).toBe(8)          // 8 + 0
+    })
+
     it('applies human modifiers using RaceService (8 base stats)', () => {
       const baseStats = {
         strength: 10,

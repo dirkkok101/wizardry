@@ -93,10 +93,15 @@ export class CharacterCreationService {
   }
 
   /**
-   * Apply race base stats to rolled stats.
+   * Apply race base stats to allocated bonus points.
    *
-   * NEW FORMULA: finalStat = RaceService.getRaceData(race).baseStats[stat] + rolled_amount
-   * Example: Human STR 8 + roll 7 = 15 final STR
+   * FORMULA: finalStat = raceBase + allocatedBonus
+   *
+   * The stats parameter contains ALLOCATED bonus points (0-29 range),
+   * NOT rolled 3d6 values (3-18 range).
+   *
+   * Example: Human (STR 8 base) + 5 allocated bonus points = 13 final STR
+   * Example: Elf (INT 9 base) + 10 allocated bonus points = 19 final INT
    */
   static applyRaceModifiers(stats: BaseStats, race: Race): BaseStats {
     const raceData = RaceService.getRaceData(race)
