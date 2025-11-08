@@ -17,9 +17,7 @@ import { MenuItem } from '../../components/menu/menu.component';
 enum CreationStep {
   SELECT_RACE = 'SELECT_RACE',
   SELECT_ALIGNMENT = 'SELECT_ALIGNMENT',
-  ROLL_BONUS_POINTS = 'ROLL_BONUS_POINTS',
-  ALLOCATE_POINTS = 'ALLOCATE_POINTS',
-  SELECT_CLASS = 'SELECT_CLASS',
+  ROLL_ALLOCATE_CLASS = 'ROLL_ALLOCATE_CLASS',
   NAME_CHARACTER = 'NAME_CHARACTER'
 }
 
@@ -68,9 +66,7 @@ export class CharacterCreationComponent implements OnInit {
     switch(this.currentStep()) {
       case CreationStep.SELECT_RACE: return 'Choose Your Race';
       case CreationStep.SELECT_ALIGNMENT: return 'Choose Your Alignment';
-      case CreationStep.ROLL_BONUS_POINTS: return 'Roll Your Attributes';
-      case CreationStep.ALLOCATE_POINTS: return 'Allocate Bonus Points';
-      case CreationStep.SELECT_CLASS: return 'Choose Your Class';
+      case CreationStep.ROLL_ALLOCATE_CLASS: return 'Roll & Allocate';
       case CreationStep.NAME_CHARACTER: return 'Name Your Character';
     }
   });
@@ -79,9 +75,7 @@ export class CharacterCreationComponent implements OnInit {
     const steps = [
       CreationStep.SELECT_RACE,
       CreationStep.SELECT_ALIGNMENT,
-      CreationStep.ROLL_BONUS_POINTS,
-      CreationStep.ALLOCATE_POINTS,
-      CreationStep.SELECT_CLASS,
+      CreationStep.ROLL_ALLOCATE_CLASS,
       CreationStep.NAME_CHARACTER
     ];
     return steps.indexOf(this.currentStep()) + 1;
@@ -176,6 +170,16 @@ export class CharacterCreationComponent implements OnInit {
     return CharacterService.getEligibleClasses(stats, alignment);
   });
 
+  /**
+   * Check if can proceed from ROLL_ALLOCATE_CLASS step.
+   * Requires both: all points allocated AND class selected.
+   */
+  readonly canProceedFromRollAllocate = computed(() => {
+    const stats = this.rolledStats();
+    const selectedClass = this.selectedClass();
+    return stats?.bonusPoints === 0 && selectedClass !== null;
+  });
+
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = [];
 
@@ -190,20 +194,10 @@ export class CharacterCreationComponent implements OnInit {
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
         break;
 
-      case CreationStep.ROLL_BONUS_POINTS:
+      case CreationStep.ROLL_ALLOCATE_CLASS:
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
-        break;
-
-      case CreationStep.ALLOCATE_POINTS:
-        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.allPointsAllocated() });
-        items.push({ id: 'reset', label: 'RESET', shortcut: 'R', enabled: true });
-        items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
-        break;
-
-      case CreationStep.SELECT_CLASS:
-        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedClass() !== null });
-        items.push({ id: 'reroll', label: 'REROLL STATS', shortcut: 'R', enabled: true });
-        items.push({ id: 'reset', label: 'START OVER', shortcut: 'ESC', enabled: true });
+        items.push({ id: 'reroll', label: 'REROLL', shortcut: 'R', enabled: this.rolledStats() !== null });
+        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.canProceedFromRollAllocate() });
         break;
 
       case CreationStep.NAME_CHARACTER:
@@ -264,16 +258,19 @@ export class CharacterCreationComponent implements OnInit {
     if (!this.isLocked()) {
       this.isLocked.set(true);
     }
-
-    // Auto-advance to allocate points
-    this.advanceToAllocatePoints();
   }
 
   async rerollStats() {
-    // Clear class selection
+    // Clear allocations (reset to 0)
+    this.rolledStats.update(stats => {
+      if (!stats) return null;
+      return CharacterCreationService.resetAllocations(stats);
+    });
+
+    // Clear selected class
     this.selectedClass.set(null);
 
-    // Roll again (which auto-advances back to ALLOCATE_POINTS)
+    // Roll new bonus points
     await this.rollBonusPoints();
   }
 
@@ -400,37 +397,26 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   /**
-   * Advances wizard from alignment selection to roll stats.
+   * Advances wizard from alignment selection to roll/allocate/class step.
    * Guards against advancing without a selected alignment.
+   * Auto-rolls bonus points on entry if not already rolled.
    */
-  advanceToRollStats() {
+  async advanceToRollAllocateClass() {
     if (!this.selectedAlignment()) return;
-    this.currentStep.set(CreationStep.ROLL_BONUS_POINTS);
+    this.currentStep.set(CreationStep.ROLL_ALLOCATE_CLASS);
+
+    // Auto-roll on entry if stats not yet rolled
+    if (!this.rolledStats()) {
+      await this.rollBonusPoints();
+    }
   }
 
   /**
-   * Advances wizard from roll stats to allocate points.
-   * No validation needed - called automatically after rolling.
-   */
-  advanceToAllocatePoints() {
-    this.currentStep.set(CreationStep.ALLOCATE_POINTS);
-  }
-
-  /**
-   * Advances wizard from allocate points to class selection.
-   * Guards against advancing with unallocated points.
-   */
-  advanceToSelectClass() {
-    if (!this.allPointsAllocated()) return;
-    this.currentStep.set(CreationStep.SELECT_CLASS);
-  }
-
-  /**
-   * Advances wizard from class selection to name character.
-   * Guards against advancing without a selected class.
+   * Advances wizard from roll/allocate/class to name character.
+   * Guards against advancing without completing allocation and class selection.
    */
   advanceToNameCharacter() {
-    if (!this.selectedClass()) return;
+    if (!this.canProceedFromRollAllocate()) return;
     this.currentStep.set(CreationStep.NAME_CHARACTER);
   }
 
@@ -445,38 +431,21 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   /**
-   * Goes back from roll stats to alignment selection.
-   * Clears rolled stats but preserves alignment.
+   * Goes back from roll/allocate/class to alignment selection.
+   * Clears rolled stats and selected class.
    */
-  goBackFromRollStats() {
-    this.rolledStats.set(null);
-    this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
-  }
-
-  /**
-   * Goes back from allocate points to roll stats.
-   * Preserves rolled stats but resets allocations.
-   */
-  goBackFromAllocatePoints() {
-    this.currentStep.set(CreationStep.ROLL_BONUS_POINTS);
-  }
-
-  /**
-   * Goes back from class selection to alignment selection (nuclear option).
-   * Clears BOTH rolled stats AND selected class to prevent stat fishing.
-   */
-  goBackFromSelectClass() {
+  goBackFromRollAllocateClass() {
     this.rolledStats.set(null);
     this.selectedClass.set(null);
     this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
   }
 
   /**
-   * Goes back from name character to class selection.
+   * Goes back from name character to roll/allocate/class step.
    * Preserves all selections including stats and class.
    */
   goBackFromNameCharacter() {
-    this.currentStep.set(CreationStep.SELECT_CLASS);
+    this.currentStep.set(CreationStep.ROLL_ALLOCATE_CLASS);
   }
 
   cancelToTrainingGrounds() {
@@ -526,18 +495,6 @@ export class CharacterCreationComponent implements OnInit {
       [stat]: currentAllocation - 1,
       bonusPoints: current.bonusPoints + 1
     });
-  }
-
-  /**
-   * Reset all allocations, return all points to pool.
-   * Uses CharacterCreationService.resetAllocations().
-   */
-  resetAllAllocations(): void {
-    const current = this.rolledStats();
-    if (!current) return;
-
-    const reset = CharacterCreationService.resetAllocations(current);
-    this.rolledStats.set(reset);
   }
 
   /**
@@ -591,16 +548,8 @@ export class CharacterCreationComponent implements OnInit {
         handled = this.handleAlignmentStepKeys(key);
         break;
 
-      case CreationStep.ROLL_BONUS_POINTS:
-        handled = this.handleRollStatsStepKeys(key);
-        break;
-
-      case CreationStep.ALLOCATE_POINTS:
-        handled = this.handleAllocatePointsStepKeys(key);
-        break;
-
-      case CreationStep.SELECT_CLASS:
-        handled = this.handleSelectClassStepKeys(key);
+      case CreationStep.ROLL_ALLOCATE_CLASS:
+        handled = this.handleRollAllocateClassStepKeys(key);
         break;
 
       case CreationStep.NAME_CHARACTER:
@@ -640,7 +589,7 @@ export class CharacterCreationComponent implements OnInit {
       this.selectedAlignment.set(Alignment.EVIL);
       return true;
     } else if (key === 'enter' && this.selectedAlignment()) {
-      this.advanceToRollStats();
+      this.advanceToRollAllocateClass();
       return true;
     } else if (key === 'escape') {
       this.goBackFromAlignment();
@@ -649,35 +598,7 @@ export class CharacterCreationComponent implements OnInit {
     return false;
   }
 
-  private handleRollStatsStepKeys(key: string): boolean {
-    if (key === 'r' && !this.isRolling()) {
-      this.rollBonusPoints();
-      return true;
-    } else if (key === 'escape') {
-      this.goBackFromRollStats();
-      return true;
-    }
-    return false;
-  }
-
-  private handleAllocatePointsStepKeys(key: string): boolean {
-    if (key === 'r') {
-      // Reset all allocations
-      this.resetAllAllocations();
-      return true;
-    } else if (key === 'enter' && this.allPointsAllocated()) {
-      // Continue to class selection if all points allocated
-      this.advanceToSelectClass();
-      return true;
-    } else if (key === 'escape') {
-      // Go back to roll stats
-      this.goBackFromAllocatePoints();
-      return true;
-    }
-    return false;
-  }
-
-  private handleSelectClassStepKeys(key: string): boolean {
+  private handleRollAllocateClassStepKeys(key: string): boolean {
     const classMap: Record<string, CharacterClass> = {
       'f': CharacterClass.FIGHTER,
       'm': CharacterClass.MAGE,
@@ -690,6 +611,7 @@ export class CharacterCreationComponent implements OnInit {
     };
 
     if (key === 'r') {
+      // Reroll stats
       this.rerollStats();
       return true;
     } else if (key in classMap) {
@@ -700,11 +622,13 @@ export class CharacterCreationComponent implements OnInit {
         this.selectedClass.set(selectedClass);
       }
       return true;
-    } else if (key === 'enter' && this.selectedClass()) {
+    } else if (key === 'enter' && this.canProceedFromRollAllocate()) {
+      // Continue to name character if all requirements met
       this.advanceToNameCharacter();
       return true;
     } else if (key === 'escape') {
-      this.goBackFromSelectClass();
+      // Go back to alignment
+      this.goBackFromRollAllocateClass();
       return true;
     }
     return false;
@@ -734,10 +658,8 @@ export class CharacterCreationComponent implements OnInit {
         if (this.currentStep() === CreationStep.SELECT_RACE) {
           this.advanceToAlignment();
         } else if (this.currentStep() === CreationStep.SELECT_ALIGNMENT) {
-          this.advanceToRollStats();
-        } else if (this.currentStep() === CreationStep.ALLOCATE_POINTS) {
-          this.advanceToSelectClass();
-        } else if (this.currentStep() === CreationStep.SELECT_CLASS) {
+          this.advanceToRollAllocateClass();
+        } else if (this.currentStep() === CreationStep.ROLL_ALLOCATE_CLASS) {
           this.advanceToNameCharacter();
         }
         break;
@@ -751,33 +673,20 @@ export class CharacterCreationComponent implements OnInit {
         // Context-aware back based on current step
         if (this.currentStep() === CreationStep.SELECT_ALIGNMENT) {
           this.goBackFromAlignment();
-        } else if (this.currentStep() === CreationStep.ROLL_BONUS_POINTS) {
-          this.goBackFromRollStats();
-        } else if (this.currentStep() === CreationStep.ALLOCATE_POINTS) {
-          this.goBackFromAllocatePoints();
+        } else if (this.currentStep() === CreationStep.ROLL_ALLOCATE_CLASS) {
+          this.goBackFromRollAllocateClass();
         } else if (this.currentStep() === CreationStep.NAME_CHARACTER) {
           this.goBackFromNameCharacter();
         }
         break;
 
-      case 'reset':
-        // Context-aware reset based on current step
-        if (this.currentStep() === CreationStep.ALLOCATE_POINTS) {
-          // ALLOCATE_POINTS: reset allocations
-          this.resetAllAllocations();
-        } else if (this.currentStep() === CreationStep.SELECT_CLASS) {
-          // SELECT_CLASS: start over (nuclear reset)
-          this.goBackFromSelectClass();
-        }
-        break;
-
       case 'reroll':
-        // Step 4 only: reroll stats
+        // ROLL_ALLOCATE_CLASS step: reroll stats
         this.rerollStats();
         break;
 
       case 'create':
-        // Step 5 only: create character
+        // NAME_CHARACTER step: create character
         const name = this.characterName().trim();
         if (name) {
           this.submitCharacter(name);

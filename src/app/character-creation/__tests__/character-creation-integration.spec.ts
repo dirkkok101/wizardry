@@ -136,7 +136,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('HUMAN' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
 
     // Allocate all bonus points
@@ -145,7 +145,6 @@ describe('CharacterCreationComponent - Integration', () => {
       vitality: 12, agility: 10, luck: 10, bonusPoints: 0
     });
 
-    component.advanceToSelectClass();
     component.selectClass('FIGHTER' as CharacterClass);
     component.advanceToNameCharacter();
     await component.submitCharacter('Character1');
@@ -161,7 +160,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('ELF' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.NEUTRAL);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
 
     // Allocate all bonus points
@@ -170,7 +169,6 @@ describe('CharacterCreationComponent - Integration', () => {
       vitality: 10, agility: 12, luck: 10, bonusPoints: 0
     });
 
-    component.advanceToSelectClass();
     component.selectClass('MAGE' as CharacterClass);
     component.advanceToNameCharacter();
     await component.submitCharacter('Character2');
@@ -204,7 +202,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectAlignment(Alignment.GOOD);
     expect(component.selectedAlignment()).toBe(Alignment.GOOD);
 
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
     const originalStats = component.rolledStats();
     expect(originalStats).not.toBeNull();
@@ -216,7 +214,7 @@ describe('CharacterCreationComponent - Integration', () => {
     expect(component.selectedAlignment()).toBe(Alignment.GOOD); // Alignment persists
 
     // Advance again and roll new stats
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
     const newStats = component.rolledStats();
 
@@ -236,7 +234,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('HUMAN' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
 
     // Allocate all bonus points
@@ -246,7 +244,6 @@ describe('CharacterCreationComponent - Integration', () => {
     });
     const stats = component.rolledStats();
 
-    component.advanceToSelectClass();
     component.selectClass('FIGHTER' as CharacterClass);
     component.advanceToNameCharacter();
 
@@ -285,7 +282,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('HUMAN' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
 
     // Allocate all bonus points and advance to class selection
@@ -294,7 +291,6 @@ describe('CharacterCreationComponent - Integration', () => {
       vitality: 12, agility: 10, luck: 10, bonusPoints: 0
     });
 
-    component.advanceToSelectClass();
     expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
 
     const firstStats = component.rolledStats();
@@ -311,7 +307,6 @@ describe('CharacterCreationComponent - Integration', () => {
       strength: 12, intelligence: 12, piety: 12,
       vitality: 12, agility: 12, luck: 12, bonusPoints: 0
     });
-    component.advanceToSelectClass();
 
     await component.rerollStats();
     const thirdStats = component.rolledStats();
@@ -323,7 +318,6 @@ describe('CharacterCreationComponent - Integration', () => {
       strength: 10, intelligence: 10, piety: 10,
       vitality: 10, agility: 10, luck: 10, bonusPoints: 0
     });
-    component.advanceToSelectClass();
 
     await component.rerollStats();
     const fourthStats = component.rolledStats();
@@ -344,7 +338,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('HUMAN' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
 
     // Fighter should almost always be eligible (low requirements)
@@ -361,7 +355,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('HUMAN' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
 
     expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
 
@@ -384,12 +378,12 @@ describe('CharacterCreationComponent - Integration', () => {
     expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
 
     // Step 2: Cannot advance without alignment
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT); // Stays on step 2
 
     // Select alignment and advance
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
   });
 
@@ -398,7 +392,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectRace('ELF' as Race);
     component.advanceToAlignment();
     component.selectAlignment(Alignment.GOOD);
-    component.advanceToRollStats();
+    component.advanceToRollAllocateClass();
     await component.rollBonusPoints();
 
     // Allocate all bonus points
@@ -407,7 +401,6 @@ describe('CharacterCreationComponent - Integration', () => {
       vitality: 10, agility: 12, luck: 10, bonusPoints: 0
     });
 
-    component.advanceToSelectClass();
     component.selectClass('MAGE' as CharacterClass);
     component.advanceToNameCharacter();
     await component.submitCharacter('TestMage');

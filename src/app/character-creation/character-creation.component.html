@@ -8,7 +8,7 @@
     <div class="controls-column">
       <div class="step-header">
         <h2>{{ stepTitle() }}</h2>
-        <span class="step-indicator">Step {{ stepNumber() }} of 6</span>
+        <span class="step-indicator">Step {{ stepNumber() }} of 4</span>
       </div>
 
       <div class="step-content">
@@ -78,181 +78,9 @@
             </div>
           }
 
-          @case (CreationStep.ROLL_BONUS_POINTS) {
-            <div class="roll-bonus-points-step">
-              @if (rolledStats()) {
-                <!-- Bonus Points Result -->
-                <div class="bonus-result">
-                  <div class="bonus-amount">{{ rolledStats()!.bonusPoints }} Points</div>
-
-                  <div class="bonus-grade">
-                    @if (rolledStats()!.bonusPoints >= 27) {
-                      <span class="grade-exceptional">⭐ EXCEPTIONAL ROLL! ⭐</span>
-                    } @else if (rolledStats()!.bonusPoints >= 17) {
-                      <span class="grade-lucky">✨ Lucky Roll!</span>
-                    } @else {
-                      <span class="grade-normal">Normal Roll</span>
-                    }
-                  </div>
-
-                  <p class="bonus-hint">
-                    You can reroll as many times as you like.<br>
-                    Elite classes (Lord, Samurai, Ninja, Bishop) typically need 17+ points.
-                  </p>
-                </div>
-              } @else {
-                <!-- Roll Button -->
-                <button
-                  class="roll-button"
-                  [disabled]="isRolling()"
-                  (click)="rollBonusPoints()"
-                >
-                  {{ isRolling() ? 'Rolling...' : 'ROLL BONUS POINTS' }}
-                  @if (!isRolling()) {
-                    <span class="shortcut">(R)</span>
-                  }
-                </button>
-
-                <div class="roll-explanation">
-                  <p>Roll for bonus points to allocate to your attributes.</p>
-                  <ul>
-                    <li><strong>7-10 points:</strong> Normal (90% chance)</li>
-                    <li><strong>17-20 points:</strong> Lucky (9.25% chance)</li>
-                    <li><strong>27-29 points:</strong> Exceptional (0.75% chance)</li>
-                  </ul>
-                  <p class="roll-hint">
-                    You can reroll unlimited times until you get a pool you're happy with.
-                  </p>
-                </div>
-              }
-            </div>
-          }
-
-          @case (CreationStep.ALLOCATE_POINTS) {
-            <div class="allocate-points-step">
-              <!-- Allocation Header -->
-              <div class="allocation-header">
-                <div class="points-remaining">
-                  <span class="label">Points Remaining:</span>
-                  <span class="value" [class.zero]="allPointsAllocated()">
-                    {{ rolledStats()!.bonusPoints }}
-                  </span>
-                </div>
-
-                @if (!allPointsAllocated()) {
-                  <div class="allocation-warning">
-                    ⚠️ You must allocate all points before continuing
-                  </div>
-                }
-              </div>
-
-              <!-- Allocation Grid -->
-              <div class="allocation-grid">
-                <div class="allocation-row">
-                  <span class="stat-label">STR:</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.strength <= 0"
-                    (click)="deallocatePoint('strength')"
-                  >−</button>
-                  <span class="allocated-amount">{{ rolledStats()!.strength }}</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('strength') + rolledStats()!.strength >= 18)"
-                    (click)="allocatePoint('strength')"
-                  >+</button>
-                  <span class="final-value">= {{ finalStats()!.strength }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">INT:</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.intelligence <= 0"
-                    (click)="deallocatePoint('intelligence')"
-                  >−</button>
-                  <span class="allocated-amount">{{ rolledStats()!.intelligence }}</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('intelligence') + rolledStats()!.intelligence >= 18)"
-                    (click)="allocatePoint('intelligence')"
-                  >+</button>
-                  <span class="final-value">= {{ finalStats()!.intelligence }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">PIE:</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.piety <= 0"
-                    (click)="deallocatePoint('piety')"
-                  >−</button>
-                  <span class="allocated-amount">{{ rolledStats()!.piety }}</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('piety') + rolledStats()!.piety >= 18)"
-                    (click)="allocatePoint('piety')"
-                  >+</button>
-                  <span class="final-value">= {{ finalStats()!.piety }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">VIT:</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.vitality <= 0"
-                    (click)="deallocatePoint('vitality')"
-                  >−</button>
-                  <span class="allocated-amount">{{ rolledStats()!.vitality }}</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('vitality') + rolledStats()!.vitality >= 18)"
-                    (click)="allocatePoint('vitality')"
-                  >+</button>
-                  <span class="final-value">= {{ finalStats()!.vitality }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">AGI:</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.agility <= 0"
-                    (click)="deallocatePoint('agility')"
-                  >−</button>
-                  <span class="allocated-amount">{{ rolledStats()!.agility }}</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('agility') + rolledStats()!.agility >= 18)"
-                    (click)="allocatePoint('agility')"
-                  >+</button>
-                  <span class="final-value">= {{ finalStats()!.agility }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">LUC:</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.luck <= 0"
-                    (click)="deallocatePoint('luck')"
-                  >−</button>
-                  <span class="allocated-amount">{{ rolledStats()!.luck }}</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('luck') + rolledStats()!.luck >= 18)"
-                    (click)="allocatePoint('luck')"
-                  >+</button>
-                  <span class="final-value">= {{ finalStats()!.luck }}</span>
-                </div>
-              </div>
-
-              <div class="allocation-hint">
-                Use +/− buttons to allocate points. Maximum 18 per stat (race base + allocated).
-              </div>
-            </div>
-          }
-
-          @case (CreationStep.SELECT_CLASS) {
-            <div class="class-selection">
+          @case (CreationStep.ROLL_ALLOCATE_CLASS) {
+            <div class="roll-allocate-class-step">
+              <!-- Class Selection Grid -->
               <div class="button-grid classes">
                 @for (classOption of allClasses; track classOption.id) {
                   <button
@@ -268,12 +96,16 @@
                 }
               </div>
 
+              <!-- Class Info Panel -->
               @if (selectedClass()) {
                 <div class="class-description">
                   <p>{{ getClassDescription(selectedClass()!) }}</p>
                 </div>
+              } @else {
+                <div class="class-description empty">
+                  Select a class to see details
+                </div>
               }
-              <div class="selection-hint">Press letter key to select class</div>
             </div>
           }
 
@@ -334,12 +166,137 @@
           <div class="sheet-section stats">
             <label>Attributes:</label>
             <div class="stat-list">
-              @if (currentStep() === CreationStep.ALLOCATE_POINTS) {
-                <!-- Allocation View: Base + Allocated = Total -->
-                <div class="stat-header">
-                  <span class="stat-name"></span>
-                  <span class="stat-breakdown-label">Base + Allocated = Total</span>
+              @if (currentStep() === CreationStep.ROLL_ALLOCATE_CLASS) {
+                <!-- ROLL_ALLOCATE_CLASS View: Interactive Allocation -->
+                <!-- Points Remaining Header -->
+                <div class="allocation-header">
+                  <div class="points-remaining">
+                    <span class="label">Points Remaining:</span>
+                    <span class="value" [class.zero]="allPointsAllocated()">
+                      {{ rolledStats()!.bonusPoints }}
+                    </span>
+                  </div>
                 </div>
+
+                <div class="stat-breakdown-label">BASE + ALLOCATED = TOTAL</div>
+
+                <!-- Allocation Grid with +/- buttons -->
+                <div class="allocation-row">
+                  <span class="stat-label">STR:</span>
+                  <span class="base-value">{{ raceData()!.baseStats.str }}</span>
+                  <span class="plus">+</span>
+                  <button
+                    class="btn-decrement"
+                    [disabled]="rolledStats()!.strength <= 0"
+                    (click)="deallocatePoint('strength')"
+                  >−</button>
+                  <span class="allocated-amount">[{{ rolledStats()!.strength }}]</span>
+                  <button
+                    class="btn-increment"
+                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('strength') + rolledStats()!.strength >= 18)"
+                    (click)="allocatePoint('strength')"
+                  >+</button>
+                  <span class="equals">=</span>
+                  <span class="final-value">{{ finalStats()!.strength }}</span>
+                </div>
+
+                <div class="allocation-row">
+                  <span class="stat-label">INT:</span>
+                  <span class="base-value">{{ raceData()!.baseStats.int }}</span>
+                  <span class="plus">+</span>
+                  <button
+                    class="btn-decrement"
+                    [disabled]="rolledStats()!.intelligence <= 0"
+                    (click)="deallocatePoint('intelligence')"
+                  >−</button>
+                  <span class="allocated-amount">[{{ rolledStats()!.intelligence }}]</span>
+                  <button
+                    class="btn-increment"
+                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('intelligence') + rolledStats()!.intelligence >= 18)"
+                    (click)="allocatePoint('intelligence')"
+                  >+</button>
+                  <span class="equals">=</span>
+                  <span class="final-value">{{ finalStats()!.intelligence }}</span>
+                </div>
+
+                <div class="allocation-row">
+                  <span class="stat-label">PIE:</span>
+                  <span class="base-value">{{ raceData()!.baseStats.pie }}</span>
+                  <span class="plus">+</span>
+                  <button
+                    class="btn-decrement"
+                    [disabled]="rolledStats()!.piety <= 0"
+                    (click)="deallocatePoint('piety')"
+                  >−</button>
+                  <span class="allocated-amount">[{{ rolledStats()!.piety }}]</span>
+                  <button
+                    class="btn-increment"
+                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('piety') + rolledStats()!.piety >= 18)"
+                    (click)="allocatePoint('piety')"
+                  >+</button>
+                  <span class="equals">=</span>
+                  <span class="final-value">{{ finalStats()!.piety }}</span>
+                </div>
+
+                <div class="allocation-row">
+                  <span class="stat-label">VIT:</span>
+                  <span class="base-value">{{ raceData()!.baseStats.vit }}</span>
+                  <span class="plus">+</span>
+                  <button
+                    class="btn-decrement"
+                    [disabled]="rolledStats()!.vitality <= 0"
+                    (click)="deallocatePoint('vitality')"
+                  >−</button>
+                  <span class="allocated-amount">[{{ rolledStats()!.vitality }}]</span>
+                  <button
+                    class="btn-increment"
+                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('vitality') + rolledStats()!.vitality >= 18)"
+                    (click)="allocatePoint('vitality')"
+                  >+</button>
+                  <span class="equals">=</span>
+                  <span class="final-value">{{ finalStats()!.vitality }}</span>
+                </div>
+
+                <div class="allocation-row">
+                  <span class="stat-label">AGI:</span>
+                  <span class="base-value">{{ raceData()!.baseStats.agi }}</span>
+                  <span class="plus">+</span>
+                  <button
+                    class="btn-decrement"
+                    [disabled]="rolledStats()!.agility <= 0"
+                    (click)="deallocatePoint('agility')"
+                  >−</button>
+                  <span class="allocated-amount">[{{ rolledStats()!.agility }}]</span>
+                  <button
+                    class="btn-increment"
+                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('agility') + rolledStats()!.agility >= 18)"
+                    (click)="allocatePoint('agility')"
+                  >+</button>
+                  <span class="equals">=</span>
+                  <span class="final-value">{{ finalStats()!.agility }}</span>
+                </div>
+
+                <div class="allocation-row">
+                  <span class="stat-label">LUC:</span>
+                  <span class="base-value">{{ raceData()!.baseStats.luc }}</span>
+                  <span class="plus">+</span>
+                  <button
+                    class="btn-decrement"
+                    [disabled]="rolledStats()!.luck <= 0"
+                    (click)="deallocatePoint('luck')"
+                  >−</button>
+                  <span class="allocated-amount">[{{ rolledStats()!.luck }}]</span>
+                  <button
+                    class="btn-increment"
+                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('luck') + rolledStats()!.luck >= 18)"
+                    (click)="allocatePoint('luck')"
+                  >+</button>
+                  <span class="equals">=</span>
+                  <span class="final-value">{{ finalStats()!.luck }}</span>
+                </div>
+              } @else {
+                <!-- Default view for NAME_CHARACTER step (after allocation complete) -->
+                <div class="stat-breakdown-label">BASE + ALLOCATED = TOTAL</div>
                 <div class="stat-row">
                   <span class="stat-name">STR:</span>
                   <span class="stat-breakdown">
@@ -387,74 +344,6 @@
                     <span class="allocated">{{ rolledStats()!.luck }}</span> =
                     <span class="total">{{ finalStats()!.luck }}</span>
                   </span>
-                </div>
-
-                <div class="bonus-points-remaining">
-                  <strong>Points Remaining:</strong> {{ rolledStats()!.bonusPoints }}
-                </div>
-              } @else {
-                <!-- Default view for other steps -->
-                <div class="stat-header">
-                  <span class="stat-name"></span>
-                  <span class="stat-breakdown-label">Base + Roll + Bonus = Total</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">STR:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.str }}</span> +
-                    <span class="roll">{{ rolledStats()!.strength }}</span> +
-                    <span class="bonus">0</span> =
-                    <span class="total">{{ finalStats()!.strength }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">INT:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.int }}</span> +
-                    <span class="roll">{{ rolledStats()!.intelligence }}</span> +
-                    <span class="bonus">0</span> =
-                    <span class="total">{{ finalStats()!.intelligence }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">PIE:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.pie }}</span> +
-                    <span class="roll">{{ rolledStats()!.piety }}</span> +
-                    <span class="bonus">0</span> =
-                    <span class="total">{{ finalStats()!.piety }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">VIT:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.vit }}</span> +
-                    <span class="roll">{{ rolledStats()!.vitality }}</span> +
-                    <span class="bonus">0</span> =
-                    <span class="total">{{ finalStats()!.vitality }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">AGI:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.agi }}</span> +
-                    <span class="roll">{{ rolledStats()!.agility }}</span> +
-                    <span class="bonus">0</span> =
-                    <span class="total">{{ finalStats()!.agility }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">LUC:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.luc }}</span> +
-                    <span class="roll">{{ rolledStats()!.luck }}</span> +
-                    <span class="bonus">0</span> =
-                    <span class="total">{{ finalStats()!.luck }}</span>
-                  </span>
-                </div>
-                <div class="bonus-points">
-                  <strong>Bonus Points Available:</strong> {{ rolledStats()!.bonusPoints }}
-                  <span class="bonus-note">(Not yet allocatable)</span>
                 </div>
               }
             </div>
