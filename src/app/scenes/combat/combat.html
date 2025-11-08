@@ -1,10 +1,91 @@
-<div class="combat-stub">
-  <h2>Combat - Round {{ roundNumber() }}</h2>
-  <p>Combat service layer complete. UI integration in progress.</p>
-  <div class="combat-log">
-    @for (msg of combatLog(); track $index) {
-      <div>{{ msg }}</div>
-    }
-  </div>
-  <button (click)="executeRound()">Execute Round (Stub)</button>
+<!-- src/app/scenes/combat/combat.html -->
+<div class="combat-scene">
+  @if (combatState(); as combat) {
+    <div class="combat-header">
+      <h2>COMBAT - ROUND {{ roundNumber() }}</h2>
+      @if (!combat.canFlee) {
+        <div class="fixed-encounter-badge">FIXED ENCOUNTER - CANNOT FLEE</div>
+      }
+    </div>
+
+    <div class="combat-grid">
+      <!-- Monsters Panel -->
+      <div class="monsters-panel">
+        <h3>MONSTERS ({{ monsters().length }})</h3>
+        @for (monster of monsters(); track monster.id) {
+          <div class="monster-card" [class.dead]="monster.status === 'DEAD'">
+            <div class="monster-name">{{ monster.name }}</div>
+            <div class="monster-stats">
+              <span class="hp">HP: {{ monster.hp }}/{{ monster.maxHp }}</span>
+              <span class="ac">AC: {{ monster.ac }}</span>
+              <span class="status">{{ monster.status }}</span>
+            </div>
+            @if (monster.hp > 0) {
+              <div class="hp-bar">
+                <div class="hp-fill" [style.width.%]="(monster.hp / monster.maxHp) * 100"></div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Party Panel -->
+      <div class="party-panel">
+        <h3>PARTY</h3>
+        @for (char of partyCharacters(); track char.id) {
+          <div class="character-combat-card" [class.dead]="char.hp <= 0">
+            <div class="char-name">{{ char.name }} ({{ char.class }})</div>
+            <div class="char-stats">
+              <span class="hp">HP: {{ char.hp }}/{{ char.maxHp }}</span>
+              <span class="ac">AC: {{ char.ac }}</span>
+            </div>
+            @if (char.hp > 0) {
+              <div class="hp-bar">
+                <div class="hp-fill" [style.width.%]="(char.hp / char.maxHp) * 100"></div>
+              </div>
+              <div class="action-selection">
+                @if (selectedActions().has(char.id)) {
+                  <span class="action-selected">✓ Action Selected</span>
+                } @else {
+                  <span class="action-pending">⏳ Select Action...</span>
+                }
+              </div>
+            } @else {
+              <div class="char-status-dead">DEAD</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Combat Log -->
+    <div class="combat-log">
+      <h3>COMBAT LOG</h3>
+      <div class="log-messages">
+        @for (msg of combatLog(); track $index) {
+          <div class="log-message">{{ msg }}</div>
+        }
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="combat-actions">
+      <button
+        class="execute-round-btn"
+        [disabled]="!allActionsSelected() || isExecutingRound()"
+        (click)="executeRound()">
+        @if (isExecutingRound()) {
+          Executing Round...
+        } @else if (allActionsSelected()) {
+          (Enter) Execute Round {{ roundNumber() }}
+        } @else {
+          Select Actions for All Characters
+        }
+      </button>
+    </div>
+  } @else {
+    <div class="no-combat">
+      <p>No combat active. Returning to maze...</p>
+    </div>
+  }
 </div>
