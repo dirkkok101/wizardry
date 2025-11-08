@@ -131,4 +131,29 @@ export class CharacterCreationService {
       bonusPoints: stats.bonusPoints - points
     }
   }
+
+  /**
+   * Reset all bonus point allocations
+   * Returns all allocated points back to the bonus pool
+   * Used when player wants to re-allocate from scratch
+   */
+  static resetAllocations(currentStats: RolledStats): RolledStats {
+    const totalAllocated =
+      currentStats.strength +
+      currentStats.intelligence +
+      currentStats.piety +
+      currentStats.vitality +
+      currentStats.agility +
+      currentStats.luck
+
+    return {
+      strength: 0,
+      intelligence: 0,
+      piety: 0,
+      vitality: 0,
+      agility: 0,
+      luck: 0,
+      bonusPoints: currentStats.bonusPoints + totalAllocated
+    }
+  }
 }

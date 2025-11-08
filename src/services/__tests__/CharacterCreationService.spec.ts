@@ -249,4 +249,63 @@ describe('CharacterCreationService', () => {
       }).toThrow('Not enough bonus points')
     })
   })
+
+  describe('resetAllocations', () => {
+    it('returns all allocated points to pool', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 3,
+        piety: 2,
+        vitality: 4,
+        agility: 1,
+        luck: 0,
+        bonusPoints: 7
+      }
+
+      const result = CharacterCreationService.resetAllocations(stats)
+
+      // 5 + 3 + 2 + 4 + 1 + 0 = 15 allocated
+      // 7 remaining + 15 allocated = 22 total
+      expect(result.bonusPoints).toBe(22)
+    })
+
+    it('zeros all stat allocations', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 3,
+        piety: 2,
+        vitality: 4,
+        agility: 1,
+        luck: 0,
+        bonusPoints: 7
+      }
+
+      const result = CharacterCreationService.resetAllocations(stats)
+
+      expect(result.strength).toBe(0)
+      expect(result.intelligence).toBe(0)
+      expect(result.piety).toBe(0)
+      expect(result.vitality).toBe(0)
+      expect(result.agility).toBe(0)
+      expect(result.luck).toBe(0)
+    })
+
+    it('returns new immutable RolledStats object', () => {
+      const stats = {
+        strength: 5,
+        intelligence: 3,
+        piety: 2,
+        vitality: 4,
+        agility: 1,
+        luck: 0,
+        bonusPoints: 7
+      }
+
+      const result = CharacterCreationService.resetAllocations(stats)
+
+      expect(result).not.toBe(stats)
+      expect(result).toHaveProperty('strength')
+      expect(result).toHaveProperty('bonusPoints')
+    })
+  })
 })
