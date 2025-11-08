@@ -6,6 +6,7 @@ import { SceneType } from '../../../types/SceneType'
 import { createTestGameStateWithCombat, createTestCharacter } from '../../../test-helpers/test-factories'
 import { Router } from '@angular/router'
 import { VictoryService } from '../../../services/VictoryService'
+import { CharacterStatus } from '../../../types/CharacterStatus'
 
 describe('CombatComponent', () => {
   let component: CombatComponent
@@ -246,6 +247,45 @@ describe('CombatComponent', () => {
 
       const newPosition = gameState.state().dungeon.position
       expect(newPosition).toEqual(position)
+    })
+  })
+
+  describe('Defeat Handling', () => {
+    beforeEach(() => {
+      // Setup defeat scenario - all party members dead
+      gameState.updateState(state => {
+        const char1 = state.roster.get('c1')!
+        const char2 = state.roster.get('c2')!
+
+        return {
+          ...state,
+          roster: new Map(state.roster)
+            .set('c1', { ...char1, hp: 0, status: CharacterStatus.DEAD })
+            .set('c2', { ...char2, hp: 0, status: CharacterStatus.DEAD })
+        }
+      })
+
+      fixture.detectChanges()
+    })
+
+    it('shows defeat modal on party wipe', () => {
+      component['handleDefeat']()
+
+      expect(component.showDefeatModal()).toBe(true)
+    })
+
+    it('navigates to temple on defeat', () => {
+      component['handleDefeat']()
+      component.returnToTemple()
+
+      expect(router.navigate).toHaveBeenCalledWith(['/temple'])
+    })
+
+    it('clears combat state on defeat', () => {
+      component['handleDefeat']()
+
+      const combat = gameState.state().combat
+      expect(combat).toBeUndefined()
     })
   })
 })

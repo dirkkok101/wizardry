@@ -111,6 +111,22 @@
         </div>
       </div>
     }
+
+    <!-- Defeat Modal -->
+    @if (showDefeatModal()) {
+      <div class="defeat-modal-overlay">
+        <div class="defeat-modal">
+          <h2>DEFEAT</h2>
+          <p class="defeat-message">
+            Your party has been defeated!<br>
+            You awaken at the Temple of Cant...
+          </p>
+          <button class="temple-btn" (click)="returnToTemple()">
+            (Enter) Go to Temple
+          </button>
+        </div>
+      </div>
+    }
   } @else {
     <div class="no-combat">
       <p>No combat active. Returning to maze...</p>

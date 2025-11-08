@@ -32,6 +32,7 @@ export class CombatComponent implements OnInit {
   readonly isExecutingRound = signal<boolean>(false)
   readonly showVictoryModal = signal<boolean>(false)
   readonly victoryRewards = signal<VictoryRewards | null>(null)
+  readonly showDefeatModal = signal<boolean>(false)
 
   // Computed party characters
   readonly partyCharacters = computed(() => {
@@ -192,12 +193,23 @@ export class CombatComponent implements OnInit {
   }
 
   private handleDefeat(): void {
-    // TODO: Implement in next task
-    console.log('Defeat!')
+    // Clear combat state
+    this.gameState.updateState(state => ({
+      ...state,
+      combat: undefined
+    }))
+
+    // Show defeat modal
+    this.showDefeatModal.set(true)
   }
 
   returnToMaze(): void {
     this.showVictoryModal.set(false)
     this.router.navigate(['/maze'])
+  }
+
+  returnToTemple(): void {
+    this.showDefeatModal.set(false)
+    this.router.navigate(['/temple'])
   }
 }
