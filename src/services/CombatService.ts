@@ -142,4 +142,73 @@ export class CombatService {
 
     return this.createCommand(monster, 'ATTACK', target)
   }
+
+  static executeCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): { newState: CombatState; message: string } {
+    // Handle different command types
+    if (command.type === 'ATTACK') {
+      return this.executeAttackCommand(state, command)
+    }
+
+    // TODO: Handle other command types (CAST_SPELL, USE_ITEM, etc.)
+    return { newState: state, message: 'Unknown command type' }
+  }
+
+  private static executeAttackCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): { newState: CombatState; message: string } {
+    const target = command.target as Combatant
+    if (!target) {
+      return { newState: state, message: 'No target specified' }
+    }
+
+    const attackResult = this.resolveAttack(command.actor, target)
+    const actorName = this.getCombatantName(command.actor)
+    const targetName = this.getCombatantName(target)
+
+    if (!attackResult.hit) {
+      return {
+        newState: state,
+        message: `${actorName} attacks ${targetName}: ${attackResult.message}`
+      }
+    }
+
+    // Apply damage to target
+    const newState = this.applyDamage(state, target, attackResult.damage)
+
+    return {
+      newState,
+      message: `${actorName} attacks ${targetName}: ${attackResult.message}`
+    }
+  }
+
+  private static applyDamage(
+    state: CombatState,
+    target: Combatant,
+    damage: number
+  ): CombatState {
+    // Apply damage to monster
+    if ('monsterId' in target) {
+      const newMonsters = state.monsters.map(m => {
+        if (m.id !== target.id) return m
+        const newHp = Math.max(0, m.hp - damage)
+        return {
+          ...m,
+          hp: newHp,
+          status: newHp === 0 ? 'DEAD' : m.status
+        }
+      })
+      return { ...state, monsters: newMonsters }
+    }
+
+    // TODO: Apply damage to character
+    return state
+  }
+
+  private static getCombatantName(combatant: Combatant): string {
+    return combatant.name || 'Unknown'
+  }
 }
