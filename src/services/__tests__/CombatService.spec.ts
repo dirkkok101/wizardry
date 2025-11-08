@@ -1,6 +1,6 @@
 // src/services/__tests__/CombatService.spec.ts
 import { CombatService } from '../CombatService'
-import { createTestCharacter } from '../../test-helpers/test-factories'
+import { createTestCharacter, createTestMonster } from '../../test-helpers/test-factories'
 
 describe('CombatService', () => {
   describe('calculateInitiative', () => {
@@ -71,6 +71,42 @@ describe('CombatService', () => {
       const state = CombatService.initiateCombat('kobold', party, false)
 
       expect(state.canFlee).toBe(false)
+    })
+  })
+
+  describe('createCommand', () => {
+    it('creates attack command with initiative', () => {
+      const actor = createTestCharacter({ agility: 15 })
+      const target = createTestMonster()
+
+      const cmd = CombatService.createCommand(actor, 'ATTACK', target)
+
+      expect(cmd.id).toBeDefined()
+      expect(cmd.actor).toBe(actor)
+      expect(cmd.type).toBe('ATTACK')
+      expect(cmd.target).toBe(target)
+      expect(cmd.initiative).toBeGreaterThanOrEqual(1)
+      expect(cmd.data).toBeUndefined()
+    })
+
+    it('creates spell command with spell data', () => {
+      const actor = createTestCharacter()
+      const target = createTestMonster()
+
+      const cmd = CombatService.createCommand(actor, 'CAST_SPELL', target, { spellId: 'halito' })
+
+      expect(cmd.type).toBe('CAST_SPELL')
+      expect(cmd.data).toEqual({ spellId: 'halito' })
+    })
+
+    it('rolls different initiative each time', () => {
+      const actor = createTestCharacter({ agility: 10 })
+      const initiatives = Array.from({ length: 50 }, () =>
+        CombatService.createCommand(actor, 'ATTACK').initiative
+      )
+
+      const unique = new Set(initiatives)
+      expect(unique.size).toBeGreaterThan(1)
     })
   })
 })
