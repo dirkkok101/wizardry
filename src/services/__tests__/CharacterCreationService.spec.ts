@@ -121,6 +121,33 @@ describe('CharacterCreationService', () => {
       expect(stats.bonusPoints).toBeGreaterThanOrEqual(7)
       expect(stats.bonusPoints).toBeLessThanOrEqual(29)
     })
+
+    describe('rollBonusPointsOnly', () => {
+      it('returns 0 for all stats', () => {
+        const result = CharacterCreationService.rollBonusPointsOnly()
+
+        expect(result.strength).toBe(0)
+        expect(result.intelligence).toBe(0)
+        expect(result.piety).toBe(0)
+        expect(result.vitality).toBe(0)
+        expect(result.agility).toBe(0)
+        expect(result.luck).toBe(0)
+      })
+
+      it('rolls bonus points between 7-29', () => {
+        const result = CharacterCreationService.rollBonusPointsOnly()
+
+        expect(result.bonusPoints).toBeGreaterThanOrEqual(7)
+        expect(result.bonusPoints).toBeLessThanOrEqual(29)
+      })
+
+      it('returns immutable RolledStats object', () => {
+        const result = CharacterCreationService.rollBonusPointsOnly()
+
+        expect(result).toHaveProperty('strength')
+        expect(result).toHaveProperty('bonusPoints')
+      })
+    })
   })
 
   describe('applyRaceModifiers', () => {

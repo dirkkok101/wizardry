@@ -40,6 +40,27 @@ export class CharacterCreationService {
   }
 
   /**
+   * Roll ONLY bonus points (authentic Wizardry 1 system)
+   * No 3d6 rolls - all stats start at 0 (player allocates bonus points)
+   *
+   * Bonus Point Formula (authentic):
+   * - Base: 1d4 + 6 = 7-10 points (90% probability)
+   * - First bonus: 1/11 chance to add +10 → 17-20 points (9.25%)
+   * - Second bonus: If still <20, another 1/11 chance to add +10 → 27-29 points (0.75%)
+   */
+  static rollBonusPointsOnly(): RolledStats {
+    return {
+      strength: 0,
+      intelligence: 0,
+      piety: 0,
+      vitality: 0,
+      agility: 0,
+      luck: 0,
+      bonusPoints: this.rollBonusPoints()
+    }
+  }
+
+  /**
    * Roll 3d6 (sum of three 6-sided dice).
    */
   private static roll3d6(): number {
