@@ -48,6 +48,11 @@ describe('VictoryService', () => {
 
       expect(result.xpPerCharacter).toBe(33)  // floor(100/3)
     })
+
+    it('handles empty monster array', () => {
+      const result = VictoryService.calculateVictoryRewards([], 1)
+      expect(result).toEqual({ totalXP: 0, xpPerCharacter: 0, totalGold: 0 })
+    })
   })
 
   describe('distributeRewards', () => {
@@ -73,6 +78,18 @@ describe('VictoryService', () => {
       const newRoster = VictoryService.distributeRewards(roster, partyMembers, 10, 10)
 
       expect(newRoster).not.toBe(roster)
+    })
+
+    it('skips party members not in roster', () => {
+      const char1 = createTestCharacter({ id: 'c1', experience: 100 })
+      const roster = new Map([['c1', char1]])
+      const partyMembers = ['c1', 'c2', 'c3']  // c2, c3 don't exist
+
+      const newRoster = VictoryService.distributeRewards(roster, partyMembers, 10, 0)
+
+      expect(newRoster.size).toBe(1)  // Only c1 updated
+      expect(newRoster.has('c2')).toBe(false)
+      expect(newRoster.get('c1')!.experience).toBe(110)  // c1 got XP
     })
   })
 })
