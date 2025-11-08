@@ -1,7 +1,8 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult } from '../types/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance } from '../types/Combat'
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
+import { CharacterStatus } from '../types/CharacterStatus'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -119,5 +120,26 @@ export class CombatService {
       return Math.floor((combatant.strength - 10) / 2)
     }
     return 0
+  }
+
+  static selectMonsterAction(
+    monster: MonsterInstance,
+    party: Character[],
+    frontRow: string[]
+  ): CombatCommand {
+    // Get alive front row members
+    const aliveFront = party.filter(c =>
+      frontRow.includes(c.id) && c.status !== CharacterStatus.DEAD && c.hp > 0
+    )
+
+    // If no alive front row, target alive back row
+    const targetPool = aliveFront.length > 0
+      ? aliveFront
+      : party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+
+    // Select random target
+    const target = targetPool[Math.floor(Math.random() * targetPool.length)]
+
+    return this.createCommand(monster, 'ATTACK', target)
   }
 }
