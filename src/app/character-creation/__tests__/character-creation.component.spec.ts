@@ -456,6 +456,37 @@ describe('CharacterCreationComponent', () => {
       const isEligible = component.isClassEligible(CharacterClass.FIGHTER);
       expect(typeof isEligible).toBe('boolean');
     });
+
+    it('should auto-deselect class when it becomes ineligible', async () => {
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.advanceToRollAllocateClass();
+      await component.rollBonusPoints();
+
+      // Mock stats to make MAGE eligible (needs INT 11+)
+      // Human base INT = 8, so we need 3 allocated points to reach 11
+      component.rolledStats.set({
+        strength: 0, intelligence: 3, piety: 0,
+        vitality: 0, agility: 0, luck: 0, bonusPoints: 17
+      });
+
+      fixture.detectChanges();
+
+      // INT is now 11 (8 base + 3 allocated) - eligible for MAGE
+      expect(component.isClassEligible(CharacterClass.MAGE)).toBe(true);
+      component.selectClass(CharacterClass.MAGE);
+      expect(component.selectedClass()).toBe(CharacterClass.MAGE);
+
+      // Deallocate 1 point to drop INT to 10 (ineligible for MAGE)
+      component.deallocatePoint('intelligence');
+
+      fixture.detectChanges();
+
+      // Class should auto-deselect when it becomes ineligible
+      // INT is now 10 (8 base + 2 allocated) - ineligible for MAGE
+      expect(component.isClassEligible(CharacterClass.MAGE)).toBe(false);
+      expect(component.selectedClass()).toBeNull();
+    });
   });
 
   describe('selectClass()', () => {
@@ -1056,6 +1087,29 @@ describe('CharacterCreationComponent', () => {
         await component.handleFooterAction('continue');
 
         expect(component.currentStep()).toBe(CreationStep.ROLL_ALLOCATE_CLASS);
+      });
+
+      it('should auto-roll bonus points when entering ROLL_ALLOCATE_CLASS', async () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+
+        expect(component.rolledStats()).toBeNull();
+
+        await component.advanceToRollAllocateClass();
+
+        // Should auto-roll on entry
+        expect(component.currentStep()).toBe(CreationStep.ROLL_ALLOCATE_CLASS);
+        expect(component.rolledStats()).not.toBeNull();
+        expect(component.rolledStats()!.bonusPoints).toBeGreaterThanOrEqual(7);
+        expect(component.rolledStats()!.bonusPoints).toBeLessThanOrEqual(29);
+
+        // Should have initialized all stats to 0
+        expect(component.rolledStats()!.strength).toBe(0);
+        expect(component.rolledStats()!.intelligence).toBe(0);
+        expect(component.rolledStats()!.piety).toBe(0);
+        expect(component.rolledStats()!.vitality).toBe(0);
+        expect(component.rolledStats()!.agility).toBe(0);
+        expect(component.rolledStats()!.luck).toBe(0);
       });
 
       it('should advance from ROLL_ALLOCATE_CLASS to NAME_CHARACTER', async () => {

@@ -1,4 +1,4 @@
-import { Component, computed, HostListener, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -212,7 +212,15 @@ export class CharacterCreationComponent implements OnInit {
   constructor(
     private gameState: GameStateService,
     private router: Router
-  ) {}
+  ) {
+    // Auto-deselect class if it becomes ineligible during allocation
+    effect(() => {
+      const currentClass = this.selectedClass();
+      if (currentClass && !this.isClassEligible(currentClass)) {
+        this.selectedClass.set(null);
+      }
+    });
+  }
 
   ngOnInit() {
     // Verify services are initialized
