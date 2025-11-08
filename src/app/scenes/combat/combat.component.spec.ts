@@ -223,4 +223,29 @@ describe('CombatComponent', () => {
       expect(rewards?.totalXP).toBeGreaterThan(0)
     })
   })
+
+  describe('Return to Maze', () => {
+    it('navigates to /maze on victory return', () => {
+      component.showVictoryModal.set(true)
+      component.returnToMaze()
+
+      expect(router.navigate).toHaveBeenCalledWith(['/maze'])
+    })
+
+    it('clears victory modal on return', () => {
+      component.showVictoryModal.set(true)
+      component.returnToMaze()
+
+      expect(component.showVictoryModal()).toBe(false)
+    })
+
+    it('preserves dungeon position when returning', () => {
+      const position = gameState.state().dungeon.position
+
+      component.returnToMaze()
+
+      const newPosition = gameState.state().dungeon.position
+      expect(newPosition).toEqual(position)
+    })
+  })
 })
