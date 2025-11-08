@@ -362,5 +362,8 @@
   </div>
 
   <!-- Scene Footer (full width) -->
-  <app-scene-footer [menuItems]="footerMenuItems()" />
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
 </div>
