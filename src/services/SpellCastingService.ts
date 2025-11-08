@@ -43,7 +43,12 @@ export class SpellCastingService {
       return { canCast: false, reason: 'No spell points' }
     }
 
-    const spellPoints = caster.spellPoints[spell.type]?.[spell.level] || 0
+    const pool = spell.type === 'mage' ? caster.spellPoints.mage : caster.spellPoints.priest
+    if (!pool || !Array.isArray(pool)) {
+      return { canCast: false, reason: 'No spell points' }
+    }
+
+    const spellPoints = pool[spell.level] || 0
     if (spellPoints < 1) {
       return { canCast: false, reason: 'Insufficient spell points' }
     }
@@ -53,17 +58,23 @@ export class SpellCastingService {
 
   static deductSpellPoints(caster: Character, spellId: string): Character {
     const spell = SPELL_CACHE.get(spellId)!
-    const currentPoints = caster.spellPoints![spell.type][spell.level]
+    if (!caster.spellPoints) return caster
+
+    const pool = spell.type === 'mage' ? caster.spellPoints.mage : caster.spellPoints.priest
+    if (!pool || !Array.isArray(pool)) return caster
+
+    const currentPoints = pool[spell.level] || 0
+    const newPool = [
+      ...pool.slice(0, spell.level),
+      currentPoints - 1,
+      ...pool.slice(spell.level + 1)
+    ]
 
     return {
       ...caster,
       spellPoints: {
         ...caster.spellPoints,
-        [spell.type]: [
-          ...caster.spellPoints![spell.type].slice(0, spell.level),
-          currentPoints - 1,
-          ...caster.spellPoints![spell.type].slice(spell.level + 1)
-        ]
+        [spell.type]: newPool
       }
     }
   }
