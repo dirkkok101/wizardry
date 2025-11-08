@@ -1,5 +1,5 @@
 // src/app/scenes/combat/combat.ts
-import { Component, computed, signal, OnInit } from '@angular/core'
+import { Component, computed, signal, OnInit, HostListener } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../../services/GameStateService'
@@ -211,5 +211,31 @@ export class CombatComponent implements OnInit {
   returnToTemple(): void {
     this.showDefeatModal.set(false)
     this.router.navigate(['/temple'])
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyPress(event: KeyboardEvent): void {
+    const key = event.key.toLowerCase()
+
+    // Victory modal - Enter to return
+    if (this.showVictoryModal() && key === 'enter') {
+      this.returnToMaze()
+      event.preventDefault()
+      return
+    }
+
+    // Defeat modal - Enter to go to temple
+    if (this.showDefeatModal() && key === 'enter') {
+      this.returnToTemple()
+      event.preventDefault()
+      return
+    }
+
+    // Execute round - Enter when all actions selected
+    if (key === 'enter' && this.allActionsSelected() && !this.isExecutingRound()) {
+      this.executeRound()
+      event.preventDefault()
+      return
+    }
   }
 }

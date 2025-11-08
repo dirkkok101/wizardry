@@ -288,4 +288,47 @@ describe('CombatComponent', () => {
       expect(combat).toBeUndefined()
     })
   })
+
+  describe('Keyboard Shortcuts', () => {
+    it('executes round on Enter key when all actions selected', () => {
+      // Select all actions
+      const chars = component.partyCharacters()
+      const monster = component.monsters()[0]
+      chars.forEach(char => component.selectAction(char.id, 'ATTACK', monster))
+
+      const executeRoundSpy = jest.spyOn(component, 'executeRound')
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' })
+      component.handleKeyPress(event)
+
+      expect(executeRoundSpy).toHaveBeenCalled()
+    })
+
+    it('does not execute round on Enter when actions not selected', () => {
+      const executeRoundSpy = jest.spyOn(component, 'executeRound')
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' })
+      component.handleKeyPress(event)
+
+      expect(executeRoundSpy).not.toHaveBeenCalled()
+    })
+
+    it('returns to maze on Enter in victory modal', () => {
+      component.showVictoryModal.set(true)
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' })
+      component.handleKeyPress(event)
+
+      expect(router.navigate).toHaveBeenCalledWith(['/maze'])
+    })
+
+    it('returns to temple on Enter in defeat modal', () => {
+      component.showDefeatModal.set(true)
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' })
+      component.handleKeyPress(event)
+
+      expect(router.navigate).toHaveBeenCalledWith(['/temple'])
+    })
+  })
 })
