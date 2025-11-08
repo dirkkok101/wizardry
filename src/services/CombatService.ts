@@ -48,4 +48,26 @@ export class CombatService {
       data
     }
   }
+
+  /**
+   * Calculate hit chance percentage
+   * Formula: (attackBonus + defenderAC + 10) × 5%
+   * Clamped between 5% and 95%
+   */
+  static calculateHitChance(attacker: Combatant, defender: Combatant): number {
+    const attackBonus = this.getAttackBonus(attacker)
+    const rawChance = (attackBonus + defender.ac + 10) * 5
+
+    return Math.max(5, Math.min(95, rawChance))
+  }
+
+  private static getAttackBonus(combatant: Combatant): number {
+    // For characters: level + STR modifier
+    if ('class' in combatant && combatant.class) {
+      const strMod = Math.floor((combatant.strength - 10) / 2)
+      return combatant.level + strMod
+    }
+    // For monsters: level
+    return combatant.level || 1
+  }
 }

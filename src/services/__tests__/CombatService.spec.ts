@@ -109,4 +109,35 @@ describe('CombatService', () => {
       expect(unique.size).toBeGreaterThan(1)
     })
   })
+
+  describe('calculateHitChance', () => {
+    it('calculates basic hit chance formula', () => {
+      const attacker = createTestCharacter({ level: 1 })  // Attack bonus ~1
+      const defender = createTestMonster({ ac: 8 })
+
+      const hitChance = CombatService.calculateHitChance(attacker, defender)
+
+      // Formula: (attackBonus + defenderAC + 10) × 5%
+      // (1 + 8 + 10) × 5% = 19 × 5% = 95%
+      expect(hitChance).toBe(95)
+    })
+
+    it('caps hit chance at 95%', () => {
+      const attacker = createTestCharacter({ level: 10 })  // High attack bonus
+      const defender = createTestMonster({ ac: 10 })
+
+      const hitChance = CombatService.calculateHitChance(attacker, defender)
+
+      expect(hitChance).toBeLessThanOrEqual(95)
+    })
+
+    it('has minimum hit chance of 5%', () => {
+      const attacker = createTestCharacter({ level: 1 })
+      const defender = createTestMonster({ ac: -10 })  // Very low AC
+
+      const hitChance = CombatService.calculateHitChance(attacker, defender)
+
+      expect(hitChance).toBeGreaterThanOrEqual(5)
+    })
+  })
 })
