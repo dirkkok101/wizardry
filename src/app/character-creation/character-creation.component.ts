@@ -6,7 +6,7 @@ import { GameStateService } from '../../services/GameStateService';
 import { RaceService } from '../../services/RaceService';
 import { ClassService } from '../../services/ClassService';
 import { CharacterService } from '../../services/CharacterService';
-import { CharacterCreationService, RolledStats } from '../../services/CharacterCreationService';
+import { CharacterCreationService, RolledStats, BaseStats } from '../../services/CharacterCreationService';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { Race, parseRace } from '../../types/Race';
@@ -134,6 +134,28 @@ export class CharacterCreationComponent implements OnInit {
       agility: raceData.baseStats.agi + rolled.agility,
       luck: raceData.baseStats.luc + rolled.luck,
       bonusPoints: rolled.bonusPoints
+    };
+  });
+
+  readonly allocatedPoints = computed(() => {
+    const rolled = this.rolledStats();
+    if (!rolled) {
+      return {
+        strength: 0,
+        intelligence: 0,
+        piety: 0,
+        vitality: 0,
+        agility: 0,
+        luck: 0
+      };
+    }
+    return {
+      strength: rolled.strength,
+      intelligence: rolled.intelligence,
+      piety: rolled.piety,
+      vitality: rolled.vitality,
+      agility: rolled.agility,
+      luck: rolled.luck
     };
   });
 
@@ -428,6 +450,82 @@ export class CharacterCreationComponent implements OnInit {
   cancelToTrainingGrounds() {
     // Navigate back to training grounds scene
     this.router.navigate(['/training-grounds']);
+  }
+
+  // ============================================================================
+  // Bonus Point Allocation Methods
+  // ============================================================================
+
+  /**
+   * Allocate 1 bonus point to specified stat.
+   * Validates: sufficient points remaining and 18 cap (race base + allocated).
+   */
+  allocatePoint(stat: keyof BaseStats): void {
+    const current = this.rolledStats();
+    if (!current || current.bonusPoints <= 0) return;
+
+    // Check 18 cap: race base + allocated + 1 cannot exceed 18
+    const raceBase = this.getRaceBaseStat(stat);
+    const currentAllocation = current[stat];
+    if (raceBase + currentAllocation + 1 > 18) return;
+
+    try {
+      const updated = CharacterCreationService.allocateBonusPoints(current, stat, 1);
+      this.rolledStats.set(updated);
+    } catch (error) {
+      console.error('Allocation failed:', error);
+    }
+  }
+
+  /**
+   * Deallocate 1 bonus point from specified stat.
+   * Returns point to bonus pool.
+   */
+  deallocatePoint(stat: keyof BaseStats): void {
+    const current = this.rolledStats();
+    if (!current) return;
+
+    const currentAllocation = current[stat];
+    if (currentAllocation <= 0) return;
+
+    // Manually reverse allocation (decrease stat, increase pool)
+    this.rolledStats.set({
+      ...current,
+      [stat]: currentAllocation - 1,
+      bonusPoints: current.bonusPoints + 1
+    });
+  }
+
+  /**
+   * Reset all allocations, return all points to pool.
+   * Uses CharacterCreationService.resetAllocations().
+   */
+  resetAllAllocations(): void {
+    const current = this.rolledStats();
+    if (!current) return;
+
+    const reset = CharacterCreationService.resetAllocations(current);
+    this.rolledStats.set(reset);
+  }
+
+  /**
+   * Get race base stat for specified attribute.
+   * Used for 18 cap validation (base + allocated <= 18).
+   */
+  private getRaceBaseStat(stat: keyof BaseStats): number {
+    const raceData = this.raceData();
+    if (!raceData) return 0;
+
+    const mapping: Record<keyof BaseStats, keyof typeof raceData.baseStats> = {
+      strength: 'str',
+      intelligence: 'int',
+      piety: 'pie',
+      vitality: 'vit',
+      agility: 'agi',
+      luck: 'luc'
+    };
+
+    return raceData.baseStats[mapping[stat]];
   }
 
   // Get keyboard shortcut for class

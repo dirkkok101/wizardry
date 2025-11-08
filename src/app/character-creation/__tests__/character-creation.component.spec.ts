@@ -1852,4 +1852,198 @@ describe('CharacterCreationComponent', () => {
       });
     });
   });
+
+  describe('Bonus Point Allocation Methods', () => {
+    beforeEach(async () => {
+      // Setup: complete flow to ALLOCATE_POINTS step
+      component.selectRace(Race.HUMAN);
+      component.selectAlignment(Alignment.GOOD);
+      component.advanceToAlignment();
+      component.advanceToRollStats();
+      await component.rollStats();
+
+      // Mock specific stats for predictable testing
+      // rolledStats contains ALLOCATED bonus points (starts at 0)
+      component.rolledStats.set({
+        strength: 0, intelligence: 0, piety: 0,
+        vitality: 0, agility: 0, luck: 0, bonusPoints: 8
+      });
+
+      // Advance to ALLOCATE_POINTS step
+      component.currentStep.set(CreationStep.ALLOCATE_POINTS);
+    });
+
+    describe('allocatePoint()', () => {
+      it('should add 1 point to the specified stat', () => {
+        component.allocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(1);
+      });
+
+      it('should decrease bonus points pool by 1', () => {
+        const initialPool = component.rolledStats()!.bonusPoints;
+        component.allocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(1);
+        // Pool should decrease (verify via finalStats)
+        const finalStats = component.finalStats();
+        expect(finalStats!.bonusPoints).toBe(initialPool - 1);
+      });
+
+      it('should allow allocating to multiple different stats', () => {
+        component.allocatePoint('strength');
+        component.allocatePoint('intelligence');
+        component.allocatePoint('agility');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(1);
+        expect(allocated.intelligence).toBe(1);
+        expect(allocated.agility).toBe(1);
+      });
+
+      it('should allow allocating multiple points to same stat', () => {
+        component.allocatePoint('strength');
+        component.allocatePoint('strength');
+        component.allocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(3);
+      });
+
+      it('should not allocate when bonus points pool is empty', () => {
+        // Allocate all 8 points
+        for (let i = 0; i < 8; i++) {
+          component.allocatePoint('strength');
+        }
+
+        // Try to allocate one more
+        component.allocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(8); // Should stay at 8
+      });
+
+      it('should not allocate when stat would exceed 18 cap', () => {
+        // Human has 8 STR base, so can allocate up to 10 (8+10=18 cap)
+        // Allocate 10 points to reach the cap
+        component.rolledStats.set({
+          strength: 10, intelligence: 0, piety: 0,
+          vitality: 0, agility: 0, luck: 0, bonusPoints: 5
+        });
+
+        // Try to allocate when already at cap (raceBase=8 + allocated=10 = 18)
+        component.allocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(10); // Should not increase
+      });
+
+      it('should validate against 18 cap correctly', () => {
+        // Human has 8 STR base
+        // Allocate 9 points (8 + 9 = 17, can add 1 more)
+        component.rolledStats.set({
+          strength: 9, intelligence: 0, piety: 0,
+          vitality: 0, agility: 0, luck: 0, bonusPoints: 8
+        });
+
+        // Should allow adding 1 to reach 18
+        component.allocatePoint('strength');
+        const allocated1 = component.allocatedPoints();
+        expect(allocated1.strength).toBe(10); // 9 + 1 = 10
+
+        // Should NOT allow adding another (would exceed 18)
+        component.allocatePoint('strength');
+        const allocated2 = component.allocatedPoints();
+        expect(allocated2.strength).toBe(10); // Still 10
+      });
+    });
+
+    describe('deallocatePoint()', () => {
+      it('should remove 1 point from the specified stat', () => {
+        component.allocatePoint('strength');
+        component.allocatePoint('strength');
+
+        component.deallocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(1);
+      });
+
+      it('should increase bonus points pool by 1', () => {
+        component.allocatePoint('strength');
+        const poolAfterAlloc = component.finalStats()!.bonusPoints;
+
+        component.deallocatePoint('strength');
+
+        const poolAfterDealloc = component.finalStats()!.bonusPoints;
+        expect(poolAfterDealloc).toBe(poolAfterAlloc + 1);
+      });
+
+      it('should not deallocate when stat allocation is already 0', () => {
+        component.deallocatePoint('strength');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(0);
+      });
+
+      it('should handle deallocating from multiple stats', () => {
+        component.allocatePoint('strength');
+        component.allocatePoint('intelligence');
+        component.allocatePoint('agility');
+
+        component.deallocatePoint('strength');
+        component.deallocatePoint('agility');
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(0);
+        expect(allocated.intelligence).toBe(1);
+        expect(allocated.agility).toBe(0);
+      });
+    });
+
+    describe('resetAllAllocations()', () => {
+      it('should reset all allocated points to 0', () => {
+        component.allocatePoint('strength');
+        component.allocatePoint('strength');
+        component.allocatePoint('intelligence');
+        component.allocatePoint('piety');
+
+        component.resetAllAllocations();
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(0);
+        expect(allocated.intelligence).toBe(0);
+        expect(allocated.piety).toBe(0);
+        expect(allocated.vitality).toBe(0);
+        expect(allocated.agility).toBe(0);
+        expect(allocated.luck).toBe(0);
+      });
+
+      it('should restore full bonus points pool', () => {
+        const initialPool = component.rolledStats()!.bonusPoints;
+
+        component.allocatePoint('strength');
+        component.allocatePoint('intelligence');
+        component.allocatePoint('agility');
+
+        component.resetAllAllocations();
+
+        const finalStats = component.finalStats();
+        expect(finalStats!.bonusPoints).toBe(initialPool);
+      });
+
+      it('should work when no points allocated', () => {
+        const initialPool = component.rolledStats()!.bonusPoints;
+
+        component.resetAllAllocations();
+
+        const allocated = component.allocatedPoints();
+        expect(allocated.strength).toBe(0);
+        const finalStats = component.finalStats();
+        expect(finalStats!.bonusPoints).toBe(initialPool);
+      });
+    });
+  });
 });
