@@ -1,20 +1,22 @@
 import { TileInspectionService } from '../TileInspectionService';
-import { Level, Position } from '../../types/Dungeon';
+import { LevelData, Position } from '../../types/Dungeon';
 import { GameState } from '../../types/GameState';
 import { createTestCharacter, createTestGameState } from '../../test-helpers/test-factories';
 
 describe('TileInspectionService', () => {
   describe('hasSearchableContent', () => {
-    const level: Level = {
-      id: 1,
-      width: 20,
-      height: 20,
+    const level: LevelData = {
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      startPosition: { x: 0, y: 0, facing: 'north' },
+      edgeWrapping: false,
       tiles: [
-        [
-          { type: 'floor' },
-          { type: 'searchable', searchContent: { itemId: 'bronze_key' } },
-        ],
+        { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key' },
       ],
+      encounterRate: 0.1,
+      encounterTable: 'level_1',
     };
 
     it('returns true for searchable tile with content', () => {
@@ -32,15 +34,17 @@ describe('TileInspectionService', () => {
 
   describe('inspectTile', () => {
     it('returns item from searchable tile', () => {
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
         tiles: [
-          [
-            { type: 'searchable', searchContent: { itemId: 'bronze_key', message: 'You found a bronze key!' } },
-          ],
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key', message: 'You found a bronze key!' },
         ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
       const position: Position = { x: 0, y: 0, facing: 'NORTH' };
       const result = TileInspectionService.inspectTile(level, position);
@@ -51,11 +55,17 @@ describe('TileInspectionService', () => {
     });
 
     it('returns empty result for non-searchable tile', () => {
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
-        tiles: [[{ type: 'floor' }]],
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
       const position: Position = { x: 0, y: 0, facing: 'NORTH' };
       const result = TileInspectionService.inspectTile(level, position);
@@ -67,15 +77,17 @@ describe('TileInspectionService', () => {
 
   describe('inspectTileWithState', () => {
     it('adds discovered item to first party member inventory', () => {
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
         tiles: [
-          [
-            { type: 'searchable', searchContent: { itemId: 'bronze_key', message: 'You found a bronze key!' } },
-          ],
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key', message: 'You found a bronze key!' },
         ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
 
       const character = createTestCharacter({ id: 'char1', inventory: [] });
@@ -97,6 +109,7 @@ describe('TileInspectionService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          visitedTiles: new Set(),
         },
       };
 
@@ -111,15 +124,17 @@ describe('TileInspectionService', () => {
     });
 
     it('clears tile search content after discovery', () => {
-      const level: Level = {
-        id: 1,
-        width: 20,
-        height: 20,
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
         tiles: [
-          [
-            { type: 'searchable', searchContent: { itemId: 'bronze_key' } },
-          ],
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key' },
         ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
       };
 
       const character = createTestCharacter({ id: 'char1', inventory: [] });
@@ -141,6 +156,7 @@ describe('TileInspectionService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          visitedTiles: new Set(),
         },
       };
 

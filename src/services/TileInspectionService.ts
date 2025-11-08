@@ -1,5 +1,6 @@
-import { Level, Position } from '../types/Dungeon';
+import { LevelData, Position } from '../types/Dungeon';
 import { GameState } from '../types/GameState';
+import { DungeonService } from './DungeonService';
 
 export interface InspectionResult {
   found: boolean;
@@ -12,28 +13,29 @@ export class TileInspectionService {
   /**
    * Check if current tile has searchable content
    */
-  static hasSearchableContent(level: Level, position: Position): boolean {
-    const tile = level.tiles[position.y][position.x];
-    return tile.type === 'searchable' && !!tile.searchContent;
+  static hasSearchableContent(level: LevelData, position: Position): boolean {
+    const tile = DungeonService.getTile(level, position.x, position.y);
+    return tile.type === 'searchable' && !!tile.item;
   }
 
   /**
    * Inspect current tile and return search results
    * Returns item ID and message if found
    */
-  static inspectTile(level: Level, position: Position): InspectionResult {
-    const tile = level.tiles[position.y][position.x];
+  static inspectTile(level: LevelData, position: Position): InspectionResult {
+    const tile = DungeonService.getTile(level, position.x, position.y);
 
-    if (tile.type !== 'searchable' || !tile.searchContent) {
+    if (tile.type !== 'searchable' || !tile.item) {
       return { found: false };
     }
 
-    const { itemId, message } = tile.searchContent;
+    const itemId = tile.item;
+    const message = tile.message || `You found ${itemId}!`;
 
     return {
       found: true,
       itemId,
-      message: message || `You found ${itemId}!`,
+      message,
     };
   }
 
@@ -41,15 +43,16 @@ export class TileInspectionService {
    * Inspect tile with game state integration
    * Adds item to first party member inventory and clears tile content
    */
-  static inspectTileWithState(state: GameState, level: Level): InspectionResult {
+  static inspectTileWithState(state: GameState, level: LevelData): InspectionResult {
     const position = state.dungeon.position;
-    const tile = level.tiles[position.y][position.x];
+    const tile = DungeonService.getTile(level, position.x, position.y);
 
-    if (tile.type !== 'searchable' || !tile.searchContent) {
+    if (tile.type !== 'searchable' || !tile.item) {
       return { found: false, state };
     }
 
-    const { itemId, message } = tile.searchContent;
+    const itemId = tile.item;
+    const message = tile.message || `You found ${itemId}!`;
 
     // Add item to first party member's inventory
     const firstMemberId = state.party.members[0];
@@ -62,8 +65,11 @@ export class TileInspectionService {
     });
 
     // Clear tile content (one-time search)
-    // Mutate the level tile directly to ensure subsequent inspections see cleared state
-    level.tiles[position.y][position.x] = { ...tile, searchContent: undefined };
+    // Find the tile in the 1D array and mutate it
+    const tileIndex = level.tiles.findIndex(t => t.x === position.x && t.y === position.y);
+    if (tileIndex !== -1) {
+      level.tiles[tileIndex] = { ...tile, item: undefined };
+    }
 
     const newState: GameState = {
       ...state,
@@ -73,7 +79,7 @@ export class TileInspectionService {
     return {
       found: true,
       itemId,
-      message: message || `You found ${itemId}!`,
+      message,
       state: newState,
     };
   }
