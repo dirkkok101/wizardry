@@ -244,6 +244,14 @@ export class CombatService {
       // TODO: Check party wipe (defeat)
     }
 
+    // Final victory/defeat check after all commands executed
+    const allMonstersDead = currentState.monsters.every(m => m.status === 'DEAD')
+    if (allMonstersDead) {
+      return { newState: currentState, messages, victory: true, defeat: false }
+    }
+
+    // TODO: Check party wipe (defeat)
+
     return {
       newState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
       messages,
