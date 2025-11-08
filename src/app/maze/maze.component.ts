@@ -12,6 +12,7 @@ import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
 import { MazeRenderingService } from '../../services/MazeRenderingService';
 import { EncounterService } from '../../services/EncounterService';
+import { CombatService } from '../../services/CombatService';
 import { DoorService } from '../../services/DoorService';
 import { TileInspectionService } from '../../services/TileInspectionService';
 import { SceneType } from '../../types/SceneType';
@@ -356,28 +357,38 @@ export class MazeComponent implements OnInit {
   }
 
   private checkForEncounter(): void {
-    // Roll for random encounter
     const encounterOccurs = EncounterService.rollRandomEncounter();
+    if (!encounterOccurs) return;
 
-    if (!encounterOccurs) {
-      return;
-    }
-
-    // Get encounter table for current level
     const encounterTable = EncounterService.getEncounterTable(this.currentLevel());
-
-    // Select random monster from table
     const monsterId = EncounterService.selectMonster(encounterTable);
 
-    // Format monster name for display (capitalize and replace underscores)
-    const monsterName = this.formatMonsterName(monsterId);
+    this.initiateEncounter(monsterId, true);  // true = can flee
+  }
 
-    // Add encounter message
+  private handleFixedEncounter(monsterId: string): void {
+    this.initiateEncounter(monsterId, false);  // false = cannot flee
+  }
+
+  private initiateEncounter(monsterId: string, canFlee: boolean): void {
+    const monsterName = this.formatMonsterName(monsterId);
     this.addMessage(`You encounter ${monsterName}!`);
 
-    // Navigate to combat using queueMicrotask for async handling
+    // Get party characters for combat
+    const partyChars = this.partyCharacters();
+
+    // Initialize combat state using CombatService
+    const combatState = CombatService.initiateCombat(monsterId, partyChars, canFlee);
+
+    // Update game state with combat
+    this.gameState.updateState(state => ({
+      ...state,
+      combat: combatState
+    }));
+
+    // Navigate to combat
     queueMicrotask(() => {
-      this.router.navigate(['/combat-stub']);
+      this.router.navigate(['/combat']);
     });
   }
 

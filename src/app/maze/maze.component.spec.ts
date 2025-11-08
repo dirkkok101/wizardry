@@ -4,6 +4,7 @@ import { MazeComponent } from './maze.component';
 import { GameStateService } from '../../services/GameStateService';
 import { DungeonService } from '../../services/DungeonService';
 import { EncounterService } from '../../services/EncounterService';
+import { CombatService } from '../../services/CombatService';
 import { SceneType } from '../../types/SceneType';
 import { createTestCharacter } from '../../test-helpers/test-factories';
 
@@ -949,5 +950,96 @@ describe('MazeComponent - Elevator', () => {
 
     const state = gameState.state();
     expect(state.dungeon.currentLevel).toBe(3);
+  });
+});
+
+describe('MazeComponent - Combat Integration', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+  let router: Router;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+    router = TestBed.inject(Router);
+
+    jest.spyOn(router, 'navigate');
+
+    // Mock loadLevel
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
+    // Set up test state with dungeon and party
+    const char1 = createTestCharacter({ id: 'c1', name: 'Fighter' });
+    const char2 = createTestCharacter({ id: 'c2', name: 'Mage' });
+
+    gameState.updateState(state => ({
+      ...state,
+      roster: new Map([
+        ['c1', char1],
+        ['c2', char2]
+      ]),
+      party: {
+        members: ['c1', 'c2'],
+        formation: { frontRow: ['c1'], backRow: ['c2'] },
+        gold: 100
+      },
+      dungeon: createTestDungeonState()
+    }));
+  });
+
+  it('initializes combat state on encounter', () => {
+    jest.spyOn(EncounterService, 'rollRandomEncounter').mockReturnValue(true);
+    jest.spyOn(EncounterService, 'selectMonster').mockReturnValue('kobold');
+
+    component['checkForEncounter']();
+
+    const combat = gameState.state().combat;
+    expect(combat).toBeDefined();
+    expect(combat?.monsters.length).toBeGreaterThan(0);
+    expect(combat?.roundNumber).toBe(1);
+    expect(combat?.canFlee).toBe(true);
+  });
+
+  it('navigates to /combat on encounter', async () => {
+    jest.spyOn(EncounterService, 'rollRandomEncounter').mockReturnValue(true);
+    jest.spyOn(EncounterService, 'selectMonster').mockReturnValue('kobold');
+
+    component['checkForEncounter']();
+
+    // Wait for queueMicrotask to complete
+    await Promise.resolve();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/combat']);
+  });
+
+  it('sets canFlee to false for fixed encounters', () => {
+    // Trigger fixed encounter (implementation-specific)
+    component['handleFixedEncounter']('kobold');
+
+    const combat = gameState.state().combat;
+    expect(combat?.canFlee).toBe(false);
   });
 });
