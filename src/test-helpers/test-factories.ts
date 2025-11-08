@@ -6,6 +6,7 @@ import { CharacterClass } from '../types/CharacterClass'
 import { Alignment } from '../types/Alignment'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SceneType } from '../types/SceneType'
+import { MonsterInstance, CombatState, CombatCommand } from '../types/Combat'
 
 /**
  * Test factory: Create a test character with default values
@@ -121,4 +122,69 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
     },
     ...overrides
   }
+}
+
+/**
+ * Test factory: Create a test monster instance
+ * @param overrides - Partial monster properties to override defaults
+ */
+export function createTestMonster(overrides: Partial<MonsterInstance> = {}): MonsterInstance {
+  return {
+    id: `monster-${Math.random().toString(36).substr(2, 9)}`,
+    monsterId: 'kobold',
+    name: 'Kobold',
+    hp: 5,
+    maxHp: 5,
+    ac: 8,
+    damage: [{ dice: '1d4', min: 1, max: 4 }],
+    xp: 415,
+    status: 'ALIVE',
+    level: 1,
+    agility: 10,
+    ...overrides
+  }
+}
+
+/**
+ * Test factory: Create a test combat state
+ * @param overrides - Partial combat state properties to override defaults
+ */
+export function createTestCombatState(overrides: Partial<CombatState> = {}): CombatState {
+  return {
+    monsters: [createTestMonster()],
+    commandQueue: [],
+    roundNumber: 1,
+    combatLog: [],
+    canFlee: true,
+    ...overrides
+  }
+}
+
+/**
+ * Test factory: Create a test combat command
+ * @param overrides - Partial command properties to override defaults
+ */
+export function createTestCombatCommand(overrides: Partial<CombatCommand> = {}): CombatCommand {
+  const actor = createTestCharacter()
+  return {
+    id: `cmd-${Math.random().toString(36).substr(2, 9)}`,
+    actor,
+    type: 'ATTACK',
+    initiative: 5,
+    ...overrides
+  }
+}
+
+/**
+ * Test factory: Create a combat party with characters and roster
+ */
+export function createCombatParty(): { party: Character[], roster: Map<string, Character> } {
+  const char1 = createTestCharacter({ id: 'char1', name: 'Fighter', hp: 15, maxHp: 15 })
+  const char2 = createTestCharacter({ id: 'char2', name: 'Mage', hp: 8, maxHp: 8 })
+  const party = [char1, char2]
+  const roster = new Map([
+    [char1.id, char1],
+    [char2.id, char2]
+  ])
+  return { party, roster }
 }
