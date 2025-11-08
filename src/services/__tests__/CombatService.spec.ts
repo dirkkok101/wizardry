@@ -47,4 +47,30 @@ describe('CombatService', () => {
       })
     })
   })
+
+  describe('initiateCombat', () => {
+    it('creates combat state with monster group', () => {
+      const party = [
+        createTestCharacter({ id: 'char1' }),
+        createTestCharacter({ id: 'char2' })
+      ]
+
+      const state = CombatService.initiateCombat('kobold', party, true)
+
+      expect(state.monsters.length).toBeGreaterThanOrEqual(3)
+      expect(state.monsters.length).toBeLessThanOrEqual(5)
+      expect(state.monsters.every(m => m.monsterId === 'kobold')).toBe(true)
+      expect(state.commandQueue).toEqual([])
+      expect(state.roundNumber).toBe(1)
+      expect(state.combatLog).toEqual([])
+      expect(state.canFlee).toBe(true)
+    })
+
+    it('sets canFlee to false for fixed encounters', () => {
+      const party = [createTestCharacter()]
+      const state = CombatService.initiateCombat('kobold', party, false)
+
+      expect(state.canFlee).toBe(false)
+    })
+  })
 })

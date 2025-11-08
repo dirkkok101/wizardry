@@ -1,5 +1,7 @@
 // src/services/CombatService.ts
-import { Combatant } from '../types/Combat'
+import { Combatant, CombatState } from '../types/Combat'
+import { Character } from '../types/Character'
+import { MonsterService } from './MonsterService'
 
 export class CombatService {
   /**
@@ -12,5 +14,21 @@ export class CombatService {
     const roll = Math.floor(Math.random() * 10)  // 0-9
 
     return Math.max(1, roll + agiMod)
+  }
+
+  static initiateCombat(
+    monsterId: string,
+    party: Character[],
+    canFlee: boolean
+  ): CombatState {
+    const monsters = MonsterService.generateMonsterGroup(monsterId)
+
+    return {
+      monsters,
+      commandQueue: [],
+      roundNumber: 1,
+      combatLog: [],
+      canFlee
+    }
   }
 }
