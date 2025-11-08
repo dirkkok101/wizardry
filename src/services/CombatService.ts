@@ -211,4 +211,51 @@ export class CombatService {
   private static getCombatantName(combatant: Combatant): string {
     return combatant.name || 'Unknown'
   }
+
+  static executeRound(state: CombatState): {
+    newState: CombatState
+    messages: string[]
+    victory: boolean
+    defeat: boolean
+  } {
+    // Sort commands by initiative (descending)
+    const sortedQueue = [...state.commandQueue].sort(
+      (a, b) => b.initiative - a.initiative
+    )
+
+    let currentState = { ...state, commandQueue: [] }
+    const messages: string[] = []
+
+    // Execute each command
+    for (const command of sortedQueue) {
+      // Skip if actor is dead
+      if (this.isCombatantDead(command.actor)) continue
+
+      const result = this.executeCommand(currentState, command)
+      currentState = result.newState
+      messages.push(result.message)
+
+      // Check victory/defeat after each action
+      const allMonstersDead = currentState.monsters.every(m => m.status === 'DEAD')
+      if (allMonstersDead) {
+        return { newState: currentState, messages, victory: true, defeat: false }
+      }
+
+      // TODO: Check party wipe (defeat)
+    }
+
+    return {
+      newState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
+      messages,
+      victory: false,
+      defeat: false
+    }
+  }
+
+  private static isCombatantDead(combatant: Combatant): boolean {
+    if ('status' in combatant) {
+      return combatant.status === 'DEAD' || combatant.status === CharacterStatus.DEAD
+    }
+    return combatant.hp <= 0
+  }
 }
