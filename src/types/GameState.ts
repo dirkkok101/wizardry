@@ -1,6 +1,7 @@
 import { Character } from './Character'
 import { SceneType } from './SceneType'
 import { DungeonState } from './Dungeon'
+import { CombatState } from './Combat'
 
 /**
  * Party represents the player's adventuring party.
@@ -41,6 +42,7 @@ export interface GameState {
   dungeon: DungeonState
   settings: Settings
   encounterTriggered?: boolean // Set to true when an encounter is triggered (e.g., by kicking a door)
+  combat?: CombatState // Active combat state (undefined when not in combat)
 }
 
 export interface SaveData {
