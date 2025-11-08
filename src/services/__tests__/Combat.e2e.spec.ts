@@ -5,21 +5,18 @@ import { createTestCharacter } from '../../test-helpers/test-factories'
 
 describe('Combat E2E Flow', () => {
   it('completes full combat from encounter to victory', () => {
-    // 1. Generate monster encounter
-    const monsters = MonsterService.generateMonsterGroup('kobold')
-    expect(monsters.length).toBeGreaterThanOrEqual(3)
-    expect(monsters.length).toBeLessThanOrEqual(8)
-
-    // 2. Initialize combat
+    // 1. Initialize combat
     const party = [
       createTestCharacter({ id: 'fighter', name: 'Conan', strength: 16, hp: 20, maxHp: 20 }),
       createTestCharacter({ id: 'mage', name: 'Gandalf', intelligence: 16, hp: 8, maxHp: 8 })
     ]
     const state = CombatService.initiateCombat('kobold', party, true)
 
+    // 2. Verify initial state
     expect(state.roundNumber).toBe(1)
     expect(state.canFlee).toBe(true)
-    expect(state.monsters.length).toBe(monsters.length)
+    expect(state.monsters.length).toBeGreaterThanOrEqual(3)
+    expect(state.monsters.length).toBeLessThanOrEqual(8)
 
     // 3. Simulate multiple rounds until victory
     let currentState = state
