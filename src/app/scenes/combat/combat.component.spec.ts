@@ -71,4 +71,42 @@ describe('CombatComponent', () => {
     const actions = component.selectedActions()
     expect(actions.size).toBe(0)
   })
+
+  describe('Action Selection', () => {
+    it('selects ATTACK action for character', () => {
+      const char = component.partyCharacters()[0]
+      const monster = component.monsters()[0]
+
+      component.selectAction(char.id, 'ATTACK', monster)
+
+      const actions = component.selectedActions()
+      expect(actions.has(char.id)).toBe(true)
+      expect(actions.get(char.id)!.type).toBe('ATTACK')
+      expect(actions.get(char.id)!.target).toBe(monster)
+    })
+
+    it('creates command with initiative when selecting action', () => {
+      const char = component.partyCharacters()[0]
+      const monster = component.monsters()[0]
+
+      component.selectAction(char.id, 'ATTACK', monster)
+
+      const command = component.selectedActions().get(char.id)!
+      expect(command.initiative).toBeGreaterThanOrEqual(1)
+      expect(command.actor).toBe(char)
+    })
+
+    it('replaces existing action when selecting new one', () => {
+      const char = component.partyCharacters()[0]
+      const monster1 = component.monsters()[0]
+      const monster2 = component.monsters()[1] || monster1
+
+      component.selectAction(char.id, 'ATTACK', monster1)
+      component.selectAction(char.id, 'ATTACK', monster2)
+
+      const actions = component.selectedActions()
+      expect(actions.size).toBe(1)
+      expect(actions.get(char.id)!.target).toBe(monster2)
+    })
+  })
 })

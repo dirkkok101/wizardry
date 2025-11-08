@@ -5,7 +5,7 @@ import { Router } from '@angular/router'
 import { GameStateService } from '../../../services/GameStateService'
 import { CombatService } from '../../../services/CombatService'
 import { SceneType } from '../../../types/SceneType'
-import { CombatState, CombatCommand, Combatant } from '../../../types/Combat'
+import { CombatState, CombatCommand, Combatant, CombatActionType } from '../../../types/Combat'
 import { Character } from '../../../types/Character'
 
 interface SelectedAction {
@@ -77,7 +77,22 @@ export class CombatComponent implements OnInit {
   }
 
   selectAction(characterId: string, actionType: string, target?: Combatant): void {
-    // TODO: Implement in next task
+    const character = this.roster().get(characterId)
+    if (!character) return
+
+    // Create combat command using CombatService
+    const command = CombatService.createCommand(
+      character,
+      actionType as CombatActionType,
+      target
+    )
+
+    // Update selected actions (immutable)
+    this.selectedActions.update(actions => {
+      const newActions = new Map(actions)
+      newActions.set(characterId, command)
+      return newActions
+    })
   }
 
   executeRound(): void {
