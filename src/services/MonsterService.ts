@@ -31,14 +31,9 @@ export class MonsterService {
     const cached = MONSTER_CACHE.get(monsterId)
     if (cached) return cached
 
-    try {
-      // Dynamic import for other monsters
-      const data = require(`../../data/monsters/${monsterId}.json`)
-      MONSTER_CACHE.set(monsterId, data)
-      return data
-    } catch (error) {
-      throw new Error(`Monster not found: ${monsterId}`)
-    }
+    // For now, only kobold is pre-loaded
+    // TODO: Add other monsters to cache as needed
+    throw new Error(`Monster not found: ${monsterId}`)
   }
 
   static createMonsterInstance(monsterId: string): MonsterInstance {
