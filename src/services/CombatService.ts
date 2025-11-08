@@ -1,5 +1,5 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType } from '../types/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult } from '../types/Combat'
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
 import { v4 as uuidv4 } from 'uuid'
@@ -69,5 +69,55 @@ export class CombatService {
     }
     // For monsters: level
     return combatant.level || 1
+  }
+
+  static resolveAttack(attacker: Combatant, defender: Combatant): AttackResult {
+    const hitChance = this.calculateHitChance(attacker, defender)
+    const roll = Math.random() * 100
+
+    if (roll >= hitChance) {
+      return {
+        hit: false,
+        damage: 0,
+        critical: false,
+        message: 'Miss!'
+      }
+    }
+
+    // Roll damage
+    const baseDamage = this.rollDamage(attacker)
+    const strMod = this.getStrengthModifier(attacker)
+    const damage = Math.max(1, baseDamage + strMod)
+
+    // Critical hit on roll >= 95
+    const critical = roll >= 95
+    const finalDamage = critical ? damage * 2 : damage
+
+    return {
+      hit: true,
+      damage: finalDamage,
+      critical,
+      message: critical ? `Critical Hit! ${finalDamage} damage!` : `${finalDamage} damage!`
+    }
+  }
+
+  private static rollDamage(combatant: Combatant): number {
+    // For characters: basic weapon damage (simplified)
+    if ('class' in combatant) {
+      return Math.floor(Math.random() * 6) + 1  // 1d6
+    }
+    // For monsters: roll from damage array
+    if ('damage' in combatant && combatant.damage && combatant.damage.length > 0) {
+      const dice = combatant.damage[0]
+      return Math.floor(Math.random() * (dice.max - dice.min + 1)) + dice.min
+    }
+    return 1
+  }
+
+  private static getStrengthModifier(combatant: Combatant): number {
+    if ('strength' in combatant) {
+      return Math.floor((combatant.strength - 10) / 2)
+    }
+    return 0
   }
 }
