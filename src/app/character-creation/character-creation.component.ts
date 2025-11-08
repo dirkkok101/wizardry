@@ -269,12 +269,12 @@ export class CharacterCreationComponent implements OnInit {
     this.advanceToAllocatePoints();
   }
 
-  rerollStats() {
+  async rerollStats() {
     // Clear class selection
     this.selectedClass.set(null);
 
     // Roll again (which auto-advances back to ALLOCATE_POINTS)
-    this.rollBonusPoints();
+    await this.rollBonusPoints();
   }
 
   // Class eligibility check
