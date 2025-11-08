@@ -194,6 +194,12 @@ export class CharacterCreationComponent implements OnInit {
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
         break;
 
+      case CreationStep.ALLOCATE_POINTS:
+        items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.allPointsAllocated() });
+        items.push({ id: 'reset', label: 'RESET', shortcut: 'R', enabled: true });
+        items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
+        break;
+
       case CreationStep.SELECT_CLASS:
         items.push({ id: 'continue', label: 'CONTINUE', shortcut: 'ENTER', enabled: this.selectedClass() !== null });
         items.push({ id: 'reroll', label: 'REROLL STATS', shortcut: 'R', enabled: true });
@@ -259,15 +265,15 @@ export class CharacterCreationComponent implements OnInit {
       this.isLocked.set(true);
     }
 
-    // Auto-advance to class selection
-    this.advanceToSelectClass();
+    // Auto-advance to allocate points
+    this.advanceToAllocatePoints();
   }
 
   rerollStats() {
     // Clear class selection
     this.selectedClass.set(null);
 
-    // Roll again (which auto-advances back to SELECT_CLASS)
+    // Roll again (which auto-advances back to ALLOCATE_POINTS)
     this.rollBonusPoints();
   }
 
@@ -403,10 +409,19 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   /**
-   * Advances wizard from roll stats to class selection.
+   * Advances wizard from roll stats to allocate points.
    * No validation needed - called automatically after rolling.
    */
+  advanceToAllocatePoints() {
+    this.currentStep.set(CreationStep.ALLOCATE_POINTS);
+  }
+
+  /**
+   * Advances wizard from allocate points to class selection.
+   * Guards against advancing with unallocated points.
+   */
   advanceToSelectClass() {
+    if (!this.allPointsAllocated()) return;
     this.currentStep.set(CreationStep.SELECT_CLASS);
   }
 
@@ -436,6 +451,14 @@ export class CharacterCreationComponent implements OnInit {
   goBackFromRollStats() {
     this.rolledStats.set(null);
     this.currentStep.set(CreationStep.SELECT_ALIGNMENT);
+  }
+
+  /**
+   * Goes back from allocate points to roll stats.
+   * Preserves rolled stats but resets allocations.
+   */
+  goBackFromAllocatePoints() {
+    this.currentStep.set(CreationStep.ROLL_BONUS_POINTS);
   }
 
   /**
@@ -572,6 +595,10 @@ export class CharacterCreationComponent implements OnInit {
         handled = this.handleRollStatsStepKeys(key);
         break;
 
+      case CreationStep.ALLOCATE_POINTS:
+        handled = this.handleAllocatePointsStepKeys(key);
+        break;
+
       case CreationStep.SELECT_CLASS:
         handled = this.handleSelectClassStepKeys(key);
         break;
@@ -628,6 +655,23 @@ export class CharacterCreationComponent implements OnInit {
       return true;
     } else if (key === 'escape') {
       this.goBackFromRollStats();
+      return true;
+    }
+    return false;
+  }
+
+  private handleAllocatePointsStepKeys(key: string): boolean {
+    if (key === 'r') {
+      // Reset all allocations
+      this.resetAllAllocations();
+      return true;
+    } else if (key === 'enter' && this.allPointsAllocated()) {
+      // Continue to class selection if all points allocated
+      this.advanceToSelectClass();
+      return true;
+    } else if (key === 'escape') {
+      // Go back to roll stats
+      this.goBackFromAllocatePoints();
       return true;
     }
     return false;
@@ -691,6 +735,8 @@ export class CharacterCreationComponent implements OnInit {
           this.advanceToAlignment();
         } else if (this.currentStep() === CreationStep.SELECT_ALIGNMENT) {
           this.advanceToRollStats();
+        } else if (this.currentStep() === CreationStep.ALLOCATE_POINTS) {
+          this.advanceToSelectClass();
         } else if (this.currentStep() === CreationStep.SELECT_CLASS) {
           this.advanceToNameCharacter();
         }
@@ -707,14 +753,22 @@ export class CharacterCreationComponent implements OnInit {
           this.goBackFromAlignment();
         } else if (this.currentStep() === CreationStep.ROLL_BONUS_POINTS) {
           this.goBackFromRollStats();
+        } else if (this.currentStep() === CreationStep.ALLOCATE_POINTS) {
+          this.goBackFromAllocatePoints();
         } else if (this.currentStep() === CreationStep.NAME_CHARACTER) {
           this.goBackFromNameCharacter();
         }
         break;
 
       case 'reset':
-        // Step 4 only: start over (nuclear reset)
-        this.goBackFromSelectClass();
+        // Context-aware reset based on current step
+        if (this.currentStep() === CreationStep.ALLOCATE_POINTS) {
+          // ALLOCATE_POINTS: reset allocations
+          this.resetAllAllocations();
+        } else if (this.currentStep() === CreationStep.SELECT_CLASS) {
+          // SELECT_CLASS: start over (nuclear reset)
+          this.goBackFromSelectClass();
+        }
         break;
 
       case 'reroll':
