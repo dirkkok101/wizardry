@@ -17,7 +17,8 @@ import { MenuItem } from '../../components/menu/menu.component';
 enum CreationStep {
   SELECT_RACE = 'SELECT_RACE',
   SELECT_ALIGNMENT = 'SELECT_ALIGNMENT',
-  ROLL_STATS = 'ROLL_STATS',
+  ROLL_BONUS_POINTS = 'ROLL_BONUS_POINTS',
+  ALLOCATE_POINTS = 'ALLOCATE_POINTS',
   SELECT_CLASS = 'SELECT_CLASS',
   NAME_CHARACTER = 'NAME_CHARACTER'
 }
@@ -67,7 +68,8 @@ export class CharacterCreationComponent implements OnInit {
     switch(this.currentStep()) {
       case CreationStep.SELECT_RACE: return 'Choose Your Race';
       case CreationStep.SELECT_ALIGNMENT: return 'Choose Your Alignment';
-      case CreationStep.ROLL_STATS: return 'Roll Your Attributes';
+      case CreationStep.ROLL_BONUS_POINTS: return 'Roll Your Attributes';
+      case CreationStep.ALLOCATE_POINTS: return 'Allocate Bonus Points';
       case CreationStep.SELECT_CLASS: return 'Choose Your Class';
       case CreationStep.NAME_CHARACTER: return 'Name Your Character';
     }
@@ -77,7 +79,8 @@ export class CharacterCreationComponent implements OnInit {
     const steps = [
       CreationStep.SELECT_RACE,
       CreationStep.SELECT_ALIGNMENT,
-      CreationStep.ROLL_STATS,
+      CreationStep.ROLL_BONUS_POINTS,
+      CreationStep.ALLOCATE_POINTS,
       CreationStep.SELECT_CLASS,
       CreationStep.NAME_CHARACTER
     ];
@@ -156,7 +159,7 @@ export class CharacterCreationComponent implements OnInit {
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
         break;
 
-      case CreationStep.ROLL_STATS:
+      case CreationStep.ROLL_BONUS_POINTS:
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
         break;
 
@@ -365,7 +368,7 @@ export class CharacterCreationComponent implements OnInit {
    */
   advanceToRollStats() {
     if (!this.selectedAlignment()) return;
-    this.currentStep.set(CreationStep.ROLL_STATS);
+    this.currentStep.set(CreationStep.ROLL_BONUS_POINTS);
   }
 
   /**
@@ -458,7 +461,7 @@ export class CharacterCreationComponent implements OnInit {
         handled = this.handleAlignmentStepKeys(key);
         break;
 
-      case CreationStep.ROLL_STATS:
+      case CreationStep.ROLL_BONUS_POINTS:
         handled = this.handleRollStatsStepKeys(key);
         break;
 
@@ -595,7 +598,7 @@ export class CharacterCreationComponent implements OnInit {
         // Context-aware back based on current step
         if (this.currentStep() === CreationStep.SELECT_ALIGNMENT) {
           this.goBackFromAlignment();
-        } else if (this.currentStep() === CreationStep.ROLL_STATS) {
+        } else if (this.currentStep() === CreationStep.ROLL_BONUS_POINTS) {
           this.goBackFromRollStats();
         } else if (this.currentStep() === CreationStep.NAME_CHARACTER) {
           this.goBackFromNameCharacter();

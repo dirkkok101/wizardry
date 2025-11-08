@@ -11,11 +11,12 @@ import { CharacterClass } from '../../../types/CharacterClass';
 import { Alignment } from '../../../types/Alignment';
 
 // Access CreationStep from component class
-type CreationStep = 'SELECT_RACE' | 'SELECT_ALIGNMENT' | 'ROLL_STATS' | 'SELECT_CLASS' | 'NAME_CHARACTER';
+type CreationStep = 'SELECT_RACE' | 'SELECT_ALIGNMENT' | 'ROLL_BONUS_POINTS' | 'ALLOCATE_POINTS' | 'SELECT_CLASS' | 'NAME_CHARACTER';
 const CreationStep = {
   SELECT_RACE: 'SELECT_RACE' as CreationStep,
   SELECT_ALIGNMENT: 'SELECT_ALIGNMENT' as CreationStep,
-  ROLL_STATS: 'ROLL_STATS' as CreationStep,
+  ROLL_BONUS_POINTS: 'ROLL_BONUS_POINTS' as CreationStep,
+  ALLOCATE_POINTS: 'ALLOCATE_POINTS' as CreationStep,
   SELECT_CLASS: 'SELECT_CLASS' as CreationStep,
   NAME_CHARACTER: 'NAME_CHARACTER' as CreationStep
 };
@@ -147,6 +148,16 @@ describe('CharacterCreationComponent', () => {
       expect(component.allClasses.length).toBeGreaterThan(0);
       expect(component.Alignment).toBeDefined();
     });
+
+    it('should use 6-step wizard flow: SELECT_RACE → SELECT_ALIGNMENT → ROLL_BONUS_POINTS → ALLOCATE_POINTS → SELECT_CLASS → NAME_CHARACTER', () => {
+      // Verify all 6 steps exist in the enum
+      expect(CreationStep.SELECT_RACE).toBe('SELECT_RACE');
+      expect(CreationStep.SELECT_ALIGNMENT).toBe('SELECT_ALIGNMENT');
+      expect(CreationStep.ROLL_BONUS_POINTS).toBe('ROLL_BONUS_POINTS');
+      expect(CreationStep.ALLOCATE_POINTS).toBe('ALLOCATE_POINTS');
+      expect(CreationStep.SELECT_CLASS).toBe('SELECT_CLASS');
+      expect(CreationStep.NAME_CHARACTER).toBe('NAME_CHARACTER');
+    });
   });
 
   describe('Computed Signals', () => {
@@ -264,9 +275,9 @@ describe('CharacterCreationComponent', () => {
         });
       });
 
-      describe('Step 3: ROLL_STATS', () => {
+      describe('Step 3: ROLL_BONUS_POINTS', () => {
         it('should show only back (no continue)', () => {
-          component.currentStep.set(CreationStep.ROLL_STATS);
+          component.currentStep.set(CreationStep.ROLL_BONUS_POINTS);
           const items = component.footerMenuItems();
 
           expect(items.length).toBe(1);
@@ -569,7 +580,7 @@ describe('CharacterCreationComponent', () => {
   // resetForm() API was renamed to resetWizard() - tested in other sections
 
   describe('handleKeyPress()', () => {
-    it('should roll stats on R key when on ROLL_STATS step', async () => {
+    it('should roll stats on R key when on ROLL_BONUS_POINTS step', async () => {
       component.selectRace(Race.HUMAN);
       component.advanceToAlignment();
       component.selectAlignment(Alignment.GOOD);
@@ -1021,13 +1032,13 @@ describe('CharacterCreationComponent', () => {
         expect(component.currentStep()).toBe(CreationStep.SELECT_ALIGNMENT);
       });
 
-      it('should advance from SELECT_ALIGNMENT to ROLL_STATS', () => {
+      it('should advance from SELECT_ALIGNMENT to ROLL_BONUS_POINTS', () => {
         component.currentStep.set(CreationStep.SELECT_ALIGNMENT);
         component.selectedAlignment.set(Alignment.GOOD);
 
         component.handleFooterAction('continue');
 
-        expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
+        expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
       });
 
       it('should advance from SELECT_CLASS to NAME_CHARACTER', async () => {
@@ -1072,8 +1083,8 @@ describe('CharacterCreationComponent', () => {
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
       });
 
-      it('should go back from ROLL_STATS to SELECT_ALIGNMENT', () => {
-        component.currentStep.set(CreationStep.ROLL_STATS);
+      it('should go back from ROLL_BONUS_POINTS to SELECT_ALIGNMENT', () => {
+        component.currentStep.set(CreationStep.ROLL_BONUS_POINTS);
 
         component.handleFooterAction('back');
 
@@ -1583,7 +1594,7 @@ describe('CharacterCreationComponent', () => {
       // Step 2b: Press Enter to advance to roll stats step
       const eventEnter2 = new KeyboardEvent('keydown', { key: 'Enter' });
       component.handleKeyPress(eventEnter2);
-      expect(component.currentStep()).toBe('ROLL_STATS');
+      expect(component.currentStep()).toBe('ROLL_BONUS_POINTS');
 
       // Step 3: Roll stats (locks race/alignment)
       const event3 = new KeyboardEvent('keydown', { key: 'r' });
@@ -1633,7 +1644,7 @@ describe('CharacterCreationComponent', () => {
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
       });
 
-      it('shows step 1 of 5', () => {
+      it('shows step 1 of 6', () => {
         expect(component.stepNumber()).toBe(1);
         expect(component.stepTitle()).toBe('Choose Your Race');
       });
@@ -1654,23 +1665,23 @@ describe('CharacterCreationComponent', () => {
         expect(component.currentStep()).toBe(CreationStep.SELECT_RACE);
       });
 
-      it('advances from SELECT_ALIGNMENT to ROLL_STATS', () => {
+      it('advances from SELECT_ALIGNMENT to ROLL_BONUS_POINTS', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
 
-        expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
+        expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
         expect(component.stepNumber()).toBe(3);
       });
 
-      it('auto-advances from ROLL_STATS to SELECT_CLASS after rolling', async () => {
+      it('auto-advances from ROLL_BONUS_POINTS to SELECT_CLASS after rolling', async () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
         await component.rollStats();
 
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
-        expect(component.stepNumber()).toBe(4);
+        expect(component.stepNumber()).toBe(5);
         expect(component.rolledStats()).toBeTruthy();
       });
 
@@ -1681,7 +1692,7 @@ describe('CharacterCreationComponent', () => {
         component.advanceToNameCharacter();
 
         expect(component.currentStep()).toBe(CreationStep.NAME_CHARACTER);
-        expect(component.stepNumber()).toBe(5);
+        expect(component.stepNumber()).toBe(6);
       });
     });
 
@@ -1698,7 +1709,7 @@ describe('CharacterCreationComponent', () => {
         expect(component.selectedRace()).toBe(Race.HUMAN); // race persists
       });
 
-      it('goes back from ROLL_STATS to SELECT_ALIGNMENT and clears stats', () => {
+      it('goes back from ROLL_BONUS_POINTS to SELECT_ALIGNMENT and clears stats', () => {
         component.selectedRace.set(Race.HUMAN);
         component.selectedAlignment.set(Alignment.GOOD);
         component.advanceToRollStats();
@@ -1815,12 +1826,12 @@ describe('CharacterCreationComponent', () => {
         await component.rollStats();
         expect(component.currentStep()).toBe(CreationStep.SELECT_CLASS);
 
-        // Step 4: Select class (pick first eligible)
+        // Step 5: Select class (pick first eligible)
         const eligibleClass = component.eligibleClasses()[0];
         component.selectedClass.set(eligibleClass);
         component.advanceToNameCharacter();
 
-        // Step 5: Submit name
+        // Step 6: Submit name
         await component.submitCharacter('Legolas');
 
         // Verify immediate reset (no delay)

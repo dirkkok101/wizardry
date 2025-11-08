@@ -12,7 +12,8 @@ import { CharacterClass } from '../../../types/CharacterClass';
 enum CreationStep {
   SELECT_RACE = 'SELECT_RACE',
   SELECT_ALIGNMENT = 'SELECT_ALIGNMENT',
-  ROLL_STATS = 'ROLL_STATS',
+  ROLL_BONUS_POINTS = 'ROLL_BONUS_POINTS',
+  ALLOCATE_POINTS = 'ALLOCATE_POINTS',
   SELECT_CLASS = 'SELECT_CLASS',
   NAME_CHARACTER = 'NAME_CHARACTER'
 }
@@ -316,7 +317,7 @@ describe('CharacterCreationComponent - Integration', () => {
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
 
-    expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
+    expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
 
     await component.rollStats();
 
@@ -343,7 +344,7 @@ describe('CharacterCreationComponent - Integration', () => {
     // Select alignment and advance
     component.selectAlignment(Alignment.GOOD);
     component.advanceToRollStats();
-    expect(component.currentStep()).toBe(CreationStep.ROLL_STATS);
+    expect(component.currentStep()).toBe(CreationStep.ROLL_BONUS_POINTS);
   });
 
   it('resets wizard state completely after character creation', async () => {
