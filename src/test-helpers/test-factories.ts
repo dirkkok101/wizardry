@@ -7,6 +7,7 @@ import { Alignment } from '../types/Alignment'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SceneType } from '../types/SceneType'
 import { MonsterInstance, CombatState, CombatCommand } from '../types/Combat'
+import { MonsterService } from '../services/MonsterService'
 
 /**
  * Test factory: Create a test character with default values
@@ -187,4 +188,45 @@ export function createCombatParty(): { party: Character[], roster: Map<string, C
     [char2.id, char2]
   ])
   return { party, roster }
+}
+
+/**
+ * Test factory: Create a combat state for UI testing with sensible defaults
+ * @param overrides - Partial combat state properties to override defaults
+ */
+export function createTestCombatStateForUI(overrides?: {
+  monsters?: MonsterInstance[]
+  roundNumber?: number
+  canFlee?: boolean
+  commandQueue?: CombatCommand[]
+  combatLog?: string[]
+}): CombatState {
+  const defaultMonsters = MonsterService.generateMonsterGroup('kobold')
+
+  return {
+    monsters: overrides?.monsters || defaultMonsters,
+    commandQueue: overrides?.commandQueue || [],
+    roundNumber: overrides?.roundNumber || 1,
+    combatLog: overrides?.combatLog || ['Combat begins!'],
+    canFlee: overrides?.canFlee ?? true
+  }
+}
+
+/**
+ * Test factory: Create a GameState with combat initialized
+ * @param overrides - Partial properties to override defaults
+ */
+export function createTestGameStateWithCombat(overrides?: {
+  combat?: CombatState
+  party?: Partial<Party>
+  roster?: Map<string, Character>
+}): GameState {
+  const baseState = createTestGameState()
+
+  return {
+    ...baseState,
+    combat: overrides?.combat || createTestCombatStateForUI(),
+    party: { ...baseState.party, ...overrides?.party },
+    roster: overrides?.roster || baseState.roster
+  }
 }
