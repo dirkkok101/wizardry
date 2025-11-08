@@ -586,5 +586,28 @@ interface MonsterEntry {
 
 ---
 
+## Phase 5: Special Tiles & Interactions ✅ COMPLETE
+
+**Status:** Complete (2025-11-07)
+**Total Tests:** 1050+ passing
+**Performance:** All targets met (<10ms per special tile, <3s suite)
+**Coverage:** 82% overall
+
+All special tile mechanics implemented and tested:
+- ✅ Teleporters with loop prevention
+- ✅ Spinners (random facing)
+- ✅ Chutes (1-3 level fall, 1d6 damage per level)
+- ✅ Pits (AGI-based avoidance, 1d6 damage)
+- ✅ Darkness (per-tile lightRadius override)
+- ✅ Anti-magic (tile flag check)
+- ✅ Stairs (auto level change)
+- ✅ Elevators (UI dialog with level selection)
+- ✅ Searchable tiles (I key inspection)
+- ✅ Fixed encounters (defeated list check)
+- ✅ Message tiles (display text)
+- ✅ Door kicking (K key, STR-based, encounter chance)
+
+---
+
 **Document Status**: Complete and approved for implementation
 **Next Steps**: Create git worktree for feature branch, then detailed implementation plan
