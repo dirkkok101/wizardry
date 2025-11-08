@@ -96,7 +96,72 @@ export class CombatComponent implements OnInit {
   }
 
   executeRound(): void {
+    const combat = this.combatState()
+    if (!combat) return
+
+    const chars = this.partyCharacters()
+    const actions = this.selectedActions()
+
+    // Create party commands from selected actions
+    const partyCommands = Array.from(actions.values())
+
+    // Create monster commands using AI
+    const aliveMonsters = combat.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD')
+    const frontRow = this.party().formation.frontRow
+    const monsterCommands = aliveMonsters.map(m =>
+      CombatService.selectMonsterAction(m, chars, frontRow)
+    )
+
+    // Update combat state with all commands
+    const stateWithCommands: CombatState = {
+      ...combat,
+      commandQueue: [...partyCommands, ...monsterCommands]
+    }
+
+    // Execute round
+    this.isExecutingRound.set(true)
+    const result = CombatService.executeRound(stateWithCommands)
+
+    // Update game state with result
+    this.gameState.updateState(state => {
+      // Update combat state
+      const newState = {
+        ...state,
+        combat: result.newState
+      }
+
+      // Update combat log
+      const updatedCombat = {
+        ...result.newState,
+        combatLog: [...result.newState.combatLog, ...result.messages]
+      }
+
+      return {
+        ...newState,
+        combat: updatedCombat
+      }
+    })
+
+    // Clear selected actions
+    this.selectedActions.set(new Map())
+    this.isExecutingRound.set(false)
+
+    // Check for victory or defeat
+    if (result.victory) {
+      this.handleVictory()
+    } else if (result.defeat) {
+      this.handleDefeat()
+    }
+  }
+
+  private handleVictory(): void {
     // TODO: Implement in next task
+    console.log('Victory!')
+  }
+
+  private handleDefeat(): void {
+    // TODO: Implement in next task
+    console.log('Defeat!')
   }
 
   returnToMaze(): void {
