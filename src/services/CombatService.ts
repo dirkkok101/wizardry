@@ -1,7 +1,8 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState } from '../types/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType } from '../types/Combat'
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
+import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
   /**
@@ -29,6 +30,22 @@ export class CombatService {
       roundNumber: 1,
       combatLog: [],
       canFlee
+    }
+  }
+
+  static createCommand(
+    actor: Combatant,
+    actionType: CombatActionType,
+    target?: Combatant | Combatant[],
+    data?: any
+  ): CombatCommand {
+    return {
+      id: uuidv4(),
+      actor,
+      type: actionType,
+      initiative: this.calculateInitiative(actor),
+      target,
+      data
     }
   }
 }
