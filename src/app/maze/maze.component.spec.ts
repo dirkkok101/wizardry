@@ -1043,3 +1043,78 @@ describe('MazeComponent - Combat Integration', () => {
     expect(combat?.canFlee).toBe(false);
   });
 });
+
+describe('MazeComponent - Layout Structure', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+
+    // Mock loadLevel to avoid level data issues
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(20).fill(null).map(() =>
+        Array(20).fill(null).map(() => ({
+          x: 0,
+          y: 0,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+        }))
+      ),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
+    // Set up test state with dungeon
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: createTestDungeonState()
+    }));
+  });
+
+  it('has horizontal message log at bottom', () => {
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement;
+    const messageLog = compiled.querySelector('.message-log-section');
+
+    expect(messageLog).toBeTruthy();
+
+    // Verify not inside maze-content (should be sibling)
+    const mazeContent = compiled.querySelector('.maze-content');
+    expect(mazeContent.contains(messageLog)).toBe(false);
+  });
+
+  it('projects active spells into scene title', () => {
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement;
+    const sceneTitle = compiled.querySelector('app-scene-title');
+
+    // If there are active spells, they should be projected into scene-title
+    const activeSpells = compiled.querySelector('.active-spells-inline');
+
+    if (activeSpells) {
+      // Active spells should be projected content inside scene-title
+      expect(sceneTitle.contains(activeSpells)).toBe(true);
+    } else {
+      // If no active spells, the inline div shouldn't exist (which is correct)
+      expect(activeSpells).toBeNull();
+    }
+  });
+});

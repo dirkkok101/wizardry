@@ -1,5 +1,15 @@
 <div class="maze-scene">
-  <app-scene-title [title]="sceneTitle()" />
+  <!-- Title with Active Spells inline -->
+  <app-scene-title [title]="sceneTitle()">
+    @if (activeSpells().length > 0) {
+      <div class="active-spells-inline">
+        @for (spell of activeSpells(); track spell.name) {
+          <span class="spell-icon">{{ spell.icon }}</span>
+          <span class="spell-text">{{ spell.name }}: {{ spell.description }}</span>
+        }
+      </div>
+    }
+  </app-scene-title>
 
   @if (isLoadingLevel()) {
     <div class="loading-overlay">
@@ -12,25 +22,25 @@
     <div class="error-message">{{ errorMessage() }}</div>
   }
 
+  <!-- Two-column content: Canvas | Character Cards -->
   <div class="maze-content">
-    <!-- Left: 3D Canvas View + Message Log -->
+    <!-- Left: 3D Canvas (450×450px) -->
     <div class="maze-viewport">
       <app-maze-view [commands]="drawCommands()" />
-      <app-message-log [messages]="messages()" />
     </div>
 
-    <!-- Right: Party & Spells -->
-    <div class="maze-panel">
-      <!-- Active Spells -->
-      <app-active-spells [spells]="activeSpells()" />
-
-      <!-- Party Grid (2×3) -->
-      <div class="party-grid">
-        @for (char of partyCharacters(); track char.id) {
-          <app-character-card [character]="char" />
-        }
-      </div>
+    <!-- Right: Character Grid (3×2) -->
+    <div class="party-grid">
+      @for (char of partyCharacters(); track char.id) {
+        <app-character-card [character]="char" />
+      }
     </div>
+  </div>
+
+  <!-- Full-width Message Log -->
+  <div class="message-log-section">
+    <div class="message-log-header">RECENT EVENTS:</div>
+    <app-message-log [messages]="messages()" />
   </div>
 
   <!-- Footer Actions -->
@@ -39,7 +49,7 @@
     (itemSelected)="handleFooterAction($event)"
   />
 
-  <!-- Elevator Dialog -->
+  <!-- Elevator Dialog (if active) -->
   @if (showElevatorDialog()) {
     <div class="elevator-dialog-overlay">
       <div class="elevator-dialog">
