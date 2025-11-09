@@ -3,16 +3,24 @@ import { TileData, Position } from '../../types/Dungeon';
 import { CanvasCommand, ViewportConfig } from '../../types/rendering.types';
 
 // Helper to create test tile
-function createTestTile(x: number, y: number, walls: {
-  north: 'open' | 'wall' | 'door' | 'secret';
-  east: 'open' | 'wall' | 'door' | 'secret';
-  south: 'open' | 'wall' | 'door' | 'secret';
-  west: 'open' | 'wall' | 'door' | 'secret';
-}): TileData {
+function createTestTile(
+  x: number,
+  y: number,
+  walls: {
+    north: 'open' | 'wall' | 'door' | 'secret';
+    east: 'open' | 'wall' | 'door' | 'secret';
+    south: 'open' | 'wall' | 'door' | 'secret';
+    west: 'open' | 'wall' | 'door' | 'secret';
+  },
+  relativeX: number = 0,
+  relativeDepth: number = 1
+): TileData & { relativeX: number; relativeDepth: number } {
   return {
     x,
     y,
-    walls
+    walls,
+    relativeX,
+    relativeDepth
   };
 }
 
@@ -240,9 +248,9 @@ describe('MazeRenderingService', () => {
 
     it('renders 3 tiles with correct perspective', () => {
       const tiles = [
-        createTestTile(0, 1, { north: 'open', east: 'open', south: 'open', west: 'open' }),
-        createTestTile(0, 2, { north: 'open', east: 'open', south: 'open', west: 'open' }),
-        createTestTile(0, 3, { north: 'open', east: 'open', south: 'open', west: 'open' })
+        createTestTile(10, 9, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 1),
+        createTestTile(10, 8, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 2),
+        createTestTile(10, 7, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 3)
       ];
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
@@ -253,9 +261,9 @@ describe('MazeRenderingService', () => {
 
     it('renders far tiles before near tiles (z-ordering)', () => {
       const tiles = [
-        createTestTile(0, 1, { north: 'wall', east: 'open', south: 'open', west: 'open' }),
-        createTestTile(0, 2, { north: 'wall', east: 'open', south: 'open', west: 'open' }),
-        createTestTile(0, 3, { north: 'wall', east: 'open', south: 'open', west: 'open' })
+        createTestTile(10, 9, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 1),
+        createTestTile(10, 8, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 2),
+        createTestTile(10, 7, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 3)
       ];
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
@@ -275,7 +283,7 @@ describe('MazeRenderingService', () => {
 
     it('handles single tile (light radius 1)', () => {
       const tiles = [
-        createTestTile(0, 1, { north: 'open', east: 'open', south: 'open', west: 'open' })
+        createTestTile(10, 9, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 1)
       ];
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
@@ -284,6 +292,28 @@ describe('MazeRenderingService', () => {
       // All commands should have full brightness
       const hasFadedCommands = commands.some(cmd => cmd.alpha && cmd.alpha < 1.0);
       expect(hasFadedCommands).toBe(false);
+    });
+
+    it('renders 3×3 grid of tiles with walls', () => {
+      const tiles = [
+        // Depth 1
+        createTestTile(9, 9, { north: 'open', east: 'wall', south: 'open', west: 'open' }, -1, 1),
+        createTestTile(10, 9, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 1),
+        createTestTile(11, 9, { north: 'open', east: 'open', south: 'open', west: 'wall' }, 1, 1),
+        // Depth 2
+        createTestTile(9, 8, { north: 'open', east: 'wall', south: 'open', west: 'open' }, -1, 2),
+        createTestTile(10, 8, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 2),
+        createTestTile(11, 8, { north: 'open', east: 'open', south: 'open', west: 'wall' }, 1, 2),
+        // Depth 3
+        createTestTile(9, 7, { north: 'open', east: 'wall', south: 'open', west: 'open' }, -1, 3),
+        createTestTile(10, 7, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 3),
+        createTestTile(11, 7, { north: 'open', east: 'open', south: 'open', west: 'wall' }, 1, 3)
+      ];
+
+      const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
+
+      // Should render tunnel frames + walls from 9 tiles
+      expect(commands.length).toBeGreaterThan(16); // 16 tunnel frame lines + wall lines
     });
   });
 
@@ -313,6 +343,81 @@ describe('MazeRenderingService', () => {
 
       // All lines should have lineWidth of 2 (depth 1)
       expect(commands.every(cmd => cmd.lineWidth === 2)).toBe(true);
+    });
+  });
+
+  describe('renderTile (with spatial positioning)', () => {
+    const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
+    const config = { width: 600, height: 600, tileDepth: 3 };
+
+    it('renders center column tile with all visible walls', () => {
+      const tile: TileData & { relativeX: number; relativeDepth: number } = {
+        x: 10, y: 9,
+        walls: { north: 'wall', east: 'open', south: 'open', west: 'wall' },
+        relativeX: 0,
+        relativeDepth: 1
+      };
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, config);
+
+      // Center column: should render front and left walls (east is open)
+      expect(commands.length).toBeGreaterThan(0);
+
+      // Should have wall commands (4 lines per wall)
+      const wallCount = commands.length / 4;
+      expect(wallCount).toBeGreaterThanOrEqual(2); // front + left walls
+    });
+
+    it('renders left column tile with only right-facing wall visible', () => {
+      const tile: TileData & { relativeX: number; relativeDepth: number } = {
+        x: 9, y: 9,
+        walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' },
+        relativeX: -1,
+        relativeDepth: 1
+      };
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, config);
+
+      // Left column: only render east wall (right side from player perspective)
+      // This forms the left corridor wall seen from center
+      expect(commands.length).toBeGreaterThan(0);
+    });
+
+    it('renders right column tile with only left-facing wall visible', () => {
+      const tile: TileData & { relativeX: number; relativeDepth: number } = {
+        x: 11, y: 9,
+        walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' },
+        relativeX: 1,
+        relativeDepth: 1
+      };
+
+      const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, config);
+
+      // Right column: only render west wall (left side from player perspective)
+      // This forms the right corridor wall seen from center
+      expect(commands.length).toBeGreaterThan(0);
+    });
+
+    it('positions walls with correct horizontal offset', () => {
+      const leftTile: TileData & { relativeX: number; relativeDepth: number } = {
+        x: 9, y: 9,
+        walls: { north: 'open', east: 'wall', south: 'open', west: 'open' },
+        relativeX: -1,
+        relativeDepth: 1
+      };
+
+      const rightTile: TileData & { relativeX: number; relativeDepth: number } = {
+        x: 11, y: 9,
+        walls: { north: 'open', east: 'open', south: 'open', west: 'wall' },
+        relativeX: 1,
+        relativeDepth: 1
+      };
+
+      const leftCommands = MazeRenderingService.renderTile(leftTile, 'NORTH', perspective, config);
+      const rightCommands = MazeRenderingService.renderTile(rightTile, 'NORTH', perspective, config);
+
+      // Left and right walls should have different X positions
+      expect(leftCommands[0].x).not.toEqual(rightCommands[0].x);
     });
   });
 });

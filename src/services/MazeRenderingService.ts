@@ -167,6 +167,7 @@ export function renderTunnelFrames(config: ViewportConfig, tileDepth: number): C
  * @param perspective - Perspective scale parameters
  * @param config - Viewport configuration
  * @param depth - Distance from player (1-3)
+ * @param relativeX - Column offset (-1, 0, 1)
  * @returns Array of line drawing commands for wireframe wall
  */
 export function renderWall(
@@ -174,7 +175,8 @@ export function renderWall(
   wallType: 'open' | 'wall' | 'door' | 'secret' | 'locked_door',
   perspective: PerspectiveScale,
   config: ViewportConfig,
-  depth: number = 1
+  depth: number = 1,
+  relativeX: number = 0
 ): CanvasCommand[] {
   // Secret walls are invisible
   if (wallType === 'secret' || wallType === 'open') {
@@ -196,10 +198,13 @@ export function renderWall(
   const wallHeight = 200 * perspective.scale;
   const depthY = centerY + perspective.offsetY;
 
+  // Calculate horizontal offset based on column position
+  const columnOffset = relativeX * wallOffset;
+
   if (side === 'left') {
     // Left wall wireframe
     commands.push(...generateRectangleOutline(
-      centerX - wallOffset - 50,
+      centerX - wallOffset - 50 + columnOffset,
       depthY - wallHeight / 2,
       50,
       wallHeight,
@@ -210,7 +215,7 @@ export function renderWall(
   } else if (side === 'right') {
     // Right wall wireframe
     commands.push(...generateRectangleOutline(
-      centerX + wallOffset,
+      centerX + wallOffset + columnOffset,
       depthY - wallHeight / 2,
       50,
       wallHeight,
@@ -221,7 +226,7 @@ export function renderWall(
   } else if (side === 'front') {
     // Front wall (dead end) - full width wireframe
     commands.push(...generateRectangleOutline(
-      centerX - wallOffset,
+      centerX - wallOffset + columnOffset,
       depthY - wallHeight / 2,
       wallOffset * 2,
       wallHeight,
@@ -236,34 +241,48 @@ export function renderWall(
 
 /**
  * Render a single tile with all its walls
- * @param tile - Tile data with walls
+ * @param tile - Tile data with walls and relative positioning
  * @param facing - Direction player is facing
  * @param perspective - Perspective scale parameters
  * @param config - Viewport configuration
- * @param depth - Distance from player (1-3)
  * @returns Array of drawing commands for the tile
  */
 export function renderTile(
-  tile: TileData,
+  tile: TileData & { relativeX: number; relativeDepth: number },
   facing: Direction,
   perspective: PerspectiveScale,
-  config: ViewportConfig,
-  depth: number = 1
+  config: ViewportConfig
 ): CanvasCommand[] {
   const commands: CanvasCommand[] = [];
 
   // Get walls relative to player facing
   const walls = getRelativeWalls(tile.walls, facing);
 
-  // Render walls based on their type, passing depth for wireframe styling
-  if (walls.left !== 'open') {
-    commands.push(...renderWall('left', walls.left, perspective, config, depth));
-  }
-  if (walls.right !== 'open') {
-    commands.push(...renderWall('right', walls.right, perspective, config, depth));
-  }
-  if (walls.front !== 'open') {
-    commands.push(...renderWall('front', walls.front, perspective, config, depth));
+  // Determine which walls to render based on column position
+  const relativeX = tile.relativeX;
+  const depth = tile.relativeDepth;
+
+  if (relativeX === -1) {
+    // Left column: only render right wall (forms left corridor edge)
+    if (walls.right !== 'open') {
+      commands.push(...renderWall('left', walls.right, perspective, config, depth, relativeX));
+    }
+  } else if (relativeX === 0) {
+    // Center column: render all visible walls
+    if (walls.front !== 'open') {
+      commands.push(...renderWall('front', walls.front, perspective, config, depth, relativeX));
+    }
+    if (walls.left !== 'open') {
+      commands.push(...renderWall('left', walls.left, perspective, config, depth, relativeX));
+    }
+    if (walls.right !== 'open') {
+      commands.push(...renderWall('right', walls.right, perspective, config, depth, relativeX));
+    }
+  } else if (relativeX === 1) {
+    // Right column: only render left wall (forms right corridor edge)
+    if (walls.left !== 'open') {
+      commands.push(...renderWall('right', walls.left, perspective, config, depth, relativeX));
+    }
   }
 
   return commands;
@@ -271,13 +290,13 @@ export function renderTile(
 
 /**
  * Generate complete view of maze from player perspective
- * @param tiles - Array of visible tiles (near to far)
+ * @param tiles - Array of visible tiles (near to far) with spatial positioning
  * @param facing - Direction player is facing
  * @param config - Viewport configuration
  * @returns Complete array of drawing commands
  */
 export function generateView(
-  tiles: TileData[],
+  tiles: (TileData & { relativeX: number; relativeDepth: number })[],
   facing: Direction,
   config: ViewportConfig
 ): CanvasCommand[] {
@@ -288,15 +307,18 @@ export function generateView(
   const commands: CanvasCommand[] = [];
 
   // Draw horizontal tunnel frames first (creates the 3D tunnel cross-sections)
-  commands.push(...renderTunnelFrames(config, tiles.length));
+  const maxDepth = Math.max(...tiles.map(t => t.relativeDepth));
+  commands.push(...renderTunnelFrames(config, maxDepth));
+
+  // Sort tiles by depth (far to near for correct z-ordering)
+  const sortedTiles = [...tiles].sort((a, b) => b.relativeDepth - a.relativeDepth);
 
   // Render tiles from far to near for correct z-ordering
-  for (let i = tiles.length - 1; i >= 0; i--) {
-    const tile = tiles[i];
-    const depth = i + 1;  // Convert 0-based index to 1-based depth
+  for (const tile of sortedTiles) {
+    const depth = tile.relativeDepth;
     const perspective = calculatePerspective(depth);
 
-    commands.push(...renderTile(tile, facing, perspective, config, depth));
+    commands.push(...renderTile(tile, facing, perspective, config));
   }
 
   return commands;
