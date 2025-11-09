@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface MenuItem {
@@ -34,7 +34,7 @@ export interface MenuItem {
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss']
 })
-export class MenuComponent implements OnInit {
+export class MenuComponent implements OnInit, OnChanges {
   @Input() title: string = '';
   @Input() items: MenuItem[] = [];
   @Output() select = new EventEmitter<string>();
@@ -42,10 +42,35 @@ export class MenuComponent implements OnInit {
   selectedIndex: number = 0;
 
   ngOnInit() {
-    // Select first enabled item
-    this.selectedIndex = this.items.findIndex(item => item.enabled);
-    if (this.selectedIndex === -1) {
-      this.selectedIndex = 0;
+    this.updateSelectedIndex();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['items']) {
+      this.updateSelectedIndex();
+    }
+  }
+
+  /**
+   * Update selected index to point to the most appropriate menu item.
+   * Prioritizes items with ENTER shortcut, then falls back to first enabled item.
+   * This ensures Enter key triggers the primary action (e.g., "Continue") rather
+   * than secondary actions (e.g., "Cancel").
+   */
+  private updateSelectedIndex() {
+    // First try to select item with ENTER shortcut
+    const enterItemIndex = this.items.findIndex(
+      item => item.shortcut?.toUpperCase() === 'ENTER' && item.enabled
+    );
+
+    if (enterItemIndex !== -1) {
+      this.selectedIndex = enterItemIndex;
+    } else {
+      // Fallback: select first enabled item
+      this.selectedIndex = this.items.findIndex(item => item.enabled);
+      if (this.selectedIndex === -1) {
+        this.selectedIndex = 0;
+      }
     }
   }
 
