@@ -118,28 +118,40 @@ export const DungeonService = {
   },
 
   /**
-   * Get tiles visible from current position
-   * Returns array of tiles in front of player up to lightRadius distance
-   * @param level - Level data
-   * @param position - Current position and facing
-   * @param lightRadius - How many tiles ahead to return (1-3)
-   * @returns Array of TileData, ordered near to far
+   * Get all visible tiles in front of party (3-column grid)
+   * @param level - Current dungeon level
+   * @param position - Party position and facing direction
+   * @param lightRadius - How far party can see (1-3 tiles)
+   * @returns Array of visible tiles with relative positioning
    */
   getVisibleTiles(
     level: LevelData,
     position: Position,
     lightRadius: number
   ): TileData[] {
-    const tiles: TileData[] = []
-    const maxDepth = Math.min(lightRadius, 3) // Cap at 3 tiles max
+    const tiles: TileData[] = [];
+    const maxDepth = Math.min(lightRadius, 3);
 
+    // Iterate through each depth (distance ahead)
     for (let depth = 1; depth <= maxDepth; depth++) {
-      const { x, y } = getPositionAhead(position, depth)
-      const tile = this.getTile(level, x, y)
-      tiles.push(tile)
+      // Iterate through each column (left, center, right)
+      for (let column = -1; column <= 1; column++) {
+        // Transform relative position to world coordinates
+        const worldCoords = this.transformToWorldCoords(position, column, depth);
+
+        // Get tile data from map
+        const tile = this.getTile(level, worldCoords.x, worldCoords.y);
+
+        // Add relative positioning for rendering
+        tiles.push({
+          ...tile,
+          relativeX: column,
+          relativeDepth: depth
+        });
+      }
     }
 
-    return tiles
+    return tiles;
   },
 
   /**

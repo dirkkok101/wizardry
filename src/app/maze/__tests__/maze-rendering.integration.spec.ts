@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MazeComponent } from '../maze.component';
 import { GameStateService } from '../../../services/GameStateService';
 import { DungeonService } from '../../../services/DungeonService';
+import { NavigationService } from '../../../services/NavigationService';
 import { Router } from '@angular/router';
 
 function createTestDungeonState() {
@@ -59,13 +60,17 @@ describe('Maze Rendering Integration', () => {
     fixture.detectChanges();
   });
 
-  it('renders view with 3 visible tiles', () => {
+  it('renders view with 3×3 grid (9 tiles)', () => {
     const tiles = component.visibleTiles();
 
-    expect(tiles.length).toBe(3);
-    expect(tiles[0].y).toBe(11);  // Near tile
-    expect(tiles[1].y).toBe(12);  // Mid tile
-    expect(tiles[2].y).toBe(13);  // Far tile
+    expect(tiles.length).toBe(9); // 3 columns × 3 depths
+
+    // Check center column tiles
+    const centerTiles = tiles.filter(t => t.relativeX === 0);
+    expect(centerTiles.length).toBe(3);
+    expect(centerTiles[0].y).toBe(9);  // Near tile (NORTH = decreasing Y)
+    expect(centerTiles[1].y).toBe(8);  // Mid tile
+    expect(centerTiles[2].y).toBe(7);  // Far tile
   });
 
   it('generates drawing commands from visible tiles', () => {
@@ -79,6 +84,20 @@ describe('Maze Rendering Integration', () => {
   it('updates view when moving forward', () => {
     jest.spyOn(DungeonService, 'canMove').mockReturnValue({ allowed: true });
 
+    // Mock NavigationService to actually move the position
+    jest.spyOn(NavigationService, 'moveForward').mockImplementation((state) => {
+      return {
+        ...state,
+        dungeon: {
+          ...state.dungeon!,
+          position: {
+            ...state.dungeon!.position,
+            y: state.dungeon!.position.y - 1  // Move north (decrease Y)
+          }
+        }
+      };
+    });
+
     const initialCommands = component.drawCommands().length;
 
     component.moveForward();
@@ -86,7 +105,8 @@ describe('Maze Rendering Integration', () => {
 
     // Position changed, so tiles and commands should update
     const newTiles = component.visibleTiles();
-    expect(newTiles[0].y).toBe(12);  // Moved forward, near tile is now y+2
+    const centerTiles = newTiles.filter(t => t.relativeX === 0);
+    expect(centerTiles[0].y).toBe(8);  // Moved forward from y=10 to y=9, near tile is now y=8
   });
 
   it('respects light radius for visible tiles', () => {
@@ -101,6 +121,6 @@ describe('Maze Rendering Integration', () => {
     fixture.detectChanges();
 
     const tiles = component.visibleTiles();
-    expect(tiles.length).toBe(1);  // Only near tile visible
+    expect(tiles.length).toBe(3);  // 3 columns × 1 depth
   });
 });
