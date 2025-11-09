@@ -248,9 +248,8 @@
 
   app-message-log {
     display: block;
-    height: calc(100% - 1.5rem);  // Subtract header height
-    max-height: calc(100% - 1.5rem);
-    overflow-y: auto;
+    height: calc(100% - 1.8rem);  // Subtract header height
+    overflow: hidden;
   }
 
   // Smaller screens - reduce height
