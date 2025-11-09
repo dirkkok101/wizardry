@@ -100,30 +100,55 @@ export function getRelativeWalls(
 }
 
 /**
- * Draw horizontal tunnel cross-sections for authentic Wizardry wireframe
- * Creates nested horizontal rectangles at each depth to show tunnel perspective
+ * Draw perspective grid for authentic Wizardry wireframe
+ * Creates converging lines and horizontal cross-sections
  * @param config - Viewport configuration
  * @param tileDepth - How many tiles deep to render (1-3)
- * @returns Array of rectangle outline commands
+ * @returns Array of line commands creating 3D tunnel perspective
  */
 export function renderTunnelFrames(config: ViewportConfig, tileDepth: number): CanvasCommand[] {
   const commands: CanvasCommand[] = [];
   const centerX = config.width / 2;
   const centerY = config.height / 2;
 
-  // Draw horizontal rectangles for each depth level
-  // These create the tunnel cross-sections that get smaller toward the vanishing point
+  // Viewport edges (outermost frame)
+  const viewportWidth = 450;
+  const viewportHeight = 200;  // Reduced height for more authentic proportions
+
+  const outerLeft = centerX - viewportWidth / 2;
+  const outerRight = centerX + viewportWidth / 2;
+  const outerTop = centerY - viewportHeight / 2;
+  const outerBottom = centerY + viewportHeight / 2;
+
+  // Draw 4 diagonal perspective lines from viewport edges to vanishing point
+  // These create the tunnel edges converging toward center
+  commands.push(
+    // Top-left to center
+    { type: 'line', x: outerLeft, y: outerTop, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 },
+    // Top-right to center
+    { type: 'line', x: outerRight, y: outerTop, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 },
+    // Bottom-left to center
+    { type: 'line', x: outerLeft, y: outerBottom, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 },
+    // Bottom-right to center
+    { type: 'line', x: outerRight, y: outerBottom, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 }
+  );
+
+  // Draw horizontal cross-section rectangles at each depth
   for (let depth = 1; depth <= tileDepth; depth++) {
     const perspective = calculatePerspective(depth);
     const color = getColorForDepth(depth);
     const lineWidth = getLineWidthForDepth(depth);
 
-    // Calculate rectangle size based on perspective scale
-    const rectWidth = 400 * perspective.scale;
-    const rectHeight = 300 * perspective.scale;
+    // Calculate rectangle size - much narrower height for authentic look
+    const rectWidth = viewportWidth * perspective.scale;
+    const rectHeight = viewportHeight * perspective.scale;
 
     const x = centerX - rectWidth / 2;
-    const y = centerY - rectHeight / 2 + perspective.offsetY;
+    const y = centerY - rectHeight / 2;
 
     // Draw horizontal rectangle outline for this depth
     commands.push(...generateRectangleOutline(
