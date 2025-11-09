@@ -100,74 +100,37 @@ export function getRelativeWalls(
 }
 
 /**
- * Draw continuous perspective lines for authentic Wizardry wireframe
- * Creates 4 lines from viewport corners to vanishing point
+ * Draw horizontal tunnel cross-sections for authentic Wizardry wireframe
+ * Creates nested horizontal rectangles at each depth to show tunnel perspective
  * @param config - Viewport configuration
- * @returns Array of perspective line commands
+ * @param tileDepth - How many tiles deep to render (1-3)
+ * @returns Array of rectangle outline commands
  */
-export function renderPerspectiveLines(config: ViewportConfig): CanvasCommand[] {
+export function renderTunnelFrames(config: ViewportConfig, tileDepth: number): CanvasCommand[] {
   const commands: CanvasCommand[] = [];
   const centerX = config.width / 2;
   const centerY = config.height / 2;
 
-  // Viewport bounds (outermost frame at depth 0)
-  const outerLeft = 100;
-  const outerRight = config.width - 100;
-  const outerTop = 50;
-  const outerBottom = config.height - 50;
+  // Draw horizontal rectangles for each depth level
+  // These create the tunnel cross-sections that get smaller toward the vanishing point
+  for (let depth = 1; depth <= tileDepth; depth++) {
+    const perspective = calculatePerspective(depth);
+    const color = getColorForDepth(depth);
+    const lineWidth = getLineWidthForDepth(depth);
 
-  // Vanishing point (innermost point at depth 3)
-  const vanishX = centerX;
-  const vanishY = centerY;
+    // Calculate rectangle size based on perspective scale
+    const rectWidth = 400 * perspective.scale;
+    const rectHeight = 300 * perspective.scale;
 
-  // Draw 4 continuous perspective lines from viewport corners to vanishing point
-  // Top-left to center
-  commands.push({
-    type: 'line',
-    x: outerLeft,
-    y: outerTop,
-    x2: vanishX,
-    y2: vanishY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: 1.0
-  });
+    const x = centerX - rectWidth / 2;
+    const y = centerY - rectHeight / 2 + perspective.offsetY;
 
-  // Top-right to center
-  commands.push({
-    type: 'line',
-    x: outerRight,
-    y: outerTop,
-    x2: vanishX,
-    y2: vanishY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: 1.0
-  });
-
-  // Bottom-left to center
-  commands.push({
-    type: 'line',
-    x: outerLeft,
-    y: outerBottom,
-    x2: vanishX,
-    y2: vanishY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: 1.0
-  });
-
-  // Bottom-right to center
-  commands.push({
-    type: 'line',
-    x: outerRight,
-    y: outerBottom,
-    x2: vanishX,
-    y2: vanishY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: 1.0
-  });
+    // Draw horizontal rectangle outline for this depth
+    commands.push(...generateRectangleOutline(
+      x, y, rectWidth, rectHeight,
+      color, lineWidth, perspective.brightness
+    ));
+  }
 
   return commands;
 }
@@ -299,8 +262,8 @@ export function generateView(
 
   const commands: CanvasCommand[] = [];
 
-  // Draw continuous perspective lines first (creates the 3D corridor effect)
-  commands.push(...renderPerspectiveLines(config));
+  // Draw horizontal tunnel frames first (creates the 3D tunnel cross-sections)
+  commands.push(...renderTunnelFrames(config, tiles.length));
 
   // Render tiles from far to near for correct z-ordering
   for (let i = tiles.length - 1; i >= 0; i--) {
@@ -320,7 +283,7 @@ export const MazeRenderingService = {
   getColorForDepth,
   getLineWidthForDepth,
   generateRectangleOutline,
-  renderPerspectiveLines,
+  renderTunnelFrames,
   renderWall,
   renderTile,
   generateView

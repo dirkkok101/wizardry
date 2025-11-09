@@ -90,27 +90,32 @@ describe('MazeRenderingService', () => {
     });
   });
 
-  describe('renderPerspectiveLines', () => {
-    it('returns perspective line commands', () => {
-      const commands = MazeRenderingService.renderPerspectiveLines(testConfig);
+  describe('renderTunnelFrames', () => {
+    it('returns horizontal tunnel frame commands', () => {
+      const commands = MazeRenderingService.renderTunnelFrames(testConfig, 3);
 
       expect(commands.length).toBeGreaterThan(0);
       expect(commands[0].type).toBe('line');
       expect(commands[0].color).toBe('#0f0');
     });
 
-    it('creates 4 continuous perspective lines from viewport to vanishing point', () => {
-      const commands = MazeRenderingService.renderPerspectiveLines(testConfig);
+    it('creates horizontal rectangles for each depth', () => {
+      const commands = MazeRenderingService.renderTunnelFrames(testConfig, 3);
 
-      // 4 lines from viewport corners to center (vanishing point)
-      expect(commands.length).toBe(4);
+      // 3 depths × 4 lines per rectangle = 12 lines
+      expect(commands.length).toBe(12);
       expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
 
-    it('uses consistent alpha of 1.0 for all perspective lines', () => {
-      const commands = MazeRenderingService.renderPerspectiveLines(testConfig);
+    it('uses depth-based colors and brightness', () => {
+      const commands = MazeRenderingService.renderTunnelFrames(testConfig, 2);
 
-      expect(commands.every(cmd => cmd.alpha === 1.0)).toBe(true);
+      // Should have 8 lines (2 rectangles × 4 lines)
+      expect(commands.length).toBe(8);
+
+      // First rectangle (depth 1) should be brighter
+      expect(commands[0].color).toBe('#0f0');
+      expect(commands[0].alpha).toBe(1.0);
     });
   });
 
@@ -255,11 +260,11 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
 
-      // Skip first 4 commands (perspective lines have alpha=1.0)
+      // Skip first 12 commands (3 tunnel frames × 4 lines = 12)
       // Then check that far tile walls (lower brightness) come before near tile walls
       const wallBrightnesses = commands
-        .slice(4) // Skip perspective lines
-        .filter(cmd => cmd.alpha !== undefined && cmd.alpha !== 1.0)
+        .slice(12) // Skip tunnel frames
+        .filter(cmd => cmd.alpha !== undefined)
         .map(cmd => cmd.alpha);
 
       // First wall commands should have lower brightness (far tiles)
