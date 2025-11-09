@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component } from '@angular/core';
 import { SceneTitleComponent } from './scene-title.component';
 import { GameStateService } from '../../services/GameStateService';
 import { signal } from '@angular/core';
@@ -30,6 +31,49 @@ describe('SceneTitleComponent', () => {
 
     const h1 = fixture.nativeElement.querySelector('h1');
     expect(h1.textContent).toBe('TEST TITLE');
+  });
+
+  describe('content projection', () => {
+    @Component({
+      standalone: true,
+      imports: [SceneTitleComponent],
+      template: `
+        <app-scene-title [title]="'TEST TITLE'">
+          <div class="projected-content">Projected Content</div>
+        </app-scene-title>
+      `
+    })
+    class TestHostComponent {}
+
+    it('projects content into ng-content slot', () => {
+      const hostFixture = TestBed.createComponent(TestHostComponent);
+      hostFixture.detectChanges();
+
+      const projectedContent = hostFixture.nativeElement.querySelector('.projected-content');
+      expect(projectedContent).toBeTruthy();
+      expect(projectedContent.textContent).toBe('Projected Content');
+    });
+
+    it('displays both title and projected content', () => {
+      const hostFixture = TestBed.createComponent(TestHostComponent);
+      hostFixture.detectChanges();
+
+      const h1 = hostFixture.nativeElement.querySelector('h1');
+      const projectedContent = hostFixture.nativeElement.querySelector('.projected-content');
+
+      expect(h1.textContent).toBe('TEST TITLE');
+      expect(projectedContent.textContent).toBe('Projected Content');
+    });
+
+    it('works without projected content', () => {
+      fixture.componentRef.setInput('title', 'TEST TITLE');
+      fixture.detectChanges();
+
+      const h1 = fixture.nativeElement.querySelector('h1');
+      expect(h1.textContent).toBe('TEST TITLE');
+      // Component should still render without errors
+      expect(fixture.nativeElement.querySelector('.scene-header')).toBeTruthy();
+    });
   });
 
   describe('party gold display', () => {
