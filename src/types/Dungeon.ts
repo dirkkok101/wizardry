@@ -135,3 +135,59 @@ export interface Level {
   height: number
   tiles: Tile[][]
 }
+
+/**
+ * 3D point in world space
+ */
+export interface Vector3 {
+  x: number  // Horizontal position
+  y: number  // Vertical position (height)
+  z: number  // Depth
+}
+
+/**
+ * 2D point in screen space
+ */
+export interface Vector2 {
+  x: number  // Screen X coordinate
+  y: number  // Screen Y coordinate
+}
+
+/**
+ * Wall segment in world space
+ * Represents a quad (4 corners) to be rendered
+ */
+export interface WallSegment {
+  // Bottom edge endpoints in world space
+  x1: number
+  z1: number
+  x2: number
+  z2: number
+
+  // Wall properties
+  height: number       // Wall height (typically 1.0)
+  distance: number     // Distance from camera (for z-ordering)
+  isVertical: boolean  // true = N/S wall, false = E/W wall
+  wallType: WallType   // Wall type for coloring
+}
+
+/**
+ * Enhanced player state with pre-computed direction vectors
+ * for efficient perspective transformation
+ */
+export interface PlayerState {
+  // Grid position (discrete)
+  gridX: number
+  gridY: number
+
+  // Orientation (radians: 0=North, π/2=East, π=South, 3π/2=West)
+  angle: number
+
+  // Pre-computed direction vectors (updated when angle changes)
+  dirX: number   // cos(angle)
+  dirY: number   // sin(angle)
+
+  // Camera plane (perpendicular to direction, scaled by FOV)
+  planeX: number
+  planeY: number
+}
