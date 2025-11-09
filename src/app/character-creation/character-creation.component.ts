@@ -44,7 +44,7 @@ interface FinalStats {
   styleUrl: './character-creation.component.scss'
 })
 export class CharacterCreationComponent implements OnInit {
-  private readonly ROLL_ANIMATION_DURATION_MS = 300;
+  private readonly ROLL_ANIMATION_DURATION_MS = 0;
 
   // Form state signals
   readonly selectedRace = signal<Race | null>(null);
