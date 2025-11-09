@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, input } from '@angular/core';
+import { Component, ElementRef, ViewChild, input, effect, ChangeDetectionStrategy, untracked } from '@angular/core';
 import { CanvasCommand } from '../../types/rendering.types';
 
 /**
@@ -8,6 +8,7 @@ import { CanvasCommand } from '../../types/rendering.types';
 @Component({
   selector: 'app-maze-view',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './maze-view.component.html',
   styleUrls: ['./maze-view.component.scss']
 })
@@ -19,16 +20,24 @@ export class MazeViewComponent {
 
   private ctx: CanvasRenderingContext2D | null = null;
 
+  constructor() {
+    // React to changes in commands signal
+    // Only render if context is available (after ngAfterViewInit)
+    effect(() => {
+      // Check ctx without creating signal dependency
+      if (untracked(() => this.ctx)) {
+        const commands = this.commands(); // Subscribe to signal changes
+        if (commands.length > 0) {
+          this.render();
+        }
+      }
+    });
+  }
+
   ngAfterViewInit(): void {
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d');
     this.render();
-  }
-
-  ngOnChanges(): void {
-    if (this.ctx) {
-      this.render();
-    }
   }
 
   private render(): void {
