@@ -120,24 +120,24 @@ describe('MazeRenderingService', () => {
   describe('renderWall', () => {
     const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
 
-    it('renders left wall as filled rectangle', () => {
+    it('renders left wall as wireframe lines', () => {
       const commands = MazeRenderingService.renderWall('left', 'wall', perspective, testConfig);
 
       expect(commands.length).toBeGreaterThan(0);
-      expect(commands.some(cmd => cmd.type === 'fillRect')).toBe(true);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
 
     it('uses correct color for regular wall', () => {
       const commands = MazeRenderingService.renderWall('left', 'wall', perspective, testConfig);
 
-      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
+      const wallCmd = commands.find(cmd => cmd.type === 'line');
       expect(wallCmd?.color).toBe('#0f0');
     });
 
     it('uses darker color for door', () => {
       const commands = MazeRenderingService.renderWall('left', 'door', perspective, testConfig);
 
-      const doorCmd = commands.find(cmd => cmd.type === 'fillRect');
+      const doorCmd = commands.find(cmd => cmd.type === 'line');
       expect(doorCmd?.color).toBe('#080');
     });
 
@@ -151,15 +151,16 @@ describe('MazeRenderingService', () => {
       const fadedPerspective = { scale: 0.4, offsetY: 100, brightness: 0.5 };
       const commands = MazeRenderingService.renderWall('left', 'wall', fadedPerspective, testConfig);
 
-      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
+      const wallCmd = commands.find(cmd => cmd.type === 'line');
       expect(wallCmd?.alpha).toBe(0.5);
     });
 
-    it('renders front wall at full width', () => {
+    it('renders front wall with 4 lines (wireframe rectangle)', () => {
       const commands = MazeRenderingService.renderWall('front', 'wall', perspective, testConfig);
 
-      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
-      expect(wallCmd?.width).toBeGreaterThan(300); // Should be near full width
+      // Should have 4 lines for rectangle outline
+      expect(commands.length).toBe(4);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
   });
 
@@ -191,9 +192,9 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
 
-      // Should have corridor lines + left wall
-      const hasWall = commands.some(cmd => cmd.type === 'fillRect');
-      expect(hasWall).toBe(true);
+      // Should have corridor lines (4) + left wall wireframe (4) = 8 lines
+      expect(commands.length).toBe(8);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
 
     it('renders front wall when facing wall', () => {
@@ -206,10 +207,9 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
 
-      // Front wall should be present
-      const wallCmd = commands.find(cmd => cmd.type === 'fillRect');
-      expect(wallCmd).toBeDefined();
-      expect(wallCmd!.width).toBeGreaterThan(300); // Front wall is wide
+      // Should have corridor lines (4) + front wall wireframe (4) = 8 lines
+      expect(commands.length).toBe(8);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
 
     it('renders door with darker color', () => {
@@ -278,6 +278,35 @@ describe('MazeRenderingService', () => {
       // All commands should have full brightness
       const hasFadedCommands = commands.some(cmd => cmd.alpha && cmd.alpha < 1.0);
       expect(hasFadedCommands).toBe(false);
+    });
+  });
+
+  describe('renderWall (wireframe)', () => {
+    it('generates wireframe lines instead of fillRect for walls', () => {
+      const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
+      const config = { width: 600, height: 600, tileDepth: 3 };
+
+      const commands = MazeRenderingService.renderWall('left', 'wall', perspective, config);
+
+      // Should generate 4 line commands (rectangle outline)
+      expect(commands.length).toBe(4);
+      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
+
+      // Should NOT contain any fillRect commands
+      expect(commands.some(cmd => cmd.type === 'fillRect')).toBe(false);
+    });
+
+    it('uses correct color and lineWidth for depth', () => {
+      const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
+      const config = { width: 600, height: 600, tileDepth: 3 };
+
+      const commands = MazeRenderingService.renderWall('front', 'wall', perspective, config);
+
+      // All lines should use green color
+      expect(commands.every(cmd => cmd.color === '#0f0')).toBe(true);
+
+      // All lines should have lineWidth of 2 (depth 1)
+      expect(commands.every(cmd => cmd.lineWidth === 2)).toBe(true);
     });
   });
 });
