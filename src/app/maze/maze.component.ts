@@ -318,7 +318,35 @@ export class MazeComponent implements OnInit {
   }
 
   handleFooterAction(action: string): void {
-    // Will be implemented in later tasks
+    switch (action) {
+      case 'forward':
+        this.moveForward();
+        break;
+      case 'back':
+        this.moveBackward();
+        break;
+      case 'left':
+        this.turnLeft();
+        break;
+      case 'right':
+        this.turnRight();
+        break;
+      case 'strafe_left':
+        this.strafeLeft();
+        break;
+      case 'strafe_right':
+        this.strafeRight();
+        break;
+      case 'kick':
+        this.kickDoor();
+        break;
+      case 'inspect':
+        this.inspectTile();
+        break;
+      case 'camp':
+        this.returnToCamp();
+        break;
+    }
   }
 
   private executeMovement(
