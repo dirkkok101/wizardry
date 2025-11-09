@@ -171,4 +171,68 @@ describe('DungeonService', () => {
       expect(tiles[2]).toMatchObject({ x: 10, y: 2 })
     })
   })
+
+  describe('transformToWorldCoords', () => {
+    it('transforms relative coords when facing NORTH', () => {
+      const position: Position = { x: 10, y: 10, level: 1, facing: 'NORTH' };
+
+      // Center ahead (0, 1)
+      expect(DungeonService.transformToWorldCoords(position, 0, 1)).toEqual({ x: 10, y: 9 });
+
+      // Left ahead (-1, 1)
+      expect(DungeonService.transformToWorldCoords(position, -1, 1)).toEqual({ x: 9, y: 9 });
+
+      // Right ahead (1, 1)
+      expect(DungeonService.transformToWorldCoords(position, 1, 1)).toEqual({ x: 11, y: 9 });
+    });
+
+    it('transforms relative coords when facing EAST', () => {
+      const position: Position = { x: 10, y: 10, level: 1, facing: 'EAST' };
+
+      // Center ahead (0, 1)
+      expect(DungeonService.transformToWorldCoords(position, 0, 1)).toEqual({ x: 11, y: 10 });
+
+      // Left ahead (-1, 1)
+      expect(DungeonService.transformToWorldCoords(position, -1, 1)).toEqual({ x: 11, y: 9 });
+
+      // Right ahead (1, 1)
+      expect(DungeonService.transformToWorldCoords(position, 1, 1)).toEqual({ x: 11, y: 11 });
+    });
+
+    it('transforms relative coords when facing SOUTH', () => {
+      const position: Position = { x: 10, y: 10, level: 1, facing: 'SOUTH' };
+
+      // Center ahead (0, 1)
+      expect(DungeonService.transformToWorldCoords(position, 0, 1)).toEqual({ x: 10, y: 11 });
+
+      // Left ahead (-1, 1)
+      expect(DungeonService.transformToWorldCoords(position, -1, 1)).toEqual({ x: 11, y: 11 });
+
+      // Right ahead (1, 1)
+      expect(DungeonService.transformToWorldCoords(position, 1, 1)).toEqual({ x: 9, y: 11 });
+    });
+
+    it('transforms relative coords when facing WEST', () => {
+      const position: Position = { x: 10, y: 10, level: 1, facing: 'WEST' };
+
+      // Center ahead (0, 1)
+      expect(DungeonService.transformToWorldCoords(position, 0, 1)).toEqual({ x: 9, y: 10 });
+
+      // Left ahead (-1, 1)
+      expect(DungeonService.transformToWorldCoords(position, -1, 1)).toEqual({ x: 9, y: 11 });
+
+      // Right ahead (1, 1)
+      expect(DungeonService.transformToWorldCoords(position, 1, 1)).toEqual({ x: 9, y: 9 });
+    });
+
+    it('handles edge wrapping at boundaries', () => {
+      const position: Position = { x: 0, y: 0, level: 1, facing: 'NORTH' };
+
+      // Left edge wraps to 19
+      expect(DungeonService.transformToWorldCoords(position, -1, 0)).toEqual({ x: 19, y: 0 });
+
+      // Up edge wraps to 19
+      expect(DungeonService.transformToWorldCoords(position, 0, 1)).toEqual({ x: 0, y: 19 });
+    });
+  });
 })

@@ -141,6 +141,51 @@ export const DungeonService = {
 
     return tiles
   },
+
+  /**
+   * Transform relative coordinates (from player perspective) to world coordinates
+   * @param position - Player position with facing direction
+   * @param relativeX - Horizontal offset (-1 = left, 0 = center, 1 = right)
+   * @param relativeY - Forward offset (1 = one tile ahead, 2 = two tiles ahead, etc.)
+   * @returns World coordinates with edge wrapping
+   */
+  transformToWorldCoords(
+    position: Position,
+    relativeX: number,
+    relativeY: number
+  ): { x: number; y: number } {
+    let worldX = position.x;
+    let worldY = position.y;
+
+    switch (position.facing) {
+      case 'NORTH':
+        // North: forward = -Y, left = -X
+        worldX = position.x + relativeX;
+        worldY = position.y - relativeY;
+        break;
+      case 'EAST':
+        // East: forward = +X, left = -Y
+        worldX = position.x + relativeY;
+        worldY = position.y + relativeX;
+        break;
+      case 'SOUTH':
+        // South: forward = +Y, left = +X
+        worldX = position.x - relativeX;
+        worldY = position.y + relativeY;
+        break;
+      case 'WEST':
+        // West: forward = -X, left = +Y
+        worldX = position.x - relativeY;
+        worldY = position.y - relativeX;
+        break;
+    }
+
+    // Handle edge wrapping (maps are 20×20 with wrapping enabled)
+    worldX = ((worldX % 20) + 20) % 20;
+    worldY = ((worldY % 20) + 20) % 20;
+
+    return { x: worldX, y: worldY };
+  },
 }
 
 /**
