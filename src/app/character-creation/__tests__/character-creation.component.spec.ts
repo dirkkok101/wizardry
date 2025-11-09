@@ -98,6 +98,108 @@ describe('CharacterCreationComponent', () => {
         canIdentifyItems: false,
         canDispelUndead: false,
         canCriticalHit: false
+      }],
+      ['priest', {
+        id: 'priest',
+        name: 'Priest',
+        enum: CharacterClass.PRIEST,
+        description: 'Divine spellcaster',
+        requirements: { pie: 11 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d8',
+        spellAccess: { type: 'priest', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [2000],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: true,
+        canCriticalHit: false
+      }],
+      ['thief', {
+        id: 'thief',
+        name: 'Thief',
+        enum: CharacterClass.THIEF,
+        description: 'Stealthy specialist',
+        requirements: { agi: 11 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d6',
+        spellAccess: null,
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [1500],
+        specialAbilities: [],
+        canIdentifyItems: true,
+        canDispelUndead: false,
+        canCriticalHit: true
+      }],
+      ['bishop', {
+        id: 'bishop',
+        name: 'Bishop',
+        enum: CharacterClass.BISHOP,
+        description: 'Master of both magic types',
+        requirements: { int: 12, pie: 12 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d6',
+        spellAccess: { type: 'both', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [3000],
+        specialAbilities: [],
+        canIdentifyItems: true,
+        canDispelUndead: true,
+        canCriticalHit: false
+      }],
+      ['samurai', {
+        id: 'samurai',
+        name: 'Samurai',
+        enum: CharacterClass.SAMURAI,
+        description: 'Fighter-mage hybrid',
+        requirements: { str: 15, int: 11, pie: 10, vit: 14, agi: 10 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d8',
+        spellAccess: { type: 'mage', levels: 6 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [3500],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: false,
+        canCriticalHit: true
+      }],
+      ['lord', {
+        id: 'lord',
+        name: 'Lord',
+        enum: CharacterClass.LORD,
+        description: 'Fighter-priest hybrid',
+        requirements: { str: 15, int: 12, pie: 12, vit: 15, agi: 14, luc: 15 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d10',
+        spellAccess: { type: 'priest', levels: 6 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [4000],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: true,
+        canCriticalHit: true
+      }],
+      ['ninja', {
+        id: 'ninja',
+        name: 'Ninja',
+        enum: CharacterClass.NINJA,
+        description: 'Elite warrior-thief',
+        requirements: { str: 17, int: 17, pie: 17, vit: 17, agi: 17, luc: 17 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d8',
+        spellAccess: null,
+        attacksPerLevel: { '1-4': 2 },
+        xpTable: [5000],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: false,
+        canCriticalHit: true
       }]
     ]);
 
@@ -327,6 +429,89 @@ describe('CharacterCreationComponent', () => {
           const items = component.footerMenuItems();
           expect(items.find(i => i.id === 'create')!.enabled).toBe(true);
         });
+      });
+    });
+
+    describe('unmetRequirements computed signal', () => {
+      it('should return empty array for eligible classes', async () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        await component.advanceToRollAllocateClass();
+
+        // Allocate points to make Fighter eligible (STR 11+, Human base 8)
+        component.rolledStats.set({
+          strength: 3, intelligence: 0, piety: 0,
+          vitality: 0, agility: 0, luck: 0, bonusPoints: 0
+        });
+
+        fixture.detectChanges();
+
+        const unmet = component.unmetRequirements().get(CharacterClass.FIGHTER);
+        expect(unmet).toEqual([]);
+      });
+
+      it('should show single unmet requirement', async () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        await component.advanceToRollAllocateClass();
+
+        // Don't allocate - Fighter needs STR 11+, Human base is 8
+        component.rolledStats.set({
+          strength: 0, intelligence: 0, piety: 0,
+          vitality: 0, agility: 0, luck: 0, bonusPoints: 20
+        });
+
+        fixture.detectChanges();
+
+        const unmet = component.unmetRequirements().get(CharacterClass.FIGHTER);
+        expect(unmet).toEqual(['STR 11+']);
+      });
+
+      it('should show multiple unmet requirements for advanced classes', async () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        await component.advanceToRollAllocateClass();
+
+        component.rolledStats.set({
+          strength: 0, intelligence: 0, piety: 0,
+          vitality: 0, agility: 0, luck: 0, bonusPoints: 20
+        });
+
+        fixture.detectChanges();
+
+        const unmet = component.unmetRequirements().get(CharacterClass.BISHOP);
+        expect(unmet).toContain('INT 12+');
+        expect(unmet).toContain('PIE 12+');
+        expect(unmet?.length).toBe(2);
+      });
+
+      it('should update reactively when stats change', async () => {
+        component.selectRace(Race.HUMAN);
+        component.selectAlignment(Alignment.GOOD);
+        await component.advanceToRollAllocateClass();
+
+        component.rolledStats.set({
+          strength: 0, intelligence: 0, piety: 0,
+          vitality: 0, agility: 0, luck: 0, bonusPoints: 20
+        });
+
+        fixture.detectChanges();
+        let unmet = component.unmetRequirements().get(CharacterClass.FIGHTER);
+        expect(unmet).toEqual(['STR 11+']);
+
+        // Allocate strength to meet requirement
+        component.allocatePoint('strength');
+        component.allocatePoint('strength');
+        component.allocatePoint('strength');
+
+        fixture.detectChanges();
+        unmet = component.unmetRequirements().get(CharacterClass.FIGHTER);
+        expect(unmet).toEqual([]);
+      });
+
+      it('should return empty map when stats not available', () => {
+        const unmet = component.unmetRequirements();
+        expect(unmet.size).toBe(0);
       });
     });
   });

@@ -180,6 +180,39 @@ export class CharacterCreationComponent implements OnInit {
     return stats?.bonusPoints === 0 && selectedClass !== null;
   });
 
+  /**
+   * Compute unmet requirements for each class based on current stats.
+   * Returns a map of class ID to array of unmet requirement strings.
+   * Only includes requirements that are NOT met (for display on ineligible buttons).
+   * Format: ['STR 11+', 'INT 12+']
+   */
+  readonly unmetRequirements = computed(() => {
+    const finalStats = this.finalStats();
+    if (!finalStats) return new Map<CharacterClass, string[]>();
+
+    const result = new Map<CharacterClass, string[]>();
+
+    for (const classOption of this.allClasses) {
+      const classData = ClassService.getClassData(classOption.id);
+      const requirements = classData?.requirements || {};
+      const unmet: string[] = [];
+
+      // Check each requirement
+      for (const [stat, minimum] of Object.entries(requirements)) {
+        const statKey = this.mapStatToFinalStats(stat); // 'str' -> 'strength'
+        const currentValue = finalStats[statKey];
+
+        if (currentValue < minimum) {
+          unmet.push(`${stat.toUpperCase()} ${minimum}+`);
+        }
+      }
+
+      result.set(classOption.id, unmet);
+    }
+
+    return result;
+  });
+
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = [];
 
