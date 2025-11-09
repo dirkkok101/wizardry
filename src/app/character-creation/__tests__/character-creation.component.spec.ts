@@ -1312,6 +1312,7 @@ describe('CharacterCreationComponent', () => {
 
         expect(component.isClassEligible(CharacterClass.FIGHTER)).toBe(true);
         component.selectClass(CharacterClass.FIGHTER);
+        fixture.detectChanges();
 
         component.handleFooterAction('continue');
 
