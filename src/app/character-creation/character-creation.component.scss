@@ -245,6 +245,12 @@
   &.classes {
     // 4 columns for 8 classes
     grid-template-columns: repeat(4, 1fr);
+
+    button {
+      min-height: 3rem; // Increased from default for requirements
+      height: auto; // Allow buttons to grow
+      align-items: flex-start; // Top-align content
+    }
   }
 
   button {
@@ -288,6 +294,43 @@
       transform: translateY(0);
     }
   }
+}
+
+// Class button content layout
+.class-button-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  width: 100%;
+}
+
+.class-name {
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+// Requirements list styling
+.requirements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--warning-color, #ff9800);
+  margin-top: 0.25rem;
+}
+
+.need-label {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.requirement {
+  padding-left: 0.5rem;
+  opacity: 0.9;
 }
 
 .roll-button {
