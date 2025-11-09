@@ -306,10 +306,6 @@ export function generateView(
 
   const commands: CanvasCommand[] = [];
 
-  // Draw horizontal tunnel frames first (creates the 3D tunnel cross-sections)
-  const maxDepth = Math.max(...tiles.map(t => t.relativeDepth));
-  commands.push(...renderTunnelFrames(config, maxDepth));
-
   // Sort tiles by depth (far to near for correct z-ordering)
   const sortedTiles = [...tiles].sort((a, b) => b.relativeDepth - a.relativeDepth);
 

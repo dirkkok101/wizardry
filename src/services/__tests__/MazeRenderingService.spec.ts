@@ -248,14 +248,14 @@ describe('MazeRenderingService', () => {
 
     it('renders 3 tiles with correct perspective', () => {
       const tiles = [
-        createTestTile(10, 9, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 1),
-        createTestTile(10, 8, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 2),
-        createTestTile(10, 7, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 3)
+        createTestTile(10, 9, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 1),
+        createTestTile(10, 8, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 2),
+        createTestTile(10, 7, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 3)
       ];
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
 
-      // Should have commands (3 tiles × corridor lines)
+      // Should have commands (3 tiles × wall lines)
       expect(commands.length).toBeGreaterThan(0);
     });
 
@@ -268,10 +268,8 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
 
-      // Skip first 16 commands (4 diagonal lines + 3 tunnel frames × 4 lines = 16)
-      // Then check that far tile walls (lower brightness) come before near tile walls
+      // Check that far tile walls (lower brightness) come before near tile walls
       const wallBrightnesses = commands
-        .slice(16) // Skip tunnel frames
         .filter(cmd => cmd.alpha !== undefined)
         .map(cmd => cmd.alpha);
 
@@ -283,13 +281,13 @@ describe('MazeRenderingService', () => {
 
     it('handles single tile (light radius 1)', () => {
       const tiles = [
-        createTestTile(10, 9, { north: 'open', east: 'open', south: 'open', west: 'open' }, 0, 1)
+        createTestTile(10, 9, { north: 'wall', east: 'open', south: 'open', west: 'open' }, 0, 1)
       ];
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
 
       expect(commands.length).toBeGreaterThan(0);
-      // All commands should have full brightness
+      // All commands should have full brightness for depth 1
       const hasFadedCommands = commands.some(cmd => cmd.alpha && cmd.alpha < 1.0);
       expect(hasFadedCommands).toBe(false);
     });
@@ -312,8 +310,8 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
 
-      // Should render tunnel frames + walls from 9 tiles
-      expect(commands.length).toBeGreaterThan(16); // 16 tunnel frame lines + wall lines
+      // Should render walls from 9 tiles (each wall = 4 lines, 9 tiles with walls)
+      expect(commands.length).toBeGreaterThan(0);
     });
   });
 
