@@ -102,6 +102,108 @@ describe('CharacterCreationComponent - Integration', () => {
         canIdentifyItems: false,
         canDispelUndead: false,
         canCriticalHit: false
+      }],
+      ['priest', {
+        id: 'priest',
+        name: 'Priest',
+        enum: CharacterClass.PRIEST,
+        description: 'Divine spellcaster',
+        requirements: { pie: 11 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d8',
+        spellAccess: { type: 'priest', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [2000],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: true,
+        canCriticalHit: false
+      }],
+      ['thief', {
+        id: 'thief',
+        name: 'Thief',
+        enum: CharacterClass.THIEF,
+        description: 'Stealthy rogue',
+        requirements: { agi: 11 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d6',
+        spellAccess: null,
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [1500],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: false,
+        canCriticalHit: true
+      }],
+      ['bishop', {
+        id: 'bishop',
+        name: 'Bishop',
+        enum: CharacterClass.BISHOP,
+        description: 'Master of both divine and arcane magic',
+        requirements: { int: 12, pie: 12 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d6',
+        spellAccess: { type: 'both', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [3000],
+        specialAbilities: [],
+        canIdentifyItems: true,
+        canDispelUndead: true,
+        canCriticalHit: false
+      }],
+      ['samurai', {
+        id: 'samurai',
+        name: 'Samurai',
+        enum: CharacterClass.SAMURAI,
+        description: 'Elite warrior with mage spells',
+        requirements: { str: 15, int: 11, pie: 10, vit: 14, agi: 10 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d10',
+        spellAccess: { type: 'mage', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [3500],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: false,
+        canCriticalHit: true
+      }],
+      ['lord', {
+        id: 'lord',
+        name: 'Lord',
+        enum: CharacterClass.LORD,
+        description: 'Noble warrior with priest spells',
+        requirements: { str: 15, int: 12, pie: 12, vit: 15, agi: 14, luc: 15 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d10',
+        spellAccess: { type: 'priest', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [4000],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: true,
+        canCriticalHit: true
+      }],
+      ['ninja', {
+        id: 'ninja',
+        name: 'Ninja',
+        enum: CharacterClass.NINJA,
+        description: 'Elite thief with mage spells',
+        requirements: { str: 17, int: 17, pie: 17, vit: 17, agi: 17, luc: 17 },
+        alignmentRestrictions: [],
+        equipmentRestrictions: { weapons: [], armor: [], shields: [], helmets: [] },
+        hitDice: '1d8',
+        spellAccess: { type: 'mage', levels: 7 },
+        attacksPerLevel: { '1-4': 1 },
+        xpTable: [5000],
+        specialAbilities: [],
+        canIdentifyItems: false,
+        canDispelUndead: false,
+        canCriticalHit: true
       }]
     ]);
 
@@ -412,5 +514,36 @@ describe('CharacterCreationComponent - Integration', () => {
     expect(component.selectedClass()).toBeNull();
     expect(component.isRolling()).toBe(false);
     expect(component.isLocked()).toBe(false);
+  });
+
+  it('should display requirements on ineligible class buttons', async () => {
+    component.selectRace('HUMAN' as Race);
+    component.advanceToAlignment();
+    component.selectAlignment(Alignment.GOOD);
+    await component.advanceToRollAllocateClass();
+
+    // Don't allocate points - most classes will be ineligible
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement;
+
+    // Verify requirements structure exists for ineligible classes
+    const requirementLists = compiled.querySelectorAll('.requirements-list');
+    expect(requirementLists.length).toBeGreaterThan(0);
+
+    // Verify "Need:" label is present
+    const needLabels = compiled.querySelectorAll('.need-label');
+    expect(needLabels.length).toBeGreaterThan(0);
+
+    // Verify individual requirements are displayed
+    const requirements = compiled.querySelectorAll('.requirement');
+    expect(requirements.length).toBeGreaterThan(0);
+
+    // Verify at least one requirement text includes a stat and minimum
+    const requirementTexts = Array.from(requirements).map(el => el.textContent);
+    const hasValidFormat = requirementTexts.some(text =>
+      text && /[A-Z]{3}\s+\d+\+/.test(text)
+    );
+    expect(hasValidFormat).toBe(true);
   });
 });

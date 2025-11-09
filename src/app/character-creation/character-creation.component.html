@@ -88,10 +88,22 @@
                     [disabled]="!isClassEligible(classOption.id)"
                     (click)="selectClass(classOption.id)"
                   >
-                    <span class="shortcut">{{ classOption.shortcut }}</span>: {{ classOption.name }}
-                    @if (!isClassEligible(classOption.id)) {
-                      <span class="ineligible-marker">✗</span>
-                    }
+                    <div class="class-button-content">
+                      <div class="class-name">
+                        <span class="shortcut">{{ classOption.shortcut }}</span>: {{ classOption.name }}
+                        @if (!isClassEligible(classOption.id)) {
+                          <span class="ineligible-marker">✗</span>
+                        }
+                      </div>
+                      @if (unmetRequirements().get(classOption.id)?.length ?? 0 > 0) {
+                        <div class="requirements-list">
+                          <span class="need-label">Need:</span>
+                          @for (req of unmetRequirements().get(classOption.id); track req) {
+                            <span class="requirement">{{ req }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
                   </button>
                 }
               </div>

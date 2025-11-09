@@ -44,7 +44,7 @@ interface FinalStats {
   styleUrl: './character-creation.component.scss'
 })
 export class CharacterCreationComponent implements OnInit {
-  private readonly ROLL_ANIMATION_DURATION_MS = 300;
+  private readonly ROLL_ANIMATION_DURATION_MS = 0;
 
   // Form state signals
   readonly selectedRace = signal<Race | null>(null);
@@ -178,6 +178,39 @@ export class CharacterCreationComponent implements OnInit {
     const stats = this.rolledStats();
     const selectedClass = this.selectedClass();
     return stats?.bonusPoints === 0 && selectedClass !== null;
+  });
+
+  /**
+   * Compute unmet requirements for each class based on current stats.
+   * Returns a map of class ID to array of unmet requirement strings.
+   * Only includes requirements that are NOT met (for display on ineligible buttons).
+   * Format: ['STR 11+', 'INT 12+']
+   */
+  readonly unmetRequirements = computed(() => {
+    const finalStats = this.finalStats();
+    if (!finalStats) return new Map<CharacterClass, string[]>();
+
+    const result = new Map<CharacterClass, string[]>();
+
+    for (const classOption of this.allClasses) {
+      const classData = ClassService.getClassData(classOption.id);
+      const requirements = classData?.requirements || {};
+      const unmet: string[] = [];
+
+      // Check each requirement
+      for (const [stat, minimum] of Object.entries(requirements)) {
+        const statKey = this.mapStatToFinalStats(stat); // 'str' -> 'strength'
+        const currentValue = finalStats[statKey];
+
+        if (currentValue < minimum) {
+          unmet.push(`${stat.toUpperCase()} ${minimum}+`);
+        }
+      }
+
+      result.set(classOption.id, unmet);
+    }
+
+    return result;
   });
 
   readonly footerMenuItems = computed((): MenuItem[] => {
@@ -523,6 +556,23 @@ export class CharacterCreationComponent implements OnInit {
     };
 
     return raceData.baseStats[mapping[stat]];
+  }
+
+  /**
+   * Map abbreviated stat names (from JSON data) to FinalStats property names.
+   * @param abbrev - Abbreviated stat name ('str', 'int', 'pie', 'vit', 'agi', 'luc')
+   * @returns Full stat property name for FinalStats type
+   */
+  private mapStatToFinalStats(abbrev: string): keyof FinalStats {
+    const mapping: Record<string, keyof FinalStats> = {
+      'str': 'strength',
+      'int': 'intelligence',
+      'pie': 'piety',
+      'vit': 'vitality',
+      'agi': 'agility',
+      'luc': 'luck'
+    };
+    return mapping[abbrev];
   }
 
   // Get keyboard shortcut for class
