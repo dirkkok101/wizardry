@@ -299,6 +299,7 @@ describe('CharacterCreationComponent', () => {
 
           // Select class
           component.selectedClass.set(CharacterClass.FIGHTER);
+          fixture.detectChanges();
 
           const items = component.footerMenuItems();
           expect(items.find(i => i.id === 'continue')!.enabled).toBe(true);
