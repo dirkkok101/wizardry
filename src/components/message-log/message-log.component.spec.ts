@@ -20,9 +20,10 @@ describe('MessageLogComponent', () => {
 
     const messageElements = fixture.nativeElement.querySelectorAll('.message');
     expect(messageElements.length).toBe(3);
-    expect(messageElements[0].textContent).toBe('First');
+    // Messages are displayed newest first (reversed)
+    expect(messageElements[0].textContent).toBe('Third');
     expect(messageElements[1].textContent).toBe('Second');
-    expect(messageElements[2].textContent).toBe('Third');
+    expect(messageElements[2].textContent).toBe('First');
   });
 
   it('shows empty state when no messages', () => {

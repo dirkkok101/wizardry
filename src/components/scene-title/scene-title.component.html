@@ -1,6 +1,9 @@
 <header class="scene-header">
   <h1>{{ title() }}</h1>
-  @if (partyGold() !== null) {
-    <div class="party-gold">PARTY GOLD: {{ partyGold() }} GP</div>
-  }
+  <div class="scene-header-content">
+    <ng-content></ng-content>
+    @if (partyGold() !== null) {
+      <div class="party-gold">PARTY GOLD: {{ partyGold() }} GP</div>
+    }
+  </div>
 </header>

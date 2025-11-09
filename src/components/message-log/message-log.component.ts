@@ -1,4 +1,4 @@
-import { Component, input, ViewChild, ElementRef, afterNextRender } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -11,18 +11,8 @@ import { CommonModule } from '@angular/common';
 export class MessageLogComponent {
   readonly messages = input.required<string[]>();
 
-  @ViewChild('logContent') logContent?: ElementRef<HTMLDivElement>;
-
-  constructor() {
-    afterNextRender(() => {
-      this.scrollToBottom();
-    });
-  }
-
-  private scrollToBottom(): void {
-    if (this.logContent) {
-      const element = this.logContent.nativeElement;
-      element.scrollTop = element.scrollHeight;
-    }
-  }
+  // Show newest messages first (reversed order)
+  readonly reversedMessages = computed(() => {
+    return [...this.messages()].reverse();
+  });
 }

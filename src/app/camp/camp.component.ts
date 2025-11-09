@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
+import { NavigationService } from '../../services/NavigationService';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { CharacterCardComponent } from '../../components/character-card/character-card.component';
@@ -170,6 +171,12 @@ export class CampComponent implements OnInit {
       setTimeout(() => this.errorMessage.set(null), 3000);
       return;
     }
+
+    // Initialize dungeon state before entering maze
+    const state = this.gameState.state();
+    const newState = NavigationService.enterDungeon(state, 1);
+    this.gameState.updateState(() => newState);
+
     this.router.navigate(['/maze']);
   }
 }

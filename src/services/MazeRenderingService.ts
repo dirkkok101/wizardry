@@ -1,4 +1,4 @@
-import { TileData, Position, Direction } from '../types/Dungeon';
+import { TileData, Position, Direction, SpatialTileData } from '../types/Dungeon';
 import { CanvasCommand, ViewportConfig, PerspectiveScale, RelativeWalls } from '../types/rendering.types';
 
 /**
@@ -18,6 +18,58 @@ export function calculatePerspective(depth: number): PerspectiveScale {
     offsetY: offsets[index] ?? 100,
     brightness: brightness[index] ?? 0.5
   };
+}
+
+/**
+ * Get wireframe color based on depth (distance from player)
+ * @param depth - Tile depth (1 = near, 2 = mid, 3 = far)
+ * @returns Hex color string
+ */
+export function getColorForDepth(depth: number): string {
+  const colors = ['#0f0', '#0c0', '#090'];
+  return colors[depth - 1] ?? '#060';
+}
+
+/**
+ * Get line width based on depth (thinner lines at distance)
+ * @param depth - Tile depth (1 = near, 2 = mid, 3 = far)
+ * @returns Line width in pixels
+ */
+export function getLineWidthForDepth(depth: number): number {
+  const widths = [2, 1.5, 1];
+  return widths[depth - 1] ?? 1;
+}
+
+/**
+ * Generate 4 line commands to draw a rectangle outline (wireframe)
+ * @param x - Top-left X coordinate
+ * @param y - Top-left Y coordinate
+ * @param width - Rectangle width
+ * @param height - Rectangle height
+ * @param color - Line color
+ * @param lineWidth - Line thickness
+ * @param alpha - Opacity (0-1)
+ * @returns Array of 4 line commands (top, right, bottom, left)
+ */
+export function generateRectangleOutline(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: string,
+  lineWidth: number,
+  alpha: number
+): CanvasCommand[] {
+  return [
+    // Top edge
+    { type: 'line', x, y, x2: x + width, y2: y, color, lineWidth, alpha },
+    // Right edge
+    { type: 'line', x: x + width, y, x2: x + width, y2: y + height, color, lineWidth, alpha },
+    // Bottom edge
+    { type: 'line', x: x + width, y: y + height, x2: x, y2: y + height, color, lineWidth, alpha },
+    // Left edge
+    { type: 'line', x, y: y + height, x2: x, y2: y, color, lineWidth, alpha }
+  ];
 }
 
 /**
@@ -48,86 +100,83 @@ export function getRelativeWalls(
 }
 
 /**
- * Render corridor walls (perspective lines creating depth)
- * @param perspective - Perspective scale parameters
+ * Draw perspective grid for authentic Wizardry wireframe
+ * Creates converging lines and horizontal cross-sections
  * @param config - Viewport configuration
- * @returns Array of line drawing commands
+ * @param tileDepth - How many tiles deep to render (1-3)
+ * @returns Array of line commands creating 3D tunnel perspective
  */
-export function renderCorridor(
-  perspective: PerspectiveScale,
-  config: ViewportConfig
-): CanvasCommand[] {
+export function renderTunnelFrames(config: ViewportConfig, tileDepth: number): CanvasCommand[] {
   const commands: CanvasCommand[] = [];
   const centerX = config.width / 2;
   const centerY = config.height / 2;
 
-  const wallOffset = 200 * perspective.scale;  // Width of corridor
-  const depthY = centerY + perspective.offsetY;
+  // Viewport edges (outermost frame)
+  const viewportWidth = 450;
+  const viewportHeight = 200;  // Reduced height for more authentic proportions
 
-  // Left wall perspective line (top)
-  commands.push({
-    type: 'line',
-    x: centerX - wallOffset,
-    y: depthY - 100 * perspective.scale,
-    x2: centerX - wallOffset * 0.7,
-    y2: depthY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: perspective.brightness
-  });
+  const outerLeft = centerX - viewportWidth / 2;
+  const outerRight = centerX + viewportWidth / 2;
+  const outerTop = centerY - viewportHeight / 2;
+  const outerBottom = centerY + viewportHeight / 2;
 
-  // Left wall perspective line (bottom)
-  commands.push({
-    type: 'line',
-    x: centerX - wallOffset,
-    y: depthY + 100 * perspective.scale,
-    x2: centerX - wallOffset * 0.7,
-    y2: depthY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: perspective.brightness
-  });
+  // Draw 4 diagonal perspective lines from viewport edges to vanishing point
+  // These create the tunnel edges converging toward center
+  commands.push(
+    // Top-left to center
+    { type: 'line', x: outerLeft, y: outerTop, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 },
+    // Top-right to center
+    { type: 'line', x: outerRight, y: outerTop, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 },
+    // Bottom-left to center
+    { type: 'line', x: outerLeft, y: outerBottom, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 },
+    // Bottom-right to center
+    { type: 'line', x: outerRight, y: outerBottom, x2: centerX, y2: centerY,
+      color: '#0f0', lineWidth: 2, alpha: 1.0 }
+  );
 
-  // Right wall perspective line (top)
-  commands.push({
-    type: 'line',
-    x: centerX + wallOffset,
-    y: depthY - 100 * perspective.scale,
-    x2: centerX + wallOffset * 0.7,
-    y2: depthY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: perspective.brightness
-  });
+  // Draw horizontal cross-section rectangles at each depth
+  for (let depth = 1; depth <= tileDepth; depth++) {
+    const perspective = calculatePerspective(depth);
+    const color = getColorForDepth(depth);
+    const lineWidth = getLineWidthForDepth(depth);
 
-  // Right wall perspective line (bottom)
-  commands.push({
-    type: 'line',
-    x: centerX + wallOffset,
-    y: depthY + 100 * perspective.scale,
-    x2: centerX + wallOffset * 0.7,
-    y2: depthY,
-    color: '#0f0',
-    lineWidth: 2,
-    alpha: perspective.brightness
-  });
+    // Calculate rectangle size - much narrower height for authentic look
+    const rectWidth = viewportWidth * perspective.scale;
+    const rectHeight = viewportHeight * perspective.scale;
+
+    const x = centerX - rectWidth / 2;
+    const y = centerY - rectHeight / 2;
+
+    // Draw horizontal rectangle outline for this depth
+    commands.push(...generateRectangleOutline(
+      x, y, rectWidth, rectHeight,
+      color, lineWidth, perspective.brightness
+    ));
+  }
 
   return commands;
 }
 
 /**
- * Render a wall on specified side
+ * Render a wall on specified side using wireframe lines
  * @param side - Which side (left, right, front)
  * @param wallType - Type of wall
  * @param perspective - Perspective scale parameters
  * @param config - Viewport configuration
- * @returns Array of drawing commands for the wall
+ * @param depth - Distance from player (1-3)
+ * @param relativeX - Column offset (-1, 0, 1)
+ * @returns Array of line drawing commands for wireframe wall
  */
 export function renderWall(
   side: 'left' | 'right' | 'front',
   wallType: 'open' | 'wall' | 'door' | 'secret' | 'locked_door',
   perspective: PerspectiveScale,
-  config: ViewportConfig
+  config: ViewportConfig,
+  depth: number = 1,
+  relativeX: number = 0
 ): CanvasCommand[] {
   // Secret walls are invisible
   if (wallType === 'secret' || wallType === 'open') {
@@ -139,45 +188,55 @@ export function renderWall(
   const centerY = config.height / 2;
 
   // Door uses darker green, locked door uses red
-  const color = wallType === 'locked_door' ? '#800' : wallType === 'door' ? '#080' : '#0f0';
+  const baseColor = wallType === 'locked_door' ? '#800' :
+                    wallType === 'door' ? '#080' :
+                    getColorForDepth(depth);
+
+  const lineWidth = getLineWidthForDepth(depth);
 
   const wallOffset = 200 * perspective.scale;
   const wallHeight = 200 * perspective.scale;
   const depthY = centerY + perspective.offsetY;
 
+  // Calculate horizontal offset based on column position
+  // Left column (relativeX=-1): -1 × 200 = -200px left
+  // Center column (relativeX=0): 0 × 200 = 0px (no offset)
+  // Right column (relativeX=1): 1 × 200 = +200px right
+  const columnOffset = relativeX * wallOffset;
+
   if (side === 'left') {
-    // Left wall
-    commands.push({
-      type: 'fillRect',
-      x: centerX - wallOffset - 50,
-      y: depthY - wallHeight / 2,
-      width: 50,
-      height: wallHeight,
-      color,
-      alpha: perspective.brightness
-    });
+    // Left wall wireframe
+    commands.push(...generateRectangleOutline(
+      centerX - wallOffset - 50 + columnOffset,
+      depthY - wallHeight / 2,
+      50,
+      wallHeight,
+      baseColor,
+      lineWidth,
+      perspective.brightness
+    ));
   } else if (side === 'right') {
-    // Right wall
-    commands.push({
-      type: 'fillRect',
-      x: centerX + wallOffset,
-      y: depthY - wallHeight / 2,
-      width: 50,
-      height: wallHeight,
-      color,
-      alpha: perspective.brightness
-    });
+    // Right wall wireframe
+    commands.push(...generateRectangleOutline(
+      centerX + wallOffset + columnOffset,
+      depthY - wallHeight / 2,
+      50,
+      wallHeight,
+      baseColor,
+      lineWidth,
+      perspective.brightness
+    ));
   } else if (side === 'front') {
-    // Front wall (dead end) - full width
-    commands.push({
-      type: 'fillRect',
-      x: centerX - wallOffset,
-      y: depthY - wallHeight / 2,
-      width: wallOffset * 2,
-      height: wallHeight,
-      color,
-      alpha: perspective.brightness
-    });
+    // Front wall (dead end) - full width wireframe
+    commands.push(...generateRectangleOutline(
+      centerX - wallOffset + columnOffset,
+      depthY - wallHeight / 2,
+      wallOffset * 2,
+      wallHeight,
+      baseColor,
+      lineWidth,
+      perspective.brightness
+    ));
   }
 
   return commands;
@@ -185,14 +244,14 @@ export function renderWall(
 
 /**
  * Render a single tile with all its walls
- * @param tile - Tile data with walls
+ * @param tile - Tile data with walls and relative positioning
  * @param facing - Direction player is facing
  * @param perspective - Perspective scale parameters
  * @param config - Viewport configuration
  * @returns Array of drawing commands for the tile
  */
 export function renderTile(
-  tile: TileData,
+  tile: SpatialTileData,
   facing: Direction,
   perspective: PerspectiveScale,
   config: ViewportConfig
@@ -202,18 +261,31 @@ export function renderTile(
   // Get walls relative to player facing
   const walls = getRelativeWalls(tile.walls, facing);
 
-  // Always render corridor first (perspective lines)
-  commands.push(...renderCorridor(perspective, config));
+  // Determine which walls to render based on column position
+  const relativeX = tile.relativeX;
+  const depth = tile.relativeDepth;
 
-  // Render walls based on their type
-  if (walls.left !== 'open') {
-    commands.push(...renderWall('left', walls.left, perspective, config));
-  }
-  if (walls.right !== 'open') {
-    commands.push(...renderWall('right', walls.right, perspective, config));
-  }
-  if (walls.front !== 'open') {
-    commands.push(...renderWall('front', walls.front, perspective, config));
+  if (relativeX === -1) {
+    // Left column: only render right wall (forms left corridor edge)
+    if (walls.right !== 'open') {
+      commands.push(...renderWall('left', walls.right, perspective, config, depth, relativeX));
+    }
+  } else if (relativeX === 0) {
+    // Center column: render all visible walls
+    if (walls.front !== 'open') {
+      commands.push(...renderWall('front', walls.front, perspective, config, depth, relativeX));
+    }
+    if (walls.left !== 'open') {
+      commands.push(...renderWall('left', walls.left, perspective, config, depth, relativeX));
+    }
+    if (walls.right !== 'open') {
+      commands.push(...renderWall('right', walls.right, perspective, config, depth, relativeX));
+    }
+  } else if (relativeX === 1) {
+    // Right column: only render left wall (forms right corridor edge)
+    if (walls.left !== 'open') {
+      commands.push(...renderWall('right', walls.left, perspective, config, depth, relativeX));
+    }
   }
 
   return commands;
@@ -221,13 +293,13 @@ export function renderTile(
 
 /**
  * Generate complete view of maze from player perspective
- * @param tiles - Array of visible tiles (near to far)
+ * @param tiles - Array of visible tiles (near to far) with spatial positioning
  * @param facing - Direction player is facing
  * @param config - Viewport configuration
  * @returns Complete array of drawing commands
  */
 export function generateView(
-  tiles: TileData[],
+  tiles: SpatialTileData[],
   facing: Direction,
   config: ViewportConfig
 ): CanvasCommand[] {
@@ -237,10 +309,12 @@ export function generateView(
 
   const commands: CanvasCommand[] = [];
 
+  // Sort tiles by depth (far to near for correct z-ordering)
+  const sortedTiles = [...tiles].sort((a, b) => b.relativeDepth - a.relativeDepth);
+
   // Render tiles from far to near for correct z-ordering
-  for (let i = tiles.length - 1; i >= 0; i--) {
-    const tile = tiles[i];
-    const depth = i + 1;  // Convert 0-based index to 1-based depth
+  for (const tile of sortedTiles) {
+    const depth = tile.relativeDepth;
     const perspective = calculatePerspective(depth);
 
     commands.push(...renderTile(tile, facing, perspective, config));
@@ -252,7 +326,10 @@ export function generateView(
 export const MazeRenderingService = {
   calculatePerspective,
   getRelativeWalls,
-  renderCorridor,
+  getColorForDepth,
+  getLineWidthForDepth,
+  generateRectangleOutline,
+  renderTunnelFrames,
   renderWall,
   renderTile,
   generateView

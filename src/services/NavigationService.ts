@@ -11,6 +11,26 @@ export const NavigationService = {
   },
 
   /**
+   * Initialize dungeon state when entering from camp
+   * Sets default position and enables torch light
+   */
+  enterDungeon(state: GameState, level: number): GameState {
+    return {
+      ...state,
+      dungeon: {
+        currentLevel: level,
+        position: { x: 0, y: 0, facing: 'NORTH' },  // Default start position
+        lightRadius: 3,  // Default torch light
+        lightActive: true,
+        teleportCount: 0,
+        visitedTiles: new Set<string>(),
+        defeatedEncounters: [],
+        unlockedDoors: new Set<string>()
+      }
+    }
+  },
+
+  /**
    * Move party forward one tile (immutable state update)
    */
   moveForward(state: GameState): GameState {

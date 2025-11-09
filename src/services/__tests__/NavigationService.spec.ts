@@ -133,6 +133,67 @@ describe('NavigationService', () => {
     })
   })
 
+  describe('enterDungeon', () => {
+    it('initializes dungeon state with default position {x: 0, y: 0, facing: NORTH}', () => {
+      const state = createTestGameStateHelper()
+
+      const result = NavigationService.enterDungeon(state, 1)
+
+      expect(result.dungeon!.position).toEqual({ x: 0, y: 0, facing: 'NORTH' })
+    })
+
+    it('enables torch light with radius 3 and lightActive true', () => {
+      const state = createTestGameStateHelper()
+
+      const result = NavigationService.enterDungeon(state, 1)
+
+      expect(result.dungeon!.lightRadius).toBe(3)
+      expect(result.dungeon!.lightActive).toBe(true)
+    })
+
+    it('initializes all tracking sets as empty', () => {
+      const state = createTestGameStateHelper()
+
+      const result = NavigationService.enterDungeon(state, 1)
+
+      expect(result.dungeon!.visitedTiles).toEqual(new Set())
+      expect(result.dungeon!.defeatedEncounters).toEqual([])
+      expect(result.dungeon!.unlockedDoors).toEqual(new Set())
+    })
+
+    it('sets correct dungeon level', () => {
+      const state = createTestGameStateHelper()
+
+      const result = NavigationService.enterDungeon(state, 5)
+
+      expect(result.dungeon!.currentLevel).toBe(5)
+    })
+
+    it('preserves other game state properties (roster, party, settings)', () => {
+      const character = createTestCharacter({ id: 'char1' })
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        roster: new Map([['char1', character]]),
+        party: {
+          members: ['char1'],
+          formation: { front: ['char1'], back: [] },
+          gold: 1000
+        },
+        settings: {
+          soundEnabled: true,
+          musicEnabled: false,
+          textSpeed: 'NORMAL'
+        }
+      }
+
+      const result = NavigationService.enterDungeon(state, 1)
+
+      expect(result.roster).toEqual(state.roster)
+      expect(result.party).toEqual(state.party)
+      expect(result.settings).toEqual(state.settings)
+    })
+  })
+
   describe('enterLevel', () => {
     it('changes to new level and sets position based on entry type', () => {
       const state: GameState = {

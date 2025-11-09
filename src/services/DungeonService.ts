@@ -118,28 +118,85 @@ export const DungeonService = {
   },
 
   /**
-   * Get tiles visible from current position
-   * Returns array of tiles in front of player up to lightRadius distance
-   * @param level - Level data
-   * @param position - Current position and facing
-   * @param lightRadius - How many tiles ahead to return (1-3)
-   * @returns Array of TileData, ordered near to far
+   * Get all visible tiles in front of party (3-column grid)
+   * @param level - Current dungeon level
+   * @param position - Party position and facing direction
+   * @param lightRadius - How far party can see (1-3 tiles)
+   * @returns Array of visible tiles with relative positioning
    */
   getVisibleTiles(
     level: LevelData,
     position: Position,
     lightRadius: number
   ): TileData[] {
-    const tiles: TileData[] = []
-    const maxDepth = Math.min(lightRadius, 3) // Cap at 3 tiles max
+    const tiles: TileData[] = [];
+    const maxDepth = Math.min(lightRadius, 3);
 
+    // Iterate through each depth (distance ahead)
     for (let depth = 1; depth <= maxDepth; depth++) {
-      const { x, y } = getPositionAhead(position, depth)
-      const tile = this.getTile(level, x, y)
-      tiles.push(tile)
+      // Iterate through each column (left, center, right)
+      for (let column = -1; column <= 1; column++) {
+        // Transform relative position to world coordinates
+        const worldCoords = this.transformToWorldCoords(position, column, depth);
+
+        // Get tile data from map
+        const tile = this.getTile(level, worldCoords.x, worldCoords.y);
+
+        // Add relative positioning for rendering
+        tiles.push({
+          ...tile,
+          relativeX: column,
+          relativeDepth: depth
+        });
+      }
     }
 
-    return tiles
+    return tiles;
+  },
+
+  /**
+   * Transform relative coordinates (from player perspective) to world coordinates
+   * @param position - Player position with facing direction
+   * @param relativeX - Horizontal offset (-1 = left, 0 = center, 1 = right)
+   * @param relativeY - Forward offset (1 = one tile ahead, 2 = two tiles ahead, etc.)
+   * @returns World coordinates with edge wrapping
+   */
+  transformToWorldCoords(
+    position: Position,
+    relativeX: number,
+    relativeY: number
+  ): { x: number; y: number } {
+    let worldX = position.x;
+    let worldY = position.y;
+
+    switch (position.facing) {
+      case 'NORTH':
+        // North: forward = -Y, left = -X
+        worldX = position.x + relativeX;
+        worldY = position.y - relativeY;
+        break;
+      case 'EAST':
+        // East: forward = +X, left = -Y
+        worldX = position.x + relativeY;
+        worldY = position.y + relativeX;
+        break;
+      case 'SOUTH':
+        // South: forward = +Y, left = +X
+        worldX = position.x - relativeX;
+        worldY = position.y + relativeY;
+        break;
+      case 'WEST':
+        // West: forward = -X, left = +Y
+        worldX = position.x - relativeY;
+        worldY = position.y - relativeX;
+        break;
+    }
+
+    // Handle edge wrapping (maps are 20×20 with wrapping enabled)
+    worldX = ((worldX % 20) + 20) % 20;
+    worldY = ((worldY % 20) + 20) % 20;
+
+    return { x: worldX, y: worldY };
   },
 }
 

@@ -13,6 +13,9 @@ describe('MazeViewComponent', () => {
 
     fixture = TestBed.createComponent(MazeViewComponent);
     component = fixture.componentInstance;
+
+    // Set required input to avoid NG0950 error
+    fixture.componentRef.setInput('commands', []);
   });
 
   it('creates successfully', () => {

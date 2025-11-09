@@ -5,7 +5,6 @@ import { SceneTitleComponent } from '../../components/scene-title/scene-title.co
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { CharacterCardComponent } from '../../components/character-card/character-card.component';
 import { MessageLogComponent } from '../../components/message-log/message-log.component';
-import { ActiveSpellsComponent } from '../../components/active-spells/active-spells.component';
 import { MazeViewComponent } from '../../components/maze-view/maze-view.component';
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
@@ -19,7 +18,7 @@ import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
-import { DungeonState } from '../../types/Dungeon';
+import { DungeonState, TileData, SpatialTileData } from '../../types/Dungeon';
 
 @Component({
   selector: 'app-maze',
@@ -30,7 +29,6 @@ import { DungeonState } from '../../types/Dungeon';
     SceneFooterComponent,
     CharacterCardComponent,
     MessageLogComponent,
-    ActiveSpellsComponent,
     MazeViewComponent
   ],
   templateUrl: './maze.component.html',
@@ -96,7 +94,7 @@ export class MazeComponent implements OnInit {
     if (!pos || tiles.length === 0) return [];
 
     return MazeRenderingService.generateView(
-      tiles,
+      tiles as SpatialTileData[],
       pos.facing,
       { width: 600, height: 600, tileDepth: 3 }
     );

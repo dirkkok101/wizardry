@@ -35,8 +35,8 @@ function createNewGame(): GameState {
     dungeon: {
       currentLevel: 1,
       position: { x: 0, y: 0, facing: 'NORTH' },
-      lightActive: false,
-      lightRadius: 0,
+      lightActive: true,  // Default torch light enabled
+      lightRadius: 3,     // Default torch range
       teleportCount: 0,
       visitedTiles: new Set(),
       defeatedEncounters: [],
