@@ -525,6 +525,23 @@ export class CharacterCreationComponent implements OnInit {
     return raceData.baseStats[mapping[stat]];
   }
 
+  /**
+   * Map abbreviated stat names (from JSON data) to FinalStats property names.
+   * @param abbrev - Abbreviated stat name ('str', 'int', 'pie', 'vit', 'agi', 'luc')
+   * @returns Full stat property name for FinalStats type
+   */
+  private mapStatToFinalStats(abbrev: string): keyof FinalStats {
+    const mapping: Record<string, keyof FinalStats> = {
+      'str': 'strength',
+      'int': 'intelligence',
+      'pie': 'piety',
+      'vit': 'vitality',
+      'agi': 'agility',
+      'luc': 'luck'
+    };
+    return mapping[abbrev];
+  }
+
   // Get keyboard shortcut for class
   getClassShortcut(classId: string): string {
     const shortcuts: { [key: string]: string } = {

@@ -2123,4 +2123,25 @@ describe('CharacterCreationComponent', () => {
     });
 
   });
+
+  describe('mapStatToFinalStats()', () => {
+    it('should map str to strength', () => {
+      const result = (component as any).mapStatToFinalStats('str');
+      expect(result).toBe('strength');
+    });
+
+    it('should map int to intelligence', () => {
+      const result = (component as any).mapStatToFinalStats('int');
+      expect(result).toBe('intelligence');
+    });
+
+    it('should map all 6 stats correctly', () => {
+      expect((component as any).mapStatToFinalStats('str')).toBe('strength');
+      expect((component as any).mapStatToFinalStats('int')).toBe('intelligence');
+      expect((component as any).mapStatToFinalStats('pie')).toBe('piety');
+      expect((component as any).mapStatToFinalStats('vit')).toBe('vitality');
+      expect((component as any).mapStatToFinalStats('agi')).toBe('agility');
+      expect((component as any).mapStatToFinalStats('luc')).toBe('luck');
+    });
+  });
 });
