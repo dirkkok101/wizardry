@@ -624,9 +624,17 @@ export function generateView(
 
   const commands: CanvasCommand[] = [];
 
-  // Draw horizontal tunnel frames first (creates the 3D tunnel cross-sections)
-  const maxDepth = Math.max(...tiles.map(t => t.relativeDepth));
-  commands.push(...renderTunnelFrames(config, maxDepth));
+  // ⚠️ IMPLEMENTATION NOTE: The original plan included tunnel frames here, but
+  // testing revealed they create a generic corridor appearance that masks the
+  // spatial-aware wall rendering. Tunnel frames draw perspective lines unconditionally,
+  // preventing correct visualization of dead ends, openings, and actual dungeon layout.
+  //
+  // REMOVED in commit ecb16b1:
+  //   const maxDepth = Math.max(...tiles.map(t => t.relativeDepth));
+  //   commands.push(...renderTunnelFrames(config, maxDepth));
+  //
+  // This removal allows the spatial wall rendering to work correctly, displaying
+  // the actual dungeon layout based on player position and orientation.
 
   // Sort tiles by depth (far to near for correct z-ordering)
   const sortedTiles = [...tiles].sort((a, b) => b.relativeDepth - a.relativeDepth);
