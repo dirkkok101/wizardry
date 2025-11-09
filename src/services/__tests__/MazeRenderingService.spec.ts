@@ -90,30 +90,27 @@ describe('MazeRenderingService', () => {
     });
   });
 
-  describe('renderCorridor', () => {
-    const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
-
-    it('returns corridor line commands', () => {
-      const commands = MazeRenderingService.renderCorridor(perspective, testConfig);
+  describe('renderPerspectiveLines', () => {
+    it('returns perspective line commands', () => {
+      const commands = MazeRenderingService.renderPerspectiveLines(testConfig);
 
       expect(commands.length).toBeGreaterThan(0);
       expect(commands[0].type).toBe('line');
       expect(commands[0].color).toBe('#0f0');
     });
 
-    it('applies perspective brightness to lines', () => {
-      const fadedPerspective = { scale: 0.4, offsetY: 100, brightness: 0.5 };
-      const commands = MazeRenderingService.renderCorridor(fadedPerspective, testConfig);
+    it('creates 4 continuous perspective lines from viewport to vanishing point', () => {
+      const commands = MazeRenderingService.renderPerspectiveLines(testConfig);
 
-      expect(commands[0].alpha).toBe(0.5);
-    });
-
-    it('creates 4 lines for corridor walls (left/right perspective)', () => {
-      const commands = MazeRenderingService.renderCorridor(perspective, testConfig);
-
-      // 2 lines for left wall, 2 for right wall (creating depth)
+      // 4 lines from viewport corners to center (vanishing point)
       expect(commands.length).toBe(4);
       expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
+    });
+
+    it('uses consistent alpha of 1.0 for all perspective lines', () => {
+      const commands = MazeRenderingService.renderPerspectiveLines(testConfig);
+
+      expect(commands.every(cmd => cmd.alpha === 1.0)).toBe(true);
     });
   });
 
@@ -167,7 +164,7 @@ describe('MazeRenderingService', () => {
   describe('renderTile', () => {
     const perspective = { scale: 1.0, offsetY: 0, brightness: 1.0 };
 
-    it('renders open corridor with corridor lines only', () => {
+    it('renders open corridor with no wall lines', () => {
       const tile = createTestTile(0, 0, {
         north: 'open',
         east: 'open',
@@ -177,9 +174,9 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
 
-      // Should have corridor lines but no walls
-      expect(commands.length).toBeGreaterThan(0);
-      expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
+      // Open corridor has no walls, renderTile only returns wall commands
+      // (perspective lines are added by generateView)
+      expect(commands.length).toBe(0);
     });
 
     it('renders wall on left when left has wall', () => {
@@ -192,8 +189,9 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
 
-      // Should have corridor lines (4) + left wall wireframe (4) = 8 lines
-      expect(commands.length).toBe(8);
+      // Should have left wall wireframe only (4 lines for rectangle)
+      // Perspective lines are handled by generateView
+      expect(commands.length).toBe(4);
       expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
 
@@ -207,8 +205,9 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.renderTile(tile, 'NORTH', perspective, testConfig);
 
-      // Should have corridor lines (4) + front wall wireframe (4) = 8 lines
-      expect(commands.length).toBe(8);
+      // Should have front wall wireframe only (4 lines for rectangle)
+      // Perspective lines are handled by generateView
+      expect(commands.length).toBe(4);
       expect(commands.every(cmd => cmd.type === 'line')).toBe(true);
     });
 
@@ -256,14 +255,16 @@ describe('MazeRenderingService', () => {
 
       const commands = MazeRenderingService.generateView(tiles, 'NORTH', testConfig);
 
-      // Far tile commands should come first (lower brightness)
-      const brightnesses = commands
-        .filter(cmd => cmd.alpha !== undefined)
+      // Skip first 4 commands (perspective lines have alpha=1.0)
+      // Then check that far tile walls (lower brightness) come before near tile walls
+      const wallBrightnesses = commands
+        .slice(4) // Skip perspective lines
+        .filter(cmd => cmd.alpha !== undefined && cmd.alpha !== 1.0)
         .map(cmd => cmd.alpha);
 
-      // First commands should have lower brightness (far tiles)
-      if (brightnesses.length >= 2) {
-        expect(brightnesses[0]).toBeLessThan(brightnesses[brightnesses.length - 1]);
+      // First wall commands should have lower brightness (far tiles)
+      if (wallBrightnesses.length >= 2) {
+        expect(wallBrightnesses[0]).toBeLessThan(wallBrightnesses[wallBrightnesses.length - 1]);
       }
     });
 

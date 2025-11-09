@@ -82,9 +82,9 @@
 
 .maze-content {
   display: grid;
-  grid-template-columns: 450px 1fr;  // Fixed canvas, flexible cards
+  grid-template-columns: 600px 1fr;  // Fixed canvas, flexible cards
   gap: 0.75rem;  // Reduced from 1rem
-  height: 450px;
+  height: 600px;
   margin-bottom: 0.5rem;
 
   // Tablet breakpoint (portrait)
@@ -123,8 +123,8 @@
 }
 
 .maze-viewport {
-  width: 450px;
-  height: 450px;
+  width: 600px;
+  height: 600px;
   background: var(--crt-black);
   border: var(--crt-border);
   border-radius: 4px;

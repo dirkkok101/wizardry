@@ -5,7 +5,6 @@ import { SceneTitleComponent } from '../../components/scene-title/scene-title.co
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { CharacterCardComponent } from '../../components/character-card/character-card.component';
 import { MessageLogComponent } from '../../components/message-log/message-log.component';
-import { ActiveSpellsComponent } from '../../components/active-spells/active-spells.component';
 import { MazeViewComponent } from '../../components/maze-view/maze-view.component';
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
@@ -30,7 +29,6 @@ import { DungeonState } from '../../types/Dungeon';
     SceneFooterComponent,
     CharacterCardComponent,
     MessageLogComponent,
-    ActiveSpellsComponent,
     MazeViewComponent
   ],
   templateUrl: './maze.component.html',

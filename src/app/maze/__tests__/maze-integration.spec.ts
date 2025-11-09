@@ -20,6 +20,7 @@ import { MazeComponent } from '../maze.component';
 import { GameStateService } from '../../../services/GameStateService';
 import { DungeonService } from '../../../services/DungeonService';
 import { EncounterService } from '../../../services/EncounterService';
+import { MonsterService } from '../../../services/MonsterService';
 
 /**
  * Helper function to create test dungeon state
@@ -89,6 +90,25 @@ describe('MazeComponent - Sequential Navigation Operations', () => {
       encounterRate: 0,
       encounterTable: []
     } as any);
+
+    // Mock MonsterService.loadMonster to return test monster data
+    jest.spyOn(MonsterService, 'loadMonster').mockReturnValue({
+      id: 'orc',
+      name: 'Orc',
+      level: 1,
+      numberAppearing: { min: 1, max: 4 },
+      hp: { min: 4, max: 8 },
+      ac: 6,
+      damage: [{ dice: '1d6', min: 1, max: 6 }],
+      xp: 10,
+      gold: 5,
+      type: 'humanoid',
+      specialAbilities: [],
+      resistances: [],
+      regeneration: 0,
+      isBoss: false,
+      canFlee: true
+    });
 
     // Set up test state at position (5,5) facing NORTH
     gameState.updateState(state => ({

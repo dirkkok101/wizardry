@@ -5,6 +5,7 @@ import { GameStateService } from '../../services/GameStateService';
 import { DungeonService } from '../../services/DungeonService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
+import { MonsterService } from '../../services/MonsterService';
 import { SceneType } from '../../types/SceneType';
 import { createTestCharacter } from '../../test-helpers/test-factories';
 
@@ -460,6 +461,25 @@ describe('MazeComponent - Encounter Detection', () => {
       encounterTable: []
     } as any);
 
+    // Mock MonsterService.loadMonster to return test monster data
+    jest.spyOn(MonsterService, 'loadMonster').mockReturnValue({
+      id: 'orc',
+      name: 'Orc',
+      level: 1,
+      numberAppearing: { min: 1, max: 4 },
+      hp: { min: 4, max: 8 },
+      ac: 6,
+      damage: [{ dice: '1d6', min: 1, max: 6 }],
+      xp: 10,
+      gold: 5,
+      type: 'humanoid',
+      specialAbilities: [],
+      resistances: [],
+      regeneration: 0,
+      isBoss: false,
+      canFlee: true
+    });
+
     // Set up test state with dungeon
     gameState.updateState(state => ({
       ...state,
@@ -623,6 +643,20 @@ describe('MazeComponent - Tile Inspection', () => {
     gameState = TestBed.inject(GameStateService);
 
     // Mock loadLevel to return searchable tile at (13, 3)
+    // NOTE: tiles must be a FLAT array, not 2D array - getTile uses find()
+    const tiles: any[] = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        tiles.push({
+          x,
+          y,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: (x === 13 && y === 3) ? 'searchable' : 'normal',
+          searchContent: (x === 13 && y === 3) ? { itemId: 'potion', message: 'You found a potion!' } : undefined
+        });
+      }
+    }
+
     jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
       level: 1,
       name: 'Test Level',
@@ -631,15 +665,7 @@ describe('MazeComponent - Tile Inspection', () => {
       height: 20,
       startPosition: { x: 0, y: 0, facing: 'NORTH' },
       edgeWrapping: true,
-      tiles: Array(20).fill(null).map((_, y) =>
-        Array(20).fill(null).map((_, x) => ({
-          x,
-          y,
-          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: (x === 13 && y === 3) ? 'searchable' : 'normal',
-          searchContent: (x === 13 && y === 3) ? { itemId: 'potion', message: 'You found a potion!' } : undefined
-        }))
-      ),
+      tiles,
       encounterRate: 0,
       encounterTable: []
     } as any);
@@ -696,7 +722,8 @@ describe('MazeComponent - Tile Inspection', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
-        visitedTiles: new Set<string>()
+        visitedTiles: new Set<string>(),
+        searchedTiles: new Set<string>() // Empty - tile not searched yet
       },
     }));
 
@@ -813,6 +840,19 @@ describe('MazeComponent - Darkness Tiles', () => {
     gameState = TestBed.inject(GameStateService);
 
     // Mock loadLevel with darkness tile at (9, 12)
+    // NOTE: tiles must be a FLAT array, not 2D array - getTile uses find()
+    const tiles: any[] = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        tiles.push({
+          x,
+          y,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: (x === 9 && y === 12) ? 'darkness' : 'normal'
+        });
+      }
+    }
+
     jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
       level: 1,
       name: 'Test Level',
@@ -821,14 +861,7 @@ describe('MazeComponent - Darkness Tiles', () => {
       height: 20,
       startPosition: { x: 0, y: 0, facing: 'NORTH' },
       edgeWrapping: true,
-      tiles: Array(20).fill(null).map((_, y) =>
-        Array(20).fill(null).map((_, x) => ({
-          x,
-          y,
-          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: (x === 9 && y === 12) ? 'darkness' : 'normal'
-        }))
-      ),
+      tiles,
       encounterRate: 0,
       encounterTable: []
     } as any);
@@ -848,6 +881,7 @@ describe('MazeComponent - Darkness Tiles', () => {
       },
     }));
 
+    component.ngOnInit();
     fixture.detectChanges();
 
     // visibleTiles computed signal should use lightRadius = 0 (no tiles ahead visible)
@@ -891,6 +925,20 @@ describe('MazeComponent - Elevator', () => {
     gameState = TestBed.inject(GameStateService);
 
     // Mock loadLevel with elevator tile at (10, 8)
+    // NOTE: tiles must be a FLAT array, not 2D array - getTile uses find()
+    const tiles: any[] = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        tiles.push({
+          x,
+          y,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          type: (x === 10 && y === 8) ? 'elevator' : 'normal',
+          elevatorDestinations: (x === 10 && y === 8) ? [2, 3, 4] : undefined
+        });
+      }
+    }
+
     jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
       level: 1,
       name: 'Test Level',
@@ -899,15 +947,7 @@ describe('MazeComponent - Elevator', () => {
       height: 20,
       startPosition: { x: 0, y: 0, facing: 'NORTH' },
       edgeWrapping: true,
-      tiles: Array(20).fill(null).map((_, y) =>
-        Array(20).fill(null).map((_, x) => ({
-          x,
-          y,
-          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: (x === 10 && y === 8) ? 'elevator' : 'normal',
-          elevatorDestinations: (x === 10 && y === 8) ? [2, 3, 4] : undefined
-        }))
-      ),
+      tiles,
       encounterRate: 0,
       encounterTable: []
     } as any);
@@ -927,6 +967,7 @@ describe('MazeComponent - Elevator', () => {
       },
     }));
 
+    component.ngOnInit();
     fixture.detectChanges();
 
     expect(component.showElevatorDialog()).toBe(true);

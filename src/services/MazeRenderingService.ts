@@ -62,13 +62,13 @@ export function generateRectangleOutline(
 ): CanvasCommand[] {
   return [
     // Top edge
-    { type: 'line', x1: x, y1: y, x2: x + width, y2: y, color, lineWidth, alpha },
+    { type: 'line', x, y, x2: x + width, y2: y, color, lineWidth, alpha },
     // Right edge
-    { type: 'line', x1: x + width, y1: y, x2: x + width, y2: y + height, color, lineWidth, alpha },
+    { type: 'line', x: x + width, y, x2: x + width, y2: y + height, color, lineWidth, alpha },
     // Bottom edge
-    { type: 'line', x1: x + width, y1: y + height, x2: x, y2: y + height, color, lineWidth, alpha },
+    { type: 'line', x: x + width, y: y + height, x2: x, y2: y + height, color, lineWidth, alpha },
     // Left edge
-    { type: 'line', x1: x, y1: y + height, x2: x, y2: y, color, lineWidth, alpha }
+    { type: 'line', x, y: y + height, x2: x, y2: y, color, lineWidth, alpha }
   ];
 }
 
@@ -100,68 +100,73 @@ export function getRelativeWalls(
 }
 
 /**
- * Render corridor walls (perspective lines creating depth)
- * @param perspective - Perspective scale parameters
+ * Draw continuous perspective lines for authentic Wizardry wireframe
+ * Creates 4 lines from viewport corners to vanishing point
  * @param config - Viewport configuration
- * @returns Array of line drawing commands
+ * @returns Array of perspective line commands
  */
-export function renderCorridor(
-  perspective: PerspectiveScale,
-  config: ViewportConfig
-): CanvasCommand[] {
+export function renderPerspectiveLines(config: ViewportConfig): CanvasCommand[] {
   const commands: CanvasCommand[] = [];
   const centerX = config.width / 2;
   const centerY = config.height / 2;
 
-  const wallOffset = 200 * perspective.scale;  // Width of corridor
-  const depthY = centerY + perspective.offsetY;
+  // Viewport bounds (outermost frame at depth 0)
+  const outerLeft = 100;
+  const outerRight = config.width - 100;
+  const outerTop = 50;
+  const outerBottom = config.height - 50;
 
-  // Left wall perspective line (top)
+  // Vanishing point (innermost point at depth 3)
+  const vanishX = centerX;
+  const vanishY = centerY;
+
+  // Draw 4 continuous perspective lines from viewport corners to vanishing point
+  // Top-left to center
   commands.push({
     type: 'line',
-    x: centerX - wallOffset,
-    y: depthY - 100 * perspective.scale,
-    x2: centerX - wallOffset * 0.7,
-    y2: depthY,
+    x: outerLeft,
+    y: outerTop,
+    x2: vanishX,
+    y2: vanishY,
     color: '#0f0',
     lineWidth: 2,
-    alpha: perspective.brightness
+    alpha: 1.0
   });
 
-  // Left wall perspective line (bottom)
+  // Top-right to center
   commands.push({
     type: 'line',
-    x: centerX - wallOffset,
-    y: depthY + 100 * perspective.scale,
-    x2: centerX - wallOffset * 0.7,
-    y2: depthY,
+    x: outerRight,
+    y: outerTop,
+    x2: vanishX,
+    y2: vanishY,
     color: '#0f0',
     lineWidth: 2,
-    alpha: perspective.brightness
+    alpha: 1.0
   });
 
-  // Right wall perspective line (top)
+  // Bottom-left to center
   commands.push({
     type: 'line',
-    x: centerX + wallOffset,
-    y: depthY - 100 * perspective.scale,
-    x2: centerX + wallOffset * 0.7,
-    y2: depthY,
+    x: outerLeft,
+    y: outerBottom,
+    x2: vanishX,
+    y2: vanishY,
     color: '#0f0',
     lineWidth: 2,
-    alpha: perspective.brightness
+    alpha: 1.0
   });
 
-  // Right wall perspective line (bottom)
+  // Bottom-right to center
   commands.push({
     type: 'line',
-    x: centerX + wallOffset,
-    y: depthY + 100 * perspective.scale,
-    x2: centerX + wallOffset * 0.7,
-    y2: depthY,
+    x: outerRight,
+    y: outerBottom,
+    x2: vanishX,
+    y2: vanishY,
     color: '#0f0',
     lineWidth: 2,
-    alpha: perspective.brightness
+    alpha: 1.0
   });
 
   return commands;
@@ -262,9 +267,6 @@ export function renderTile(
   // Get walls relative to player facing
   const walls = getRelativeWalls(tile.walls, facing);
 
-  // Always render corridor first (perspective lines)
-  commands.push(...renderCorridor(perspective, config));
-
   // Render walls based on their type, passing depth for wireframe styling
   if (walls.left !== 'open') {
     commands.push(...renderWall('left', walls.left, perspective, config, depth));
@@ -297,6 +299,9 @@ export function generateView(
 
   const commands: CanvasCommand[] = [];
 
+  // Draw continuous perspective lines first (creates the 3D corridor effect)
+  commands.push(...renderPerspectiveLines(config));
+
   // Render tiles from far to near for correct z-ordering
   for (let i = tiles.length - 1; i >= 0; i--) {
     const tile = tiles[i];
@@ -315,7 +320,7 @@ export const MazeRenderingService = {
   getColorForDepth,
   getLineWidthForDepth,
   generateRectangleOutline,
-  renderCorridor,
+  renderPerspectiveLines,
   renderWall,
   renderTile,
   generateView
