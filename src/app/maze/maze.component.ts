@@ -93,13 +93,27 @@ export class MazeComponent implements OnInit {
   readonly drawCommands = computed(() => {
     const tiles = this.visibleTiles();
     const pos = this.position();
-    if (!pos || tiles.length === 0) return [];
+    const dungeon = this.dungeonState();
 
-    return MazeRenderingService.generateView(
+    console.log('[MAZE DEBUG] drawCommands executing:');
+    console.log('  - Position:', pos);
+    console.log('  - Visible tiles count:', tiles.length);
+    console.log('  - Light radius:', dungeon?.lightRadius);
+    console.log('  - Dungeon state:', dungeon);
+
+    if (!pos || tiles.length === 0) {
+      console.warn('[MAZE DEBUG] No commands generated - missing position or tiles');
+      return [];
+    }
+
+    const commands = MazeRenderingService.generateView(
       tiles,
       pos.facing,
       { width: 600, height: 600, tileDepth: 3 }
     );
+
+    console.log('[MAZE DEBUG] Generated', commands.length, 'drawing commands');
+    return commands;
   });
 
   /**
