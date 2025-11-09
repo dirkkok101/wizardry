@@ -41,35 +41,19 @@ export class MazeViewComponent {
   }
 
   private render(): void {
-    if (!this.ctx) {
-      console.warn('[CANVAS DEBUG] render() called but ctx is null');
-      return;
-    }
+    if (!this.ctx) return;
 
     const canvas = this.canvasRef.nativeElement;
     const commands = this.commands();
-
-    console.log('[CANVAS DEBUG] render() executing:');
-    console.log('  - Canvas dimensions:', canvas.width, 'x', canvas.height);
-    console.log('  - Commands count:', commands.length);
-    console.log('  - Context available:', !!this.ctx);
 
     // Clear canvas with black background
     this.ctx.fillStyle = '#000';
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw test rectangle to verify canvas works
-    this.ctx.strokeStyle = '#0f0';
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeRect(50, 50, 100, 100);
-    console.log('[CANVAS DEBUG] Drew test rectangle at (50,50,100,100)');
-
     // Execute drawing commands
     for (const cmd of commands) {
       this.executeCommand(cmd);
     }
-
-    console.log('[CANVAS DEBUG] render() complete');
   }
 
   private executeCommand(cmd: CanvasCommand): void {
