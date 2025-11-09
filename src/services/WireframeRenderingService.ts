@@ -1,4 +1,4 @@
-import { LevelData, Position, WallSegment, Vector3, WallType } from '../types/Dungeon'
+import { LevelData, PlayerState, Position, WallSegment, Vector3, WallType } from '../types/Dungeon'
 import { CanvasCommand } from '../types/rendering.types'
 import { ViewportConfig } from '../types/rendering.types'
 import { VisibilityService } from './VisibilityService'
@@ -42,7 +42,7 @@ export const WireframeRenderingService = {
    */
   renderWallQuad(
     wall: WallSegment,
-    playerState: any,
+    playerState: PlayerState,
     config: ViewportConfig
   ): CanvasCommand[] {
     const commands: CanvasCommand[] = []
