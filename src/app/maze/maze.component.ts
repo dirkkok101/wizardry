@@ -18,7 +18,7 @@ import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
-import { DungeonState, TileData } from '../../types/Dungeon';
+import { DungeonState, TileData, SpatialTileData } from '../../types/Dungeon';
 
 @Component({
   selector: 'app-maze',
@@ -94,7 +94,7 @@ export class MazeComponent implements OnInit {
     if (!pos || tiles.length === 0) return [];
 
     return MazeRenderingService.generateView(
-      tiles as (TileData & { relativeX: number; relativeDepth: number })[],
+      tiles as SpatialTileData[],
       pos.facing,
       { width: 600, height: 600, tileDepth: 3 }
     );

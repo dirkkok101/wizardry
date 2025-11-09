@@ -1,4 +1,4 @@
-import { TileData, Position, Direction } from '../types/Dungeon';
+import { TileData, Position, Direction, SpatialTileData } from '../types/Dungeon';
 import { CanvasCommand, ViewportConfig, PerspectiveScale, RelativeWalls } from '../types/rendering.types';
 
 /**
@@ -199,6 +199,9 @@ export function renderWall(
   const depthY = centerY + perspective.offsetY;
 
   // Calculate horizontal offset based on column position
+  // Left column (relativeX=-1): -1 × 200 = -200px left
+  // Center column (relativeX=0): 0 × 200 = 0px (no offset)
+  // Right column (relativeX=1): 1 × 200 = +200px right
   const columnOffset = relativeX * wallOffset;
 
   if (side === 'left') {
@@ -248,7 +251,7 @@ export function renderWall(
  * @returns Array of drawing commands for the tile
  */
 export function renderTile(
-  tile: TileData & { relativeX: number; relativeDepth: number },
+  tile: SpatialTileData,
   facing: Direction,
   perspective: PerspectiveScale,
   config: ViewportConfig
@@ -296,7 +299,7 @@ export function renderTile(
  * @returns Complete array of drawing commands
  */
 export function generateView(
-  tiles: (TileData & { relativeX: number; relativeDepth: number })[],
+  tiles: SpatialTileData[],
   facing: Direction,
   config: ViewportConfig
 ): CanvasCommand[] {
