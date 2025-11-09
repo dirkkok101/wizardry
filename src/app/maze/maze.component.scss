@@ -109,9 +109,12 @@
 .maze-content {
   display: grid;
   grid-template-columns: minmax(450px, 600px) 1fr;
+  grid-template-rows: 1fr;
   gap: 1rem;
   margin-bottom: 0.5rem;
   width: 100%;
+  flex: 1;
+  min-height: 0;
 
   // Large desktop (1920×1080 and up)
   @media (min-width: 1600px) {
@@ -149,8 +152,8 @@
 }
 
 .maze-viewport {
-  aspect-ratio: 1 / 1;
   width: 100%;
+  height: 100%;
   max-width: 600px;
   background: var(--crt-black);
   border: var(--crt-border);
@@ -161,10 +164,12 @@
     height: 100%;
   }
 
-  // Tablet portrait and mobile
+  // Tablet portrait and mobile - use square aspect ratio
   @media (max-width: 767px) {
+    aspect-ratio: 1 / 1;
     max-width: 100%;
     min-width: 350px;
+    height: auto;
   }
 
   // Small mobile
