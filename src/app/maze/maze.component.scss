@@ -110,16 +110,23 @@
 
 .maze-viewport {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;  // Stack vertically
+  gap: 1rem;              // Spacing between canvas and log
   background: var(--crt-black);
   border: var(--crt-border);
   border-radius: 4px;
   min-height: 400px;
 
   app-maze-view {
+    flex: 1;              // Canvas takes remaining space
+    min-height: 300px;    // Ensure canvas doesn't collapse
     width: 100%;
-    height: 100%;
+  }
+
+  app-message-log {
+    flex-shrink: 0;       // Don't compress the log
+    max-height: 150px;    // Keep scrollable at reasonable height
+    overflow-y: auto;     // Scroll if messages overflow
   }
 }
 
