@@ -3,7 +3,7 @@ import { CanvasCommand } from '../../types/rendering.types';
 
 /**
  * Canvas-based 3D maze view component
- * Executes drawing commands from MazeRenderingService
+ * Executes drawing commands from WireframeRenderingService
  */
 @Component({
   selector: 'app-maze-view',

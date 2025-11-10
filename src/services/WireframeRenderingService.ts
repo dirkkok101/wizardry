@@ -7,7 +7,7 @@ import { ProjectionService } from './ProjectionService'
 
 /**
  * Service for generating wireframe 3D rendering commands
- * Replaces MazeRenderingService with flood-fill + perspective projection
+ * Uses flood-fill visibility + perspective projection
  * Pure functions - no side effects
  */
 export const WireframeRenderingService = {

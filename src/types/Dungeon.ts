@@ -54,18 +54,6 @@ export interface TileData {
   isOneWay?: boolean
   destinations?: Destination[]  // For elevator
   locked?: boolean  // For door tiles (test compatibility)
-  // Add spatial positioning for rendering
-  relativeX?: number      // -1 (left), 0 (center), 1 (right)
-  relativeDepth?: number  // 1, 2, 3 (tiles ahead)
-}
-
-/**
- * TileData with required spatial positioning properties for 3D rendering.
- * Used by MazeRenderingService to render tiles with correct spatial awareness.
- */
-export type SpatialTileData = TileData & {
-  relativeX: number      // -1 (left), 0 (center), 1 (right)
-  relativeDepth: number  // 1, 2, 3 (tiles ahead)
 }
 
 export interface LevelData {
