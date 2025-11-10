@@ -4,12 +4,13 @@
 
 ## Overview
 
-Wizardry 1 uses a **pseudo-3D first-person perspective** rendered on 2D canvas, creating the illusion of depth without true 3D graphics.
+Wizardry 1 uses a **pseudo-3D first-person perspective** rendered on 2D canvas, creating the illusion of depth without true 3D graphics using mathematically correct perspective projection.
 
 **Key Concepts**:
 - Wire-frame style dungeon view
-- Visible depth: 3 tiles forward
-- Perspective scaling (closer = bigger)
+- Visible depth: 5 tiles forward (extended from original 3)
+- Mathematically correct perspective projection (5-stage pipeline)
+- Flood-fill visibility algorithm
 - Party facing determines view direction
 - Walls, doors, and corridors rendered
 - Canvas-based 2D rendering (not WebGL)
@@ -18,10 +19,11 @@ Wizardry 1 uses a **pseudo-3D first-person perspective** rendered on 2D canvas, 
 
 ### Services Involved
 
-- **FirstPersonViewService** - Calculate visible tiles, perspective
+- **WireframeRenderingService** - Main rendering orchestration, generates canvas commands
+- **VisibilityService** - Flood-fill algorithm to find visible walls
+- **ProjectionService** - 5-stage perspective projection (World → View → Screen)
+- **PlayerStateService** - Direction vector management for camera transforms
 - **DungeonService** - Get tile data for rendering
-- **VisibilityService** - Determine which tiles visible from position
-- **RenderingService** - Canvas drawing operations
 - **DoorService** - Door state (open/closed) for rendering
 
 ### Commands Involved
@@ -69,129 +71,162 @@ interface WallState {
 
 ## View Calculation
 
-### Visible Tile Grid
+### Flood-Fill Visibility Algorithm
 
-**From Party Perspective** (facing north):
-```
-       [-1,3]  [0,3]  [+1,3]    (3 tiles ahead - farthest)
-       [-1,2]  [0,2]  [+1,2]    (2 tiles ahead)
-       [-1,1]  [0,1]  [+1,1]    (1 tile ahead)
-       [-1,0]  [0,0]  [+1,0]    (Current position)
-         ^      ^      ^
-       Left   Center  Right
-```
+**Modern Approach**: Instead of using a fixed 3-column grid, the system uses a flood-fill algorithm to discover all visible walls from the player's position.
 
-**Relative Coordinates**:
-- X: -1 (left), 0 (center), +1 (right)
-- Y: 0 (current), 1, 2, 3 (distance ahead)
-
-### World to View Transformation
-
-**Facing North** (Y decreases):
+**Algorithm Flow**:
 ```typescript
-function getVisibleTiles(party: Party): VisibleTile[] {
-  const tiles: VisibleTile[] = []
+function getVisibleWalls(level: LevelData, position: Position, maxDepth: number): WallSegment[] {
+  const walls: WallSegment[] = []
+  const visited = new Set<string>()
+  const queue: { x: number, y: number, depth: number }[] = []
 
-  for (let relY = 0; relY <= 3; relY++) {
-    for (let relX = -1; relX <= 1; relX++) {
-      const worldX = party.position.x + relX
-      const worldY = party.position.y - relY  // North = -Y
+  // Start from player position
+  queue.push({ x: position.x, y: position.y, depth: 0 })
+  visited.add(`${position.x},${position.y}`)
 
-      const tile = DungeonService.getTile(party.position.level, {x: worldX, y: worldY})
-      const perspective = calculatePerspective(relX, relY)
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    if (current.depth >= maxDepth) continue
 
-      tiles.push({ relativeX: relX, relativeY: relY, tile, perspective })
+    const tile = DungeonService.getTile(level, current.x, current.y)
+
+    // Check all 4 walls
+    if (tile.walls.north !== 'open') {
+      walls.push(createWallSegment(current.x, current.y, 'north'))
+    } else if (!visited.has(`${current.x},${current.y - 1}`)) {
+      queue.push({ x: current.x, y: current.y - 1, depth: current.depth + 1 })
+      visited.add(`${current.x},${current.y - 1}`)
     }
+    // Repeat for south, east, west walls...
   }
 
-  return tiles
+  // Sort by distance (back-to-front for painter's algorithm)
+  walls.sort((a, b) => b.distance - a.distance)
+  return walls
 }
 ```
 
-**Facing East** (X increases):
-```typescript
-// Rotate coordinates 90° clockwise
-worldX = party.position.x + relY  // Distance = +X
-worldY = party.position.y + relX  // Left/right = +Y
-```
+**Advantages**:
+- Handles arbitrary room shapes automatically
+- Correctly stops at walls (no X-ray vision through closed doors)
+- Efficient - only visits reachable tiles
+- Naturally limits view distance via maxDepth parameter
+- Extended visibility: 5 tiles vs original 3 tiles
 
-**Facing South** (Y increases):
-```typescript
-worldX = party.position.x - relX  // Left/right inverted
-worldY = party.position.y + relY  // South = +Y
-```
+### World Space to Screen Space Transformation
 
-**Facing West** (X decreases):
+**5-Stage Perspective Projection Pipeline**:
+
+1. **World Space**: Wall corners in dungeon grid coordinates (x, y, z)
+   - Each tile is 1.0 units square
+   - Y axis represents height (0 = floor, 1 = ceiling)
+   - Player at discrete grid position (e.g., x=10, y=10)
+
+2. **Translation**: Translate to camera origin
+   - Subtract player position from all points
+   - Camera becomes origin (0, 0, 0)
+
+3. **Rotation**: Rotate to camera orientation
+   - Apply rotation based on facing direction (NORTH/EAST/SOUTH/WEST)
+   - Camera looks down -Z axis (forward direction)
+   - Uses pre-computed direction vectors from PlayerState
+
+4. **Perspective Division**: Apply perspective projection
+   - Project 3D points onto 2D view plane
+   - Divide by distance (z-coordinate)
+   - Closer objects appear larger (perspective foreshortening)
+   - FOV: 90 degrees (π/2 radians)
+
+5. **Screen Mapping**: Convert to canvas pixel coordinates
+   - Map normalized device coordinates [-1, 1] to pixel space [0, width]
+   - Flip Y axis (screen Y increases downward)
+   - Apply viewport transform
+
+**Example Transformation**:
 ```typescript
-worldX = party.position.x - relY  // Distance = -X
-worldY = party.position.y - relX  // Left/right inverted
+// Stage 1: Wall corner in world space
+const worldPoint: Vector3 = { x: 12.5, y: 1.0, z: 8.5 }
+
+// Stage 2-3: Transform to view space (camera at origin, looking -Z)
+const viewPoint = ProjectionService.worldToView(worldPoint, playerState)
+// Result: { x: 0.5, y: 1.0, z: -2.0 }
+
+// Stage 4-5: Project to screen space
+const screenPoint = ProjectionService.viewToScreen(viewPoint, { width: 600, height: 600 })
+// Result: { x: 375, y: 200 } (pixel coordinates)
 ```
 
 ## Perspective Scaling
 
-### Distance-Based Scaling
+### Mathematical Perspective
 
-**Scaling Formula**:
+**Automatic Perspective via Projection**: The 5-stage projection pipeline automatically handles perspective scaling through perspective division (stage 4).
+
+**Perspective Division Formula**:
 ```typescript
-function calculateScale(distance: number): number {
-  const scales = [
-    1.0,   // Distance 0 (current tile)
-    0.7,   // Distance 1 (1 tile ahead)
-    0.4,   // Distance 2 (2 tiles ahead)
-    0.2    // Distance 3 (3 tiles ahead)
-  ]
-  return scales[distance] || 0.0
-}
+// In ProjectionService.viewToScreen()
+const S = 1.0 / Math.tan(FOV / 2)  // FOV scaling factor (90° FOV)
+const ndcX = (viewPoint.x * S) / -viewPoint.z  // Divide by distance
+const ndcY = (viewPoint.y * S) / -viewPoint.z  // Divide by distance
 ```
 
-**Perspective Diminishing**:
-- Closer tiles rendered larger (scale 1.0)
-- Farther tiles rendered smaller (scale 0.2)
-- Creates depth illusion
+**Key Properties**:
+- Objects farther away (larger z) appear smaller (smaller ndcX/ndcY)
+- Objects closer (smaller z) appear larger (larger ndcX/ndcY)
+- Mathematically correct perspective (matches real-world vision)
+- No pre-defined scaling tiers - continuous smooth scaling
+
+**Comparison to Old System**:
+```
+Old System (Fixed Tiers):
+  Distance 0: scale 1.0
+  Distance 1: scale 0.7
+  Distance 2: scale 0.4
+  Distance 3: scale 0.2
+
+New System (Continuous):
+  Distance 0.5: scale ≈ 1.0 / 0.5 = 2.0 (relative)
+  Distance 1.0: scale ≈ 1.0 / 1.0 = 1.0
+  Distance 2.0: scale ≈ 1.0 / 2.0 = 0.5
+  Distance 5.0: scale ≈ 1.0 / 5.0 = 0.2
+```
 
 ### Screen Position Calculation
 
 **Canvas Layout**:
 ```
-Canvas: 800×600 pixels
+Canvas: 600×600 pixels
 
-Center X = 400
+Center X = 300
 Center Y = 300
 
-View corridor:
-  Width at distance 0: 400px
-  Width at distance 3: 80px
+FOV: 90 degrees (matches original Wizardry)
 ```
 
-**Position Formula**:
+**NDC to Screen Mapping**:
 ```typescript
-function calculateScreenPosition(
-  relX: number,
-  relY: number,
-  scale: number
-): {x: number, y: number, width: number, height: number} {
-  const centerX = 400
-  const centerY = 300
+function ndcToScreen(ndcX: number, ndcY: number, config: ViewportConfig): Vector2 {
+  // NDC space: [-1, 1] (left to right, bottom to top)
+  // Screen space: [0, width] × [0, height] (left to right, top to bottom)
 
-  const baseWidth = 400
-  const baseHeight = 300
+  const screenX = (ndcX + 1) * (config.width / 2)   // Map [-1,1] to [0,width]
+  const screenY = (1 - ndcY) * (config.height / 2)  // Map [-1,1] to [0,height], flip Y
 
-  const width = baseWidth * scale
-  const height = baseHeight * scale
-
-  // Offset based on left/center/right
-  const xOffset = relX * (width / 3)
-
-  // Y offset based on distance
-  const yOffset = relY * (height / 4)
-
-  return {
-    x: centerX + xOffset - width / 2,
-    y: centerY - yOffset - height / 2,
-    width,
-    height
-  }
+  return { x: screenX, y: screenY }
 }
+```
+
+**Viewport Transform Example**:
+```
+NDC Point: (-0.5, 0.5) (left half, upper half)
+Canvas: 600×600
+
+screenX = (-0.5 + 1) * (600 / 2) = 0.5 * 300 = 150
+screenY = (1 - 0.5) * (600 / 2) = 0.5 * 300 = 150
+
+Screen Point: (150, 150) (upper-left quadrant)
 ```
 
 ## Rendering Order
@@ -454,9 +489,11 @@ X = wall, P = party, . = floor
 ## Related Documentation
 
 **Services**:
-- [FirstPersonViewService](../services/FirstPersonViewService.md) - View calculation
-- [RenderingService](../services/RenderingService.md) - Canvas operations
-- [VisibilityService](../services/VisibilityService.md) - Tile visibility
+- [WireframeRenderingService](../services/WireframeRenderingService.md) - Main rendering orchestration
+- [VisibilityService](../services/VisibilityService.md) - Flood-fill wall detection
+- [ProjectionService](../services/ProjectionService.md) - 5-stage perspective pipeline
+- [PlayerStateService](../services/PlayerStateService.md) - Direction vector management
+- [DungeonService](../services/DungeonService.md) - Tile data access
 
 **Commands**:
 - None (rendering is passive)
@@ -468,11 +505,22 @@ X = wall, P = party, . = floor
 **Research**:
 - No specific research docs (implementation detail)
 
-**Diagrams**:
-- [Architecture Layers](../diagrams/architecture-layers.md) - UI layer
+**Types**:
+- `src/types/Dungeon.ts` - Vector3, Vector2, WallSegment, PlayerState
+- `src/types/rendering.types.ts` - CanvasCommand, ViewportConfig
 
 **Implementation Notes**:
 - Wire-frame aesthetic maintains original Wizardry feel
 - Canvas 2D rendering sufficient (no WebGL needed)
-- Perspective scaling creates convincing depth
+- Mathematically correct perspective projection (5-stage pipeline)
+- Flood-fill visibility algorithm handles arbitrary room shapes
+- Extended view distance (5 tiles vs original 3)
 - Performance excellent on modern browsers
+
+**Architecture Improvements (Nov 2025)**:
+- Replaced 3-column grid with flood-fill visibility algorithm
+- Replaced fixed perspective tiers with continuous mathematical projection
+- Separated concerns: visibility (VisibilityService), projection (ProjectionService), rendering (WireframeRenderingService)
+- Added PlayerStateService for efficient direction vector caching
+- Extended view distance from 3 to 5 tiles
+- Maintained backward compatibility with original Wizardry aesthetic
