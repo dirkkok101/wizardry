@@ -9,7 +9,7 @@ import { MazeViewComponent } from '../../components/maze-view/maze-view.componen
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
-import { MazeRenderingService } from '../../services/MazeRenderingService';
+import { WireframeRenderingService } from '../../services/WireframeRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { DoorService } from '../../services/DoorService';
@@ -18,7 +18,7 @@ import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
-import { DungeonState, TileData, SpatialTileData } from '../../types/Dungeon';
+import { DungeonState, TileData } from '../../types/Dungeon';
 
 @Component({
   selector: 'app-maze',
@@ -67,36 +67,18 @@ export class MazeComponent implements OnInit {
   });
 
   /**
-   * Tiles visible from current position based on light radius
-   * Darkness tiles override light spells (per-tile darkness)
+   * Canvas drawing commands for 3D wireframe view
    */
-  readonly visibleTiles = computed(() => {
-    const dungeon = this.dungeonState();
-    if (!dungeon) return [];
-
-    const level = DungeonService.loadLevel(this.currentLevel());
+  readonly drawCommands = computed(() => {
     const pos = this.position();
     if (!pos) return [];
 
-    // Check if current tile is darkness
-    const currentTile = DungeonService.getTile(level, pos.x, pos.y);
-    const effectiveLightRadius = currentTile.type === 'darkness' ? 0 : dungeon.lightRadius;
+    const level = DungeonService.loadLevel(this.currentLevel());
 
-    return DungeonService.getVisibleTiles(level, pos, effectiveLightRadius);
-  });
-
-  /**
-   * Canvas drawing commands for 3D view
-   */
-  readonly drawCommands = computed(() => {
-    const tiles = this.visibleTiles();
-    const pos = this.position();
-    if (!pos || tiles.length === 0) return [];
-
-    return MazeRenderingService.generateView(
-      tiles as SpatialTileData[],
-      pos.facing,
-      { width: 600, height: 600, tileDepth: 3 }
+    return WireframeRenderingService.generateWireframeCommands(
+      level,
+      pos,
+      { width: 600, height: 600, tileDepth: 5 }
     );
   });
 
