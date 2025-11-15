@@ -112,4 +112,87 @@ describe('RaycastingService', () => {
       expect(direction).toBe('north');
     });
   });
+
+  describe('edge wrapping', () => {
+    it('should wrap coordinates for toroidal maps', () => {
+      const wrappingLevel: LevelData = {
+        ...testLevel,
+        edgeWrapping: true
+      };
+
+      const playerState: PlayerState = {
+        gridX: 0,
+        gridY: 1,
+        angle: Math.PI * 3/2, // Facing west
+        dirX: -1,
+        dirY: 0,
+        planeX: 0,
+        planeY: 0.66
+      };
+
+      // Ray should wrap to east edge
+      const hit = service.castRay(wrappingLevel, playerState, -1, 0);
+
+      expect(hit).not.toBeNull();
+      expect(hit!.wallDirection).toBe('east');
+    });
+  });
+
+  describe('door detection', () => {
+    it('should detect doors as walls', () => {
+      const levelWithDoor: LevelData = {
+        ...testLevel,
+        tiles: testLevel.tiles.map(tile =>
+          tile.x === 1 && tile.y === 2
+            ? { ...tile, walls: { ...tile.walls, south: 'door' } }
+            : tile
+        )
+      };
+
+      const playerState: PlayerState = {
+        gridX: 1,
+        gridY: 1,
+        angle: 0,
+        dirX: 0,
+        dirY: 1,
+        planeX: 1,
+        planeY: 0
+      };
+
+      const hit = service.castRay(levelWithDoor, playerState, 0, 1);
+
+      expect(hit).not.toBeNull();
+      expect(hit!.wallState).toBe('door');
+    });
+  });
+
+  describe('perpendicular distance', () => {
+    it('should calculate perpendicular distance not euclidean', () => {
+      const playerState: PlayerState = {
+        gridX: 1,
+        gridY: 1,
+        angle: 0,
+        dirX: 0,
+        dirY: 1,
+        planeX: 1,
+        planeY: 0
+      };
+
+      // Cast ray at 45 degree angle
+      const rayDirX = 0.5;
+      const rayDirY = 0.866; // ~60 degrees from north
+
+      const hit = service.castRay(testLevel, playerState, rayDirX, rayDirY);
+
+      expect(hit).not.toBeNull();
+
+      // Perpendicular distance should be less than euclidean
+      const euclidean = Math.sqrt(
+        Math.pow(hit!.mapX + 0.5 - (playerState.gridX + 0.5), 2) +
+        Math.pow(hit!.mapY + 0.5 - (playerState.gridY + 0.5), 2)
+      );
+
+      expect(hit!.distance).toBeLessThan(euclidean);
+    });
+  });
 });
