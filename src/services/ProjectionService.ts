@@ -64,8 +64,9 @@ export const ProjectionService = {
     const ndcY = (viewPoint.y * S) / -viewPoint.z
 
     // Frustum culling in NDC space [-1, 1]
-    // Allow slight tolerance for floating point precision
-    if (Math.abs(ndcX) > 1.001 || Math.abs(ndcY) > 1.001) return null
+    // Relaxed tolerance (1.15) allows peripheral walls to render to screen edges
+    // This matches original Wizardry behavior where walls naturally extend off-screen
+    if (Math.abs(ndcX) > 1.15 || Math.abs(ndcY) > 1.15) return null
 
     // Convert NDC to screen coordinates
     const screenX = (ndcX + 1) * (config.width / 2)

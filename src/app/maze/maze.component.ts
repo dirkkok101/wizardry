@@ -97,7 +97,7 @@ export class MazeComponent implements OnInit {
     const commands = WireframeRenderingService.generateWireframeCommands(
       level,
       pos,
-      { width: 600, height: 600, tileDepth: 5, peripheralColumns: 3 }
+      { width: 600, height: 600, tileDepth: 5, peripheralColumns: 5 }
     );
 
     if (commands.length === 0) {
