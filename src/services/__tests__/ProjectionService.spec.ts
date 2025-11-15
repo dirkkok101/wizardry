@@ -6,14 +6,14 @@ describe('ProjectionService', () => {
   describe('worldToView', () => {
     it('transforms world point to view space (camera at origin)', () => {
       const playerState = PlayerStateService.fromPosition({ x: 5, y: 5, facing: 'NORTH' })
-      const worldPoint: Vector3 = { x: 5, y: 0, z: 3 } // 2 tiles in front
+      const worldPoint: Vector3 = { x: 5, y: 0, z: 7 } // 2 tiles in front (north = +Y)
 
       const viewPoint = ProjectionService.worldToView(worldPoint, playerState)
 
-      // Player at (5,5), point at (5,3) = 2 units north
+      // Player at (5,5), point at (5,7) = 2 units north
       // In view space: camera looks down -Z, so point should be at z=-2
       expect(viewPoint.x).toBeCloseTo(0)
-      expect(viewPoint.y).toBeCloseTo(0)
+      expect(viewPoint.y).toBeCloseTo(-0.5) // y=0 with camera at 0.5 = -0.5
       expect(viewPoint.z).toBeCloseTo(-2)
     })
 
@@ -29,16 +29,16 @@ describe('ProjectionService', () => {
 
     it('preserves Y coordinate (height)', () => {
       const playerState = PlayerStateService.fromPosition({ x: 0, y: 0, facing: 'NORTH' })
-      const worldPoint: Vector3 = { x: 0, y: 2.5, z: -1 }
+      const worldPoint: Vector3 = { x: 0, y: 2.5, z: 1 } // 1 tile north
 
       const viewPoint = ProjectionService.worldToView(worldPoint, playerState)
 
-      expect(viewPoint.y).toBeCloseTo(2.5)
+      expect(viewPoint.y).toBeCloseTo(2.0) // 2.5 - 0.5 camera height
     })
 
     it('handles points to the left of player', () => {
       const playerState = PlayerStateService.fromPosition({ x: 5, y: 5, facing: 'NORTH' })
-      const worldPoint: Vector3 = { x: 4, y: 0, z: 3 } // 1 left, 2 forward
+      const worldPoint: Vector3 = { x: 4, y: 0, z: 7 } // 1 left, 2 forward (north)
 
       const viewPoint = ProjectionService.worldToView(worldPoint, playerState)
 
@@ -132,7 +132,7 @@ describe('ProjectionService', () => {
 
     it('projects wall corner from world to screen', () => {
       const playerState = PlayerStateService.fromPosition({ x: 5, y: 5, facing: 'NORTH' })
-      const wallCorner: Vector3 = { x: 5.5, y: 1.0, z: 3.5 } // Top-right corner 2 tiles ahead
+      const wallCorner: Vector3 = { x: 5.5, y: 1.0, z: 6.5 } // Top-right corner 1.5 tiles ahead (north)
 
       const screenPoint = ProjectionService.projectPoint(wallCorner, playerState, config)
 
@@ -143,7 +143,7 @@ describe('ProjectionService', () => {
 
     it('returns null for points behind player', () => {
       const playerState = PlayerStateService.fromPosition({ x: 5, y: 5, facing: 'NORTH' })
-      const behindPoint: Vector3 = { x: 5, y: 0, z: 7 } // Behind player
+      const behindPoint: Vector3 = { x: 5, y: 0, z: 3 } // Behind player (south of position)
 
       const screenPoint = ProjectionService.projectPoint(behindPoint, playerState, config)
 

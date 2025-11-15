@@ -12,7 +12,7 @@ describe('PlayerStateService', () => {
       expect(playerState.gridY).toBe(10)
       expect(playerState.angle).toBeCloseTo(0)
       expect(playerState.dirX).toBeCloseTo(0)
-      expect(playerState.dirY).toBeCloseTo(-1)
+      expect(playerState.dirY).toBeCloseTo(1)
     })
 
     it('creates PlayerState from Position facing EAST', () => {
@@ -32,7 +32,7 @@ describe('PlayerStateService', () => {
 
       expect(playerState.angle).toBeCloseTo(Math.PI)
       expect(playerState.dirX).toBeCloseTo(0)
-      expect(playerState.dirY).toBeCloseTo(1)
+      expect(playerState.dirY).toBeCloseTo(-1)
     })
 
     it('creates PlayerState from Position facing WEST', () => {
@@ -51,8 +51,8 @@ describe('PlayerStateService', () => {
       const playerState = PlayerStateService.fromPosition(position)
 
       // For 90° FOV, plane length should be tan(45°) = 1.0
-      // Perpendicular to (0, -1) is (-1, 0) for leftward plane
-      expect(playerState.planeX).toBeCloseTo(-1)
+      // Perpendicular to (0, +1) is (+1, 0) for leftward plane
+      expect(playerState.planeX).toBeCloseTo(1)
       expect(playerState.planeY).toBeCloseTo(0)
     })
   })
@@ -78,9 +78,9 @@ describe('PlayerStateService', () => {
       playerState.angle = Math.PI / 4
       const updated = PlayerStateService.updateDirectionVectors(playerState)
 
-      // At 45°, direction should be halfway between NORTH(0,-1) and EAST(1,0)
+      // At 45°, direction should be halfway between NORTH(0,+1) and EAST(1,0)
       expect(updated.dirX).toBeCloseTo(Math.sin(Math.PI / 4))
-      expect(updated.dirY).toBeCloseTo(-Math.cos(Math.PI / 4))
+      expect(updated.dirY).toBeCloseTo(Math.cos(Math.PI / 4))
     })
   })
 })
