@@ -10,6 +10,7 @@ import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
 import { WireframeRenderingService } from '../../services/WireframeRenderingService';
+import { RaycastingRenderingService } from '../../services/RaycastingRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { DoorService } from '../../services/DoorService';
@@ -40,6 +41,12 @@ export class MazeComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingLevel = signal<boolean>(false);
 
+  // Rendering services
+  private readonly raycastingRenderer = new RaycastingRenderingService();
+
+  // Renderer toggle (for comparison testing)
+  readonly rendererType = signal<'wireframe' | 'raycasting'>('raycasting');
+
   // Computed signals from GameStateService
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
   readonly position = computed(() => this.dungeonState()?.position);
@@ -67,7 +74,7 @@ export class MazeComponent implements OnInit {
   });
 
   /**
-   * Canvas drawing commands for 3D wireframe view
+   * Canvas drawing commands for 3D view (wireframe or raycasting)
    */
   readonly drawCommands = computed(() => {
     const pos = this.position();
@@ -79,6 +86,7 @@ export class MazeComponent implements OnInit {
 
     console.log('=== MAZE RENDER START ===');
     console.log(`Position: (${pos.x}, ${pos.y}) facing ${pos.facing}`);
+    console.log(`Renderer: ${this.rendererType()}`);
 
     const levelNum = this.currentLevel();
     const level = DungeonService.loadLevel(levelNum);
@@ -94,11 +102,17 @@ export class MazeComponent implements OnInit {
       type: playerTile.type || 'normal'
     });
 
-    const commands = WireframeRenderingService.generateWireframeCommands(
-      level,
-      pos,
-      { width: 600, height: 600, tileDepth: 5, peripheralColumns: 5 }
-    );
+    const config = {
+      width: 600,
+      height: 600,
+      tileDepth: 10,
+      peripheralColumns: 5
+    };
+
+    // Switch based on renderer type
+    const commands = this.rendererType() === 'raycasting'
+      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config)
+      : WireframeRenderingService.generateWireframeCommands(level, pos, config);
 
     if (commands.length === 0) {
       console.warn('⚠️ NO COMMANDS GENERATED - check visibility and projection!');
@@ -339,6 +353,16 @@ export class MazeComponent implements OnInit {
         this.returnToCamp();
         break;
     }
+  }
+
+  /**
+   * Toggle between wireframe and raycasting renderers.
+   * Debug feature for comparison testing.
+   */
+  toggleRenderer(): void {
+    this.rendererType.update(current =>
+      current === 'wireframe' ? 'raycasting' : 'wireframe'
+    );
   }
 
   private executeMovement(
