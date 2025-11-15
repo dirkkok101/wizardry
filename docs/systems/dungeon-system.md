@@ -133,15 +133,15 @@ Level 10 - Werdna's Lair (final boss)
 
 **Grid Coordinates**:
 - X: 0-19 (west to east)
-- Y: 0-19 (north to south)
+- Y: 0-19 (south to north)
 - Level: 1-10
 
 **Example Positions**:
 ```
-(0,0) = Northwest corner
-(19,0) = Northeast corner
-(0,19) = Southwest corner
-(19,19) = Southeast corner
+(0,0) = Southwest corner (bottom-left)
+(19,0) = Southeast corner (bottom-right)
+(0,19) = Northwest corner (top-left)
+(19,19) = Northeast corner (top-right)
 (10,10) = Center
 ```
 
