@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeon Raycaster Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #gameContainer {
+            position: relative;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #controls {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #0f0;
+            background: rgba(0, 20, 0, 0.8);
+            max-width: 800px;
+        }
+
+        .control-section {
+            margin-bottom: 15px;
+        }
+
+        .control-section h3 {
+            color: #0ff;
+            margin-bottom: 5px;
+        }
+
+        .control-row {
+            margin: 5px 0;
+        }
+
+        #stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 1px solid #0f0;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .minimap {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #0f0;
+            padding: 5px;
+        }
+
+        #minimap {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        button {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 8px 15px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+
+        button:active {
+            background: #0ff;
+        }
+
+        .key {
+            display: inline-block;
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 2px 6px;
+            margin: 0 2px;
+            min-width: 25px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏰 DUNGEON RAYCASTER 🏰</h1>
+    
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="stats">
+            <div>Position: <span id="posX">0.0</span>, <span id="posY">0.0</span></div>
+            <div>Facing: <span id="facing">north</span></div>
+            <div>Tile: <span id="tileX">0</span>, <span id="tileY">0</span></div>
+            <div>FPS: <span id="fps">0</span></div>
+        </div>
+
+        <div class="minimap">
+            <canvas id="minimap" width="100" height="100"></canvas>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="control-section">
+            <h3>CONTROLS</h3>
+            <div class="control-row">
+                <span class="key">↑</span> / <span class="key">W</span> Move Forward
+            </div>
+            <div class="control-row">
+                <span class="key">↓</span> / <span class="key">S</span> Move Backward
+            </div>
+            <div class="control-row">
+                <span class="key">←</span> / <span class="key">A</span> Turn Left
+            </div>
+            <div class="control-row">
+                <span class="key">→</span> / <span class="key">D</span> Turn Right
+            </div>
+            <div class="control-row">
+                <span class="key">Q</span> Strafe Left
+            </div>
+            <div class="control-row">
+                <span class="key">E</span> Strafe Right
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>SETTINGS</h3>
+            <button onclick="toggleMinimap()">Toggle Minimap</button>
+            <button onclick="changeRenderDistance()">Render Distance: <span id="renderDist">10</span></button>
+            <button onclick="changeColors()">Change Theme</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // ============================================================================
+        // INLINE RAYCASTER (Simplified version for demo)
+        // For production, use the separate TypeScript file
+        // ============================================================================
+
+        const mapData = {
+            "level": 1,
+            "name": "Level 1",
+            "size": { "width": 20, "height": 20 },
+            "startPosition": { "x": 0, "y": 0, "facing": "north" },
+            "edgeWrapping": true,
+            "tiles": [
+                {"x":0,"y":0,"walls":{"north":"open","east":"wall","south":"wall","west":"wall"}},
+                {"x":1,"y":0,"walls":{"north":"wall","east":"wall","south":"wall","west":"wall"}},
+                {"x":2,"y":0,"walls":{"north":"wall","east":"door","south":"wall","west":"wall"}},
+                {"x":3,"y":0,"walls":{"north":"wall","east":"wall","south":"wall","west":"door"}},
+                {"x":4,"y":0,"walls":{"north":"wall","east":"door","south":"wall","west":"wall"}},
+                {"x":5,"y":0,"walls":{"north":"open","east":"wall","south":"wall","west":"door"}},
+                {"x":6,"y":0,"walls":{"north":"open","east":"wall","south":"wall","west":"wall"}},
+                {"x":0,"y":1,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":1,"y":1,"walls":{"north":"open","east":"door","south":"wall","west":"wall"}},
+                {"x":2,"y":1,"walls":{"north":"wall","east":"wall","south":"wall","west":"door"}},
+                {"x":3,"y":1,"walls":{"north":"open","east":"door","south":"wall","west":"wall"}},
+                {"x":4,"y":1,"walls":{"north":"wall","east":"wall","south":"wall","west":"door"}},
+                {"x":5,"y":1,"walls":{"north":"open","east":"open","south":"open","west":"wall"}},
+                {"x":6,"y":1,"walls":{"north":"open","east":"wall","south":"open","west":"open"}},
+                {"x":0,"y":2,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":1,"y":2,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":3,"y":2,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":5,"y":2,"walls":{"north":"wall","east":"wall","south":"open","west":"wall"}},
+                {"x":6,"y":2,"walls":{"north":"wall","east":"wall","south":"open","west":"wall"}},
+                {"x":0,"y":3,"walls":{"north":"open","east":"open","south":"open","west":"wall"}},
+                {"x":1,"y":3,"walls":{"north":"open","east":"wall","south":"open","west":"open"}},
+                {"x":2,"y":3,"walls":{"north":"wall","east":"wall","south":"open","west":"wall"}},
+                {"x":3,"y":3,"walls":{"north":"wall","east":"wall","south":"open","west":"wall"}},
+                {"x":0,"y":4,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":1,"y":4,"walls":{"north":"door","east":"wall","south":"open","west":"wall"}},
+                {"x":3,"y":4,"walls":{"north":"open","east":"door","south":"wall","west":"wall"}},
+                {"x":4,"y":4,"walls":{"north":"open","east":"wall","south":"wall","west":"door"}},
+                {"x":5,"y":4,"walls":{"north":"open","east":"wall","south":"wall","west":"wall"}},
+                {"x":6,"y":4,"walls":{"north":"open","east":"wall","south":"wall","west":"wall"}},
+                {"x":0,"y":5,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":1,"y":5,"walls":{"north":"open","east":"wall","south":"door","west":"wall"}},
+                {"x":0,"y":6,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":1,"y":6,"walls":{"north":"open","east":"wall","south":"open","west":"wall"}},
+                {"x":0,"y":7,"walls":{"north":"wall","east":"wall","south":"open","west":"wall"}},
+                {"x":1,"y":7,"walls":{"north":"wall","east":"open","south":"open","west":"wall"}},
+            ]
+        };
+
+        class DungeonMap {
+            constructor(mapData) {
+                this.tiles = new Map();
+                this.width = mapData.size.width;
+                this.height = mapData.size.height;
+                this.edgeWrapping = mapData.edgeWrapping;
+
+                for (const tile of mapData.tiles) {
+                    this.tiles.set(`${tile.x},${tile.y}`, tile);
+                }
+            }
+
+            getTile(x, y) {
+                if (this.edgeWrapping) {
+                    x = ((x % this.width) + this.width) % this.width;
+                    y = ((y % this.height) + this.height) % this.height;
+                }
+                return this.tiles.get(`${x},${y}`);
+            }
+
+            hasWall(x, y, direction) {
+                const tile = this.getTile(x, y);
+                if (!tile) return true;
+                const wallState = tile.walls[direction];
+                return wallState === 'wall' || wallState === 'door';
+            }
+
+            getWallState(x, y, direction) {
+                const tile = this.getTile(x, y);
+                if (!tile) return 'wall';
+                return tile.walls[direction];
+            }
+        }
+
+        class Raycaster {
+            constructor(map) {
+                this.map = map;
+                this.maxRayDistance = 20;
+            }
+
+            castRay(pos, dir, plane, screenX, screenWidth) {
+                const cameraX = 2 * screenX / screenWidth - 1;
+                const rayDirX = dir.x + plane.x * cameraX;
+                const rayDirY = dir.y + plane.y * cameraX;
+
+                let mapX = Math.floor(pos.x);
+                let mapY = Math.floor(pos.y);
+
+                const deltaDistX = Math.abs(1 / rayDirX);
+                const deltaDistY = Math.abs(1 / rayDirY);
+
+                let stepX, stepY, sideDistX, sideDistY;
+
+                if (rayDirX < 0) {
+                    stepX = -1;
+                    sideDistX = (pos.x - mapX) * deltaDistX;
+                } else {
+                    stepX = 1;
+                    sideDistX = (mapX + 1.0 - pos.x) * deltaDistX;
+                }
+
+                if (rayDirY < 0) {
+                    stepY = -1;
+                    sideDistY = (pos.y - mapY) * deltaDistY;
+                } else {
+                    stepY = 1;
+                    sideDistY = (mapY + 1.0 - pos.y) * deltaDistY;
+                }
+
+                let hit = false;
+                let side = 'NS';
+                let steps = 0;
+
+                while (!hit && steps < this.maxRayDistance) {
+                    if (sideDistX < sideDistY) {
+                        sideDistX += deltaDistX;
+                        mapX += stepX;
+                        side = 'NS';
+                    } else {
+                        sideDistY += deltaDistY;
+                        mapY += stepY;
+                        side = 'EW';
+                    }
+
+                    const wallDir = this.getWallDirection(side, stepX, stepY);
+                    if (this.map.hasWall(mapX, mapY, wallDir)) {
+                        hit = true;
+                    }
+                    steps++;
+                }
+
+                if (!hit) return null;
+
+                let perpWallDist = side === 'NS' ? sideDistX - deltaDistX : sideDistY - deltaDistY;
+
+                let wallX = side === 'NS' ? pos.y + perpWallDist * rayDirY : pos.x + perpWallDist * rayDirX;
+                wallX -= Math.floor(wallX);
+
+                const wallDirection = this.getWallDirection(side, stepX, stepY);
+                const wallState = this.map.getWallState(mapX, mapY, wallDirection);
+
+                return {
+                    distance: perpWallDist,
+                    mapX, mapY,
+                    side, wallX,
+                    wallState,
+                    wallDirection
+                };
+            }
+
+            getWallDirection(side, stepX, stepY) {
+                if (side === 'NS') {
+                    return stepX > 0 ? 'west' : 'east';
+                } else {
+                    return stepY > 0 ? 'north' : 'south';
+                }
+            }
+        }
+
+        class Renderer {
+            constructor(canvas, raycaster) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.raycaster = raycaster;
+                this.width = canvas.width;
+                this.height = canvas.height;
+                this.renderDistance = 10;
+                
+                this.colors = {
+                    ceiling: '#1a1a1a',
+                    floor: '#2a2a2a',
+                    wallNS: '#666666',
+                    wallEW: '#444444',
+                    door: '#8B4513'
+                };
+            }
+
+            render(player) {
+                this.ctx.fillStyle = this.colors.ceiling;
+                this.ctx.fillRect(0, 0, this.width, this.height / 2);
+                
+                this.ctx.fillStyle = this.colors.floor;
+                this.ctx.fillRect(0, this.height / 2, this.width, this.height / 2);
+
+                for (let x = 0; x < this.width; x++) {
+                    const hit = this.raycaster.castRay(
+                        player.position,
+                        player.direction,
+                        player.plane,
+                        x,
+                        this.width
+                    );
+
+                    if (hit && hit.distance < this.renderDistance) {
+                        this.drawWallStripe(x, hit);
+                    }
+                }
+            }
+
+            drawWallStripe(x, hit) {
+                const lineHeight = this.height / hit.distance;
+                const drawStart = Math.max(0, -lineHeight / 2 + this.height / 2);
+                const drawEnd = Math.min(this.height, lineHeight / 2 + this.height / 2);
+
+                let color = hit.wallState === 'door' ? this.colors.door :
+                           hit.side === 'NS' ? this.colors.wallNS : this.colors.wallEW;
+
+                const brightness = Math.max(0.2, Math.min(1.0, 1.0 - hit.distance / this.renderDistance));
+                color = this.shadeColor(color, brightness);
+
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+            }
+
+            shadeColor(color, brightness) {
+                const hex = color.replace('#', '');
+                const r = Math.floor(parseInt(hex.substring(0, 2), 16) * brightness);
+                const g = Math.floor(parseInt(hex.substring(2, 4), 16) * brightness);
+                const b = Math.floor(parseInt(hex.substring(4, 6), 16) * brightness);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+        }
+
+        class Player {
+            constructor(startPos, startFacing, map) {
+                this.map = map;
+                this.position = { x: startPos.x + 0.5, y: startPos.y + 0.5 };
+                this.direction = this.facingToVector(startFacing);
+                this.plane = { x: -this.direction.y * 0.66, y: this.direction.x * 0.66 };
+                this.facing = startFacing;
+                this.moveSpeed = 0.1;
+                this.rotSpeed = Math.PI / 2;
+            }
+
+            facingToVector(facing) {
+                const vectors = {
+                    north: { x: 0, y: -1 },
+                    east: { x: 1, y: 0 },
+                    south: { x: 0, y: 1 },
+                    west: { x: -1, y: 0 }
+                };
+                return vectors[facing];
+            }
+
+            vectorToFacing(dir) {
+                const angle = Math.atan2(dir.y, dir.x);
+                const normalized = ((angle + Math.PI * 2) % (Math.PI * 2));
+                
+                if (normalized < Math.PI / 4 || normalized >= 7 * Math.PI / 4) return 'east';
+                if (normalized >= Math.PI / 4 && normalized < 3 * Math.PI / 4) return 'south';
+                if (normalized >= 3 * Math.PI / 4 && normalized < 5 * Math.PI / 4) return 'west';
+                return 'north';
+            }
+
+            rotate(angle) {
+                const oldDirX = this.direction.x;
+                this.direction.x = oldDirX * Math.cos(angle) - this.direction.y * Math.sin(angle);
+                this.direction.y = oldDirX * Math.sin(angle) + this.direction.y * Math.cos(angle);
+
+                const oldPlaneX = this.plane.x;
+                this.plane.x = oldPlaneX * Math.cos(angle) - this.plane.y * Math.sin(angle);
+                this.plane.y = oldPlaneX * Math.sin(angle) + this.plane.y * Math.cos(angle);
+
+                this.facing = this.vectorToFacing(this.direction);
+            }
+
+            turn(direction) {
+                const angle = direction === 'left' ? -this.rotSpeed : this.rotSpeed;
+                this.rotate(angle);
+            }
+
+            move(direction) {
+                const mult = direction === 'forward' ? 1 : -1;
+                const newX = this.position.x + this.direction.x * this.moveSpeed * mult;
+                const newY = this.position.y + this.direction.y * this.moveSpeed * mult;
+
+                if (!this.checkCollision(Math.floor(newX), Math.floor(newY))) {
+                    this.position.x = newX;
+                    this.position.y = newY;
+                }
+            }
+
+            strafe(direction) {
+                const mult = direction === 'right' ? 1 : -1;
+                const strafeX = -this.direction.y * this.moveSpeed * mult;
+                const strafeY = this.direction.x * this.moveSpeed * mult;
+
+                const newX = this.position.x + strafeX;
+                const newY = this.position.y + strafeY;
+
+                if (!this.checkCollision(Math.floor(newX), Math.floor(newY))) {
+                    this.position.x = newX;
+                    this.position.y = newY;
+                }
+            }
+
+            checkCollision(tileX, tileY) {
+                const tile = this.map.getTile(tileX, tileY);
+                if (!tile) return true;
+                return tile.walls.north === 'wall' || tile.walls.south === 'wall' ||
+                       tile.walls.east === 'wall' || tile.walls.west === 'wall';
+            }
+        }
+
+        // ============================================================================
+        // GAME INITIALIZATION
+        // ============================================================================
+
+        const canvas = document.getElementById('gameCanvas');
+        const map = new DungeonMap(mapData);
+        const player = new Player(mapData.startPosition, mapData.startPosition.facing, map);
+        const raycaster = new Raycaster(map);
+        const renderer = new Renderer(canvas, raycaster);
+
+        // Input handling
+        window.addEventListener('keydown', (e) => {
+            switch (e.key.toLowerCase()) {
+                case 'arrowup':
+                case 'w':
+                    player.move('forward');
+                    break;
+                case 'arrowdown':
+                case 's':
+                    player.move('backward');
+                    break;
+                case 'arrowleft':
+                case 'a':
+                    player.turn('left');
+                    break;
+                case 'arrowright':
+                case 'd':
+                    player.turn('right');
+                    break;
+                case 'q':
+                    player.strafe('left');
+                    break;
+                case 'e':
+                    player.strafe('right');
+                    break;
+            }
+        });
+
+        // Minimap
+        const minimapCanvas = document.getElementById('minimap');
+        const minimapCtx = minimapCanvas.getContext('2d');
+        let showMinimap = true;
+
+        function drawMinimap() {
+            if (!showMinimap) return;
+
+            minimapCtx.fillStyle = '#000';
+            minimapCtx.fillRect(0, 0, 100, 100);
+
+            const scale = 5;
+            for (let y = 0; y < 20; y++) {
+                for (let x = 0; x < 20; x++) {
+                    const tile = map.getTile(x, y);
+                    if (tile) {
+                        minimapCtx.fillStyle = '#222';
+                        minimapCtx.fillRect(x * scale, y * scale, scale, scale);
+                    }
+                }
+            }
+
+            minimapCtx.fillStyle = '#0f0';
+            minimapCtx.fillRect(
+                Math.floor(player.position.x) * scale,
+                Math.floor(player.position.y) * scale,
+                scale, scale
+            );
+        }
+
+        // Stats update
+        let frameCount = 0;
+        let lastFpsUpdate = performance.now();
+
+        function updateStats() {
+            document.getElementById('posX').textContent = player.position.x.toFixed(1);
+            document.getElementById('posY').textContent = player.position.y.toFixed(1);
+            document.getElementById('facing').textContent = player.facing;
+            document.getElementById('tileX').textContent = Math.floor(player.position.x);
+            document.getElementById('tileY').textContent = Math.floor(player.position.y);
+
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsUpdate > 1000) {
+                document.getElementById('fps').textContent = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            renderer.render(player);
+            drawMinimap();
+            updateStats();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        // UI Controls
+        window.toggleMinimap = () => {
+            showMinimap = !showMinimap;
+            if (!showMinimap) {
+                minimapCtx.clearRect(0, 0, 100, 100);
+            }
+        };
+
+        let currentRenderDist = 10;
+        window.changeRenderDistance = () => {
+            currentRenderDist = currentRenderDist === 10 ? 15 : currentRenderDist === 15 ? 5 : 10;
+            renderer.renderDistance = currentRenderDist;
+            document.getElementById('renderDist').textContent = currentRenderDist;
+        };
+
+        const themes = [
+            { wallNS: '#666666', wallEW: '#444444', door: '#8B4513' },
+            { wallNS: '#8B7355', wallEW: '#6B5345', door: '#CD853F' },
+            { wallNS: '#4A4A8B', wallEW: '#2A2A6B', door: '#6495ED' },
+            { wallNS: '#8B4A8B', wallEW: '#6B2A6B', door: '#DA70D6' }
+        ];
+        let currentTheme = 0;
+
+        window.changeColors = () => {
+            currentTheme = (currentTheme + 1) % themes.length;
+            Object.assign(renderer.colors, themes[currentTheme]);
+        };
+    </script>
+</body>
+</html>
