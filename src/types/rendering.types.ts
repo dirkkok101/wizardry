@@ -2,7 +2,7 @@
  * Canvas drawing command - represents a single draw operation
  */
 export interface CanvasCommand {
-  type: 'line' | 'rect' | 'fillRect' | 'fillPolygon' | 'text';
+  type: 'line' | 'rect' | 'fillRect' | 'fillPolygon' | 'text' | 'putImageData';
   x: number;
   y: number;
   x2?: number;          // For lines (end point)
@@ -10,9 +10,10 @@ export interface CanvasCommand {
   width?: number;       // For rectangles
   height?: number;      // For rectangles
   points?: { x: number; y: number }[];  // For polygons
-  color: string;        // e.g., '#0f0', '#080'
+  color?: string;       // e.g., '#0f0', '#080' (optional for putImageData)
   lineWidth?: number;   // 1-3px
   alpha?: number;       // 0.0-1.0 for distance fading
+  imageData?: ImageData;  // For putImageData type (texture slices)
 }
 
 /**

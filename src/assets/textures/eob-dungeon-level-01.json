@@ -1,0 +1,97 @@
+{
+  "id": "eob_dungeon_level_01",
+  "description": "Eye of the Beholder - Stone Dungeon Textures (Level 1-3)",
+  "imagePath": "/assets/textures/eob-dungeon-level-01.png",
+  "width": 512,
+  "height": 512,
+  "textures": [
+    {
+      "id": "stone_wall_ns_01",
+      "x": 0,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "tags": ["wall", "ns", "stone"]
+    },
+    {
+      "id": "stone_wall_ns_02",
+      "x": 64,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "tags": ["wall", "ns", "stone"]
+    },
+    {
+      "id": "stone_wall_ns_03",
+      "x": 128,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "tags": ["wall", "ns", "stone"]
+    },
+    {
+      "id": "stone_wall_ew_01",
+      "x": 0,
+      "y": 64,
+      "width": 64,
+      "height": 64,
+      "tags": ["wall", "ew", "stone"]
+    },
+    {
+      "id": "stone_wall_ew_02",
+      "x": 64,
+      "y": 64,
+      "width": 64,
+      "height": 64,
+      "tags": ["wall", "ew", "stone"]
+    },
+    {
+      "id": "stone_wall_ew_03",
+      "x": 128,
+      "y": 64,
+      "width": 64,
+      "height": 64,
+      "tags": ["wall", "ew", "stone"]
+    },
+    {
+      "id": "wooden_door_01",
+      "x": 0,
+      "y": 128,
+      "width": 64,
+      "height": 64,
+      "tags": ["door", "wood"]
+    },
+    {
+      "id": "iron_door_locked_01",
+      "x": 64,
+      "y": 128,
+      "width": 64,
+      "height": 64,
+      "tags": ["door", "locked", "iron"]
+    },
+    {
+      "id": "secret_door_01",
+      "x": 128,
+      "y": 128,
+      "width": 64,
+      "height": 64,
+      "tags": ["secret", "stone"]
+    },
+    {
+      "id": "stone_floor_01",
+      "x": 0,
+      "y": 192,
+      "width": 64,
+      "height": 64,
+      "tags": ["floor", "stone"]
+    },
+    {
+      "id": "stone_ceiling_01",
+      "x": 64,
+      "y": 192,
+      "width": 64,
+      "height": 64,
+      "tags": ["ceiling", "stone"]
+    }
+  ]
+}

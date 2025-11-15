@@ -3,13 +3,15 @@ import { CanvasCommand, ViewportConfig } from '../types/rendering.types';
 import { RaycastingService } from './RaycastingService';
 import { PlayerStateService } from './PlayerStateService';
 import { RayHit } from '../types/rendering.types';
+import { TextureSet, TextureSlice, TextureRenderConfig, DEFAULT_TEXTURE_CONFIG, TextureSliceCacheKey } from '../types/texture.types';
+import * as TextureAtlasService from './TextureAtlasService';
 
 /**
  * Raycasting rendering service that generates canvas commands.
  *
+ * Supports both solid color rendering (original) and textured rendering (EoB-style).
  * Casts one ray per screen column, calculates wall heights based on
- * perpendicular distance, and generates fillRect commands with
- * distance-based shading.
+ * perpendicular distance, and generates canvas commands (fillRect or putImageData).
  *
  * Reference: docs/research/renderer/dungeon-renderer-implementation.ts
  */
@@ -25,8 +27,14 @@ export class RaycastingRenderingService {
     secretDoor: '#000000'   // Black (invisible)
   };
 
-  constructor() {
+  // Texture cache for performance
+  private readonly textureSliceCache: Map<TextureSliceCacheKey, TextureSlice>;
+  private readonly textureConfig: TextureRenderConfig;
+
+  constructor(textureConfig: TextureRenderConfig = DEFAULT_TEXTURE_CONFIG) {
     this.raycaster = new RaycastingService(20);
+    this.textureConfig = textureConfig;
+    this.textureSliceCache = TextureAtlasService.createSliceCache();
   }
 
   /**
@@ -35,12 +43,14 @@ export class RaycastingRenderingService {
    * @param level - Level data
    * @param position - Player position
    * @param config - Viewport configuration
+   * @param textureSet - Optional texture set for textured rendering
    * @returns Array of canvas commands
    */
   generateRaycastCommands(
     level: LevelData,
     position: Position,
-    config: ViewportConfig
+    config: ViewportConfig,
+    textureSet?: TextureSet
   ): CanvasCommand[] {
     const commands: CanvasCommand[] = [];
 
@@ -58,8 +68,10 @@ export class RaycastingRenderingService {
       const hit = this.raycaster.castRay(level, playerState, rayDirX, rayDirY);
 
       if (hit && hit.distance < config.tileDepth) {
-        // Render this wall column
-        const columnCommands = this.renderWallColumn(hit, x, config);
+        // Render this wall column (textured or solid color)
+        const columnCommands = textureSet
+          ? this.renderTexturedWallColumn(hit, x, config, textureSet)
+          : this.renderWallColumn(hit, x, config);
         commands.push(...columnCommands);
       }
     }
@@ -119,6 +131,85 @@ export class RaycastingRenderingService {
       color: shadedColor,
       alpha: 1.0
     }];
+  }
+
+  /**
+   * Render a single textured wall column.
+   *
+   * @param hit - Ray hit data
+   * @param screenX - Screen X coordinate
+   * @param config - Viewport configuration
+   * @param textureSet - Texture set to use
+   * @returns Canvas commands for this column
+   */
+  private renderTexturedWallColumn(
+    hit: RayHit,
+    screenX: number,
+    config: ViewportConfig,
+    textureSet: TextureSet
+  ): CanvasCommand[] {
+    // Calculate wall height based on perpendicular distance
+    const lineHeight = config.height / hit.distance;
+
+    // Calculate drawing bounds (centered on screen)
+    const drawStart = Math.max(0, -lineHeight / 2 + config.height / 2);
+    const drawEnd = Math.min(config.height, lineHeight / 2 + config.height / 2);
+    const wallHeight = Math.ceil(drawEnd - drawStart);
+
+    // Select texture based on wall type and orientation
+    const texture = TextureAtlasService.selectWallTexture(
+      textureSet,
+      hit.wallState,
+      hit.side
+    );
+
+    // Fallback to solid color if no texture found
+    if (!texture) {
+      return this.renderWallColumn(hit, screenX, config);
+    }
+
+    // Extract texture slice at wallX position
+    const slice = TextureAtlasService.extractTextureSliceCached(
+      texture,
+      hit.wallX,
+      wallHeight,
+      this.textureSliceCache,
+      this.textureConfig
+    );
+
+    // Apply distance fog
+    const brightness = this.calculateBrightness(hit.distance, config.tileDepth);
+    const shadedSlice = TextureAtlasService.applyBrightnessToSlice(slice, brightness);
+
+    // Create ImageData for this column
+    const imageData = new ImageData(shadedSlice.pixels, 1, wallHeight);
+
+    // Generate putImageData command
+    return [{
+      type: 'putImageData',
+      x: screenX,
+      y: Math.floor(drawStart),
+      width: 1,
+      height: wallHeight,
+      imageData,
+      alpha: 1.0
+    }];
+  }
+
+  /**
+   * Get cache statistics for debugging/monitoring.
+   *
+   * @returns Cache stats
+   */
+  getCacheStats(): { size: number; memoryUsageMB: number } {
+    return TextureAtlasService.getCacheStats(this.textureSliceCache);
+  }
+
+  /**
+   * Clear texture slice cache.
+   */
+  clearCache(): void {
+    TextureAtlasService.clearSliceCache(this.textureSliceCache);
   }
 
   /**
