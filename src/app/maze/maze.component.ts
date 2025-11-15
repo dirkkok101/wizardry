@@ -84,23 +84,8 @@ export class MazeComponent implements OnInit {
       return [];
     }
 
-    console.log('=== MAZE RENDER START ===');
-    console.log(`Position: (${pos.x}, ${pos.y}) facing ${pos.facing}`);
-    console.log(`Renderer: ${this.rendererType()}`);
-
     const levelNum = this.currentLevel();
     const level = DungeonService.loadLevel(levelNum);
-    console.log(`Level: ${level.level} "${level.name}" ${level.size.width}x${level.size.height}`);
-
-    // Log what the map says about the player's current tile
-    const playerTile = DungeonService.getTile(level, pos.x, pos.y);
-    console.log(`Player Tile (${pos.x},${pos.y}):`, {
-      north: playerTile.walls.north,
-      east: playerTile.walls.east,
-      south: playerTile.walls.south,
-      west: playerTile.walls.west,
-      type: playerTile.type || 'normal'
-    });
 
     const config = {
       width: 600,
@@ -116,10 +101,7 @@ export class MazeComponent implements OnInit {
 
     if (commands.length === 0) {
       console.warn('⚠️ NO COMMANDS GENERATED - check visibility and projection!');
-    } else {
-      console.log(`✓ Render complete: ${commands.length} commands`);
     }
-    console.log('=== MAZE RENDER END ===\n');
 
     return commands;
   });
