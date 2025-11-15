@@ -9,7 +9,8 @@ import { MazeViewComponent } from '../../components/maze-view/maze-view.componen
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
-import { MazeRenderingService } from '../../services/MazeRenderingService';
+import { WireframeRenderingService } from '../../services/WireframeRenderingService';
+import { RaycastingRenderingService } from '../../services/RaycastingRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { DoorService } from '../../services/DoorService';
@@ -18,7 +19,7 @@ import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
-import { DungeonState, TileData, SpatialTileData } from '../../types/Dungeon';
+import { DungeonState, TileData } from '../../types/Dungeon';
 
 @Component({
   selector: 'app-maze',
@@ -39,6 +40,12 @@ export class MazeComponent implements OnInit {
   readonly messages = signal<string[]>([]);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingLevel = signal<boolean>(false);
+
+  // Rendering services
+  private readonly raycastingRenderer = new RaycastingRenderingService();
+
+  // Renderer toggle (for comparison testing)
+  readonly rendererType = signal<'wireframe' | 'raycasting'>('raycasting');
 
   // Computed signals from GameStateService
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
@@ -67,37 +74,36 @@ export class MazeComponent implements OnInit {
   });
 
   /**
-   * Tiles visible from current position based on light radius
-   * Darkness tiles override light spells (per-tile darkness)
-   */
-  readonly visibleTiles = computed(() => {
-    const dungeon = this.dungeonState();
-    if (!dungeon) return [];
-
-    const level = DungeonService.loadLevel(this.currentLevel());
-    const pos = this.position();
-    if (!pos) return [];
-
-    // Check if current tile is darkness
-    const currentTile = DungeonService.getTile(level, pos.x, pos.y);
-    const effectiveLightRadius = currentTile.type === 'darkness' ? 0 : dungeon.lightRadius;
-
-    return DungeonService.getVisibleTiles(level, pos, effectiveLightRadius);
-  });
-
-  /**
-   * Canvas drawing commands for 3D view
+   * Canvas drawing commands for 3D view (wireframe or raycasting)
    */
   readonly drawCommands = computed(() => {
-    const tiles = this.visibleTiles();
     const pos = this.position();
-    if (!pos || tiles.length === 0) return [];
 
-    return MazeRenderingService.generateView(
-      tiles as SpatialTileData[],
-      pos.facing,
-      { width: 600, height: 600, tileDepth: 3 }
-    );
+    if (!pos) {
+      console.warn('[MazeComponent] No position, returning empty commands');
+      return [];
+    }
+
+    const levelNum = this.currentLevel();
+    const level = DungeonService.loadLevel(levelNum);
+
+    const config = {
+      width: 600,
+      height: 600,
+      tileDepth: 10,
+      peripheralColumns: 5
+    };
+
+    // Switch based on renderer type
+    const commands = this.rendererType() === 'raycasting'
+      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config)
+      : WireframeRenderingService.generateWireframeCommands(level, pos, config);
+
+    if (commands.length === 0) {
+      console.warn('⚠️ NO COMMANDS GENERATED - check visibility and projection!');
+    }
+
+    return commands;
   });
 
   /**
@@ -190,24 +196,6 @@ export class MazeComponent implements OnInit {
     }
 
     this.router.navigate(['/camp']);
-  }
-
-  @HostListener('window:keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    const key = event.key.toLowerCase();
-
-    switch(key) {
-      case 'w': this.moveForward(); break;
-      case 's': this.moveBackward(); break;
-      case 'a': this.turnLeft(); break;
-      case 'd': this.turnRight(); break;
-      case 'q': this.strafeLeft(); break;
-      case 'e': this.strafeRight(); break;
-      case 'k': this.kickDoor(); break;
-      case 'i': this.inspectTile(); break;
-      case 'escape': this.returnToCamp(); break;
-      // More keys will be added in later tasks
-    }
   }
 
   returnToCamp(): void {
@@ -347,6 +335,16 @@ export class MazeComponent implements OnInit {
         this.returnToCamp();
         break;
     }
+  }
+
+  /**
+   * Toggle between wireframe and raycasting renderers.
+   * Debug feature for comparison testing.
+   */
+  toggleRenderer(): void {
+    this.rendererType.update(current =>
+      current === 'wireframe' ? 'raycasting' : 'wireframe'
+    );
   }
 
   private executeMovement(

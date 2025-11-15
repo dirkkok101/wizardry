@@ -3,7 +3,7 @@ import { CanvasCommand } from '../../types/rendering.types';
 
 /**
  * Canvas-based 3D maze view component
- * Executes drawing commands from MazeRenderingService
+ * Executes drawing commands from WireframeRenderingService
  */
 @Component({
   selector: 'app-maze-view',
@@ -22,14 +22,13 @@ export class MazeViewComponent {
 
   constructor() {
     // React to changes in commands signal
-    // Only render if context is available (after ngAfterViewInit)
     effect(() => {
-      // Check ctx without creating signal dependency
-      if (untracked(() => this.ctx)) {
-        const commands = this.commands(); // Subscribe to signal changes
-        if (commands.length > 0) {
-          this.render();
-        }
+      const commands = this.commands(); // Subscribe to signal changes
+      console.log(`[MazeView Effect] Triggering render with ${commands.length} commands`);
+
+      // Only render if context is available (after ngAfterViewInit)
+      if (this.ctx) {
+        this.render();
       }
     });
   }
@@ -41,7 +40,10 @@ export class MazeViewComponent {
   }
 
   private render(): void {
-    if (!this.ctx) return;
+    if (!this.ctx) {
+      console.error('[MazeViewComponent] render - Canvas context not initialized!');
+      return;
+    }
 
     const canvas = this.canvasRef.nativeElement;
     const commands = this.commands();
@@ -54,6 +56,8 @@ export class MazeViewComponent {
     for (const cmd of commands) {
       this.executeCommand(cmd);
     }
+
+    console.log(`[Canvas] Drew ${commands.length} commands`);
   }
 
   private executeCommand(cmd: CanvasCommand): void {
@@ -77,6 +81,17 @@ export class MazeViewComponent {
         break;
       case 'fillRect':
         this.ctx.fillRect(cmd.x, cmd.y, cmd.width!, cmd.height!);
+        break;
+      case 'fillPolygon':
+        if (cmd.points && cmd.points.length > 0) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(cmd.points[0].x, cmd.points[0].y);
+          for (let i = 1; i < cmd.points.length; i++) {
+            this.ctx.lineTo(cmd.points[i].x, cmd.points[i].y);
+          }
+          this.ctx.closePath();
+          this.ctx.fill();
+        }
         break;
     }
   }

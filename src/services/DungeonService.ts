@@ -57,6 +57,7 @@ export const DungeonService = {
     }
 
     // Return default tile (all walls)
+    console.log(`[DungeonService] getTile - No tile data for (${x},${y}), returning default (all walls)`);
     return {
       x,
       y,
@@ -118,43 +119,6 @@ export const DungeonService = {
   },
 
   /**
-   * Get all visible tiles in front of party (3-column grid)
-   * @param level - Current dungeon level
-   * @param position - Party position and facing direction
-   * @param lightRadius - How far party can see (1-3 tiles)
-   * @returns Array of visible tiles with relative positioning
-   */
-  getVisibleTiles(
-    level: LevelData,
-    position: Position,
-    lightRadius: number
-  ): TileData[] {
-    const tiles: TileData[] = [];
-    const maxDepth = Math.min(lightRadius, 3);
-
-    // Iterate through each depth (distance ahead)
-    for (let depth = 1; depth <= maxDepth; depth++) {
-      // Iterate through each column (left, center, right)
-      for (let column = -1; column <= 1; column++) {
-        // Transform relative position to world coordinates
-        const worldCoords = this.transformToWorldCoords(position, column, depth);
-
-        // Get tile data from map
-        const tile = this.getTile(level, worldCoords.x, worldCoords.y);
-
-        // Add relative positioning for rendering
-        tiles.push({
-          ...tile,
-          relativeX: column,
-          relativeDepth: depth
-        });
-      }
-    }
-
-    return tiles;
-  },
-
-  /**
    * Transform relative coordinates (from player perspective) to world coordinates
    * @param position - Player position with facing direction
    * @param relativeX - Horizontal offset (-1 = left, 0 = center, 1 = right)
@@ -171,9 +135,9 @@ export const DungeonService = {
 
     switch (position.facing) {
       case 'NORTH':
-        // North: forward = -Y, left = -X
+        // North: forward = +Y, left = -X
         worldX = position.x + relativeX;
-        worldY = position.y - relativeY;
+        worldY = position.y + relativeY;
         break;
       case 'EAST':
         // East: forward = +X, left = -Y
@@ -181,9 +145,9 @@ export const DungeonService = {
         worldY = position.y + relativeX;
         break;
       case 'SOUTH':
-        // South: forward = +Y, left = +X
+        // South: forward = -Y, left = +X
         worldX = position.x - relativeX;
-        worldY = position.y + relativeY;
+        worldY = position.y - relativeY;
         break;
       case 'WEST':
         // West: forward = -X, left = +Y

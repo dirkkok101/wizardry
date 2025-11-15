@@ -15,7 +15,9 @@ export const NavigationService = {
    * Sets default position and enables torch light
    */
   enterDungeon(state: GameState, level: number): GameState {
-    return {
+    console.log(`[NavigationService] enterDungeon called - level=${level}`);
+
+    const newState: GameState = {
       ...state,
       dungeon: {
         currentLevel: level,
@@ -27,7 +29,11 @@ export const NavigationService = {
         defeatedEncounters: [],
         unlockedDoors: new Set<string>()
       }
-    }
+    };
+
+    const pos = newState.dungeon.position;
+    console.log(`[NavigationService] enterDungeon - created state: level=${newState.dungeon.currentLevel}, position=(${pos.x},${pos.y},${pos.facing}), lightRadius=${newState.dungeon.lightRadius}`);
+    return newState;
   },
 
   /**
