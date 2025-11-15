@@ -26,8 +26,8 @@ export const WireframeRenderingService = {
     const playerState = PlayerStateService.fromPosition(position)
     console.log(`[Wireframe] dirX=${playerState.dirX}, dirY=${playerState.dirY}`);
 
-    // Find visible walls using flood-fill
-    const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth)
+    // Find visible walls using hybrid grid + projection
+    const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth, config.peripheralColumns)
 
     if (walls.length === 0) {
       return commands;

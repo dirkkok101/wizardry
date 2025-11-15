@@ -38,15 +38,22 @@ describe('VisibilityService', () => {
       expect(walls.every(w => w.distance >= 0)).toBe(true)
     })
 
-    it('finds north wall when player at (2,1) facing north', () => {
+    it('finds forward walls when player at (2,2) facing north', () => {
       const level = createTestLevel()
-      const position: Position = { x: 2, y: 1, facing: 'NORTH' }
+      // Add a wall ahead of player
+      level.tiles.find(t => t.x === 2 && t.y === 3)!.walls.north = 'wall'
 
-      const walls = VisibilityService.getVisibleWalls(level, position, 2)
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const walls = VisibilityService.getVisibleWalls(level, position, 3, 3)
 
-      // Should find north wall at y=0
-      const northWalls = walls.filter(w => w.z1 === -0.5 && w.z2 === -0.5)
-      expect(northWalls.length).toBeGreaterThan(0)
+      // Should find walls in forward direction (3-column grid)
+      expect(walls.length).toBeGreaterThan(0)
+
+      // All walls should be at or ahead of player (z >= 2)
+      walls.forEach(w => {
+        const wallZ = (w.z1 + w.z2) / 2
+        expect(wallZ).toBeGreaterThanOrEqual(1.5) // Closest wall is at player tile edges
+      })
     })
 
     it('sorts walls by distance (back to front)', () => {
@@ -78,11 +85,70 @@ describe('VisibilityService', () => {
       level.tiles.find(t => t.x === 2 && t.y === 1)!.walls.north = 'wall'
 
       const position: Position = { x: 2, y: 2, facing: 'NORTH' }
-      const walls = VisibilityService.getVisibleWalls(level, position, 5)
+      const walls = VisibilityService.getVisibleWalls(level, position, 5, 3)
 
       // Should not see walls beyond the blocking wall
       const beyondWalls = walls.filter(w => w.z1 < -1.5 || w.z2 < -1.5)
       expect(beyondWalls.length).toBe(0)
+    })
+
+    it('respects peripheralColumns parameter (1 column = center only)', () => {
+      const level = createTestLevel()
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+
+      const walls1Col = VisibilityService.getVisibleWalls(level, position, 3, 1)
+      const walls3Col = VisibilityService.getVisibleWalls(level, position, 3, 3)
+
+      // 3 columns should show more walls than 1 column (includes peripherals)
+      expect(walls3Col.length).toBeGreaterThan(walls1Col.length)
+    })
+
+    it('shows peripheral walls with peripheralColumns=3 when facing wall', () => {
+      // Create level with blocking wall directly ahead at (2,3) north
+      // but add walls to peripheral tiles that should be visible
+      const level = createTestLevel()
+
+      // Add wall ahead to block forward view
+      level.tiles.find(t => t.x === 2 && t.y === 3)!.walls.north = 'wall'
+
+      // Add walls to left and right peripheral tiles
+      level.tiles.find(t => t.x === 1 && t.y === 2)!.walls.west = 'wall'
+      level.tiles.find(t => t.x === 3 && t.y === 2)!.walls.east = 'wall'
+      level.tiles.find(t => t.x === 1 && t.y === 3)!.walls.west = 'door'
+      level.tiles.find(t => t.x === 3 && t.y === 3)!.walls.east = 'door'
+
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const walls = VisibilityService.getVisibleWalls(level, position, 2, 3)
+
+      // Should find walls from peripheral tiles even though center may be blocked
+      // Including left/right walls from tiles at depth 0 and 1
+      expect(walls.length).toBeGreaterThan(0)
+
+      // Should include peripheral walls (doors)
+      const peripheralDoors = walls.filter(w => w.wallType === 'door')
+      expect(peripheralDoors.length).toBeGreaterThan(0)
+    })
+
+    it('calculates correct column offsets for peripheralColumns=3', () => {
+      // When facing NORTH from (2,2), with peripheralColumns=3:
+      // - Left column: x=1
+      // - Center column: x=2
+      // - Right column: x=3
+      const level = createTestLevel()
+
+      // Add distinctive walls to left and right tiles
+      level.tiles.find(t => t.x === 1 && t.y === 2)!.walls.west = 'door'
+      level.tiles.find(t => t.x === 3 && t.y === 2)!.walls.east = 'locked_door'
+
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const walls = VisibilityService.getVisibleWalls(level, position, 1, 3)
+
+      // Should find both peripheral walls (left door + right locked door)
+      const leftDoor = walls.find(w => w.wallType === 'door')
+      const rightDoor = walls.find(w => w.wallType === 'locked_door')
+
+      expect(leftDoor).toBeDefined()
+      expect(rightDoor).toBeDefined()
     })
 
     describe('edge wrapping', () => {
@@ -210,10 +276,11 @@ describe('VisibilityService', () => {
 
       const wall = VisibilityService.createWallSegment(3, 5, 'north', position, 'wall', levelSize)
 
+      // North wall is at +Y edge: z = gridY + 0.5 = 5.5
       expect(wall.x1).toBe(2.5)  // 3 - 0.5
-      expect(wall.z1).toBe(4.5)  // 5 - 0.5
+      expect(wall.z1).toBe(5.5)  // 5 + 0.5 (north = +Y direction)
       expect(wall.x2).toBe(3.5)  // 3 + 0.5
-      expect(wall.z2).toBe(4.5)
+      expect(wall.z2).toBe(5.5)  // 5 + 0.5
       expect(wall.isVertical).toBe(true)
       expect(wall.height).toBe(1.0)
     })
@@ -223,10 +290,11 @@ describe('VisibilityService', () => {
 
       const wall = VisibilityService.createWallSegment(3, 5, 'east', position, 'wall', levelSize)
 
-      expect(wall.x1).toBe(3.5)
-      expect(wall.z1).toBe(4.5)
-      expect(wall.x2).toBe(3.5)
-      expect(wall.z2).toBe(5.5)
+      // East wall is at +X edge
+      expect(wall.x1).toBe(3.5)  // 3 + 0.5
+      expect(wall.z1).toBe(4.5)  // 5 - 0.5
+      expect(wall.x2).toBe(3.5)  // 3 + 0.5
+      expect(wall.z2).toBe(5.5)  // 5 + 0.5
       expect(wall.isVertical).toBe(false)
     })
 
@@ -253,12 +321,13 @@ describe('VisibilityService', () => {
       it('unwraps Y coordinate when wall wraps north (player at 0, wall at 19)', () => {
         const position: Position = { x: 0, y: 0, facing: 'NORTH' }
 
-        // Wall at tile (0, 19) should unwrap to tile y=-1 (1 tile north of player)
-        // North wall edge is at tile center - 0.5
+        // Wall at tile (0, 19) should unwrap to tile y=-1 (1 tile south of player)
+        // North wall edge is at tile center + 0.5
         const wall = VisibilityService.createWallSegment(0, 19, 'north', position, 'wall', levelSize)
 
-        expect(wall.z1).toBe(-1.5)  // Unwrapped tile: 19 - 20 = -1, north wall edge at -1 - 0.5 = -1.5
-        expect(wall.z2).toBe(-1.5)  // Same for both corners (north wall is horizontal)
+        // Unwrapped tile: 19 - 20 = -1, north wall edge at -1 + 0.5 = -0.5
+        expect(wall.z1).toBe(-0.5)
+        expect(wall.z2).toBe(-0.5)
       })
 
       it('unwraps Y coordinate when wall wraps south (player at 19, wall at 0)', () => {
@@ -267,8 +336,9 @@ describe('VisibilityService', () => {
         // Wall at tile (10, 0) should unwrap to z=20 (1 tile south of player at 19)
         const wall = VisibilityService.createWallSegment(10, 0, 'south', position, 'wall', levelSize)
 
-        expect(wall.z1).toBe(20.5)  // Unwrapped: 0 + 20 = 20, wall south edge at 20 + 0.5 = 20.5
-        expect(wall.z2).toBe(20.5)
+        // Unwrapped: 0 + 20 = 20, south wall edge at 20 - 0.5 = 19.5
+        expect(wall.z1).toBe(19.5)
+        expect(wall.z2).toBe(19.5)
       })
 
       it('unwraps X coordinate when wall wraps east (player at 19, wall at 0)', () => {
@@ -298,8 +368,9 @@ describe('VisibilityService', () => {
         // Wall at tile (5, 10) is 5 tiles away, no unwrapping needed
         const wall = VisibilityService.createWallSegment(5, 10, 'north', position, 'wall', levelSize)
 
-        expect(wall.z1).toBe(9.5)   // Normal: 10 - 0.5 = 9.5
-        expect(wall.z2).toBe(9.5)
+        // North wall at +Y edge: 10 + 0.5 = 10.5
+        expect(wall.z1).toBe(10.5)
+        expect(wall.z2).toBe(10.5)
       })
     })
   })

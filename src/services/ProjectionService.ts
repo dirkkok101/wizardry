@@ -65,14 +65,7 @@ export const ProjectionService = {
 
     // Frustum culling in NDC space [-1, 1]
     // Allow slight tolerance for floating point precision
-    const isClipped = Math.abs(ndcX) > 1.001 || Math.abs(ndcY) > 1.001
-
-    // Debug: log NDC values for points that are near the frustum edge
-    if (Math.abs(Math.abs(ndcX) - 1.0) < 0.1 || Math.abs(Math.abs(ndcY) - 1.0) < 0.1) {
-      console.log(`[NDC] viewZ=${viewPoint.z.toFixed(3)}, ndcX=${ndcX.toFixed(6)}, ndcY=${ndcY.toFixed(6)}, clipped=${isClipped}`);
-    }
-
-    if (isClipped) return null
+    if (Math.abs(ndcX) > 1.001 || Math.abs(ndcY) > 1.001) return null
 
     // Convert NDC to screen coordinates
     const screenX = (ndcX + 1) * (config.width / 2)

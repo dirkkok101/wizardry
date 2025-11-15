@@ -7,21 +7,18 @@ import { DungeonService } from './DungeonService'
  */
 export const VisibilityService = {
   /**
-   * Get all visible wall segments from player position using flood-fill
+   * Get all visible wall segments from player position using hybrid flood-fill + grid
+   * Uses flood-fill for forward visibility, then adds peripheral columns (Wizardry-style)
    * Returns walls sorted back-to-front for painter's algorithm
    */
   getVisibleWalls(
     level: LevelData,
     position: Position,
-    maxDepth: number = 5
+    maxDepth: number = 5,
+    peripheralColumns: number = 3
   ): WallSegment[] {
     const walls: WallSegment[] = []
     const visited = new Set<string>()
-    const queue: { x: number; y: number; depth: number }[] = []
-
-    // Start from player's grid position
-    queue.push({ x: position.x, y: position.y, depth: 0 })
-    visited.add(`${position.x},${position.y}`);
 
     // Helper to wrap coordinates if edge wrapping is enabled
     const wrapCoords = (x: number, y: number): { x: number; y: number } => {
@@ -34,79 +31,101 @@ export const VisibilityService = {
       }
     }
 
-    let iterationCount = 0;
-    const tilesVisited: string[] = [];
-    while (queue.length > 0) {
-      const current = queue.shift()!
-      const { x, y, depth } = current
-      iterationCount++;
-      tilesVisited.push(`(${x},${y},d=${depth})`);
+    // Helper to add walls from a tile
+    const addTileWalls = (tileX: number, tileY: number) => {
+      const wrapped = wrapCoords(tileX, tileY)
+      const tile = DungeonService.getTile(level, wrapped.x, wrapped.y)
 
-      const tile = DungeonService.getTile(level, x, y)
-
-      // Don't traverse beyond maxDepth, but DO render walls at maxDepth
-      const stopTraversal = depth >= maxDepth
-
-      // Check all 4 walls of current cell
-      // North wall (y+1) - NORTH = +Y in our coordinate system
+      // Add all 4 walls if they're not open
       if (tile.walls.north !== 'open') {
-        walls.push(this.createWallSegment(x, y, 'north', position, tile.walls.north, level.size))
-      } else if (!stopTraversal) {
-        const wrapped = wrapCoords(x, y + 1)
-        const key = `${wrapped.x},${wrapped.y}`
-        if (!visited.has(key)) {
-          queue.push({ x: wrapped.x, y: wrapped.y, depth: depth + 1 })
-          visited.add(key)
-        }
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'north', position, tile.walls.north, level.size))
       }
-
-      // South wall (y-1) - SOUTH = -Y in our coordinate system
       if (tile.walls.south !== 'open') {
-        walls.push(this.createWallSegment(x, y, 'south', position, tile.walls.south, level.size))
-      } else if (!stopTraversal) {
-        const wrapped = wrapCoords(x, y - 1)
-        const key = `${wrapped.x},${wrapped.y}`
-        if (!visited.has(key)) {
-          queue.push({ x: wrapped.x, y: wrapped.y, depth: depth + 1 })
-          visited.add(key)
-        }
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'south', position, tile.walls.south, level.size))
       }
-
-      // East wall (x+1)
       if (tile.walls.east !== 'open') {
-        walls.push(this.createWallSegment(x, y, 'east', position, tile.walls.east, level.size))
-      } else if (!stopTraversal) {
-        const wrapped = wrapCoords(x + 1, y)
-        const key = `${wrapped.x},${wrapped.y}`
-        if (!visited.has(key)) {
-          queue.push({ x: wrapped.x, y: wrapped.y, depth: depth + 1 })
-          visited.add(key)
-        }
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'east', position, tile.walls.east, level.size))
       }
-
-      // West wall (x-1)
       if (tile.walls.west !== 'open') {
-        walls.push(this.createWallSegment(x, y, 'west', position, tile.walls.west, level.size))
-      } else if (!stopTraversal) {
-        const wrapped = wrapCoords(x - 1, y)
-        const key = `${wrapped.x},${wrapped.y}`
-        if (!visited.has(key)) {
-          queue.push({ x: wrapped.x, y: wrapped.y, depth: depth + 1 })
-          visited.add(key)
-        }
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'west', position, tile.walls.west, level.size))
       }
     }
 
-    // Calculate wall distance range
-    const minDist = walls.length > 0 ? Math.min(...walls.map(w => w.distance)) : 0;
-    const maxDist = walls.length > 0 ? Math.max(...walls.map(w => w.distance)) : 0;
+    // Calculate perpendicular direction based on facing
+    // perpX/perpY represent "right" direction from player's perspective
+    let perpX = 0, perpY = 0
+    let forwardX = 0, forwardY = 0
 
-    console.log(`[Visibility] Found ${walls.length} walls from ${visited.size} tiles (${iterationCount} iterations)`);
-    console.log(`[Visibility] Tiles visited: ${tilesVisited.join(' ')}`);
+    switch (position.facing) {
+      case 'NORTH':
+        forwardX = 0; forwardY = 1   // Forward = +Y
+        perpX = 1; perpY = 0          // Right = +X
+        break
+      case 'EAST':
+        forwardX = 1; forwardY = 0    // Forward = +X
+        perpX = 0; perpY = -1         // Right = -Y
+        break
+      case 'SOUTH':
+        forwardX = 0; forwardY = -1   // Forward = -Y
+        perpX = -1; perpY = 0         // Right = -X
+        break
+      case 'WEST':
+        forwardX = -1; forwardY = 0   // Forward = -X
+        perpX = 0; perpY = 1          // Right = +Y
+        break
+    }
+
+    // Calculate column offsets: peripheralColumns=3 means [-1, 0, 1]
+    const columnOffsets: number[] = []
+    if (peripheralColumns === 1) {
+      columnOffsets.push(0)  // Center only
+    } else {
+      const halfWidth = Math.floor(peripheralColumns / 2)
+      for (let i = -halfWidth; i <= halfWidth; i++) {
+        columnOffsets.push(i)
+      }
+    }
+
+    // Iterate through depth levels (0 = player tile, 1 = one ahead, etc.)
+    for (let depth = 0; depth < maxDepth; depth++) {
+      // Calculate forward position at this depth
+      const forwardPos = {
+        x: position.x + forwardX * depth,
+        y: position.y + forwardY * depth
+      }
+
+      // For each column in the grid
+      for (const colOffset of columnOffsets) {
+        const tileX = forwardPos.x + perpX * colOffset
+        const tileY = forwardPos.y + perpY * colOffset
+        const key = `${tileX},${tileY}`
+
+        if (!visited.has(key)) {
+          addTileWalls(tileX, tileY)
+          visited.add(key)
+        }
+      }
+
+      // Check if center column is blocked (stops forward traversal)
+      const centerTile = DungeonService.getTile(level, forwardPos.x, forwardPos.y)
+      const facingWall = position.facing === 'NORTH' ? centerTile.walls.north :
+                        position.facing === 'EAST' ? centerTile.walls.east :
+                        position.facing === 'SOUTH' ? centerTile.walls.south :
+                        centerTile.walls.west
+
+      // If facing a wall in center column, don't continue deeper
+      if (depth > 0 && facingWall !== 'open') {
+        break
+      }
+    }
+
+    // Calculate wall distance range for logging
+    const minDist = walls.length > 0 ? Math.min(...walls.map(w => w.distance)) : 0
+    const maxDist = walls.length > 0 ? Math.max(...walls.map(w => w.distance)) : 0
+
+    console.log(`[Visibility] Found ${walls.length} walls from ${visited.size} tiles using ${peripheralColumns}-column grid`)
     if (walls.length > 0) {
-      console.log(`[Visibility] Wall distances: min=${minDist.toFixed(2)} max=${maxDist.toFixed(2)}`);
-      const wallList = walls.map(w => `(${w.x1.toFixed(1)},${w.z1.toFixed(1)})->(${w.x2.toFixed(1)},${w.z2.toFixed(1)}) d=${w.distance.toFixed(2)}`);
-      console.log(`[Visibility] Walls: ${wallList.join(', ')}`);
+      console.log(`[Visibility] Wall distances: min=${minDist.toFixed(2)} max=${maxDist.toFixed(2)}`)
     }
 
     // Sort by distance (back-to-front for painter's algorithm)

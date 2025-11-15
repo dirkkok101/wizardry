@@ -19,9 +19,10 @@ export interface CanvasCommand {
  * Canvas viewport configuration
  */
 export interface ViewportConfig {
-  width: number;        // Canvas width in pixels (e.g., 600)
-  height: number;       // Canvas height in pixels (e.g., 600)
-  tileDepth: number;    // Number of tiles to render (3 = near, mid, far)
+  width: number;           // Canvas width in pixels (e.g., 600)
+  height: number;          // Canvas height in pixels (e.g., 600)
+  tileDepth: number;       // Number of tiles to render (3 = near, mid, far)
+  peripheralColumns: number; // Number of columns to show (1 = center only, 3 = Wizardry-style left/center/right)
 }
 
 /**
