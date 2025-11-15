@@ -71,15 +71,43 @@ export class MazeComponent implements OnInit {
    */
   readonly drawCommands = computed(() => {
     const pos = this.position();
-    if (!pos) return [];
 
-    const level = DungeonService.loadLevel(this.currentLevel());
+    if (!pos) {
+      console.warn('[MazeComponent] No position, returning empty commands');
+      return [];
+    }
 
-    return WireframeRenderingService.generateWireframeCommands(
+    console.log('=== MAZE RENDER START ===');
+    console.log(`Position: (${pos.x}, ${pos.y}) facing ${pos.facing}`);
+
+    const levelNum = this.currentLevel();
+    const level = DungeonService.loadLevel(levelNum);
+    console.log(`Level: ${level.level} "${level.name}" ${level.size.width}x${level.size.height}`);
+
+    // Log what the map says about the player's current tile
+    const playerTile = DungeonService.getTile(level, pos.x, pos.y);
+    console.log(`Player Tile (${pos.x},${pos.y}):`, {
+      north: playerTile.walls.north,
+      east: playerTile.walls.east,
+      south: playerTile.walls.south,
+      west: playerTile.walls.west,
+      type: playerTile.type || 'normal'
+    });
+
+    const commands = WireframeRenderingService.generateWireframeCommands(
       level,
       pos,
       { width: 600, height: 600, tileDepth: 5 }
     );
+
+    if (commands.length === 0) {
+      console.warn('⚠️ NO COMMANDS GENERATED - check visibility and projection!');
+    } else {
+      console.log(`✓ Render complete: ${commands.length} commands`);
+    }
+    console.log('=== MAZE RENDER END ===\n');
+
+    return commands;
   });
 
   /**
@@ -172,24 +200,6 @@ export class MazeComponent implements OnInit {
     }
 
     this.router.navigate(['/camp']);
-  }
-
-  @HostListener('window:keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    const key = event.key.toLowerCase();
-
-    switch(key) {
-      case 'w': this.moveForward(); break;
-      case 's': this.moveBackward(); break;
-      case 'a': this.turnLeft(); break;
-      case 'd': this.turnRight(); break;
-      case 'q': this.strafeLeft(); break;
-      case 'e': this.strafeRight(); break;
-      case 'k': this.kickDoor(); break;
-      case 'i': this.inspectTile(); break;
-      case 'escape': this.returnToCamp(); break;
-      // More keys will be added in later tasks
-    }
   }
 
   returnToCamp(): void {

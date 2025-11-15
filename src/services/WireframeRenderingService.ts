@@ -24,16 +24,32 @@ export const WireframeRenderingService = {
 
     // Get player state with direction vectors
     const playerState = PlayerStateService.fromPosition(position)
+    console.log(`[Wireframe] dirX=${playerState.dirX}, dirY=${playerState.dirY}`);
 
     // Find visible walls using flood-fill
     const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth)
 
+    if (walls.length === 0) {
+      return commands;
+    }
+
+    // Track rendering stats
+    let clippedCount = 0;
+    let renderedCount = 0;
+
     // Render each wall quad (already sorted back-to-front)
     for (const wall of walls) {
       const wallCommands = this.renderWallQuad(wall, playerState, config)
+      if (wallCommands.length === 0) {
+        clippedCount++;
+      } else {
+        renderedCount++;
+      }
       commands.push(...wallCommands)
     }
 
+    console.log(`[Wireframe] Rendered ${renderedCount}/${walls.length} walls (${clippedCount} clipped)`);
+    console.log(`[Wireframe] Generated ${commands.length} canvas commands`);
     return commands
   },
 
@@ -60,11 +76,23 @@ export const WireframeRenderingService = {
     const p4 = ProjectionService.projectPoint(topLeft, playerState, config)
 
     // Skip if any point is clipped
-    if (!p1 || !p2 || !p3 || !p4) return commands
+    if (!p1 || !p2 || !p3 || !p4) {
+      return commands;
+    }
 
     // Get color and alpha based on wall type and distance
     const color = this.getWallColor(wall.wallType, wall.distance)
     const alpha = this.calculateAlpha(wall.distance)
+
+    // Fill the quad with black to occlude walls behind it
+    commands.push({
+      type: 'fillPolygon',
+      x: p1.x,
+      y: p1.y,
+      points: [p1, p2, p3, p4],
+      color: '#000',
+      alpha: 1.0
+    })
 
     // Draw 4 edges of quad
     const edges = [
@@ -118,9 +146,10 @@ export const WireframeRenderingService = {
 
   /**
    * Calculate alpha transparency based on distance
+   * Returns 1.0 for fully opaque walls (proper occlusion with painter's algorithm)
    */
   calculateAlpha(distance: number): number {
-    return 1.0 / (1 + distance * 0.15)
+    return 1.0
   },
 
   /**

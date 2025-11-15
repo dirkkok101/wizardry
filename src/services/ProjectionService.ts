@@ -13,23 +13,25 @@ export const ProjectionService = {
 
   /**
    * Stage 1-2: Transform world space point to view space (camera coordinates)
-   * Camera is at origin looking down -Z axis
+   * Camera is at eye level (y=0.5) looking down -Z axis
    */
   worldToView(point: Vector3, playerState: PlayerState): Vector3 {
     // Translate to camera origin
     const dx = point.x - playerState.gridX
     const dz = point.z - playerState.gridY
 
-    // Transform to view space using direction vectors
-    // dirX, dirY form the forward direction in game space
-    // We need to rotate so forward direction becomes -Z axis
-    // Right vector is perpendicular to direction: 90° clockwise from forward
-    const rightX = -playerState.dirY
-    const rightZ = playerState.dirX
+    // Camera height (eye level)
+    const CAMERA_HEIGHT = 0.5
 
-    // Forward direction (in game space)
+    // Transform to view space using direction vectors
+    // Forward direction (in game space): (dirX, dirY)
     const forwardX = playerState.dirX
     const forwardZ = playerState.dirY
+
+    // Right vector is perpendicular to forward: 90° clockwise rotation
+    // Formula: if forward = (fx, fy), then right = (fy, -fx)
+    const rightX = forwardZ  // = dirY
+    const rightZ = -forwardX // = -dirX
 
     // Project world offset onto right and forward axes
     const viewX = dx * rightX + dz * rightZ
@@ -37,7 +39,7 @@ export const ProjectionService = {
 
     return {
       x: viewX,
-      y: point.y, // Height stays same
+      y: point.y - CAMERA_HEIGHT, // Translate Y relative to eye level
       z: viewZ
     }
   },
@@ -63,7 +65,14 @@ export const ProjectionService = {
 
     // Frustum culling in NDC space [-1, 1]
     // Allow slight tolerance for floating point precision
-    if (Math.abs(ndcX) > 1.001 || Math.abs(ndcY) > 1.001) return null
+    const isClipped = Math.abs(ndcX) > 1.001 || Math.abs(ndcY) > 1.001
+
+    // Debug: log NDC values for points that are near the frustum edge
+    if (Math.abs(Math.abs(ndcX) - 1.0) < 0.1 || Math.abs(Math.abs(ndcY) - 1.0) < 0.1) {
+      console.log(`[NDC] viewZ=${viewPoint.z.toFixed(3)}, ndcX=${ndcX.toFixed(6)}, ndcY=${ndcY.toFixed(6)}, clipped=${isClipped}`);
+    }
+
+    if (isClipped) return null
 
     // Convert NDC to screen coordinates
     const screenX = (ndcX + 1) * (config.width / 2)
@@ -82,6 +91,6 @@ export const ProjectionService = {
     config: { width: number; height: number }
   ): Vector2 | null {
     const viewPoint = this.worldToView(worldPoint, playerState)
-    return this.viewToScreen(viewPoint, config)
+    return this.viewToScreen(viewPoint, config);
   }
 }

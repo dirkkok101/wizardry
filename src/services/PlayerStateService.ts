@@ -7,7 +7,7 @@ import { Position, Direction, PlayerState } from '../types/Dungeon'
 export const PlayerStateService = {
   /**
    * Convert Direction enum to radians
-   * 0 = NORTH (pointing -Y), π/2 = EAST (pointing +X), π = SOUTH (pointing +Y), 3π/2 = WEST (pointing -X)
+   * 0 = NORTH (pointing +Y), π/2 = EAST (pointing +X), π = SOUTH (pointing -Y), 3π/2 = WEST (pointing -X)
    */
   directionToAngle(direction: Direction): number {
     switch (direction) {
@@ -21,15 +21,20 @@ export const PlayerStateService = {
   /**
    * Create PlayerState from discrete Position
    * Pre-computes direction vectors for efficient rendering
-   * Uses game coordinate system: NORTH = (0, -1), EAST = (1, 0), SOUTH = (0, 1), WEST = (-1, 0)
+   * Uses game coordinate system: NORTH = (0, +1), EAST = (1, 0), SOUTH = (0, -1), WEST = (-1, 0)
    */
   fromPosition(position: Position): PlayerState {
     const angle = this.directionToAngle(position.facing)
 
     // Convert angle to direction vector using game coordinate system
-    // NORTH (angle=0) points in -Y direction
-    const dirX = Math.sin(angle)
-    const dirY = -Math.cos(angle)
+    // NORTH (angle=0) points in +Y direction
+    let dirX = Math.sin(angle)
+    let dirY = Math.cos(angle)
+
+    // Clamp near-zero values to exactly zero to avoid floating point errors
+    // sin(π) and cos(3π/2) can return tiny negative values like -1.8e-16
+    if (Math.abs(dirX) < 1e-10) dirX = 0
+    if (Math.abs(dirY) < 1e-10) dirY = 0
 
     // Camera plane perpendicular to direction
     // For 90° FOV, plane length = tan(45°) = 1.0
@@ -55,8 +60,12 @@ export const PlayerStateService = {
    */
   updateDirectionVectors(playerState: PlayerState): PlayerState {
     // Convert angle to direction vector using game coordinate system
-    const dirX = Math.sin(playerState.angle)
-    const dirY = -Math.cos(playerState.angle)
+    let dirX = Math.sin(playerState.angle)
+    let dirY = Math.cos(playerState.angle)
+
+    // Clamp near-zero values to exactly zero to avoid floating point errors
+    if (Math.abs(dirX) < 1e-10) dirX = 0
+    if (Math.abs(dirY) < 1e-10) dirY = 0
 
     const fov = Math.PI / 2
     const planeLength = Math.tan(fov / 2)

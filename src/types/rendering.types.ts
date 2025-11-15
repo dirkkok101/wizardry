@@ -2,13 +2,14 @@
  * Canvas drawing command - represents a single draw operation
  */
 export interface CanvasCommand {
-  type: 'line' | 'rect' | 'fillRect' | 'text';
+  type: 'line' | 'rect' | 'fillRect' | 'fillPolygon' | 'text';
   x: number;
   y: number;
   x2?: number;          // For lines (end point)
   y2?: number;          // For lines (end point)
   width?: number;       // For rectangles
   height?: number;      // For rectangles
+  points?: { x: number; y: number }[];  // For polygons
   color: string;        // e.g., '#0f0', '#080'
   lineWidth?: number;   // 1-3px
   alpha?: number;       // 0.0-1.0 for distance fading
