@@ -96,7 +96,7 @@ export class MazeComponent implements OnInit {
 
     // Switch based on renderer type
     const commands = this.rendererType() === 'raycasting'
-      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config)
+      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config, undefined, this.dungeonState())
       : WireframeRenderingService.generateWireframeCommands(level, pos, config);
 
     if (commands.length === 0) {
