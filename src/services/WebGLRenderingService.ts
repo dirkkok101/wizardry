@@ -3,6 +3,8 @@ import { ViewportConfig } from '../types/rendering.types';
 import { UniformLocations, AttributeLocations, RenderableQuad } from '../types/webgl.types';
 import { VERTEX_SHADER } from '../shaders/dungeon.vert';
 import { FRAGMENT_SHADER } from '../shaders/dungeon.frag';
+import { MatrixService } from './MatrixService';
+import { PlayerStateService } from './PlayerStateService';
 
 /**
  * WebGL-based dungeon renderer with perspective-correct texture mapping.
@@ -130,7 +132,7 @@ export class WebGLRenderingService {
     position: Position,
     config: ViewportConfig
   ): void {
-    if (!this.gl || !this.program) {
+    if (!this.gl || !this.program || !this.uniforms) {
       console.error('[WebGL] Not initialized');
       return;
     }
@@ -139,8 +141,36 @@ export class WebGLRenderingService {
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-    // TODO: Implement rendering pipeline
-    console.log('[WebGL] Render called - implementation pending');
+    // Use shader program
+    this.gl.useProgram(this.program);
+
+    // Create projection matrix (90° FOV)
+    const aspect = config.width / config.height;
+    const projMatrix = MatrixService.perspective(Math.PI / 2, aspect, 0.1, config.tileDepth);
+
+    // Create view matrix from player state
+    const playerState = PlayerStateService.fromPosition(position);
+    const camPosX = playerState.gridX + 0.5;
+    const camPosY = 0.5;  // Camera height (eye level)
+    const camPosZ = playerState.gridY + 0.5;
+
+    // Convert direction to view direction (game coords use +Y = NORTH)
+    // WebGL uses +Z = forward, so we map: gameX → glX, gameY → glZ
+    const viewMatrix = MatrixService.lookAt(
+      camPosX, camPosY, camPosZ,
+      playerState.dirX, 0, playerState.dirY
+    );
+
+    // Set uniforms
+    this.gl.uniformMatrix4fv(this.uniforms.uProjectionMatrix, false, projMatrix);
+    this.gl.uniformMatrix4fv(this.uniforms.uViewMatrix, false, viewMatrix);
+    this.gl.uniform1f(this.uniforms.uFogStart, 1.0);
+    this.gl.uniform1f(this.uniforms.uFogEnd, config.tileDepth);
+    this.gl.uniform3f(this.uniforms.uFogColor, 0.0, 0.0, 0.0);  // Black fog
+
+    console.log('[WebGL] Projection and view matrices configured');
+
+    // TODO: Render quads
   }
 
   /**
