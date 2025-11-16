@@ -24,6 +24,9 @@ export class WebGLRenderingService {
 
   private currentTexture: WebGLTexture | null = null;
 
+  private atlasWidth: number = 448;
+  private atlasHeight: number = 128;
+
   /**
    * Initialize WebGL context and shader program.
    *
@@ -233,6 +236,29 @@ export class WebGLRenderingService {
   }
 
   /**
+   * Calculates UV coordinates for a texture atlas sub-rectangle
+   * @param x - Pixel X position in atlas
+   * @param y - Pixel Y position in atlas
+   * @param width - Pixel width of sub-texture
+   * @param height - Pixel height of sub-texture
+   * @returns UV coordinates [u1, v1, u2, v2] where (u1,v1) is min, (u2,v2) is max
+   */
+  private calculateUVs(
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): [number, number, number, number] {
+    // Convert pixel coordinates to normalized UV coordinates (0.0 to 1.0)
+    const u1 = x / this.atlasWidth;
+    const v1 = y / this.atlasHeight;
+    const u2 = (x + width) / this.atlasWidth;
+    const v2 = (y + height) / this.atlasHeight;
+
+    return [u1, v1, u2, v2];
+  }
+
+  /**
    * Renders a single wall segment as a textured quad
    * @param wall - Wall segment from VisibilityService
    */
@@ -243,6 +269,15 @@ export class WebGLRenderingService {
     const y1 = 0;
     const y2 = 1;
 
+    // For now, use the first stone wall texture (stone_wall_01)
+    // Task 7 will implement proper texture selection logic
+    const [u1, v1, u2, v2] = this.calculateUVs(
+      0,   // stone_wall_01 x position
+      0,   // stone_wall_01 y position
+      64,  // texture width
+      64   // texture height
+    );
+
     // Create quad vertices from wall endpoints
     // Bottom-left, bottom-right, top-right, top-left
     const vertices = this.createQuadVertices(
@@ -250,8 +285,8 @@ export class WebGLRenderingService {
       wall.x2, y1, wall.z2,  // Bottom-right
       wall.x2, y2, wall.z2,  // Top-right
       wall.x1, y2, wall.z1,  // Top-left
-      0, 0,                  // UV min (temporary - full texture)
-      1, 1                   // UV max (temporary - full texture)
+      u1, v1,                // UV min from atlas
+      u2, v2                 // UV max from atlas
     );
 
     this.uploadQuadVertices(vertices);
