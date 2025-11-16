@@ -202,7 +202,7 @@ export class MazeComponent implements OnInit {
   private async loadTextures(): Promise<void> {
     try {
       // Load texture atlas JSON
-      const response = await fetch('/assets/textures/eob-dungeon-level-01.json');
+      const response = await fetch('/data/textures/eob-dungeon-level-01.json');
       if (!response.ok) {
         throw new Error(`Failed to load texture atlas: ${response.statusText}`);
       }
