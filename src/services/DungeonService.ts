@@ -101,6 +101,11 @@ export const DungeonService = {
       }
     }
 
+    // Illusion walls look solid but can be walked through (player discovers by trying)
+    if (wallType === 'illusion') {
+      return { allowed: true }
+    }
+
     return { allowed: true }
   },
 

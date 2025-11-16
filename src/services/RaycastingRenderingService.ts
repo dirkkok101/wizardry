@@ -100,6 +100,10 @@ export class RaycastingRenderingService {
       case 'secret':
         baseColor = this.colors.secretDoor;
         break;
+      case 'illusion':
+        // Illusion walls render as regular walls (player discovers by walking through)
+        baseColor = hit.side === 'NS' ? this.colors.wallNS : this.colors.wallEW;
+        break;
       default:
         // Regular wall - darker for EW, lighter for NS
         baseColor = hit.side === 'NS' ? this.colors.wallNS : this.colors.wallEW;

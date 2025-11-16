@@ -1,7 +1,7 @@
 // Dungeon navigation and tile types
 
 export type Direction = 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
-export type WallType = 'open' | 'wall' | 'door' | 'secret' | 'locked_door'
+export type WallType = 'open' | 'wall' | 'door' | 'secret' | 'locked_door' | 'illusion'
 export type TileType =
   | 'stairs_up'
   | 'stairs_down'

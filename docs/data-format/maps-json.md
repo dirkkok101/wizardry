@@ -197,7 +197,8 @@ Every navigable cell in the dungeon is represented as a tile object.
 | `"wall"` | Solid wall (impassable) |
 | `"door"` | Regular door (can be opened) |
 | `"locked_door"` | Locked door (requires key item) |
-| `"secret_door"` | Secret door (hidden, hard to detect) |
+| `"secret"` | Secret door (hidden, hard to detect) |
+| `"illusion"` | Illusionary wall (looks solid but passable) |
 | `"open"` | No wall (passable) |
 
 **Door Mechanics**:
@@ -205,9 +206,13 @@ Every navigable cell in the dungeon is represented as a tile object.
 - **Locked doors** (`"locked_door"`): Require specific key items (Bronze Key, Silver Key, Gold Key)
   - If party has the required key, passage is granted
   - If key is missing, party is "pushed back one step"
-- **Secret doors** (`"secret_door"`): Hidden passages that don't always appear
+- **Secret doors** (`"secret"`): Hidden passages that don't always appear
   - Light spells (MILWA, LOMILWA) make them more detectable
   - May appear intermittently when looking at them
+- **Illusionary walls** (`"illusion"`): Magical illusions that appear as solid walls but can be walked through
+  - Render as regular walls (no visual hint)
+  - Players discover them by attempting to walk through
+  - Commonly used for one-way passages (combine with solid wall on return tile)
 
 #### Direction Reference
 
@@ -388,6 +393,38 @@ Forces fall to lower level.
 ```
 
 Tile with a locked door that requires a specific key. When the party has the required key, they can pass through the locked door. Without the key, they are pushed back one step.
+
+#### Illusionary Wall (One-Way Passage)
+
+**Tile at (19, 11) - Entry point with illusion wall:**
+```json
+{
+  "x": 19,
+  "y": 11,
+  "walls": {
+    "north": "illusion",
+    "east": "wall",
+    "south": "wall",
+    "west": "wall"
+  }
+}
+```
+
+**Tile at (19, 12) - Destination with solid wall:**
+```json
+{
+  "x": 19,
+  "y": 12,
+  "walls": {
+    "north": "wall",
+    "east": "wall",
+    "south": "wall",
+    "west": "wall"
+  }
+}
+```
+
+Creates a one-way passage: Players can walk north through the illusionary wall from (19,11) to (19,12), but cannot return south because (19,12) has a solid south wall. The illusion appears as a regular wall, so players must discover it by attempting to walk through.
 
 #### Sliding Wall
 
