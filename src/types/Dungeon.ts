@@ -83,6 +83,7 @@ export interface DungeonState {
   visitedTiles: Set<string>        // "level-x-y"
   defeatedEncounters: string[]     // encounter IDs
   unlockedDoors: Set<string>       // "level_y_x" - doors unlocked by kicking
+  openDoors: Set<string>           // "level_y_x" - doors currently open
 }
 
 export interface EncounterTable {

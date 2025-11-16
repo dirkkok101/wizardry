@@ -74,6 +74,9 @@ export interface RayHit {
 
   /** Which wall face was hit (north, east, south, west) */
   wallDirection: WallDirection;
+
+  /** Tile type at hit location (for stairs, special tiles, etc.) */
+  tileType?: import('./Dungeon').TileType;
 }
 
 /**

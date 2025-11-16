@@ -95,20 +95,35 @@ export interface TextureSet {
   /** Display name (e.g., 'Stone Dungeon') */
   name: string
 
-  /** Textures for north-south walls (vertical in 2D map) */
+  /** Textures for north-south walls (vertical in 2D map) - DEPRECATED: Use walls instead */
   wallsNS: Texture[]
 
-  /** Textures for east-west walls (horizontal in 2D map) */
+  /** Textures for east-west walls (horizontal in 2D map) - DEPRECATED: Use walls instead */
   wallsEW: Texture[]
+
+  /** Textures for wall variation (2 textures alternate based on position) */
+  walls?: Texture[]
 
   /** Textures for closed doors */
   doors?: Texture[]
+
+  /** Textures for open doors */
+  doorsOpen?: Texture[]
+
+  /** Textures for closed doors (alias for consistency) */
+  doorsClosed?: Texture[]
 
   /** Textures for locked doors */
   lockedDoors?: Texture[]
 
   /** Textures for secret doors */
   secretDoors?: Texture[]
+
+  /** Textures for stairs up */
+  stairsUp?: Texture[]
+
+  /** Textures for stairs down */
+  stairsDown?: Texture[]
 
   /** Textures for floor tiles (for future floor casting) */
   floors?: Texture[]

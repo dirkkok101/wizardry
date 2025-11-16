@@ -40,7 +40,8 @@ function createNewGame(): GameState {
       teleportCount: 0,
       visitedTiles: new Set(),
       defeatedEncounters: [],
-      unlockedDoors: new Set()
+      unlockedDoors: new Set(),
+      openDoors: new Set()
     },
     settings: {
       difficulty: 'NORMAL',

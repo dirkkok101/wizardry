@@ -584,6 +584,7 @@ describe('MazeComponent - Door Kicking', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
         visitedTiles: new Set<string>()
       }
     }));
@@ -611,6 +612,7 @@ describe('MazeComponent - Door Kicking', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
         visitedTiles: new Set<string>()
       }
     }));
@@ -689,6 +691,7 @@ describe('MazeComponent - Tile Inspection', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
         visitedTiles: new Set<string>()
       },
     }));
@@ -722,6 +725,7 @@ describe('MazeComponent - Tile Inspection', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
         visitedTiles: new Set<string>(),
         searchedTiles: new Set<string>() // Empty - tile not searched yet
       },
@@ -878,6 +882,7 @@ describe('MazeComponent - Darkness Tiles', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
       },
     }));
 
@@ -900,6 +905,7 @@ describe('MazeComponent - Darkness Tiles', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
       },
     }));
 
@@ -964,6 +970,7 @@ describe('MazeComponent - Elevator', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
       },
     }));
 
@@ -984,6 +991,7 @@ describe('MazeComponent - Elevator', () => {
         teleportCount: 0,
         defeatedEncounters: [],
         unlockedDoors: new Set(),
+        openDoors: new Set(),
       },
     }));
 
