@@ -440,11 +440,29 @@ export function createTextureSet(
   textures: Texture[]
 ): TextureSet {
   // Filter textures by tags
+
+  // Wall variation (new system)
+  const walls = textures.filter(t =>
+    t.tags?.includes('wall') &&
+    (t.tags?.includes('variation-1') || t.tags?.includes('variation-2'))
+  );
+
+  // Wall orientation (legacy system - maintain backward compatibility)
   const wallsNS = textures.filter(t => t.tags?.includes('wall') && t.tags?.includes('ns'));
   const wallsEW = textures.filter(t => t.tags?.includes('wall') && t.tags?.includes('ew'));
-  const doors = textures.filter(t => t.tags?.includes('door') && !t.tags?.includes('locked'));
+
+  // Doors
+  const doors = textures.filter(t => t.tags?.includes('door') && !t.tags?.includes('locked') && !t.tags?.includes('open') && !t.tags?.includes('closed'));
+  const doorsOpen = textures.filter(t => t.tags?.includes('door') && t.tags?.includes('open'));
+  const doorsClosed = textures.filter(t => t.tags?.includes('door') && t.tags?.includes('closed'));
   const lockedDoors = textures.filter(t => t.tags?.includes('door') && t.tags?.includes('locked'));
   const secretDoors = textures.filter(t => t.tags?.includes('secret'));
+
+  // Stairs
+  const stairsUp = textures.filter(t => t.tags?.includes('stairs') && t.tags?.includes('up'));
+  const stairsDown = textures.filter(t => t.tags?.includes('stairs') && t.tags?.includes('down'));
+
+  // Floor and ceiling
   const floors = textures.filter(t => t.tags?.includes('floor'));
   const ceilings = textures.filter(t => t.tags?.includes('ceiling'));
 
@@ -453,9 +471,14 @@ export function createTextureSet(
     name,
     wallsNS: wallsNS.length > 0 ? wallsNS : [],
     wallsEW: wallsEW.length > 0 ? wallsEW : [],
+    walls: walls.length > 0 ? walls : undefined,
     doors: doors.length > 0 ? doors : undefined,
+    doorsOpen: doorsOpen.length > 0 ? doorsOpen : undefined,
+    doorsClosed: doorsClosed.length > 0 ? doorsClosed : undefined,
     lockedDoors: lockedDoors.length > 0 ? lockedDoors : undefined,
     secretDoors: secretDoors.length > 0 ? secretDoors : undefined,
+    stairsUp: stairsUp.length > 0 ? stairsUp : undefined,
+    stairsDown: stairsDown.length > 0 ? stairsDown : undefined,
     floors: floors.length > 0 ? floors : undefined,
     ceilings: ceilings.length > 0 ? ceilings : undefined
   };

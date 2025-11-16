@@ -493,6 +493,59 @@ describe('TextureAtlasService', () => {
       expect(textureSet.wallsEW).toHaveLength(0);
       expect(textureSet.doors).toBeUndefined();
     });
+
+    it('organizes wall variation textures by variation tag', () => {
+      const textures: Texture[] = [
+        { ...createTestTexture('wall_01'), tags: ['wall', 'variation-1'] },
+        { ...createTestTexture('wall_02'), tags: ['wall', 'variation-2'] }
+      ];
+
+      const textureSet = TextureAtlasService.createTextureSet('test', 'Test Set', textures);
+
+      expect(textureSet.walls).toHaveLength(2);
+      expect(textureSet.walls![0].id).toBe('wall_01');
+      expect(textureSet.walls![1].id).toBe('wall_02');
+    });
+
+    it('organizes stairs textures by direction tag', () => {
+      const textures: Texture[] = [
+        { ...createTestTexture('stairs_up'), tags: ['stairs', 'up'] },
+        { ...createTestTexture('stairs_down'), tags: ['stairs', 'down'] }
+      ];
+
+      const textureSet = TextureAtlasService.createTextureSet('test', 'Test Set', textures);
+
+      expect(textureSet.stairsUp).toHaveLength(1);
+      expect(textureSet.stairsUp![0].id).toBe('stairs_up');
+      expect(textureSet.stairsDown).toHaveLength(1);
+      expect(textureSet.stairsDown![0].id).toBe('stairs_down');
+    });
+
+    it('organizes door textures by state tag', () => {
+      const textures: Texture[] = [
+        { ...createTestTexture('door_open'), tags: ['door', 'open'] },
+        { ...createTestTexture('door_closed'), tags: ['door', 'closed'] }
+      ];
+
+      const textureSet = TextureAtlasService.createTextureSet('test', 'Test Set', textures);
+
+      expect(textureSet.doorsOpen).toHaveLength(1);
+      expect(textureSet.doorsOpen![0].id).toBe('door_open');
+      expect(textureSet.doorsClosed).toHaveLength(1);
+      expect(textureSet.doorsClosed![0].id).toBe('door_closed');
+    });
+
+    it('maintains backward compatibility with ns/ew wall tags', () => {
+      const textures: Texture[] = [
+        { ...createTestTexture('wall_ns'), tags: ['wall', 'ns'] },
+        { ...createTestTexture('wall_ew'), tags: ['wall', 'ew'] }
+      ];
+
+      const textureSet = TextureAtlasService.createTextureSet('test', 'Test Set', textures);
+
+      expect(textureSet.wallsNS).toHaveLength(1);
+      expect(textureSet.wallsEW).toHaveLength(1);
+    });
   });
 
   // ============================================================================
