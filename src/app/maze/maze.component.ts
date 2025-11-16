@@ -214,6 +214,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         const texture = this.webglRenderer.uploadTexture(image);
         if (texture) {
           console.log('[MazeComponent] Texture uploaded to GPU');
+          // Set atlas metadata for texture lookups
+          this.webglRenderer.setAtlas(atlas);
+          console.log('[MazeComponent] Atlas metadata set');
         } else {
           console.error('[MazeComponent] Failed to upload texture to GPU');
         }

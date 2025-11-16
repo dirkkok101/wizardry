@@ -1,6 +1,7 @@
 import { LevelData, Position, WallSegment, DungeonState } from '../types/Dungeon';
 import { ViewportConfig } from '../types/rendering.types';
 import { UniformLocations, AttributeLocations, RenderableQuad } from '../types/webgl.types';
+import { TextureAtlas, TextureMetadata } from '../types/texture.types';
 import { VERTEX_SHADER } from '../shaders/dungeon.vert';
 import { FRAGMENT_SHADER } from '../shaders/dungeon.frag';
 import { MatrixService } from './MatrixService';
@@ -29,6 +30,7 @@ export class WebGLRenderingService {
 
   private atlasWidth: number = 0;
   private atlasHeight: number = 0;
+  private atlas: TextureAtlas | null = null;
 
   // Batch rendering buffers
   private batchVertices: number[] = [];
@@ -192,6 +194,23 @@ export class WebGLRenderingService {
     }
 
     return texture;
+  }
+
+  /**
+   * Set texture atlas metadata for texture lookups
+   * @param atlas - TextureAtlas metadata from JSON
+   */
+  setAtlas(atlas: TextureAtlas): void {
+    this.atlas = atlas;
+  }
+
+  /**
+   * Get texture metadata by ID from atlas
+   * @param id - Texture ID (e.g., 'floor_stone')
+   * @returns TextureMetadata if found, undefined otherwise
+   */
+  private getTextureById(id: string): TextureMetadata | undefined {
+    return this.atlas?.textures.find(t => t.id === id);
   }
 
   /**
@@ -378,6 +397,14 @@ export class WebGLRenderingService {
   private renderFloor(gridX: number, gridY: number): void {
     if (!this.gl) return;
 
+    const floorTexture = this.getTextureById('floor_stone');
+    if (!floorTexture) {
+      if (this.debugMode) {
+        console.warn('[WebGL] floor_stone texture not found in atlas');
+      }
+      return;
+    }
+
     // Floor is a horizontal quad at y=0
     // World coordinates: grid (x, y) maps to world (x, 0, y)
     const worldX1 = gridX;
@@ -385,8 +412,13 @@ export class WebGLRenderingService {
     const worldX2 = gridX + 1;
     const worldZ2 = gridY + 1;
 
-    // Floor texture coordinates
-    const [u1, v1, u2, v2] = this.calculateUVs(0, 0, 64, 64); // floor_stone
+    // Floor texture coordinates from atlas
+    const [u1, v1, u2, v2] = this.calculateUVs(
+      floorTexture.x,
+      floorTexture.y,
+      floorTexture.width,
+      floorTexture.height
+    );
 
     // Create horizontal quad (floor at y=0)
     // Vertices ordered counter-clockwise when viewed from above:
@@ -411,14 +443,27 @@ export class WebGLRenderingService {
   private renderCeiling(gridX: number, gridY: number): void {
     if (!this.gl) return;
 
+    const ceilingTexture = this.getTextureById('ceiling_stone');
+    if (!ceilingTexture) {
+      if (this.debugMode) {
+        console.warn('[WebGL] ceiling_stone texture not found in atlas');
+      }
+      return;
+    }
+
     // Ceiling is a horizontal quad at y=1
     const worldX1 = gridX;
     const worldZ1 = gridY;
     const worldX2 = gridX + 1;
     const worldZ2 = gridY + 1;
 
-    // Ceiling texture coordinates
-    const [u1, v1, u2, v2] = this.calculateUVs(64, 0, 64, 64); // ceiling_stone
+    // Ceiling texture coordinates from atlas
+    const [u1, v1, u2, v2] = this.calculateUVs(
+      ceilingTexture.x,
+      ceilingTexture.y,
+      ceilingTexture.width,
+      ceilingTexture.height
+    );
 
     // Create horizontal quad (ceiling at y=1)
     // Vertices ordered clockwise when viewed from above (counter-clockwise from below):
