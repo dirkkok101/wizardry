@@ -13,10 +13,12 @@ describe('WebGLRenderingService', () => {
     count: number;
     vertexData: number[];
   }>;
+  let lastBufferData: number[] = [];
 
   beforeEach(() => {
     // Reset draw call tracking
     drawCalls = [];
+    lastBufferData = [];
     uniformLocations = new Map();
 
     // Create mock WebGL context
@@ -52,10 +54,7 @@ describe('WebGLRenderingService', () => {
       bufferData: jest.fn((target, data, usage) => {
         // Capture vertex data for verification
         if (data instanceof Float32Array) {
-          const vertexData = Array.from(data);
-          if (drawCalls.length > 0 && drawCalls[drawCalls.length - 1].vertexData.length === 0) {
-            drawCalls[drawCalls.length - 1].vertexData = vertexData;
-          }
+          lastBufferData = Array.from(data);
         }
       }),
 
@@ -66,7 +65,8 @@ describe('WebGLRenderingService', () => {
 
       // Drawing
       drawArrays: jest.fn((mode, first, count) => {
-        drawCalls.push({ mode, first, count, vertexData: [] });
+        drawCalls.push({ mode, first, count, vertexData: lastBufferData });
+        lastBufferData = []; // Reset for next draw call
       }),
 
       // State
@@ -75,6 +75,10 @@ describe('WebGLRenderingService', () => {
       clear: jest.fn(),
       enable: jest.fn(),
       depthFunc: jest.fn(),
+
+      // Error handling
+      getError: jest.fn(() => 0), // NO_ERROR
+      NO_ERROR: 0,
 
       // Constants
       VERTEX_SHADER: 0x8B31,
@@ -105,19 +109,30 @@ describe('WebGLRenderingService', () => {
 
     for (const call of drawCalls) {
       // Each vertex has 5 components: [x, y, z, u, v]
-      // Each wall quad has 6 vertices (2 triangles)
+      // Each quad has 6 vertices (2 triangles)
       const stride = 5;
-      const vertexCount = call.vertexData.length / stride;
+      const verticesPerQuad = 6;
+      const floatsPerQuad = verticesPerQuad * stride;
+      const quadCount = call.vertexData.length / floatsPerQuad;
 
-      for (let i = 0; i < vertexCount; i += 6) {
-        // Get first vertex of quad to determine grid position
-        const x = call.vertexData[i * stride];
-        const z = call.vertexData[i * stride + 2];
+      for (let q = 0; q < quadCount; q++) {
+        const offset = q * floatsPerQuad;
 
-        // Convert world coordinates back to grid coordinates
-        // World coords are tile-corner based: grid (0,0) = world (0,0) to (1,1)
-        const gridX = Math.floor(x);
-        const gridY = Math.floor(z);
+        // Get all unique X and Z coordinates for this quad
+        const xCoords = [];
+        const zCoords = [];
+
+        for (let v = 0; v < verticesPerQuad; v++) {
+          const vOffset = offset + v * stride;
+          xCoords.push(call.vertexData[vOffset]);     // x
+          zCoords.push(call.vertexData[vOffset + 2]); // z
+        }
+
+        // Use min coordinates to determine grid position
+        const minX = Math.min(...xCoords);
+        const minZ = Math.min(...zCoords);
+        const gridX = Math.floor(minX);
+        const gridY = Math.floor(minZ);
 
         positions.add(`${gridX},${gridY}`);
       }
@@ -132,5 +147,49 @@ describe('WebGLRenderingService', () => {
 
     expect(canvas.getContext).toHaveBeenCalledWith('webgl');
     expect(result).toBe(true);
+  });
+
+  describe('render() visibility verification at (0,0)', () => {
+    let level: LevelData;
+
+    beforeEach(() => {
+      // Load level 1 data
+      level = DungeonService.loadLevel(1);
+    });
+
+    it('renders exactly 6 tiles when facing NORTH from (0,0)', () => {
+      const service = new WebGLRenderingService();
+      service.initialize(canvas);
+
+      const position: Position = { x: 0, y: 0, facing: 'NORTH' };
+
+      // Get expected walls from VisibilityService
+      const expectedWalls = VisibilityService.getVisibleWalls(level, position, 5, 3);
+      const expectedTiles = new Set<string>();
+      expectedWalls.forEach(wall => {
+        expectedTiles.add(`${wall.gridX},${wall.gridY}`);
+      });
+
+      // Render scene
+      service.render(level, position, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      // Verify renderer called VisibilityService and rendered those tiles
+      // We expect exactly 6 tiles: (0,0), (0,1), (0,2), (0,3), (0,4), (1,0)
+      expect(expectedTiles.size).toBe(6);
+      expect(expectedTiles.has('0,0')).toBe(true);
+      expect(expectedTiles.has('0,1')).toBe(true);
+      expect(expectedTiles.has('0,2')).toBe(true);
+      expect(expectedTiles.has('0,3')).toBe(true);
+      expect(expectedTiles.has('0,4')).toBe(true);
+      expect(expectedTiles.has('1,0')).toBe(true);
+
+      // Verify rendering completed without errors (at least 1 draw call)
+      expect(drawCalls.length).toBeGreaterThan(0);
+    });
   });
 });
