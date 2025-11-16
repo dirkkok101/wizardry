@@ -1,4 +1,4 @@
-import { LevelData, Position, WallSegment } from '../types/Dungeon';
+import { LevelData, Position, WallSegment, DungeonState } from '../types/Dungeon';
 import { ViewportConfig } from '../types/rendering.types';
 import { UniformLocations, AttributeLocations, RenderableQuad } from '../types/webgl.types';
 import { VERTEX_SHADER } from '../shaders/dungeon.vert';
@@ -176,11 +176,13 @@ export class WebGLRenderingService {
    * @param level - Level data
    * @param position - Player position
    * @param config - Viewport configuration
+   * @param dungeonState - Optional dungeon state for door rendering
    */
   render(
     level: LevelData,
     position: Position,
-    config: ViewportConfig
+    config: ViewportConfig,
+    dungeonState?: DungeonState
   ): void {
     if (!this.gl || !this.program || !this.uniforms) {
       console.error('[WebGL] Not initialized');
@@ -274,8 +276,8 @@ export class WebGLRenderingService {
 
     // Priority order: stairs > doors > walls
 
-    // Check for stairs
-    if (tile.type === 'stairs_down') {
+    // Check for stairs (both up and down use the same texture)
+    if (tile.type === 'stairs_down' || tile.type === 'stairs_up') {
       return [128, 0, 64, 64]; // stairs_down texture
     }
 
