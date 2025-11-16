@@ -386,7 +386,7 @@ export class WebGLRenderingService {
     const worldZ2 = gridY + 1;
 
     // Floor texture coordinates
-    const [u1, v1, u2, v2] = this.calculateUVs(256, 0, 64, 64); // floor_stone
+    const [u1, v1, u2, v2] = this.calculateUVs(0, 0, 64, 64); // floor_stone
 
     // Create horizontal quad (floor at y=0)
     // Vertices ordered counter-clockwise when viewed from above:
@@ -418,7 +418,7 @@ export class WebGLRenderingService {
     const worldZ2 = gridY + 1;
 
     // Ceiling texture coordinates
-    const [u1, v1, u2, v2] = this.calculateUVs(320, 0, 64, 64); // ceiling_stone
+    const [u1, v1, u2, v2] = this.calculateUVs(64, 0, 64, 64); // ceiling_stone
 
     // Create horizontal quad (ceiling at y=1)
     // Vertices ordered clockwise when viewed from above (counter-clockwise from below):
