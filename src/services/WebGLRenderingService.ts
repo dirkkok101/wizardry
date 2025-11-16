@@ -16,7 +16,7 @@ import { DungeonService } from './DungeonService';
  * GPU-accelerated quad rendering.
  */
 export class WebGLRenderingService {
-  private debugMode = true;
+  private debugMode = false;
 
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
