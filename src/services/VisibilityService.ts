@@ -7,9 +7,17 @@ import { DungeonService } from './DungeonService'
  */
 export const VisibilityService = {
   /**
-   * Get all visible wall segments from player position using hybrid flood-fill + grid
-   * Uses flood-fill for forward visibility, then adds peripheral columns (Wizardry-style)
-   * Returns walls sorted back-to-front for painter's algorithm
+   * Get visible wall segments from player's perspective.
+   *
+   * Uses hybrid grid-based traversal with early stopping for Wizardry-style
+   * peripheral vision rendering. Only returns walls within map bounds - edge
+   * wrapping is for movement topology, not rendering visibility.
+   *
+   * @param level - Level data including tiles and size
+   * @param position - Player position and facing direction
+   * @param maxDepth - Maximum viewing distance (typically 5 tiles)
+   * @param peripheralColumns - Number of columns in peripheral vision (3 = left, center, right)
+   * @returns Array of wall segments sorted back-to-front for painter's algorithm
    */
   getVisibleWalls(
     level: LevelData,

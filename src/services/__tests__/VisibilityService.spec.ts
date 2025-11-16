@@ -372,6 +372,83 @@ describe('VisibilityService', () => {
         // Verify we do see the starting tile
         expect(uniqueTiles.has('0,0')).toBe(true)
       })
+
+      it('handles player at northeast corner (19, 19)', () => {
+        const level: LevelData = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 19, y: 19, facing: 'NORTH' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 19,
+              y: 19,
+              walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: []
+        }
+
+        const position: Position = { x: 19, y: 19, facing: 'NORTH' }
+        const walls = VisibilityService.getVisibleWalls(level, position, 5, 3)
+
+        const uniqueTiles = new Set<string>()
+        walls.forEach(wall => {
+          uniqueTiles.add(`${wall.gridX},${wall.gridY}`)
+        })
+
+        // Should not wrap to x=0 or y=0
+        expect(uniqueTiles.has('0,0')).toBe(false)
+        expect(uniqueTiles.has('0,19')).toBe(false)
+        expect(uniqueTiles.has('19,0')).toBe(false)
+
+        // All visible tiles should be near (19,19)
+        uniqueTiles.forEach(tile => {
+          const [x, y] = tile.split(',').map(Number)
+          expect(x).toBeGreaterThanOrEqual(17)
+          expect(x).toBeLessThan(20)
+          expect(y).toBeGreaterThanOrEqual(17)
+          expect(y).toBeLessThan(20)
+        })
+      })
+
+      it('handles player at center of map with no wrapping needed', () => {
+        const level: LevelData = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 10, y: 10, facing: 'NORTH' },
+          edgeWrapping: true,
+          tiles: [
+            { x: 9, y: 10, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+            { x: 10, y: 10, walls: { north: 'open', east: 'open', south: 'wall', west: 'open' } },
+            { x: 11, y: 10, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+            { x: 10, y: 11, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' } }
+          ],
+          encounterRate: 0.1,
+          encounterTable: []
+        }
+
+        const position: Position = { x: 10, y: 10, facing: 'NORTH' }
+        const walls = VisibilityService.getVisibleWalls(level, position, 5, 3)
+
+        const uniqueTiles = new Set<string>()
+        walls.forEach(wall => {
+          uniqueTiles.add(`${wall.gridX},${wall.gridY}`)
+        })
+
+        // Should see tiles around (10,10) normally
+        expect(uniqueTiles.has('10,10')).toBe(true)
+        expect(uniqueTiles.has('9,10')).toBe(true)
+        expect(uniqueTiles.has('11,10')).toBe(true)
+        expect(uniqueTiles.has('10,11')).toBe(true)
+
+        // No edge tiles should appear
+        expect(uniqueTiles.has('0,10')).toBe(false)
+        expect(uniqueTiles.has('19,10')).toBe(false)
+      })
     })
   })
 
