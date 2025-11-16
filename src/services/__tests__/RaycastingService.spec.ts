@@ -195,4 +195,90 @@ describe('RaycastingService', () => {
       expect(hit!.distance).toBeLessThan(euclidean);
     });
   });
+
+  describe('castRay with tile types', () => {
+    it('includes tile type in ray hit for stairs', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 10, y: 10, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          {
+            x: 10,
+            y: 10,
+            walls: { north: 'open', east: 'open', south: 'open', west: 'open' }
+          },
+          {
+            x: 10,
+            y: 11,
+            walls: { north: 'open', east: 'open', south: 'wall', west: 'open' },
+            type: 'stairs_down'  // Special tile type - wall on south side
+          }
+        ],
+        encounterRate: 0,
+        encounterTable: 'test'
+      };
+
+      const playerState: PlayerState = {
+        gridX: 10,
+        gridY: 10,
+        angle: 0,  // Facing north
+        dirX: 0,
+        dirY: 1,  // Moving in +Y direction (north in Wizardry coords)
+        planeX: 0.66,
+        planeY: 0
+      };
+
+      const hit = service.castRay(level, playerState, 0, 1);
+
+      expect(hit).not.toBeNull();
+      expect(hit!.mapX).toBe(10);
+      expect(hit!.mapY).toBe(11);
+      expect(hit!.tileType).toBe('stairs_down');
+    });
+
+    it('includes undefined tileType for normal tiles', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 10, y: 10, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          {
+            x: 10,
+            y: 10,
+            walls: { north: 'open', east: 'open', south: 'open', west: 'open' }
+          },
+          {
+            x: 10,
+            y: 11,
+            walls: { north: 'open', east: 'open', south: 'wall', west: 'open' }
+            // No type field - normal tile
+          }
+        ],
+        encounterRate: 0,
+        encounterTable: 'test'
+      };
+
+      const playerState: PlayerState = {
+        gridX: 10,
+        gridY: 10,
+        angle: 0,
+        dirX: 0,
+        dirY: 1,
+        planeX: 0.66,
+        planeY: 0
+      };
+
+      const hit = service.castRay(level, playerState, 0, 1);
+
+      expect(hit).not.toBeNull();
+      expect(hit!.mapX).toBe(10);
+      expect(hit!.mapY).toBe(11);
+      expect(hit!.tileType).toBeUndefined();
+    });
+  });
 });
