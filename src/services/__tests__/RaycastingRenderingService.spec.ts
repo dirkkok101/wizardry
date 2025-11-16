@@ -2,6 +2,7 @@ import { RaycastingRenderingService } from '../RaycastingRenderingService';
 import { LevelData, Position, DungeonState } from '../../types/Dungeon';
 import { ViewportConfig, RayHit } from '../../types/rendering.types';
 import { TextureSet, Texture } from '../../types/texture.types';
+import * as TextureAtlasService from '../TextureAtlasService';
 
 describe('RaycastingRenderingService', () => {
   let service: RaycastingRenderingService;
@@ -177,56 +178,86 @@ describe('RaycastingRenderingService', () => {
     };
 
     it('uses stairs texture when hitting stairs tile', () => {
+      const selectStairsSpy = jest.spyOn(TextureAtlasService, 'selectStairsTexture');
+
+      // Simple 3x3 map: player at (1,1) facing south, stairs at (1,2) with wall on north side
       const level: LevelData = {
         level: 1,
         name: 'Test',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 10, y: 10, facing: 'north' },
+        size: { width: 3, height: 3 },
+        startPosition: { x: 1, y: 1, facing: 'south' },
         edgeWrapping: false,
         tiles: [
-          {
-            x: 10,
-            y: 8,
-            walls: { north: 'wall', east: 'open', south: 'open', west: 'open' },
-            type: 'stairs_down'
-          }
+          // Row 0
+          { x: 0, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          // Row 1 (player row)
+          { x: 0, y: 1, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 1, walls: { north: 'open', east: 'open', south: 'open', west: 'open' } },
+          { x: 2, y: 1, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          // Row 2
+          { x: 0, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' }, type: 'stairs_down' },
+          { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } }
         ],
         encounterRate: 0,
         encounterTable: 'test'
       };
 
-      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+      const position: Position = { x: 1, y: 1, facing: 'SOUTH' };
 
       const enhancedService = new RaycastingRenderingService();
       const commands = enhancedService.generateRaycastCommands(level, position, enhancedConfig, mockTextureSet);
 
+      // Verify that selectStairsTexture was called
+      expect(selectStairsSpy).toHaveBeenCalled();
+      // Verify it was called with the mock texture set and stairs_down type
+      const calls = selectStairsSpy.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const stairsDownCall = calls.find(call => call[1] === 'stairs_down');
+      expect(stairsDownCall).toBeDefined();
+      expect(stairsDownCall![0]).toBe(mockTextureSet);
+
       // Should have putImageData commands for textured walls
       const imageCommands = commands.filter(cmd => cmd.type === 'putImageData');
       expect(imageCommands.length).toBeGreaterThan(0);
+
+      selectStairsSpy.mockRestore();
     });
 
     it('uses open door texture when door is in openDoors set', () => {
+      const selectDoorSpy = jest.spyOn(TextureAtlasService, 'selectDoorTexture');
+
+      // Simple 3x3 map: player at (1,1) facing south, door at (1,2) with wall on north side
       const level: LevelData = {
         level: 1,
         name: 'Test',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 10, y: 10, facing: 'north' },
+        size: { width: 3, height: 3 },
+        startPosition: { x: 1, y: 1, facing: 'south' },
         edgeWrapping: false,
         tiles: [
-          {
-            x: 10,
-            y: 8,
-            walls: { north: 'door', east: 'open', south: 'open', west: 'open' }
-          }
+          // Row 0
+          { x: 0, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          // Row 1 (player row)
+          { x: 0, y: 1, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 1, walls: { north: 'open', east: 'open', south: 'open', west: 'open' } },
+          { x: 2, y: 1, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          // Row 2
+          { x: 0, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 2, walls: { north: 'door', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } }
         ],
         encounterRate: 0,
         encounterTable: 'test'
       };
 
-      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+      const position: Position = { x: 1, y: 1, facing: 'SOUTH' };
 
       const dungeonState: Partial<DungeonState> = {
-        openDoors: new Set(['1_8_10'])  // Level 1, Y=8, X=10
+        openDoors: new Set(['1_2_1'])  // Level 1, Y=2, X=1
       };
 
       const enhancedService = new RaycastingRenderingService();
@@ -238,28 +269,49 @@ describe('RaycastingRenderingService', () => {
         dungeonState as DungeonState
       );
 
+      // Verify that selectDoorTexture was called
+      expect(selectDoorSpy).toHaveBeenCalled();
+      // Verify it was called with isOpen=true
+      const calls = selectDoorSpy.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const openDoorCall = calls.find(call => call[1] === true);
+      expect(openDoorCall).toBeDefined();
+      expect(openDoorCall![0]).toBe(mockTextureSet);
+
       expect(commands.length).toBeGreaterThan(0);
+
+      selectDoorSpy.mockRestore();
     });
 
     it('uses closed door texture when door is not in openDoors set', () => {
+      const selectDoorSpy = jest.spyOn(TextureAtlasService, 'selectDoorTexture');
+
+      // Simple 3x3 map: player at (1,1) facing south, door at (1,2) with wall on north side
       const level: LevelData = {
         level: 1,
         name: 'Test',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 10, y: 10, facing: 'north' },
+        size: { width: 3, height: 3 },
+        startPosition: { x: 1, y: 1, facing: 'south' },
         edgeWrapping: false,
         tiles: [
-          {
-            x: 10,
-            y: 8,
-            walls: { north: 'door', east: 'open', south: 'open', west: 'open' }
-          }
+          // Row 0
+          { x: 0, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 0, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          // Row 1 (player row)
+          { x: 0, y: 1, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 1, walls: { north: 'open', east: 'open', south: 'open', west: 'open' } },
+          { x: 2, y: 1, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          // Row 2
+          { x: 0, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 1, y: 2, walls: { north: 'door', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } }
         ],
         encounterRate: 0,
         encounterTable: 'test'
       };
 
-      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+      const position: Position = { x: 1, y: 1, facing: 'SOUTH' };
 
       const dungeonState: Partial<DungeonState> = {
         openDoors: new Set()  // Empty - no doors open
@@ -274,10 +326,23 @@ describe('RaycastingRenderingService', () => {
         dungeonState as DungeonState
       );
 
+      // Verify that selectDoorTexture was called
+      expect(selectDoorSpy).toHaveBeenCalled();
+      // Verify it was called with isOpen=false
+      const calls = selectDoorSpy.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const closedDoorCall = calls.find(call => call[1] === false);
+      expect(closedDoorCall).toBeDefined();
+      expect(closedDoorCall![0]).toBe(mockTextureSet);
+
       expect(commands.length).toBeGreaterThan(0);
+
+      selectDoorSpy.mockRestore();
     });
 
     it('alternates wall textures based on tile position', () => {
+      const selectWallSpy = jest.spyOn(TextureAtlasService, 'selectWallTextureVariation');
+
       const level: LevelData = {
         level: 1,
         name: 'Test',
@@ -305,7 +370,18 @@ describe('RaycastingRenderingService', () => {
       const enhancedService = new RaycastingRenderingService();
       const commands = enhancedService.generateRaycastCommands(level, position, enhancedConfig, mockTextureSet);
 
+      // Verify that selectWallTextureVariation was called with textureSet and tile coordinates
+      expect(selectWallSpy).toHaveBeenCalled();
+      expect(selectWallSpy.mock.calls.length).toBeGreaterThan(0);
+      // Verify first call has correct structure (textureSet, number, number)
+      const firstCall = selectWallSpy.mock.calls[0];
+      expect(firstCall[0]).toBe(mockTextureSet);
+      expect(typeof firstCall[1]).toBe('number');
+      expect(typeof firstCall[2]).toBe('number');
+
       expect(commands.length).toBeGreaterThan(0);
+
+      selectWallSpy.mockRestore();
     });
   });
 });
