@@ -266,6 +266,113 @@ describe('VisibilityService', () => {
         expect(walls.length).toBeGreaterThan(0)
       })
     })
+
+    describe('edge wrapping visibility', () => {
+      it('does not include wrapped tiles when player is at map edge', () => {
+        // Create test level with 20x20 size
+        const level: LevelData = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'NORTH' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: { north: 'open', east: 'open', south: 'wall', west: 'wall' }
+            },
+            {
+              x: 1,
+              y: 0,
+              walls: { north: 'wall', east: 'open', south: 'wall', west: 'open' }
+            },
+            {
+              x: 0,
+              y: 1,
+              walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }
+            },
+            {
+              x: 19,
+              y: 0,
+              walls: { north: 'open', east: 'wall', south: 'wall', west: 'open' }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: []
+        }
+
+        const position: Position = { x: 0, y: 0, facing: 'NORTH' }
+        const walls = VisibilityService.getVisibleWalls(level, position, 5, 3)
+
+        // Extract unique grid coordinates from walls
+        const uniqueTiles = new Set<string>()
+        walls.forEach(wall => {
+          uniqueTiles.add(`${wall.gridX},${wall.gridY}`)
+        })
+
+        // Should NOT include tile (19, 0) even though edgeWrapping is true
+        expect(uniqueTiles.has('19,0')).toBe(false)
+        expect(uniqueTiles.has('19,1')).toBe(false)
+        expect(uniqueTiles.has('19,2')).toBe(false)
+        expect(uniqueTiles.has('19,3')).toBe(false)
+        expect(uniqueTiles.has('19,4')).toBe(false)
+
+        // Should only include tiles in bounds: (0,y) and (1,y)
+        const tiles = Array.from(uniqueTiles)
+        tiles.forEach(tile => {
+          const [x] = tile.split(',').map(Number)
+          expect(x).toBeGreaterThanOrEqual(0)
+          expect(x).toBeLessThan(level.size.width)
+        })
+
+        // Verify we do see expected tiles
+        expect(uniqueTiles.has('0,0')).toBe(true)
+        expect(uniqueTiles.has('1,0')).toBe(true)
+        expect(uniqueTiles.has('0,1')).toBe(true)
+      })
+
+      it('does not include negative coordinates when facing west from edge', () => {
+        const level: LevelData = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'WEST' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: []
+        }
+
+        const position: Position = { x: 0, y: 0, facing: 'WEST' }
+        const walls = VisibilityService.getVisibleWalls(level, position, 5, 3)
+
+        const uniqueTiles = new Set<string>()
+        walls.forEach(wall => {
+          uniqueTiles.add(`${wall.gridX},${wall.gridY}`)
+        })
+
+        // Should NOT include wrapped tiles from x=19
+        expect(uniqueTiles.has('19,0')).toBe(false)
+        expect(uniqueTiles.has('19,1')).toBe(false)
+
+        // Should only see tiles at x=0 (no negative x coordinates)
+        uniqueTiles.forEach(tile => {
+          const [x] = tile.split(',').map(Number)
+          expect(x).toBeGreaterThanOrEqual(0)
+          expect(x).toBeLessThan(level.size.width)
+        })
+
+        // Verify we do see the starting tile
+        expect(uniqueTiles.has('0,0')).toBe(true)
+      })
+    })
   })
 
   describe('createWallSegment', () => {

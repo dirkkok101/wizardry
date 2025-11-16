@@ -98,6 +98,13 @@ export const VisibilityService = {
       for (const colOffset of columnOffsets) {
         const tileX = forwardPos.x + perpX * colOffset
         const tileY = forwardPos.y + perpY * colOffset
+
+        // Skip out-of-bounds tiles (edge wrapping is for movement, not visibility)
+        if (tileX < 0 || tileX >= level.size.width ||
+            tileY < 0 || tileY >= level.size.height) {
+          continue
+        }
+
         const key = `${tileX},${tileY}`
 
         if (!visited.has(key)) {
