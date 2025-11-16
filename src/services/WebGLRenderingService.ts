@@ -301,7 +301,15 @@ export class WebGLRenderingService {
       console.log(`[WebGL] Got ${walls.length} walls to render`);
       if (walls.length > 0) {
         const firstWall = walls[0];
+
+        // Calculate expected fog factor
+        const fogStart = 2.0;
+        const fogEnd = 10.0;
+        const fogFactor = Math.max(0, Math.min(1, (fogEnd - firstWall.distance) / (fogEnd - fogStart)));
+        const visibilityPercent = (fogFactor * 100).toFixed(1);
+
         console.log(`[WebGL] First wall: (${firstWall.x1}, ${firstWall.z1}) to (${firstWall.x2}, ${firstWall.z2}), distance=${firstWall.distance.toFixed(2)}, side=${firstWall.side}`);
+        console.log(`[WebGL] Fog factor: ${fogFactor.toFixed(3)} (${visibilityPercent}% visible, ${(100 - parseFloat(visibilityPercent)).toFixed(1)}% fog)`);
       }
     }
 
