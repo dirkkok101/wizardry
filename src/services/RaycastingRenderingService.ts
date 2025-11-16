@@ -55,6 +55,16 @@ export class RaycastingRenderingService {
     dungeonState?: DungeonState
   ): CanvasCommand[] {
     const commands: CanvasCommand[] = [];
+    let textureRenderCount = 0;
+    let solidRenderCount = 0;
+    let stairsRenderCount = 0;
+    let doorRenderCount = 0;
+    let wallRenderCount = 0;
+
+    // Log texture availability
+    if (!textureSet) {
+      console.warn('[Raycasting] No textureSet provided - using solid colors');
+    }
 
     // Convert discrete position to continuous player state with vectors
     const playerState = PlayerStateService.fromPosition(position);
@@ -70,13 +80,24 @@ export class RaycastingRenderingService {
       const hit = this.raycaster.castRay(level, playerState, rayDirX, rayDirY);
 
       if (hit && hit.distance < config.tileDepth) {
+        // Sample logging for first few columns
+        const shouldLog = x < 5 || x === Math.floor(config.width / 2);
+        if (shouldLog) {
+          console.log(`[Raycasting] Column ${x}: hit=(${hit.mapX},${hit.mapY}) dist=${hit.distance.toFixed(2)} type=${hit.tileType} wall=${hit.wallState} side=${hit.side}`);
+        }
+
         // Priority 1: Check for stairs - render stairs texture if present
         if (textureSet && (hit.tileType === 'stairs_up' || hit.tileType === 'stairs_down')) {
           const stairsTexture = TextureAtlasService.selectStairsTexture(textureSet, hit.tileType);
           if (stairsTexture) {
+            if (shouldLog) console.log(`[Raycasting] Column ${x}: Using stairs texture (${hit.tileType})`);
             const columnCommands = this.renderTexturedWallColumn(hit, x, config, stairsTexture);
             commands.push(...columnCommands);
+            stairsRenderCount++;
+            textureRenderCount++;
             continue;
+          } else if (shouldLog) {
+            console.warn(`[Raycasting] Column ${x}: Stairs texture not found for ${hit.tileType}`);
           }
         }
 
@@ -87,9 +108,14 @@ export class RaycastingRenderingService {
           const doorTexture = TextureAtlasService.selectDoorTexture(textureSet, isOpen);
 
           if (doorTexture) {
+            if (shouldLog) console.log(`[Raycasting] Column ${x}: Using door texture (${isOpen ? 'open' : 'closed'})`);
             const columnCommands = this.renderTexturedWallColumn(hit, x, config, doorTexture);
             commands.push(...columnCommands);
+            doorRenderCount++;
+            textureRenderCount++;
             continue;
+          } else if (shouldLog) {
+            console.warn(`[Raycasting] Column ${x}: Door texture not found (${isOpen ? 'open' : 'closed'})`);
           }
         }
 
@@ -102,18 +128,26 @@ export class RaycastingRenderingService {
           );
 
           if (wallTexture) {
+            if (shouldLog) console.log(`[Raycasting] Column ${x}: Using wall texture variation`);
             const columnCommands = this.renderTexturedWallColumn(hit, x, config, wallTexture);
             commands.push(...columnCommands);
+            wallRenderCount++;
+            textureRenderCount++;
             continue;
+          } else if (shouldLog) {
+            console.warn(`[Raycasting] Column ${x}: Wall texture not found, falling back to solid color`);
           }
         }
 
         // Fallback: Render solid color wall
+        if (shouldLog) console.log(`[Raycasting] Column ${x}: Using solid color fallback`);
         const columnCommands = this.renderWallColumn(hit, x, config);
         commands.push(...columnCommands);
+        solidRenderCount++;
       }
     }
 
+    console.log(`[Raycasting] Frame summary: ${textureRenderCount} textured (${stairsRenderCount} stairs, ${doorRenderCount} doors, ${wallRenderCount} walls), ${solidRenderCount} solid`);
     return commands;
   }
 
@@ -198,6 +232,12 @@ export class RaycastingRenderingService {
     const drawEnd = Math.min(config.height, lineHeight / 2 + config.height / 2);
     const wallHeight = Math.ceil(drawEnd - drawStart);
 
+    // Sample logging for debugging
+    const shouldLog = screenX < 5 || screenX === Math.floor(config.width / 2);
+    if (shouldLog) {
+      console.log(`[Raycasting] renderTexturedWallColumn(${screenX}): texture=${texture.id} wallX=${hit.wallX.toFixed(3)} wallHeight=${wallHeight}`);
+    }
+
     // Extract texture slice at wallX position
     const slice = TextureAtlasService.extractTextureSliceCached(
       texture,
@@ -207,23 +247,43 @@ export class RaycastingRenderingService {
       this.textureConfig
     );
 
+    if (shouldLog) {
+      console.log(`[Raycasting] renderTexturedWallColumn(${screenX}): slice extracted, pixels=${slice.pixels.length} expected=${wallHeight * 4}`);
+    }
+
     // Apply distance fog
     const brightness = this.calculateBrightness(hit.distance, config.tileDepth);
     const shadedSlice = TextureAtlasService.applyBrightnessToSlice(slice, brightness);
 
-    // Create ImageData for this column
-    const imageData = new ImageData(new Uint8ClampedArray(shadedSlice.pixels), 1, wallHeight);
+    if (shouldLog) {
+      console.log(`[Raycasting] renderTexturedWallColumn(${screenX}): brightness=${brightness.toFixed(3)} shaded pixels=${shadedSlice.pixels.length}`);
+    }
 
-    // Generate putImageData command
-    return [{
-      type: 'putImageData',
-      x: screenX,
-      y: Math.floor(drawStart),
-      width: 1,
-      height: wallHeight,
-      imageData,
-      alpha: 1.0
-    }];
+    // Create ImageData for this column
+    try {
+      const imageData = new ImageData(new Uint8ClampedArray(shadedSlice.pixels), 1, wallHeight);
+
+      if (shouldLog) {
+        console.log(`[Raycasting] renderTexturedWallColumn(${screenX}): ✅ ImageData created successfully (${imageData.width}x${imageData.height})`);
+      }
+
+      // Generate putImageData command
+      return [{
+        type: 'putImageData',
+        x: screenX,
+        y: Math.floor(drawStart),
+        width: 1,
+        height: wallHeight,
+        imageData,
+        alpha: 1.0
+      }];
+    } catch (error) {
+      console.error(`[Raycasting] renderTexturedWallColumn(${screenX}): ❌ Failed to create ImageData:`, error);
+      console.error(`[Raycasting] Details: wallHeight=${wallHeight} pixels.length=${shadedSlice.pixels.length}`);
+
+      // Fallback to solid color rendering
+      return this.renderWallColumn(hit, screenX, config);
+    }
   }
 
   /**

@@ -152,6 +152,13 @@ export function extractTextureSlice(
   // Calculate source pixel column
   const sourceX = Math.floor(clampedX * texture.width);
 
+  // Sample logging (log first extraction per texture)
+  const shouldLog = Math.random() < 0.01; // Log ~1% of extractions
+  if (shouldLog) {
+    console.log(`[TextureAtlas] extractTextureSlice: texture=${texture.id} textureX=${textureX.toFixed(3)} clampedX=${clampedX.toFixed(3)} sourceX=${sourceX} targetHeight=${targetHeight}`);
+    console.log(`[TextureAtlas] Source texture: ${texture.width}x${texture.height} imageData.length=${texture.imageData.data.length}`);
+  }
+
   // Extract column from ImageData
   const pixels = new Uint8ClampedArray(targetHeight * 4); // RGBA
 
@@ -162,12 +169,29 @@ export function extractTextureSlice(
     // Get pixel from source texture
     const sourceIndex = (sourceY * texture.width + sourceX) * 4;
 
+    // Validate index bounds
+    if (sourceIndex + 3 >= texture.imageData.data.length) {
+      console.error(`[TextureAtlas] ❌ Out of bounds: sourceIndex=${sourceIndex} exceeds imageData.length=${texture.imageData.data.length}`);
+      console.error(`[TextureAtlas] Details: y=${y} sourceY=${sourceY} sourceX=${sourceX} texture=${texture.width}x${texture.height}`);
+      // Fill with magenta for debugging
+      const destIndex = y * 4;
+      pixels[destIndex + 0] = 255; // R
+      pixels[destIndex + 1] = 0;   // G
+      pixels[destIndex + 2] = 255; // B
+      pixels[destIndex + 3] = 255; // A
+      continue;
+    }
+
     // Copy RGBA values
     const destIndex = y * 4;
     pixels[destIndex + 0] = texture.imageData.data[sourceIndex + 0]; // R
     pixels[destIndex + 1] = texture.imageData.data[sourceIndex + 1]; // G
     pixels[destIndex + 2] = texture.imageData.data[sourceIndex + 2]; // B
     pixels[destIndex + 3] = texture.imageData.data[sourceIndex + 3]; // A
+  }
+
+  if (shouldLog) {
+    console.log(`[TextureAtlas] ✅ Slice extracted: ${pixels.length} bytes (${targetHeight} pixels)`);
   }
 
   return {
@@ -260,6 +284,12 @@ export function applyBrightnessToSlice(
   slice: TextureSlice,
   brightness: number
 ): TextureSlice {
+  // Sample logging
+  const shouldLog = Math.random() < 0.01; // Log ~1% of brightness applications
+  if (shouldLog) {
+    console.log(`[TextureAtlas] applyBrightnessToSlice: brightness=${brightness.toFixed(3)} pixels=${slice.pixels.length} textureId=${slice.textureId}`);
+  }
+
   const adjustedPixels = new Uint8ClampedArray(slice.pixels.length);
 
   for (let i = 0; i < slice.pixels.length; i += 4) {
@@ -267,6 +297,12 @@ export function applyBrightnessToSlice(
     adjustedPixels[i + 1] = Math.floor(slice.pixels[i + 1] * brightness); // G
     adjustedPixels[i + 2] = Math.floor(slice.pixels[i + 2] * brightness); // B
     adjustedPixels[i + 3] = slice.pixels[i + 3];                          // A (unchanged)
+  }
+
+  if (shouldLog) {
+    // Log sample pixel before/after for verification
+    const sampleIdx = 0;
+    console.log(`[TextureAtlas] Sample pixel: before=[${slice.pixels[sampleIdx]},${slice.pixels[sampleIdx+1]},${slice.pixels[sampleIdx+2]}] after=[${adjustedPixels[sampleIdx]},${adjustedPixels[sampleIdx+1]},${adjustedPixels[sampleIdx+2]}]`);
   }
 
   return {

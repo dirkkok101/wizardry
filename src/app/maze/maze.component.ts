@@ -201,18 +201,40 @@ export class MazeComponent implements OnInit {
    */
   private async loadTextures(): Promise<void> {
     try {
+      console.log('[MazeComponent] Starting texture load from /assets/textures/eob-dungeon-level-01.json');
+
       // Load texture atlas JSON
       const response = await fetch('/assets/textures/eob-dungeon-level-01.json');
       if (!response.ok) {
         throw new Error(`Failed to load texture atlas: ${response.statusText}`);
       }
       const atlas: TextureAtlas = await response.json();
+      console.log('[MazeComponent] Loaded atlas JSON:', {
+        id: atlas.id,
+        imagePath: atlas.imagePath,
+        dimensions: `${atlas.width}x${atlas.height}`,
+        textureCount: atlas.textures.length
+      });
 
       // Load sprite sheet image
+      console.log('[MazeComponent] Loading sprite sheet from:', atlas.imagePath);
       const spriteSheet = await TextureAtlasService.loadTextureAtlas(atlas);
+      console.log('[MazeComponent] Sprite sheet loaded:', {
+        naturalWidth: spriteSheet.naturalWidth,
+        naturalHeight: spriteSheet.naturalHeight,
+        complete: spriteSheet.complete
+      });
 
       // Extract all textures
+      console.log('[MazeComponent] Extracting textures...');
       const textures = TextureAtlasService.extractAllTextures(spriteSheet, atlas);
+      console.log('[MazeComponent] Extracted textures:', textures.map(t => ({
+        id: t.id,
+        size: `${t.width}x${t.height}`,
+        tags: t.tags,
+        hasImageData: !!t.imageData,
+        imageDataSize: t.imageData?.data?.length
+      })));
 
       // Create texture set
       const textureSet = TextureAtlasService.createTextureSet(
@@ -220,13 +242,26 @@ export class MazeComponent implements OnInit {
         atlas.description || 'Dungeon Level 1',
         textures
       );
+      console.log('[MazeComponent] Created TextureSet:', {
+        id: textureSet.id,
+        walls: textureSet.walls?.length || 0,
+        wallsNS: textureSet.wallsNS?.length || 0,
+        wallsEW: textureSet.wallsEW?.length || 0,
+        stairsUp: textureSet.stairsUp?.length || 0,
+        stairsDown: textureSet.stairsDown?.length || 0,
+        doorsOpen: textureSet.doorsOpen?.length || 0,
+        doorsClosed: textureSet.doorsClosed?.length || 0,
+        floors: textureSet.floors?.length || 0,
+        ceilings: textureSet.ceilings?.length || 0
+      });
 
       // Store in signal
       this.textureSet.set(textureSet);
 
-      console.log('[MazeComponent] Textures loaded successfully:', textureSet);
+      console.log('[MazeComponent] ✅ Textures loaded successfully');
     } catch (error) {
-      console.error('[MazeComponent] Failed to load textures:', error);
+      console.error('[MazeComponent] ❌ Failed to load textures:', error);
+      console.error('[MazeComponent] Stack trace:', (error as Error).stack);
       // Don't set error - just fall back to solid colors
       // Textures will be undefined, raycaster will use solid colors
     }
