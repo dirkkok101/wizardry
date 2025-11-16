@@ -8,9 +8,6 @@ import { MessageLogComponent } from '../../components/message-log/message-log.co
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
-// Old renderers - replaced by WebGL renderer
-// import { WireframeRenderingService } from '../../services/WireframeRenderingService';
-// import { RaycastingRenderingService } from '../../services/RaycastingRenderingService';
 import { WebGLRenderingService } from '../../services/WebGLRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
