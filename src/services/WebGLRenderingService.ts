@@ -121,6 +121,51 @@ export class WebGLRenderingService {
   }
 
   /**
+   * Upload texture atlas to GPU.
+   *
+   * @param image - Loaded HTMLImageElement from texture atlas
+   * @returns WebGL texture handle
+   */
+  uploadTexture(image: HTMLImageElement): WebGLTexture | null {
+    if (!this.gl) {
+      console.error('[WebGL] Cannot upload texture - not initialized');
+      return null;
+    }
+
+    const texture = this.gl.createTexture();
+    if (!texture) {
+      console.error('[WebGL] Failed to create texture');
+      return null;
+    }
+
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+
+    // Upload image data
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D,
+      0,                    // Mipmap level
+      this.gl.RGBA,         // Internal format
+      this.gl.RGBA,         // Source format
+      this.gl.UNSIGNED_BYTE,
+      image
+    );
+
+    // Set texture parameters
+    // Use NEAREST filtering for pixel-art textures
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+
+    // Clamp to edge (no wrapping)
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+
+    this.currentTexture = texture;
+    console.log('[WebGL] Texture uploaded:', image.width, 'x', image.height);
+
+    return texture;
+  }
+
+  /**
    * Render the dungeon scene.
    *
    * @param level - Level data
@@ -167,6 +212,13 @@ export class WebGLRenderingService {
     this.gl.uniform1f(this.uniforms.uFogStart, 1.0);
     this.gl.uniform1f(this.uniforms.uFogEnd, config.tileDepth);
     this.gl.uniform3f(this.uniforms.uFogColor, 0.0, 0.0, 0.0);  // Black fog
+
+    // Bind texture
+    if (this.currentTexture && this.uniforms.uTexture) {
+      this.gl.activeTexture(this.gl.TEXTURE0);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.currentTexture);
+      this.gl.uniform1i(this.uniforms.uTexture, 0);
+    }
 
     console.log('[WebGL] Projection and view matrices configured');
 
