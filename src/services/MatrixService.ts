@@ -64,14 +64,15 @@ export class MatrixService {
     const newUpZ = normRightX * fwdY - normRightY * fwdX;
 
     // Create view matrix (inverse of camera transform)
+    // WebGL uses column-major format: each group of 4 values is a column
     return new Float32Array([
-      normRightX, newUpX, -fwdX, 0,
-      normRightY, newUpY, -fwdY, 0,
-      normRightZ, newUpZ, -fwdZ, 0,
+      normRightX, normRightY, normRightZ, 0,           // Column 0: Right vector
+      newUpX, newUpY, newUpZ, 0,                       // Column 1: Up vector
+      -fwdX, -fwdY, -fwdZ, 0,                         // Column 2: Forward vector (negated)
       -(normRightX * posX + normRightY * posY + normRightZ * posZ),
       -(newUpX * posX + newUpY * posY + newUpZ * posZ),
       -(-fwdX * posX + -fwdY * posY + -fwdZ * posZ),
-      1
+      1                                                // Column 3: Translation
     ]);
   }
 
