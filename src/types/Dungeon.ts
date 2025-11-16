@@ -158,6 +158,11 @@ export interface WallSegment {
   distance: number     // Distance from camera (for z-ordering)
   isVertical: boolean  // true = N/S wall, false = E/W wall
   wallType: WallType   // Wall type for coloring
+
+  // Grid position and orientation (for texture selection)
+  gridX: number        // Map X coordinate
+  gridY: number        // Map Y coordinate
+  side: 'north' | 'south' | 'east' | 'west'  // Wall orientation
 }
 
 /**

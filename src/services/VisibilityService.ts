@@ -214,7 +214,10 @@ export const VisibilityService = {
       height: 1.0,
       distance,
       isVertical,
-      wallType
+      wallType,
+      gridX,
+      gridY,
+      side
     }
   }
 }

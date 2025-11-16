@@ -6,6 +6,7 @@ import { FRAGMENT_SHADER } from '../shaders/dungeon.frag';
 import { MatrixService } from './MatrixService';
 import { PlayerStateService } from './PlayerStateService';
 import { VisibilityService } from './VisibilityService';
+import { DungeonService } from './DungeonService';
 
 /**
  * WebGL-based dungeon renderer with perspective-correct texture mapping.
@@ -231,7 +232,7 @@ export class WebGLRenderingService {
 
     // Render each visible wall
     for (const wall of walls) {
-      this.renderWall(wall);
+      this.renderWall(level, wall);
     }
   }
 
@@ -259,24 +260,58 @@ export class WebGLRenderingService {
   }
 
   /**
+   * Selects the appropriate texture for a wall segment based on tile type
+   * @param level - Level data containing tile types
+   * @param wall - Wall segment to render
+   * @returns Texture atlas coordinates [x, y, width, height] in pixels
+   */
+  private selectWallTexture(
+    level: LevelData,
+    wall: WallSegment
+  ): [number, number, number, number] {
+    // Get tile at wall position using DungeonService
+    const tile = DungeonService.getTile(level, wall.gridX, wall.gridY);
+
+    // Priority order: stairs > doors > walls
+
+    // Check for stairs
+    if (tile.type === 'stairs_down') {
+      return [128, 0, 64, 64]; // stairs_down texture
+    }
+
+    // Check for doors
+    if (tile.type === 'door') {
+      // For now, all doors render as closed
+      // TODO: integrate with DungeonState.openDoors when available
+      return [192, 0, 64, 64]; // door_closed texture
+    }
+
+    // Regular walls: alternate between stone_wall_01 and stone_wall_02
+    // Use checkerboard pattern based on grid position
+    const useVariation2 = (wall.gridX + wall.gridY) % 2 === 1;
+
+    if (useVariation2) {
+      return [64, 0, 64, 64]; // stone_wall_02
+    } else {
+      return [0, 0, 64, 64];  // stone_wall_01
+    }
+  }
+
+  /**
    * Renders a single wall segment as a textured quad
+   * @param level - Level data containing tile types
    * @param wall - Wall segment from VisibilityService
    */
-  private renderWall(wall: WallSegment): void {
+  private renderWall(level: LevelData, wall: WallSegment): void {
     if (!this.gl) return;
 
     // Wall height (from floor y=0 to ceiling y=1)
     const y1 = 0;
     const y2 = 1;
 
-    // For now, use the first stone wall texture (stone_wall_01)
-    // Task 7 will implement proper texture selection logic
-    const [u1, v1, u2, v2] = this.calculateUVs(
-      0,   // stone_wall_01 x position
-      0,   // stone_wall_01 y position
-      64,  // texture width
-      64   // texture height
-    );
+    // Select appropriate texture based on tile type
+    const [texX, texY, texW, texH] = this.selectWallTexture(level, wall);
+    const [u1, v1, u2, v2] = this.calculateUVs(texX, texY, texW, texH);
 
     // Create quad vertices from wall endpoints
     // Bottom-left, bottom-right, top-right, top-left
