@@ -299,17 +299,7 @@ export class WebGLRenderingService {
     }
 
     // Render floors and ceilings for all visible tiles
-    const visibleTiles = this.getVisibleTiles(position, config);
-
-    if (this.debugMode) {
-      console.log('[WebGL] Visible tiles for floor/ceiling:', {
-        count: visibleTiles.length,
-        depth: config.tileDepth,
-        peripheralColumns: config.peripheralColumns,
-        actualWidth: (config.peripheralColumns || 3) + 1,
-        first15Tiles: visibleTiles.slice(0, 15).map(([x, y]) => `(${x},${y})`).join(', ')
-      });
-    }
+    const visibleTiles = this.getVisibleTiles(level, position, config);
 
     for (const [gridX, gridY] of visibleTiles) {
       this.renderFloor(gridX, gridY);
@@ -503,69 +493,49 @@ export class WebGLRenderingService {
   }
 
   /**
-   * Gets the grid coordinates of all visible tiles based on player position and view frustum
+   * Gets the grid coordinates of all visible tiles based on player position and wall occlusion
+   *
+   * Delegates to VisibilityService for proper wall-based occlusion instead of using
+   * naive rectangular grid. Ensures floors/ceilings only render where walls are visible.
+   *
+   * @param level - Level data for wall checking
    * @param position - Player position
    * @param config - Viewport configuration
-   * @returns Array of [gridX, gridY] coordinates
+   * @returns Array of [gridX, gridY] coordinates for tiles with visible walls
    */
-  private getVisibleTiles(position: Position, config: ViewportConfig): Array<[number, number]> {
-    const tiles: Array<[number, number]> = [];
+  private getVisibleTiles(
+    level: LevelData,
+    position: Position,
+    config: ViewportConfig
+  ): Array<[number, number]> {
+    // Delegate to VisibilityService for proper wall occlusion
+    const walls = VisibilityService.getVisibleWalls(
+      level,
+      position,
+      config.tileDepth || 5,
+      config.peripheralColumns || 3
+    );
 
-    // Player's grid position
-    const playerGridX = Math.floor(position.x);
-    const playerGridY = Math.floor(position.y);
-
-    // Calculate visible tile range based on facing direction
-    // For simplicity, render a rectangular area in front of the player
-    const depth = config.tileDepth || 5;
-    const width = (config.peripheralColumns || 3) + 1; // +1 for center column
-
-    if (this.debugMode) {
-      console.log('[WebGL] getVisibleTiles() called:', {
-        playerPos: `(${position.x}, ${position.y})`,
-        gridPos: `(${playerGridX}, ${playerGridY})`,
-        facing: position.facing,
-        depth: depth,
-        peripheralColumns: config.peripheralColumns,
-        calculatedWidth: width,
-        widthRange: `[${-Math.floor(width / 2)} to ${Math.floor(width / 2)}]`
-      });
+    // Extract unique tile coordinates from visible walls
+    const tileSet = new Set<string>();
+    for (const wall of walls) {
+      tileSet.add(`${wall.gridX},${wall.gridY}`);
     }
 
-    // Use Direction enum to determine tile coordinates
-    // NORTH = +Y, EAST = +X, SOUTH = -Y, WEST = -X
-    switch (position.facing) {
-      case 'EAST':
-        for (let d = 0; d <= depth; d++) {
-          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
-            tiles.push([playerGridX + d, playerGridY + w]);
-          }
-        }
-        break;
+    // Convert to array of coordinate tuples
+    const tiles = Array.from(tileSet).map(key => {
+      const [x, y] = key.split(',').map(Number);
+      return [x, y] as [number, number];
+    });
 
-      case 'NORTH':
-        for (let d = 0; d <= depth; d++) {
-          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
-            tiles.push([playerGridX + w, playerGridY + d]);
-          }
-        }
-        break;
-
-      case 'WEST':
-        for (let d = 0; d <= depth; d++) {
-          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
-            tiles.push([playerGridX - d, playerGridY + w]);
-          }
-        }
-        break;
-
-      case 'SOUTH':
-        for (let d = 0; d <= depth; d++) {
-          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
-            tiles.push([playerGridX + w, playerGridY - d]);
-          }
-        }
-        break;
+    if (this.debugMode) {
+      console.log('[WebGL] Visible tiles for floor/ceiling:', {
+        count: tiles.length,
+        depth: config.tileDepth,
+        peripheralColumns: config.peripheralColumns,
+        derivedFrom: 'VisibilityService.getVisibleWalls()',
+        first15Tiles: tiles.slice(0, 15).map(([x, y]) => `(${x},${y})`).join(', ')
+      });
     }
 
     return tiles;
