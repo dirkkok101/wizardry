@@ -14,12 +14,14 @@ describe('WebGLRenderingService', () => {
     vertexData: number[];
   }>;
   let lastBufferData: number[] = [];
+  let mockTextures: Map<string, any>;
 
   beforeEach(() => {
     // Reset draw call tracking
     drawCalls = [];
     lastBufferData = [];
     uniformLocations = new Map();
+    mockTextures = new Map();
 
     // Create mock WebGL context
     mockGLContext = {
@@ -46,6 +48,7 @@ describe('WebGLRenderingService', () => {
       }),
       uniformMatrix4fv: jest.fn(),
       uniform1f: jest.fn(),
+      uniform1i: jest.fn(),
       uniform3f: jest.fn(),
 
       // Buffers
@@ -80,6 +83,21 @@ describe('WebGLRenderingService', () => {
       getError: jest.fn(() => 0), // NO_ERROR
       NO_ERROR: 0,
 
+      // Textures
+      createTexture: jest.fn(() => ({} as WebGLTexture)),
+      bindTexture: jest.fn(),
+      texImage2D: jest.fn(),
+      texParameteri: jest.fn(),
+      activeTexture: jest.fn(),
+      TEXTURE_2D: 0x0DE1,
+      TEXTURE_MIN_FILTER: 0x2801,
+      TEXTURE_MAG_FILTER: 0x2800,
+      LINEAR: 0x2601,
+      NEAREST: 0x2600,
+      TEXTURE0: 0x84C0,
+      RGBA: 0x1908,
+      UNSIGNED_BYTE: 0x1401,
+
       // Constants
       VERTEX_SHADER: 0x8B31,
       FRAGMENT_SHADER: 0x8B30,
@@ -102,6 +120,21 @@ describe('WebGLRenderingService', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
+  // Helper to load a mock texture atlas into the service
+  const loadMockAtlas = (service: any) => {
+    // Create a minimal mock atlas with required textures
+    service['atlas'] = {
+      textures: [
+        { id: 'wall_stone', x: 0, y: 0, width: 64, height: 64 },
+        { id: 'floor_stone', x: 64, y: 0, width: 64, height: 64 },
+        { id: 'ceiling_stone', x: 128, y: 0, width: 64, height: 64 }
+      ]
+    };
+    service['atlasWidth'] = 256;
+    service['atlasHeight'] = 64;
+    service['currentTexture'] = {} as WebGLTexture;
+  };
 
   // Helper to extract grid positions from vertex data
   const extractGridPositionsFromDrawCalls = (): Set<string> => {
@@ -190,6 +223,121 @@ describe('WebGLRenderingService', () => {
 
       // Verify rendering completed without errors (at least 1 draw call)
       expect(drawCalls.length).toBeGreaterThan(0);
+    });
+
+    it('renders floors and ceilings for all 6 visible tiles when facing NORTH from (0,0)', () => {
+      const service = new WebGLRenderingService();
+      service.initialize(canvas);
+      loadMockAtlas(service); // Load textures so floors/ceilings render
+
+      const position: Position = { x: 0, y: 0, facing: 'NORTH' };
+
+      // Get expected tiles from VisibilityService
+      const expectedWalls = VisibilityService.getVisibleWalls(level, position, 5, 3);
+      const expectedTiles = new Set<string>();
+      expectedWalls.forEach(wall => {
+        expectedTiles.add(`${wall.gridX},${wall.gridY}`);
+      });
+
+      // Render scene
+      service.render(level, position, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      // Count quads rendered (walls + floors + ceilings)
+      const totalQuads = drawCalls.reduce((sum, call) => sum + (call.count / 6), 0);
+      const wallCount = expectedWalls.length; // 12 walls for 6 tiles
+      const floorCount = expectedTiles.size; // 6 floors (one per tile)
+      const ceilingCount = expectedTiles.size; // 6 ceilings (one per tile)
+      const expectedQuads = wallCount + floorCount + ceilingCount;
+
+      // Verify we rendered walls + floors + ceilings
+      expect(totalQuads).toBe(expectedQuads);
+      console.log(`Rendered ${totalQuads} quads: ${wallCount} walls + ${floorCount} floors + ${ceilingCount} ceilings`);
+    });
+
+    it('renders floors and ceilings for 6 visible tiles when facing EAST from (0,0)', () => {
+      const service = new WebGLRenderingService();
+      service.initialize(canvas);
+      loadMockAtlas(service);
+
+      const position: Position = { x: 0, y: 0, facing: 'EAST' };
+
+      const expectedWalls = VisibilityService.getVisibleWalls(level, position, 5, 3);
+      const expectedTiles = new Set<string>();
+      expectedWalls.forEach(wall => {
+        expectedTiles.add(`${wall.gridX},${wall.gridY}`);
+      });
+
+      service.render(level, position, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      const totalQuads = drawCalls.reduce((sum, call) => sum + (call.count / 6), 0);
+      const expectedQuads = expectedWalls.length + expectedTiles.size * 2;
+
+      expect(totalQuads).toBe(expectedQuads);
+      expect(expectedTiles.size).toBe(6); // EAST should see 6 tiles
+    });
+
+    it('renders floors and ceilings for 2 visible tiles when facing SOUTH from (0,0)', () => {
+      const service = new WebGLRenderingService();
+      service.initialize(canvas);
+      loadMockAtlas(service);
+
+      const position: Position = { x: 0, y: 0, facing: 'SOUTH' };
+
+      const expectedWalls = VisibilityService.getVisibleWalls(level, position, 5, 3);
+      const expectedTiles = new Set<string>();
+      expectedWalls.forEach(wall => {
+        expectedTiles.add(`${wall.gridX},${wall.gridY}`);
+      });
+
+      service.render(level, position, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      const totalQuads = drawCalls.reduce((sum, call) => sum + (call.count / 6), 0);
+      const expectedQuads = expectedWalls.length + expectedTiles.size * 2;
+
+      expect(totalQuads).toBe(expectedQuads);
+      expect(expectedTiles.size).toBe(2); // SOUTH should see 2 tiles
+    });
+
+    it('renders floors and ceilings for 2 visible tiles when facing WEST from (0,0)', () => {
+      const service = new WebGLRenderingService();
+      service.initialize(canvas);
+      loadMockAtlas(service);
+
+      const position: Position = { x: 0, y: 0, facing: 'WEST' };
+
+      const expectedWalls = VisibilityService.getVisibleWalls(level, position, 5, 3);
+      const expectedTiles = new Set<string>();
+      expectedWalls.forEach(wall => {
+        expectedTiles.add(`${wall.gridX},${wall.gridY}`);
+      });
+
+      service.render(level, position, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      const totalQuads = drawCalls.reduce((sum, call) => sum + (call.count / 6), 0);
+      const expectedQuads = expectedWalls.length + expectedTiles.size * 2;
+
+      expect(totalQuads).toBe(expectedQuads);
+      expect(expectedTiles.size).toBe(2); // WEST should see 2 tiles
     });
   });
 });
