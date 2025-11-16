@@ -276,5 +276,69 @@ describe('PlayerStateService', () => {
         expect(north.angle).toBeCloseTo(0)
       })
     })
+
+    describe('starting from WEST', () => {
+      const startPos = { x: 0, y: 0, facing: 'WEST' as const }
+
+      it('maintains camera position when turning right to NORTH', () => {
+        const west = PlayerStateService.fromPosition(startPos)
+        const north = PlayerStateService.fromPosition({ x: 0, y: 0, facing: 'NORTH' })
+
+        // Grid position unchanged
+        expect(north.gridX).toBe(0)
+        expect(north.gridY).toBe(0)
+
+        // Camera position unchanged
+        expect(north.gridX + 0.5).toBe(0.5)
+        expect(north.gridY + 0.5).toBe(0.5)
+
+        // Direction vectors updated to NORTH
+        expect(north.dirX).toBeCloseTo(0)
+        expect(north.dirY).toBeCloseTo(1)
+        expect(north.planeX).toBeCloseTo(1)
+        expect(north.planeY).toBeCloseTo(0)
+        expect(north.angle).toBeCloseTo(0)
+      })
+
+      it('maintains camera position when turning left to SOUTH', () => {
+        const west = PlayerStateService.fromPosition(startPos)
+        const south = PlayerStateService.fromPosition({ x: 0, y: 0, facing: 'SOUTH' })
+
+        // Grid position unchanged
+        expect(south.gridX).toBe(0)
+        expect(south.gridY).toBe(0)
+
+        // Camera position unchanged
+        expect(south.gridX + 0.5).toBe(0.5)
+        expect(south.gridY + 0.5).toBe(0.5)
+
+        // Direction vectors updated to SOUTH
+        expect(south.dirX).toBeCloseTo(0)
+        expect(south.dirY).toBeCloseTo(-1)
+        expect(south.planeX).toBeCloseTo(-1)
+        expect(south.planeY).toBeCloseTo(0)
+        expect(south.angle).toBeCloseTo(Math.PI)
+      })
+
+      it('maintains camera position when turning around to EAST', () => {
+        const west = PlayerStateService.fromPosition(startPos)
+        const east = PlayerStateService.fromPosition({ x: 0, y: 0, facing: 'EAST' })
+
+        // Grid position unchanged
+        expect(east.gridX).toBe(0)
+        expect(east.gridY).toBe(0)
+
+        // Camera position unchanged
+        expect(east.gridX + 0.5).toBe(0.5)
+        expect(east.gridY + 0.5).toBe(0.5)
+
+        // Direction vectors updated to EAST
+        expect(east.dirX).toBeCloseTo(1)
+        expect(east.dirY).toBeCloseTo(0)
+        expect(east.planeX).toBeCloseTo(0)
+        expect(east.planeY).toBeCloseTo(1)
+        expect(east.angle).toBeCloseTo(Math.PI / 2)
+      })
+    })
   })
 })
