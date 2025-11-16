@@ -39,7 +39,7 @@
     },
     {
       "id": "floor_stone",
-      "x": 256,
+      "x": 0,
       "y": 0,
       "width": 64,
       "height": 64,
@@ -47,7 +47,7 @@
     },
     {
       "id": "ceiling_stone",
-      "x": 320,
+      "x": 64,
       "y": 0,
       "width": 64,
       "height": 64,
