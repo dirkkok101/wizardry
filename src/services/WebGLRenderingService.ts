@@ -236,6 +236,13 @@ export class WebGLRenderingService {
     for (const wall of walls) {
       this.renderWall(level, wall);
     }
+
+    // Render floors and ceilings for all visible tiles
+    const visibleTiles = this.getVisibleTiles(position, config);
+    for (const [gridX, gridY] of visibleTiles) {
+      this.renderFloor(gridX, gridY);
+      this.renderCeiling(gridX, gridY);
+    }
   }
 
   /**
@@ -328,6 +335,130 @@ export class WebGLRenderingService {
 
     this.uploadQuadVertices(vertices);
     this.drawQuad();
+  }
+
+  /**
+   * Renders a floor quad for a single tile
+   * @param gridX - Grid X coordinate
+   * @param gridY - Grid Y coordinate
+   */
+  private renderFloor(gridX: number, gridY: number): void {
+    if (!this.gl) return;
+
+    // Floor is a horizontal quad at y=0
+    // World coordinates: grid (x, y) maps to world (x, 0, y)
+    const worldX1 = gridX;
+    const worldZ1 = gridY;
+    const worldX2 = gridX + 1;
+    const worldZ2 = gridY + 1;
+
+    // Floor texture coordinates
+    const [u1, v1, u2, v2] = this.calculateUVs(256, 0, 64, 64); // floor_stone
+
+    // Create horizontal quad (floor at y=0)
+    // Vertices ordered counter-clockwise when viewed from above:
+    // Bottom-left, bottom-right, top-right, top-left
+    const vertices = this.createQuadVertices(
+      worldX1, 0, worldZ1,  // Bottom-left corner
+      worldX2, 0, worldZ1,  // Bottom-right corner
+      worldX2, 0, worldZ2,  // Top-right corner
+      worldX1, 0, worldZ2,  // Top-left corner
+      u1, v1,
+      u2, v2
+    );
+
+    this.uploadQuadVertices(vertices);
+    this.drawQuad();
+  }
+
+  /**
+   * Renders a ceiling quad for a single tile
+   * @param gridX - Grid X coordinate
+   * @param gridY - Grid Y coordinate
+   */
+  private renderCeiling(gridX: number, gridY: number): void {
+    if (!this.gl) return;
+
+    // Ceiling is a horizontal quad at y=1
+    const worldX1 = gridX;
+    const worldZ1 = gridY;
+    const worldX2 = gridX + 1;
+    const worldZ2 = gridY + 1;
+
+    // Ceiling texture coordinates
+    const [u1, v1, u2, v2] = this.calculateUVs(320, 0, 64, 64); // ceiling_stone
+
+    // Create horizontal quad (ceiling at y=1)
+    // Vertices ordered clockwise when viewed from above (counter-clockwise from below):
+    // Bottom-left, top-left, top-right, bottom-right
+    const vertices = this.createQuadVertices(
+      worldX1, 1, worldZ1,  // Bottom-left corner
+      worldX1, 1, worldZ2,  // Top-left corner
+      worldX2, 1, worldZ2,  // Top-right corner
+      worldX2, 1, worldZ1,  // Bottom-right corner
+      u1, v1,
+      u2, v2
+    );
+
+    this.uploadQuadVertices(vertices);
+    this.drawQuad();
+  }
+
+  /**
+   * Gets the grid coordinates of all visible tiles based on player position and view frustum
+   * @param position - Player position
+   * @param config - Viewport configuration
+   * @returns Array of [gridX, gridY] coordinates
+   */
+  private getVisibleTiles(position: Position, config: ViewportConfig): Array<[number, number]> {
+    const tiles: Array<[number, number]> = [];
+
+    // Player's grid position
+    const playerGridX = Math.floor(position.x);
+    const playerGridY = Math.floor(position.y);
+
+    // Calculate visible tile range based on facing direction
+    // For simplicity, render a rectangular area in front of the player
+    const depth = config.tileDepth || 5;
+    const width = (config.peripheralColumns || 3) + 1; // +1 for center column
+
+    // Use Direction enum to determine tile coordinates
+    // NORTH = +Y, EAST = +X, SOUTH = -Y, WEST = -X
+    switch (position.facing) {
+      case 'EAST':
+        for (let d = 0; d <= depth; d++) {
+          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
+            tiles.push([playerGridX + d, playerGridY + w]);
+          }
+        }
+        break;
+
+      case 'NORTH':
+        for (let d = 0; d <= depth; d++) {
+          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
+            tiles.push([playerGridX + w, playerGridY + d]);
+          }
+        }
+        break;
+
+      case 'WEST':
+        for (let d = 0; d <= depth; d++) {
+          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
+            tiles.push([playerGridX - d, playerGridY + w]);
+          }
+        }
+        break;
+
+      case 'SOUTH':
+        for (let d = 0; d <= depth; d++) {
+          for (let w = -Math.floor(width / 2); w <= Math.floor(width / 2); w++) {
+            tiles.push([playerGridX + w, playerGridY - d]);
+          }
+        }
+        break;
+    }
+
+    return tiles;
   }
 
   /**
