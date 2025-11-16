@@ -186,7 +186,8 @@ export class RaycastingRenderingService {
     const shadedSlice = TextureAtlasService.applyBrightnessToSlice(slice, brightness);
 
     // Create ImageData for this column
-    const imageData = new ImageData(shadedSlice.pixels, 1, wallHeight);
+    // Need to create new Uint8ClampedArray to satisfy TypeScript's strict ImageData constructor
+    const imageData = new ImageData(new Uint8ClampedArray(shadedSlice.pixels), 1, wallHeight);
 
     // Generate putImageData command
     return [{

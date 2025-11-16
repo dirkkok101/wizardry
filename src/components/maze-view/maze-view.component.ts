@@ -65,8 +65,10 @@ export class MazeViewComponent {
 
     // Apply command styling
     this.ctx.globalAlpha = cmd.alpha ?? 1.0;
-    this.ctx.strokeStyle = cmd.color;
-    this.ctx.fillStyle = cmd.color;
+    if (cmd.color) {
+      this.ctx.strokeStyle = cmd.color;
+      this.ctx.fillStyle = cmd.color;
+    }
     this.ctx.lineWidth = cmd.lineWidth ?? 2;
 
     switch (cmd.type) {
@@ -91,6 +93,11 @@ export class MazeViewComponent {
           }
           this.ctx.closePath();
           this.ctx.fill();
+        }
+        break;
+      case 'putImageData':
+        if (cmd.imageData) {
+          this.ctx.putImageData(cmd.imageData, cmd.x, cmd.y);
         }
         break;
     }
