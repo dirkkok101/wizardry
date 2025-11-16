@@ -1,10 +1,11 @@
-import { LevelData, Position } from '../types/Dungeon';
+import { LevelData, Position, WallSegment } from '../types/Dungeon';
 import { ViewportConfig } from '../types/rendering.types';
 import { UniformLocations, AttributeLocations, RenderableQuad } from '../types/webgl.types';
 import { VERTEX_SHADER } from '../shaders/dungeon.vert';
 import { FRAGMENT_SHADER } from '../shaders/dungeon.frag';
 import { MatrixService } from './MatrixService';
 import { PlayerStateService } from './PlayerStateService';
+import { VisibilityService } from './VisibilityService';
 
 /**
  * WebGL-based dungeon renderer with perspective-correct texture mapping.
@@ -222,15 +223,35 @@ export class WebGLRenderingService {
 
     console.log('[WebGL] Projection and view matrices configured');
 
-    // TEST: Render a dummy quad at position (0, 0) facing north
-    // This is a 1×1 wall at map coordinate (0, 0)
+    // Get visible walls from VisibilityService
+    const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth, config.peripheralColumns);
+
+    // Render each visible wall
+    for (const wall of walls) {
+      this.renderWall(wall);
+    }
+  }
+
+  /**
+   * Renders a single wall segment as a textured quad
+   * @param wall - Wall segment from VisibilityService
+   */
+  private renderWall(wall: WallSegment): void {
+    if (!this.gl) return;
+
+    // Wall height (from floor y=0 to ceiling y=1)
+    const y1 = 0;
+    const y2 = 1;
+
+    // Create quad vertices from wall endpoints
+    // Bottom-left, bottom-right, top-right, top-left
     const vertices = this.createQuadVertices(
-      -0.5, 0, 0.5,  // Bottom-left
-      0.5, 0, 0.5,   // Bottom-right
-      0.5, 1, 0.5,   // Top-right
-      -0.5, 1, 0.5,  // Top-left
-      0, 0,          // UV min
-      1, 1           // UV max
+      wall.x1, y1, wall.z1,  // Bottom-left
+      wall.x2, y1, wall.z2,  // Bottom-right
+      wall.x2, y2, wall.z2,  // Top-right
+      wall.x1, y2, wall.z1,  // Top-left
+      0, 0,                  // UV min (temporary - full texture)
+      1, 1                   // UV max (temporary - full texture)
     );
 
     this.uploadQuadVertices(vertices);
