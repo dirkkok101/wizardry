@@ -20,6 +20,8 @@ import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
 import { DungeonState, TileData } from '../../types/Dungeon';
+import { TextureAtlas, TextureSet } from '../../types/texture.types';
+import * as TextureAtlasService from '../../services/TextureAtlasService';
 
 @Component({
   selector: 'app-maze',
@@ -40,6 +42,7 @@ export class MazeComponent implements OnInit {
   readonly messages = signal<string[]>([]);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingLevel = signal<boolean>(false);
+  readonly textureSet = signal<TextureSet | null>(null);
 
   // Rendering services
   private readonly raycastingRenderer = new RaycastingRenderingService();
@@ -94,9 +97,12 @@ export class MazeComponent implements OnInit {
       peripheralColumns: 5
     };
 
+    // Get texture set (may be null if still loading)
+    const textures = this.textureSet();
+
     // Switch based on renderer type
     const commands = this.rendererType() === 'raycasting'
-      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config, undefined, this.dungeonState())
+      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config, textures ?? undefined, this.dungeonState())
       : WireframeRenderingService.generateWireframeCommands(level, pos, config);
 
     if (commands.length === 0) {
@@ -169,7 +175,7 @@ export class MazeComponent implements OnInit {
     private router: Router
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Set scene type
     this.gameState.updateState(state => ({
       ...state,
@@ -185,6 +191,45 @@ export class MazeComponent implements OnInit {
 
     // Add welcome message
     this.addMessage(`Entering Level ${this.currentLevel()}...`);
+
+    // Load textures asynchronously
+    await this.loadTextures();
+  }
+
+  /**
+   * Load texture atlas and create TextureSet
+   */
+  private async loadTextures(): Promise<void> {
+    try {
+      // Load texture atlas JSON
+      const response = await fetch('/assets/textures/eob-dungeon-level-01.json');
+      if (!response.ok) {
+        throw new Error(`Failed to load texture atlas: ${response.statusText}`);
+      }
+      const atlas: TextureAtlas = await response.json();
+
+      // Load sprite sheet image
+      const spriteSheet = await TextureAtlasService.loadTextureAtlas(atlas);
+
+      // Extract all textures
+      const textures = TextureAtlasService.extractAllTextures(spriteSheet, atlas);
+
+      // Create texture set
+      const textureSet = TextureAtlasService.createTextureSet(
+        atlas.id,
+        atlas.description || 'Dungeon Level 1',
+        textures
+      );
+
+      // Store in signal
+      this.textureSet.set(textureSet);
+
+      console.log('[MazeComponent] Textures loaded successfully:', textureSet);
+    } catch (error) {
+      console.error('[MazeComponent] Failed to load textures:', error);
+      // Don't set error - just fall back to solid colors
+      // Textures will be undefined, raycaster will use solid colors
+    }
   }
 
   @HostListener('window:keydown.escape')
