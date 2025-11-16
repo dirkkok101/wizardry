@@ -222,7 +222,96 @@ export class WebGLRenderingService {
 
     console.log('[WebGL] Projection and view matrices configured');
 
-    // TODO: Render quads
+    // TEST: Render a dummy quad at position (0, 0) facing north
+    // This is a 1×1 wall at map coordinate (0, 0)
+    const vertices = this.createQuadVertices(
+      -0.5, 0, 0.5,  // Bottom-left
+      0.5, 0, 0.5,   // Bottom-right
+      0.5, 1, 0.5,   // Top-right
+      -0.5, 1, 0.5,  // Top-left
+      0, 0,          // UV min
+      1, 1           // UV max
+    );
+
+    this.uploadQuadVertices(vertices);
+    this.drawQuad();
+  }
+
+  /**
+   * Creates vertex data for a textured quad (two triangles)
+   * @param x1, y1, z1 - Bottom-left corner
+   * @param x2, y2, z2 - Bottom-right corner
+   * @param x3, y3, z3 - Top-right corner
+   * @param x4, y4, z4 - Top-left corner
+   * @param u1, v1, u2, v2 - UV coordinates (min/max)
+   * @returns Float32Array with interleaved position + UV data
+   */
+  private createQuadVertices(
+    x1: number, y1: number, z1: number,
+    x2: number, y2: number, z2: number,
+    x3: number, y3: number, z3: number,
+    x4: number, y4: number, z4: number,
+    u1: number, v1: number,
+    u2: number, v2: number
+  ): Float32Array {
+    // Interleaved format: [x, y, z, u, v] per vertex
+    // Two triangles: (v1, v2, v3) and (v1, v3, v4)
+    return new Float32Array([
+      // Triangle 1: bottom-left, bottom-right, top-right
+      x1, y1, z1, u1, v2,
+      x2, y2, z2, u2, v2,
+      x3, y3, z3, u2, v1,
+      // Triangle 2: bottom-left, top-right, top-left
+      x1, y1, z1, u1, v2,
+      x3, y3, z3, u2, v1,
+      x4, y4, z4, u1, v1
+    ]);
+  }
+
+  /**
+   * Uploads quad vertex data to GPU and configures attributes
+   * @param vertices - Interleaved vertex data [x,y,z,u,v,...]
+   */
+  private uploadQuadVertices(vertices: Float32Array): void {
+    if (!this.gl || !this.vertexBuffer || !this.attributes) return;
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, vertices, this.gl.DYNAMIC_DRAW);
+
+    const stride = 5 * Float32Array.BYTES_PER_ELEMENT; // 5 floats per vertex
+    const posOffset = 0;
+    const uvOffset = 3 * Float32Array.BYTES_PER_ELEMENT;
+
+    // Position attribute (3 floats)
+    this.gl.vertexAttribPointer(
+      this.attributes.aPosition,
+      3,
+      this.gl.FLOAT,
+      false,
+      stride,
+      posOffset
+    );
+    this.gl.enableVertexAttribArray(this.attributes.aPosition);
+
+    // Texture coordinate attribute (2 floats)
+    this.gl.vertexAttribPointer(
+      this.attributes.aTexCoord,
+      2,
+      this.gl.FLOAT,
+      false,
+      stride,
+      uvOffset
+    );
+    this.gl.enableVertexAttribArray(this.attributes.aTexCoord);
+  }
+
+  /**
+   * Draws a quad using the currently uploaded vertex data
+   */
+  private drawQuad(): void {
+    if (!this.gl) return;
+    // 6 vertices (2 triangles)
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
   }
 
   /**
