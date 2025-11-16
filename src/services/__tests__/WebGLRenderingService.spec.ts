@@ -340,4 +340,55 @@ describe('WebGLRenderingService', () => {
       expect(expectedTiles.size).toBe(2); // WEST should see 2 tiles
     });
   });
+
+  describe('camera orientation when rotating at (0,0)', () => {
+    it('changes visible tiles when rotating from NORTH to EAST', () => {
+      const service = new WebGLRenderingService();
+      service.initialize(canvas);
+      loadMockAtlas(service);
+
+      const level = DungeonService.loadLevel(1);
+
+      // Render facing NORTH
+      const northPos: Position = { x: 0, y: 0, facing: 'NORTH' };
+      service.render(level, northPos, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      const northWalls = VisibilityService.getVisibleWalls(level, northPos, 5, 3);
+      const northTiles = new Set<string>();
+      northWalls.forEach(wall => northTiles.add(`${wall.gridX},${wall.gridY}`));
+
+      // Render facing EAST (after "turning right")
+      const eastPos: Position = { x: 0, y: 0, facing: 'EAST' };
+      service.render(level, eastPos, {
+        width: 800,
+        height: 600,
+        tileDepth: 5,
+        peripheralColumns: 3
+      });
+
+      const eastWalls = VisibilityService.getVisibleWalls(level, eastPos, 5, 3);
+      const eastTiles = new Set<string>();
+      eastWalls.forEach(wall => eastTiles.add(`${wall.gridX},${wall.gridY}`));
+
+      // Verify different tiles visible after rotation
+      expect(northTiles.size).toBe(6);  // (0,0), (0,1), (0,2), (0,3), (0,4), (1,0)
+      expect(eastTiles.size).toBe(6);   // (0,0), (1,0), (2,0), (3,0), (4,0), (0,1)
+
+      // Verify tiles are actually different (rotation changed view)
+      const uniqueToNorth = Array.from(northTiles).filter(t => !eastTiles.has(t));
+      const uniqueToEast = Array.from(eastTiles).filter(t => !northTiles.has(t));
+
+      expect(uniqueToNorth.length).toBeGreaterThan(0);
+      expect(uniqueToEast.length).toBeGreaterThan(0);
+
+      // Both should see (0,0) and (1,0) or (0,1) in common
+      expect(northTiles.has('0,0')).toBe(true);
+      expect(eastTiles.has('0,0')).toBe(true);
+    });
+  });
 });
