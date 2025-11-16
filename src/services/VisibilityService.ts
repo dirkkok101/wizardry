@@ -94,35 +94,74 @@ export const VisibilityService = {
       }
     }
 
+    // Helper function to get perpendicular wall direction
+    const getPerpendicularWall = (offset: number): 'north' | 'south' | 'east' | 'west' => {
+      // offset -1 = left, +1 = right from player's perspective
+      switch (position.facing) {
+        case 'NORTH':
+          return offset < 0 ? 'west' : 'east'
+        case 'EAST':
+          return offset < 0 ? 'north' : 'south'
+        case 'SOUTH':
+          return offset < 0 ? 'east' : 'west'
+        case 'WEST':
+          return offset < 0 ? 'south' : 'north'
+      }
+    }
+
     // Iterate through depth levels (0 = player tile, 1 = one ahead, etc.)
     for (let depth = 0; depth < maxDepth; depth++) {
-      // Calculate forward position at this depth
-      const forwardPos = {
-        x: position.x + forwardX * depth,
-        y: position.y + forwardY * depth
+      // Calculate center column position at this depth
+      const centerX = position.x + forwardX * depth
+      const centerY = position.y + forwardY * depth
+
+      // Skip if center is out of bounds
+      if (centerX < 0 || centerX >= level.size.width ||
+          centerY < 0 || centerY >= level.size.height) {
+        break
       }
 
-      // For each column in the grid
-      for (const colOffset of columnOffsets) {
-        const tileX = forwardPos.x + perpX * colOffset
-        const tileY = forwardPos.y + perpY * colOffset
+      const centerKey = `${centerX},${centerY}`
+      const centerTile = DungeonService.getTile(level, centerX, centerY)
 
-        // Skip out-of-bounds tiles (edge wrapping is for movement, not visibility)
-        if (tileX < 0 || tileX >= level.size.width ||
-            tileY < 0 || tileY >= level.size.height) {
-          continue
+      // Always add center column tile
+      if (!visited.has(centerKey)) {
+        addTileWalls(centerX, centerY)
+        visited.add(centerKey)
+      }
+
+      // Add peripheral tiles only if there's an opening connecting them to center
+      if (peripheralColumns === 3) {
+        // Check left peripheral (-1 offset)
+        const leftX = centerX + perpX * -1
+        const leftY = centerY + perpY * -1
+        const leftKey = `${leftX},${leftY}`
+        const leftWallDir = getPerpendicularWall(-1)
+
+        if (leftX >= 0 && leftX < level.size.width &&
+            leftY >= 0 && leftY < level.size.height &&
+            !visited.has(leftKey) &&
+            centerTile.walls[leftWallDir] === 'open') {
+          addTileWalls(leftX, leftY)
+          visited.add(leftKey)
         }
 
-        const key = `${tileX},${tileY}`
+        // Check right peripheral (+1 offset)
+        const rightX = centerX + perpX * 1
+        const rightY = centerY + perpY * 1
+        const rightKey = `${rightX},${rightY}`
+        const rightWallDir = getPerpendicularWall(1)
 
-        if (!visited.has(key)) {
-          addTileWalls(tileX, tileY)
-          visited.add(key)
+        if (rightX >= 0 && rightX < level.size.width &&
+            rightY >= 0 && rightY < level.size.height &&
+            !visited.has(rightKey) &&
+            centerTile.walls[rightWallDir] === 'open') {
+          addTileWalls(rightX, rightY)
+          visited.add(rightKey)
         }
       }
 
-      // Check if center column is blocked (stops forward traversal)
-      const centerTile = DungeonService.getTile(level, forwardPos.x, forwardPos.y)
+      // Determine forward wall direction
       const facingWall = position.facing === 'NORTH' ? centerTile.walls.north :
                         position.facing === 'EAST' ? centerTile.walls.east :
                         position.facing === 'SOUTH' ? centerTile.walls.south :
