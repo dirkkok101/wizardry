@@ -15,6 +15,8 @@ import { DungeonService } from './DungeonService';
  * GPU-accelerated quad rendering.
  */
 export class WebGLRenderingService {
+  private debugMode = false;
+
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private uniforms: UniformLocations | null = null;
@@ -25,8 +27,8 @@ export class WebGLRenderingService {
 
   private currentTexture: WebGLTexture | null = null;
 
-  private atlasWidth: number = 448;
-  private atlasHeight: number = 128;
+  private atlasWidth: number = 0;
+  private atlasHeight: number = 0;
 
   // Batch rendering buffers
   private batchVertices: number[] = [];
@@ -42,7 +44,9 @@ export class WebGLRenderingService {
     // Get WebGL context
     this.gl = canvas.getContext('webgl');
     if (!this.gl) {
-      console.error('[WebGL] WebGL not supported');
+      if (this.debugMode) {
+        console.error('[WebGL] WebGL not supported');
+      }
       return false;
     }
 
@@ -82,7 +86,9 @@ export class WebGLRenderingService {
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.depthFunc(this.gl.LEQUAL);
 
-    console.log('[WebGL] Initialization successful');
+    if (this.debugMode) {
+      console.log('[WebGL] Initialization successful');
+    }
     return true;
   }
 
@@ -99,7 +105,9 @@ export class WebGLRenderingService {
     this.gl.compileShader(shader);
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      console.error('[WebGL] Shader compilation failed:', this.gl.getShaderInfoLog(shader));
+      if (this.debugMode) {
+        console.error('[WebGL] Shader compilation failed:', this.gl.getShaderInfoLog(shader));
+      }
       this.gl.deleteShader(shader);
       return null;
     }
@@ -121,7 +129,9 @@ export class WebGLRenderingService {
     this.gl.linkProgram(program);
 
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-      console.error('[WebGL] Program linking failed:', this.gl.getProgramInfoLog(program));
+      if (this.debugMode) {
+        console.error('[WebGL] Program linking failed:', this.gl.getProgramInfoLog(program));
+      }
       this.gl.deleteProgram(program);
       return null;
     }
@@ -137,15 +147,23 @@ export class WebGLRenderingService {
    */
   uploadTexture(image: HTMLImageElement): WebGLTexture | null {
     if (!this.gl) {
-      console.error('[WebGL] Cannot upload texture - not initialized');
+      if (this.debugMode) {
+        console.error('[WebGL] Cannot upload texture - not initialized');
+      }
       return null;
     }
 
     const texture = this.gl.createTexture();
     if (!texture) {
-      console.error('[WebGL] Failed to create texture');
+      if (this.debugMode) {
+        console.error('[WebGL] Failed to create texture');
+      }
       return null;
     }
+
+    // Derive atlas dimensions from loaded image
+    this.atlasWidth = image.width;
+    this.atlasHeight = image.height;
 
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
 
@@ -169,7 +187,9 @@ export class WebGLRenderingService {
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
     this.currentTexture = texture;
-    console.log('[WebGL] Texture uploaded:', image.width, 'x', image.height);
+    if (this.debugMode) {
+      console.log('[WebGL] Texture uploaded:', image.width, 'x', image.height);
+    }
 
     return texture;
   }
@@ -189,7 +209,9 @@ export class WebGLRenderingService {
     dungeonState?: DungeonState
   ): void {
     if (!this.gl || !this.program || !this.uniforms) {
-      console.error('[WebGL] Not initialized');
+      if (this.debugMode) {
+        console.error('[WebGL] Not initialized');
+      }
       return;
     }
 
@@ -234,7 +256,9 @@ export class WebGLRenderingService {
       this.gl.uniform1i(this.uniforms.uTexture, 0);
     }
 
-    console.log('[WebGL] Projection and view matrices configured');
+    if (this.debugMode) {
+      console.log('[WebGL] Projection and view matrices configured');
+    }
 
     // Get visible walls from VisibilityService
     const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth, config.peripheralColumns);

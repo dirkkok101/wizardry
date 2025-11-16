@@ -377,7 +377,7 @@ describe('TextureAtlasService', () => {
     });
 
     it('matches raycasting renderer fog formula', () => {
-      // Should match RaycastingRenderingService.calculateBrightness
+      // Uses linear fog formula for distance-based brightness
       const distance = 3.0;
       const maxDistance = 10.0;
       const brightness = TextureAtlasService.calculateFogBrightness(distance, maxDistance);
