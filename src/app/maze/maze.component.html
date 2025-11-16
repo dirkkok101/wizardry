@@ -26,7 +26,7 @@
   <div class="maze-content">
     <!-- Left: 3D Canvas -->
     <div class="maze-viewport">
-      <app-maze-view [commands]="drawCommands()" />
+      <canvas #mazeCanvas width="600" height="600"></canvas>
     </div>
 
     <!-- Right: Character Cards + Message Log -->
