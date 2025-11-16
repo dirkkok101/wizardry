@@ -130,8 +130,18 @@ export const WireframeRenderingService = {
       baseColor = '#800' // Red for locked doors
     } else if (wallType === 'secret') {
       return '#000' // Black (invisible) for secret doors
-    } else {
+    } else if (wallType === 'illusion' || wallType === 'wall') {
+      // Illusion walls render as regular walls (player discovers by walking through)
       // Normal walls - fade with distance
+      if (distance < 1.5) {
+        baseColor = '#0f0' // Bright green (near)
+      } else if (distance < 2.5) {
+        baseColor = '#0c0' // Medium green (mid)
+      } else {
+        baseColor = '#090' // Dim green (far)
+      }
+    } else {
+      // Fallback for 'open' or any other wall types
       if (distance < 1.5) {
         baseColor = '#0f0' // Bright green (near)
       } else if (distance < 2.5) {
