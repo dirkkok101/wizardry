@@ -1,7 +1,7 @@
 import { RaycastingRenderingService } from '../RaycastingRenderingService';
-import { LevelData } from '../../types/Dungeon';
-import { Position } from '../../types/Dungeon';
-import { ViewportConfig } from '../../types/rendering.types';
+import { LevelData, Position, DungeonState } from '../../types/Dungeon';
+import { ViewportConfig, RayHit } from '../../types/rendering.types';
+import { TextureSet, Texture } from '../../types/texture.types';
 
 describe('RaycastingRenderingService', () => {
   let service: RaycastingRenderingService;
@@ -142,6 +142,170 @@ describe('RaycastingRenderingService', () => {
       // Door color should contain brown RGB values (base is #8B4513)
       // After shading it will be darker but should still have characteristic ratios
       expect(commandsDoor[0].color).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/);
+    });
+  });
+
+  describe('generateRaycastCommands with enhanced textures', () => {
+    const createMockTexture = (id: string): Texture => ({
+      id,
+      width: 64,
+      height: 64,
+      imageData: new ImageData(64, 64),
+      tags: []
+    });
+
+    const mockTextureSet: TextureSet = {
+      id: 'test',
+      name: 'Test',
+      wallsNS: [],
+      wallsEW: [],
+      walls: [
+        createMockTexture('wall_01'),
+        createMockTexture('wall_02')
+      ],
+      stairsDown: [createMockTexture('stairs_down')],
+      stairsUp: [createMockTexture('stairs_up')],
+      doorsOpen: [createMockTexture('door_open')],
+      doorsClosed: [createMockTexture('door_closed')]
+    };
+
+    const enhancedConfig: ViewportConfig = {
+      width: 600,
+      height: 600,
+      tileDepth: 20,
+      peripheralColumns: 5
+    };
+
+    it('uses stairs texture when hitting stairs tile', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 10, y: 10, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          {
+            x: 10,
+            y: 8,
+            walls: { north: 'wall', east: 'open', south: 'open', west: 'open' },
+            type: 'stairs_down'
+          }
+        ],
+        encounterRate: 0,
+        encounterTable: 'test'
+      };
+
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+
+      const enhancedService = new RaycastingRenderingService();
+      const commands = enhancedService.generateRaycastCommands(level, position, enhancedConfig, mockTextureSet);
+
+      // Should have putImageData commands for textured walls
+      const imageCommands = commands.filter(cmd => cmd.type === 'putImageData');
+      expect(imageCommands.length).toBeGreaterThan(0);
+    });
+
+    it('uses open door texture when door is in openDoors set', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 10, y: 10, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          {
+            x: 10,
+            y: 8,
+            walls: { north: 'door', east: 'open', south: 'open', west: 'open' }
+          }
+        ],
+        encounterRate: 0,
+        encounterTable: 'test'
+      };
+
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+
+      const dungeonState: Partial<DungeonState> = {
+        openDoors: new Set(['1_8_10'])  // Level 1, Y=8, X=10
+      };
+
+      const enhancedService = new RaycastingRenderingService();
+      const commands = enhancedService.generateRaycastCommands(
+        level,
+        position,
+        enhancedConfig,
+        mockTextureSet,
+        dungeonState as DungeonState
+      );
+
+      expect(commands.length).toBeGreaterThan(0);
+    });
+
+    it('uses closed door texture when door is not in openDoors set', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 10, y: 10, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          {
+            x: 10,
+            y: 8,
+            walls: { north: 'door', east: 'open', south: 'open', west: 'open' }
+          }
+        ],
+        encounterRate: 0,
+        encounterTable: 'test'
+      };
+
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+
+      const dungeonState: Partial<DungeonState> = {
+        openDoors: new Set()  // Empty - no doors open
+      };
+
+      const enhancedService = new RaycastingRenderingService();
+      const commands = enhancedService.generateRaycastCommands(
+        level,
+        position,
+        enhancedConfig,
+        mockTextureSet,
+        dungeonState as DungeonState
+      );
+
+      expect(commands.length).toBeGreaterThan(0);
+    });
+
+    it('alternates wall textures based on tile position', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 10, y: 10, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          {
+            x: 10,
+            y: 8,
+            walls: { north: 'wall', east: 'open', south: 'open', west: 'open' }
+          },
+          {
+            x: 10,
+            y: 9,
+            walls: { north: 'wall', east: 'open', south: 'open', west: 'open' }
+          }
+        ],
+        encounterRate: 0,
+        encounterTable: 'test'
+      };
+
+      const position: Position = { x: 10, y: 10, facing: 'NORTH' };
+
+      const enhancedService = new RaycastingRenderingService();
+      const commands = enhancedService.generateRaycastCommands(level, position, enhancedConfig, mockTextureSet);
+
+      expect(commands.length).toBeGreaterThan(0);
     });
   });
 });

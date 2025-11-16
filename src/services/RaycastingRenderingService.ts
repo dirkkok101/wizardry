@@ -1,9 +1,9 @@
-import { LevelData, Position } from '../types/Dungeon';
+import { LevelData, Position, DungeonState } from '../types/Dungeon';
 import { CanvasCommand, ViewportConfig } from '../types/rendering.types';
 import { RaycastingService } from './RaycastingService';
 import { PlayerStateService } from './PlayerStateService';
 import { RayHit } from '../types/rendering.types';
-import { TextureSet, TextureSlice, TextureRenderConfig, DEFAULT_TEXTURE_CONFIG, TextureSliceCacheKey } from '../types/texture.types';
+import { TextureSet, Texture, TextureSlice, TextureRenderConfig, DEFAULT_TEXTURE_CONFIG, TextureSliceCacheKey } from '../types/texture.types';
 import * as TextureAtlasService from './TextureAtlasService';
 
 /**
@@ -44,13 +44,15 @@ export class RaycastingRenderingService {
    * @param position - Player position
    * @param config - Viewport configuration
    * @param textureSet - Optional texture set for textured rendering
+   * @param dungeonState - Optional dungeon state for door tracking
    * @returns Array of canvas commands
    */
   generateRaycastCommands(
     level: LevelData,
     position: Position,
     config: ViewportConfig,
-    textureSet?: TextureSet
+    textureSet?: TextureSet,
+    dungeonState?: DungeonState
   ): CanvasCommand[] {
     const commands: CanvasCommand[] = [];
 
@@ -68,10 +70,46 @@ export class RaycastingRenderingService {
       const hit = this.raycaster.castRay(level, playerState, rayDirX, rayDirY);
 
       if (hit && hit.distance < config.tileDepth) {
-        // Render this wall column (textured or solid color)
-        const columnCommands = textureSet
-          ? this.renderTexturedWallColumn(hit, x, config, textureSet)
-          : this.renderWallColumn(hit, x, config);
+        // Priority 1: Check for stairs - render stairs texture if present
+        if (textureSet && (hit.tileType === 'stairs_up' || hit.tileType === 'stairs_down')) {
+          const stairsTexture = TextureAtlasService.selectStairsTexture(textureSet, hit.tileType);
+          if (stairsTexture) {
+            const columnCommands = this.renderTexturedWallColumn(hit, x, config, stairsTexture);
+            commands.push(...columnCommands);
+            continue;
+          }
+        }
+
+        // Priority 2: Check for doors - render with open/closed texture
+        if (textureSet && (hit.wallState === 'door' || hit.wallState === 'locked_door')) {
+          const doorKey = `${level.level}_${hit.mapY}_${hit.mapX}`;
+          const isOpen = dungeonState?.openDoors?.has(doorKey) || false;
+          const doorTexture = TextureAtlasService.selectDoorTexture(textureSet, isOpen);
+
+          if (doorTexture) {
+            const columnCommands = this.renderTexturedWallColumn(hit, x, config, doorTexture);
+            commands.push(...columnCommands);
+            continue;
+          }
+        }
+
+        // Priority 3: Render regular wall with variation
+        if (textureSet) {
+          const wallTexture = TextureAtlasService.selectWallTextureVariation(
+            textureSet,
+            hit.mapX,
+            hit.mapY
+          );
+
+          if (wallTexture) {
+            const columnCommands = this.renderTexturedWallColumn(hit, x, config, wallTexture);
+            commands.push(...columnCommands);
+            continue;
+          }
+        }
+
+        // Fallback: Render solid color wall
+        const columnCommands = this.renderWallColumn(hit, x, config);
         commands.push(...columnCommands);
       }
     }
@@ -143,14 +181,14 @@ export class RaycastingRenderingService {
    * @param hit - Ray hit data
    * @param screenX - Screen X coordinate
    * @param config - Viewport configuration
-   * @param textureSet - Texture set to use
+   * @param texture - Texture to use for this column
    * @returns Canvas commands for this column
    */
   private renderTexturedWallColumn(
     hit: RayHit,
     screenX: number,
     config: ViewportConfig,
-    textureSet: TextureSet
+    texture: Texture
   ): CanvasCommand[] {
     // Calculate wall height based on perpendicular distance
     const lineHeight = config.height / hit.distance;
@@ -159,18 +197,6 @@ export class RaycastingRenderingService {
     const drawStart = Math.max(0, -lineHeight / 2 + config.height / 2);
     const drawEnd = Math.min(config.height, lineHeight / 2 + config.height / 2);
     const wallHeight = Math.ceil(drawEnd - drawStart);
-
-    // Select texture based on wall type and orientation
-    const texture = TextureAtlasService.selectWallTexture(
-      textureSet,
-      hit.wallState,
-      hit.side
-    );
-
-    // Fallback to solid color if no texture found
-    if (!texture) {
-      return this.renderWallColumn(hit, screenX, config);
-    }
 
     // Extract texture slice at wallX position
     const slice = TextureAtlasService.extractTextureSliceCached(
@@ -186,7 +212,6 @@ export class RaycastingRenderingService {
     const shadedSlice = TextureAtlasService.applyBrightnessToSlice(slice, brightness);
 
     // Create ImageData for this column
-    // Need to create new Uint8ClampedArray to satisfy TypeScript's strict ImageData constructor
     const imageData = new ImageData(new Uint8ClampedArray(shadedSlice.pixels), 1, wallHeight);
 
     // Generate putImageData command
