@@ -16,7 +16,7 @@ import { DungeonService } from './DungeonService';
  * GPU-accelerated quad rendering.
  */
 export class WebGLRenderingService {
-  private debugMode = false;
+  private debugMode = true;
 
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
@@ -246,7 +246,9 @@ export class WebGLRenderingService {
 
     // Create projection matrix (90° FOV)
     const aspect = config.width / config.height;
-    const projMatrix = MatrixService.perspective(Math.PI / 2, aspect, 0.1, config.tileDepth);
+    // Far plane at 10 tiles provides depth precision for walls up to 5 tiles away
+    const farPlane = 10.0;
+    const projMatrix = MatrixService.perspective(Math.PI / 2, aspect, 0.1, farPlane);
 
     // Create view matrix from player state
     const playerState = PlayerStateService.fromPosition(position);
@@ -275,8 +277,10 @@ export class WebGLRenderingService {
     // Set uniforms
     this.gl.uniformMatrix4fv(this.uniforms.uProjectionMatrix, false, projMatrix);
     this.gl.uniformMatrix4fv(this.uniforms.uViewMatrix, false, viewMatrix);
-    this.gl.uniform1f(this.uniforms.uFogStart, 1.0);
-    this.gl.uniform1f(this.uniforms.uFogEnd, config.tileDepth);
+    // Fog starts at 2 tiles, ends at 10 tiles
+    // Ensures walls at depth 5 are ~62% visible instead of 0% visible
+    this.gl.uniform1f(this.uniforms.uFogStart, 2.0);
+    this.gl.uniform1f(this.uniforms.uFogEnd, 10.0);
     this.gl.uniform3f(this.uniforms.uFogColor, 0.0, 0.0, 0.0);  // Black fog
 
     // Bind texture
@@ -293,6 +297,14 @@ export class WebGLRenderingService {
     // Get visible walls from VisibilityService
     const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth, config.peripheralColumns);
 
+    if (this.debugMode) {
+      console.log(`[WebGL] Got ${walls.length} walls to render`);
+      if (walls.length > 0) {
+        const firstWall = walls[0];
+        console.log(`[WebGL] First wall: (${firstWall.x1}, ${firstWall.z1}) to (${firstWall.x2}, ${firstWall.z2}), distance=${firstWall.distance.toFixed(2)}, side=${firstWall.side}`);
+      }
+    }
+
     // Render each visible wall
     for (const wall of walls) {
       this.renderWall(level, wall);
@@ -307,6 +319,9 @@ export class WebGLRenderingService {
     }
 
     // Flush remaining quads in batch
+    if (this.debugMode) {
+      console.log(`[WebGL] Flushing batch with ${this.batchVertices.length} floats (${this.batchVertices.length / 30} quads)`);
+    }
     this.flushBatch();
   }
 
@@ -683,6 +698,12 @@ export class WebGLRenderingService {
     // Draw entire batch in one call
     const vertexCount = this.batchVertices.length / 5; // 5 floats per vertex
     this.gl.drawArrays(this.gl.TRIANGLES, 0, vertexCount);
+
+    // Check for WebGL errors
+    const error = this.gl.getError();
+    if (error !== this.gl.NO_ERROR) {
+      console.error(`[WebGL] Error after drawArrays: ${error}`);
+    }
 
     // Clear batch for next frame
     this.batchVertices = [];
