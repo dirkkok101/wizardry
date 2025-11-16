@@ -124,6 +124,9 @@ export class RaycastingService {
     const wallDirection = this.getWallDirection(side, stepX, stepY);
     const wallState = this.getWallState(level, mapX, mapY, wallDirection);
 
+    // Get tile data for additional information
+    const tileData = this.getTile(level, mapX, mapY);
+
     return {
       distance: perpWallDist,
       mapX,
@@ -131,7 +134,8 @@ export class RaycastingService {
       side,
       wallX,
       wallState,
-      wallDirection
+      wallDirection,
+      tileType: tileData?.type  // NEW: Include tile type
     };
   }
 

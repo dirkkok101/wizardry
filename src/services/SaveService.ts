@@ -115,7 +115,8 @@ export class SaveService {
         teleportCount: 0,
         visitedTiles: new Set(),
         defeatedEncounters: [],
-        unlockedDoors: new Set()
+        unlockedDoors: new Set(),
+        openDoors: new Set()
       }
     }
   }

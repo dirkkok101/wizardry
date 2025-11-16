@@ -109,6 +109,7 @@ describe('TileInspectionService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
           visitedTiles: new Set(),
         },
       };
@@ -156,6 +157,7 @@ describe('TileInspectionService', () => {
           teleportCount: 0,
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
           visitedTiles: new Set(),
         },
       };

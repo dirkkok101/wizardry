@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { TextureAtlas, TextureSet } from '../types/texture.types';
+import * as TextureAtlasService from './TextureAtlasService';
 
 /**
  * AssetLoadingService - Service for loading game assets
@@ -17,6 +19,7 @@ export interface GameAssets {
   sprites: Record<string, HTMLImageElement>
   sounds: Record<string, AudioBuffer>
   dataFiles: Map<string, any>
+  textures?: Map<string, TextureSet>  // Texture sets keyed by ID
 }
 
 export interface LoadingStats {
@@ -81,6 +84,86 @@ async function loadCastleMenuAssets(): Promise<HTMLImageElement> {
  */
 async function loadTrainingGroundsAssets(): Promise<HTMLImageElement> {
   return new Image() // Placeholder - not actually used
+}
+
+/**
+ * Load a single texture atlas and extract textures.
+ *
+ * @param atlas - Texture atlas metadata
+ * @returns Extracted textures from the atlas
+ */
+async function loadTextureAtlasAndExtract(atlas: TextureAtlas): Promise<import('../types/texture.types').Texture[]> {
+  try {
+    // Load sprite sheet image
+    const spriteSheet = await TextureAtlasService.loadTextureAtlas(atlas);
+
+    // Extract all textures from the sprite sheet
+    const textures = TextureAtlasService.extractAllTextures(spriteSheet, atlas);
+
+    // Cache the atlas
+    assetCache.set(`atlas:${atlas.id}`, textures);
+
+    return textures;
+  } catch (error) {
+    throw new AssetLoadError(
+      atlas.id,
+      'texture_atlas',
+      `Failed to load texture atlas`,
+      error as Error
+    );
+  }
+}
+
+/**
+ * Load texture atlases from metadata files.
+ *
+ * Loads atlas metadata JSON files, then loads each sprite sheet and extracts textures.
+ *
+ * @param atlasMetadataFiles - Array of atlas metadata file paths
+ * @returns Map of texture sets keyed by atlas ID
+ */
+async function loadTextureAtlases(atlasMetadataFiles: string[]): Promise<Map<string, TextureSet>> {
+  const textureSets = new Map<string, TextureSet>();
+
+  for (const metadataPath of atlasMetadataFiles) {
+    try {
+      // Load atlas metadata JSON
+      const response = await fetch(metadataPath);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${metadataPath}: ${response.statusText}`);
+      }
+      const atlasMetadata: TextureAtlas = await response.json();
+
+      // Load sprite sheet and extract textures
+      const textures = await loadTextureAtlasAndExtract(atlasMetadata);
+
+      // Create texture set
+      const textureSet = TextureAtlasService.createTextureSet(
+        atlasMetadata.id,
+        atlasMetadata.description || atlasMetadata.id,
+        textures
+      );
+
+      textureSets.set(atlasMetadata.id, textureSet);
+
+      // Update progress
+      loadingStats.loadedCount++;
+      loadingStats.progress = (loadingStats.loadedCount / loadingStats.totalCount) * 100;
+      loadProgressHandlers.forEach(handler => handler(loadingStats.progress));
+    } catch (error) {
+      loadingStats.failedCount++;
+      const assetError = new AssetLoadError(
+        metadataPath,
+        'texture_atlas_metadata',
+        `Failed to load texture atlas metadata`,
+        error as Error
+      );
+      loadErrorHandlers.forEach(handler => handler(assetError));
+      throw assetError;
+    }
+  }
+
+  return textureSets;
 }
 
 /**
@@ -358,5 +441,26 @@ export class AssetLoadingService {
    */
   async loadDataFiles<T extends { id: string }>(directory: string): Promise<Map<string, T>> {
     return loadDataFiles<T>(directory);
+  }
+
+  /**
+   * Load texture atlases from metadata files.
+   *
+   * @param atlasMetadataFiles - Array of paths to atlas metadata JSON files
+   * @returns Map of texture sets keyed by atlas ID
+   */
+  async loadTextureAtlases(atlasMetadataFiles: string[]): Promise<Map<string, TextureSet>> {
+    return loadTextureAtlases(atlasMetadataFiles);
+  }
+
+  /**
+   * Get loaded texture set by ID.
+   *
+   * @param textureSetId - Texture set identifier
+   * @returns Texture set or null if not found
+   */
+  getTextureSet(textureSetId: string): TextureSet | null {
+    const cached = assetCache.get(`atlas:${textureSetId}`);
+    return cached ?? null;
   }
 }

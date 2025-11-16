@@ -27,7 +27,8 @@ export const NavigationService = {
         teleportCount: 0,
         visitedTiles: new Set<string>(),
         defeatedEncounters: [],
-        unlockedDoors: new Set<string>()
+        unlockedDoors: new Set<string>(),
+        openDoors: new Set<string>()
       }
     };
 

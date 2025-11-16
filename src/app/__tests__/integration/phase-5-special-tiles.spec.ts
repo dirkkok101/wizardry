@@ -37,6 +37,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -92,6 +93,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -163,6 +165,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -233,6 +236,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -301,6 +305,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -335,6 +340,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -382,6 +388,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -443,6 +450,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -484,6 +492,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -506,6 +515,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -528,6 +538,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -558,6 +569,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -604,6 +616,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 
@@ -652,6 +665,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           visitedTiles: new Set(),
           defeatedEncounters: [],
           unlockedDoors: new Set(),
+          openDoors: new Set(),
         },
       };
 

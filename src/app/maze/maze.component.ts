@@ -1,16 +1,14 @@
-import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
 import { CharacterCardComponent } from '../../components/character-card/character-card.component';
 import { MessageLogComponent } from '../../components/message-log/message-log.component';
-import { MazeViewComponent } from '../../components/maze-view/maze-view.component';
 import { GameStateService } from '../../services/GameStateService';
 import { NavigationService } from '../../services/NavigationService';
 import { DungeonService } from '../../services/DungeonService';
-import { WireframeRenderingService } from '../../services/WireframeRenderingService';
-import { RaycastingRenderingService } from '../../services/RaycastingRenderingService';
+import { WebGLRenderingService } from '../../services/WebGLRenderingService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { DoorService } from '../../services/DoorService';
@@ -20,6 +18,9 @@ import { MenuItem } from '../../components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
 import { DungeonState, TileData } from '../../types/Dungeon';
+import { TextureAtlas } from '../../types/texture.types';
+import { ViewportConfig } from '../../types/rendering.types';
+import * as TextureAtlasService from '../../services/TextureAtlasService';
 
 @Component({
   selector: 'app-maze',
@@ -29,23 +30,23 @@ import { DungeonState, TileData } from '../../types/Dungeon';
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterCardComponent,
-    MessageLogComponent,
-    MazeViewComponent
+    MessageLogComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
 })
-export class MazeComponent implements OnInit {
+export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
+  // Canvas reference for WebGL rendering
+  @ViewChild('mazeCanvas', { static: false })
+  canvasRef?: ElementRef<HTMLCanvasElement>;
+
   // Local signals
   readonly messages = signal<string[]>([]);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingLevel = signal<boolean>(false);
 
-  // Rendering services
-  private readonly raycastingRenderer = new RaycastingRenderingService();
-
-  // Renderer toggle (for comparison testing)
-  readonly rendererType = signal<'wireframe' | 'raycasting'>('raycasting');
+  // WebGL Renderer
+  private webglRenderer: WebGLRenderingService | null = null;
 
   // Computed signals from GameStateService
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
@@ -73,38 +74,6 @@ export class MazeComponent implements OnInit {
     return spells;
   });
 
-  /**
-   * Canvas drawing commands for 3D view (wireframe or raycasting)
-   */
-  readonly drawCommands = computed(() => {
-    const pos = this.position();
-
-    if (!pos) {
-      console.warn('[MazeComponent] No position, returning empty commands');
-      return [];
-    }
-
-    const levelNum = this.currentLevel();
-    const level = DungeonService.loadLevel(levelNum);
-
-    const config = {
-      width: 600,
-      height: 600,
-      tileDepth: 10,
-      peripheralColumns: 5
-    };
-
-    // Switch based on renderer type
-    const commands = this.rendererType() === 'raycasting'
-      ? this.raycastingRenderer.generateRaycastCommands(level, pos, config)
-      : WireframeRenderingService.generateWireframeCommands(level, pos, config);
-
-    if (commands.length === 0) {
-      console.warn('⚠️ NO COMMANDS GENERATED - check visibility and projection!');
-    }
-
-    return commands;
-  });
 
   /**
    * Show elevator dialog when on elevator tile
@@ -169,7 +138,7 @@ export class MazeComponent implements OnInit {
     private router: Router
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Set scene type
     this.gameState.updateState(state => ({
       ...state,
@@ -185,6 +154,122 @@ export class MazeComponent implements OnInit {
 
     // Add welcome message
     this.addMessage(`Entering Level ${this.currentLevel()}...`);
+  }
+
+  ngAfterViewInit(): void {
+    const canvas = this.canvasRef?.nativeElement;
+    if (!canvas) {
+      console.error('[MazeComponent] Canvas element not found');
+      return;
+    }
+
+    // Initialize WebGL renderer
+    this.webglRenderer = new WebGLRenderingService();
+    const success = this.webglRenderer.initialize(canvas);
+
+    if (!success) {
+      console.error('[MazeComponent] Failed to initialize WebGL renderer');
+      this.webglRenderer = null;
+      return;
+    }
+
+    console.log('[MazeComponent] WebGL renderer initialized successfully');
+
+    // Load textures and render
+    this.loadTextures();
+  }
+
+  ngOnDestroy(): void {
+    if (this.webglRenderer) {
+      this.webglRenderer.dispose();
+      this.webglRenderer = null;
+    }
+  }
+
+  /**
+   * Load texture atlas and upload to GPU
+   */
+  private async loadTextures(): Promise<void> {
+    try {
+      console.log('[MazeComponent] Loading texture atlas...');
+
+      // Load texture atlas metadata
+      const response = await fetch('/assets/textures/eob-dungeon-level-01.json');
+      if (!response.ok) {
+        throw new Error(`Failed to load texture atlas: ${response.statusText}`);
+      }
+      const atlas: TextureAtlas = await response.json();
+
+      // Load texture image
+      console.log('[MazeComponent] Loading texture image from:', atlas.imagePath);
+      const image = await TextureAtlasService.loadTextureAtlas(atlas);
+
+      console.log('[MazeComponent] Texture atlas loaded:', {
+        dimensions: `${image.naturalWidth}x${image.naturalHeight}`,
+        textures: atlas.textures.length
+      });
+
+      // Upload texture to GPU
+      if (this.webglRenderer) {
+        const texture = this.webglRenderer.uploadTexture(image);
+        if (texture) {
+          console.log('[MazeComponent] Texture uploaded to GPU');
+        } else {
+          console.error('[MazeComponent] Failed to upload texture to GPU');
+        }
+      }
+
+      // Trigger initial render
+      this.render();
+    } catch (error) {
+      console.error('[MazeComponent] Failed to load textures:', error);
+      console.error('[MazeComponent] Stack trace:', (error as Error).stack);
+    }
+  }
+
+  /**
+   * Render the dungeon view using WebGL
+   */
+  private render(): void {
+    if (!this.webglRenderer) {
+      console.warn('[MazeComponent] WebGL renderer not initialized');
+      return;
+    }
+
+    const gameState = this.gameState.state();
+    if (!gameState) {
+      console.warn('[MazeComponent] No game state available');
+      return;
+    }
+
+    const level = DungeonService.loadLevel(this.currentLevel());
+    if (!level) {
+      console.warn('[MazeComponent] No current level');
+      return;
+    }
+
+    const position = this.position();
+    if (!position) {
+      console.warn('[MazeComponent] No party position');
+      return;
+    }
+
+    const canvas = this.canvasRef?.nativeElement;
+    if (!canvas) {
+      console.warn('[MazeComponent] Canvas not available');
+      return;
+    }
+
+    // Viewport configuration
+    const config: ViewportConfig = {
+      width: canvas.width,
+      height: canvas.height,
+      tileDepth: 5,
+      peripheralColumns: 3
+    };
+
+    // Render the dungeon with dungeon state for door rendering
+    this.webglRenderer.render(level, position, config, this.dungeonState());
   }
 
   @HostListener('window:keydown.escape')
@@ -216,6 +301,7 @@ export class MazeComponent implements OnInit {
     const newState = NavigationService.turnLeft(state);
     this.gameState.updateState(() => newState);
     this.addMessage('You turn left.');
+    this.render();
   }
 
   turnRight(): void {
@@ -223,6 +309,7 @@ export class MazeComponent implements OnInit {
     const newState = NavigationService.turnRight(state);
     this.gameState.updateState(() => newState);
     this.addMessage('You turn right.');
+    this.render();
   }
 
   strafeLeft(): void {
@@ -337,15 +424,6 @@ export class MazeComponent implements OnInit {
     }
   }
 
-  /**
-   * Toggle between wireframe and raycasting renderers.
-   * Debug feature for comparison testing.
-   */
-  toggleRenderer(): void {
-    this.rendererType.update(current =>
-      current === 'wireframe' ? 'raycasting' : 'wireframe'
-    );
-  }
 
   private executeMovement(
     moveType: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT',
@@ -375,6 +453,9 @@ export class MazeComponent implements OnInit {
       'STRAFE_RIGHT': 'You strafe right.'
     };
     this.addMessage(messages[moveType]);
+
+    // Re-render after movement
+    this.render();
 
     // Check for encounter after successful movement
     this.checkForEncounter();
