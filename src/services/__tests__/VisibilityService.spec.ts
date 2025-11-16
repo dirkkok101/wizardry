@@ -452,6 +452,81 @@ describe('VisibilityService', () => {
     })
   })
 
+  describe('level 1 visibility from (0,0)', () => {
+    let level1: LevelData
+
+    beforeEach(async () => {
+      const { DungeonService } = await import('../DungeonService')
+      level1 = DungeonService.loadLevel(1)
+    })
+
+    it('facing NORTH from (0,0) should see tiles (0,0), (0,1), (0,2), (0,3)', () => {
+      const position: Position = { x: 0, y: 0, facing: 'NORTH' }
+      const walls = VisibilityService.getVisibleWalls(level1, position, 5, 3)
+
+      // Extract unique tiles from wall segments
+      const visibleTiles = new Set<string>()
+      walls.forEach(wall => {
+        visibleTiles.add(`${wall.gridX},${wall.gridY}`)
+      })
+
+      // Should see tiles (0,0), (0,1), (0,2), (0,3)
+      expect(visibleTiles.has('0,0')).toBe(true)
+      expect(visibleTiles.has('0,1')).toBe(true)
+      expect(visibleTiles.has('0,2')).toBe(true)
+      expect(visibleTiles.has('0,3')).toBe(true)
+    })
+
+    it('facing EAST from (0,0) should see tiles (0,0), (1,0), (2,0), (3,0)', () => {
+      const position: Position = { x: 0, y: 0, facing: 'EAST' }
+      const walls = VisibilityService.getVisibleWalls(level1, position, 5, 3)
+
+      // Extract unique tiles from wall segments
+      const visibleTiles = new Set<string>()
+      walls.forEach(wall => {
+        visibleTiles.add(`${wall.gridX},${wall.gridY}`)
+      })
+
+      // Should see tiles (0,0), (1,0), (2,0), (3,0)
+      expect(visibleTiles.has('0,0')).toBe(true)
+      expect(visibleTiles.has('1,0')).toBe(true)
+      expect(visibleTiles.has('2,0')).toBe(true)
+      expect(visibleTiles.has('3,0')).toBe(true)
+    })
+
+    it('facing SOUTH from (0,0) should only see tile (0,0)', () => {
+      const position: Position = { x: 0, y: 0, facing: 'SOUTH' }
+      const walls = VisibilityService.getVisibleWalls(level1, position, 5, 1) // peripheralColumns=1 for center only
+
+      // Extract unique tiles from wall segments
+      const visibleTiles = new Set<string>()
+      walls.forEach(wall => {
+        visibleTiles.add(`${wall.gridX},${wall.gridY}`)
+      })
+
+      // Should only see tile (0,0) - south wall blocks further view
+      expect(visibleTiles.has('0,0')).toBe(true)
+      // Should not see any tiles beyond (0,0)
+      expect(visibleTiles.size).toBe(1)
+    })
+
+    it('facing WEST from (0,0) should only see tile (0,0)', () => {
+      const position: Position = { x: 0, y: 0, facing: 'WEST' }
+      const walls = VisibilityService.getVisibleWalls(level1, position, 5, 1) // peripheralColumns=1 for center only
+
+      // Extract unique tiles from wall segments
+      const visibleTiles = new Set<string>()
+      walls.forEach(wall => {
+        visibleTiles.add(`${wall.gridX},${wall.gridY}`)
+      })
+
+      // Should only see tile (0,0) - west wall blocks further view
+      expect(visibleTiles.has('0,0')).toBe(true)
+      // Should not see any tiles beyond (0,0)
+      expect(visibleTiles.size).toBe(1)
+    })
+  })
+
   describe('createWallSegment', () => {
     const levelSize = { width: 20, height: 20 }
 
