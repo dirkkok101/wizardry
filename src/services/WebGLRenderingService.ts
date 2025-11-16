@@ -28,6 +28,10 @@ export class WebGLRenderingService {
   private atlasWidth: number = 448;
   private atlasHeight: number = 128;
 
+  // Batch rendering buffers
+  private batchVertices: number[] = [];
+  private maxBatchSize: number = 1000; // Max quads per batch (6000 vertices)
+
   /**
    * Initialize WebGL context and shader program.
    *
@@ -193,6 +197,9 @@ export class WebGLRenderingService {
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
+    // Start new batch
+    this.startBatch();
+
     // Use shader program
     this.gl.useProgram(this.program);
 
@@ -243,6 +250,9 @@ export class WebGLRenderingService {
       this.renderFloor(gridX, gridY);
       this.renderCeiling(gridX, gridY);
     }
+
+    // Flush remaining quads in batch
+    this.flushBatch();
   }
 
   /**
@@ -333,8 +343,7 @@ export class WebGLRenderingService {
       u2, v2                 // UV max from atlas
     );
 
-    this.uploadQuadVertices(vertices);
-    this.drawQuad();
+    this.addQuadToBatch(vertices);
   }
 
   /**
@@ -367,8 +376,7 @@ export class WebGLRenderingService {
       u2, v2
     );
 
-    this.uploadQuadVertices(vertices);
-    this.drawQuad();
+    this.addQuadToBatch(vertices);
   }
 
   /**
@@ -400,8 +408,7 @@ export class WebGLRenderingService {
       u2, v2
     );
 
-    this.uploadQuadVertices(vertices);
-    this.drawQuad();
+    this.addQuadToBatch(vertices);
   }
 
   /**
@@ -536,6 +543,76 @@ export class WebGLRenderingService {
     if (!this.gl) return;
     // 6 vertices (2 triangles)
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+  }
+
+  /**
+   * Starts a new rendering batch
+   */
+  private startBatch(): void {
+    this.batchVertices = [];
+  }
+
+  /**
+   * Adds a quad to the current batch instead of rendering immediately
+   * @param vertices - Quad vertex data (30 floats)
+   */
+  private addQuadToBatch(vertices: Float32Array): void {
+    // Add all vertex data to batch array
+    for (let i = 0; i < vertices.length; i++) {
+      this.batchVertices.push(vertices[i]);
+    }
+
+    // If batch is full, flush it
+    if (this.batchVertices.length >= this.maxBatchSize * 30) {
+      this.flushBatch();
+    }
+  }
+
+  /**
+   * Uploads and renders all quads in the current batch
+   */
+  private flushBatch(): void {
+    if (this.batchVertices.length === 0) return;
+    if (!this.gl || !this.vertexBuffer || !this.attributes) return;
+
+    // Convert batch array to Float32Array
+    const batchData = new Float32Array(this.batchVertices);
+
+    // Upload entire batch to GPU
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, batchData, this.gl.DYNAMIC_DRAW);
+
+    // Configure vertex attributes
+    const stride = 5 * Float32Array.BYTES_PER_ELEMENT;
+    const posOffset = 0;
+    const uvOffset = 3 * Float32Array.BYTES_PER_ELEMENT;
+
+    this.gl.vertexAttribPointer(
+      this.attributes.aPosition,
+      3,
+      this.gl.FLOAT,
+      false,
+      stride,
+      posOffset
+    );
+    this.gl.enableVertexAttribArray(this.attributes.aPosition);
+
+    this.gl.vertexAttribPointer(
+      this.attributes.aTexCoord,
+      2,
+      this.gl.FLOAT,
+      false,
+      stride,
+      uvOffset
+    );
+    this.gl.enableVertexAttribArray(this.attributes.aTexCoord);
+
+    // Draw entire batch in one call
+    const vertexCount = this.batchVertices.length / 5; // 5 floats per vertex
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, vertexCount);
+
+    // Clear batch for next frame
+    this.batchVertices = [];
   }
 
   /**
