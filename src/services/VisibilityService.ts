@@ -153,7 +153,7 @@ export const VisibilityService = {
 
   /**
    * Create wall segment from grid position and side
-   * Converts grid coordinates to world space (each tile = 1 unit, centered at grid position)
+   * Converts grid coordinates to world space (tile corners at grid positions, each tile = 1.0 units)
    * Unwraps coordinates when edge wrapping creates shorter paths
    */
   createWallSegment(
@@ -185,34 +185,36 @@ export const VisibilityService = {
     let x1: number, z1: number, x2: number, z2: number
     let isVertical: boolean
 
-    // Convert unwrapped grid to world coordinates (tile center at unwrappedX, unwrappedY)
-    // Each tile is 1.0 units
-    // COORDINATE SYSTEM: NORTH = +Y, SOUTH = -Y
+    // Convert grid to world coordinates (tile corners at grid positions, each tile = 1.0 units)
+    // COORDINATE SYSTEM: Grid (x,y) is bottom-left corner, tile extends to (x+1,y+1)
+    // NORTH = +Y direction, walls are at tile edges
     if (side === 'north') {
-      // North wall is at the +Y edge of the tile
-      x1 = unwrappedX - 0.5
-      z1 = unwrappedY + 0.5
-      x2 = unwrappedX + 0.5
-      z2 = unwrappedY + 0.5
+      // North wall at top edge (+Y direction)
+      x1 = unwrappedX
+      z1 = unwrappedY + 1
+      x2 = unwrappedX + 1
+      z2 = unwrappedY + 1
       isVertical = true
     } else if (side === 'south') {
-      // South wall is at the -Y edge of the tile
-      x1 = unwrappedX - 0.5
-      z1 = unwrappedY - 0.5
-      x2 = unwrappedX + 0.5
-      z2 = unwrappedY - 0.5
+      // South wall at bottom edge (-Y direction)
+      x1 = unwrappedX
+      z1 = unwrappedY
+      x2 = unwrappedX + 1
+      z2 = unwrappedY
       isVertical = true
     } else if (side === 'east') {
-      x1 = unwrappedX + 0.5
-      z1 = unwrappedY - 0.5
-      x2 = unwrappedX + 0.5
-      z2 = unwrappedY + 0.5
+      // East wall at right edge (+X direction)
+      x1 = unwrappedX + 1
+      z1 = unwrappedY
+      x2 = unwrappedX + 1
+      z2 = unwrappedY + 1
       isVertical = false
     } else { // west
-      x1 = unwrappedX - 0.5
-      z1 = unwrappedY - 0.5
-      x2 = unwrappedX - 0.5
-      z2 = unwrappedY + 0.5
+      // West wall at left edge (-X direction)
+      x1 = unwrappedX
+      z1 = unwrappedY
+      x2 = unwrappedX
+      z2 = unwrappedY + 1
       isVertical = false
     }
 

@@ -460,11 +460,11 @@ describe('VisibilityService', () => {
 
       const wall = VisibilityService.createWallSegment(3, 5, 'north', position, 'wall', levelSize)
 
-      // North wall is at +Y edge: z = gridY + 0.5 = 5.5
-      expect(wall.x1).toBe(2.5)  // 3 - 0.5
-      expect(wall.z1).toBe(5.5)  // 5 + 0.5 (north = +Y direction)
-      expect(wall.x2).toBe(3.5)  // 3 + 0.5
-      expect(wall.z2).toBe(5.5)  // 5 + 0.5
+      // North wall at top edge: z = gridY + 1 = 6
+      expect(wall.x1).toBe(3)   // gridX
+      expect(wall.z1).toBe(6)   // gridY + 1 (north = +Y direction)
+      expect(wall.x2).toBe(4)   // gridX + 1
+      expect(wall.z2).toBe(6)   // gridY + 1
       expect(wall.isVertical).toBe(true)
       expect(wall.height).toBe(1.0)
     })
@@ -474,11 +474,11 @@ describe('VisibilityService', () => {
 
       const wall = VisibilityService.createWallSegment(3, 5, 'east', position, 'wall', levelSize)
 
-      // East wall is at +X edge
-      expect(wall.x1).toBe(3.5)  // 3 + 0.5
-      expect(wall.z1).toBe(4.5)  // 5 - 0.5
-      expect(wall.x2).toBe(3.5)  // 3 + 0.5
-      expect(wall.z2).toBe(5.5)  // 5 + 0.5
+      // East wall at right edge: x = gridX + 1 = 4
+      expect(wall.x1).toBe(4)   // gridX + 1
+      expect(wall.z1).toBe(5)   // gridY
+      expect(wall.x2).toBe(4)   // gridX + 1
+      expect(wall.z2).toBe(6)   // gridY + 1
       expect(wall.isVertical).toBe(false)
     })
 
@@ -506,12 +506,11 @@ describe('VisibilityService', () => {
         const position: Position = { x: 0, y: 0, facing: 'NORTH' }
 
         // Wall at tile (0, 19) should unwrap to tile y=-1 (1 tile south of player)
-        // North wall edge is at tile center + 0.5
         const wall = VisibilityService.createWallSegment(0, 19, 'north', position, 'wall', levelSize)
 
-        // Unwrapped tile: 19 - 20 = -1, north wall edge at -1 + 0.5 = -0.5
-        expect(wall.z1).toBe(-0.5)
-        expect(wall.z2).toBe(-0.5)
+        // Unwrapped tile: 19 - 20 = -1, north wall at -1 + 1 = 0
+        expect(wall.z1).toBe(0)
+        expect(wall.z2).toBe(0)
       })
 
       it('unwraps Y coordinate when wall wraps south (player at 19, wall at 0)', () => {
@@ -520,9 +519,9 @@ describe('VisibilityService', () => {
         // Wall at tile (10, 0) should unwrap to z=20 (1 tile south of player at 19)
         const wall = VisibilityService.createWallSegment(10, 0, 'south', position, 'wall', levelSize)
 
-        // Unwrapped: 0 + 20 = 20, south wall edge at 20 - 0.5 = 19.5
-        expect(wall.z1).toBe(19.5)
-        expect(wall.z2).toBe(19.5)
+        // Unwrapped: 0 + 20 = 20, south wall at bottom edge: 20
+        expect(wall.z1).toBe(20)
+        expect(wall.z2).toBe(20)
       })
 
       it('unwraps X coordinate when wall wraps east (player at 19, wall at 0)', () => {
@@ -531,19 +530,20 @@ describe('VisibilityService', () => {
         // Wall at tile (0, 10) should unwrap to x=20 (1 tile east of player at 19)
         const wall = VisibilityService.createWallSegment(0, 10, 'east', position, 'wall', levelSize)
 
-        expect(wall.x1).toBe(20.5)  // Unwrapped: 0 + 20 = 20, wall east edge at 20 + 0.5 = 20.5
-        expect(wall.x2).toBe(20.5)
+        // Unwrapped: 0 + 20 = 20, east wall at right edge: 20 + 1 = 21
+        expect(wall.x1).toBe(21)
+        expect(wall.x2).toBe(21)
       })
 
       it('unwraps X coordinate when wall wraps west (player at 0, wall at 19)', () => {
         const position: Position = { x: 0, y: 10, facing: 'WEST' }
 
         // Wall at tile (19, 10) should unwrap to tile x=-1 (1 tile west of player at 0)
-        // West wall edge is at tile center - 0.5
         const wall = VisibilityService.createWallSegment(19, 10, 'west', position, 'wall', levelSize)
 
-        expect(wall.x1).toBe(-1.5)  // Unwrapped tile: 19 - 20 = -1, west wall edge at -1 - 0.5 = -1.5
-        expect(wall.x2).toBe(-1.5)
+        // Unwrapped tile: 19 - 20 = -1, west wall at left edge: -1
+        expect(wall.x1).toBe(-1)
+        expect(wall.x2).toBe(-1)
       })
 
       it('does not unwrap coordinates when distance is less than half map size', () => {
@@ -552,9 +552,9 @@ describe('VisibilityService', () => {
         // Wall at tile (5, 10) is 5 tiles away, no unwrapping needed
         const wall = VisibilityService.createWallSegment(5, 10, 'north', position, 'wall', levelSize)
 
-        // North wall at +Y edge: 10 + 0.5 = 10.5
-        expect(wall.z1).toBe(10.5)
-        expect(wall.z2).toBe(10.5)
+        // North wall at top edge: 10 + 1 = 11
+        expect(wall.z1).toBe(11)
+        expect(wall.z2).toBe(11)
       })
     })
   })
