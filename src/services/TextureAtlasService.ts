@@ -356,6 +356,75 @@ export function selectWallTexture(
 }
 
 /**
+ * Select wall texture using variation (based on tile position).
+ *
+ * Alternates between available wall textures based on tile coordinates
+ * to create visual variety without orientation-based selection.
+ *
+ * @param textureSet - Texture set to select from
+ * @param mapX - Tile X coordinate
+ * @param mapY - Tile Y coordinate
+ * @returns Selected texture, or null if not found
+ */
+export function selectWallTextureVariation(
+  textureSet: TextureSet,
+  mapX: number,
+  mapY: number
+): Texture | null {
+  const walls = textureSet.walls;
+  if (!walls || walls.length === 0) {
+    return null;
+  }
+
+  // Alternate based on tile position (checkerboard pattern)
+  const variation = (mapX + mapY) % walls.length;
+  return walls[variation];
+}
+
+/**
+ * Select stairs texture based on tile type.
+ *
+ * @param textureSet - Texture set to select from
+ * @param tileType - Tile type (stairs_up or stairs_down)
+ * @returns Selected texture, or null if not found
+ */
+export function selectStairsTexture(
+  textureSet: TextureSet,
+  tileType: import('../types/Dungeon').TileType
+): Texture | null {
+  if (tileType === 'stairs_up') {
+    return textureSet.stairsUp?.[0] || null;
+  }
+  if (tileType === 'stairs_down') {
+    return textureSet.stairsDown?.[0] || null;
+  }
+  return null;
+}
+
+/**
+ * Select door texture based on open state.
+ *
+ * @param textureSet - Texture set to select from
+ * @param isOpen - Whether door is open
+ * @returns Selected texture, or null if not found
+ */
+export function selectDoorTexture(
+  textureSet: TextureSet,
+  isOpen: boolean
+): Texture | null {
+  // Try specific open/closed textures first
+  if (isOpen && textureSet.doorsOpen && textureSet.doorsOpen.length > 0) {
+    return textureSet.doorsOpen[0];
+  }
+  if (!isOpen && textureSet.doorsClosed && textureSet.doorsClosed.length > 0) {
+    return textureSet.doorsClosed[0];
+  }
+
+  // Fallback to generic doors array
+  return textureSet.doors?.[0] || null;
+}
+
+/**
  * Create a texture set from extracted textures.
  *
  * Helper function to organize textures by tags into a TextureSet.

@@ -535,4 +535,157 @@ describe('TextureAtlasService', () => {
       expect(stats.memoryUsageMB).toBeCloseTo(0.00114, 4);
     });
   });
+
+  // ============================================================================
+  // NEW TEXTURE SELECTION FUNCTIONS (Task 2)
+  // ============================================================================
+
+  describe('selectWallTextureVariation', () => {
+    let textureSet: TextureSet;
+
+    beforeEach(() => {
+      textureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: [],
+        walls: [
+          createTestTexture('wall_01'),
+          createTestTexture('wall_02')
+        ]
+      };
+    });
+
+    it('alternates between two wall textures based on tile position', () => {
+      // Even coordinates should use wall_01
+      expect(TextureAtlasService.selectWallTextureVariation(textureSet, 0, 0)?.id).toBe('wall_01');
+      expect(TextureAtlasService.selectWallTextureVariation(textureSet, 2, 2)?.id).toBe('wall_01');
+
+      // Odd coordinates should use wall_02
+      expect(TextureAtlasService.selectWallTextureVariation(textureSet, 0, 1)?.id).toBe('wall_02');
+      expect(TextureAtlasService.selectWallTextureVariation(textureSet, 1, 0)?.id).toBe('wall_02');
+    });
+
+    it('returns null if no wall textures available', () => {
+      const emptySet: TextureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: []
+      };
+
+      expect(TextureAtlasService.selectWallTextureVariation(emptySet, 0, 0)).toBeNull();
+    });
+
+    it('wraps index if more than 2 textures available', () => {
+      const threeTextureSet: TextureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: [],
+        walls: [
+          createTestTexture('wall_01'),
+          createTestTexture('wall_02'),
+          createTestTexture('wall_03')
+        ]
+      };
+
+      // Should cycle through all 3 textures
+      expect(TextureAtlasService.selectWallTextureVariation(threeTextureSet, 0, 0)?.id).toBe('wall_01');
+      expect(TextureAtlasService.selectWallTextureVariation(threeTextureSet, 1, 0)?.id).toBe('wall_02');
+      expect(TextureAtlasService.selectWallTextureVariation(threeTextureSet, 2, 0)?.id).toBe('wall_03');
+      expect(TextureAtlasService.selectWallTextureVariation(threeTextureSet, 3, 0)?.id).toBe('wall_01');
+    });
+  });
+
+  describe('selectStairsTexture', () => {
+    let textureSet: TextureSet;
+
+    beforeEach(() => {
+      textureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: [],
+        stairsUp: [createTestTexture('stairs_up')],
+        stairsDown: [createTestTexture('stairs_down')]
+      };
+    });
+
+    it('returns stairs_up texture for stairs_up tile type', () => {
+      const result = TextureAtlasService.selectStairsTexture(textureSet, 'stairs_up');
+      expect(result?.id).toBe('stairs_up');
+    });
+
+    it('returns stairs_down texture for stairs_down tile type', () => {
+      const result = TextureAtlasService.selectStairsTexture(textureSet, 'stairs_down');
+      expect(result?.id).toBe('stairs_down');
+    });
+
+    it('returns null for non-stairs tile types', () => {
+      expect(TextureAtlasService.selectStairsTexture(textureSet, 'teleporter')).toBeNull();
+      expect(TextureAtlasService.selectStairsTexture(textureSet, 'pit')).toBeNull();
+    });
+
+    it('returns null if no stairs textures defined', () => {
+      const emptySet: TextureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: []
+      };
+
+      expect(TextureAtlasService.selectStairsTexture(emptySet, 'stairs_up')).toBeNull();
+    });
+  });
+
+  describe('selectDoorTexture', () => {
+    let textureSet: TextureSet;
+
+    beforeEach(() => {
+      textureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: [],
+        doorsOpen: [createTestTexture('door_open')],
+        doorsClosed: [createTestTexture('door_closed')]
+      };
+    });
+
+    it('returns open door texture when door is open', () => {
+      const result = TextureAtlasService.selectDoorTexture(textureSet, true);
+      expect(result?.id).toBe('door_open');
+    });
+
+    it('returns closed door texture when door is closed', () => {
+      const result = TextureAtlasService.selectDoorTexture(textureSet, false);
+      expect(result?.id).toBe('door_closed');
+    });
+
+    it('falls back to doors array if doorsOpen/doorsClosed not defined', () => {
+      const fallbackSet: TextureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: [],
+        doors: [createTestTexture('door_generic')]
+      };
+
+      expect(TextureAtlasService.selectDoorTexture(fallbackSet, true)?.id).toBe('door_generic');
+      expect(TextureAtlasService.selectDoorTexture(fallbackSet, false)?.id).toBe('door_generic');
+    });
+
+    it('returns null if no door textures available', () => {
+      const emptySet: TextureSet = {
+        id: 'test',
+        name: 'Test Set',
+        wallsNS: [],
+        wallsEW: []
+      };
+
+      expect(TextureAtlasService.selectDoorTexture(emptySet, true)).toBeNull();
+      expect(TextureAtlasService.selectDoorTexture(emptySet, false)).toBeNull();
+    });
+  });
 });
