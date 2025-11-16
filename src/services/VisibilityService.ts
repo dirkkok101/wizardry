@@ -123,10 +123,12 @@ export const VisibilityService = {
     const minDist = walls.length > 0 ? Math.min(...walls.map(w => w.distance)) : 0
     const maxDist = walls.length > 0 ? Math.max(...walls.map(w => w.distance)) : 0
 
+    console.log(`[Visibility] Player at (${position.x}, ${position.y}) facing ${position.facing}`)
     console.log(`[Visibility] Found ${walls.length} walls from ${visited.size} tiles using ${peripheralColumns}-column grid`)
     if (walls.length > 0) {
       console.log(`[Visibility] Wall distances: min=${minDist.toFixed(2)} max=${maxDist.toFixed(2)}`)
     }
+    console.log(`[Visibility] First 10 visited tiles:`, Array.from(visited).slice(0, 10).map(t => `(${t})`).join(', '))
 
     // Sort by distance (back-to-front for painter's algorithm)
     walls.sort((a, b) => b.distance - a.distance)

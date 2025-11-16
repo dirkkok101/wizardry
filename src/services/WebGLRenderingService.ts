@@ -16,7 +16,7 @@ import { DungeonService } from './DungeonService';
  * GPU-accelerated quad rendering.
  */
 export class WebGLRenderingService {
-  private debugMode = false;
+  private debugMode = true;
 
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
@@ -254,6 +254,17 @@ export class WebGLRenderingService {
     const camPosY = 0.5;  // Camera height (eye level)
     const camPosZ = playerState.gridY + 0.5;
 
+    if (this.debugMode) {
+      console.log('[WebGL] Player state:', {
+        pos: `(${position.x}, ${position.y})`,
+        facing: position.facing,
+        gridPos: `(${playerState.gridX}, ${playerState.gridY})`,
+        direction: `(${playerState.dirX.toFixed(2)}, ${playerState.dirY.toFixed(2)})`,
+        angle: `${(playerState.angle * 180 / Math.PI).toFixed(0)}°`,
+        cameraPos: `(${camPosX.toFixed(1)}, ${camPosY.toFixed(1)}, ${camPosZ.toFixed(1)})`
+      });
+    }
+
     // Convert direction to view direction (game coords use +Y = NORTH)
     // WebGL uses +Z = forward, so we map: gameX → glX, gameY → glZ
     const viewMatrix = MatrixService.lookAt(
@@ -289,6 +300,17 @@ export class WebGLRenderingService {
 
     // Render floors and ceilings for all visible tiles
     const visibleTiles = this.getVisibleTiles(position, config);
+
+    if (this.debugMode) {
+      console.log('[WebGL] Visible tiles for floor/ceiling:', {
+        count: visibleTiles.length,
+        depth: config.tileDepth,
+        peripheralColumns: config.peripheralColumns,
+        actualWidth: (config.peripheralColumns || 3) + 1,
+        first15Tiles: visibleTiles.slice(0, 15).map(([x, y]) => `(${x},${y})`).join(', ')
+      });
+    }
+
     for (const [gridX, gridY] of visibleTiles) {
       this.renderFloor(gridX, gridY);
       this.renderCeiling(gridX, gridY);
@@ -497,6 +519,18 @@ export class WebGLRenderingService {
     // For simplicity, render a rectangular area in front of the player
     const depth = config.tileDepth || 5;
     const width = (config.peripheralColumns || 3) + 1; // +1 for center column
+
+    if (this.debugMode) {
+      console.log('[WebGL] getVisibleTiles() called:', {
+        playerPos: `(${position.x}, ${position.y})`,
+        gridPos: `(${playerGridX}, ${playerGridY})`,
+        facing: position.facing,
+        depth: depth,
+        peripheralColumns: config.peripheralColumns,
+        calculatedWidth: width,
+        widthRange: `[${-Math.floor(width / 2)} to ${Math.floor(width / 2)}]`
+      });
+    }
 
     // Use Direction enum to determine tile coordinates
     // NORTH = +Y, EAST = +X, SOUTH = -Y, WEST = -X
