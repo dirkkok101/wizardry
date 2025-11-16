@@ -6,8 +6,17 @@ import { DungeonService } from '../../services/DungeonService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { MonsterService } from '../../services/MonsterService';
+import { WebGLRenderingService } from '../../services/WebGLRenderingService';
 import { SceneType } from '../../types/SceneType';
 import { createTestCharacter } from '../../test-helpers/test-factories';
+
+// Mock TextureAtlasService module
+jest.mock('../../services/TextureAtlasService', () => ({
+  loadTextureAtlas: jest.fn().mockResolvedValue({
+    naturalWidth: 448,
+    naturalHeight: 128
+  } as HTMLImageElement)
+}));
 
 function createTestDungeonState() {
   return {
@@ -20,6 +29,29 @@ function createTestDungeonState() {
     defeatedEncounters: []
   };
 }
+
+// Mock WebGL methods globally for all tests
+beforeAll(() => {
+  // Mock WebGLRenderingService methods
+  jest.spyOn(WebGLRenderingService.prototype, 'initialize').mockReturnValue(true);
+  jest.spyOn(WebGLRenderingService.prototype, 'uploadTexture').mockReturnValue({} as WebGLTexture);
+  jest.spyOn(WebGLRenderingService.prototype, 'render').mockImplementation(() => {});
+  jest.spyOn(WebGLRenderingService.prototype, 'dispose').mockImplementation(() => {});
+
+  // Mock fetch for texture loading
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({
+        id: 'test-atlas',
+        imagePath: '/assets/test.png',
+        width: 448,
+        height: 128,
+        textures: []
+      })
+    } as Response)
+  );
+});
 
 describe('MazeComponent - Initialization', () => {
   let component: MazeComponent;
