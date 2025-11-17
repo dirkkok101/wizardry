@@ -139,8 +139,8 @@ describe('MatrixService', () => {
       // North = negative Z in our coordinate system
       const mat = MatrixService.lookAt(0, 0, 0, 0, 0, -1);
 
-      // Right vector should be (1, 0, 0) for north-facing
-      expect(mat[0]).toBeCloseTo(1, 5);
+      // Right vector should be (-1, 0, 0) for north-facing (negated for left/right fix)
+      expect(mat[0]).toBeCloseTo(-1, 5);
       expect(mat[1]).toBeCloseTo(0, 5);
       expect(mat[2]).toBeCloseTo(0, 5);
 
@@ -159,8 +159,8 @@ describe('MatrixService', () => {
       // South = positive Z
       const mat = MatrixService.lookAt(0, 0, 0, 0, 0, 1);
 
-      // Right vector should be (-1, 0, 0) for south-facing
-      expect(mat[0]).toBeCloseTo(-1, 5);
+      // Right vector should be (1, 0, 0) for south-facing (negated for left/right fix)
+      expect(mat[0]).toBeCloseTo(1, 5);
       expect(mat[1]).toBeCloseTo(0, 5);
       expect(mat[2]).toBeCloseTo(0, 5);
 
@@ -174,10 +174,10 @@ describe('MatrixService', () => {
       // East = positive X
       const mat = MatrixService.lookAt(0, 0, 0, 1, 0, 0);
 
-      // Right vector should be (0, 0, 1) for east-facing
+      // Right vector should be (0, 0, -1) for east-facing (negated for left/right fix)
       expect(mat[0]).toBeCloseTo(0, 5);
       expect(mat[1]).toBeCloseTo(0, 5);
-      expect(mat[2]).toBeCloseTo(1, 5);
+      expect(mat[2]).toBeCloseTo(-1, 5);
 
       // Forward vector (negated) should be (-1, 0, 0)
       expect(mat[8]).toBeCloseTo(-1, 5);
@@ -189,10 +189,10 @@ describe('MatrixService', () => {
       // West = negative X
       const mat = MatrixService.lookAt(0, 0, 0, -1, 0, 0);
 
-      // Right vector should be (0, 0, -1) for west-facing
+      // Right vector should be (0, 0, 1) for west-facing (negated for left/right fix)
       expect(mat[0]).toBeCloseTo(0, 5);
       expect(mat[1]).toBeCloseTo(0, 5);
-      expect(mat[2]).toBeCloseTo(-1, 5);
+      expect(mat[2]).toBeCloseTo(1, 5);
 
       // Forward vector (negated) should be (1, 0, 0)
       expect(mat[8]).toBeCloseTo(1, 5);
@@ -206,11 +206,11 @@ describe('MatrixService', () => {
 
       // Translation column should be computed from dot products
       // For north-facing at (5, 2, 3):
-      // Right = (1, 0, 0), Up = (0, 1, 0), Forward = (0, 0, -1)
-      // TX = -(1*5 + 0*2 + 0*3) = -5
+      // Right = (-1, 0, 0) [negated], Up = (0, 1, 0), Forward = (0, 0, -1)
+      // TX = -(-1*5 + 0*2 + 0*3) = 5
       // TY = -(0*5 + 1*2 + 0*3) = -2
       // TZ = -(0*5 + 0*2 + 1*3) = -3
-      expect(mat[12]).toBeCloseTo(-5, 5);
+      expect(mat[12]).toBeCloseTo(5, 5);
       expect(mat[13]).toBeCloseTo(-2, 5);
       expect(mat[14]).toBeCloseTo(-3, 5);
     });
