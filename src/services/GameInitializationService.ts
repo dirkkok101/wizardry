@@ -7,6 +7,7 @@ import { SceneType } from '../types/SceneType'
 import { RaceService } from './RaceService'
 import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
+import { DungeonService } from './DungeonService'
 
 let gameState: GameState | null = null
 
@@ -70,6 +71,34 @@ async function initializeGame(): Promise<void> {
   ])
 
   console.log('Game data initialized successfully')
+
+  // Validate map data in development mode
+  if (process.env['NODE_ENV'] !== 'production') {
+    console.log('Validating dungeon maps...')
+    const validationErrors: string[] = []
+
+    for (let level = 1; level <= 10; level++) {
+      try {
+        const levelData = DungeonService.loadLevel(level)
+        const errors = DungeonService.validateStairsWalls(levelData)
+
+        if (errors.length > 0) {
+          validationErrors.push(`Level ${level}:`)
+          validationErrors.push(...errors.map(err => `  ${err}`))
+        }
+      } catch (error) {
+        validationErrors.push(`Level ${level}: Failed to load - ${error}`)
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      console.warn('Map validation errors found:')
+      validationErrors.forEach(err => console.warn(err))
+    } else {
+      console.log('All dungeon maps validated successfully')
+    }
+  }
+
   gameState = createNewGame()
 }
 

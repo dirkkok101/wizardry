@@ -57,7 +57,6 @@ export const DungeonService = {
     }
 
     // Return default tile (all walls)
-    console.log(`[DungeonService] getTile - No tile data for (${x},${y}), returning default (all walls)`);
     return {
       x,
       y,

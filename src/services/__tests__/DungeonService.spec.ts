@@ -32,14 +32,15 @@ describe('DungeonService', () => {
 
       expect(tile.x).toBe(0)
       expect(tile.y).toBe(0)
-      expect(tile.type).toBe('stairs_up')
+      // Tile (0,0) now uses wall-based stairs, not tile type
+      expect(tile.walls.west).toBe('stairs_up')
     })
 
     it('returns tile with correct wall configuration', () => {
       const level = DungeonService.loadLevel(1)
-      const tile = DungeonService.getTile(level, 2, 0)
+      const tile = DungeonService.getTile(level, 7, 0)
 
-      expect(tile.walls.east).toBe('door')
+      expect(tile.walls.north).toBe('door')
     })
 
     it('returns default tile for coordinates with no tile data', () => {
@@ -63,7 +64,7 @@ describe('DungeonService', () => {
     })
 
     it('blocks movement when wall present', () => {
-      const position: Position = { x: 0, y: 0, facing: 'EAST' }
+      const position: Position = { x: 0, y: 0, facing: 'SOUTH' }
       const result = DungeonService.canMove(level, position, 'FORWARD')
 
       expect(result.allowed).toBe(false)
@@ -71,7 +72,7 @@ describe('DungeonService', () => {
     })
 
     it('blocks movement when door present', () => {
-      const position: Position = { x: 2, y: 0, facing: 'EAST' }
+      const position: Position = { x: 7, y: 0, facing: 'NORTH' }
       const result = DungeonService.canMove(level, position, 'FORWARD')
 
       expect(result.allowed).toBe(false)

@@ -11,12 +11,21 @@ export const NavigationService = {
   },
 
   /**
+   * Assert that dungeon state exists and is valid
+   * @throws Error if dungeon state is not initialized
+   */
+  requireDungeon(state: GameState): DungeonState {
+    if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
+      throw new Error('Operation requires dungeon state but dungeon is not initialized')
+    }
+    return state.dungeon
+  },
+
+  /**
    * Initialize dungeon state when entering from camp
    * Sets default position and enables torch light
    */
   enterDungeon(state: GameState, level: number): GameState {
-    console.log(`[NavigationService] enterDungeon called - level=${level}`);
-
     const newState: GameState = {
       ...state,
       dungeon: {
@@ -32,8 +41,6 @@ export const NavigationService = {
       }
     };
 
-    const pos = newState.dungeon!.position;
-    console.log(`[NavigationService] enterDungeon - created state: level=${newState.dungeon!.currentLevel}, position=(${pos.x},${pos.y},${pos.facing}), lightRadius=${newState.dungeon!.lightRadius}`);
     return newState;
   },
 
@@ -286,6 +293,8 @@ export const NavigationService = {
     newLevel: number,
     entryType: 'STAIRS_UP' | 'STAIRS_DOWN' | 'ELEVATOR' | 'CHUTE'
   ): GameState {
+    const dungeon = this.requireDungeon(state)
+
     // Clamp level to 1-10
     newLevel = Math.max(1, Math.min(10, newLevel))
 
@@ -308,16 +317,16 @@ export const NavigationService = {
 
     // If no entry tile found, use current position
     if (!entryPosition) {
-      entryPosition = { ...state.dungeon!.position }
+      entryPosition = { ...dungeon.position }
     }
 
     // Maintain facing direction
-    entryPosition.facing = state.dungeon!.position.facing
+    entryPosition.facing = dungeon.position.facing
 
     return {
       ...state,
       dungeon: {
-        ...state.dungeon!,
+        ...dungeon,
         currentLevel: newLevel,
         position: entryPosition,
       }
@@ -341,11 +350,13 @@ export const NavigationService = {
    * Called after every movement
    */
   handleSpecialTile(state: GameState, tile: TileData): GameState {
+    const dungeon = this.requireDungeon(state)
+
     // Reset teleport count for non-teleporter tiles
-    if (tile.type !== 'teleporter' && state.dungeon!.teleportCount > 0) {
+    if (tile.type !== 'teleporter' && dungeon.teleportCount > 0) {
       state = {
         ...state,
-        dungeon: { ...state.dungeon!, teleportCount: 0 }
+        dungeon: { ...dungeon, teleportCount: 0 }
       }
     }
 
@@ -363,14 +374,14 @@ export const NavigationService = {
         return this.handlePit(state)
 
       case 'stairs_up':
-        if (state.dungeon!.currentLevel > 1) {
-          return this.enterLevel(state, state.dungeon!.currentLevel - 1, 'STAIRS_UP')
+        if (dungeon.currentLevel > 1) {
+          return this.enterLevel(state, dungeon.currentLevel - 1, 'STAIRS_UP')
         }
         return state
 
       case 'stairs_down':
-        if (state.dungeon!.currentLevel < 10) {
-          return this.enterLevel(state, state.dungeon!.currentLevel + 1, 'STAIRS_DOWN')
+        if (dungeon.currentLevel < 10) {
+          return this.enterLevel(state, dungeon.currentLevel + 1, 'STAIRS_DOWN')
         }
         return state
 
@@ -405,8 +416,10 @@ export const NavigationService = {
    * Handle teleporter tile - instant transport with loop prevention
    */
   handleTeleporter(state: GameState, tile: TileData): GameState {
+    const dungeon = this.requireDungeon(state)
+
     // Prevent infinite loops - max 3 consecutive teleports
-    if (state.dungeon!.teleportCount >= 3) {
+    if (dungeon.teleportCount >= 3) {
       return state
     }
 
@@ -417,13 +430,13 @@ export const NavigationService = {
     return {
       ...state,
       dungeon: {
-        ...state.dungeon!,
+        ...dungeon,
         position: {
-          ...state.dungeon!.position,
+          ...dungeon.position,
           x: tile.destination.x!,
           y: tile.destination.y!,
         },
-        teleportCount: state.dungeon!.teleportCount + 1,
+        teleportCount: dungeon.teleportCount + 1,
       }
     }
   },
@@ -432,15 +445,16 @@ export const NavigationService = {
    * Handle spinner tile - randomize facing direction
    */
   handleSpinner(state: GameState): GameState {
+    const dungeon = this.requireDungeon(state)
     const directions: Direction[] = ['NORTH', 'SOUTH', 'EAST', 'WEST']
     const randomDirection = directions[Math.floor(Math.random() * directions.length)]
 
     return {
       ...state,
       dungeon: {
-        ...state.dungeon!,
+        ...dungeon,
         position: {
-          ...state.dungeon!.position,
+          ...dungeon.position,
           facing: randomDirection,
         }
       }
@@ -452,12 +466,14 @@ export const NavigationService = {
    * Research: docs/systems/dungeon-system.md:449-476
    */
   handleChute(state: GameState): GameState {
+    const dungeon = this.requireDungeon(state)
+
     // Roll for fall distance (1-3 levels)
     const levelsFallen = Math.floor(Math.random() * 3) + 1
-    const newLevel = Math.min(10, state.dungeon!.currentLevel + levelsFallen)
+    const newLevel = Math.min(10, dungeon.currentLevel + levelsFallen)
 
     // Calculate damage (1d6 per level fallen)
-    const actualFall = newLevel - state.dungeon!.currentLevel
+    const actualFall = newLevel - dungeon.currentLevel
     const damagePerCharacter: Map<string, number> = new Map()
 
     for (const memberId of state.party.members) {
@@ -482,7 +498,7 @@ export const NavigationService = {
       ...state,
       roster: newRoster,
       dungeon: {
-        ...state.dungeon!,
+        ...dungeon,
         currentLevel: newLevel,
       }
     }
@@ -494,13 +510,14 @@ export const NavigationService = {
    * Failure: 1d6 damage
    */
   handlePit(state: GameState): GameState {
+    const dungeon = this.requireDungeon(state)
     const newRoster = new Map(state.roster);
 
     for (const memberId of state.party.members) {
       const character = newRoster.get(memberId)!;
 
       // Calculate avoidance chance: (AGI - Level) × 4%
-      const avoidanceChance = (character.agility - state.dungeon!.currentLevel) * 4;
+      const avoidanceChance = (character.agility - dungeon.currentLevel) * 4;
       const roll = Math.random() * 100;
 
       // Failed avoidance - take 1d6 damage
@@ -543,14 +560,15 @@ export const NavigationService = {
 
     // Handle stairs_down (to another level)
     if (destination.level !== undefined) {
+      const dungeon = this.requireDungeon(state)
       const targetX = destination.x ?? 0;
       const targetY = destination.y ?? 0;
-      const targetFacing = state.dungeon!.position.facing;
+      const targetFacing = dungeon.position.facing;
 
       return {
         ...state,
         dungeon: {
-          ...state.dungeon!,
+          ...dungeon,
           currentLevel: destination.level,
           position: {
             x: targetX,
