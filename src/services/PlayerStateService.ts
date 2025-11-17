@@ -36,12 +36,12 @@ export const PlayerStateService = {
     if (Math.abs(dirX) < 1e-10) dirX = 0
     if (Math.abs(dirY) < 1e-10) dirY = 0
 
-    // Camera plane perpendicular to direction
+    // Camera plane perpendicular to direction (points to left edge of viewport)
     // For 90° FOV, plane length = tan(45°) = 1.0
     const fov = Math.PI / 2
     const planeLength = Math.tan(fov / 2)
-    const planeX = dirY * planeLength
-    const planeY = dirX * planeLength
+    const planeX = -dirY * planeLength
+    const planeY = -dirX * planeLength
 
     return {
       gridX: position.x,
@@ -69,8 +69,8 @@ export const PlayerStateService = {
 
     const fov = Math.PI / 2
     const planeLength = Math.tan(fov / 2)
-    const planeX = dirY * planeLength
-    const planeY = dirX * planeLength
+    const planeX = -dirY * planeLength
+    const planeY = -dirX * planeLength
 
     return {
       ...playerState,

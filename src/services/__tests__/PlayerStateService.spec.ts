@@ -51,8 +51,8 @@ describe('PlayerStateService', () => {
       const playerState = PlayerStateService.fromPosition(position)
 
       // For 90° FOV, plane length should be tan(45°) = 1.0
-      // Perpendicular to (0, +1) is (+1, 0) for leftward plane
-      expect(playerState.planeX).toBeCloseTo(1)
+      // Perpendicular to (0, +1) is (-1, 0) pointing to left edge of viewport
+      expect(playerState.planeX).toBeCloseTo(-1)
       expect(playerState.planeY).toBeCloseTo(0)
     })
   })
@@ -68,7 +68,7 @@ describe('PlayerStateService', () => {
       expect(updated.dirX).toBeCloseTo(1)
       expect(updated.dirY).toBeCloseTo(0)
       expect(updated.planeX).toBeCloseTo(0)
-      expect(updated.planeY).toBeCloseTo(1)
+      expect(updated.planeY).toBeCloseTo(-1)
     })
 
     it('handles arbitrary angles', () => {
@@ -104,7 +104,7 @@ describe('PlayerStateService', () => {
         expect(east.dirX).toBeCloseTo(1)
         expect(east.dirY).toBeCloseTo(0)
         expect(east.planeX).toBeCloseTo(0)
-        expect(east.planeY).toBeCloseTo(1)
+        expect(east.planeY).toBeCloseTo(-1)
         expect(east.angle).toBeCloseTo(Math.PI / 2)
       })
 
@@ -124,7 +124,7 @@ describe('PlayerStateService', () => {
         expect(west.dirX).toBeCloseTo(-1)
         expect(west.dirY).toBeCloseTo(0)
         expect(west.planeX).toBeCloseTo(0)
-        expect(west.planeY).toBeCloseTo(-1)
+        expect(west.planeY).toBeCloseTo(1)
         expect(west.angle).toBeCloseTo((3 * Math.PI) / 2)
       })
 
@@ -143,7 +143,7 @@ describe('PlayerStateService', () => {
         // Direction vectors updated to SOUTH
         expect(south.dirX).toBeCloseTo(0)
         expect(south.dirY).toBeCloseTo(-1)
-        expect(south.planeX).toBeCloseTo(-1)
+        expect(south.planeX).toBeCloseTo(1)
         expect(south.planeY).toBeCloseTo(0)
         expect(south.angle).toBeCloseTo(Math.PI)
       })
@@ -167,7 +167,7 @@ describe('PlayerStateService', () => {
         // Direction vectors updated to SOUTH
         expect(south.dirX).toBeCloseTo(0)
         expect(south.dirY).toBeCloseTo(-1)
-        expect(south.planeX).toBeCloseTo(-1)
+        expect(south.planeX).toBeCloseTo(1)
         expect(south.planeY).toBeCloseTo(0)
         expect(south.angle).toBeCloseTo(Math.PI)
       })
@@ -187,7 +187,7 @@ describe('PlayerStateService', () => {
         // Direction vectors updated to NORTH
         expect(north.dirX).toBeCloseTo(0)
         expect(north.dirY).toBeCloseTo(1)
-        expect(north.planeX).toBeCloseTo(1)
+        expect(north.planeX).toBeCloseTo(-1)
         expect(north.planeY).toBeCloseTo(0)
         expect(north.angle).toBeCloseTo(0)
       })
@@ -208,7 +208,7 @@ describe('PlayerStateService', () => {
         expect(west.dirX).toBeCloseTo(-1)
         expect(west.dirY).toBeCloseTo(0)
         expect(west.planeX).toBeCloseTo(0)
-        expect(west.planeY).toBeCloseTo(-1)
+        expect(west.planeY).toBeCloseTo(1)
         expect(west.angle).toBeCloseTo((3 * Math.PI) / 2)
       })
     })
@@ -232,7 +232,7 @@ describe('PlayerStateService', () => {
         expect(west.dirX).toBeCloseTo(-1)
         expect(west.dirY).toBeCloseTo(0)
         expect(west.planeX).toBeCloseTo(0)
-        expect(west.planeY).toBeCloseTo(-1)
+        expect(west.planeY).toBeCloseTo(1)
         expect(west.angle).toBeCloseTo((3 * Math.PI) / 2)
       })
 
@@ -252,7 +252,7 @@ describe('PlayerStateService', () => {
         expect(east.dirX).toBeCloseTo(1)
         expect(east.dirY).toBeCloseTo(0)
         expect(east.planeX).toBeCloseTo(0)
-        expect(east.planeY).toBeCloseTo(1)
+        expect(east.planeY).toBeCloseTo(-1)
         expect(east.angle).toBeCloseTo(Math.PI / 2)
       })
 
@@ -271,7 +271,7 @@ describe('PlayerStateService', () => {
         // Direction vectors updated to NORTH
         expect(north.dirX).toBeCloseTo(0)
         expect(north.dirY).toBeCloseTo(1)
-        expect(north.planeX).toBeCloseTo(1)
+        expect(north.planeX).toBeCloseTo(-1)
         expect(north.planeY).toBeCloseTo(0)
         expect(north.angle).toBeCloseTo(0)
       })
@@ -295,7 +295,7 @@ describe('PlayerStateService', () => {
         // Direction vectors updated to NORTH
         expect(north.dirX).toBeCloseTo(0)
         expect(north.dirY).toBeCloseTo(1)
-        expect(north.planeX).toBeCloseTo(1)
+        expect(north.planeX).toBeCloseTo(-1)
         expect(north.planeY).toBeCloseTo(0)
         expect(north.angle).toBeCloseTo(0)
       })
@@ -315,7 +315,7 @@ describe('PlayerStateService', () => {
         // Direction vectors updated to SOUTH
         expect(south.dirX).toBeCloseTo(0)
         expect(south.dirY).toBeCloseTo(-1)
-        expect(south.planeX).toBeCloseTo(-1)
+        expect(south.planeX).toBeCloseTo(1)
         expect(south.planeY).toBeCloseTo(0)
         expect(south.angle).toBeCloseTo(Math.PI)
       })
@@ -336,7 +336,7 @@ describe('PlayerStateService', () => {
         expect(east.dirX).toBeCloseTo(1)
         expect(east.dirY).toBeCloseTo(0)
         expect(east.planeX).toBeCloseTo(0)
-        expect(east.planeY).toBeCloseTo(1)
+        expect(east.planeY).toBeCloseTo(-1)
         expect(east.angle).toBeCloseTo(Math.PI / 2)
       })
     })
