@@ -44,6 +44,10 @@ export class TileInspectionService {
    * Adds item to first party member inventory and clears tile content
    */
   static inspectTileWithState(state: GameState, level: LevelData): InspectionResult {
+    if (!state.dungeon) {
+      return { found: false, state };
+    }
+
     const position = state.dungeon.position;
     const tile = DungeonService.getTile(level, position.x, position.y);
 

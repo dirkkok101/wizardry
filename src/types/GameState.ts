@@ -39,7 +39,7 @@ export interface GameState {
   currentScene: SceneType
   roster: Map<string, Character> // All created characters
   party: Party
-  dungeon: DungeonState
+  dungeon?: DungeonState // Optional: undefined when in castle/town
   settings: Settings
   encounterTriggered?: boolean // Set to true when an encounter is triggered (e.g., by kicking a door)
   combat?: CombatState // Active combat state (undefined when not in combat)

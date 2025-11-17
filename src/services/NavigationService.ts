@@ -32,8 +32,8 @@ export const NavigationService = {
       }
     };
 
-    const pos = newState.dungeon.position;
-    console.log(`[NavigationService] enterDungeon - created state: level=${newState.dungeon.currentLevel}, position=(${pos.x},${pos.y},${pos.facing}), lightRadius=${newState.dungeon.lightRadius}`);
+    const pos = newState.dungeon!.position;
+    console.log(`[NavigationService] enterDungeon - created state: level=${newState.dungeon!.currentLevel}, position=(${pos.x},${pos.y},${pos.facing}), lightRadius=${newState.dungeon!.lightRadius}`);
     return newState;
   },
 
@@ -522,14 +522,11 @@ export const NavigationService = {
 
     // Handle stairs_up (to castle)
     if (destination.type === 'castle') {
-      // Return state with currentLevel: 0 to indicate castle transition
+      // Return state with dungeon: undefined to indicate castle transition
       // Component will handle actual scene transition
       return {
         ...state,
-        dungeon: {
-          ...state.dungeon!,
-          currentLevel: 0
-        }
+        dungeon: undefined
       };
     }
 

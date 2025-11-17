@@ -170,7 +170,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Verify door is kickable
-      expect(DoorService.canKickDoor(level, state.dungeon.position)).toBe(true);
+      expect(DoorService.canKickDoor(level, state.dungeon!.position)).toBe(true);
 
       // Kick door multiple times until encounter triggers or door opens
       let encounterTriggered = false;
@@ -310,7 +310,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Verify searchable
-      expect(TileInspectionService.hasSearchableContent(level, state.dungeon.position)).toBe(true);
+      expect(TileInspectionService.hasSearchableContent(level, state.dungeon!.position)).toBe(true);
 
       // Inspect tile
       const result = TileInspectionService.inspectTileWithState(state, level);
@@ -350,12 +350,12 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       // If this tile is darkness, test light override
       if (currentTile.type === 'darkness_zone_start') {
         // Effective light radius should be 0 regardless of spell
-        const effectiveLightRadius = currentTile.type === 'darkness_zone_start' ? 0 : state.dungeon.lightRadius;
+        const effectiveLightRadius = currentTile.type === 'darkness_zone_start' ? 0 : state.dungeon!.lightRadius;
 
         expect(effectiveLightRadius).toBe(0);
       } else {
         // If not a darkness tile, just verify light works normally
-        expect(state.dungeon.lightRadius).toBe(3);
+        expect(state.dungeon!.lightRadius).toBe(3);
       }
     });
   });
@@ -624,17 +624,17 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       const movedState = NavigationService.moveForward(state);
 
       // Position should have changed
-      expect(movedState.dungeon.position.x !== state.dungeon.position.x ||
-             movedState.dungeon.position.y !== state.dungeon.position.y).toBe(true);
+      expect(movedState.dungeon!.position.x !== state.dungeon!.position.x ||
+             movedState.dungeon!.position.y !== state.dungeon!.position.y).toBe(true);
 
       // Test turning
       const turnedState = NavigationService.turnLeft(movedState);
-      expect(turnedState.dungeon.position.facing).not.toBe(movedState.dungeon.position.facing);
+      expect(turnedState.dungeon!.position.facing).not.toBe(movedState.dungeon!.position.facing);
 
       // Test strafing
       const strafedState = NavigationService.strafeRight(turnedState);
-      expect(strafedState.dungeon.position.x !== turnedState.dungeon.position.x ||
-             strafedState.dungeon.position.y !== turnedState.dungeon.position.y).toBe(true);
+      expect(strafedState.dungeon!.position.x !== turnedState.dungeon!.position.x ||
+             strafedState.dungeon!.position.y !== turnedState.dungeon!.position.y).toBe(true);
     });
   });
 

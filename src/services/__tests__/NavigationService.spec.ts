@@ -656,8 +656,8 @@ describe('NavigationService', () => {
 
         const result = NavigationService.handleStairsTransition(state, destination);
 
-        // Should return castle marker (currentLevel = 0 indicates castle)
-        expect(result.dungeon!.currentLevel).toBe(0);
+        // Should return undefined dungeon (indicates castle/town)
+        expect(result.dungeon).toBeUndefined();
       });
 
       it('transitions to next level when destination has level number', () => {

@@ -55,6 +55,15 @@ export class SaveService {
    * Serialize GameState to JSON-compatible format
    */
   private serializeGameState(state: GameState): any {
+    // Handle optional dungeon state
+    if (!state.dungeon) {
+      return {
+        ...state,
+        roster: Array.from(state.roster.entries()),
+        dungeon: undefined
+      }
+    }
+
     // Handle visitedTiles as either Map or Set
     const visitedTilesArray = state.dungeon.visitedTiles instanceof Map
       ? Array.from(state.dungeon.visitedTiles.entries())
@@ -65,13 +74,19 @@ export class SaveService {
       ? Array.from((state.dungeon as any).unlockedDoors)
       : []
 
+    // Handle openDoors Set (convert to array for JSON serialization)
+    const openDoorsArray = (state.dungeon as any).openDoors
+      ? Array.from((state.dungeon as any).openDoors)
+      : []
+
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
       dungeon: {
         ...state.dungeon,
         visitedTiles: visitedTilesArray,
-        unlockedDoors: unlockedDoorsArray
+        unlockedDoors: unlockedDoorsArray,
+        openDoors: openDoorsArray
       }
     }
   }
@@ -81,6 +96,15 @@ export class SaveService {
    * Handles backward compatibility with older save formats
    */
   private deserializeGameState(data: any): GameState {
+    // Handle undefined/null dungeon state (castle/town)
+    if (!data.dungeon) {
+      return {
+        ...data,
+        roster: new Map(data.roster || []),
+        dungeon: undefined
+      }
+    }
+
     // Determine if visitedTiles is Map format (array of [key, value] pairs) or Set format (array of strings)
     const visitedTilesData = data.dungeon?.visitedTiles || []
     let visitedTiles
@@ -99,24 +123,19 @@ export class SaveService {
     const unlockedDoorsData = data.dungeon?.unlockedDoors || []
     const unlockedDoors = new Set(unlockedDoorsData)
 
+    // Deserialize openDoors Set (from array)
+    const openDoorsData = data.dungeon?.openDoors || []
+    const openDoors = new Set(openDoorsData)
+
     return {
       ...data,
       roster: new Map(data.roster || []),
-      dungeon: data.dungeon ? {
+      dungeon: {
         ...data.dungeon,
         visitedTiles,
         defeatedEncounters: data.dungeon.defeatedEncounters || [],
-        unlockedDoors
-      } : {
-        currentLevel: 1,
-        position: { x: 0, y: 0, facing: 'NORTH' },
-        lightActive: false,
-        lightRadius: 0,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
+        unlockedDoors,
+        openDoors
       }
     }
   }

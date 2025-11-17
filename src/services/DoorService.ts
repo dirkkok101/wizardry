@@ -35,7 +35,7 @@ export class DoorService {
     characterId: string
   ): GameState {
     const character = state.roster.get(characterId);
-    if (!character) {
+    if (!character || !state.dungeon) {
       return state;
     }
 

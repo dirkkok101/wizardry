@@ -325,6 +325,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   kickDoor(): void {
     const state = this.gameState.state();
+    if (!state.dungeon) {
+      return;
+    }
     const level = DungeonService.loadLevel(this.currentLevel());
 
     // Check if can kick door
@@ -364,6 +367,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   inspectTile(): void {
     const state = this.gameState.state();
+    if (!state.dungeon) {
+      return;
+    }
     const level = DungeonService.loadLevel(this.currentLevel());
 
     // Check if current tile has searchable content

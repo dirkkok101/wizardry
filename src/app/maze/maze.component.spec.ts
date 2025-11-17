@@ -1025,7 +1025,7 @@ describe('MazeComponent - Elevator', () => {
     component.selectElevatorLevel(3);
 
     const state = gameState.state();
-    expect(state.dungeon.currentLevel).toBe(3);
+    expect(state.dungeon?.currentLevel).toBe(3);
   });
 });
 
