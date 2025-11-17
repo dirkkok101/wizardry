@@ -80,6 +80,7 @@ export const DungeonService = {
     const wallDirection = this.getWallDirectionForMovement(position.facing, moveDirection)
     const wallType = tile.walls[wallDirection]
 
+    // Block solid walls
     if (wallType === 'wall') {
       return {
         allowed: false,
@@ -87,21 +88,32 @@ export const DungeonService = {
       }
     }
 
-    if (wallType === 'door') {
+    // Block doors (requires kicking)
+    if (wallType === 'door' || wallType === 'locked_door') {
       return {
         allowed: false,
         reason: 'A door blocks your way. Press K to kick it open.'
       }
     }
 
+    // Block secret doors (appear as walls)
     if (wallType === 'secret') {
       return {
         allowed: false,
-        reason: 'You walk into a wall. Ouch!' // Secret doors appear as walls
+        reason: 'You walk into a wall. Ouch!'
       }
     }
 
-    // Illusion walls look solid but can be walked through (player discovers by trying)
+    // NEW: Allow passage through stairs walls and trigger special action
+    if (wallType === 'stairs_up' || wallType === 'stairs_down') {
+      return {
+        allowed: true,
+        triggersSpecialAction: 'stairs',
+        destination: tile.destination
+      }
+    }
+
+    // Allow passage through illusions and open spaces
     if (wallType === 'illusion') {
       return { allowed: true }
     }

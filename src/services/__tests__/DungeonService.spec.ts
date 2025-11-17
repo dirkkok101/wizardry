@@ -1,5 +1,5 @@
 import { DungeonService } from '../DungeonService'
-import { Position } from '../../types/Dungeon'
+import { Position, LevelData, TileData } from '../../types/Dungeon'
 
 describe('DungeonService', () => {
   describe('loadLevel', () => {
@@ -150,4 +150,90 @@ describe('DungeonService', () => {
       expect(DungeonService.transformToWorldCoords(position, 0, 1)).toEqual({ x: 0, y: 1 });
     });
   });
+
+  describe('canMove with stairs walls', () => {
+    const createTestLevel = (): LevelData => ({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      startPosition: { x: 0, y: 0, facing: 'north' },
+      edgeWrapping: true,
+      tiles: [],
+      encounterRate: 0.1,
+      encounterTable: 'test_table'
+    })
+
+    it('allows movement through stairs_up wall and marks special action', () => {
+      const level = createTestLevel()
+      const tile: TileData = {
+        x: 0,
+        y: 1,
+        walls: {
+          north: 'stairs_up',
+          south: 'open',
+          east: 'open',
+          west: 'wall'
+        },
+        destination: { type: 'castle' }
+      }
+
+      // Add tile to level (player is standing on this tile)
+      level.tiles.push(tile)
+
+      // Player at (0,1) facing NORTH, so they check the north wall of tile (0,1)
+      const position: Position = { x: 0, y: 1, facing: 'NORTH' }
+      const result = DungeonService.canMove(level, position, 'FORWARD')
+
+      expect(result.allowed).toBe(true)
+      expect(result.triggersSpecialAction).toBe('stairs')
+      expect(result.destination).toEqual({ type: 'castle' })
+    })
+
+    it('allows movement through stairs_down wall and passes destination', () => {
+      const level = createTestLevel()
+      const tile: TileData = {
+        x: 5,
+        y: 11,
+        walls: {
+          north: 'stairs_down',
+          south: 'wall',
+          east: 'wall',
+          west: 'wall'
+        },
+        destination: { level: 2, x: 10, y: 5 }
+      }
+
+      // Add tile to level (player is standing on this tile)
+      level.tiles.push(tile)
+
+      // Player at (5,11) facing NORTH, so they check the north wall of tile (5,11)
+      const position: Position = { x: 5, y: 11, facing: 'NORTH' }
+      const result = DungeonService.canMove(level, position, 'FORWARD')
+
+      expect(result.allowed).toBe(true)
+      expect(result.triggersSpecialAction).toBe('stairs')
+      expect(result.destination?.level).toBe(2)
+      expect(result.destination?.x).toBe(10)
+      expect(result.destination?.y).toBe(5)
+    })
+
+    it('still blocks regular wall types', () => {
+      const level = createTestLevel()
+      const tile: TileData = {
+        x: 0,
+        y: 1,
+        walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }
+      }
+
+      // Add tile to level (player is standing on this tile)
+      level.tiles.push(tile)
+
+      // Player at (0,1) facing NORTH, so they check the north wall of tile (0,1)
+      const position: Position = { x: 0, y: 1, facing: 'NORTH' }
+      const result = DungeonService.canMove(level, position, 'FORWARD')
+
+      expect(result.allowed).toBe(false)
+      expect(result.reason).toContain('wall')
+    })
+  })
 })
