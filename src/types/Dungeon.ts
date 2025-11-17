@@ -108,6 +108,8 @@ export interface MonsterEntry {
 export interface MovementValidation {
   allowed: boolean
   reason?: string
+  triggersSpecialAction?: 'stairs' | 'teleporter' | 'pit' | 'chute'  // NEW
+  destination?: Destination  // NEW
 }
 
 export interface SpecialTileResult {
