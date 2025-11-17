@@ -352,6 +352,59 @@ const msg = DungeonService.getMessage(level10, { x: 0, y: 0, level: 10, facing: 
 // msg: "TREBOR SUX" (Latin clue on Level 10)
 ```
 
+### validateStairsWalls
+
+Validate that all stairs walls have destination data.
+
+**Signature**:
+```typescript
+function validateStairsWalls(level: LevelData): string[]
+```
+
+**Parameters**:
+- `level`: Level data to validate
+
+**Returns**: Array of error messages (empty if valid)
+
+**Purpose**:
+- Validates map data integrity at load time
+- Ensures all stairs walls (`stairs_up` or `stairs_down`) have valid destination data
+- Prevents runtime errors from missing destinations
+
+**Validation Logic**:
+```typescript
+// For each tile in level:
+// 1. Check if any wall is stairs_up or stairs_down
+// 2. If yes, verify tile.destination exists
+// 3. If missing, add error message with tile coordinates
+```
+
+**Example**:
+```typescript
+const level = DungeonService.loadLevel(1);
+const errors = DungeonService.validateStairsWalls(level);
+
+if (errors.length > 0) {
+  console.error('Map validation errors:');
+  errors.forEach(err => console.error(`  - ${err}`));
+  // Example output: "Tile (0, 0) has stairs wall but no destination"
+}
+```
+
+**Error Format**:
+```
+"Tile (x, y) has stairs wall but no destination"
+```
+
+**When to Use**:
+- During level loading (before allowing player movement)
+- During map editor save validation
+- During development to catch map data errors early
+
+**Related**:
+- See [Dungeon Navigation System](../systems/dungeon-navigation.md#validation) for stairs wall system overview
+- See [NavigationService.handleStairsTransition](./NavigationService.md#handlestairstransition) for runtime behavior
+
 ## Dependencies
 
 Uses:

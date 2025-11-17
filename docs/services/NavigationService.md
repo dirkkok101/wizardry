@@ -259,6 +259,107 @@ const opposite = NavigationService.getOppositeDirection("north")
 // opposite === "south"
 ```
 
+### handleStairsTransition
+
+Process stairs transitions for both castle (stairs_up) and level-to-level (stairs_down).
+
+**Signature**:
+```typescript
+function handleStairsTransition(
+  state: GameState,
+  destination: Destination | undefined
+): GameState
+```
+
+**Parameters**:
+- `state`: Current game state
+- `destination`: Destination data from tile (castle or level coordinates)
+
+**Returns**: Updated game state with dungeon updated or set to undefined for castle
+
+**Purpose**:
+- Handles immediate transitions when walking into stairs walls
+- Called **before** position update (unlike tile effects)
+- Distinguishes between castle exit (stairs_up) and level descent (stairs_down)
+
+**Behavior**:
+
+**For Castle Transitions** (`destination.type === 'castle'`):
+```typescript
+// Returns state with dungeon: undefined to signal castle transition
+// MazeComponent detects this and calls SceneNavigationService
+return {
+  ...state,
+  dungeon: undefined  // Signals castle transition
+};
+```
+
+**For Level Transitions** (`destination.level !== undefined`):
+```typescript
+// Updates dungeon state with new level and position
+return {
+  ...state,
+  dungeon: {
+    level: destination.level,
+    position: {
+      x: destination.x ?? 0,
+      y: destination.y ?? 0,
+      facing: destination.facing ?? state.dungeon!.position.facing
+    }
+  }
+};
+```
+
+**Error Handling**:
+- If `destination` is undefined: Returns state unchanged, logs error
+- If `destination` is invalid (no type or level): Returns state unchanged, logs error
+
+**Example**:
+```typescript
+// Walking into stairs_up wall
+const destination = { type: 'castle' };
+const newState = NavigationService.handleStairsTransition(state, destination);
+// newState.dungeon === undefined (signals castle transition)
+
+// Walking into stairs_down wall
+const destination = { level: 2, x: 10, y: 5, facing: 'south' };
+const newState = NavigationService.handleStairsTransition(state, destination);
+// newState.dungeon.level === 2
+// newState.dungeon.position === { x: 10, y: 5, facing: 'south' }
+
+// Using current facing if not specified
+const destination = { level: 3, x: 5, y: 5 };  // No facing specified
+const state = { dungeon: { position: { facing: 'east' } } };
+const newState = NavigationService.handleStairsTransition(state, destination);
+// newState.dungeon.position.facing === 'east' (preserved from current state)
+```
+
+**Integration with Movement**:
+```typescript
+// In moveForward():
+const validation = DungeonService.canMove(level, position, 'FORWARD');
+
+if (validation.triggersSpecialAction === 'stairs') {
+  // Handle stairs BEFORE position update
+  return NavigationService.handleStairsTransition(state, validation.destination);
+}
+
+// Normal movement continues...
+const newPosition = calculateNewPosition(position);
+updatePosition(newPosition);
+checkTileEffects(newPosition);  // Teleporter, spinner, etc.
+```
+
+**Key Differences from Tile Effects**:
+- **Timing**: Stairs trigger before position update; tile effects trigger after
+- **Position**: Stairs don't update position (transition handles it); tile effects do
+- **Tile checks**: Stairs skip tile effect checks; normal movement checks them
+
+**Related**:
+- See [DungeonService.validateStairsWalls](./DungeonService.md#validatestairswalls) for map validation
+- See [Dungeon Navigation System](../systems/dungeon-navigation.md#stairs-wall-interactions) for full stairs system overview
+- See [WebGLRenderingService](../architecture/webgl-renderer.md) for stairs texture rendering
+
 ## Dependencies
 
 Uses:
