@@ -357,7 +357,7 @@ export class WebGLRenderingService {
   }
 
   /**
-   * Selects the appropriate texture for a wall segment based on tile type
+   * Selects the appropriate texture for a wall segment based on wall type
    * @param level - Level data containing tile types
    * @param wall - Wall segment to render
    * @returns Texture atlas coordinates [x, y, width, height] in pixels
@@ -371,12 +371,30 @@ export class WebGLRenderingService {
 
     // Priority order: stairs > doors > walls
 
-    // Check for stairs (both up and down use the same texture)
-    if (tile.type === 'stairs_down' || tile.type === 'stairs_up') {
-      return [128, 0, 64, 64]; // stairs_down texture
+    // Check for stairs walls (check the specific wall direction)
+    // wall.side is already typed as 'north' | 'south' | 'east' | 'west'
+    const wallType = tile.walls[wall.side];
+
+    // Check if this wall is a stairs wall
+    if (wallType === 'stairs_up') {
+      const texture = this.getTextureById('stairs_up');
+      if (texture) {
+        return [texture.x, texture.y, texture.width, texture.height];
+      }
+      // Fallback to hardcoded coordinates if texture not found
+      return [384, 0, 64, 64];
     }
 
-    // Check for doors
+    if (wallType === 'stairs_down') {
+      const texture = this.getTextureById('stairs_down');
+      if (texture) {
+        return [texture.x, texture.y, texture.width, texture.height];
+      }
+      // Fallback to hardcoded coordinates if texture not found
+      return [320, 0, 64, 64];
+    }
+
+    // Check for doors (tile.type check for backward compatibility)
     if (tile.type === 'door') {
       // For now, all doors render as closed
       // TODO: integrate with DungeonState.openDoors when available
