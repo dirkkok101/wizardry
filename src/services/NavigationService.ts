@@ -507,4 +507,53 @@ export const NavigationService = {
       roster: newRoster,
     };
   },
+
+  /**
+   * Handle stairs transition from wall-based stairs
+   * @param state Current game state
+   * @param destination Destination data from tile
+   * @returns Updated game state (or state indicating castle transition)
+   */
+  handleStairsTransition(state: GameState, destination: any): GameState {
+    // Validate destination exists
+    if (!destination) {
+      console.error('Stairs wall has no destination data');
+      return state;
+    }
+
+    // Handle stairs_up (to castle)
+    if (destination.type === 'castle') {
+      console.log('You climb the stairs back to the castle.');
+      // Return state with dungeon cleared to indicate castle transition
+      // Component will handle actual scene transition
+      return {
+        ...state,
+        dungeon: undefined
+      };
+    }
+
+    // Handle stairs_down (to another level)
+    if (destination.level !== undefined) {
+      const targetX = destination.x ?? 0;
+      const targetY = destination.y ?? 0;
+      const targetFacing = destination.facing ?? state.dungeon!.position.facing;
+
+      return {
+        ...state,
+        dungeon: {
+          ...state.dungeon!,
+          currentLevel: destination.level,
+          position: {
+            x: targetX,
+            y: targetY,
+            facing: targetFacing as Direction
+          }
+        }
+      };
+    }
+
+    // Fallback error
+    console.error('Invalid stairs destination:', destination);
+    return state;
+  },
 }

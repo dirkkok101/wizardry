@@ -649,6 +649,98 @@ describe('NavigationService', () => {
       });
     });
 
+    describe('handleStairsTransition', () => {
+      it('transitions to castle when destination type is castle', () => {
+        const destination = { type: 'castle' as const };
+        const state = createTestGameStateHelper();
+
+        // Mock console.log to capture messages
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+
+        const result = NavigationService.handleStairsTransition(state, destination);
+
+        // Should return castle marker (currentLevel = 0 indicates castle)
+        expect(result.dungeon).toBeUndefined();
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('castle'));
+
+        consoleLogSpy.mockRestore();
+      });
+
+      it('transitions to next level when destination has level number', () => {
+        const destination = {
+          level: 2,
+          x: 10,
+          y: 5,
+          facing: 'SOUTH'
+        };
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 0, y: 0, facing: 'NORTH' },
+            lightActive: true,
+            lightRadius: 3,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        };
+
+        const result = NavigationService.handleStairsTransition(state, destination);
+
+        expect(result.dungeon!.currentLevel).toBe(2);
+        expect(result.dungeon!.position.x).toBe(10);
+        expect(result.dungeon!.position.y).toBe(5);
+        expect(result.dungeon!.position.facing).toBe('SOUTH');
+      });
+
+      it('uses current facing when destination facing not specified', () => {
+        const destination = { level: 3, x: 5, y: 5 };
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          dungeon: {
+            currentLevel: 2,
+            position: { x: 0, y: 0, facing: 'EAST' },
+            lightActive: true,
+            lightRadius: 3,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: []
+          }
+        };
+
+        const result = NavigationService.handleStairsTransition(state, destination);
+
+        expect(result.dungeon!.currentLevel).toBe(3);
+        expect(result.dungeon!.position.facing).toBe('EAST');
+      });
+
+      it('shows error when destination is undefined', () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+        const state = createTestGameStateHelper();
+
+        const result = NavigationService.handleStairsTransition(state, undefined);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Stairs wall has no destination data');
+        expect(result).toEqual(state); // State unchanged
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      it('shows error when destination is invalid', () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+        const invalidDestination = {} as any;
+        const state = createTestGameStateHelper();
+
+        const result = NavigationService.handleStairsTransition(state, invalidDestination);
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid stairs destination:', invalidDestination);
+        expect(result).toEqual(state); // State unchanged
+
+        consoleErrorSpy.mockRestore();
+      });
+    });
+
     describe('elevator', () => {
       it('returns state unchanged (UI handles level selection)', () => {
         const tile = {
