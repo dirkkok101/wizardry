@@ -46,6 +46,18 @@ export const NavigationService = {
     }
 
     const currentPos = state.dungeon.position
+    const level = DungeonService.loadLevel(state.dungeon.currentLevel)
+
+    // Check for special action triggers BEFORE updating position
+    // This only checks for stairs walls, not general movement validation
+    const validation = DungeonService.canMove(level, currentPos, 'FORWARD')
+
+    if (validation.triggersSpecialAction === 'stairs') {
+      return this.handleStairsTransition(state, validation.destination)
+    }
+
+    // Normal movement: calculate new position
+    // Note: Wall validation is done by MazeComponent before calling this method
     const nextPos = this.getNextPosition(currentPos, currentPos.facing, false)
 
     let newState: GameState = {
@@ -57,7 +69,6 @@ export const NavigationService = {
     }
 
     // Trigger special tile effects
-    const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
     const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
     newState = this.handleSpecialTile(newState, tile)
 
