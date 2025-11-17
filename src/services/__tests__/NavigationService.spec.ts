@@ -654,24 +654,17 @@ describe('NavigationService', () => {
         const destination = { type: 'castle' as const };
         const state = createTestGameStateHelper();
 
-        // Mock console.log to capture messages
-        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-
         const result = NavigationService.handleStairsTransition(state, destination);
 
         // Should return castle marker (currentLevel = 0 indicates castle)
-        expect(result.dungeon).toBeUndefined();
-        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('castle'));
-
-        consoleLogSpy.mockRestore();
+        expect(result.dungeon!.currentLevel).toBe(0);
       });
 
       it('transitions to next level when destination has level number', () => {
         const destination = {
           level: 2,
           x: 10,
-          y: 5,
-          facing: 'SOUTH'
+          y: 5
         };
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -682,7 +675,9 @@ describe('NavigationService', () => {
             lightRadius: 3,
             teleportCount: 0,
             visitedTiles: new Set(),
-            defeatedEncounters: []
+            defeatedEncounters: [],
+            unlockedDoors: new Set(),
+            openDoors: new Set()
           }
         };
 
@@ -691,7 +686,7 @@ describe('NavigationService', () => {
         expect(result.dungeon!.currentLevel).toBe(2);
         expect(result.dungeon!.position.x).toBe(10);
         expect(result.dungeon!.position.y).toBe(5);
-        expect(result.dungeon!.position.facing).toBe('SOUTH');
+        expect(result.dungeon!.position.facing).toBe('NORTH'); // Uses current facing
       });
 
       it('uses current facing when destination facing not specified', () => {
@@ -705,7 +700,9 @@ describe('NavigationService', () => {
             lightRadius: 3,
             teleportCount: 0,
             visitedTiles: new Set(),
-            defeatedEncounters: []
+            defeatedEncounters: [],
+            unlockedDoors: new Set(),
+            openDoors: new Set()
           }
         };
 
@@ -715,29 +712,21 @@ describe('NavigationService', () => {
         expect(result.dungeon!.position.facing).toBe('EAST');
       });
 
-      it('shows error when destination is undefined', () => {
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      it('returns unchanged state when destination is undefined', () => {
         const state = createTestGameStateHelper();
 
         const result = NavigationService.handleStairsTransition(state, undefined);
 
-        expect(consoleErrorSpy).toHaveBeenCalledWith('Stairs wall has no destination data');
         expect(result).toEqual(state); // State unchanged
-
-        consoleErrorSpy.mockRestore();
       });
 
-      it('shows error when destination is invalid', () => {
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      it('returns unchanged state when destination is invalid', () => {
         const invalidDestination = {} as any;
         const state = createTestGameStateHelper();
 
         const result = NavigationService.handleStairsTransition(state, invalidDestination);
 
-        expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid stairs destination:', invalidDestination);
         expect(result).toEqual(state); // State unchanged
-
-        consoleErrorSpy.mockRestore();
       });
     });
 

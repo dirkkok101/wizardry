@@ -1,5 +1,5 @@
 import { GameState } from '../types/GameState'
-import { Position, Direction, DungeonState, TileData, TileType, LevelData } from '../types/Dungeon'
+import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '../types/Dungeon'
 import { DungeonService } from './DungeonService'
 
 export const NavigationService = {
@@ -514,21 +514,22 @@ export const NavigationService = {
    * @param destination Destination data from tile
    * @returns Updated game state (or state indicating castle transition)
    */
-  handleStairsTransition(state: GameState, destination: any): GameState {
+  handleStairsTransition(state: GameState, destination: Destination | undefined): GameState {
     // Validate destination exists
     if (!destination) {
-      console.error('Stairs wall has no destination data');
       return state;
     }
 
     // Handle stairs_up (to castle)
     if (destination.type === 'castle') {
-      console.log('You climb the stairs back to the castle.');
-      // Return state with dungeon cleared to indicate castle transition
+      // Return state with currentLevel: 0 to indicate castle transition
       // Component will handle actual scene transition
       return {
         ...state,
-        dungeon: undefined
+        dungeon: {
+          ...state.dungeon!,
+          currentLevel: 0
+        }
       };
     }
 
@@ -536,7 +537,7 @@ export const NavigationService = {
     if (destination.level !== undefined) {
       const targetX = destination.x ?? 0;
       const targetY = destination.y ?? 0;
-      const targetFacing = destination.facing ?? state.dungeon!.position.facing;
+      const targetFacing = state.dungeon!.position.facing;
 
       return {
         ...state,
@@ -546,14 +547,13 @@ export const NavigationService = {
           position: {
             x: targetX,
             y: targetY,
-            facing: targetFacing as Direction
+            facing: targetFacing
           }
         }
       };
     }
 
-    // Fallback error
-    console.error('Invalid stairs destination:', destination);
+    // Fallback - no valid destination
     return state;
   },
 }
