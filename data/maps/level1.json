@@ -21,9 +21,8 @@
             "north": "open",
             "east": "open",
             "south": "wall",
-            "west": "wall"
+            "west": "stairs_up"
           },
-          "type": "stairs_up",
           "destination": {
             "type": "castle"
           }
