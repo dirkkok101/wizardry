@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../styles/variables' as *;
 
 .character-actions {
@@ -18,7 +19,7 @@
   transition: background-color 0.2s, border-color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: lighten($color-bg-black, 5%);
+    background-color: color.adjust($color-bg-black, $lightness: 5%);
     border-color: $color-text-bright;
   }
 
@@ -36,7 +37,7 @@
     border-color: $color-error;
 
     &:hover:not(:disabled) {
-      border-color: lighten($color-error, 10%);
+      border-color: color.adjust($color-error, $lightness: 10%);
     }
   }
 }

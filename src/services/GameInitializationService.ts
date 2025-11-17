@@ -2,6 +2,7 @@
  * GameInitializationService - Create new game state
  */
 
+import { isDevMode } from '@angular/core'
 import { GameState } from '../types/GameState'
 import { SceneType } from '../types/SceneType'
 import { RaceService } from './RaceService'
@@ -73,7 +74,7 @@ async function initializeGame(): Promise<void> {
   console.log('Game data initialized successfully')
 
   // Validate map data in development mode
-  if (process.env['NODE_ENV'] !== 'production') {
+  if (isDevMode()) {
     console.log('Validating dungeon maps...')
     const validationErrors: string[] = []
 
