@@ -122,6 +122,28 @@ export const DungeonService = {
   },
 
   /**
+   * Validate that all stairs walls have destination data
+   * Returns array of error messages (empty if valid)
+   */
+  validateStairsWalls(level: LevelData): string[] {
+    const errors: string[] = []
+
+    for (const tile of level.tiles) {
+      // Check if any wall on this tile is a stairs type
+      const hasStairsWall = Object.values(tile.walls).some(
+        wallType => wallType === 'stairs_up' || wallType === 'stairs_down'
+      )
+
+      // If has stairs wall but no destination, that's an error
+      if (hasStairsWall && !tile.destination) {
+        errors.push(`Tile (${tile.x}, ${tile.y}) has stairs wall but no destination`)
+      }
+    }
+
+    return errors
+  },
+
+  /**
    * Helper: determine which wall to check based on facing and movement
    */
   getWallDirectionForMovement(facing: Direction, moveDirection: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT'): keyof TileWalls {

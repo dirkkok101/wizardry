@@ -236,4 +236,106 @@ describe('DungeonService', () => {
       expect(result.reason).toContain('wall')
     })
   })
+
+  describe('validateStairsWalls', () => {
+    it('returns no errors when stairs walls have valid destinations', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: true,
+        encounterRate: 0.1,
+        encounterTable: 'test_table',
+        tiles: [
+          {
+            x: 0,
+            y: 0,
+            walls: { north: 'open', south: 'wall', east: 'open', west: 'stairs_up' },
+            destination: { type: 'castle' }
+          },
+          {
+            x: 5,
+            y: 5,
+            walls: { north: 'stairs_down', south: 'wall', east: 'wall', west: 'wall' },
+            destination: { level: 2, x: 10, y: 10 }
+          }
+        ]
+      }
+
+      const errors = DungeonService.validateStairsWalls(level)
+      expect(errors).toHaveLength(0)
+    })
+
+    it('detects missing destination on stairs_up wall', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: true,
+        encounterRate: 0.1,
+        encounterTable: 'test_table',
+        tiles: [
+          {
+            x: 0,
+            y: 0,
+            walls: { north: 'open', south: 'wall', east: 'open', west: 'stairs_up' }
+            // Missing destination field
+          }
+        ]
+      }
+
+      const errors = DungeonService.validateStairsWalls(level)
+      expect(errors.length).toBeGreaterThan(0)
+      expect(errors[0]).toContain('(0, 0)')
+      expect(errors[0]).toContain('no destination')
+    })
+
+    it('detects missing destination on stairs_down wall', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: true,
+        encounterRate: 0.1,
+        encounterTable: 'test_table',
+        tiles: [
+          {
+            x: 10,
+            y: 15,
+            walls: { north: 'wall', south: 'stairs_down', east: 'wall', west: 'wall' }
+            // Missing destination field
+          }
+        ]
+      }
+
+      const errors = DungeonService.validateStairsWalls(level)
+      expect(errors).toContain('Tile (10, 15) has stairs wall but no destination')
+    })
+
+    it('allows normal tiles without stairs to have no destination', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: true,
+        encounterRate: 0.1,
+        encounterTable: 'test_table',
+        tiles: [
+          {
+            x: 0,
+            y: 0,
+            walls: { north: 'wall', south: 'open', east: 'door', west: 'illusion' }
+            // No stairs, no destination = valid
+          }
+        ]
+      }
+
+      const errors = DungeonService.validateStairsWalls(level)
+      expect(errors).toHaveLength(0)
+    })
+  })
 })
