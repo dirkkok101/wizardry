@@ -1,0 +1,75 @@
+{
+  "id": "eob_dungeon_highres",
+  "imagePath": "/assets/textures/eob-dungeon-highres.png",
+  "width": 6144,
+  "height": 4096,
+  "description": "High-resolution Eye of the Beholder style dungeon textures - 2048x2048 per texture",
+  "textures": [
+    {
+      "id": "wall_1",
+      "x": 0,
+      "y": 0,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["wall", "stone", "variation-1"]
+    },
+    {
+      "id": "wall_2",
+      "x": 2048,
+      "y": 0,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["wall", "stone", "variation-2"]
+    },
+    {
+      "id": "door_closed",
+      "x": 4096,
+      "y": 0,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["door", "closed", "metal"]
+    },
+    {
+      "id": "door_open",
+      "x": 0,
+      "y": 2048,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["door", "open", "wooden"]
+    },
+    {
+      "id": "stairs_down",
+      "x": 2048,
+      "y": 2048,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["stairs", "down"]
+    },
+    {
+      "id": "stairs_up",
+      "x": 4096,
+      "y": 2048,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["stairs", "up"]
+    },
+    {
+      "id": "floor_stone",
+      "x": 0,
+      "y": 0,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["floor", "stone"],
+      "note": "Reuses wall_1 texture"
+    },
+    {
+      "id": "ceiling_stone",
+      "x": 2048,
+      "y": 0,
+      "width": 2048,
+      "height": 2048,
+      "tags": ["ceiling", "stone"],
+      "note": "Reuses wall_2 texture"
+    }
+  ]
+}

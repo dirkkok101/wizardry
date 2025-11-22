@@ -313,9 +313,9 @@
           "y": 1,
           "walls": {
             "north": "open",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "wall"
+            "west": "open"
           }
         },
         {
@@ -1752,7 +1752,7 @@
           "x": 9,
           "y": 8,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "wall",
             "west": "door"

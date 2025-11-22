@@ -401,6 +401,14 @@ export class WebGLRenderingService {
       const doorKey = `${dungeonState?.currentLevel}_${wall.gridY}_${wall.gridX}`;
       const isOpen = dungeonState?.openDoors?.has(doorKey) ?? false;
 
+      console.log('[WebGL] Checking door:', {
+        position: { x: wall.gridX, y: wall.gridY },
+        doorKey,
+        isOpen,
+        openDoorsSize: dungeonState?.openDoors?.size,
+        allOpenDoors: Array.from(dungeonState?.openDoors || [])
+      });
+
       // Select texture based on door state
       const textureId = isOpen ? 'door_open' : 'door_closed';
       const texture = this.getTextureById(textureId);

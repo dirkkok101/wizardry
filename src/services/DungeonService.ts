@@ -72,7 +72,7 @@ export const DungeonService = {
   /**
    * Check if movement is allowed from current position
    */
-  canMove(level: LevelData, position: Position, moveDirection: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT'): MovementValidation {
+  canMove(level: LevelData, position: Position, moveDirection: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT', openDoors?: Set<string>, currentLevel?: number): MovementValidation {
     const tile = this.getTile(level, position.x, position.y)
 
     // Determine which wall to check based on facing and move direction
@@ -87,11 +87,18 @@ export const DungeonService = {
       }
     }
 
-    // Block doors (requires kicking)
+    // Check doors - allow passage if open, block if closed
     if (wallType === 'door' || wallType === 'locked_door') {
+      const doorKey = `${currentLevel}_${position.y}_${position.x}`;
+      const isOpen = openDoors?.has(doorKey) ?? false;
+
+      if (isOpen) {
+        return { allowed: true }; // Door is open, allow passage
+      }
+
       return {
         allowed: false,
-        reason: 'A door blocks your way. Press K to kick it open.'
+        reason: 'A door blocks your way. Press O to open it.'
       }
     }
 

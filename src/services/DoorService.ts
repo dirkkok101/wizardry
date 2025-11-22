@@ -5,7 +5,21 @@ import { DungeonService } from './DungeonService';
 
 export class DoorService {
   /**
-   * Check if party can kick a door from current position
+   * Check if party can open a door from current position
+   * Works with wall-based doors (modern approach)
+   */
+  static canOpenDoor(level: LevelData, position: Position): boolean {
+    const currentTile = DungeonService.getTile(level, position.x, position.y);
+
+    // Check the wall in the direction we're facing
+    const wallType = currentTile.walls[position.facing.toLowerCase() as 'north' | 'south' | 'east' | 'west'];
+
+    // Can open if there's a door or locked_door wall
+    return wallType === 'door' || wallType === 'locked_door';
+  }
+
+  /**
+   * Check if party can kick a door from current position (legacy tile-based)
    */
   static canKickDoor(level: LevelData, position: Position): boolean {
     // Get tile in front of party
@@ -25,7 +39,48 @@ export class DoorService {
   }
 
   /**
-   * Attempt to kick down a locked door
+   * Open a door at current position
+   * Adds BOTH sides of the door to openDoors set (current tile and adjacent tile)
+   */
+  static openDoor(state: GameState): GameState {
+    if (!state.dungeon) {
+      return state;
+    }
+
+    const { currentLevel, position } = state.dungeon;
+    const newOpenDoors = new Set(state.dungeon.openDoors);
+
+    // Add current tile door
+    const currentDoorKey = `${currentLevel}_${position.y}_${position.x}`;
+    newOpenDoors.add(currentDoorKey);
+
+    // Calculate adjacent tile position based on facing direction
+    const delta = NavigationService.getFacingDelta(position.facing);
+    const adjX = position.x + delta.x;
+    const adjY = position.y + delta.y;
+
+    // Add adjacent tile door (the other side of the same wall)
+    const adjacentDoorKey = `${currentLevel}_${adjY}_${adjX}`;
+    newOpenDoors.add(adjacentDoorKey);
+
+    console.log('[DoorService] Opening door at:', {
+      position,
+      currentDoorKey,
+      adjacentDoorKey,
+      openDoorsSize: newOpenDoors.size
+    });
+
+    return {
+      ...state,
+      dungeon: {
+        ...state.dungeon,
+        openDoors: newOpenDoors,
+      },
+    };
+  }
+
+  /**
+   * Attempt to kick down a locked door (legacy tile-based)
    * Success: (STR × 4%) + 20% (range 32-92%)
    * Success: Unlock door + 12.5% encounter chance
    * Failure: 1d3 damage to kicker

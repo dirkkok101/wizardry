@@ -57,7 +57,7 @@ export const NavigationService = {
 
     // Check for special action triggers BEFORE updating position
     // This only checks for stairs walls, not general movement validation
-    const validation = DungeonService.canMove(level, currentPos, 'FORWARD')
+    const validation = DungeonService.canMove(level, currentPos, 'FORWARD', state.dungeon.openDoors, state.dungeon.currentLevel)
 
     if (validation.triggersSpecialAction === 'stairs') {
       return this.handleStairsTransition(state, validation.destination)

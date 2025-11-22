@@ -563,7 +563,7 @@ describe('MazeComponent - Encounter Detection', () => {
   });
 });
 
-describe('MazeComponent - Door Kicking', () => {
+describe('MazeComponent - Door Opening', () => {
   let component: MazeComponent;
   let fixture: ComponentFixture<MazeComponent>;
   let gameState: GameStateService;
@@ -577,7 +577,7 @@ describe('MazeComponent - Door Kicking', () => {
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
 
-    // Mock loadLevel to avoid level data issues
+    // Mock loadLevel with wall-based doors
     jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
       level: 1,
       name: 'Test Level',
@@ -586,11 +586,14 @@ describe('MazeComponent - Door Kicking', () => {
       height: 20,
       startPosition: { x: 0, y: 0, facing: 'NORTH' },
       edgeWrapping: true,
-      tiles: Array(20).fill(null).map(() =>
-        Array(20).fill(null).map(() => ({
-          x: 0,
-          y: 0,
-          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+      tiles: Array(20).fill(null).map((_, y) =>
+        Array(20).fill(null).map((_, x) => ({
+          x,
+          y,
+          // Position 7,0 has a door on north wall
+          walls: (x === 7 && y === 0)
+            ? { north: 'door', south: 'open', east: 'open', west: 'open' }
+            : { north: 'open', south: 'open', east: 'open', west: 'open' }
         }))
       ),
       encounterRate: 0,
@@ -598,13 +601,13 @@ describe('MazeComponent - Door Kicking', () => {
     } as any);
   });
 
-  it('triggers door kick on K key press when facing locked door', () => {
-    // Setup state with locked door ahead
+  it('triggers door open on O key press when facing door', () => {
+    // Setup state at position with door on north wall
     gameState.updateState(state => ({
       ...state,
       dungeon: {
         currentLevel: 1,
-        position: { x: 0, y: 0, facing: 'EAST' as const },
+        position: { x: 7, y: 0, facing: 'NORTH' as const },
         lightActive: false,
         lightRadius: 0,
         teleportCount: 0,
@@ -618,15 +621,15 @@ describe('MazeComponent - Door Kicking', () => {
     component.ngOnInit();
     fixture.detectChanges();
 
-    const kickSpy = jest.spyOn(component, 'kickDoor');
+    const openSpy = jest.spyOn(component, 'openDoor');
 
-    // Trigger kick action
-    component.handleFooterAction('kick');
+    // Trigger open action
+    component.handleFooterAction('open');
 
-    expect(kickSpy).toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalled();
   });
 
-  it('does not trigger kick when not facing locked door', () => {
+  it('does not trigger open when not facing door', () => {
     gameState.updateState(state => ({
       ...state,
       dungeon: {
@@ -645,12 +648,12 @@ describe('MazeComponent - Door Kicking', () => {
     component.ngOnInit();
     fixture.detectChanges();
 
-    const kickSpy = jest.spyOn(component, 'kickDoor');
+    const openSpy = jest.spyOn(component, 'openDoor');
 
-    component.handleFooterAction('kick');
+    component.handleFooterAction('open');
 
-    // Should call kickDoor, which will show "No locked door ahead" message
-    expect(kickSpy).toHaveBeenCalled();
+    // Should call openDoor, which will show "No door here" message
+    expect(openSpy).toHaveBeenCalled();
   });
 });
 

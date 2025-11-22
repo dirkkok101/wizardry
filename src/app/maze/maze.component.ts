@@ -111,12 +111,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Footer menu
   readonly footerMenuItems = computed((): MenuItem[] => {
     const state = this.gameState.state();
-    let canKick = false;
+    let canOpen = false;
     let canInspect = false;
 
     if (state.dungeon?.position) {
       const level = DungeonService.loadLevel(this.currentLevel());
-      canKick = DoorService.canKickDoor(level, state.dungeon.position);
+      canOpen = DoorService.canOpenDoor(level, state.dungeon.position);
       canInspect = TileInspectionService.hasSearchableContent(level, state.dungeon.position);
     }
 
@@ -127,7 +127,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'right', label: 'Turn Right (D)', shortcut: 'D', enabled: true },
       { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
-      { id: 'kick', label: 'Kick Door (K)', shortcut: 'K', enabled: canKick },
+      { id: 'open', label: 'Open Door (O)', shortcut: 'O', enabled: canOpen },
       { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect },
       { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
     ];
@@ -340,6 +340,36 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.executeMovement('STRAFE_RIGHT', (state: GameState) => NavigationService.strafeRight(state));
   }
 
+  openDoor(): void {
+    const state = this.gameState.state();
+    if (!state.dungeon) {
+      return;
+    }
+    const level = DungeonService.loadLevel(this.currentLevel());
+
+    // Check if can open door
+    if (!DoorService.canOpenDoor(level, state.dungeon.position)) {
+      this.addMessage('No door here.');
+      return;
+    }
+
+    console.log('[MazeComponent] Before opening door:', {
+      openDoorsSize: state.dungeon.openDoors.size,
+      allOpenDoors: Array.from(state.dungeon.openDoors)
+    });
+
+    const newState = DoorService.openDoor(state);
+    this.gameState.updateState(() => newState);
+
+    console.log('[MazeComponent] After updateState:', {
+      openDoorsSize: this.dungeonState().openDoors.size,
+      allOpenDoors: Array.from(this.dungeonState().openDoors)
+    });
+
+    this.addMessage('You open the door.');
+    this.render(); // Re-render to show open door
+  }
+
   kickDoor(): void {
     const state = this.gameState.state();
     if (!state.dungeon) {
@@ -438,8 +468,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'strafe_right':
         this.strafeRight();
         break;
-      case 'kick':
-        this.kickDoor();
+      case 'open':
+        this.openDoor();
         break;
       case 'inspect':
         this.inspectTile();
@@ -460,7 +490,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const position = this.position()!;
 
     // Validate movement
-    const validation = DungeonService.canMove(level, position, moveType);
+    const validation = DungeonService.canMove(level, position, moveType, state.dungeon?.openDoors, state.dungeon?.currentLevel);
 
     if (!validation.allowed) {
       this.addMessage(validation.reason!);
