@@ -22,6 +22,22 @@
       "tags": ["wall", "stone", "variation-2"]
     },
     {
+      "id": "door_closed",
+      "x": 192,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "tags": ["door", "closed", "metal"]
+    },
+    {
+      "id": "door_open",
+      "x": 256,
+      "y": 0,
+      "width": 64,
+      "height": 64,
+      "tags": ["door", "open", "wooden"]
+    },
+    {
       "id": "stairs_down",
       "x": 320,
       "y": 0,
@@ -38,14 +54,6 @@
       "tags": ["stairs", "up"]
     },
     {
-      "id": "door_closed",
-      "x": 192,
-      "y": 0,
-      "width": 64,
-      "height": 64,
-      "tags": ["door", "closed", "wooden"]
-    },
-    {
       "id": "floor_stone",
       "x": 0,
       "y": 0,
@@ -60,14 +68,6 @@
       "width": 64,
       "height": 64,
       "tags": ["ceiling", "stone"]
-    },
-    {
-      "id": "door_open",
-      "x": 384,
-      "y": 0,
-      "width": 64,
-      "height": 64,
-      "tags": ["door", "open", "wooden"]
     }
   ]
 }
