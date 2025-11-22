@@ -33,6 +33,7 @@ export interface Settings {
   difficulty: 'EASY' | 'NORMAL' | 'HARD'
   soundEnabled: boolean
   musicEnabled: boolean
+  encountersEnabled: boolean // Set to false to disable random encounters (useful for testing rendering/movement)
 }
 
 export interface GameState {

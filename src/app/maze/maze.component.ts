@@ -286,6 +286,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/camp']);
   }
 
+  @HostListener('window:keydown.control.e')
+  toggleEncounters(): void {
+    const currentState = this.gameState.state();
+    const newEncounterState = !currentState.settings.encountersEnabled;
+
+    this.gameState.updateState((state) => ({
+      ...state,
+      settings: {
+        ...state.settings,
+        encountersEnabled: newEncounterState
+      }
+    }));
+
+    const status = newEncounterState ? 'ENABLED' : 'DISABLED';
+    this.addMessage(`Random encounters ${status} (Ctrl+E to toggle)`);
+  }
+
   returnToCamp(): void {
     this.addMessage('Returning to camp...');
     this.router.navigate(['/camp']);
@@ -471,6 +488,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private checkForEncounter(): void {
+    // Skip encounter check if disabled in settings (useful for testing)
+    if (!this.gameState.state().settings.encountersEnabled) {
+      return;
+    }
+
     const encounterOccurs = EncounterService.rollRandomEncounter();
     if (!encounterOccurs) return;
 

@@ -48,7 +48,8 @@ function createNewGame(): GameState {
     settings: {
       difficulty: 'NORMAL',
       soundEnabled: true,
-      musicEnabled: true
+      musicEnabled: true,
+      encountersEnabled: true // Set to false to disable random encounters for testing
     }
   }
 }
