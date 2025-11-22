@@ -315,7 +315,7 @@ export class WebGLRenderingService {
 
     // Render each visible wall
     for (const wall of walls) {
-      this.renderWall(level, wall);
+      this.renderWall(level, wall, dungeonState);
     }
 
     // Render floors and ceilings for all visible tiles
@@ -364,7 +364,8 @@ export class WebGLRenderingService {
    */
   private selectWallTexture(
     level: LevelData,
-    wall: WallSegment
+    wall: WallSegment,
+    dungeonState?: DungeonState
   ): [number, number, number, number] {
     // Get tile at wall position using DungeonService
     const tile = DungeonService.getTile(level, wall.gridX, wall.gridY);
@@ -394,11 +395,23 @@ export class WebGLRenderingService {
       return [320, 0, 64, 64];
     }
 
-    // Check for doors (tile.type check for backward compatibility)
-    if (tile.type === 'door') {
-      // For now, all doors render as closed
-      // TODO: integrate with DungeonState.openDoors when available
-      return [192, 0, 64, 64]; // door_closed texture
+    // Check for doors (check wall type, matching how stairs work)
+    if (wallType === 'door' || wallType === 'locked_door') {
+      // Determine if door is open by checking dungeonState
+      const doorKey = `${dungeonState?.currentLevel}_${wall.gridY}_${wall.gridX}`;
+      const isOpen = dungeonState?.openDoors?.has(doorKey) ?? false;
+
+      // Select texture based on door state
+      const textureId = isOpen ? 'door_open' : 'door_closed';
+      const texture = this.getTextureById(textureId);
+
+      if (texture) {
+        return [texture.x, texture.y, texture.width, texture.height];
+      }
+
+      // Fallback to closed door if texture not found
+      console.warn(`[WebGL] Door texture '${textureId}' not found in atlas`);
+      return [192, 0, 64, 64]; // Hardcoded fallback for door_closed
     }
 
     // Regular walls: alternate between stone_wall_01 and stone_wall_02
@@ -417,7 +430,7 @@ export class WebGLRenderingService {
    * @param level - Level data containing tile types
    * @param wall - Wall segment from VisibilityService
    */
-  private renderWall(level: LevelData, wall: WallSegment): void {
+  private renderWall(level: LevelData, wall: WallSegment, dungeonState?: DungeonState): void {
     if (!this.gl) return;
 
     // Wall height (from floor y=0 to ceiling y=1)
@@ -425,7 +438,7 @@ export class WebGLRenderingService {
     const y2 = 1;
 
     // Select appropriate texture based on tile type
-    const [texX, texY, texW, texH] = this.selectWallTexture(level, wall);
+    const [texX, texY, texW, texH] = this.selectWallTexture(level, wall, dungeonState);
     const [u1, v1, u2, v2] = this.calculateUVs(texX, texY, texW, texH);
 
     // Create quad vertices from wall endpoints
