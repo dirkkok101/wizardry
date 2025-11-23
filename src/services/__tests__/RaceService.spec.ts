@@ -7,7 +7,7 @@ describe('RaceService', () => {
     global.fetch = jest.fn((url: string) => {
       const path = url.toString()
 
-      // Race data mocks
+      // Race data mocks (using lowercase class names for Zod validation)
       if (path.includes('/assets/races/human.json')) {
         return Promise.resolve({
           ok: true,
@@ -20,7 +20,7 @@ describe('RaceService', () => {
             description: 'Humans are the most versatile race',
             strengths: ['Balanced stats'],
             weaknesses: ['No special bonuses'],
-            bestClasses: ['Any']
+            bestClasses: ['fighter', 'lord', 'samurai']
           })
         } as Response)
       }
@@ -36,7 +36,7 @@ describe('RaceService', () => {
             description: 'Elves are magical and agile',
             strengths: ['High INT, PIE'],
             weaknesses: ['Low VIT'],
-            bestClasses: ['Mage', 'Priest']
+            bestClasses: ['mage', 'priest', 'bishop']
           })
         } as Response)
       }
@@ -52,7 +52,7 @@ describe('RaceService', () => {
             description: 'Dwarves are tough',
             strengths: ['High VIT'],
             weaknesses: ['Low AGI'],
-            bestClasses: ['Fighter', 'Priest']
+            bestClasses: ['fighter', 'priest', 'lord']
           })
         } as Response)
       }
@@ -68,7 +68,7 @@ describe('RaceService', () => {
             description: 'Gnomes are clever',
             strengths: ['Balanced'],
             weaknesses: ['Low STR'],
-            bestClasses: ['Thief', 'Mage']
+            bestClasses: ['thief', 'priest', 'bishop']
           })
         } as Response)
       }
@@ -78,13 +78,13 @@ describe('RaceService', () => {
           json: () => Promise.resolve({
             id: 'hobbit',
             name: 'Hobbit',
-            baseStats: { str: 5, int: 7, pie: 6, vit: 6, agi: 10, luc: 12 },
+            baseStats: { str: 5, int: 7, pie: 7, vit: 6, agi: 10, luc: 15 },
             savingThrowBonus: { spell: -3 },
-            statTotal: 46,
+            statTotal: 50,
             description: 'Hobbits are lucky',
             strengths: ['High LUC, AGI'],
             weaknesses: ['Low STR, VIT'],
-            bestClasses: ['Thief']
+            bestClasses: ['thief', 'ninja']
           })
         } as Response)
       }
