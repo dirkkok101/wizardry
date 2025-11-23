@@ -226,4 +226,17 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
       expect(effect.instantDeath).toContain('t2')
     })
   })
+
+  describe('DUMAPIC (Show Coordinates)', () => {
+    it('provides coordinate display utility', () => {
+      const caster = createTestCharacter({
+        spellPoints: { mage: { level1: { current: 3, max: 3 } } }
+      })
+
+      const effect = SpellCastingService.resolveSpellEffect('dumapic', caster, [caster])
+
+      expect(effect.message).toContain('DUMAPIC')
+      expect(effect.message).toContain('location')
+    })
+  })
 })

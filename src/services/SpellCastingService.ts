@@ -23,7 +23,7 @@ export interface SpellData {
   healingDice?: string     // Healing amount (e.g., "1d8", "2d8")
   healToFull?: boolean     // If true, heals to maximum HP (MALIKTO)
   acModifier?: number      // AC buff modifier (negative = better AC, e.g., -2 for MOGREF)
-  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light' | 'locate_person' | 'teleport' | 'recall'  // Utility effects
+  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light' | 'locate_person' | 'teleport' | 'recall' | 'show_coordinates'  // Utility effects
   instantDeath?: boolean   // If true, instant kill (MAKANITO)
   resurrection?: boolean   // If true, resurrects dead (KADORTO)
   resurrectionSuccessRate?: number  // Success rate for resurrection (0.50 for KADORTO, 0.90 for DI)
@@ -56,6 +56,15 @@ SPELL_CACHE.set('katino', {
   type: 'mage',
   target: 'group',
   statusEffect: 'ASLEEP'
+})
+
+SPELL_CACHE.set('dumapic', {
+  id: 'dumapic',
+  name: 'DUMAPIC',
+  level: 1,
+  type: 'mage',
+  target: 'self',
+  utility: 'show_coordinates'
 })
 
 // Mage Level 2 Spells
@@ -743,6 +752,8 @@ export class SpellCastingService {
         message = `${spell.name} creates extended light!`
       } else if (spell.utility === 'locate_person') {
         message = `${spell.name} locates missing persons!`
+      } else if (spell.utility === 'show_coordinates') {
+        message = `${spell.name} shows your location in the dungeon!`
       }
 
       return {
