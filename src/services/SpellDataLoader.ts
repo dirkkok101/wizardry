@@ -1,38 +1,25 @@
 import { SpellDefinition, LoadedSpell } from '../types/SpellDefinition'
 import { SpellDefinitionSchema } from '../validation/spell-schema'
+import { AssetLoadingService } from './AssetLoadingService'
 
 /**
  * Service for loading and validating spell data from JSON files
+ * Uses AssetLoadingService for centralized loading infrastructure
  * Implements caching to prevent multiple loads
+ * Gracefully handles individual spell failures
  */
 export class SpellDataLoader {
   private static spellCache: Map<string, LoadedSpell> | null = null
   private static loadPromise: Promise<Map<string, LoadedSpell>> | null = null
-
-  /**
-   * List of all spell IDs (one JSON file per spell)
-   * Complete list of 56 spells including level variants
-   */
-  private static readonly SPELL_IDS = [
-    // Mage spells
-    'halito', 'mogref', 'katino', 'dumapic', 'dilto', 'sopic',
-    'mahalito', 'molito', 'morlis', 'dalto', 'lahalito',
-    'madalto', 'lakanito', 'zilwan', 'masopic', 'haman', 'malor',
-    'mahaman', 'tiltowait', 'melito', 'lomilwa_mage',
-    'haman_7', 'mahaman_7', 'tiltowait_7',
-    // Priest spells
-    'dios', 'badios', 'milwa', 'porfic', 'calfo', 'manifo',
-    'montino', 'dial', 'latumapic', 'matu', 'bamatu', 'dialko',
-    'latumofis', 'lomilwa', 'dalto_priest', 'litokan', 'kandi',
-    'di', 'badi', 'lorto', 'mabadi', 'loktofeit', 'malikto',
-    'kadorto', 'madi', 'mamorlis', 'bamordi', 'makanito',
-    'katu', 'maporfic', 'badial', 'badialma', 'kalki',
-    'badi_6', 'dial_5', 'badialma_5', 'mabadi_7', 'malikto_7', 'lomilwa_priest'
-  ]
+  private static loading = false
+  private static loaded = false
+  private static loadError: Error | null = null
+  private static failedSpells: Map<string, string> = new Map() // spellId → error message
 
   /**
    * Load all spell JSON files and validate them
    * Returns cached results on subsequent calls
+   * Gracefully handles individual spell failures
    */
   static async loadAllSpells(): Promise<Map<string, LoadedSpell>> {
     // Return cached result if available
@@ -53,42 +40,64 @@ export class SpellDataLoader {
 
   /**
    * Internal method to perform the actual loading
+   * Uses AssetLoadingService for centralized infrastructure
    */
   private static async performLoad(): Promise<Map<string, LoadedSpell>> {
+    this.loading = true
+    this.loadError = null
+    this.failedSpells.clear()
+
     const spells = new Map<string, LoadedSpell>()
     const loadedAt = Date.now()
 
-    // Load all spells in parallel
-    const loadPromises = this.SPELL_IDS.map(async (spellId) => {
-      try {
-        const response = await fetch(`/assets/spells/${spellId}.json`)
-        if (!response.ok) {
-          throw new Error(`Failed to load ${spellId}: ${response.statusText}`)
+    try {
+      // Use AssetLoadingService to load spell JSON files
+      const assetLoader = new AssetLoadingService()
+      const rawSpells = await assetLoader.loadDataFiles<SpellDefinition>('spells')
+
+      // Validate each spell with Zod and convert to LoadedSpell
+      for (const [spellId, rawSpell] of rawSpells.entries()) {
+        try {
+          // Validate with Zod
+          const validated = SpellDefinitionSchema.parse(rawSpell)
+
+          // Convert to LoadedSpell
+          const loadedSpell: LoadedSpell = {
+            ...validated,
+            loaded: true,
+            validatedAt: loadedAt
+          }
+
+          spells.set(spellId, loadedSpell)
+        } catch (error) {
+          // Track validation failure but continue loading other spells
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          this.failedSpells.set(spellId, errorMessage)
+          console.warn(`Failed to validate spell ${spellId}:`, errorMessage)
         }
-
-        const json = await response.json()
-
-        // Validate with Zod
-        const validated = SpellDefinitionSchema.parse(json)
-
-        // Convert to LoadedSpell
-        const loadedSpell: LoadedSpell = {
-          ...validated,
-          loaded: true,
-          validatedAt: loadedAt
-        }
-
-        spells.set(spellId, loadedSpell)
-      } catch (error) {
-        console.error(`Error loading spell ${spellId}:`, error)
-        throw error  // Fail fast on any error
       }
-    })
 
-    await Promise.all(loadPromises)
+      this.loaded = true
 
-    console.log(`Loaded ${spells.size} spells`)
-    return spells
+      const successCount = spells.size
+      const failCount = this.failedSpells.size
+      const totalCount = successCount + failCount
+
+      if (failCount > 0) {
+        console.warn(`Loaded ${successCount}/${totalCount} spells (${failCount} failed)`)
+      } else {
+        console.log(`Loaded ${successCount}/${totalCount} spells`)
+      }
+
+      return spells
+    } catch (error) {
+      // Catastrophic failure (e.g., directory not found)
+      this.loadError = error as Error
+      console.error('Failed to load spells:', error)
+      throw error
+    } finally {
+      this.loading = false
+    }
   }
 
   /**
@@ -113,10 +122,57 @@ export class SpellDataLoader {
   }
 
   /**
+   * Check if spells are currently being loaded
+   */
+  static isLoading(): boolean {
+    return this.loading
+  }
+
+  /**
+   * Check if spells have been successfully loaded
+   */
+  static isLoaded(): boolean {
+    return this.loaded
+  }
+
+  /**
+   * Get any error that occurred during loading
+   */
+  static getError(): Error | null {
+    return this.loadError
+  }
+
+  /**
+   * Get map of failed spell loads
+   * @returns Map of spellId → error message for spells that failed to load or validate
+   */
+  static getFailedSpells(): ReadonlyMap<string, string> {
+    return this.failedSpells
+  }
+
+  /**
+   * Get count of successfully loaded spells
+   */
+  static getLoadedCount(): number {
+    return this.spellCache?.size ?? 0
+  }
+
+  /**
+   * Get total count of spells attempted to load
+   */
+  static getTotalCount(): number {
+    return this.getLoadedCount() + this.failedSpells.size
+  }
+
+  /**
    * Clear cache (for testing)
    */
   static clearCache(): void {
     this.spellCache = null
     this.loadPromise = null
+    this.loading = false
+    this.loaded = false
+    this.loadError = null
+    this.failedSpells.clear()
   }
 }

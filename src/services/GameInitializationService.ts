@@ -69,7 +69,20 @@ async function initializeGame(): Promise<void> {
   // Load spells first (required for character creation, combat, etc.)
   console.log('Loading spells...')
   await SpellDataLoader.loadAllSpells()
-  console.log('Spells loaded successfully')
+
+  // Report spell loading statistics
+  const spellCount = SpellDataLoader.getLoadedCount()
+  const failedSpells = SpellDataLoader.getFailedSpells()
+  const totalSpells = SpellDataLoader.getTotalCount()
+
+  if (failedSpells.size > 0) {
+    console.warn(`Loaded ${spellCount}/${totalSpells} spells (${failedSpells.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed spells:', Array.from(failedSpells.entries()))
+    }
+  } else {
+    console.log(`Loaded ${spellCount} spells successfully`)
+  }
 
   // Initialize data services in parallel
   await Promise.all([

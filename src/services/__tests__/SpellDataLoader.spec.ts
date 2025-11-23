@@ -70,6 +70,52 @@ describe('SpellDataLoader', () => {
 
       expect(spells1).toBe(spells2)  // Same object reference
     })
+
+    it('gracefully handles individual spell validation failures', async () => {
+      // Clear cache first to ensure clean state
+      SpellDataLoader.clearCache()
+
+      // Temporarily replace the mock to return invalid data for one spell
+      const originalFetch = global.fetch;
+      (global.fetch as any) = jest.fn((url: string) => {
+        const spellId = url.split('/').pop()?.replace('.json', '')
+
+        if (spellId === 'halito') {
+          // Return invalid spell data (missing required fields)
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'halito', invalidField: 'bad' })
+          } as Response)
+        }
+
+        // Return valid data for other spells
+        const isMage = ['mogref', 'katino'].includes(spellId as string)
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: spellId,
+            name: spellId?.toUpperCase() || 'UNKNOWN',
+            level: 1,
+            casterType: isMage ? 'mage' : 'priest',
+            category: 'offensive',
+            target: 'group',
+            damage: { dice: '1d8', type: 'fire' },
+            description: `Mock spell ${spellId}`,
+            castableIn: ['combat']
+          })
+        } as Response)
+      })
+
+      const spells = await SpellDataLoader.loadAllSpells()
+
+      // Should load successfully despite one failure
+      expect(spells.size).toBeGreaterThan(0)
+      expect(spells.has('halito')).toBe(false)  // Failed spell not in results
+      expect(SpellDataLoader.getFailedSpells().has('halito')).toBe(true)  // Tracked as failed
+
+      // Restore original mock
+      global.fetch = originalFetch
+    })
   })
 
   describe('getSpell', () => {
@@ -103,6 +149,69 @@ describe('SpellDataLoader', () => {
 
     it('throws error if spells not loaded', () => {
       expect(() => SpellDataLoader.getAllSpells()).toThrow('Spells not loaded')
+    })
+  })
+
+  describe('loading state tracking', () => {
+    it('tracks loading state during load', async () => {
+      expect(SpellDataLoader.isLoading()).toBe(false)
+      expect(SpellDataLoader.isLoaded()).toBe(false)
+
+      const loadPromise = SpellDataLoader.loadAllSpells()
+      // Note: isLoading() may be false here due to fast execution in tests
+
+      await loadPromise
+
+      expect(SpellDataLoader.isLoading()).toBe(false)
+      expect(SpellDataLoader.isLoaded()).toBe(true)
+    })
+
+    it('returns loaded count after loading', async () => {
+      expect(SpellDataLoader.getLoadedCount()).toBe(0)
+
+      await SpellDataLoader.loadAllSpells()
+
+      expect(SpellDataLoader.getLoadedCount()).toBeGreaterThan(50)
+    })
+
+    it('returns total count including failed spells', async () => {
+      await SpellDataLoader.loadAllSpells()
+      const loadedCount = SpellDataLoader.getLoadedCount()
+      const failedCount = SpellDataLoader.getFailedSpells().size
+      const totalCount = SpellDataLoader.getTotalCount()
+
+      expect(totalCount).toBe(loadedCount + failedCount)
+    })
+
+    it('returns null error when load succeeds', async () => {
+      await SpellDataLoader.loadAllSpells()
+
+      expect(SpellDataLoader.getError()).toBeNull()
+    })
+
+    it('returns readonly map of failed spells', async () => {
+      await SpellDataLoader.loadAllSpells()
+      const failedSpells = SpellDataLoader.getFailedSpells()
+
+      expect(failedSpells).toBeInstanceOf(Map)
+      // ReadonlyMap check - should not have set method in type
+      expect(typeof failedSpells.get).toBe('function')
+    })
+  })
+
+  describe('clearCache', () => {
+    it('resets all state flags', async () => {
+      await SpellDataLoader.loadAllSpells()
+      expect(SpellDataLoader.isLoaded()).toBe(true)
+      expect(SpellDataLoader.getLoadedCount()).toBeGreaterThan(0)
+
+      SpellDataLoader.clearCache()
+
+      expect(SpellDataLoader.isLoaded()).toBe(false)
+      expect(SpellDataLoader.isLoading()).toBe(false)
+      expect(SpellDataLoader.getLoadedCount()).toBe(0)
+      expect(SpellDataLoader.getFailedSpells().size).toBe(0)
+      expect(SpellDataLoader.getError()).toBeNull()
     })
   })
 })
