@@ -69,4 +69,43 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
       expect(effect.acBuffs![0].acModifier).toBe(-2)
     })
   })
+
+  describe('MOLITO (Improved Sparks)', () => {
+    it('deals 3d6 fire damage to group', () => {
+      const caster = createTestCharacter({
+        spellPoints: { mage: { level3: { current: 1, max: 1 } } }
+      })
+      const targets = [createTestCharacter({ id: 't1' })]
+
+      const effect = SpellCastingService.resolveSpellEffect('molito', caster, targets)
+
+      expect(effect.damage![0]).toBeGreaterThanOrEqual(3)
+      expect(effect.damage![0]).toBeLessThanOrEqual(18)
+    })
+  })
+
+  describe('BAMATU (Prayer)', () => {
+    it('applies -4 AC buff to all allies', () => {
+      const caster = createTestCharacter({
+        spellPoints: { priest: { level3: { current: 1, max: 1 } } }
+      })
+      const allies = [createTestCharacter({ id: 'a1' })]
+
+      const effect = SpellCastingService.resolveSpellEffect('bamatu', caster, allies)
+
+      expect(effect.acBuffs![0].acModifier).toBe(-4)
+    })
+  })
+
+  describe('LOMILWA (Extended Light)', () => {
+    it('provides extended light utility', () => {
+      const caster = createTestCharacter({
+        spellPoints: { priest: { level3: { current: 1, max: 1 } } }
+      })
+
+      const effect = SpellCastingService.resolveSpellEffect('lomilwa', caster, [caster])
+
+      expect(effect.message).toContain('LOMILWA')
+    })
+  })
 })

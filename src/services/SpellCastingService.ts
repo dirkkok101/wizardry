@@ -111,6 +111,16 @@ SPELL_CACHE.set('lahalito', {
   damageDice: '6d6'  // 6-36 damage
 })
 
+SPELL_CACHE.set('molito', {
+  id: 'molito',
+  name: 'MOLITO',
+  level: 3,
+  type: 'mage',
+  target: 'group',
+  damageType: 'fire',
+  damageDice: '3d6'
+})
+
 // Priest Level 1 Spells
 SPELL_CACHE.set('dios', {
   id: 'dios',
@@ -213,6 +223,24 @@ SPELL_CACHE.set('kalki', {
   type: 'priest',
   target: 'all_allies',
   acModifier: -1  // Improves AC by 1
+})
+
+SPELL_CACHE.set('bamatu', {
+  id: 'bamatu',
+  name: 'BAMATU',
+  level: 3,
+  type: 'priest',
+  target: 'all_allies',
+  acModifier: -4
+})
+
+SPELL_CACHE.set('lomilwa', {
+  id: 'lomilwa',
+  name: 'LOMILWA',
+  level: 3,
+  type: 'priest',
+  target: 'self',
+  utility: 'extended_light'
 })
 
 // Mage Level 4 Spells
@@ -489,6 +517,10 @@ export class SpellCastingService {
         message = `${spell.name} reveals the monsters' vital signs!`
       } else if (spell.utility === 'identify_foe') {
         message = `${spell.name} identifies the enemy!`
+      } else if (spell.utility === 'identify_trap') {
+        message = `${spell.name} reveals any traps nearby!`
+      } else if (spell.utility === 'extended_light') {
+        message = `${spell.name} creates extended light!`
       }
 
       return {
