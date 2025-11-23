@@ -1,6 +1,6 @@
 import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 import { SpellDataLoader } from './src/services/SpellDataLoader';
-import { MonsterService } from './src/services/MonsterService';
+import { MonsterDataLoader } from './src/services/MonsterDataLoader';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -47,15 +47,16 @@ global.fetch = jest.fn(async (url: string) => {
 
 // Pre-load spells and monsters for all tests using real data
 beforeAll(async () => {
-  await SpellDataLoader.loadAllSpells();
-  // Preload common monsters used in tests for synchronous access
-  await MonsterService.preloadMonsters(['kobold', 'orc', 'zombie', 'murphy_ghost']);
+  await Promise.all([
+    SpellDataLoader.loadAllSpells(),
+    MonsterDataLoader.loadAllMonsters()
+  ]);
 });
 
 // Clear caches after all tests
 afterAll(() => {
   SpellDataLoader.clearCache();
-  MonsterService.clearCache();
+  MonsterDataLoader.clearCache();
 });
 
 // Polyfill ImageData for canvas tests

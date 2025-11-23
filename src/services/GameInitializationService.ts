@@ -10,6 +10,7 @@ import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
+import { MonsterDataLoader } from './MonsterDataLoader'
 
 let gameState: GameState | null = null
 
@@ -66,9 +67,12 @@ function createNewGame(): GameState {
 async function initializeGame(): Promise<void> {
   console.log('Initializing game data...')
 
-  // Load spells first (required for character creation, combat, etc.)
-  console.log('Loading spells...')
-  await SpellDataLoader.loadAllSpells()
+  // Load spells and monsters in parallel (required for character creation, combat, etc.)
+  console.log('Loading spells and monsters...')
+  await Promise.all([
+    SpellDataLoader.loadAllSpells(),
+    MonsterDataLoader.loadAllMonsters()
+  ])
 
   // Report spell loading statistics
   const spellCount = SpellDataLoader.getLoadedCount()
@@ -84,7 +88,21 @@ async function initializeGame(): Promise<void> {
     console.log(`Loaded ${spellCount} spells successfully`)
   }
 
-  // Initialize data services in parallel
+  // Report monster loading statistics
+  const monsterCount = MonsterDataLoader.getLoadedCount()
+  const failedMonsters = MonsterDataLoader.getFailedMonsters()
+  const totalMonsters = MonsterDataLoader.getTotalCount()
+
+  if (failedMonsters.size > 0) {
+    console.warn(`Loaded ${monsterCount}/${totalMonsters} monsters (${failedMonsters.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed monsters:', Array.from(failedMonsters.entries()))
+    }
+  } else {
+    console.log(`Loaded ${monsterCount} monsters successfully`)
+  }
+
+  // Initialize other data services in parallel
   await Promise.all([
     RaceService.initialize(),
     ClassService.initialize(),

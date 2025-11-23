@@ -131,7 +131,7 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
  * Test factory: Create a test monster instance (synchronous, for simple tests)
  *
  * WARNING: This creates a hardcoded kobold monster for testing purposes only.
- * For realistic monster data, use createMonsterFromTemplate() or MonsterService directly.
+ * For realistic monster data from JSON, use createMonsterFromData() or MonsterService directly.
  *
  * @param overrides - Partial monster properties to override defaults
  */
@@ -154,28 +154,29 @@ export function createTestMonster(overrides: Partial<MonsterInstance> = {}): Mon
 }
 
 /**
- * Test factory: Create monster instance from MonsterService (async, uses real data)
+ * Test factory: Create monster instance from real data (synchronous)
  *
- * This loads and validates actual monster data from JSON files.
- * Use this for integration tests that need realistic monster behavior.
+ * Uses MonsterService to create instance from loaded monster data.
+ * Monsters are preloaded in setup-jest.ts via MonsterDataLoader.
  *
  * @param monsterId - Monster ID (e.g., 'kobold', 'werdna', 'greater_demon')
- * @returns Promise of MonsterInstance with validated data
+ * @returns MonsterInstance with validated data
  */
-export async function createMonsterFromTemplate(monsterId: string): Promise<MonsterInstance> {
-  return await MonsterService.createMonsterInstance(monsterId)
+export function createMonsterFromData(monsterId: string): MonsterInstance {
+  return MonsterService.createMonsterInstance(monsterId)
 }
 
 /**
- * Test factory: Create monster group from MonsterService (async, uses real data)
+ * Test factory: Create monster group from real data (synchronous)
  *
  * Creates a group of monsters with randomized count based on template.
+ * Monsters are preloaded in setup-jest.ts via MonsterDataLoader.
  *
  * @param monsterId - Monster ID
- * @returns Promise of MonsterInstance array
+ * @returns Array of MonsterInstances
  */
-export async function createMonsterGroup(monsterId: string): Promise<MonsterInstance[]> {
-  return await MonsterService.generateMonsterGroup(monsterId)
+export function createMonsterGroup(monsterId: string): MonsterInstance[] {
+  return MonsterService.generateMonsterGroup(monsterId)
 }
 
 /**
