@@ -3,6 +3,7 @@ import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '../../test-helpers/test-factories'
 import { MonsterGroup } from '../../types/Combat'
 import { CharacterStatus } from '../../types/CharacterStatus'
+import { CharacterClass } from '../../types/CharacterClass'
 
 describe('CombatService - Phase 2 Features', () => {
   describe('Critical Hit Formula', () => {
@@ -94,62 +95,62 @@ describe('CombatService - Phase 2 Features', () => {
 
   describe('getAttacksPerRound', () => {
     it('Fighter gets 1 attack at level 1', () => {
-      const fighter = createTestCharacter({ class: 'Fighter', level: 1 })
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, level: 1 })
       expect(CombatService.getAttacksPerRound(fighter)).toBe(1)
     })
 
     it('Fighter gets 2 attacks at level 5', () => {
-      const fighter = createTestCharacter({ class: 'Fighter', level: 5 })
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, level: 5 })
       expect(CombatService.getAttacksPerRound(fighter)).toBe(2)
     })
 
     it('Fighter gets 3 attacks at level 10', () => {
-      const fighter = createTestCharacter({ class: 'Fighter', level: 10 })
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, level: 10 })
       expect(CombatService.getAttacksPerRound(fighter)).toBe(3)
     })
 
     it('Lord gets 1 + floor(level/5) attacks', () => {
-      const lord = createTestCharacter({ class: 'Lord', level: 7 })
+      const lord = createTestCharacter({ class: CharacterClass.LORD, level: 7 })
       expect(CombatService.getAttacksPerRound(lord)).toBe(2) // 1 + floor(7/5) = 2
     })
 
     it('Samurai gets 1 + floor(level/5) attacks', () => {
-      const samurai = createTestCharacter({ class: 'Samurai', level: 12 })
+      const samurai = createTestCharacter({ class: CharacterClass.SAMURAI, level: 12 })
       expect(CombatService.getAttacksPerRound(samurai)).toBe(3) // 1 + floor(12/5) = 3
     })
 
     it('Ninja gets 2 + floor(level/5) attacks', () => {
-      const ninja = createTestCharacter({ class: 'Ninja', level: 1 })
+      const ninja = createTestCharacter({ class: CharacterClass.NINJA, level: 1 })
       expect(CombatService.getAttacksPerRound(ninja)).toBe(2)
     })
 
     it('Ninja gets 4 attacks at level 10', () => {
-      const ninja = createTestCharacter({ class: 'Ninja', level: 10 })
+      const ninja = createTestCharacter({ class: CharacterClass.NINJA, level: 10 })
       expect(CombatService.getAttacksPerRound(ninja)).toBe(4) // 2 + floor(10/5) = 4
     })
 
     it('Mage always gets 1 attack', () => {
-      const mage = createTestCharacter({ class: 'Mage', level: 10 })
+      const mage = createTestCharacter({ class: CharacterClass.MAGE, level: 10 })
       expect(CombatService.getAttacksPerRound(mage)).toBe(1)
     })
 
     it('Priest always gets 1 attack', () => {
-      const priest = createTestCharacter({ class: 'Priest', level: 10 })
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST, level: 10 })
       expect(CombatService.getAttacksPerRound(priest)).toBe(1)
     })
 
     it('Bishop always gets 1 attack', () => {
-      const bishop = createTestCharacter({ class: 'Bishop', level: 10 })
+      const bishop = createTestCharacter({ class: CharacterClass.BISHOP, level: 10 })
       expect(CombatService.getAttacksPerRound(bishop)).toBe(1)
     })
 
     it('Thief always gets 1 attack', () => {
-      const thief = createTestCharacter({ class: 'Thief', level: 10 })
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, level: 10 })
       expect(CombatService.getAttacksPerRound(thief)).toBe(1)
     })
 
     it('caps attacks at 10 maximum', () => {
-      const fighter = createTestCharacter({ class: 'Fighter', level: 100 })
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, level: 100 })
       expect(CombatService.getAttacksPerRound(fighter)).toBe(10)
     })
 

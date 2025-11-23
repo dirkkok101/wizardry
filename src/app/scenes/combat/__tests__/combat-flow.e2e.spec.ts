@@ -29,6 +29,21 @@ describe('Combat Flow E2E', () => {
     jest.spyOn(router, 'navigate')
   })
 
+  // Helper function to select actions for characters using new character-by-character API
+  const selectActionsForParty = (actionType: 'ATTACK' | 'PARRY' | 'RUN', target?: any) => {
+    const aliveChars = component.partyCharacters().filter(c => c.hp > 0)
+    aliveChars.forEach(() => {
+      if (actionType === 'PARRY') {
+        component.selectActionType('PARRY')
+      } else {
+        component.selectActionType(actionType)
+        if (target) {
+          component.selectTarget(target)
+        }
+      }
+    })
+  }
+
   describe('Victory Flow', () => {
     it('completes full combat encounter: setup → action selection → round execution → victory → maze', () => {
       // 1. Setup initial combat state with 2 characters and 1 weak monster
@@ -80,7 +95,8 @@ describe('Combat Flow E2E', () => {
             combatLog: ['Combat begins!'],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -99,13 +115,10 @@ describe('Combat Flow E2E', () => {
       const monster = component.monsters()[0]
       expect(monster.hp).toBe(1)
 
-      component.selectAction('c1', 'ATTACK', monster)
-      component.selectAction('c2', 'ATTACK', monster)
+      selectActionsForParty('ATTACK', monster)
 
       // Verify actions were selected
       expect(component.selectedActions().size).toBe(2)
-      expect(component.selectedActions().has('c1')).toBe(true)
-      expect(component.selectedActions().has('c2')).toBe(true)
       expect(component.allActionsSelected()).toBe(true)
 
       // 4. Record initial state before round execution
@@ -183,7 +196,8 @@ describe('Combat Flow E2E', () => {
             combatLog: ['Combat begins!'],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -193,9 +207,7 @@ describe('Combat Flow E2E', () => {
 
       // Select attack actions for all characters targeting first monster
       const monster = component.monsters()[0]
-      component.selectAction('c1', 'ATTACK', monster)
-      component.selectAction('c2', 'ATTACK', monster)
-      component.selectAction('c3', 'ATTACK', monster)
+      selectActionsForParty('ATTACK', monster)
 
       expect(component.allActionsSelected()).toBe(true)
 
@@ -254,7 +266,8 @@ describe('Combat Flow E2E', () => {
             combatLog: [],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -307,7 +320,8 @@ describe('Combat Flow E2E', () => {
             combatLog: [],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -350,7 +364,8 @@ describe('Combat Flow E2E', () => {
             combatLog: [],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -358,8 +373,9 @@ describe('Combat Flow E2E', () => {
       component.ngOnInit()
       fixture.detectChanges()
 
-      // Select an action
-      component.selectAction('c1', 'ATTACK', monster)
+      // Select an action for first character
+      component.selectActionType('ATTACK')
+      component.selectTarget(monster)
       expect(component.selectedActions().size).toBe(1)
 
       // Handle defeat
@@ -396,7 +412,8 @@ describe('Combat Flow E2E', () => {
             combatLog: [],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -409,7 +426,7 @@ describe('Combat Flow E2E', () => {
 
       // Combat won't end quickly with monsters at 50hp
       // Just verify we can execute without immediate victory/defeat
-      component.selectAction('c1', 'ATTACK', component.monsters()[0])
+      selectActionsForParty('ATTACK', component.monsters()[0])
       component.executeRound()
 
       // Combat state should still exist (not victory or defeat)
@@ -441,7 +458,8 @@ describe('Combat Flow E2E', () => {
             combatLog: ['Combat begins!'],
             canFlee: true,
             statusEffects: new Map(),
-            acModifiers: new Map()
+            acModifiers: new Map(),
+            statusDurations: new Map()
           }
         })
       )
@@ -453,7 +471,7 @@ describe('Combat Flow E2E', () => {
       expect(initialLogLength).toBe(1) // Should have the initial message
 
       // Execute round
-      component.selectAction('c1', 'ATTACK', component.monsters()[0])
+      selectActionsForParty('ATTACK', component.monsters()[0])
       component.executeRound()
 
       // After victory, combat state is cleared so log disappears from component

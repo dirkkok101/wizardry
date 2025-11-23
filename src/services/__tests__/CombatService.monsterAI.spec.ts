@@ -2,6 +2,7 @@
 import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster, createTestGameStateWithCombat } from '../../test-helpers/test-factories'
 import { CharacterStatus } from '../../types/CharacterStatus'
+import { CharacterClass } from '../../types/CharacterClass'
 
 describe('CombatService - Monster AI', () => {
   describe('selectMonsterAction', () => {
@@ -103,8 +104,8 @@ describe('CombatService - Monster AI', () => {
 
       it('level 6+ monsters prefer spellcasters', () => {
         const monster = createTestMonster({ level: 7 })
-        const fighter = createTestCharacter({ id: 'fighter', class: 'Fighter', hp: 20, maxHp: 20 })
-        const mage = createTestCharacter({ id: 'mage', class: 'Mage', hp: 15, maxHp: 15 })
+        const fighter = createTestCharacter({ id: 'fighter', class: CharacterClass.FIGHTER, hp: 20, maxHp: 20 })
+        const mage = createTestCharacter({ id: 'mage', class: CharacterClass.MAGE, hp: 15, maxHp: 15 })
         const party = [fighter, mage]
         const frontRow = ['fighter', 'mage']
 
@@ -116,8 +117,8 @@ describe('CombatService - Monster AI', () => {
 
       it('level 6+ monsters target weakest spellcaster among multiple', () => {
         const monster = createTestMonster({ level: 8 })
-        const priest = createTestCharacter({ id: 'priest', class: 'Priest', hp: 10, maxHp: 10 }) // 100% HP
-        const mage = createTestCharacter({ id: 'mage', class: 'Mage', hp: 3, maxHp: 10 }) // 30% HP
+        const priest = createTestCharacter({ id: 'priest', class: CharacterClass.PRIEST, hp: 10, maxHp: 10 }) // 100% HP
+        const mage = createTestCharacter({ id: 'mage', class: CharacterClass.MAGE, hp: 3, maxHp: 10 }) // 30% HP
         const party = [priest, mage]
         const frontRow = ['priest', 'mage']
 
@@ -129,8 +130,8 @@ describe('CombatService - Monster AI', () => {
 
       it('level 6+ monsters fall back to weakest HP% if no spellcasters', () => {
         const monster = createTestMonster({ level: 9 })
-        const fighter1 = createTestCharacter({ id: 'f1', class: 'Fighter', hp: 5, maxHp: 20 }) // 25% HP
-        const fighter2 = createTestCharacter({ id: 'f2', class: 'Fighter', hp: 18, maxHp: 20 }) // 90% HP
+        const fighter1 = createTestCharacter({ id: 'f1', class: CharacterClass.FIGHTER, hp: 5, maxHp: 20 }) // 25% HP
+        const fighter2 = createTestCharacter({ id: 'f2', class: CharacterClass.FIGHTER, hp: 18, maxHp: 20 }) // 90% HP
         const party = [fighter1, fighter2]
         const frontRow = ['f1', 'f2']
 

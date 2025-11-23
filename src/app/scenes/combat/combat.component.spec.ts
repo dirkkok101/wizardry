@@ -105,11 +105,11 @@ describe('CombatComponent', () => {
       expect(actions.get(activeChar.id)!.type).toBe('PARRY')
     })
 
-    it('shows target selection when selecting FLEE', () => {
-      component.selectActionType('FLEE')
+    it('shows target selection when selecting RUN', () => {
+      component.selectActionType('RUN')
 
       expect(component.showTargetSelection()).toBe(true)
-      expect(component.selectedActionType()).toBe('FLEE')
+      expect(component.selectedActionType()).toBe('RUN')
     })
 
     it('creates command when target is selected', () => {
