@@ -1,15 +1,15 @@
 {
-  "id": "badi",
-  "name": "BADI",
-  "level": 5,
+  "id": "malikto_6",
+  "name": "MALIKTO",
+  "level": 6,
   "casterType": "priest",
   "category": "offensive",
   "target": "group",
-  "description": "Instant death to enemy group",
+  "description": "Turn enemies to stone",
   "castableIn": [
     "combat"
   ],
   "effect": {
-    "type": "instant_death"
+    "type": "petrification"
   }
 }
