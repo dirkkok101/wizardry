@@ -9,6 +9,7 @@ import { RaceService } from './RaceService'
 import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
+import { SpellDataLoader } from './SpellDataLoader'
 
 let gameState: GameState | null = null
 
@@ -64,6 +65,11 @@ function createNewGame(): GameState {
  */
 async function initializeGame(): Promise<void> {
   console.log('Initializing game data...')
+
+  // Load spells first (required for character creation, combat, etc.)
+  console.log('Loading spells...')
+  await SpellDataLoader.loadAllSpells()
+  console.log('Spells loaded successfully')
 
   // Initialize data services in parallel
   await Promise.all([
