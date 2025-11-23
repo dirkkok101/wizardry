@@ -91,6 +91,9 @@ export class CombatComponent implements OnInit {
     return aliveMembers[index] || null
   })
 
+  // Active character ID (null-safe for template usage)
+  readonly activeCharacterId = computed(() => this.activeCharacter()?.id ?? null)
+
   // Available spells for active character
   readonly availableSpells = computed(() => {
     const char = this.activeCharacter()

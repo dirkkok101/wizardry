@@ -40,11 +40,11 @@
         @for (char of partyCharacters(); track char.id) {
           <div class="character-combat-card"
                [class.dead]="char.hp <= 0"
-               [class.active]="activeCharacter()?.id === char.id"
+               [class.active]="activeCharacterId() === char.id"
                [class.action-selected]="selectedActions().has(char.id)">
             <div class="char-name">
               {{ char.name }} ({{ char.class }})
-              @if (activeCharacter()?.id === char.id) {
+              @if (activeCharacterId() === char.id) {
                 <span class="active-indicator">▶</span>
               }
             </div>
@@ -64,7 +64,7 @@
               <div class="action-selection">
                 @if (selectedActions().has(char.id)) {
                   <span class="action-selected">✓ Action Selected</span>
-                } @else if (activeCharacter()?.id === char.id) {
+                } @else if (activeCharacterId() === char.id) {
                   <span class="action-pending">⏳ Select Action...</span>
                 } @else {
                   <span class="action-waiting">⏸ Waiting...</span>
