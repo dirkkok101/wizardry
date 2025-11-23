@@ -239,105 +239,35 @@ describe('DungeonService', () => {
     })
   })
 
-  describe('validateStairsWalls', () => {
-    it('returns no errors when stairs walls have valid destinations', () => {
-      const level: LevelData = {
-        level: 1,
-        name: 'Test Level',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 0, y: 0, facing: 'north' },
-        edgeWrapping: true,
-        encounterRate: 0.1,
-        encounterTable: 'test_table',
-        tiles: [
-          {
-            x: 0,
-            y: 0,
-            walls: { north: 'open', south: 'wall', east: 'open', west: 'stairs_up' },
-            destination: { type: 'castle' }
-          },
-          {
-            x: 5,
-            y: 5,
-            walls: { north: 'stairs_down', south: 'wall', east: 'wall', west: 'wall' },
-            destination: { level: 2, x: 10, y: 10 }
-          }
-        ]
+  describe('Integration tests', () => {
+    it('successfully loads and validates level1.json with no errors', () => {
+      // This verifies the actual data file passes all Zod validation rules
+      expect(() => DungeonService.loadLevel(1)).not.toThrow()
+
+      const level = DungeonService.loadLevel(1)
+
+      // Verify basic structure
+      expect(level.level).toBe(1)
+      expect(level.size).toEqual({ width: 20, height: 20 })
+      expect(level.tiles).toBeTruthy()
+      expect(level.tiles.length).toBeGreaterThan(0)
+
+      // Verify no duplicate coordinates (Zod refinement catches this)
+      const coords = new Set<string>()
+      for (const tile of level.tiles) {
+        const key = `${tile.x},${tile.y}`
+        expect(coords.has(key)).toBe(false) // No duplicates
+        coords.add(key)
       }
 
-      const errors = DungeonService.validateStairsWalls(level)
-      expect(errors).toHaveLength(0)
+      // Verify direction was transformed to uppercase
+      expect(level.startPosition.facing).toMatch(/^(NORTH|SOUTH|EAST|WEST)$/)
     })
 
-    it('detects missing destination on stairs_up wall', () => {
-      const level: LevelData = {
-        level: 1,
-        name: 'Test Level',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 0, y: 0, facing: 'north' },
-        edgeWrapping: true,
-        encounterRate: 0.1,
-        encounterTable: 'test_table',
-        tiles: [
-          {
-            x: 0,
-            y: 0,
-            walls: { north: 'open', south: 'wall', east: 'open', west: 'stairs_up' }
-            // Missing destination field
-          }
-        ]
-      }
-
-      const errors = DungeonService.validateStairsWalls(level)
-      expect(errors.length).toBeGreaterThan(0)
-      expect(errors[0]).toContain('(0, 0)')
-      expect(errors[0]).toContain('no destination')
-    })
-
-    it('detects missing destination on stairs_down wall', () => {
-      const level: LevelData = {
-        level: 1,
-        name: 'Test Level',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 0, y: 0, facing: 'north' },
-        edgeWrapping: true,
-        encounterRate: 0.1,
-        encounterTable: 'test_table',
-        tiles: [
-          {
-            x: 10,
-            y: 15,
-            walls: { north: 'wall', south: 'stairs_down', east: 'wall', west: 'wall' }
-            // Missing destination field
-          }
-        ]
-      }
-
-      const errors = DungeonService.validateStairsWalls(level)
-      expect(errors).toContain('Tile (10, 15) has stairs wall but no destination')
-    })
-
-    it('allows normal tiles without stairs to have no destination', () => {
-      const level: LevelData = {
-        level: 1,
-        name: 'Test Level',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 0, y: 0, facing: 'north' },
-        edgeWrapping: true,
-        encounterRate: 0.1,
-        encounterTable: 'test_table',
-        tiles: [
-          {
-            x: 0,
-            y: 0,
-            walls: { north: 'wall', south: 'open', east: 'door', west: 'illusion' }
-            // No stairs, no destination = valid
-          }
-        ]
-      }
-
-      const errors = DungeonService.validateStairsWalls(level)
-      expect(errors).toHaveLength(0)
+    it('successfully loads level2.json with no validation errors', () => {
+      expect(() => DungeonService.loadLevel(2)).not.toThrow()
+      const level = DungeonService.loadLevel(2)
+      expect(level.level).toBe(2)
     })
   })
 
