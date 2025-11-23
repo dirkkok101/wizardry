@@ -1,4 +1,6 @@
 import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls } from '../types/Dungeon'
+import { LevelFileSchema, ValidatedLevelDataSchema } from '../schemas/dungeon-schemas'
+import { ZodError } from 'zod'
 
 // Import JSON data
 import level1Data from '../../data/maps/level1.json'
@@ -14,7 +16,8 @@ const LEVEL_DATA_MAP: Record<number, any> = {
 
 export const DungeonService = {
   /**
-   * Load dungeon level data from JSON
+   * Load dungeon level data from JSON with Zod validation
+   * @throws {Error} If level is invalid or data structure is incorrect
    */
   loadLevel(level: number): LevelData {
     if (level < 1 || level > 10) {
@@ -26,23 +29,55 @@ export const DungeonService = {
       throw new Error(`Map data not found for level ${level}`)
     }
 
-    // Parse JSON structure (levels[0] contains the level)
-    const levelData = rawData.levels[0]
+    try {
+      // Validate the entire file structure
+      const fileValidation = LevelFileSchema.safeParse(rawData)
+      if (!fileValidation.success) {
+        throw new Error(`Invalid level file structure for level ${level}: ${this.formatZodError(fileValidation.error)}`)
+      }
 
-    return {
-      level: levelData.level,
-      name: levelData.name,
-      size: levelData.size,
-      startPosition: {
-        x: levelData.startPosition.x,
-        y: levelData.startPosition.y,
-        facing: levelData.startPosition.facing.toUpperCase() as Direction
-      },
-      edgeWrapping: levelData.edgeWrapping,
-      tiles: levelData.tiles,
-      encounterRate: levelData.encounterRate,
-      encounterTable: levelData.encounterTable
+      // Parse JSON structure (levels[0] contains the level)
+      const levelData = fileValidation.data.levels[0]
+
+      // Validate the level data with business logic rules
+      const levelValidation = ValidatedLevelDataSchema.safeParse(levelData)
+      if (!levelValidation.success) {
+        throw new Error(`Invalid level data for level ${level}: ${this.formatZodError(levelValidation.error)}`)
+      }
+
+      // Convert to LevelData with uppercase Direction
+      return {
+        level: levelValidation.data.level,
+        name: levelValidation.data.name,
+        size: levelValidation.data.size,
+        startPosition: {
+          x: levelValidation.data.startPosition.x,
+          y: levelValidation.data.startPosition.y,
+          facing: levelValidation.data.startPosition.facing.toUpperCase() as Direction
+        },
+        edgeWrapping: levelValidation.data.edgeWrapping,
+        tiles: levelValidation.data.tiles,
+        encounterRate: levelValidation.data.encounterRate,
+        encounterTable: levelValidation.data.encounterTable
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error(`Unexpected error loading level ${level}: ${String(error)}`)
     }
+  },
+
+  /**
+   * Format Zod validation errors into readable messages
+   */
+  formatZodError(error: ZodError): string {
+    if (!error.errors || error.errors.length === 0) {
+      return error.message || 'Unknown validation error'
+    }
+    return error.errors
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
   },
 
   /**

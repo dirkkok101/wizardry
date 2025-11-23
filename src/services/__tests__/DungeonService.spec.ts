@@ -1,5 +1,6 @@
 import { DungeonService } from '../DungeonService'
 import { Position, LevelData, TileData } from '../../types/Dungeon'
+import { LevelFileSchema, ValidatedLevelDataSchema } from '../../schemas/dungeon-schemas'
 
 describe('DungeonService', () => {
   describe('loadLevel', () => {
@@ -337,6 +338,360 @@ describe('DungeonService', () => {
 
       const errors = DungeonService.validateStairsWalls(level)
       expect(errors).toHaveLength(0)
+    })
+  })
+
+  describe('Zod validation', () => {
+    describe('LevelFileSchema', () => {
+      it('accepts valid level file structure', () => {
+        const validData = {
+          levels: [
+            {
+              level: 1,
+              name: 'Test Level',
+              size: { width: 20, height: 20 },
+              startPosition: { x: 0, y: 0, facing: 'north' },
+              edgeWrapping: true,
+              tiles: [],
+              encounterRate: 0.1,
+              encounterTable: 'test_table'
+            }
+          ]
+        }
+
+        const result = LevelFileSchema.safeParse(validData)
+        expect(result.success).toBe(true)
+      })
+
+      it('rejects missing levels array', () => {
+        const invalidData = {
+          level: 1,
+          name: 'Test Level'
+        }
+
+        const result = LevelFileSchema.safeParse(invalidData)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects empty levels array', () => {
+        const invalidData = {
+          levels: []
+        }
+
+        const result = LevelFileSchema.safeParse(invalidData)
+        expect(result.success).toBe(false)
+      })
+    })
+
+    describe('ValidatedLevelDataSchema', () => {
+      it('accepts valid level with all required fields', () => {
+        const validLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: {
+                north: 'open',
+                east: 'wall',
+                south: 'wall',
+                west: 'wall'
+              }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(validLevel)
+        expect(result.success).toBe(true)
+      })
+
+      it('rejects level number outside 1-10 range', () => {
+        const invalidLevel = {
+          level: 11,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects tile coordinates outside 0-19 range', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 25,  // Invalid: > 19
+              y: 10,
+              walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects invalid wall type', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: {
+                north: 'invalid_wall_type',
+                east: 'wall',
+                south: 'wall',
+                west: 'wall'
+              }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects invalid facing direction', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'northeast' },  // Invalid
+          edgeWrapping: true,
+          tiles: [],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects encounter rate outside 0-1 range', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [],
+          encounterRate: 1.5,  // Invalid: > 1
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects missing required tile walls', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: {
+                north: 'wall',
+                east: 'wall'
+                // Missing south and west
+              }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects stairs wall without destination', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: {
+                north: 'stairs_up',
+                east: 'wall',
+                south: 'wall',
+                west: 'wall'
+              }
+              // Missing destination
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+        if (!result.success) {
+          expect(result.error.message).toContain('stairs')
+        }
+      })
+
+      it('rejects duplicate tile coordinates', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 5,
+              y: 10,
+              walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' }
+            },
+            {
+              x: 5,
+              y: 10,  // Duplicate!
+              walls: { north: 'open', east: 'open', south: 'open', west: 'open' }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+        if (!result.success) {
+          expect(result.error.message).toContain('Duplicate')
+        }
+      })
+
+      it('rejects non-20x20 level size', () => {
+        const invalidLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 15, height: 15 },  // Invalid: not 20x20
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidLevel)
+        expect(result.success).toBe(false)
+        if (!result.success) {
+          expect(result.error.message).toContain('20x20')
+        }
+      })
+
+      it('accepts stairs wall with valid destination', () => {
+        const validLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: {
+                north: 'stairs_down',
+                east: 'wall',
+                south: 'wall',
+                west: 'wall'
+              },
+              destination: { level: 2, x: 0, y: 0 }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(validLevel)
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts all valid wall types', () => {
+        const validLevel = {
+          level: 1,
+          name: 'Test Level',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [
+            {
+              x: 0,
+              y: 0,
+              walls: { north: 'open', east: 'wall', south: 'door', west: 'secret' }
+            },
+            {
+              x: 1,
+              y: 0,
+              walls: { north: 'locked_door', east: 'illusion', south: 'wall', west: 'open' }
+            }
+          ],
+          encounterRate: 0.1,
+          encounterTable: 'test_table'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(validLevel)
+        expect(result.success).toBe(true)
+      })
+    })
+
+    describe('formatZodError', () => {
+      it('formats validation errors into readable messages', () => {
+        const invalidData = {
+          level: 'not a number',
+          name: '',
+          size: { width: 20, height: 20 },
+          startPosition: { x: 0, y: 0, facing: 'north' },
+          edgeWrapping: true,
+          tiles: [],
+          encounterRate: 0.1,
+          encounterTable: 'test'
+        }
+
+        const result = ValidatedLevelDataSchema.safeParse(invalidData)
+        expect(result.success).toBe(false)
+
+        if (!result.success) {
+          const formatted = DungeonService.formatZodError(result.error)
+          expect(formatted).toBeTruthy()
+          expect(typeof formatted).toBe('string')
+        }
+      })
     })
   })
 })
