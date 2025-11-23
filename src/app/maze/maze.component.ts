@@ -193,8 +193,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       console.log('[MazeComponent] Loading texture atlas...');
 
-      // Load texture atlas metadata
-      const response = await fetch('/assets/textures/eob-dungeon-level-01.json');
+      // Load high-resolution texture atlas metadata
+      const response = await fetch('/assets/textures/eob-dungeon-highres.json');
       if (!response.ok) {
         throw new Error(`Failed to load texture atlas: ${response.statusText}`);
       }

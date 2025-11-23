@@ -163,6 +163,10 @@
     width: 100%;
     height: 100%;
     display: block;
+    // Disable CRT scanline effect on WebGL canvas for crisp high-res rendering
+    position: relative;
+    z-index: 10000;
+    isolation: isolate;
   }
 
   // Tablet portrait and mobile - use square aspect ratio

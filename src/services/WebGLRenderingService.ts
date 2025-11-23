@@ -180,9 +180,9 @@ export class WebGLRenderingService {
     );
 
     // Set texture parameters
-    // Use NEAREST filtering for pixel-art textures
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+    // Use LINEAR filtering for smooth high-resolution textures
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 
     // Clamp to edge (no wrapping)
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
@@ -379,20 +379,18 @@ export class WebGLRenderingService {
     // Check if this wall is a stairs wall
     if (wallType === 'stairs_up') {
       const texture = this.getTextureById('stairs_up');
-      if (texture) {
-        return [texture.x, texture.y, texture.width, texture.height];
+      if (!texture) {
+        throw new Error('[WebGL] Texture "stairs_up" not found in atlas');
       }
-      // Fallback to hardcoded coordinates if texture not found
-      return [384, 0, 64, 64];
+      return [texture.x, texture.y, texture.width, texture.height];
     }
 
     if (wallType === 'stairs_down') {
       const texture = this.getTextureById('stairs_down');
-      if (texture) {
-        return [texture.x, texture.y, texture.width, texture.height];
+      if (!texture) {
+        throw new Error('[WebGL] Texture "stairs_down" not found in atlas');
       }
-      // Fallback to hardcoded coordinates if texture not found
-      return [320, 0, 64, 64];
+      return [texture.x, texture.y, texture.width, texture.height];
     }
 
     // Check for doors (check wall type, matching how stairs work)
@@ -413,24 +411,23 @@ export class WebGLRenderingService {
       const textureId = isOpen ? 'door_open' : 'door_closed';
       const texture = this.getTextureById(textureId);
 
-      if (texture) {
-        return [texture.x, texture.y, texture.width, texture.height];
+      if (!texture) {
+        throw new Error(`[WebGL] Door texture "${textureId}" not found in atlas`);
       }
 
-      // Fallback to closed door if texture not found
-      console.warn(`[WebGL] Door texture '${textureId}' not found in atlas`);
-      return [192, 0, 64, 64]; // Hardcoded fallback for door_closed
+      return [texture.x, texture.y, texture.width, texture.height];
     }
 
-    // Regular walls: alternate between stone_wall_01 and stone_wall_02
-    // Use checkerboard pattern based on grid position
+    // Regular walls: alternate between wall_1 and wall_2 using checkerboard pattern
     const useVariation2 = (wall.gridX + wall.gridY) % 2 === 1;
+    const textureId = useVariation2 ? 'wall_2' : 'wall_1';
+    const texture = this.getTextureById(textureId);
 
-    if (useVariation2) {
-      return [64, 0, 64, 64]; // stone_wall_02
-    } else {
-      return [0, 0, 64, 64];  // stone_wall_01
+    if (!texture) {
+      throw new Error(`[WebGL] Wall texture "${textureId}" not found in atlas`);
     }
+
+    return [texture.x, texture.y, texture.width, texture.height];
   }
 
   /**

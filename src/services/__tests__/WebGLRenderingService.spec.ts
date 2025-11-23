@@ -123,16 +123,21 @@ describe('WebGLRenderingService', () => {
 
   // Helper to load a mock texture atlas into the service
   const loadMockAtlas = (service: any) => {
-    // Create a minimal mock atlas with required textures
+    // Create a minimal mock atlas with all required textures
     service['atlas'] = {
       textures: [
-        { id: 'wall_stone', x: 0, y: 0, width: 64, height: 64 },
-        { id: 'floor_stone', x: 64, y: 0, width: 64, height: 64 },
-        { id: 'ceiling_stone', x: 128, y: 0, width: 64, height: 64 }
+        { id: 'wall_1', x: 0, y: 0, width: 64, height: 64, tags: ['wall'] },
+        { id: 'wall_2', x: 64, y: 0, width: 64, height: 64, tags: ['wall'] },
+        { id: 'door_closed', x: 128, y: 0, width: 64, height: 64, tags: ['door', 'closed'] },
+        { id: 'door_open', x: 192, y: 0, width: 64, height: 64, tags: ['door', 'open'] },
+        { id: 'stairs_up', x: 256, y: 0, width: 64, height: 64, tags: ['stairs', 'up'] },
+        { id: 'stairs_down', x: 320, y: 0, width: 64, height: 64, tags: ['stairs', 'down'] },
+        { id: 'floor_stone', x: 0, y: 64, width: 64, height: 64, tags: ['floor'] },
+        { id: 'ceiling_stone', x: 64, y: 64, width: 64, height: 64, tags: ['ceiling'] }
       ]
     };
-    service['atlasWidth'] = 256;
-    service['atlasHeight'] = 64;
+    service['atlasWidth'] = 512;
+    service['atlasHeight'] = 128;
     service['currentTexture'] = {} as WebGLTexture;
   };
 
@@ -193,6 +198,7 @@ describe('WebGLRenderingService', () => {
     it('renders exactly 6 tiles when facing NORTH from (0,0)', () => {
       const service = new WebGLRenderingService();
       service.initialize(canvas);
+      loadMockAtlas(service);
 
       const position: Position = { x: 0, y: 0, facing: 'NORTH' };
 
