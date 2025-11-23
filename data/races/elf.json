@@ -16,5 +16,5 @@
   "description": "Elves are intelligent and pious, making them excellent spellcasters. However, they are physically fragile.",
   "strengths": ["High intelligence and piety", "Good agility", "Wand saving throw bonus"],
   "weaknesses": ["Low strength and vitality", "Fragile in combat"],
-  "bestClasses": ["Mage", "Priest", "Bishop"]
+  "bestClasses": ["mage", "priest", "bishop"]
 }

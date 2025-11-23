@@ -6,7 +6,6 @@ import { isDevMode } from '@angular/core'
 import { GameState } from '../types/GameState'
 import { SceneType } from '../types/SceneType'
 import { RaceService } from './RaceService'
-import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
@@ -103,11 +102,21 @@ async function initializeGame(): Promise<void> {
     console.log(`Loaded ${spellCount} spells successfully`)
   }
 
-  // Initialize remaining data services in parallel
-  await Promise.all([
-    RaceService.initialize(),
-    ItemDataService.loadAllItems()
-  ])
+  // Initialize race service (critical - must succeed)
+  try {
+    await RaceService.initialize()
+
+    // Report race loading statistics
+    const raceCount = RaceService.getLoadedCount()
+    const totalRaces = RaceService.getTotalCount()
+    console.log(`Loaded ${raceCount} races successfully`)
+  } catch (error) {
+    console.error('Failed to initialize races:', error)
+    throw error // Races are critical, re-throw error
+  }
+
+  // Initialize remaining data services
+  await ItemDataService.loadAllItems()
 
   console.log('Game data initialized successfully')
 
