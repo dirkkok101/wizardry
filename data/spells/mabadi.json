@@ -1,15 +1,28 @@
 {
-  "id": "mabadi",
   "name": "MABADI",
-  "level": 5,
   "casterType": "priest",
   "category": "offensive",
-  "target": "all_enemies",
-  "description": "Instant death to all enemy groups",
   "castableIn": [
     "combat"
   ],
-  "effect": {
-    "type": "instant_death"
-  }
+  "levels": [
+    {
+      "level": 5,
+      "id": "mabadi",
+      "description": "Instant death to all enemy groups",
+      "target": "all_enemies",
+      "effect": {
+        "type": "instant_death"
+      }
+    },
+    {
+      "level": 7,
+      "id": "mabadi_7",
+      "description": "Party-wide death spell",
+      "target": "all_enemies",
+      "effect": {
+        "type": "instant_death"
+      }
+    }
+  ]
 }

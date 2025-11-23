@@ -35,47 +35,108 @@ const EXPECTED_PRIEST_SPELLS = {
   7: ['DI', 'MABADI', 'MALIKTO']
 };
 
-function validateSpellFile(filePath) {
+// Check if spell file is in consolidated format (has levels array)
+function isConsolidatedFormat(rawSpell) {
+  return Array.isArray(rawSpell.levels) && rawSpell.levels.length > 0;
+}
+
+// Flatten consolidated spell into individual spell objects
+function flattenConsolidatedSpell(fileData) {
+  const spells = [];
+
+  for (const levelData of fileData.levels) {
+    const spell = {
+      id: levelData.id,
+      name: fileData.name,
+      level: levelData.level,
+      casterType: fileData.casterType,
+      category: fileData.category,
+      target: levelData.target,
+      castableIn: fileData.castableIn,
+      description: levelData.description,
+      // Copy level-specific fields
+      ...levelData
+    };
+
+    // Remove the redundant fields that were copied from levelData
+    delete spell.id;
+    delete spell.target;
+    delete spell.description;
+
+    // Restore correct values
+    spell.id = levelData.id;
+    spell.target = levelData.target;
+    spell.description = levelData.description;
+
+    spells.push(spell);
+  }
+
+  return spells;
+}
+
+// Validate a single spell object
+function validateSpellObject(spell, filePath) {
   const errors = [];
+
+  // Required fields
+  if (!spell.id) errors.push(`${filePath}: Missing 'id' field`);
+  if (!spell.name) errors.push(`${filePath}: Missing 'name' field`);
+  if (!spell.level) errors.push(`${filePath}: Missing 'level' field`);
+  if (!spell.casterType) errors.push(`${filePath}: Missing 'casterType' field`);
+  if (!spell.category) errors.push(`${filePath}: Missing 'category' field`);
+  if (!spell.target) errors.push(`${filePath}: Missing 'target' field`);
+  if (!spell.description) errors.push(`${filePath}: Missing 'description' field`);
+  if (!spell.castableIn || spell.castableIn.length === 0) {
+    errors.push(`${filePath}: Missing or empty 'castableIn' field`);
+  }
+
+  // Validate casterType
+  if (spell.casterType && !['mage', 'priest'].includes(spell.casterType)) {
+    errors.push(`${filePath}: Invalid casterType '${spell.casterType}' (must be 'mage' or 'priest')`);
+  }
+
+  // Validate level range
+  if (spell.level && (spell.level < 1 || spell.level > 7)) {
+    errors.push(`${filePath}: Invalid level ${spell.level} (must be 1-7)`);
+  }
+
+  // Validate category-specific fields
+  if (spell.category === 'offensive' && !spell.damage && !spell.effect) {
+    errors.push(`${filePath}: Offensive spell missing 'damage' or 'effect' field`);
+  }
+  if (spell.category === 'healing' && !spell.healing) {
+    errors.push(`${filePath}: Healing spell missing 'healing' field`);
+  }
+
+  return errors;
+}
+
+function validateSpellFile(filePath) {
+  const allErrors = [];
+  const spells = [];
 
   try {
     const content = readFileSync(filePath, 'utf-8');
-    const spell = JSON.parse(content);
+    const rawData = JSON.parse(content);
 
-    // Required fields
-    if (!spell.id) errors.push(`${filePath}: Missing 'id' field`);
-    if (!spell.name) errors.push(`${filePath}: Missing 'name' field`);
-    if (!spell.level) errors.push(`${filePath}: Missing 'level' field`);
-    if (!spell.casterType) errors.push(`${filePath}: Missing 'casterType' field`);
-    if (!spell.category) errors.push(`${filePath}: Missing 'category' field`);
-    if (!spell.target) errors.push(`${filePath}: Missing 'target' field`);
-    if (!spell.description) errors.push(`${filePath}: Missing 'description' field`);
-    if (!spell.castableIn || spell.castableIn.length === 0) {
-      errors.push(`${filePath}: Missing or empty 'castableIn' field`);
+    // Detect format and convert to array of spells
+    const spellObjects = isConsolidatedFormat(rawData)
+      ? flattenConsolidatedSpell(rawData)
+      : [rawData];
+
+    // Validate each spell
+    for (const spell of spellObjects) {
+      const errors = validateSpellObject(spell, filePath);
+      allErrors.push(...errors);
+      if (errors.length === 0) {
+        spells.push(spell);
+      }
     }
 
-    // Validate casterType
-    if (spell.casterType && !['mage', 'priest'].includes(spell.casterType)) {
-      errors.push(`${filePath}: Invalid casterType '${spell.casterType}' (must be 'mage' or 'priest')`);
-    }
-
-    // Validate level range
-    if (spell.level && (spell.level < 1 || spell.level > 7)) {
-      errors.push(`${filePath}: Invalid level ${spell.level} (must be 1-7)`);
-    }
-
-    // Validate category-specific fields
-    if (spell.category === 'offensive' && !spell.damage && !spell.effect) {
-      errors.push(`${filePath}: Offensive spell missing 'damage' or 'effect' field`);
-    }
-    if (spell.category === 'healing' && !spell.healing) {
-      errors.push(`${filePath}: Healing spell missing 'healing' field`);
-    }
-
-    return { spell, errors };
+    return { spells, errors: allErrors };
   } catch (e) {
-    errors.push(`${filePath}: Failed to parse JSON - ${e.message}`);
-    return { spell: null, errors };
+    allErrors.push(`${filePath}: Failed to parse JSON - ${e.message}`);
+    return { spells: [], errors: allErrors };
   }
 }
 
@@ -96,13 +157,14 @@ function validateAllSpells() {
   // Validate each spell file
   for (const file of files) {
     const filePath = join(spellsDir, file);
-    const { spell, errors } = validateSpellFile(filePath);
+    const { spells, errors } = validateSpellFile(filePath);
 
     if (errors.length > 0) {
       result.errors.push(...errors);
     }
 
-    if (spell) {
+    // A file can contain multiple spells (consolidated format)
+    for (const spell of spells) {
       result.spells.push(spell);
       result.totalSpells++;
 
