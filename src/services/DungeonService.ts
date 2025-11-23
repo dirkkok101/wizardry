@@ -1,5 +1,5 @@
 import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls } from '../types/Dungeon'
-import { LevelFileSchema, ValidatedLevelDataSchema } from '../schemas/dungeon-schemas'
+import { ValidatedLevelDataSchema } from '../schemas/dungeon-schemas'
 import { ZodError } from 'zod'
 
 // Import JSON data
@@ -30,41 +30,21 @@ export const DungeonService = {
     }
 
     try {
-      // Validate the entire file structure
-      const fileValidation = LevelFileSchema.safeParse(rawData)
-      if (!fileValidation.success) {
-        throw new Error(`Invalid level file structure for level ${level}: ${this.formatZodError(fileValidation.error)}`)
-      }
-
       // Parse JSON structure (levels[0] contains the level)
-      const levelData = fileValidation.data.levels[0]
+      const levelData = rawData.levels[0]
 
-      // Validate the level data with business logic rules
+      // Validate with all business logic rules (includes direction transform)
       const levelValidation = ValidatedLevelDataSchema.safeParse(levelData)
       if (!levelValidation.success) {
         throw new Error(`Invalid level data for level ${level}: ${this.formatZodError(levelValidation.error)}`)
       }
 
-      // Convert to LevelData with uppercase Direction
-      return {
-        level: levelValidation.data.level,
-        name: levelValidation.data.name,
-        size: levelValidation.data.size,
-        startPosition: {
-          x: levelValidation.data.startPosition.x,
-          y: levelValidation.data.startPosition.y,
-          facing: levelValidation.data.startPosition.facing.toUpperCase() as Direction
-        },
-        edgeWrapping: levelValidation.data.edgeWrapping,
-        tiles: levelValidation.data.tiles,
-        encounterRate: levelValidation.data.encounterRate,
-        encounterTable: levelValidation.data.encounterTable
-      }
+      // Schema validates structure and transforms lowercase direction to uppercase
+      return levelValidation.data as LevelData
     } catch (error) {
-      if (error instanceof Error) {
-        throw error
-      }
-      throw new Error(`Unexpected error loading level ${level}: ${String(error)}`)
+      throw new Error(
+        `Failed to load level ${level}: ${error instanceof Error ? error.message : String(error)}`
+      )
     }
   },
 
@@ -160,28 +140,6 @@ export const DungeonService = {
     }
 
     return { allowed: true }
-  },
-
-  /**
-   * Validate that all stairs walls have destination data
-   * Returns array of error messages (empty if valid)
-   */
-  validateStairsWalls(level: LevelData): string[] {
-    const errors: string[] = []
-
-    for (const tile of level.tiles) {
-      // Check if any wall on this tile is a stairs type
-      const hasStairsWall = Object.values(tile.walls).some(
-        wallType => wallType === 'stairs_up' || wallType === 'stairs_down'
-      )
-
-      // If has stairs wall but no destination, that's an error
-      if (hasStairsWall && !tile.destination) {
-        errors.push(`Tile (${tile.x}, ${tile.y}) has stairs wall but no destination`)
-      }
-    }
-
-    return errors
   },
 
   /**

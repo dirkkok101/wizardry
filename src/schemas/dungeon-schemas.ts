@@ -6,7 +6,8 @@ import { z } from 'zod';
  */
 
 // Basic enums
-export const DirectionSchema = z.enum(['north', 'south', 'east', 'west']);
+export const DirectionSchema = z.enum(['north', 'south', 'east', 'west'])
+  .transform((val) => val.toUpperCase() as 'NORTH' | 'SOUTH' | 'EAST' | 'WEST');
 
 export const WallTypeSchema = z.enum([
   'open',
