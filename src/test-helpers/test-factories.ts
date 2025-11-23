@@ -128,7 +128,11 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
 }
 
 /**
- * Test factory: Create a test monster instance
+ * Test factory: Create a test monster instance (synchronous, for simple tests)
+ *
+ * WARNING: This creates a hardcoded kobold monster for testing purposes only.
+ * For realistic monster data, use createMonsterFromTemplate() or MonsterService directly.
+ *
  * @param overrides - Partial monster properties to override defaults
  */
 export function createTestMonster(overrides: Partial<MonsterInstance> = {}): MonsterInstance {
@@ -144,8 +148,34 @@ export function createTestMonster(overrides: Partial<MonsterInstance> = {}): Mon
     status: 'ALIVE',
     level: 1,
     agility: 10,
+    undead: false,
     ...overrides
   }
+}
+
+/**
+ * Test factory: Create monster instance from MonsterService (async, uses real data)
+ *
+ * This loads and validates actual monster data from JSON files.
+ * Use this for integration tests that need realistic monster behavior.
+ *
+ * @param monsterId - Monster ID (e.g., 'kobold', 'werdna', 'greater_demon')
+ * @returns Promise of MonsterInstance with validated data
+ */
+export async function createMonsterFromTemplate(monsterId: string): Promise<MonsterInstance> {
+  return await MonsterService.createMonsterInstance(monsterId)
+}
+
+/**
+ * Test factory: Create monster group from MonsterService (async, uses real data)
+ *
+ * Creates a group of monsters with randomized count based on template.
+ *
+ * @param monsterId - Monster ID
+ * @returns Promise of MonsterInstance array
+ */
+export async function createMonsterGroup(monsterId: string): Promise<MonsterInstance[]> {
+  return await MonsterService.generateMonsterGroup(monsterId)
 }
 
 /**
