@@ -91,8 +91,9 @@ function validateSpellFile(filePath: string): { spell: SpellData | null; errors:
     }
 
     // Validate category-specific fields
-    if (spell.category === 'offensive' && !spell.damage) {
-      errors.push(`${filePath}: Offensive spell missing 'damage' field`);
+    // Offensive spells need either 'damage' OR 'effect' (instant death, petrification use 'effect')
+    if (spell.category === 'offensive' && !spell.damage && !spell.effect) {
+      errors.push(`${filePath}: Offensive spell missing 'damage' or 'effect' field`);
     }
     if (spell.category === 'healing' && !spell.healing) {
       errors.push(`${filePath}: Healing spell missing 'healing' field`);
