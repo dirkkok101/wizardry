@@ -15,8 +15,9 @@ describe('Combat E2E Flow', () => {
     // 2. Verify initial state
     expect(state.roundNumber).toBe(1)
     expect(state.canFlee).toBe(true)
-    expect(state.monsters.length).toBeGreaterThanOrEqual(3)
-    expect(state.monsters.length).toBeLessThanOrEqual(8)
+    const initialMonsters = CombatService.getAllMonsters(state)
+    expect(initialMonsters.length).toBeGreaterThanOrEqual(3)
+    expect(initialMonsters.length).toBeLessThanOrEqual(8)
 
     // 3. Simulate multiple rounds until victory
     let currentState = state
@@ -25,7 +26,7 @@ describe('Combat E2E Flow', () => {
 
     while (roundCount < maxRounds) {
       // Get alive monsters
-      const aliveMonsters = currentState.monsters.filter(m => m.status !== 'DEAD' && m.hp > 0)
+      const aliveMonsters = CombatService.getAllAliveMonsters(currentState)
 
       if (aliveMonsters.length === 0) {
         // Victory!
@@ -44,12 +45,13 @@ describe('Combat E2E Flow', () => {
 
       // Execute round
       currentState.commandQueue = [...partyCommands, ...monsterCommands]
-      const result = CombatService.executeRound(currentState)
+      const result = CombatService.executeRound(currentState, party)
       currentState = result.newState
 
       // Check for victory
       if (result.victory) {
-        expect(currentState.monsters.every(m => m.status === 'DEAD')).toBe(true)
+        const allMonsters = CombatService.getAllMonsters(currentState)
+        expect(allMonsters.every(m => m.status === 'DEAD')).toBe(true)
         expect(result.messages.length).toBeGreaterThan(0)
         return
       }
@@ -73,9 +75,12 @@ describe('Combat E2E Flow', () => {
     expect(state.canFlee).toBe(false)
 
     // Simulate instant victory by setting all monsters to dead
-    const deadMonsters = state.monsters.map(m => ({ ...m, hp: 0, status: 'DEAD' as const }))
-    const victoryState = { ...state, monsters: deadMonsters, commandQueue: [] }
-    const result = CombatService.executeRound(victoryState)
+    const deadMonsterGroups = state.monsterGroups.map(group => ({
+      ...group,
+      monsters: group.monsters.map(m => ({ ...m, hp: 0, status: 'DEAD' as const }))
+    }))
+    const victoryState = { ...state, monsterGroups: deadMonsterGroups, commandQueue: [] }
+    const result = CombatService.executeRound(victoryState, party)
 
     expect(result.victory).toBe(true)
     expect(result.defeat).toBe(false)

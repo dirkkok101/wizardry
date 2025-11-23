@@ -1,13 +1,20 @@
 // Test for executeRound
 import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '../../test-helpers/test-factories'
+import { MonsterGroup } from '../../types/Combat'
 
 describe('CombatService.executeRound', () => {
   it('executes commands in initiative order', () => {
-    const char1 = createTestCharacter({ id: 'c1', name: 'Fighter' })
-    const char2 = createTestCharacter({ id: 'c2', name: 'Mage' })
+    const char1 = createTestCharacter({ id: 'c1', name: 'Fighter', hp: 100 })
+    const char2 = createTestCharacter({ id: 'c2', name: 'Mage', hp: 100 })
     const monster = createTestMonster({ name: 'Kobold', hp: 100 }) // High HP so doesn't die
-    const state = createTestCombatState({ monsters: [monster] })
+
+    const monsterGroups: MonsterGroup[] = [{
+      id: 'A',
+      monsters: [monster],
+      formation: 'front'
+    }]
+    const state = createTestCombatState({ monsterGroups })
 
     const cmd1 = CombatService.createCommand(char1, 'ATTACK', monster)
     cmd1.initiative = 5
@@ -18,7 +25,8 @@ describe('CombatService.executeRound', () => {
 
     state.commandQueue = [cmd1, cmd2, cmd3]
 
-    const result = CombatService.executeRound(state)
+    const party = [char1, char2]
+    const result = CombatService.executeRound(state, party)
 
     // Should execute in order: cmd2 (10), cmd3 (7), cmd1 (5)
     expect(result.messages).toHaveLength(3)
@@ -28,9 +36,15 @@ describe('CombatService.executeRound', () => {
   })
 
   it('detects victory when all monsters dead', () => {
-    const char = createTestCharacter()
+    const char = createTestCharacter({ hp: 100 })
     const monster = createTestMonster({ hp: 1 })
-    const state = createTestCombatState({ monsters: [monster] })
+
+    const monsterGroups: MonsterGroup[] = [{
+      id: 'A',
+      monsters: [monster],
+      formation: 'front'
+    }]
+    const state = createTestCombatState({ monsterGroups })
 
     jest.spyOn(CombatService, 'resolveAttack').mockReturnValue({
       hit: true,
@@ -42,7 +56,8 @@ describe('CombatService.executeRound', () => {
     const cmd = CombatService.createCommand(char, 'ATTACK', monster)
     state.commandQueue = [cmd]
 
-    const result = CombatService.executeRound(state)
+    const party = [char]
+    const result = CombatService.executeRound(state, party)
 
     expect(result.victory).toBe(true)
     expect(result.defeat).toBe(false)
@@ -52,8 +67,9 @@ describe('CombatService.executeRound', () => {
 
   it('increments round number', () => {
     const state = createTestCombatState({ roundNumber: 3, commandQueue: [] })
+    const party = [createTestCharacter()]
 
-    const result = CombatService.executeRound(state)
+    const result = CombatService.executeRound(state, party)
 
     expect(result.newState.roundNumber).toBe(4)
   })

@@ -1097,7 +1097,8 @@ describe('MazeComponent - Combat Integration', () => {
 
     const combat = gameState.state().combat;
     expect(combat).toBeDefined();
-    expect(combat?.monsters.length).toBeGreaterThan(0);
+    const monsters = combat ? CombatService.getAllMonsters(combat) : [];
+    expect(monsters.length).toBeGreaterThan(0);
     expect(combat?.roundNumber).toBe(1);
     expect(combat?.canFlee).toBe(true);
   });

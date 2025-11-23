@@ -70,7 +70,11 @@ describe('Combat Flow E2E', () => {
             gold: 100
           },
           combat: {
-            monsters: [weakMonster],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [weakMonster],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: ['Combat begins!'],
@@ -167,7 +171,11 @@ describe('Combat Flow E2E', () => {
             gold: 0
           },
           combat: {
-            monsters: [monster1, monster2],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [monster1, monster2],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: ['Combat begins!'],
@@ -232,7 +240,11 @@ describe('Combat Flow E2E', () => {
             gold: 0
           },
           combat: {
-            monsters: [strongMonster],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [strongMonster],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
@@ -279,7 +291,11 @@ describe('Combat Flow E2E', () => {
             gold: 0
           },
           combat: {
-            monsters: [monster],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [monster],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
@@ -316,7 +332,11 @@ describe('Combat Flow E2E', () => {
             gold: 0
           },
           combat: {
-            monsters: [monster],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [monster],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
@@ -356,7 +376,11 @@ describe('Combat Flow E2E', () => {
             gold: 0
           },
           combat: {
-            monsters: [monster],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [monster],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
@@ -395,7 +419,11 @@ describe('Combat Flow E2E', () => {
             gold: 0
           },
           combat: {
-            monsters: [monster],
+            monsterGroups: [{
+              id: 'A',
+              monsters: [monster],
+              formation: 'front'
+            }],
             commandQueue: [],
             roundNumber: 1,
             combatLog: ['Combat begins!'],

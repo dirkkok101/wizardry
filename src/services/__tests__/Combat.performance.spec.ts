@@ -6,10 +6,10 @@ import { createTestCharacter } from '../../test-helpers/test-factories'
 describe('Combat Performance', () => {
   it('executes combat round in <100ms', () => {
     const party = Array.from({ length: 6 }, (_, i) =>
-      createTestCharacter({ id: `char${i}`, name: `Hero${i}` })
+      createTestCharacter({ id: `char${i}`, name: `Hero${i}`, hp: 100 })
     )
-    const monsters = MonsterService.generateMonsterGroup('kobold')
     const state = CombatService.initiateCombat('kobold', party, true)
+    const monsters = CombatService.getAllMonsters(state)
 
     // Create commands
     const partyCommands = party.map(c => CombatService.createCommand(c, 'ATTACK', monsters[0]))
@@ -21,7 +21,7 @@ describe('Combat Performance', () => {
 
     // Measure execution time
     const start = performance.now()
-    CombatService.executeRound(state)
+    CombatService.executeRound(state, party)
     const duration = performance.now() - start
 
     expect(duration).toBeLessThan(100)  // <100ms per round

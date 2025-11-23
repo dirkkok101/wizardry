@@ -166,17 +166,20 @@ describe('CombatComponent', () => {
       // Setup victory scenario - all monsters dead
       gameState.updateState(state => {
         const combat = state.combat!
-        const deadMonsters = combat.monsters.map(m => ({
-          ...m,
-          hp: 0,
-          status: 'DEAD' as const
+        const deadMonsterGroups = combat.monsterGroups.map(group => ({
+          ...group,
+          monsters: group.monsters.map(m => ({
+            ...m,
+            hp: 0,
+            status: 'DEAD' as const
+          }))
         }))
 
         return {
           ...state,
           combat: {
             ...combat,
-            monsters: deadMonsters
+            monsterGroups: deadMonsterGroups
           }
         }
       })
