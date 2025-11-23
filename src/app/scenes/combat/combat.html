@@ -1,12 +1,12 @@
 <!-- src/app/scenes/combat/combat.html -->
 <div class="combat-scene">
   @if (combatState(); as combat) {
-    <div class="combat-header">
-      <h2>COMBAT - ROUND {{ roundNumber() }}</h2>
+    <!-- Header -->
+    <app-scene-title [title]="'COMBAT - ROUND ' + roundNumber()">
       @if (!combat.canFlee) {
         <div class="fixed-encounter-badge">FIXED ENCOUNTER - CANNOT FLEE</div>
       }
-    </div>
+    </app-scene-title>
 
     <div class="combat-grid">
       <!-- Monsters Panel -->
@@ -78,29 +78,10 @@
       </div>
     </div>
 
-    <!-- Action Selection Panel (shown for active character) -->
+    <!-- Action Selection Status (shown for active character) -->
     @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showTargetSelection()) {
-      <div class="action-panel">
-        <h3>{{ activeCharacter()!.name }} - SELECT ACTION</h3>
-        <div class="action-buttons">
-          <button class="action-btn attack-btn" (click)="selectActionType('ATTACK')">
-            (A)TTACK
-          </button>
-          <button class="action-btn cast-btn" (click)="selectActionType('CAST_SPELL')"
-                  [disabled]="availableSpells().length === 0">
-            (C)AST SPELL
-          </button>
-          <button class="action-btn parry-btn" (click)="selectActionType('PARRY')">
-            (P)ARRY
-          </button>
-          <button class="action-btn flee-btn" (click)="selectActionType('RUN')"
-                  [disabled]="!combat.canFlee">
-            (F)LEE
-          </button>
-        </div>
-        @if (availableSpells().length === 0) {
-          <div class="no-spells-msg">No spells available</div>
-        }
+      <div class="action-status">
+        <p>{{ activeCharacter()!.name }} - SELECT ACTION</p>
       </div>
     }
 
@@ -149,21 +130,22 @@
       </div>
     </div>
 
-    <!-- Action Bar -->
-    <div class="combat-actions">
-      <button
-        class="execute-round-btn"
-        [disabled]="!allActionsSelected() || isExecutingRound()"
-        (click)="executeRound()">
-        @if (isExecutingRound()) {
-          Executing Round...
-        } @else if (allActionsSelected()) {
-          (Enter) Execute Round {{ roundNumber() }}
-        } @else {
-          Selecting Actions... ({{ selectedActions().size }}/{{ alivePartyMembers().length }})
-        }
-      </button>
-    </div>
+    <!-- Footer with action menu -->
+    @if (!showSpellMenu() && !showTargetSelection() && !showVictoryModal() && !showDefeatModal()) {
+      @if (allActionsSelected()) {
+        <!-- Show execute round menu -->
+        <app-scene-footer
+          [menuItems]="roundMenuItems()"
+          (itemSelected)="handleActionSelection($event)"
+        />
+      } @else if (activeCharacter()) {
+        <!-- Show action selection menu -->
+        <app-scene-footer
+          [menuItems]="actionMenuItems()"
+          (itemSelected)="handleActionSelection($event)"
+        />
+      }
+    }
 
     <!-- Victory Modal -->
     @if (showVictoryModal()) {
@@ -214,9 +196,11 @@
               }
             </div>
           }
-          <button class="return-btn" (click)="returnToMaze()">
-            (Enter) Return to Maze
-          </button>
+          <!-- Victory footer menu -->
+          <app-scene-footer
+            [menuItems]="victoryMenuItems()"
+            (itemSelected)="handleActionSelection($event)"
+          />
         </div>
       </div>
     }
@@ -230,9 +214,11 @@
             Your party has been defeated!<br>
             You awaken at the Temple of Cant...
           </p>
-          <button class="temple-btn" (click)="returnToTemple()">
-            (Enter) Go to Temple
-          </button>
+          <!-- Defeat footer menu -->
+          <app-scene-footer
+            [menuItems]="defeatMenuItems()"
+            (itemSelected)="handleActionSelection($event)"
+          />
         </div>
       </div>
     }

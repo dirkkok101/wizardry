@@ -381,8 +381,8 @@ describe('CombatComponent', () => {
     })
   })
 
-  describe('Keyboard Shortcuts', () => {
-    it('executes round on Enter key when all actions selected', () => {
+  describe('Footer Menu Actions', () => {
+    it('executes round when execute action selected', () => {
       // Select all actions using new flow
       const chars = component.partyCharacters()
       const monster = component.monsters()[0]
@@ -393,35 +393,31 @@ describe('CombatComponent', () => {
 
       const executeRoundSpy = jest.spyOn(component, 'executeRound')
 
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyPress(event)
+      component.handleActionSelection('execute')
 
       expect(executeRoundSpy).toHaveBeenCalled()
     })
 
-    it('does not execute round on Enter when actions not selected', () => {
-      const executeRoundSpy = jest.spyOn(component, 'executeRound')
+    it('handles action menu selection for attack', () => {
+      const selectActionTypeSpy = jest.spyOn(component, 'selectActionType')
 
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyPress(event)
+      component.handleActionSelection('attack')
 
-      expect(executeRoundSpy).not.toHaveBeenCalled()
+      expect(selectActionTypeSpy).toHaveBeenCalledWith('ATTACK')
     })
 
-    it('returns to maze on Enter in victory modal', () => {
+    it('returns to maze when return action selected', () => {
       component.showVictoryModal.set(true)
 
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyPress(event)
+      component.handleActionSelection('return')
 
       expect(router.navigate).toHaveBeenCalledWith(['/maze'])
     })
 
-    it('returns to temple on Enter in defeat modal', () => {
+    it('returns to temple when temple action selected', () => {
       component.showDefeatModal.set(true)
 
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyPress(event)
+      component.handleActionSelection('temple')
 
       expect(router.navigate).toHaveBeenCalledWith(['/temple'])
     })

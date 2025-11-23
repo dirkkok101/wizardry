@@ -1,5 +1,5 @@
 // src/app/scenes/combat/combat.ts
-import { Component, computed, signal, OnInit, HostListener } from '@angular/core'
+import { Component, computed, signal, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../../services/GameStateService'
@@ -9,6 +9,9 @@ import { VictoryService, VictoryRewards } from '../../../services/VictoryService
 import { SceneType } from '../../../types/SceneType'
 import { CombatState, CombatCommand, Combatant, CombatActionType } from '../../../types/Combat'
 import { Character } from '../../../types/Character'
+import { MenuItem } from '../../../components/menu/menu.component'
+import { SceneTitleComponent } from '../../../components/scene-title/scene-title.component'
+import { SceneFooterComponent } from '../../../components/scene-footer/scene-footer.component'
 
 interface SelectedAction {
   characterId: string
@@ -18,7 +21,11 @@ interface SelectedAction {
 @Component({
   selector: 'app-combat',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    SceneFooterComponent
+  ],
   templateUrl: './combat.html',
   styleUrls: ['./combat.scss']
 })
@@ -129,6 +136,42 @@ export class CombatComponent implements OnInit {
     return spells
   })
 
+  // Action menu items for current active character
+  readonly actionMenuItems = computed((): MenuItem[] => {
+    const char = this.activeCharacter()
+    if (!char) return []
+
+    const combat = this.combatState()
+    const hasSpells = this.availableSpells().length > 0
+
+    return [
+      { id: 'attack', label: 'Attack', shortcut: 'A', enabled: true },
+      { id: 'cast', label: 'Cast Spell', shortcut: 'C', enabled: hasSpells },
+      { id: 'parry', label: 'Parry', shortcut: 'P', enabled: true },
+      { id: 'flee', label: 'Flee', shortcut: 'F', enabled: combat?.canFlee ?? false }
+    ]
+  })
+
+  // Round execution menu
+  readonly roundMenuItems = computed((): MenuItem[] => [
+    {
+      id: 'execute',
+      label: `Execute Round ${this.roundNumber()}`,
+      shortcut: 'ENTER',
+      enabled: this.allActionsSelected() && !this.isExecutingRound()
+    }
+  ])
+
+  // Victory modal menu
+  readonly victoryMenuItems = computed((): MenuItem[] => [
+    { id: 'return', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
+  ])
+
+  // Defeat modal menu
+  readonly defeatMenuItems = computed((): MenuItem[] => [
+    { id: 'temple', label: 'Go to Temple', shortcut: 'ENTER', enabled: true }
+  ])
+
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -139,6 +182,30 @@ export class CombatComponent implements OnInit {
       ...state,
       currentScene: SceneType.COMBAT
     }))
+  }
+
+  /**
+   * Handle action menu selection (new footer menu pattern)
+   */
+  handleActionSelection(itemId: string): void {
+    if (itemId === 'execute') {
+      this.executeRound()
+      return
+    }
+
+    if (itemId === 'return') {
+      this.returnToMaze()
+      return
+    }
+
+    if (itemId === 'temple') {
+      this.returnToTemple()
+      return
+    }
+
+    // Handle combat actions (attack, cast, parry, flee)
+    const actionType = itemId.toUpperCase() as CombatActionType
+    this.selectActionType(actionType)
   }
 
   selectActionType(actionType: CombatActionType): void {
@@ -407,29 +474,5 @@ export class CombatComponent implements OnInit {
     this.router.navigate(['/temple'])
   }
 
-  @HostListener('window:keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    const key = event.key.toLowerCase()
-
-    // Victory modal - Enter to return
-    if (this.showVictoryModal() && key === 'enter') {
-      this.returnToMaze()
-      event.preventDefault()
-      return
-    }
-
-    // Defeat modal - Enter to go to temple
-    if (this.showDefeatModal() && key === 'enter') {
-      this.returnToTemple()
-      event.preventDefault()
-      return
-    }
-
-    // Execute round - Enter when all actions selected
-    if (key === 'enter' && this.allActionsSelected() && !this.isExecutingRound()) {
-      this.executeRound()
-      event.preventDefault()
-      return
-    }
-  }
+  // Keyboard handling now delegated to MenuComponent via SceneFooterComponent
 }
