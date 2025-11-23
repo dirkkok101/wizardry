@@ -2,9 +2,11 @@
   "id": "mahaman",
   "name": "MAHAMAN",
   "level": 6,
-  "type": "utility",
+  "casterType": "mage",
+  "category": "utility",
   "target": "all_enemies",
-  "effect": "transform",
   "description": "Transforms all monster groups",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

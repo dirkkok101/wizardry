@@ -2,10 +2,15 @@
   "id": "halito",
   "name": "HALITO",
   "level": 1,
-  "type": "offensive",
-  "target": "enemy_group",
-  "damage": "1d8",
-  "damageType": "fire",
+  "casterType": "mage",
+  "category": "offensive",
+  "target": "group",
   "description": "1d8 fire damage to enemy group",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "1d8",
+    "type": "fire"
+  }
 }

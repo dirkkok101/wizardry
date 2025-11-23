@@ -2,10 +2,15 @@
   "id": "dalto_priest",
   "name": "DALTO",
   "level": 4,
-  "type": "offensive",
-  "target": "enemy_group",
-  "damage": "6d6",
-  "damageType": "cold",
+  "casterType": "priest",
+  "category": "offensive",
+  "target": "group",
   "description": "6d6 cold damage",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "6d6",
+    "type": "cold"
+  }
 }

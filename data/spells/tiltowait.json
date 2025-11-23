@@ -1,11 +1,16 @@
 {
   "id": "tiltowait",
   "name": "TILTOWAIT",
-  "level": 6,
-  "type": "offensive",
+  "level": 7,
+  "casterType": "mage",
+  "category": "offensive",
   "target": "all_enemies",
-  "damage": "massive",
-  "damageType": "magic",
   "description": "Massive damage to all groups",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "10d10",
+    "type": "fire"
+  }
 }

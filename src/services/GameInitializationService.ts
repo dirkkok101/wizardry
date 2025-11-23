@@ -9,6 +9,7 @@ import { RaceService } from './RaceService'
 import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
+import { SpellDataLoader } from './SpellDataLoader'
 
 let gameState: GameState | null = null
 
@@ -64,6 +65,24 @@ function createNewGame(): GameState {
  */
 async function initializeGame(): Promise<void> {
   console.log('Initializing game data...')
+
+  // Load spells first (required for character creation, combat, etc.)
+  console.log('Loading spells...')
+  await SpellDataLoader.loadAllSpells()
+
+  // Report spell loading statistics
+  const spellCount = SpellDataLoader.getLoadedCount()
+  const failedSpells = SpellDataLoader.getFailedSpells()
+  const totalSpells = SpellDataLoader.getTotalCount()
+
+  if (failedSpells.size > 0) {
+    console.warn(`Loaded ${spellCount}/${totalSpells} spells (${failedSpells.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed spells:', Array.from(failedSpells.entries()))
+    }
+  } else {
+    console.log(`Loaded ${spellCount} spells successfully`)
+  }
 
   // Initialize data services in parallel
   await Promise.all([

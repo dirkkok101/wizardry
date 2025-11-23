@@ -2,10 +2,12 @@
   "id": "maporfic",
   "name": "MAPORFIC",
   "level": 4,
-  "type": "buff",
+  "casterType": "priest",
+  "category": "buff",
   "target": "party",
-  "effect": "ac_bonus",
-  "acBonus": -4,
   "description": "-4 AC to entire party",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "acBonus": -4
 }

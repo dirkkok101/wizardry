@@ -2,9 +2,11 @@
   "id": "kandi",
   "name": "KANDI",
   "level": 4,
-  "type": "utility",
+  "casterType": "priest",
+  "category": "utility",
   "target": "dead_body",
-  "effect": "locate_person",
   "description": "Find specific character in dungeon",
-  "castableIn": ["dungeon"]
+  "castableIn": [
+    "dungeon"
+  ]
 }

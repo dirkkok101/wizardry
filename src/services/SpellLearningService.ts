@@ -1,5 +1,6 @@
 import { Character } from '../types/Character'
 import { CharacterClass } from '../types/CharacterClass'
+import { SpellDataLoader } from './SpellDataLoader'
 
 interface Spell {
   id: string
@@ -33,26 +34,6 @@ const PRIEST_SPELL_LEVEL_REQUIREMENTS: Record<number, number> = {
   6: 11,  // Level 11 = Spell Level 6
   7: 13   // Level 13 = Spell Level 7
 }
-
-// Sample spell data (in real implementation, load from data/spells/)
-const MAGE_SPELLS: Spell[] = [
-  { id: 'HALITO', name: 'Halito', level: 1, type: 'MAGE' },
-  { id: 'MOGREF', name: 'Mogref', level: 1, type: 'MAGE' },
-  { id: 'KATINO', name: 'Katino', level: 1, type: 'MAGE' },
-  { id: 'DUMAPIC', name: 'Dumapic', level: 1, type: 'MAGE' },
-  { id: 'DILTO', name: 'Dilto', level: 2, type: 'MAGE' },
-  { id: 'SOPIC', name: 'Sopic', level: 2, type: 'MAGE' },
-  { id: 'MAKANITO', name: 'Makanito', level: 2, type: 'MAGE' }
-]
-
-const PRIEST_SPELLS: Spell[] = [
-  { id: 'DIOS', name: 'Dios', level: 1, type: 'PRIEST' },
-  { id: 'BADIOS', name: 'Badios', level: 1, type: 'PRIEST' },
-  { id: 'MILWA', name: 'Milwa', level: 1, type: 'PRIEST' },
-  { id: 'PORFIC', name: 'Porfic', level: 1, type: 'PRIEST' },
-  { id: 'MATU', name: 'Matu', level: 2, type: 'PRIEST' },
-  { id: 'CALFO', name: 'Calfo', level: 2, type: 'PRIEST' }
-]
 
 export class SpellLearningService {
   /**
@@ -125,9 +106,21 @@ export class SpellLearningService {
       return { updatedCharacter: character, newSpells: [] }
     }
 
-    // Get spells for this level
-    const spellPool = isMagic ? MAGE_SPELLS : PRIEST_SPELLS
-    const availableSpells = spellPool.filter(s => s.level === unlockedSpellLevel)
+    // Get spells for this level from loaded data
+    const allSpells = SpellDataLoader.getAllSpells()
+    const casterType = isMagic ? 'mage' : 'priest'
+
+    const availableSpells: Spell[] = []
+    for (const spell of allSpells.values()) {
+      if (spell.casterType === casterType && spell.level === unlockedSpellLevel) {
+        availableSpells.push({
+          id: spell.id,
+          name: spell.name,
+          level: spell.level,
+          type: casterType === 'mage' ? 'MAGE' : 'PRIEST'
+        })
+      }
+    }
 
     if (availableSpells.length === 0) {
       return { updatedCharacter: character, newSpells: [] }

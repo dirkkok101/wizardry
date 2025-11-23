@@ -2,9 +2,11 @@
   "id": "haman",
   "name": "HAMAN",
   "level": 6,
-  "type": "utility",
-  "target": "enemy_group",
-  "effect": "transform",
+  "casterType": "mage",
+  "category": "utility",
+  "target": "group",
   "description": "Transforms monsters",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

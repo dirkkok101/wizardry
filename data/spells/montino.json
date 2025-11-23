@@ -2,9 +2,11 @@
   "id": "montino",
   "name": "MONTINO",
   "level": 2,
-  "type": "debuff",
-  "target": "enemy_group",
-  "effect": "silence",
+  "casterType": "priest",
+  "category": "debuff",
+  "target": "group",
   "description": "Silence enemy group",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

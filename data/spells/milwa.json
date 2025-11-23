@@ -2,9 +2,11 @@
   "id": "milwa",
   "name": "MILWA",
   "level": 1,
-  "type": "utility",
+  "casterType": "priest",
+  "category": "utility",
   "target": "party",
-  "effect": "light",
   "description": "Illuminates dungeon",
-  "castableIn": ["dungeon"]
+  "castableIn": [
+    "dungeon"
+  ]
 }

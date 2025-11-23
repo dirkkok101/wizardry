@@ -2,9 +2,11 @@
   "id": "latumapic",
   "name": "LATUMAPIC",
   "level": 3,
-  "type": "utility",
-  "target": "enemy_group",
-  "effect": "identify_foe",
+  "casterType": "priest",
+  "category": "utility",
+  "target": "group",
   "description": "Shows enemy stats and abilities",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

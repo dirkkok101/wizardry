@@ -2,10 +2,15 @@
   "id": "mahalito",
   "name": "MAHALITO",
   "level": 3,
-  "type": "offensive",
-  "target": "enemy_group",
-  "damage": "4d6",
-  "damageType": "fire",
+  "casterType": "mage",
+  "category": "offensive",
+  "target": "group",
   "description": "4d6 fire damage",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "4d6",
+    "type": "fire"
+  }
 }

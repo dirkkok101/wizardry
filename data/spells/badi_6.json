@@ -2,9 +2,11 @@
   "id": "badi_6",
   "name": "BADI",
   "level": 6,
-  "type": "offensive",
-  "target": "enemy_group",
-  "effect": "instant_death",
+  "casterType": "priest",
+  "category": "offensive",
+  "target": "group",
   "description": "Greater instant death",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

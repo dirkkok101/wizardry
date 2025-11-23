@@ -2,10 +2,12 @@
   "id": "kalki",
   "name": "KALKI",
   "level": 1,
-  "type": "buff",
+  "casterType": "priest",
+  "category": "buff",
   "target": "party",
-  "effect": "ac_bonus",
-  "acBonus": -1,
   "description": "-1 AC to entire party",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "acBonus": -1
 }

@@ -2,9 +2,11 @@
   "id": "sopic",
   "name": "SOPIC",
   "level": 2,
-  "type": "buff",
-  "target": "single_ally",
-  "effect": "invisible",
+  "casterType": "mage",
+  "category": "buff",
+  "target": "single",
   "description": "Makes ally invisible",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

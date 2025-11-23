@@ -2,9 +2,11 @@
   "id": "mabadi",
   "name": "MABADI",
   "level": 5,
-  "type": "offensive",
+  "casterType": "priest",
+  "category": "offensive",
   "target": "all_enemies",
-  "effect": "instant_death",
   "description": "Instant death to all enemy groups",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }
