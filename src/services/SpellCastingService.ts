@@ -3,17 +3,23 @@ import { Character } from '../types/Character'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SpellEffect, Combatant } from '../types/Combat'
 
+// Spell targeting types
+export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self'
+
 // Simplified spell data for now
 interface SpellData {
   id: string
   name: string
   level: number
   type: 'mage' | 'priest'
+  target: SpellTarget      // How the spell targets combatants
   damageType?: string
   damageDice?: string
+  undeadOnly?: boolean     // If true, only damages undead (BADIOS, etc.)
   statusEffect?: 'BLIND' | 'SILENCED' | 'ASLEEP'  // Status effect applied to target group
   healingDice?: string     // Healing amount (e.g., "1d8", "2d8")
   acModifier?: number      // AC buff modifier (negative = better AC, e.g., -2 for MOGREF)
+  utility?: 'reveal_stats' | 'identify_foe'  // Utility effects
 }
 
 const SPELL_CACHE = new Map<string, SpellData>()
@@ -24,6 +30,7 @@ SPELL_CACHE.set('halito', {
   name: 'HALITO',
   level: 1,
   type: 'mage',
+  target: 'group',
   damageType: 'fire',
   damageDice: '1d8'
 })
@@ -33,6 +40,7 @@ SPELL_CACHE.set('katino', {
   name: 'KATINO',
   level: 1,
   type: 'mage',
+  target: 'group',
   statusEffect: 'ASLEEP'
 })
 
@@ -42,6 +50,7 @@ SPELL_CACHE.set('dilto', {
   name: 'DILTO',
   level: 2,
   type: 'mage',
+  target: 'group',
   statusEffect: 'BLIND'
 })
 
@@ -50,7 +59,29 @@ SPELL_CACHE.set('mogref', {
   name: 'MOGREF',
   level: 2,
   type: 'mage',
+  target: 'all_allies',
   acModifier: -2  // Improves AC by 2
+})
+
+// Mage Level 3 Spells
+SPELL_CACHE.set('mahalito', {
+  id: 'mahalito',
+  name: 'MAHALITO',
+  level: 3,
+  type: 'mage',
+  target: 'group',
+  damageType: 'fire',
+  damageDice: '4d6'  // 4-24 damage
+})
+
+SPELL_CACHE.set('lahalito', {
+  id: 'lahalito',
+  name: 'LAHALITO',
+  level: 3,
+  type: 'mage',
+  target: 'single',
+  damageType: 'fire',
+  damageDice: '6d6'  // 6-36 damage
 })
 
 // Priest Level 1 Spells
@@ -59,7 +90,28 @@ SPELL_CACHE.set('dios', {
   name: 'DIOS',
   level: 1,
   type: 'priest',
+  target: 'single',
   healingDice: '1d8'
+})
+
+SPELL_CACHE.set('badios', {
+  id: 'badios',
+  name: 'BADIOS',
+  level: 1,
+  type: 'priest',
+  target: 'single',
+  damageType: 'holy',
+  damageDice: '1d8',
+  undeadOnly: true  // Only damages undead
+})
+
+SPELL_CACHE.set('milwa', {
+  id: 'milwa',
+  name: 'MILWA',
+  level: 1,
+  type: 'priest',
+  target: 'group',
+  utility: 'reveal_stats'
 })
 
 // Priest Level 2 Spells
@@ -68,6 +120,7 @@ SPELL_CACHE.set('dial', {
   name: 'DIAL',
   level: 2,
   type: 'priest',
+  target: 'all_allies',
   healingDice: '2d8'
 })
 
@@ -76,7 +129,17 @@ SPELL_CACHE.set('montino', {
   name: 'MONTINO',
   level: 2,
   type: 'priest',
+  target: 'group',
   statusEffect: 'SILENCED'
+})
+
+SPELL_CACHE.set('latumapic', {
+  id: 'latumapic',
+  name: 'LATUMAPIC',
+  level: 2,
+  type: 'priest',
+  target: 'group',
+  utility: 'identify_foe'
 })
 
 // Priest Level 3 Spells
@@ -85,6 +148,7 @@ SPELL_CACHE.set('kalki', {
   name: 'KALKI',
   level: 3,
   type: 'priest',
+  target: 'all_allies',
   acModifier: -1  // Improves AC by 1
 })
 
@@ -165,7 +229,18 @@ export class SpellCastingService {
 
     // Handle offensive spells (damage)
     if (spell.damageType && spell.damageDice) {
-      const damage = targets.map(() => this.rollDice(spell.damageDice!))
+      // For undead-only spells, filter targets to only undead
+      const validTargets = spell.undeadOnly
+        ? targets.filter(t => 'monsterId' in t && t.undead === true)
+        : targets
+
+      if (spell.undeadOnly && validTargets.length === 0) {
+        return {
+          message: `${spell.name} has no effect on living creatures!`
+        }
+      }
+
+      const damage = validTargets.map(() => this.rollDice(spell.damageDice!))
       return {
         damage,
         message: `${spell.name} deals ${damage.join(', ')} damage!`
@@ -217,6 +292,27 @@ export class SpellCastingService {
       return {
         acBuffs,
         message: `${spell.name} strengthens the party's defenses!`
+      }
+    }
+
+    // Handle utility spells
+    if (spell.utility) {
+      const targetIds = targets.map(t => t.id)
+      const revealType = spell.utility === 'reveal_stats' ? 'stats' : 'identity'
+
+      let message = ''
+      if (spell.utility === 'reveal_stats') {
+        message = `${spell.name} reveals the monsters' vital signs!`
+      } else if (spell.utility === 'identify_foe') {
+        message = `${spell.name} identifies the enemy!`
+      }
+
+      return {
+        revealedInfo: {
+          targetIds,
+          type: revealType
+        },
+        message
       }
     }
 

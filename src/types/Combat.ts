@@ -40,6 +40,7 @@ export interface MonsterInstance {
   status: CombatantStatus
   level: number
   agility?: number  // For initiative calculation
+  undead?: boolean  // True if monster is undead (for BADIOS, etc.)
 }
 
 export type Combatant = Character | MonsterInstance
@@ -81,6 +82,10 @@ export interface SpellEffect {
   healing?: number[]
   statusEffects?: { target: string; effect: string }[]
   acBuffs?: { target: string; acModifier: number }[]  // AC modifiers to apply
+  revealedInfo?: {  // Information revealed by utility spells
+    targetIds: string[]
+    type: 'stats' | 'identity'  // 'stats' for MILWA, 'identity' for LATUMAPIC
+  }
   message: string
 }
 
