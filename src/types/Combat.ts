@@ -80,12 +80,20 @@ export interface AttackResult {
 export interface SpellEffect {
   damage?: number[]
   healing?: number[]
+  fullHeal?: string[]  // Target IDs to heal to full HP (MALIKTO)
   statusEffects?: { target: string; effect: string }[]
   acBuffs?: { target: string; acModifier: number }[]  // AC modifiers to apply
   revealedInfo?: {  // Information revealed by utility spells
     targetIds: string[]
     type: 'stats' | 'identity'  // 'stats' for MILWA, 'identity' for LATUMAPIC
   }
+  instantDeath?: string[]  // Target IDs to instantly kill (MAKANITO)
+  resurrection?: string[]  // Target IDs to resurrect (KADORTO)
+  statusCures?: {  // Status effects to cure (LITOKAN, LATUMOFIS)
+    targetIds: string[]
+    cureType: 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
+  }
+  causeFear?: string[]  // Target IDs that become feared (MORLIS)
   message: string
 }
 
