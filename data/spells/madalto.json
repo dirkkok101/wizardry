@@ -2,10 +2,15 @@
   "id": "madalto",
   "name": "MADALTO",
   "level": 5,
-  "type": "offensive",
+  "casterType": "mage",
+  "category": "offensive",
   "target": "all_enemies",
-  "damage": "variable",
-  "damageType": "cold",
   "description": "Party-wide cold attack",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "variable",
+    "type": "cold"
+  }
 }

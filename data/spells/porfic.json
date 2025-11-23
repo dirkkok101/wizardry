@@ -2,10 +2,12 @@
   "id": "porfic",
   "name": "PORFIC",
   "level": 1,
-  "type": "buff",
-  "target": "single_ally",
-  "effect": "ac_bonus",
-  "acBonus": -4,
+  "casterType": "priest",
+  "category": "buff",
+  "target": "single",
   "description": "-4 AC to single ally",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "acBonus": -4
 }

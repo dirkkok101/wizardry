@@ -2,9 +2,11 @@
   "id": "manifo",
   "name": "MANIFO",
   "level": 2,
-  "type": "debuff",
-  "target": "enemy_group",
-  "effect": "silence",
+  "casterType": "priest",
+  "category": "debuff",
+  "target": "group",
   "description": "Silence enemy group (no spells)",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

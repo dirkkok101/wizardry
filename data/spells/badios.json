@@ -2,11 +2,18 @@
   "id": "badios",
   "name": "BADIOS",
   "level": 1,
-  "type": "offensive",
-  "target": "single_enemy",
-  "damage": "1d8",
-  "damageType": "holy",
-  "effectiveAgainst": ["undead"],
+  "casterType": "priest",
+  "category": "offensive",
+  "target": "single",
   "description": "1d8 damage to undead",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "1d8",
+    "type": "holy"
+  },
+  "effectiveAgainst": [
+    "undead"
+  ]
 }

@@ -2,10 +2,15 @@
   "id": "lakanito",
   "name": "LAKANITO",
   "level": 5,
-  "type": "offensive",
-  "target": "enemy_group",
-  "damage": "variable",
-  "damageType": "vacuum",
+  "casterType": "mage",
+  "category": "offensive",
+  "target": "group",
   "description": "Vacuum attack, ignores some resistances",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "variable",
+    "type": "vacuum"
+  }
 }

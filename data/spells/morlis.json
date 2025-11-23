@@ -2,9 +2,11 @@
   "id": "morlis",
   "name": "MORLIS",
   "level": 4,
-  "type": "debuff",
-  "target": "enemy_group",
-  "effect": "paralyze",
+  "casterType": "mage",
+  "category": "debuff",
+  "target": "group",
   "description": "Paralyze enemy group",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

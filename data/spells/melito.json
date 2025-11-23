@@ -2,11 +2,16 @@
   "id": "melito",
   "name": "MELITO",
   "level": 2,
-  "type": "offensive",
-  "target": "enemy_group",
-  "damage": "1d8",
-  "damageType": "lightning",
-  "damageMode": "each",
+  "casterType": "mage",
+  "category": "offensive",
+  "target": "group",
   "description": "1d8 damage to each enemy in group",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "1d8",
+    "type": "lightning"
+  },
+  "damageMode": "each"
 }

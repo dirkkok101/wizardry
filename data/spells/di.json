@@ -2,11 +2,14 @@
   "id": "di",
   "name": "DI",
   "level": 7,
-  "type": "utility",
+  "casterType": "priest",
+  "category": "utility",
   "target": "dead_body",
-  "effect": "resurrect",
-  "successRate": 0.9,
-  "failureResult": "ashes",
   "description": "Resurrect from death (90% success, failure = ashes)",
-  "castableIn": ["town", "dungeon"]
+  "castableIn": [
+    "town",
+    "dungeon"
+  ],
+  "successRate": 0.9,
+  "failureResult": "ashes"
 }

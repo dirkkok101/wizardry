@@ -2,9 +2,17 @@
   "id": "dios",
   "name": "DIOS",
   "level": 1,
-  "type": "healing",
-  "target": "single_ally",
-  "healing": "1d8",
+  "casterType": "priest",
+  "category": "healing",
+  "target": "single",
   "description": "Restore 1d8 HP",
-  "castableIn": ["combat", "dungeon", "town"]
+  "castableIn": [
+    "combat",
+    "dungeon",
+    "town"
+  ],
+  "healing": {
+    "dice": "1d8",
+    "type": "normal"
+  }
 }

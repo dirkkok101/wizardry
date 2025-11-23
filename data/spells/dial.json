@@ -2,9 +2,17 @@
   "id": "dial",
   "name": "DIAL",
   "level": 3,
-  "type": "healing",
-  "target": "single_ally",
-  "healing": "2d8",
+  "casterType": "priest",
+  "category": "healing",
+  "target": "single",
   "description": "Restore 2d8 HP",
-  "castableIn": ["combat", "dungeon", "town"]
+  "castableIn": [
+    "combat",
+    "dungeon",
+    "town"
+  ],
+  "healing": {
+    "dice": "2d8",
+    "type": "normal"
+  }
 }

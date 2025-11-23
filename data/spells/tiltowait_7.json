@@ -2,10 +2,15 @@
   "id": "tiltowait_7",
   "name": "TILTOWAIT",
   "level": 7,
-  "type": "offensive",
+  "casterType": "mage",
+  "category": "offensive",
   "target": "all_enemies",
-  "damage": "massive",
-  "damageType": "magic",
   "description": "Ultimate damage spell",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "10d10",
+    "type": "magic"
+  }
 }

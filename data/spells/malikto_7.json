@@ -2,9 +2,11 @@
   "id": "malikto_7",
   "name": "MALIKTO",
   "level": 7,
-  "type": "offensive",
+  "casterType": "priest",
+  "category": "offensive",
   "target": "all_enemies",
-  "effect": "petrify",
   "description": "Turn all enemies to stone",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

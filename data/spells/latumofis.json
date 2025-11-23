@@ -2,9 +2,11 @@
   "id": "latumofis",
   "name": "LATUMOFIS",
   "level": 4,
-  "type": "utility",
-  "target": "enemy_group",
-  "effect": "identify_enemy",
+  "casterType": "priest",
+  "category": "utility",
+  "target": "group",
   "description": "Full enemy analysis",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

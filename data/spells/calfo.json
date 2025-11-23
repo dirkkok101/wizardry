@@ -2,10 +2,12 @@
   "id": "calfo",
   "name": "CALFO",
   "level": 2,
-  "type": "utility",
+  "casterType": "priest",
+  "category": "utility",
   "target": "chest",
-  "effect": "identify_trap",
-  "successRate": 0.95,
   "description": "Identify trap type (95% success)",
-  "castableIn": ["dungeon"]
+  "castableIn": [
+    "dungeon"
+  ],
+  "successRate": 0.95
 }

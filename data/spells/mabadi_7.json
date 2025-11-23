@@ -2,9 +2,11 @@
   "id": "mabadi_7",
   "name": "MABADI",
   "level": 7,
-  "type": "offensive",
+  "casterType": "priest",
+  "category": "offensive",
   "target": "all_enemies",
-  "effect": "instant_death",
   "description": "Party-wide death spell",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

@@ -2,10 +2,15 @@
   "id": "badial",
   "name": "BADIAL",
   "level": 3,
-  "type": "offensive",
+  "casterType": "priest",
+  "category": "offensive",
   "target": "all_enemies",
-  "damage": "2d8",
-  "damageType": "holy",
   "description": "2d8 damage to all enemy groups",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ],
+  "damage": {
+    "dice": "2d8",
+    "type": "holy"
+  }
 }

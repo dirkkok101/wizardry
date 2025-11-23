@@ -2,9 +2,11 @@
   "id": "zilwan",
   "name": "ZILWAN",
   "level": 5,
-  "type": "utility",
-  "target": "enemy_group",
-  "effect": "dispel",
+  "casterType": "mage",
+  "category": "utility",
+  "target": "group",
   "description": "Removes magical effects",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }

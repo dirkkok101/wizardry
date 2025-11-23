@@ -2,9 +2,11 @@
   "id": "katino",
   "name": "KATINO",
   "level": 1,
-  "type": "debuff",
-  "target": "enemy_group",
-  "effect": "sleep",
+  "casterType": "mage",
+  "category": "debuff",
+  "target": "group",
   "description": "Sleep enemy group",
-  "castableIn": ["combat"]
+  "castableIn": [
+    "combat"
+  ]
 }
