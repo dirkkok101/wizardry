@@ -109,7 +109,20 @@ export class CombatComponent implements OnInit {
     const actions = this.selectedActions()
 
     // Create party commands from selected actions
-    const partyCommands = Array.from(actions.values())
+    // Expand attack commands into multiple attacks for multi-attack classes
+    const partyCommands: CombatCommand[] = []
+    for (const command of actions.values()) {
+      if (command.type === 'ATTACK') {
+        const attacksPerRound = CombatService.getAttacksPerRound(command.actor)
+        for (let i = 0; i < attacksPerRound; i++) {
+          partyCommands.push(
+            CombatService.createCommand(command.actor, 'ATTACK', command.target)
+          )
+        }
+      } else {
+        partyCommands.push(command)
+      }
+    }
 
     // Create monster commands using AI
     const aliveMonsters = CombatService.getAllAliveMonsters(combat)
@@ -153,12 +166,25 @@ export class CombatComponent implements OnInit {
     this.selectedActions.set(new Map())
     this.isExecutingRound.set(false)
 
-    // Check for victory or defeat
+    // Check for victory, defeat, or flee
     if (result.victory) {
       this.handleVictory()
     } else if (result.defeat) {
       this.handleDefeat()
+    } else if (result.fled) {
+      this.handleFlee()
     }
+  }
+
+  private handleFlee(): void {
+    // Clear combat state
+    this.gameState.updateState(state => ({
+      ...state,
+      combat: undefined
+    }))
+
+    // Return to maze
+    this.router.navigate(['/maze'])
   }
 
   private handleVictory(): void {

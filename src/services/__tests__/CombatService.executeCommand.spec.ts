@@ -24,7 +24,8 @@ describe('CombatService.executeCommand', () => {
     })
 
     const cmd = CombatService.createCommand(attacker, 'ATTACK', defender)
-    const result = CombatService.executeCommand(state, cmd)
+    const parryingCombatants = new Set<string>()
+    const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
     expect(result.newState.monsterGroups[0].monsters[0].hp).toBe(5)
     expect(result.message).toContain('5 damage')
@@ -51,7 +52,8 @@ describe('CombatService.executeCommand', () => {
     })
 
     const cmd = CombatService.createCommand(attacker, 'ATTACK', defender)
-    const result = CombatService.executeCommand(state, cmd)
+    const parryingCombatants = new Set<string>()
+    const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
     expect(result.newState.monsterGroups[0].monsters[0].hp).toBe(0)
     expect(result.newState.monsterGroups[0].monsters[0].status).toBe('DEAD')
