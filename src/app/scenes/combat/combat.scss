@@ -567,3 +567,43 @@
     box-shadow: 0 0 15px rgba(64, 224, 208, 0.5);
   }
 }
+
+// Status Effect Indicators
+.status-effect,
+.status {
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.status-poisoned {
+  background: #4a1a4a;
+  color: #b366ff;
+}
+
+.status-asleep {
+  background: #1a3a5a;
+  color: #66b3ff;
+}
+
+.status-paralyzed {
+  background: #5a5a1a;
+  color: #ffff66;
+}
+
+.status-stoned {
+  background: #3a3a3a;
+  color: #999;
+}
+
+.status-alive {
+  background: #1a4a1a;
+  color: #66ff66;
+}
+
+.status-dead {
+  background: #4a1a1a;
+  color: #ff6666;
+}

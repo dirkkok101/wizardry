@@ -21,7 +21,9 @@
             <div class="monster-stats">
               <span class="hp">HP: {{ monster.hp }}/{{ monster.maxHp }}</span>
               <span class="ac">AC: {{ monster.ac }}</span>
-              <span class="status">{{ monster.status }}</span>
+              <span class="status" [class]="'status-' + monster.status.toLowerCase()">
+                {{ monster.status }}
+              </span>
             </div>
             @if (monster.hp > 0) {
               <div class="hp-bar">
@@ -49,6 +51,11 @@
             <div class="char-stats">
               <span class="hp">HP: {{ char.hp }}/{{ char.maxHp }}</span>
               <span class="ac">AC: {{ char.ac }}</span>
+              @if (char.status !== 'OK' && char.status !== 'INJURED' && char.status !== 'DEAD') {
+                <span class="status-effect" [class]="'status-' + char.status.toLowerCase()">
+                  {{ char.status }}
+                </span>
+              }
             </div>
             @if (char.hp > 0) {
               <div class="hp-bar">

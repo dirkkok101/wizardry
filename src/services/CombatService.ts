@@ -43,7 +43,8 @@ export class CombatService {
       combatLog: [],
       canFlee,
       statusEffects: new Map(),  // Initialize empty status effects
-      acModifiers: new Map()      // Initialize empty AC modifiers
+      acModifiers: new Map(),    // Initialize empty AC modifiers
+      statusDurations: new Map() // Initialize empty status durations
     }
   }
 
@@ -173,11 +174,11 @@ export class CombatService {
       const levelBonus = Math.floor(level / 5)
 
       switch (combatant.class) {
-        case 'Fighter':
-        case 'Lord':
-        case 'Samurai':
+        case 'FIGHTER':
+        case 'LORD':
+        case 'SAMURAI':
           return Math.min(10, 1 + levelBonus)
-        case 'Ninja':
+        case 'NINJA':
           return Math.min(10, 2 + levelBonus)
         default:
           return 1
@@ -240,9 +241,9 @@ export class CombatService {
       })
     }
 
-    // Level 6+: Prefer spellcasters (Mage > Priest > Bishop > others)
+    // Level 6+: Prefer spellcasters (MAGE > PRIEST > BISHOP > others)
     const spellcasters = targets.filter(c =>
-      c.class === 'Mage' || c.class === 'Priest' || c.class === 'Bishop'
+      c.class === 'MAGE' || c.class === 'PRIEST' || c.class === 'BISHOP'
     )
 
     if (spellcasters.length > 0) {
@@ -897,6 +898,7 @@ export class CombatService {
     messages: string[]
     damagedCharacters: Map<string, Character>  // Characters that took damage this round
     spellCasters: Map<string, { character: Character; spellId: string }>  // Characters who cast spells this round
+    curedCharacters: Map<string, Character>  // Characters whose status changed (sleep/paralysis wore off)
     victory: boolean
     defeat: boolean
     fled: boolean  // Whether party successfully fled
@@ -910,8 +912,33 @@ export class CombatService {
     const messages: string[] = []
     const damagedCharacters = new Map<string, Character>()
     const spellCasters = new Map<string, { character: Character; spellId: string }>()
+    const curedCharacters = new Map<string, Character>()
     const parryingCombatants = new Set<string>()  // Track who is parrying this round
     const fleeingCharacters = new Set<string>()   // Track who is attempting to flee
+
+    // Apply poison damage at start of round
+    const poisonResult = this.applyPoisonDamage(currentState, party)
+    currentState = poisonResult.newState
+    messages.push(...poisonResult.messages)
+    // Merge poison damage into damagedCharacters
+    for (const [charId, char] of poisonResult.damagedCharacters.entries()) {
+      damagedCharacters.set(charId, char)
+    }
+
+    // Check for defeat from poison damage
+    const allPartyDeadFromPoison = this.areAllCharactersDead(party, damagedCharacters)
+    if (allPartyDeadFromPoison) {
+      return {
+        newState: currentState,
+        messages,
+        damagedCharacters,
+        spellCasters,
+        curedCharacters,
+        victory: false,
+        defeat: true,
+        fled: false
+      }
+    }
 
     // Execute each command
     for (const command of sortedQueue) {
@@ -969,6 +996,7 @@ export class CombatService {
           messages,
           damagedCharacters,
           spellCasters,
+          curedCharacters,
           victory: true,
           defeat: false,
           fled: false
@@ -983,6 +1011,7 @@ export class CombatService {
           messages,
           damagedCharacters,
           spellCasters,
+          curedCharacters,
           victory: false,
           defeat: true,
           fled: false
@@ -998,6 +1027,7 @@ export class CombatService {
         messages,
         damagedCharacters,
         spellCasters,
+        curedCharacters,
         victory: true,
         defeat: false,
         fled: false
@@ -1011,6 +1041,7 @@ export class CombatService {
         messages,
         damagedCharacters,
         spellCasters,
+        curedCharacters,
         victory: false,
         defeat: true,
         fled: false
@@ -1033,6 +1064,7 @@ export class CombatService {
           messages,
           damagedCharacters,
           spellCasters,
+          curedCharacters,
           victory: false,
           defeat: false,
           fled: true
@@ -1042,11 +1074,30 @@ export class CombatService {
       }
     }
 
+    // Tick down status effect durations at end of round
+    const durationResult = this.tickStatusDurations(currentState, party)
+    currentState = durationResult.newState
+    messages.push(...durationResult.messages)
+
+    // Track characters whose status changed (wake/unparalyze)
+    // Component will need to update roster for these characters
+    for (const msg of durationResult.messages) {
+      // Find characters mentioned in wear-off messages
+      for (const char of party) {
+        if (msg.includes(char.name) && (msg.includes('ASLEEP') || msg.includes('PARALYZED'))) {
+          // Mark character as needing status cure
+          const curedChar = { ...char, status: CharacterStatus.OK }
+          curedCharacters.set(char.id, curedChar)
+        }
+      }
+    }
+
     return {
       newState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
       messages,
       damagedCharacters,
       spellCasters,
+      curedCharacters,
       victory: false,
       defeat: false,
       fled: false
@@ -1137,5 +1188,188 @@ export class CombatService {
     }
 
     return false
+  }
+
+  /**
+   * Set status effect duration for a combatant
+   * @param rounds - Number of rounds the status lasts, -1 for permanent/until cured
+   */
+  static setStatusDuration(
+    state: CombatState,
+    combatantId: string,
+    status: import('../types/Combat').DurationTrackedStatus,
+    rounds: number
+  ): CombatState {
+    const newDurations = new Map(state.statusDurations)
+    const combatantDurations = newDurations.get(combatantId) || new Map()
+    const updatedCombatantDurations = new Map(combatantDurations)
+    updatedCombatantDurations.set(status, rounds)
+    newDurations.set(combatantId, updatedCombatantDurations)
+
+    return {
+      ...state,
+      statusDurations: newDurations
+    }
+  }
+
+  /**
+   * Get remaining duration for a status effect
+   * Returns 0 if status is not active
+   */
+  static getStatusDuration(
+    state: CombatState,
+    combatantId: string,
+    status: import('../types/Combat').DurationTrackedStatus
+  ): number {
+    const combatantDurations = state.statusDurations.get(combatantId)
+    if (!combatantDurations) return 0
+    return combatantDurations.get(status) || 0
+  }
+
+  /**
+   * Tick down all status effect durations by 1 round
+   * Removes effects when duration reaches 0
+   * Returns new state and messages about effects wearing off
+   */
+  static tickStatusDurations(
+    state: CombatState,
+    party: Character[]
+  ): { newState: CombatState; messages: string[] } {
+    let currentState = state
+    const messages: string[] = []
+    const newDurations = new Map(state.statusDurations)
+
+    // Process each combatant's status durations
+    for (const [combatantId, statusMap] of newDurations.entries()) {
+      const updatedStatusMap = new Map(statusMap)
+      let hasChanges = false
+
+      for (const [status, duration] of updatedStatusMap.entries()) {
+        // Skip permanent effects (-1)
+        if (duration === -1) continue
+
+        const newDuration = duration - 1
+
+        if (newDuration <= 0) {
+          // Status effect expires
+          updatedStatusMap.delete(status)
+          hasChanges = true
+
+          // Remove from corresponding status tracking
+          if (status === 'BLIND' || status === 'SILENCED') {
+            currentState = this.removeStatusEffect(currentState, combatantId, status)
+          } else if (status === 'ASLEEP' || status === 'PARALYZED') {
+            // Wake/unparalyze character
+            currentState = this.cureCharacterStatus(currentState, combatantId, status, party)
+          }
+
+          // Find combatant name for message
+          const combatant = this.findCombatant(currentState, combatantId, party)
+          if (combatant) {
+            messages.push(`${this.getCombatantName(combatant)}'s ${status} effect wears off!`)
+          }
+        } else {
+          // Decrease duration
+          updatedStatusMap.set(status, newDuration)
+          hasChanges = true
+        }
+      }
+
+      if (hasChanges) {
+        if (updatedStatusMap.size === 0) {
+          newDurations.delete(combatantId)
+        } else {
+          newDurations.set(combatantId, updatedStatusMap)
+        }
+      }
+    }
+
+    return {
+      newState: { ...currentState, statusDurations: newDurations },
+      messages
+    }
+  }
+
+  /**
+   * Apply poison damage to all poisoned combatants
+   * Returns new state, damaged characters, and damage messages
+   */
+  static applyPoisonDamage(
+    state: CombatState,
+    party: Character[]
+  ): {
+    newState: CombatState
+    damagedCharacters: Map<string, Character>
+    messages: string[]
+  } {
+    let currentState = state
+    const damagedCharacters = new Map<string, Character>()
+    const messages: string[] = []
+
+    // Check party members for poison
+    for (const char of party) {
+      if (char.status === CharacterStatus.POISONED && char.hp > 0) {
+        // Poison does 1d4 damage per round
+        const poisonDamage = Math.floor(Math.random() * 4) + 1
+        const damagedChar = this.applyDamageToCharacter(char, poisonDamage)
+        damagedCharacters.set(char.id, damagedChar)
+
+        if (damagedChar.hp <= 0) {
+          messages.push(`${char.name} succumbs to poison! (${poisonDamage} damage)`)
+        } else {
+          messages.push(`${char.name} takes ${poisonDamage} poison damage!`)
+        }
+      }
+    }
+
+    // Check monsters for poison (monsters don't typically get poisoned, but support it)
+    for (const monster of this.getAllMonsters(currentState)) {
+      if (monster.status === 'ALIVE' && monster.hp > 0) {
+        const duration = this.getStatusDuration(currentState, monster.id, 'POISONED')
+        if (duration > 0) {
+          const poisonDamage = Math.floor(Math.random() * 4) + 1
+          currentState = this.applyDamage(currentState, monster, poisonDamage)
+          messages.push(`${monster.name} takes ${poisonDamage} poison damage!`)
+        }
+      }
+    }
+
+    return {
+      newState: currentState,
+      damagedCharacters,
+      messages
+    }
+  }
+
+  /**
+   * Cure a character's persistent status effect (ASLEEP, PARALYZED, POISONED)
+   * Returns new state (Note: Character status changes must be applied by component)
+   */
+  private static cureCharacterStatus(
+    state: CombatState,
+    characterId: string,
+    status: 'ASLEEP' | 'PARALYZED' | 'POISONED',
+    party: Character[]
+  ): CombatState {
+    // This method exists for consistency
+    // The actual character status change happens in the component via roster update
+    // We just need to clear the duration tracking
+    return state
+  }
+
+  /**
+   * Find a combatant by ID in combat state or party
+   */
+  private static findCombatant(
+    state: CombatState,
+    combatantId: string,
+    party: Character[]
+  ): Combatant | undefined {
+    // Check party
+    const partyMember = party.find(c => c.id === combatantId)
+    if (partyMember) return partyMember
+
+    // Check monsters
+    return this.getAllMonsters(state).find(m => m.id === combatantId)
   }
 }

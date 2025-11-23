@@ -11,9 +11,22 @@ export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
 export type CombatStatusEffect = 'BLIND' | 'SILENCED'
 
 /**
+ * All status effects that can have durations tracked during combat
+ * Includes both temporary combat effects and persistent character effects
+ */
+export type DurationTrackedStatus = CombatStatusEffect | 'ASLEEP' | 'PARALYZED' | 'POISONED'
+
+/**
  * Map of combatant IDs to their active status effects
  */
 export type CombatStatusEffects = Map<string, Set<CombatStatusEffect>>
+
+/**
+ * Status effect duration tracking
+ * Map of combatant ID -> Map of status type -> rounds remaining
+ * -1 means permanent/until cured
+ */
+export type StatusDurations = Map<string, Map<DurationTrackedStatus, number>>
 
 /**
  * Map of combatant IDs to their AC modifier (negative = better defense)
@@ -68,6 +81,7 @@ export interface CombatState {
   canFlee: boolean
   statusEffects: CombatStatusEffects  // Temporary status effects (blind, silenced)
   acModifiers: CombatAcModifiers  // Temporary AC bonuses (MOGREF, KALKI, etc.)
+  statusDurations: StatusDurations  // Track how many rounds each status effect lasts
 }
 
 export interface AttackResult {

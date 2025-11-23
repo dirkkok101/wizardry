@@ -135,8 +135,8 @@ export class CombatComponent implements OnInit {
   }
 
   selectActionType(actionType: CombatActionType): void {
-    // If ATTACK, PARRY, or FLEE - show target selection
-    if (actionType === 'ATTACK' || actionType === 'FLEE') {
+    // If ATTACK or RUN - show target selection
+    if (actionType === 'ATTACK' || actionType === 'RUN') {
       this.selectedActionType.set(actionType)
       this.showTargetSelection.set(true)
     } else if (actionType === 'PARRY') {
@@ -272,6 +272,11 @@ export class CombatComponent implements OnInit {
         const currentChar = newRoster.get(charId) || character
         const updatedChar = SpellCastingService.deductSpellPoints(currentChar, spellId)
         newRoster.set(charId, updatedChar)
+      }
+
+      // Apply status cures (sleep/paralysis wore off)
+      for (const [charId, curedChar] of result.curedCharacters.entries()) {
+        newRoster.set(charId, curedChar)
       }
 
       // Update combat state with log
