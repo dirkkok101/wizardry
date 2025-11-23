@@ -26,6 +26,7 @@ export interface SpellData {
   utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light' | 'locate_person' | 'teleport' | 'recall'  // Utility effects
   instantDeath?: boolean   // If true, instant kill (MAKANITO)
   resurrection?: boolean   // If true, resurrects dead (KADORTO)
+  resurrectionSuccessRate?: number  // Success rate for resurrection (0.50 for KADORTO, 0.90 for DI)
   statusCure?: StatusCure  // Cures status ailments (LITOKAN, LATUMOFIS)
   causeFear?: boolean      // If true, causes fear/flee (MORLIS)
   dispelMagic?: boolean  // If true, dispels magic effects (ZILWAN)
