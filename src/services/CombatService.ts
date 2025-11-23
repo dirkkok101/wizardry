@@ -192,20 +192,74 @@ export class CombatService {
     party: Character[],
     frontRow: string[]
   ): CombatCommand {
-    // Get alive front row members
+    // Get alive front row members that can be targeted
     const aliveFront = party.filter(c =>
-      frontRow.includes(c.id) && c.status !== CharacterStatus.DEAD && c.hp > 0
+      frontRow.includes(c.id) && this.canCombatantAct(c)
     )
 
     // If no alive front row, target alive back row
     const targetPool = aliveFront.length > 0
       ? aliveFront
-      : party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+      : party.filter(c => this.canCombatantAct(c))
 
-    // Select random target
-    const target = targetPool[Math.floor(Math.random() * targetPool.length)]
+    // If no valid targets, return a do-nothing command
+    if (targetPool.length === 0) {
+      return this.createCommand(monster, 'PARRY')
+    }
+
+    // Select target using AI strategy based on monster level
+    const target = this.selectMonsterTarget(monster, targetPool)
 
     return this.createCommand(monster, 'ATTACK', target)
+  }
+
+  /**
+   * Select best target for monster using AI strategy
+   * Strategy varies by monster level:
+   * - Level 1-2: Random targeting (simple creatures)
+   * - Level 3-5: Focus fire on weakest (smart hunters)
+   * - Level 6+: Target spellcasters preferentially (intelligent foes)
+   */
+  private static selectMonsterTarget(
+    monster: MonsterInstance,
+    targets: Character[]
+  ): Character {
+    const level = monster.level || 1
+
+    // Level 1-2: Random targeting
+    if (level <= 2) {
+      return targets[Math.floor(Math.random() * targets.length)]
+    }
+
+    // Level 3-5: Focus fire on weakest HP%
+    if (level <= 5) {
+      return targets.reduce((weakest, current) => {
+        const weakestPercent = weakest.hp / weakest.maxHp
+        const currentPercent = current.hp / current.maxHp
+        return currentPercent < weakestPercent ? current : weakest
+      })
+    }
+
+    // Level 6+: Prefer spellcasters (Mage > Priest > Bishop > others)
+    const spellcasters = targets.filter(c =>
+      c.class === 'Mage' || c.class === 'Priest' || c.class === 'Bishop'
+    )
+
+    if (spellcasters.length > 0) {
+      // Among spellcasters, target the weakest HP%
+      return spellcasters.reduce((weakest, current) => {
+        const weakestPercent = weakest.hp / weakest.maxHp
+        const currentPercent = current.hp / current.maxHp
+        return currentPercent < weakestPercent ? current : weakest
+      })
+    }
+
+    // If no spellcasters, fall back to weakest HP%
+    return targets.reduce((weakest, current) => {
+      const weakestPercent = weakest.hp / weakest.maxHp
+      const currentPercent = current.hp / current.maxHp
+      return currentPercent < weakestPercent ? current : weakest
+    })
   }
 
   static executeCommand(
@@ -861,8 +915,8 @@ export class CombatService {
 
     // Execute each command
     for (const command of sortedQueue) {
-      // Skip if actor is dead
-      if (this.isCombatantDead(command.actor)) continue
+      // Skip if actor cannot act (dead, asleep, paralyzed)
+      if (!this.canCombatantAct(command.actor)) continue
 
       const result = this.executeCommand(currentState, command, parryingCombatants)
       currentState = result.newState
@@ -1050,5 +1104,38 @@ export class CombatService {
    */
   static getAllAliveMonsters(state: CombatState): MonsterInstance[] {
     return this.getAllMonsters(state).filter(m => m.status !== 'DEAD' && m.hp > 0)
+  }
+
+  /**
+   * Get all monsters that can act (alive and not incapacitated)
+   * Incapacitated: DEAD, ASLEEP, PARALYZED
+   */
+  static getAllActingMonsters(state: CombatState): MonsterInstance[] {
+    return this.getAllMonsters(state).filter(m =>
+      m.status === 'ALIVE' && m.hp > 0
+    )
+  }
+
+  /**
+   * Check if a combatant can act this round
+   * Returns false if dead, asleep, or paralyzed
+   */
+  static canCombatantAct(combatant: Combatant): boolean {
+    // Check monster status
+    if ('monsterId' in combatant) {
+      const monster = combatant as MonsterInstance
+      return monster.status === 'ALIVE' && monster.hp > 0
+    }
+
+    // Check character status
+    if ('class' in combatant) {
+      const char = combatant as Character
+      return char.hp > 0 &&
+             char.status !== CharacterStatus.DEAD &&
+             char.status !== CharacterStatus.ASLEEP &&
+             char.status !== CharacterStatus.PARALYZED
+    }
+
+    return false
   }
 }

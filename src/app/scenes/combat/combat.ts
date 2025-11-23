@@ -240,10 +240,10 @@ export class CombatComponent implements OnInit {
       }
     }
 
-    // Create monster commands using AI
-    const aliveMonsters = CombatService.getAllAliveMonsters(combat)
+    // Create monster commands using AI (only for monsters that can act)
+    const actingMonsters = CombatService.getAllActingMonsters(combat)
     const frontRow = this.party().formation.frontRow
-    const monsterCommands = aliveMonsters.map(m =>
+    const monsterCommands = actingMonsters.map(m =>
       CombatService.selectMonsterAction(m, chars, frontRow)
     )
 
