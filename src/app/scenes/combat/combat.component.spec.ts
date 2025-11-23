@@ -74,52 +74,131 @@ describe('CombatComponent', () => {
     expect(actions.size).toBe(0)
   })
 
-  describe('Action Selection', () => {
-    it('selects ATTACK action for character', () => {
-      const char = component.partyCharacters()[0]
-      const monster = component.monsters()[0]
+  it('initializes with first character as active', () => {
+    const activeChar = component.activeCharacter()
+    const firstChar = component.partyCharacters()[0]
+    expect(activeChar).toBe(firstChar)
+  })
 
-      component.selectAction(char.id, 'ATTACK', monster)
+  describe('Character-by-character Action Selection', () => {
+    it('shows target selection when selecting ATTACK', () => {
+      component.selectActionType('ATTACK')
 
-      const actions = component.selectedActions()
-      expect(actions.has(char.id)).toBe(true)
-      expect(actions.get(char.id)!.type).toBe('ATTACK')
-      expect(actions.get(char.id)!.target).toBe(monster)
+      expect(component.showTargetSelection()).toBe(true)
+      expect(component.selectedActionType()).toBe('ATTACK')
     })
 
-    it('creates command with initiative when selecting action', () => {
-      const char = component.partyCharacters()[0]
-      const monster = component.monsters()[0]
+    it('shows spell menu when selecting CAST_SPELL', () => {
+      component.selectActionType('CAST_SPELL')
 
-      component.selectAction(char.id, 'ATTACK', monster)
-
-      const command = component.selectedActions().get(char.id)!
-      expect(command.initiative).toBeGreaterThanOrEqual(1)
-      expect(command.actor).toBe(char)
+      expect(component.showSpellMenu()).toBe(true)
+      expect(component.selectedActionType()).toBe('CAST_SPELL')
     })
 
-    it('replaces existing action when selecting new one', () => {
-      const char = component.partyCharacters()[0]
-      const monster1 = component.monsters()[0]
-      const monster2 = component.monsters()[1] || monster1
+    it('immediately confirms PARRY action without target', () => {
+      const activeChar = component.activeCharacter()!
 
-      component.selectAction(char.id, 'ATTACK', monster1)
-      component.selectAction(char.id, 'ATTACK', monster2)
+      component.selectActionType('PARRY')
 
       const actions = component.selectedActions()
-      expect(actions.size).toBe(1)
-      expect(actions.get(char.id)!.target).toBe(monster2)
+      expect(actions.has(activeChar.id)).toBe(true)
+      expect(actions.get(activeChar.id)!.type).toBe('PARRY')
+    })
+
+    it('shows target selection when selecting FLEE', () => {
+      component.selectActionType('FLEE')
+
+      expect(component.showTargetSelection()).toBe(true)
+      expect(component.selectedActionType()).toBe('FLEE')
+    })
+
+    it('creates command when target is selected', () => {
+      const activeChar = component.activeCharacter()!
+      const monster = component.monsters()[0]
+
+      component.selectActionType('ATTACK')
+      component.selectTarget(monster)
+
+      const actions = component.selectedActions()
+      expect(actions.has(activeChar.id)).toBe(true)
+      expect(actions.get(activeChar.id)!.type).toBe('ATTACK')
+      expect(actions.get(activeChar.id)!.target).toBe(monster)
+    })
+
+    it('advances to next character after action confirmed', () => {
+      const firstChar = component.activeCharacter()!
+      const monster = component.monsters()[0]
+
+      component.selectActionType('ATTACK')
+      component.selectTarget(monster)
+
+      const secondChar = component.activeCharacter()!
+      expect(secondChar.id).not.toBe(firstChar.id)
+    })
+
+    it('tracks which characters have selected actions', () => {
+      const chars = component.partyCharacters()
+      const monster = component.monsters()[0]
+
+      // First character selects attack
+      component.selectActionType('ATTACK')
+      component.selectTarget(monster)
+
+      expect(component.selectedActions().has(chars[0].id)).toBe(true)
+      expect(component.selectedActions().has(chars[1].id)).toBe(false)
+
+      // Second character selects parry
+      component.selectActionType('PARRY')
+
+      expect(component.selectedActions().has(chars[0].id)).toBe(true)
+      expect(component.selectedActions().has(chars[1].id)).toBe(true)
+    })
+
+    it('all actions selected when all alive characters have actions', () => {
+      const chars = component.partyCharacters()
+      const monster = component.monsters()[0]
+
+      expect(component.allActionsSelected()).toBe(false)
+
+      // Select actions for all characters
+      chars.forEach(() => {
+        component.selectActionType('ATTACK')
+        component.selectTarget(monster)
+      })
+
+      expect(component.allActionsSelected()).toBe(true)
+    })
+
+    it('cancels action selection and resets UI state', () => {
+      component.selectActionType('ATTACK')
+      expect(component.showTargetSelection()).toBe(true)
+
+      component.cancelActionSelection()
+
+      expect(component.showTargetSelection()).toBe(false)
+      expect(component.selectedActionType()).toBe(null)
+    })
+
+    it('cancels spell menu selection', () => {
+      component.selectActionType('CAST_SPELL')
+      expect(component.showSpellMenu()).toBe(true)
+
+      component.cancelActionSelection()
+
+      expect(component.showSpellMenu()).toBe(false)
+      expect(component.selectedActionType()).toBe(null)
     })
   })
 
   describe('Execute Round', () => {
     beforeEach(() => {
-      // Select actions for all characters
+      // Select actions for all characters using new flow
       const chars = component.partyCharacters()
       const monster = component.monsters()[0]
 
-      chars.forEach(char => {
-        component.selectAction(char.id, 'ATTACK', monster)
+      chars.forEach(() => {
+        component.selectActionType('ATTACK')
+        component.selectTarget(monster)
       })
     })
 
@@ -137,6 +216,16 @@ describe('CombatComponent', () => {
       component.executeRound()
 
       expect(component.selectedActions().size).toBe(0)
+    })
+
+    it('resets active character index to first character after round', () => {
+      // Active character should be at index 1 after both selected actions
+      expect(component.activeCharacterIndex()).toBeGreaterThan(0)
+
+      component.executeRound()
+
+      // Should reset to first character (index 0)
+      expect(component.activeCharacterIndex()).toBe(0)
     })
 
     it('updates combat state in GameStateService', () => {
@@ -294,10 +383,13 @@ describe('CombatComponent', () => {
 
   describe('Keyboard Shortcuts', () => {
     it('executes round on Enter key when all actions selected', () => {
-      // Select all actions
+      // Select all actions using new flow
       const chars = component.partyCharacters()
       const monster = component.monsters()[0]
-      chars.forEach(char => component.selectAction(char.id, 'ATTACK', monster))
+      chars.forEach(() => {
+        component.selectActionType('ATTACK')
+        component.selectTarget(monster)
+      })
 
       const executeRoundSpy = jest.spyOn(component, 'executeRound')
 
