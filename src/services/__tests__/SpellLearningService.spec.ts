@@ -11,10 +11,19 @@ beforeAll(async () => {
       'lakanito', 'zilwan', 'masopic', 'haman', 'malor', 'mahaman',
       'tiltowait', 'melito', 'lomilwa_mage', 'haman_7', 'mahaman_7', 'tiltowait_7'
     ].includes(spellId as string)
+
+    // Give different spells different levels for testing
+    const spellLevels: Record<string, number> = {
+      'halito': 1, 'mogref': 1, 'katino': 1, 'dumapic': 1,
+      'dilto': 2, 'sopic': 2, 'mahalito': 3, 'madalto': 5, 'tiltowait': 7,
+      'dios': 1, 'badios': 1, 'porfic': 1, 'milwa': 1,
+      'matu': 2, 'calfo': 2, 'dial': 2
+    }
+
     const mockSpellData = {
       id: spellId,
       name: spellId?.toUpperCase() || 'UNKNOWN',
-      level: 1,
+      level: spellLevels[spellId as string] || 1,
       casterType: isMage ? 'mage' : 'priest',
       category: 'offensive',
       target: 'group',
