@@ -1,8 +1,12 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env tsx
 /**
  * Validate all race JSON files against Zod schema and source material
  *
- * Usage: npx ts-node scripts/validate-race-data.ts
+ * Usage: npm run validate:races
+ *
+ * Exit codes:
+ * - 0: All races valid
+ * - 1: One or more races failed validation
  */
 
 import * as fs from 'fs'
@@ -10,7 +14,7 @@ import * as path from 'path'
 import {
   validateAndLoadRaceData,
   EXPECTED_RACE_DATA
-} from '../src/types/RaceValidation.js'
+} from '../src/types/RaceValidation'
 
 const RACES_DIR = path.join(__dirname, '../data/races')
 const RACE_FILES = ['human.json', 'elf.json', 'dwarf.json', 'gnome.json', 'hobbit.json']

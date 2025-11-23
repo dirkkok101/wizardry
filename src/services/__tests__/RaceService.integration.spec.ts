@@ -147,4 +147,18 @@ describe('RaceService Integration', () => {
       })
     })
   })
+
+  describe('performance', () => {
+    it('initializes all races in under 100ms', async () => {
+      // Create a fresh instance to test initialization performance
+      const { RaceService: FreshRaceService } = await import('../RaceService')
+
+      const start = performance.now()
+      await FreshRaceService.initialize()
+      const duration = performance.now() - start
+
+      expect(duration).toBeLessThan(100)
+      expect(FreshRaceService.getLoadedCount()).toBe(5)
+    })
+  })
 })

@@ -1,8 +1,7 @@
 import { Race, RaceData, getRaceId } from '../types/Race'
+import { SaveType } from '../types/SavingThrow'
 import { AssetLoadingService } from './AssetLoadingService'
 import { validateAndLoadRaceData } from '../types/RaceValidation'
-
-type SaveType = 'death' | 'wand' | 'breath' | 'petrify' | 'spell'
 
 class RaceServiceClass {
   private raceData: Map<string, RaceData> | null = null
@@ -55,7 +54,11 @@ class RaceServiceClass {
       console.error(`Loaded ${successCount}/${totalCount} races (${failCount} failed)`)
       console.error('Failed races:', Array.from(this.failedRaces.entries()))
 
-      // Races are critical - throw error if any fail
+      // Races are critical for game initialization - all 5 must load successfully
+      // because character creation, class eligibility calculations, and saving throw
+      // mechanics depend on complete and accurate race data. Unlike spells (which can
+      // gracefully degrade), missing or invalid race data would break core game systems.
+      // This strict validation ensures data integrity at startup rather than runtime failures.
       throw new Error(
         `Race data validation failed: ${failCount} race(s) failed to load.\n` +
         Array.from(this.failedRaces.entries())

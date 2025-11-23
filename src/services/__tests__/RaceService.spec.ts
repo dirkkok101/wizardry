@@ -1,5 +1,6 @@
 import { RaceService } from '../RaceService'
 import { Race } from '../../types/Race'
+import { EXPECTED_RACE_DATA } from '../../types/RaceValidation'
 
 describe('RaceService', () => {
   beforeAll(async () => {
@@ -7,16 +8,14 @@ describe('RaceService', () => {
     global.fetch = jest.fn((url: string) => {
       const path = url.toString()
 
-      // Race data mocks (using lowercase class names for Zod validation)
+      // Race data mocks (using EXPECTED_RACE_DATA to ensure consistency with validation)
       if (path.includes('/assets/races/human.json')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({
             id: 'human',
             name: 'Human',
-            baseStats: { str: 8, int: 8, pie: 5, vit: 8, agi: 8, luc: 9 },
-            savingThrowBonus: { death: -1 },
-            statTotal: 46,
+            ...EXPECTED_RACE_DATA.human,
             description: 'Humans are the most versatile race',
             strengths: ['Balanced stats'],
             weaknesses: ['No special bonuses'],
@@ -30,9 +29,7 @@ describe('RaceService', () => {
           json: () => Promise.resolve({
             id: 'elf',
             name: 'Elf',
-            baseStats: { str: 7, int: 10, pie: 10, vit: 6, agi: 9, luc: 6 },
-            savingThrowBonus: { wand: -2 },
-            statTotal: 48,
+            ...EXPECTED_RACE_DATA.elf,
             description: 'Elves are magical and agile',
             strengths: ['High INT, PIE'],
             weaknesses: ['Low VIT'],
@@ -46,9 +43,7 @@ describe('RaceService', () => {
           json: () => Promise.resolve({
             id: 'dwarf',
             name: 'Dwarf',
-            baseStats: { str: 10, int: 7, pie: 10, vit: 10, agi: 5, luc: 6 },
-            savingThrowBonus: { breath: -4 },
-            statTotal: 48,
+            ...EXPECTED_RACE_DATA.dwarf,
             description: 'Dwarves are tough',
             strengths: ['High VIT'],
             weaknesses: ['Low AGI'],
@@ -62,9 +57,7 @@ describe('RaceService', () => {
           json: () => Promise.resolve({
             id: 'gnome',
             name: 'Gnome',
-            baseStats: { str: 7, int: 7, pie: 10, vit: 8, agi: 10, luc: 7 },
-            savingThrowBonus: { petrify: -2 },
-            statTotal: 49,
+            ...EXPECTED_RACE_DATA.gnome,
             description: 'Gnomes are clever',
             strengths: ['Balanced'],
             weaknesses: ['Low STR'],
@@ -78,9 +71,7 @@ describe('RaceService', () => {
           json: () => Promise.resolve({
             id: 'hobbit',
             name: 'Hobbit',
-            baseStats: { str: 5, int: 7, pie: 7, vit: 6, agi: 10, luc: 15 },
-            savingThrowBonus: { spell: -3 },
-            statTotal: 50,
+            ...EXPECTED_RACE_DATA.hobbit,
             description: 'Hobbits are lucky',
             strengths: ['High LUC, AGI'],
             weaknesses: ['Low STR, VIT'],
