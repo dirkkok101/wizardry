@@ -11,9 +11,12 @@ interface SpellData {
   type: 'mage' | 'priest'
   damageType?: string
   damageDice?: string
+  statusEffect?: 'BLIND' | 'SILENCED' | 'ASLEEP'  // Status effect applied to target group
 }
 
 const SPELL_CACHE = new Map<string, SpellData>()
+
+// Mage Level 1 Spells
 SPELL_CACHE.set('halito', {
   id: 'halito',
   name: 'HALITO',
@@ -21,6 +24,32 @@ SPELL_CACHE.set('halito', {
   type: 'mage',
   damageType: 'fire',
   damageDice: '1d8'
+})
+
+SPELL_CACHE.set('katino', {
+  id: 'katino',
+  name: 'KATINO',
+  level: 1,
+  type: 'mage',
+  statusEffect: 'ASLEEP'
+})
+
+// Mage Level 2 Spells
+SPELL_CACHE.set('dilto', {
+  id: 'dilto',
+  name: 'DILTO',
+  level: 2,
+  type: 'mage',
+  statusEffect: 'BLIND'
+})
+
+// Priest Level 2 Spells
+SPELL_CACHE.set('montino', {
+  id: 'montino',
+  name: 'MONTINO',
+  level: 2,
+  type: 'priest',
+  statusEffect: 'SILENCED'
 })
 
 export class SpellCastingService {
@@ -94,9 +123,12 @@ export class SpellCastingService {
     targets: Combatant[]
   ): SpellEffect {
     const spell = SPELL_CACHE.get(spellId)
+    if (!spell) {
+      return { message: 'Unknown spell' }
+    }
 
-    // Handle offensive spells
-    if (spell?.damageType && spell.damageDice) {
+    // Handle offensive spells (damage)
+    if (spell.damageType && spell.damageDice) {
       const damage = targets.map(() => this.rollDice(spell.damageDice!))
       return {
         damage,
@@ -104,8 +136,35 @@ export class SpellCastingService {
       }
     }
 
-    // TODO: Handle healing, buffs, debuffs
-    return { message: 'No effect' }
+    // Handle status effect spells
+    if (spell.statusEffect) {
+      const statusEffects = targets.map(target => ({
+        target: target.id,
+        effect: spell.statusEffect!
+      }))
+
+      // Generate appropriate message based on effect
+      let effectMsg = ''
+      switch (spell.statusEffect) {
+        case 'ASLEEP':
+          effectMsg = 'puts the enemy group to sleep!'
+          break
+        case 'BLIND':
+          effectMsg = 'blinds the enemy group!'
+          break
+        case 'SILENCED':
+          effectMsg = 'silences the enemy group!'
+          break
+      }
+
+      return {
+        statusEffects,
+        message: `${spell.name} ${effectMsg}`
+      }
+    }
+
+    // TODO: Handle healing, buffs, other effects
+    return { message: `${spell.name} has no effect` }
   }
 
   private static rollDice(dice: string): number {

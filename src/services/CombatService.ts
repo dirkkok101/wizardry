@@ -346,8 +346,23 @@ export class CombatService {
       }
     }
 
+    // Apply status effects to targets
+    if (spellEffect.statusEffects && spellEffect.statusEffects.length > 0) {
+      for (const statusEffect of spellEffect.statusEffects) {
+        const effect = statusEffect.effect
+
+        // Handle combat-only status effects (BLIND, SILENCED)
+        if (effect === 'BLIND' || effect === 'SILENCED') {
+          newState = this.applyStatusEffect(newState, statusEffect.target, effect)
+        }
+        // Handle CombatantStatus effects (ASLEEP)
+        else if (effect === 'ASLEEP') {
+          newState = this.applyAsleepStatus(newState, statusEffect.target)
+        }
+      }
+    }
+
     // TODO: Apply healing to targets
-    // TODO: Apply status effects
 
     return {
       newState,
@@ -523,6 +538,30 @@ export class CombatService {
       ...state,
       statusEffects: newStatusEffects
     }
+  }
+
+  /**
+   * Apply ASLEEP status to a monster
+   * Updates the monster's status field to 'ASLEEP'
+   */
+  private static applyAsleepStatus(
+    state: CombatState,
+    combatantId: string
+  ): CombatState {
+    // Find and update the monster
+    const newMonsterGroups = state.monsterGroups.map(group => ({
+      ...group,
+      monsters: group.monsters.map(m => {
+        if (m.id !== combatantId) return m
+        // Only put alive monsters to sleep (can't sleep if dead)
+        if (m.status === 'ALIVE') {
+          return { ...m, status: 'ASLEEP' as const }
+        }
+        return m
+      })
+    }))
+
+    return { ...state, monsterGroups: newMonsterGroups }
   }
 
   private static applyDamage(
