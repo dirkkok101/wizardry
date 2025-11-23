@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../../services/GameStateService'
 import { CombatService } from '../../../services/CombatService'
+import { SpellCastingService } from '../../../services/SpellCastingService'
 import { VictoryService, VictoryRewards } from '../../../services/VictoryService'
 import { SceneType } from '../../../types/SceneType'
 import { CombatState, CombatCommand, Combatant, CombatActionType } from '../../../types/Combat'
@@ -143,10 +144,19 @@ export class CombatComponent implements OnInit {
 
     // Update game state with result
     this.gameState.updateState(state => {
-      // Update roster with damaged characters
+      // Update roster with damaged characters and spell casters
       let newRoster = new Map(state.roster)
+
+      // Apply damage
       for (const [charId, damagedChar] of result.damagedCharacters.entries()) {
         newRoster.set(charId, damagedChar)
+      }
+
+      // Deduct spell points for casters
+      for (const [charId, {character, spellId}] of result.spellCasters.entries()) {
+        const currentChar = newRoster.get(charId) || character
+        const updatedChar = SpellCastingService.deductSpellPoints(currentChar, spellId)
+        newRoster.set(charId, updatedChar)
       }
 
       // Update combat state with log

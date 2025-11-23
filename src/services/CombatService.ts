@@ -3,6 +3,7 @@ import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, 
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
 import { CharacterStatus } from '../types/CharacterStatus'
+import { SpellCastingService } from './SpellCastingService'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -220,7 +221,15 @@ export class CombatService {
       return this.executeRunCommand(state, command)
     }
 
-    // TODO: Handle other command types (CAST_SPELL, USE_ITEM, DISPEL)
+    if (command.type === 'CAST_SPELL') {
+      return this.executeCastSpellCommand(state, command)
+    }
+
+    if (command.type === 'DISPEL') {
+      return this.executeDispelCommand(state, command)
+    }
+
+    // TODO: Handle other command types (USE_ITEM)
     return { newState: state, message: 'Unknown command type' }
   }
 
@@ -281,6 +290,127 @@ export class CombatService {
     return {
       newState: state, // State doesn't change, flee is checked at end of round
       message: `${actorName} attempts to flee!`
+    }
+  }
+
+  private static executeCastSpellCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): { newState: CombatState; message: string } {
+    const caster = command.actor as Character
+    const actorName = this.getCombatantName(caster)
+    const spellId = command.data?.spellId
+
+    if (!spellId) {
+      return { newState: state, message: `${actorName} casts nothing!` }
+    }
+
+    // Check if can cast
+    const canCastResult = SpellCastingService.canCastSpell(caster, spellId)
+    if (!canCastResult.canCast) {
+      return {
+        newState: state,
+        message: `${actorName} cannot cast spell: ${canCastResult.reason}`
+      }
+    }
+
+    // Get targets
+    const targets = Array.isArray(command.target) ? command.target : command.target ? [command.target] : []
+
+    // Resolve spell effect
+    const spellEffect = SpellCastingService.resolveSpellEffect(spellId, caster, targets)
+
+    // Apply damage to targets (if spell has damage)
+    let newState = state
+    if (spellEffect.damage && spellEffect.damage.length > 0) {
+      for (let i = 0; i < targets.length && i < spellEffect.damage.length; i++) {
+        const target = targets[i]
+        const damage = spellEffect.damage[i]
+        newState = this.applyDamage(newState, target, damage)
+      }
+    }
+
+    // TODO: Apply healing to targets
+    // TODO: Apply status effects
+
+    return {
+      newState,
+      message: `${actorName} casts ${spellId.toUpperCase()}: ${spellEffect.message}`
+    }
+  }
+
+  private static executeDispelCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): { newState: CombatState; message: string } {
+    const caster = command.actor as Character
+    const actorName = this.getCombatantName(caster)
+
+    // Must target a monster group
+    if (!command.target || !('monsterId' in command.target)) {
+      return {
+        newState: state,
+        message: `${actorName} cannot dispel that target!`
+      }
+    }
+
+    const targetMonster = command.target as MonsterInstance
+
+    // Find the group containing this monster
+    const groupId = command.data?.groupId as 'A' | 'B' | 'C' | 'D' | undefined
+    if (!groupId) {
+      return {
+        newState: state,
+        message: `${actorName} DISPEL fails: no group specified!`
+      }
+    }
+
+    const group = state.monsterGroups.find(g => g.id === groupId)
+    if (!group || group.monsters.length === 0) {
+      return {
+        newState: state,
+        message: `${actorName} DISPEL fails: group empty!`
+      }
+    }
+
+    // Check if group contains undead
+    // TODO: Add isUndead property to monsters
+    // For now, assume all monsters can be dispelled (simplified)
+
+    // Calculate dispel chance: (CasterLevel - UndeadLevel) × 10, clamped to 5-95%
+    const casterLevel = caster.level || 1
+    const undeadLevel = targetMonster.level || 1
+    const rawChance = (casterLevel - undeadLevel) * 10
+    const dispelChance = Math.max(5, Math.min(95, rawChance))
+
+    // Roll for success
+    const roll = Math.random() * 100
+
+    if (roll < dispelChance) {
+      // Success! Destroy entire group
+      const newMonsterGroups = state.monsterGroups.map(g =>
+        g.id === groupId
+          ? {
+              ...g,
+              monsters: g.monsters.map(m => ({
+                ...m,
+                hp: 0,
+                status: 'DEAD' as const
+              }))
+            }
+          : g
+      )
+
+      return {
+        newState: { ...state, monsterGroups: newMonsterGroups },
+        message: `${actorName} DISPEL destroys Group ${groupId}!`
+      }
+    } else {
+      // Failure
+      return {
+        newState: state,
+        message: `${actorName} DISPEL fails!`
+      }
     }
   }
 
@@ -375,6 +505,7 @@ export class CombatService {
     newState: CombatState
     messages: string[]
     damagedCharacters: Map<string, Character>  // Characters that took damage this round
+    spellCasters: Map<string, { character: Character; spellId: string }>  // Characters who cast spells this round
     victory: boolean
     defeat: boolean
     fled: boolean  // Whether party successfully fled
@@ -387,6 +518,7 @@ export class CombatService {
     let currentState: CombatState = { ...state, commandQueue: [] }
     const messages: string[] = []
     const damagedCharacters = new Map<string, Character>()
+    const spellCasters = new Map<string, { character: Character; spellId: string }>()
     const parryingCombatants = new Set<string>()  // Track who is parrying this round
     const fleeingCharacters = new Set<string>()   // Track who is attempting to flee
 
@@ -402,6 +534,12 @@ export class CombatService {
       // Track RUN commands
       if (command.type === 'RUN' && !('monsterId' in command.actor)) {
         fleeingCharacters.add(command.actor.id)
+      }
+
+      // Track CAST_SPELL commands for spell point deduction
+      if (command.type === 'CAST_SPELL' && !('monsterId' in command.actor) && command.data?.spellId) {
+        const caster = command.actor as Character
+        spellCasters.set(caster.id, { character: caster, spellId: command.data.spellId })
       }
 
       // Track character damage for component to update roster
@@ -435,6 +573,7 @@ export class CombatService {
           newState: currentState,
           messages,
           damagedCharacters,
+          spellCasters,
           victory: true,
           defeat: false,
           fled: false
@@ -448,6 +587,7 @@ export class CombatService {
           newState: currentState,
           messages,
           damagedCharacters,
+          spellCasters,
           victory: false,
           defeat: true,
           fled: false
@@ -462,6 +602,7 @@ export class CombatService {
         newState: currentState,
         messages,
         damagedCharacters,
+        spellCasters,
         victory: true,
         defeat: false,
         fled: false
@@ -474,6 +615,7 @@ export class CombatService {
         newState: currentState,
         messages,
         damagedCharacters,
+        spellCasters,
         victory: false,
         defeat: true,
         fled: false
@@ -495,6 +637,7 @@ export class CombatService {
           newState: currentState,
           messages,
           damagedCharacters,
+          spellCasters,
           victory: false,
           defeat: false,
           fled: true
@@ -508,6 +651,7 @@ export class CombatService {
       newState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
       messages,
       damagedCharacters,
+      spellCasters,
       victory: false,
       defeat: false,
       fled: false

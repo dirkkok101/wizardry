@@ -44,11 +44,14 @@ export class SpellCastingService {
     }
 
     const pool = spell.type === 'mage' ? caster.spellPoints.mage : caster.spellPoints.priest
-    if (!pool || !Array.isArray(pool)) {
+    if (!pool) {
       return { canCast: false, reason: 'No spell points' }
     }
 
-    const spellPoints = pool[spell.level] || 0
+    // Get spell points for the level
+    const levelKey = `level${spell.level}` as keyof typeof pool
+    const spellPoints = pool[levelKey]?.current || 0
+
     if (spellPoints < 1) {
       return { canCast: false, reason: 'Insufficient spell points' }
     }
@@ -61,14 +64,20 @@ export class SpellCastingService {
     if (!caster.spellPoints) return caster
 
     const pool = spell.type === 'mage' ? caster.spellPoints.mage : caster.spellPoints.priest
-    if (!pool || !Array.isArray(pool)) return caster
+    if (!pool) return caster
 
-    const currentPoints = pool[spell.level] || 0
-    const newPool = [
-      ...pool.slice(0, spell.level),
-      currentPoints - 1,
-      ...pool.slice(spell.level + 1)
-    ]
+    // Get spell level key
+    const levelKey = `level${spell.level}` as keyof typeof pool
+    const currentPoints = pool[levelKey]?.current || 0
+
+    // Create new pool with updated points
+    const newPool = {
+      ...pool,
+      [levelKey]: {
+        ...pool[levelKey],
+        current: Math.max(0, currentPoints - 1)
+      }
+    }
 
     return {
       ...caster,
