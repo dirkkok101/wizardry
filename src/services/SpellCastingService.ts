@@ -308,6 +308,35 @@ SPELL_CACHE.set('madalto', {
   damageDice: '8d6'
 })
 
+// Mage Level 6 Spells
+SPELL_CACHE.set('haman', {
+  id: 'haman',
+  name: 'HAMAN',
+  level: 6,
+  type: 'mage',
+  target: 'single',
+  transformation: true
+})
+
+SPELL_CACHE.set('lomilwa_mage', {
+  id: 'lomilwa_mage',
+  name: 'LOMILWA',
+  level: 6,
+  type: 'mage',
+  target: 'self',
+  utility: 'extended_light'
+})
+
+SPELL_CACHE.set('malor', {
+  id: 'malor',
+  name: 'MALOR',
+  level: 6,
+  type: 'mage',
+  target: 'self',
+  utility: 'teleport',
+  teleportSuccessRate: 0.75
+})
+
 // Mage Level 7 Spells
 SPELL_CACHE.set('tiltowait', {
   id: 'tiltowait',
@@ -317,6 +346,15 @@ SPELL_CACHE.set('tiltowait', {
   target: 'group',
   damageType: 'fire',
   damageDice: '10d10'  // 10-100 damage - the nuke!
+})
+
+SPELL_CACHE.set('mahaman', {
+  id: 'mahaman',
+  name: 'MAHAMAN',
+  level: 7,
+  type: 'mage',
+  target: 'all_enemies',
+  transformation: true
 })
 
 // Priest Level 4 Spells
@@ -445,6 +483,16 @@ SPELL_CACHE.set('madi', {
   healingDice: '3d8'  // Heals entire party
 })
 
+SPELL_CACHE.set('lorto', {
+  id: 'lorto',
+  name: 'LORTO',
+  level: 6,
+  type: 'priest',
+  target: 'all_enemies',
+  damageType: 'physical',
+  damageDice: '6d6'
+})
+
 // Priest Level 7 Spells
 SPELL_CACHE.set('kadorto', {
   id: 'kadorto',
@@ -452,7 +500,8 @@ SPELL_CACHE.set('kadorto', {
   level: 7,
   type: 'priest',
   target: 'single',
-  resurrection: true
+  resurrection: true,
+  resurrectionSuccessRate: 0.50
 })
 
 SPELL_CACHE.set('malikto', {
@@ -462,6 +511,25 @@ SPELL_CACHE.set('malikto', {
   type: 'priest',
   target: 'all_allies',
   healToFull: true  // Fully restores entire party
+})
+
+SPELL_CACHE.set('di', {
+  id: 'di',
+  name: 'DI',
+  level: 7,
+  type: 'priest',
+  target: 'single',
+  resurrection: true,
+  resurrectionSuccessRate: 0.90
+})
+
+SPELL_CACHE.set('mabadi', {
+  id: 'mabadi',
+  name: 'MABADI',
+  level: 7,
+  type: 'priest',
+  target: 'all_enemies',
+  instantDeath: true
 })
 
 export class SpellCastingService {
@@ -548,6 +616,18 @@ export class SpellCastingService {
       }
     }
 
+    // Handle transformation (HAMAN, MAHAMAN)
+    if (spell.transformation) {
+      const transformations = targets.map(t => ({
+        monsterId: t.id,
+        newType: 'RANDOM'  // Will be resolved by CombatService based on level
+      }))
+      return {
+        transformations,
+        message: `${spell.name} transforms the monsters!`
+      }
+    }
+
     // Handle offensive spells (damage)
     if (spell.damageType && spell.damageDice) {
       // For undead-only spells, filter targets to only undead
@@ -618,6 +698,36 @@ export class SpellCastingService {
 
     // Handle utility spells
     if (spell.utility) {
+      // Handle teleportation (MALOR)
+      if (spell.utility === 'teleport') {
+        // Success rate from spell data, default 75%
+        const success = Math.random() < (spell.teleportSuccessRate || 0.75)
+        return {
+          teleport: {
+            success
+            // Coordinates will be provided by dungeon navigation UI
+          },
+          message: success
+            ? `${spell.name} teleports the party!`
+            : `${spell.name} fails! The party is scattered!`
+        }
+      }
+
+      // Handle recall to town (LOKTOFEIT)
+      if (spell.utility === 'recall') {
+        // Success rate: caster level × 2%, max 95%
+        const casterLevel = (caster as any).level || 1
+        const successRate = Math.min(casterLevel * 2, 95)
+        const success = Math.random() * 100 < successRate
+        return {
+          recall: { success },
+          message: success
+            ? `${spell.name} recalls the party to town!`
+            : `${spell.name} fails! The party remains in the dungeon!`
+        }
+      }
+
+      // Handle other utility spells
       const targetIds = targets.map(t => t.id)
       const revealType = spell.utility === 'reveal_stats' ? 'stats' : 'identity'
 

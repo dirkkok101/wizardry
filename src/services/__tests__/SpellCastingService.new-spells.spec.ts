@@ -178,4 +178,52 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
       expect(effect.instantDeath).toContain('t1')
     })
   })
+
+  describe('HAMAN (Transformation)', () => {
+    it('transforms single monster', () => {
+      const caster = createTestCharacter({
+        spellPoints: { mage: { level6: { current: 1, max: 1 } } }
+      })
+      const target = createTestCharacter({ id: 't1' })
+
+      const effect = SpellCastingService.resolveSpellEffect('haman', caster, [target])
+
+      expect(effect.message).toContain('transforms')
+    })
+  })
+
+  describe('MALOR (Teleport)', () => {
+    it('provides teleport utility with 75% success rate', () => {
+      const caster = createTestCharacter({
+        spellPoints: { mage: { level6: { current: 1, max: 1 } } }
+      })
+
+      const spell = SpellCastingService.getSpell('malor')
+      expect(spell?.teleportSuccessRate).toBe(0.75)
+    })
+  })
+
+  describe('DI (Resurrection)', () => {
+    it('has 90% resurrection success rate', () => {
+      const spell = SpellCastingService.getSpell('di')
+      expect(spell?.resurrectionSuccessRate).toBe(0.90)
+    })
+  })
+
+  describe('MABADI (Death All)', () => {
+    it('attempts instant death on all enemies', () => {
+      const caster = createTestCharacter({
+        spellPoints: { priest: { level7: { current: 1, max: 1 } } }
+      })
+      const targets = [
+        createTestCharacter({ id: 't1' }),
+        createTestCharacter({ id: 't2' })
+      ]
+
+      const effect = SpellCastingService.resolveSpellEffect('mabadi', caster, targets)
+
+      expect(effect.instantDeath).toContain('t1')
+      expect(effect.instantDeath).toContain('t2')
+    })
+  })
 })

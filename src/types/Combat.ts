@@ -109,6 +109,19 @@ export interface SpellEffect {
   }
   causeFear?: string[]  // Target IDs that become feared (MORLIS)
   dispelEffects?: string[]  // Target IDs to dispel magic effects from (ZILWAN)
+  transformations?: Array<{  // Monster transformations (HAMAN, MAHAMAN)
+    monsterId: string
+    newType: string
+  }>
+  teleport?: {  // Teleport effect (MALOR)
+    success: boolean
+    targetX?: number
+    targetY?: number
+    targetLevel?: number
+  }
+  recall?: {  // Recall to town (LOKTOFEIT)
+    success: boolean
+  }
   message: string
 }
 
