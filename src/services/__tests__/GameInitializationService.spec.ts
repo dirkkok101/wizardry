@@ -304,6 +304,25 @@ describe('GameInitializationService', () => {
         } as Response)
       }
 
+      // Spell data mocks (generic for all spells)
+      if (path.includes('/assets/spells/')) {
+        const spellId = path.split('/').pop()?.replace('.json', '')
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: spellId,
+            name: spellId?.toUpperCase() || 'UNKNOWN',
+            level: 1,
+            casterType: 'mage',
+            category: 'offensive',
+            target: 'group',
+            damage: { dice: '1d8', type: 'fire' },
+            description: `Mock spell ${spellId}`,
+            castableIn: ['combat']
+          })
+        } as Response)
+      }
+
       return Promise.reject(new Error(`Not found: ${path}`))
     }) as jest.Mock
   })
