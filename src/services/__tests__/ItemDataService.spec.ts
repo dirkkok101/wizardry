@@ -29,8 +29,7 @@ describe('ItemDataService', () => {
 
   beforeEach(() => {
     // Reset service state between tests
-    ItemDataService['itemsCache'].clear();
-    ItemDataService['loaded'] = false;
+    ItemDataService.clearCache();
 
     // Mock fetch to return JSON format for individual item files
     global.fetch = jest.fn((url: string) => {
