@@ -51,6 +51,58 @@ export class CombatComponent implements OnInit {
   readonly showSpellMenu = signal<boolean>(false)
   readonly showTargetSelection = signal<boolean>(false)
 
+  // Target selection prompt (dynamic based on action type and spell)
+  readonly targetSelectionPrompt = computed(() => {
+    const actionType = this.selectedActionType()
+    const spellId = this.selectedSpellId()
+
+    // For spell casting with target selection
+    if (actionType === 'CAST_SPELL' && spellId) {
+      const spell = SpellCastingService.getSpell(spellId)
+      if (spell) {
+        // Spell-specific prompt
+        if (spell.target === 'single') {
+          return {
+            title: `${spell.name} - SELECT SINGLE TARGET`,
+            subtitle: 'Click on a monster to target'
+          }
+        } else if (spell.target === 'group') {
+          return {
+            title: `${spell.name} - SELECT MONSTER GROUP`,
+            subtitle: 'Click on any monster in the target group'
+          }
+        } else if (spell.target === 'all_enemies') {
+          return {
+            title: `${spell.name} - TARGETING ALL ENEMIES`,
+            subtitle: 'Spell will affect all monster groups'
+          }
+        }
+      }
+    }
+
+    // For attack action
+    if (actionType === 'ATTACK') {
+      return {
+        title: 'ATTACK - SELECT TARGET',
+        subtitle: 'Click on a monster to attack'
+      }
+    }
+
+    // For flee action
+    if (actionType === 'RUN') {
+      return {
+        title: 'FLEE - SELECT DIRECTION',
+        subtitle: 'Click on a monster group to flee from'
+      }
+    }
+
+    // Default fallback
+    return {
+      title: 'SELECT TARGET',
+      subtitle: 'Click on a monster to target'
+    }
+  })
+
   // Computed party characters
   readonly partyCharacters = computed(() => {
     const members = this.party().members
@@ -108,6 +160,38 @@ export class CombatComponent implements OnInit {
     if (!char) return []
 
     return SpellCastingService.getAvailableSpells(char)
+  })
+
+  // Spell points by level for active character
+  readonly spellPointsByLevel = computed(() => {
+    const char = this.activeCharacter()
+    if (!char || !char.spellPoints) return new Map<string, { current: number; max: number }>()
+
+    const pointsMap = new Map<string, { current: number; max: number }>()
+
+    // Collect mage spell points
+    if (char.spellPoints.mage) {
+      for (let level = 1; level <= 7; level++) {
+        const key = `level${level}` as keyof typeof char.spellPoints.mage
+        const points = char.spellPoints.mage[key]
+        if (points) {
+          pointsMap.set(`mage-${level}`, { current: points.current, max: points.max })
+        }
+      }
+    }
+
+    // Collect priest spell points
+    if (char.spellPoints.priest) {
+      for (let level = 1; level <= 7; level++) {
+        const key = `level${level}` as keyof typeof char.spellPoints.priest
+        const points = char.spellPoints.priest[key]
+        if (points) {
+          pointsMap.set(`priest-${level}`, { current: points.current, max: points.max })
+        }
+      }
+    }
+
+    return pointsMap
   })
 
   // Action menu items for current active character

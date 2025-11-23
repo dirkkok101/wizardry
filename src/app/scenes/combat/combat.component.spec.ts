@@ -190,6 +190,142 @@ describe('CombatComponent', () => {
     })
   })
 
+  describe('Spell Selection', () => {
+    beforeEach(() => {
+      // Setup a character with spell points
+      const mage = createTestCharacter({
+        id: 'mage1',
+        name: 'Gandalf',
+        class: 'Mage',
+        spellPoints: {
+          mage: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 2, max: 2 },
+            level3: { current: 1, max: 1 }
+          }
+        }
+      })
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('mage1', mage),
+        party: {
+          ...state.party,
+          members: ['mage1'],
+          formation: { frontRow: [], backRow: ['mage1'] }
+        }
+      }))
+
+      component.ngOnInit()
+      fixture.detectChanges()
+    })
+
+    it('displays available spells with real names', () => {
+      const spells = component.availableSpells()
+      expect(spells.length).toBeGreaterThan(0)
+      expect(spells[0].name).toBeDefined()
+      expect(spells[0].id).toBeDefined()
+    })
+
+    it('stores spell ID when spell is selected', () => {
+      const spells = component.availableSpells()
+      const firstSpell = spells[0]
+
+      component.selectActionType('CAST_SPELL')
+      component.selectSpell(firstSpell.id)
+
+      expect(component.selectedSpellId()).toBe(firstSpell.id)
+    })
+
+    it('skips target selection for all_allies spells', () => {
+      // Find a spell with all_allies target (e.g., MOGREF, DIAL)
+      const spells = component.availableSpells()
+      const alliesSpell = spells.find(s => s.target === 'all_allies')
+
+      if (alliesSpell) {
+        component.selectActionType('CAST_SPELL')
+        component.selectSpell(alliesSpell.id)
+
+        // Should NOT show target selection
+        expect(component.showTargetSelection()).toBe(false)
+        // Should have created the action
+        expect(component.selectedActions().size).toBe(1)
+      }
+    })
+
+    it('shows target selection for single target spells', () => {
+      const spells = component.availableSpells()
+      const singleSpell = spells.find(s => s.target === 'single')
+
+      if (singleSpell) {
+        component.selectActionType('CAST_SPELL')
+        component.selectSpell(singleSpell.id)
+
+        // Should show target selection
+        expect(component.showTargetSelection()).toBe(true)
+        // Should NOT have created action yet
+        expect(component.selectedActions().size).toBe(0)
+      }
+    })
+
+    it('shows target selection for group target spells', () => {
+      const spells = component.availableSpells()
+      const groupSpell = spells.find(s => s.target === 'group')
+
+      if (groupSpell) {
+        component.selectActionType('CAST_SPELL')
+        component.selectSpell(groupSpell.id)
+
+        // Should show target selection
+        expect(component.showTargetSelection()).toBe(true)
+        // Should NOT have created action yet
+        expect(component.selectedActions().size).toBe(0)
+      }
+    })
+
+    it('attaches spell ID to combat command', () => {
+      const spells = component.availableSpells()
+      const alliesSpell = spells.find(s => s.target === 'all_allies')
+
+      if (alliesSpell) {
+        component.selectActionType('CAST_SPELL')
+        component.selectSpell(alliesSpell.id)
+
+        const action = component.selectedActions().get('mage1')
+        expect(action).toBeDefined()
+        expect(action!.type).toBe('CAST_SPELL')
+        expect(action!.data).toEqual({ spellId: alliesSpell.id })
+      }
+    })
+
+    it('provides dynamic target selection prompts based on spell type', () => {
+      const spells = component.availableSpells()
+      const singleSpell = spells.find(s => s.target === 'single')
+
+      if (singleSpell) {
+        component.selectActionType('CAST_SPELL')
+        component.selectedSpellId.set(singleSpell.id)
+
+        const prompt = component.targetSelectionPrompt()
+        expect(prompt.title).toContain(singleSpell.name)
+        expect(prompt.title).toContain('SINGLE TARGET')
+      }
+    })
+
+    it('computes spell points by level for active character', () => {
+      const points = component.spellPointsByLevel()
+      expect(points.size).toBeGreaterThan(0)
+
+      // Check mage level 1 points
+      const mageL1 = points.get('mage-1')
+      expect(mageL1).toEqual({ current: 3, max: 3 })
+
+      // Check mage level 2 points
+      const mageL2 = points.get('mage-2')
+      expect(mageL2).toEqual({ current: 2, max: 2 })
+    })
+  })
+
   describe('Execute Round', () => {
     beforeEach(() => {
       // Select actions for all characters using new flow

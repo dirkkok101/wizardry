@@ -574,6 +574,49 @@
         transform: translateX(5px);
         border-color: var(--color-primary);
       }
+
+      .spell-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .spell-name {
+          font-size: 1.4rem;
+          font-weight: bold;
+        }
+
+        .spell-points {
+          font-size: 1rem;
+          color: var(--color-primary);
+          padding: 2px 8px;
+          border: 1px solid var(--color-primary);
+          border-radius: 3px;
+
+          &.low-points {
+            color: var(--color-danger);
+            border-color: var(--color-danger);
+          }
+        }
+      }
+
+      .spell-info {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+
+      &:hover .spell-points {
+        color: var(--color-bg);
+        border-color: var(--color-bg);
+
+        &.low-points {
+          color: var(--color-bg);
+          border-color: var(--color-bg);
+        }
+      }
     }
   }
 
