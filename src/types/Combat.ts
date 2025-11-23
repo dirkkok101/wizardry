@@ -15,6 +15,12 @@ export type CombatStatusEffect = 'BLIND' | 'SILENCED'
  */
 export type CombatStatusEffects = Map<string, Set<CombatStatusEffect>>
 
+/**
+ * Map of combatant IDs to their AC modifier (negative = better defense)
+ * Example: -2 means AC is improved by 2 points
+ */
+export type CombatAcModifiers = Map<string, number>
+
 export interface DiceRoll {
   dice: string  // "1d8", "2d6", etc.
   min: number
@@ -60,6 +66,7 @@ export interface CombatState {
   combatLog: string[]
   canFlee: boolean
   statusEffects: CombatStatusEffects  // Temporary status effects (blind, silenced)
+  acModifiers: CombatAcModifiers  // Temporary AC bonuses (MOGREF, KALKI, etc.)
 }
 
 export interface AttackResult {
@@ -73,6 +80,7 @@ export interface SpellEffect {
   damage?: number[]
   healing?: number[]
   statusEffects?: { target: string; effect: string }[]
+  acBuffs?: { target: string; acModifier: number }[]  // AC modifiers to apply
   message: string
 }
 

@@ -42,7 +42,8 @@ export class CombatService {
       roundNumber: 1,
       combatLog: [],
       canFlee,
-      statusEffects: new Map()  // Initialize empty status effects
+      statusEffects: new Map(),  // Initialize empty status effects
+      acModifiers: new Map()      // Initialize empty AC modifiers
     }
   }
 
@@ -362,7 +363,21 @@ export class CombatService {
       }
     }
 
-    // TODO: Apply healing to targets
+    // Apply healing to targets
+    if (spellEffect.healing && spellEffect.healing.length > 0) {
+      for (let i = 0; i < targets.length && i < spellEffect.healing.length; i++) {
+        const target = targets[i]
+        const healing = spellEffect.healing[i]
+        newState = this.applyHealing(newState, target, healing)
+      }
+    }
+
+    // Apply AC buffs to targets
+    if (spellEffect.acBuffs && spellEffect.acBuffs.length > 0) {
+      for (const acBuff of spellEffect.acBuffs) {
+        newState = this.applyAcBuff(newState, acBuff.target, acBuff.acModifier)
+      }
+    }
 
     return {
       newState,
@@ -615,6 +630,48 @@ export class CombatService {
       hp: newHp,
       status: newStatus
     }
+  }
+
+  /**
+   * Apply healing to a character
+   * Returns updated character with restored HP (capped at maxHp)
+   */
+  static applyHealingToCharacter(character: Character, healing: number): Character {
+    const newHp = Math.min(character.maxHp, character.hp + healing)
+    return {
+      ...character,
+      hp: newHp
+    }
+  }
+
+  /**
+   * Apply healing to a combatant (Note: healing only affects characters in practice)
+   * For characters, this is handled by the component via GameStateService
+   * Returns the state unchanged (component must update roster)
+   */
+  private static applyHealing(
+    state: CombatState,
+    target: Combatant,
+    healing: number
+  ): CombatState {
+    // Healing is applied to characters via the roster in the component
+    // This method exists for consistency with applyDamage
+    return state
+  }
+
+  /**
+   * Apply AC buff to a combatant
+   * Stores the AC modifier in the combat state
+   */
+  private static applyAcBuff(
+    state: CombatState,
+    targetId: string,
+    acModifier: number
+  ): CombatState {
+    const newAcModifiers = new Map(state.acModifiers)
+    const currentModifier = newAcModifiers.get(targetId) || 0
+    newAcModifiers.set(targetId, currentModifier + acModifier)
+    return { ...state, acModifiers: newAcModifiers }
   }
 
   private static getCombatantName(combatant: Combatant): string {

@@ -79,7 +79,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: ['Combat begins!'],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )
@@ -181,7 +182,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: ['Combat begins!'],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )
@@ -251,7 +253,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: [],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )
@@ -303,7 +306,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: [],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )
@@ -345,7 +349,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: [],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )
@@ -390,7 +395,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: [],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )
@@ -434,7 +440,8 @@ describe('Combat Flow E2E', () => {
             roundNumber: 1,
             combatLog: ['Combat begins!'],
             canFlee: true,
-            statusEffects: new Map()
+            statusEffects: new Map(),
+            acModifiers: new Map()
           }
         })
       )

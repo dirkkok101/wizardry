@@ -12,6 +12,8 @@ interface SpellData {
   damageType?: string
   damageDice?: string
   statusEffect?: 'BLIND' | 'SILENCED' | 'ASLEEP'  // Status effect applied to target group
+  healingDice?: string     // Healing amount (e.g., "1d8", "2d8")
+  acModifier?: number      // AC buff modifier (negative = better AC, e.g., -2 for MOGREF)
 }
 
 const SPELL_CACHE = new Map<string, SpellData>()
@@ -43,13 +45,47 @@ SPELL_CACHE.set('dilto', {
   statusEffect: 'BLIND'
 })
 
+SPELL_CACHE.set('mogref', {
+  id: 'mogref',
+  name: 'MOGREF',
+  level: 2,
+  type: 'mage',
+  acModifier: -2  // Improves AC by 2
+})
+
+// Priest Level 1 Spells
+SPELL_CACHE.set('dios', {
+  id: 'dios',
+  name: 'DIOS',
+  level: 1,
+  type: 'priest',
+  healingDice: '1d8'
+})
+
 // Priest Level 2 Spells
+SPELL_CACHE.set('dial', {
+  id: 'dial',
+  name: 'DIAL',
+  level: 2,
+  type: 'priest',
+  healingDice: '2d8'
+})
+
 SPELL_CACHE.set('montino', {
   id: 'montino',
   name: 'MONTINO',
   level: 2,
   type: 'priest',
   statusEffect: 'SILENCED'
+})
+
+// Priest Level 3 Spells
+SPELL_CACHE.set('kalki', {
+  id: 'kalki',
+  name: 'KALKI',
+  level: 3,
+  type: 'priest',
+  acModifier: -1  // Improves AC by 1
 })
 
 export class SpellCastingService {
@@ -163,7 +199,28 @@ export class SpellCastingService {
       }
     }
 
-    // TODO: Handle healing, buffs, other effects
+    // Handle healing spells
+    if (spell.healingDice) {
+      const healing = targets.map(() => this.rollDice(spell.healingDice!))
+      return {
+        healing,
+        message: `${spell.name} heals ${healing.join(', ')} HP!`
+      }
+    }
+
+    // Handle AC buff spells
+    if (spell.acModifier) {
+      const acBuffs = targets.map(target => ({
+        target: target.id,
+        acModifier: spell.acModifier!
+      }))
+      return {
+        acBuffs,
+        message: `${spell.name} strengthens the party's defenses!`
+      }
+    }
+
+    // Unknown spell type
     return { message: `${spell.name} has no effect` }
   }
 

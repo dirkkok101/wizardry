@@ -168,6 +168,7 @@ export function createTestCombatState(overrides: Partial<CombatState> = {}): Com
     combatLog: [],
     canFlee: true,
     statusEffects: new Map(),
+    acModifiers: new Map(),
     ...overrides
   }
 }
@@ -227,7 +228,8 @@ export function createTestCombatStateForUI(overrides?: {
     roundNumber: overrides?.roundNumber || 1,
     combatLog: overrides?.combatLog || ['Combat begins!'],
     canFlee: overrides?.canFlee ?? true,
-    statusEffects: new Map()
+    statusEffects: new Map(),
+    acModifiers: new Map()
   }
 }
 
