@@ -8,5 +8,8 @@
   "description": "Turn all enemies to stone",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "effect": {
+    "type": "petrification"
+  }
 }

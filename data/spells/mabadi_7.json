@@ -8,5 +8,8 @@
   "description": "Party-wide death spell",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "effect": {
+    "type": "instant_death"
+  }
 }

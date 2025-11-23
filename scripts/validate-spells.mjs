@@ -65,8 +65,8 @@ function validateSpellFile(filePath) {
     }
 
     // Validate category-specific fields
-    if (spell.category === 'offensive' && !spell.damage) {
-      errors.push(`${filePath}: Offensive spell missing 'damage' field`);
+    if (spell.category === 'offensive' && !spell.damage && !spell.effect) {
+      errors.push(`${filePath}: Offensive spell missing 'damage' or 'effect' field`);
     }
     if (spell.category === 'healing' && !spell.healing) {
       errors.push(`${filePath}: Healing spell missing 'healing' field`);

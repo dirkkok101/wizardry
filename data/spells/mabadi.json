@@ -8,5 +8,8 @@
   "description": "Instant death to all enemy groups",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "effect": {
+    "type": "instant_death"
+  }
 }

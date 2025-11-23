@@ -8,5 +8,8 @@
   "description": "Greater instant death",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "effect": {
+    "type": "instant_death"
+  }
 }
