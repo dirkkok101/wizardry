@@ -78,7 +78,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: ['Combat begins!'],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )
@@ -179,7 +180,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: ['Combat begins!'],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )
@@ -248,7 +250,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )
@@ -299,7 +302,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )
@@ -340,7 +344,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )
@@ -384,7 +389,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: [],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )
@@ -427,7 +433,8 @@ describe('Combat Flow E2E', () => {
             commandQueue: [],
             roundNumber: 1,
             combatLog: ['Combat begins!'],
-            canFlee: true
+            canFlee: true,
+            statusEffects: new Map()
           }
         })
       )

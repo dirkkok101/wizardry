@@ -41,7 +41,8 @@ export class CombatService {
       commandQueue: [],
       roundNumber: 1,
       combatLog: [],
-      canFlee
+      canFlee,
+      statusEffects: new Map()  // Initialize empty status effects
     }
   }
 
@@ -67,13 +68,15 @@ export class CombatService {
    * Clamped between 5% and 95%
    *
    * @param defenderAcModifier - AC modifier (e.g., -2 for PARRY). Lower AC = better defense
+   * @param attackerPenalty - Attack penalty (e.g., -4 for BLIND)
    */
   static calculateHitChance(
     attacker: Combatant,
     defender: Combatant,
-    defenderAcModifier: number = 0
+    defenderAcModifier: number = 0,
+    attackerPenalty: number = 0
   ): number {
-    const attackBonus = this.getAttackBonus(attacker)
+    const attackBonus = this.getAttackBonus(attacker) + attackerPenalty
     const effectiveAc = defender.ac + defenderAcModifier
     const rawChance = (attackBonus + effectiveAc + 10) * 5
 
@@ -93,9 +96,10 @@ export class CombatService {
   static resolveAttack(
     attacker: Combatant,
     defender: Combatant,
-    defenderAcModifier: number = 0
+    defenderAcModifier: number = 0,
+    attackerPenalty: number = 0
   ): AttackResult {
-    const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier)
+    const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty)
     const hitRoll = Math.random() * 100
 
     if (hitRoll >= hitChance) {
@@ -247,7 +251,11 @@ export class CombatService {
     const isParrying = parryingCombatants.has(target.id)
     const acModifier = isParrying ? -2 : 0
 
-    const attackResult = this.resolveAttack(command.actor, target, acModifier)
+    // Check if attacker is blind (-4 attack penalty)
+    const isBlind = this.hasStatusEffect(state, command.actor.id, 'BLIND')
+    const attackerPenalty = isBlind ? -4 : 0
+
+    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
     const actorName = this.getCombatantName(command.actor)
     const targetName = this.getCombatantName(target)
 
@@ -303,6 +311,14 @@ export class CombatService {
 
     if (!spellId) {
       return { newState: state, message: `${actorName} casts nothing!` }
+    }
+
+    // Check if silenced
+    if (this.hasStatusEffect(state, caster.id, 'SILENCED')) {
+      return {
+        newState: state,
+        message: `${actorName} is silenced and cannot cast spells!`
+      }
     }
 
     // Check if can cast
@@ -451,6 +467,64 @@ export class CombatService {
     return chance
   }
 
+  /**
+   * Check if a combatant has a specific status effect
+   */
+  static hasStatusEffect(
+    state: CombatState,
+    combatantId: string,
+    effect: 'BLIND' | 'SILENCED'
+  ): boolean {
+    const effects = state.statusEffects.get(combatantId)
+    return effects ? effects.has(effect) : false
+  }
+
+  /**
+   * Apply a status effect to a combatant
+   */
+  static applyStatusEffect(
+    state: CombatState,
+    combatantId: string,
+    effect: 'BLIND' | 'SILENCED'
+  ): CombatState {
+    const newStatusEffects = new Map(state.statusEffects)
+    const existing = newStatusEffects.get(combatantId) || new Set()
+    newStatusEffects.set(combatantId, new Set([...existing, effect]))
+
+    return {
+      ...state,
+      statusEffects: newStatusEffects
+    }
+  }
+
+  /**
+   * Remove a status effect from a combatant
+   */
+  static removeStatusEffect(
+    state: CombatState,
+    combatantId: string,
+    effect: 'BLIND' | 'SILENCED'
+  ): CombatState {
+    const newStatusEffects = new Map(state.statusEffects)
+    const existing = newStatusEffects.get(combatantId)
+
+    if (existing) {
+      const newEffects = new Set(existing)
+      newEffects.delete(effect)
+
+      if (newEffects.size === 0) {
+        newStatusEffects.delete(combatantId)
+      } else {
+        newStatusEffects.set(combatantId, newEffects)
+      }
+    }
+
+    return {
+      ...state,
+      statusEffects: newStatusEffects
+    }
+  }
+
   private static applyDamage(
     state: CombatState,
     target: Combatant,
@@ -463,10 +537,12 @@ export class CombatService {
         monsters: group.monsters.map(m => {
           if (m.id !== target.id) return m
           const newHp = Math.max(0, m.hp - damage)
+          // Wake up sleeping monster if damaged
+          const newStatus = newHp === 0 ? 'DEAD' : m.status === 'ASLEEP' ? 'ALIVE' : m.status
           return {
             ...m,
             hp: newHp,
-            status: newHp === 0 ? 'DEAD' : m.status
+            status: newStatus
           }
         })
       }))
@@ -482,15 +558,23 @@ export class CombatService {
   /**
    * Apply damage to a character and update status if dead
    * Returns updated character (for use by components)
+   * Also wakes sleeping characters
    */
   static applyDamageToCharacter(character: Character, damage: number): Character {
     const newHp = Math.max(0, character.hp - damage)
     const isDead = newHp === 0
 
+    // Wake up sleeping character if damaged
+    const newStatus = isDead
+      ? CharacterStatus.DEAD
+      : character.status === CharacterStatus.ASLEEP
+        ? CharacterStatus.OK
+        : character.status
+
     return {
       ...character,
       hp: newHp,
-      status: isDead ? CharacterStatus.DEAD : character.status
+      status: newStatus
     }
   }
 
@@ -548,17 +632,21 @@ export class CombatService {
         const isParrying = parryingCombatants.has(target.id)
         const acModifier = isParrying ? -2 : 0
 
+        // Check if attacker is blind (-4 attack penalty)
+        const isBlind = this.hasStatusEffect(currentState, command.actor.id, 'BLIND')
+        const attackerPenalty = isBlind ? -4 : 0
+
         const existingDamage = damagedCharacters.get(target.id)
         if (existingDamage) {
           // Accumulate damage
-          const attackResult = this.resolveAttack(command.actor, target, acModifier)
+          const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
           if (attackResult.hit) {
             const updated = this.applyDamageToCharacter(existingDamage, attackResult.damage)
             damagedCharacters.set(target.id, updated)
           }
         } else {
           // First damage to this character
-          const attackResult = this.resolveAttack(command.actor, target, acModifier)
+          const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
           if (attackResult.hit) {
             const updated = this.applyDamageToCharacter(target, attackResult.damage)
             damagedCharacters.set(target.id, updated)

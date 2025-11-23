@@ -4,6 +4,17 @@ import { Character } from './Character'
 export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL'
 export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
 
+/**
+ * Temporary status effects that only last during combat
+ * These are cleared when combat ends
+ */
+export type CombatStatusEffect = 'BLIND' | 'SILENCED'
+
+/**
+ * Map of combatant IDs to their active status effects
+ */
+export type CombatStatusEffects = Map<string, Set<CombatStatusEffect>>
+
 export interface DiceRoll {
   dice: string  // "1d8", "2d6", etc.
   min: number
@@ -48,6 +59,7 @@ export interface CombatState {
   roundNumber: number
   combatLog: string[]
   canFlee: boolean
+  statusEffects: CombatStatusEffects  // Temporary status effects (blind, silenced)
 }
 
 export interface AttackResult {
