@@ -9,6 +9,15 @@ export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 's
 // Status cure types
 export type StatusCure = 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
 
+// Spell success rate constants
+const SPELL_SUCCESS_RATES = {
+  MALOR_TELEPORT: 0.75,
+  KADORTO_RESURRECTION: 0.50,
+  DI_RESURRECTION: 0.90,
+  LOKTOFEIT_LEVEL_MULTIPLIER: 2,
+  LOKTOFEIT_MAX_RATE: 95
+} as const
+
 // Simplified spell data for now
 export interface SpellData {
   id: string
@@ -344,7 +353,7 @@ SPELL_CACHE.set('malor', {
   type: 'mage',
   target: 'self',
   utility: 'teleport',
-  teleportSuccessRate: 0.75
+  teleportSuccessRate: SPELL_SUCCESS_RATES.MALOR_TELEPORT
 })
 
 // Mage Level 7 Spells
@@ -511,7 +520,7 @@ SPELL_CACHE.set('kadorto', {
   type: 'priest',
   target: 'single',
   resurrection: true,
-  resurrectionSuccessRate: 0.50
+  resurrectionSuccessRate: SPELL_SUCCESS_RATES.KADORTO_RESURRECTION
 })
 
 SPELL_CACHE.set('malikto', {
@@ -530,7 +539,7 @@ SPELL_CACHE.set('di', {
   type: 'priest',
   target: 'single',
   resurrection: true,
-  resurrectionSuccessRate: 0.90
+  resurrectionSuccessRate: SPELL_SUCCESS_RATES.DI_RESURRECTION
 })
 
 SPELL_CACHE.set('mabadi', {
@@ -727,7 +736,10 @@ export class SpellCastingService {
       if (spell.utility === 'recall') {
         // Success rate: caster level × 2%, max 95%
         const casterLevel = caster.level || 1
-        const successRate = Math.min(casterLevel * 2, 95)
+        const successRate = Math.min(
+          casterLevel * SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER,
+          SPELL_SUCCESS_RATES.LOKTOFEIT_MAX_RATE
+        )
         const success = Math.random() * 100 < successRate
         return {
           recall: { success },
