@@ -626,7 +626,11 @@ export class SpellCastingService {
       return { message: 'Unknown spell' }
     }
 
-    // Handle dispel magic (ZILWAN)
+    /**
+     * Handle dispel magic effects (ZILWAN)
+     * Removes all active magical effects from target group
+     * Affects: AC buffs, status effects, invisibility, etc.
+     */
     if (spell.dispelMagic) {
       const targetIds = targets.map(t => t.id)
       return {
@@ -635,7 +639,13 @@ export class SpellCastingService {
       }
     }
 
-    // Handle transformation (HAMAN, MAHAMAN)
+    /**
+     * Handle transformation effects (HAMAN, MAHAMAN)
+     * Transforms monsters into different types
+     * HAMAN: Single target transformation
+     * MAHAMAN: Group transformation
+     * Target type is resolved by CombatService based on dungeon level
+     */
     if (spell.transformation) {
       const transformations = targets.map(t => ({
         monsterId: t.id,
@@ -717,7 +727,13 @@ export class SpellCastingService {
 
     // Handle utility spells
     if (spell.utility) {
-      // Handle teleportation (MALOR)
+      /**
+       * Handle teleportation (MALOR)
+       * Teleports party to a specific dungeon location
+       * Success rate: 75% (SPELL_SUCCESS_RATES.MALOR_TELEPORT)
+       * Failure: Party is scattered to random locations
+       * Target coordinates provided by dungeon navigation UI
+       */
       if (spell.utility === 'teleport') {
         // Success rate from spell data, default 75%
         const success = Math.random() < (spell.teleportSuccessRate || 0.75)
@@ -732,7 +748,13 @@ export class SpellCastingService {
         }
       }
 
-      // Handle recall to town (LOKTOFEIT)
+      /**
+       * Handle recall to town (LOKTOFEIT)
+       * Returns party to town from dungeon
+       * Success rate: (caster level × 2)%, maximum 95%
+       * Uses SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER and LOKTOFEIT_MAX_RATE
+       * Failure: Party remains in dungeon
+       */
       if (spell.utility === 'recall') {
         // Success rate: caster level × 2%, max 95%
         const casterLevel = caster.level || 1
