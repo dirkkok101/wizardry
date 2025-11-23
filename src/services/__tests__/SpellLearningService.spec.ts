@@ -1,6 +1,36 @@
 import { SpellLearningService } from '../SpellLearningService'
 import { createTestCharacter } from '../../test-helpers/test-factories'
 import { CharacterClass } from '../../types/CharacterClass'
+import { SpellDataLoader } from '../SpellDataLoader'
+
+beforeAll(async () => {
+  global.fetch = jest.fn((url: string) => {
+    const spellId = url.split('/').pop()?.replace('.json', '')
+    const isMage = ['halito', 'mogref', 'katino', 'dumapic', 'dilto', 'sopic',
+      'mahalito', 'molito', 'morlis', 'dalto', 'lahalito', 'madalto',
+      'lakanito', 'zilwan', 'masopic', 'haman', 'malor', 'mahaman',
+      'tiltowait', 'melito', 'lomilwa_mage', 'haman_7', 'mahaman_7', 'tiltowait_7'
+    ].includes(spellId as string)
+    const mockSpellData = {
+      id: spellId,
+      name: spellId?.toUpperCase() || 'UNKNOWN',
+      level: 1,
+      casterType: isMage ? 'mage' : 'priest',
+      category: 'offensive',
+      target: 'group',
+      damage: { dice: '1d8', type: 'fire' },
+      description: `Mock spell ${spellId}`,
+      castableIn: ['combat']
+    }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(mockSpellData) } as Response)
+  }) as jest.Mock
+  await SpellDataLoader.loadAllSpells()
+})
+
+afterAll(() => {
+  SpellDataLoader.clearCache()
+  ;(global.fetch as jest.Mock).mockRestore()
+})
 
 describe('SpellLearningService', () => {
   describe('isCaster', () => {
