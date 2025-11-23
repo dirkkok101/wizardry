@@ -53,6 +53,45 @@ $spacing-xl: 32px;
   --crt-glow-sm: 0 0 3px var(--crt-green-glow);
   --crt-glow-md: 0 0 5px var(--crt-green-glow), 0 0 10px rgba(0, 255, 0, 0.4);
   --crt-glow-lg: 0 0 10px var(--crt-green-glow), 0 0 20px rgba(0, 255, 0, 0.6);
+
+  // Color system for component use
+  --color-primary: #40e0d0;           // Cyan/turquoise for primary actions
+  --color-primary-light: #60f0e0;     // Lighter variant for hover states
+  --color-danger: #ff0000;            // Red for danger/errors
+  --color-danger-light: #ff4444;      // Lighter variant for hover states
+  --color-success: #00ff88;           // Green for success states
+  --color-warning: #ffaa00;           // Amber for warnings
+
+  // Background colors
+  --color-bg: #000000;                // Pure black background
+  --color-bg-black: #000000;          // Alias for consistency
+  --color-panel-bg: rgba(0, 20, 0, 0.9);
+  --color-card-bg: rgba(0, 40, 0, 0.6);
+
+  // Text colors
+  --color-text: #00ff88;              // Bright green text
+  --color-text-primary: #00ff88;      // Primary text color
+  --color-text-bright: #00ff88;       // Bright text variant
+  --color-text-dim: #008800;          // Dimmed text
+  --color-text-muted: #666666;        // Muted/disabled text
+
+  // UI elements
+  --color-border: #00ff00;            // Green borders
+  --color-border-light: rgba(0, 255, 0, 0.3);
+  --color-gold: #ffaa00;              // Gold/amber for currency
+
+  // Spacing system
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  // Typography
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
 }
 
 // Global CRT text styling
