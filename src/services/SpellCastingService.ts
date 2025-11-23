@@ -19,11 +19,11 @@ export interface SpellData {
   damageType?: string
   damageDice?: string
   undeadOnly?: boolean     // If true, only damages undead (BADIOS, etc.)
-  statusEffect?: 'BLIND' | 'SILENCED' | 'ASLEEP'  // Status effect applied to target group
+  statusEffect?: 'BLIND' | 'SILENCED' | 'ASLEEP' | 'INVISIBLE'  // Status effect applied to target group
   healingDice?: string     // Healing amount (e.g., "1d8", "2d8")
   healToFull?: boolean     // If true, heals to maximum HP (MALIKTO)
   acModifier?: number      // AC buff modifier (negative = better AC, e.g., -2 for MOGREF)
-  utility?: 'reveal_stats' | 'identify_foe'  // Utility effects
+  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light'  // Utility effects
   instantDeath?: boolean   // If true, instant kill (MAKANITO)
   resurrection?: boolean   // If true, resurrects dead (KADORTO)
   statusCure?: StatusCure  // Cures status ailments (LITOKAN, LATUMOFIS)
@@ -71,6 +71,25 @@ SPELL_CACHE.set('mogref', {
   acModifier: -2  // Improves AC by 2
 })
 
+SPELL_CACHE.set('melito', {
+  id: 'melito',
+  name: 'MELITO',
+  level: 2,
+  type: 'mage',
+  target: 'group',
+  damageType: 'fire',
+  damageDice: '1d8'
+})
+
+SPELL_CACHE.set('sopic', {
+  id: 'sopic',
+  name: 'SOPIC',
+  level: 2,
+  type: 'mage',
+  target: 'single',
+  statusEffect: 'INVISIBLE'
+})
+
 // Mage Level 3 Spells
 SPELL_CACHE.set('mahalito', {
   id: 'mahalito',
@@ -113,6 +132,15 @@ SPELL_CACHE.set('badios', {
   undeadOnly: true  // Only damages undead
 })
 
+SPELL_CACHE.set('porfic', {
+  id: 'porfic',
+  name: 'PORFIC',
+  level: 1,
+  type: 'priest',
+  target: 'single',
+  acModifier: -4
+})
+
 SPELL_CACHE.set('milwa', {
   id: 'milwa',
   name: 'MILWA',
@@ -148,6 +176,33 @@ SPELL_CACHE.set('latumapic', {
   type: 'priest',
   target: 'group',
   utility: 'identify_foe'
+})
+
+SPELL_CACHE.set('calfo', {
+  id: 'calfo',
+  name: 'CALFO',
+  level: 2,
+  type: 'priest',
+  target: 'self',
+  utility: 'identify_trap'
+})
+
+SPELL_CACHE.set('manifo', {
+  id: 'manifo',
+  name: 'MANIFO',
+  level: 2,
+  type: 'priest',
+  target: 'group',
+  statusEffect: 'SILENCED'
+})
+
+SPELL_CACHE.set('matu', {
+  id: 'matu',
+  name: 'MATU',
+  level: 2,
+  type: 'priest',
+  target: 'all_allies',
+  acModifier: -2
 })
 
 // Priest Level 3 Spells
