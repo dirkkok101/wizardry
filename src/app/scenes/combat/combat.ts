@@ -47,6 +47,7 @@ export class CombatComponent implements OnInit {
   readonly showDefeatModal = signal<boolean>(false)
   readonly activeCharacterIndex = signal<number>(0)
   readonly selectedActionType = signal<CombatActionType | null>(null)
+  readonly selectedSpellId = signal<string | null>(null)
   readonly showSpellMenu = signal<boolean>(false)
   readonly showTargetSelection = signal<boolean>(false)
 
@@ -104,36 +105,9 @@ export class CombatComponent implements OnInit {
   // Available spells for active character
   readonly availableSpells = computed(() => {
     const char = this.activeCharacter()
-    if (!char || !char.spellPoints) return []
+    if (!char) return []
 
-    // Get all spell IDs that the character can cast
-    const spells: string[] = []
-
-    // Check mage spells
-    if (char.spellPoints.mage) {
-      for (let level = 1; level <= 7; level++) {
-        const levelKey = `level${level}` as keyof typeof char.spellPoints.mage
-        const points = char.spellPoints.mage[levelKey]
-        if (points && points.current > 0) {
-          // Add spell IDs for this level (simplified - in real game would lookup spell list)
-          // For now, just indicate which levels are available
-          spells.push(`Mage Level ${level}`)
-        }
-      }
-    }
-
-    // Check priest spells
-    if (char.spellPoints.priest) {
-      for (let level = 1; level <= 7; level++) {
-        const levelKey = `level${level}` as keyof typeof char.spellPoints.priest
-        const points = char.spellPoints.priest[levelKey]
-        if (points && points.current > 0) {
-          spells.push(`Priest Level ${level}`)
-        }
-      }
-    }
-
-    return spells
+    return SpellCastingService.getAvailableSpells(char)
   })
 
   // Action menu items for current active character
@@ -224,10 +198,26 @@ export class CombatComponent implements OnInit {
   }
 
   selectSpell(spellId: string): void {
-    // After selecting spell, show target selection
+    // Store the selected spell ID
+    this.selectedSpellId.set(spellId)
     this.showSpellMenu.set(false)
-    this.showTargetSelection.set(true)
-    // Store spell ID in action type for later
+
+    // Get spell data to check targeting requirements
+    const spell = SpellCastingService.getSpell(spellId)
+    if (!spell) {
+      console.error(`Unknown spell: ${spellId}`)
+      this.cancelActionSelection()
+      return
+    }
+
+    // Determine if target selection is needed based on spell target type
+    if (spell.target === 'all_allies' || spell.target === 'self') {
+      // No target selection needed - confirm action immediately
+      this.confirmAction('CAST_SPELL', undefined)
+    } else {
+      // Show target selection for single, group, or all_enemies spells
+      this.showTargetSelection.set(true)
+    }
   }
 
   selectTarget(target: Combatant): void {
@@ -249,6 +239,14 @@ export class CombatComponent implements OnInit {
       target
     )
 
+    // If casting a spell, attach spell ID to command data
+    if (actionType === 'CAST_SPELL') {
+      const spellId = this.selectedSpellId()
+      if (spellId) {
+        command.data = { spellId }
+      }
+    }
+
     // Update selected actions (immutable)
     this.selectedActions.update(actions => {
       const newActions = new Map(actions)
@@ -258,6 +256,7 @@ export class CombatComponent implements OnInit {
 
     // Reset UI state
     this.selectedActionType.set(null)
+    this.selectedSpellId.set(null)
     this.showSpellMenu.set(false)
     this.showTargetSelection.set(false)
 

@@ -10,7 +10,7 @@ export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 's
 export type StatusCure = 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
 
 // Simplified spell data for now
-interface SpellData {
+export interface SpellData {
   id: string
   name: string
   level: number
@@ -516,5 +516,41 @@ export class SpellCastingService {
       total += Math.floor(Math.random() * sides) + 1
     }
     return total
+  }
+
+  /**
+   * Get spell data by ID
+   */
+  static getSpell(spellId: string): SpellData | undefined {
+    return SPELL_CACHE.get(spellId.toLowerCase())
+  }
+
+  /**
+   * Get all spells for a character based on class and available spell points
+   */
+  static getAvailableSpells(character: Character): SpellData[] {
+    if (!character.spellPoints) return []
+
+    const available: SpellData[] = []
+
+    // Check each spell in cache
+    for (const spell of SPELL_CACHE.values()) {
+      // Check if character has the right spell type
+      const pool = spell.type === 'mage' ? character.spellPoints.mage : character.spellPoints.priest
+      if (!pool) continue
+
+      // Check if character has points for this spell level
+      const levelKey = `level${spell.level}` as keyof typeof pool
+      const points = pool[levelKey]
+      if (points && points.current > 0) {
+        available.push(spell)
+      }
+    }
+
+    // Sort by level, then alphabetically
+    return available.sort((a, b) => {
+      if (a.level !== b.level) return a.level - b.level
+      return a.name.localeCompare(b.name)
+    })
   }
 }

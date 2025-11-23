@@ -91,9 +91,27 @@
         <div class="spell-menu">
           <h3>{{ activeCharacter()!.name }} - SELECT SPELL</h3>
           <div class="spell-list">
-            @for (spell of availableSpells(); track $index) {
-              <button class="spell-option" (click)="selectSpell(spell)">
-                {{ spell }}
+            @for (spell of availableSpells(); track spell.id) {
+              <button class="spell-option" (click)="selectSpell(spell.id)">
+                <div class="spell-name">{{ spell.name }}</div>
+                <div class="spell-info">
+                  <span class="spell-level">Level {{ spell.level }}</span>
+                  @if (spell.damageDice) {
+                    <span class="spell-effect">{{ spell.damageDice }} {{ spell.damageType || 'damage' }}</span>
+                  }
+                  @if (spell.healingDice) {
+                    <span class="spell-effect">Heal {{ spell.healingDice }}</span>
+                  }
+                  @if (spell.healToFull) {
+                    <span class="spell-effect">Full heal</span>
+                  }
+                  @if (spell.statusEffect) {
+                    <span class="spell-effect">{{ spell.statusEffect }}</span>
+                  }
+                  @if (spell.acModifier) {
+                    <span class="spell-effect">AC {{ spell.acModifier > 0 ? '+' : '' }}{{ spell.acModifier }}</span>
+                  }
+                </div>
               </button>
             }
           </div>
