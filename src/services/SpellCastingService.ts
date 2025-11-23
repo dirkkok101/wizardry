@@ -726,7 +726,7 @@ export class SpellCastingService {
       // Handle recall to town (LOKTOFEIT)
       if (spell.utility === 'recall') {
         // Success rate: caster level × 2%, max 95%
-        const casterLevel = (caster as any).level || 1
+        const casterLevel = caster.level || 1
         const successRate = Math.min(casterLevel * 2, 95)
         const success = Math.random() * 100 < successRate
         return {
