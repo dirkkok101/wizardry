@@ -184,6 +184,23 @@
                 <span class="label">Gold Found:</span>
                 <span class="value">{{ rewards.totalGold }}</span>
               </div>
+              @if (rewards.items.length > 0) {
+                <div class="items-section">
+                  <h3>Items Found:</h3>
+                  <div class="item-list">
+                    @for (item of rewards.items; track $index) {
+                      <div class="item-entry" [class.unidentified]="!item.identified">
+                        @if (item.identified) {
+                          <span class="item-name">{{ item.itemName }}</span>
+                        } @else {
+                          <span class="item-name unidentified-text">{{ item.itemName }}</span>
+                          <span class="identify-hint">(Requires Temple identification)</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           }
           <button class="return-btn" (click)="returnToMaze()">

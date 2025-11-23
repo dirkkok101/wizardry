@@ -336,12 +336,20 @@ export class CombatComponent implements OnInit {
       partyMembers
     )
 
-    // Distribute rewards to roster (only living characters get XP)
-    const newRoster = VictoryService.distributeRewards(
+    // Distribute XP to roster (only living characters get XP)
+    let newRoster = VictoryService.distributeRewards(
       roster,
       partyMembers,
       rewards.xpPerCharacter
     )
+
+    // Distribute items to party inventories
+    const itemResult = VictoryService.distributeItems(
+      newRoster,
+      partyMembers,
+      rewards.items
+    )
+    newRoster = itemResult.roster
 
     // Update game state
     this.gameState.updateState(state => ({
