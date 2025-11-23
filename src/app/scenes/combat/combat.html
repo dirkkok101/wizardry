@@ -13,7 +13,10 @@
       <div class="monsters-panel">
         <h3>MONSTERS ({{ monsters().length }})</h3>
         @for (monster of monsters(); track monster.id) {
-          <div class="monster-card" [class.dead]="monster.status === 'DEAD'">
+          <div class="monster-card"
+               [class.dead]="monster.status === 'DEAD'"
+               [class.targetable]="showTargetSelection() && monster.hp > 0"
+               (click)="showTargetSelection() && monster.hp > 0 ? selectTarget(monster) : null">
             <div class="monster-name">{{ monster.name }}</div>
             <div class="monster-stats">
               <span class="hp">HP: {{ monster.hp }}/{{ monster.maxHp }}</span>
@@ -33,8 +36,16 @@
       <div class="party-panel">
         <h3>PARTY</h3>
         @for (char of partyCharacters(); track char.id) {
-          <div class="character-combat-card" [class.dead]="char.hp <= 0">
-            <div class="char-name">{{ char.name }} ({{ char.class }})</div>
+          <div class="character-combat-card"
+               [class.dead]="char.hp <= 0"
+               [class.active]="activeCharacter()?.id === char.id"
+               [class.action-selected]="selectedActions().has(char.id)">
+            <div class="char-name">
+              {{ char.name }} ({{ char.class }})
+              @if (activeCharacter()?.id === char.id) {
+                <span class="active-indicator">▶</span>
+              }
+            </div>
             <div class="char-stats">
               <span class="hp">HP: {{ char.hp }}/{{ char.maxHp }}</span>
               <span class="ac">AC: {{ char.ac }}</span>
@@ -46,8 +57,10 @@
               <div class="action-selection">
                 @if (selectedActions().has(char.id)) {
                   <span class="action-selected">✓ Action Selected</span>
-                } @else {
+                } @else if (activeCharacter()?.id === char.id) {
                   <span class="action-pending">⏳ Select Action...</span>
+                } @else {
+                  <span class="action-waiting">⏸ Waiting...</span>
                 }
               </div>
             } @else {
@@ -58,12 +71,73 @@
       </div>
     </div>
 
+    <!-- Action Selection Panel (shown for active character) -->
+    @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showTargetSelection()) {
+      <div class="action-panel">
+        <h3>{{ activeCharacter()!.name }} - SELECT ACTION</h3>
+        <div class="action-buttons">
+          <button class="action-btn attack-btn" (click)="selectActionType('ATTACK')">
+            (A)TTACK
+          </button>
+          <button class="action-btn cast-btn" (click)="selectActionType('CAST_SPELL')"
+                  [disabled]="availableSpells().length === 0">
+            (C)AST SPELL
+          </button>
+          <button class="action-btn parry-btn" (click)="selectActionType('PARRY')">
+            (P)ARRY
+          </button>
+          <button class="action-btn flee-btn" (click)="selectActionType('FLEE')"
+                  [disabled]="!combat.canFlee">
+            (F)LEE
+          </button>
+        </div>
+        @if (availableSpells().length === 0) {
+          <div class="no-spells-msg">No spells available</div>
+        }
+      </div>
+    }
+
+    <!-- Spell Selection Menu -->
+    @if (showSpellMenu()) {
+      <div class="spell-menu-overlay">
+        <div class="spell-menu">
+          <h3>{{ activeCharacter()!.name }} - SELECT SPELL</h3>
+          <div class="spell-list">
+            @for (spell of availableSpells(); track $index) {
+              <button class="spell-option" (click)="selectSpell(spell)">
+                {{ spell }}
+              </button>
+            }
+          </div>
+          <button class="cancel-btn" (click)="cancelActionSelection()">
+            (Esc) Cancel
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Target Selection Overlay -->
+    @if (showTargetSelection()) {
+      <div class="target-selection-overlay">
+        <div class="target-selection-prompt">
+          <h3>SELECT TARGET</h3>
+          <p>Click on a monster to target</p>
+          <button class="cancel-btn" (click)="cancelActionSelection()">
+            (Esc) Cancel
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Combat Log -->
     <div class="combat-log">
       <h3>COMBAT LOG</h3>
       <div class="log-messages">
         @for (msg of combatLog(); track $index) {
           <div class="log-message">{{ msg }}</div>
+        }
+        @if (combatLog().length === 0) {
+          <div class="log-message">Combat begins!</div>
         }
       </div>
     </div>
@@ -79,7 +153,7 @@
         } @else if (allActionsSelected()) {
           (Enter) Execute Round {{ roundNumber() }}
         } @else {
-          Select Actions for All Characters
+          Selecting Actions... ({{ selectedActions().size }}/{{ alivePartyMembers().length }})
         }
       </button>
     </div>

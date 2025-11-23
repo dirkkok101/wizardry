@@ -34,6 +34,10 @@ export class CombatComponent implements OnInit {
   readonly showVictoryModal = signal<boolean>(false)
   readonly victoryRewards = signal<VictoryRewards | null>(null)
   readonly showDefeatModal = signal<boolean>(false)
+  readonly activeCharacterIndex = signal<number>(0)
+  readonly selectedActionType = signal<CombatActionType | null>(null)
+  readonly showSpellMenu = signal<boolean>(false)
+  readonly showTargetSelection = signal<boolean>(false)
 
   // Computed party characters
   readonly partyCharacters = computed(() => {
@@ -71,6 +75,53 @@ export class CombatComponent implements OnInit {
       .every(c => actions.has(c.id))
   })
 
+  // Get alive party members (for action selection)
+  readonly alivePartyMembers = computed(() => {
+    return this.partyCharacters().filter(c => c.hp > 0)
+  })
+
+  // Current active character (the one selecting an action)
+  readonly activeCharacter = computed(() => {
+    const aliveMembers = this.alivePartyMembers()
+    const index = this.activeCharacterIndex()
+    return aliveMembers[index] || null
+  })
+
+  // Available spells for active character
+  readonly availableSpells = computed(() => {
+    const char = this.activeCharacter()
+    if (!char || !char.spellPoints) return []
+
+    // Get all spell IDs that the character can cast
+    const spells: string[] = []
+
+    // Check mage spells
+    if (char.spellPoints.mage) {
+      for (let level = 1; level <= 7; level++) {
+        const levelKey = `level${level}` as keyof typeof char.spellPoints.mage
+        const points = char.spellPoints.mage[levelKey]
+        if (points && points.current > 0) {
+          // Add spell IDs for this level (simplified - in real game would lookup spell list)
+          // For now, just indicate which levels are available
+          spells.push(`Mage Level ${level}`)
+        }
+      }
+    }
+
+    // Check priest spells
+    if (char.spellPoints.priest) {
+      for (let level = 1; level <= 7; level++) {
+        const levelKey = `level${level}` as keyof typeof char.spellPoints.priest
+        const points = char.spellPoints.priest[levelKey]
+        if (points && points.current > 0) {
+          spells.push(`Priest Level ${level}`)
+        }
+      }
+    }
+
+    return spells
+  })
+
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -83,23 +134,87 @@ export class CombatComponent implements OnInit {
     }))
   }
 
-  selectAction(characterId: string, actionType: string, target?: Combatant): void {
-    const character = this.roster().get(characterId)
+  selectActionType(actionType: CombatActionType): void {
+    // If ATTACK, PARRY, or FLEE - show target selection
+    if (actionType === 'ATTACK' || actionType === 'FLEE') {
+      this.selectedActionType.set(actionType)
+      this.showTargetSelection.set(true)
+    } else if (actionType === 'PARRY') {
+      // PARRY doesn't need a target
+      this.confirmAction(actionType, undefined)
+    } else if (actionType === 'CAST_SPELL') {
+      // Show spell selection menu
+      this.selectedActionType.set(actionType)
+      this.showSpellMenu.set(true)
+    }
+  }
+
+  selectSpell(spellId: string): void {
+    // After selecting spell, show target selection
+    this.showSpellMenu.set(false)
+    this.showTargetSelection.set(true)
+    // Store spell ID in action type for later
+  }
+
+  selectTarget(target: Combatant): void {
+    const actionType = this.selectedActionType()
+    if (!actionType) return
+
+    this.confirmAction(actionType, target)
+    this.showTargetSelection.set(false)
+  }
+
+  confirmAction(actionType: CombatActionType, target?: Combatant): void {
+    const character = this.activeCharacter()
     if (!character) return
 
     // Create combat command using CombatService
     const command = CombatService.createCommand(
       character,
-      actionType as CombatActionType,
+      actionType,
       target
     )
 
     // Update selected actions (immutable)
     this.selectedActions.update(actions => {
       const newActions = new Map(actions)
-      newActions.set(characterId, command)
+      newActions.set(character.id, command)
       return newActions
     })
+
+    // Reset UI state
+    this.selectedActionType.set(null)
+    this.showSpellMenu.set(false)
+    this.showTargetSelection.set(false)
+
+    // Advance to next character
+    this.advanceToNextCharacter()
+  }
+
+  advanceToNextCharacter(): void {
+    const aliveMembers = this.alivePartyMembers()
+    const currentIndex = this.activeCharacterIndex()
+
+    // Move to next alive character who hasn't selected an action
+    let nextIndex = currentIndex + 1
+
+    while (nextIndex < aliveMembers.length) {
+      const nextChar = aliveMembers[nextIndex]
+      if (!this.selectedActions().has(nextChar.id)) {
+        this.activeCharacterIndex.set(nextIndex)
+        return
+      }
+      nextIndex++
+    }
+
+    // If we've gone through all characters, stay at the last one
+    // (executeRound button will be enabled)
+  }
+
+  cancelActionSelection(): void {
+    this.selectedActionType.set(null)
+    this.showSpellMenu.set(false)
+    this.showTargetSelection.set(false)
   }
 
   executeRound(): void {
@@ -172,8 +287,9 @@ export class CombatComponent implements OnInit {
       }
     })
 
-    // Clear selected actions
+    // Clear selected actions and reset to first character
     this.selectedActions.set(new Map())
+    this.activeCharacterIndex.set(0)
     this.isExecutingRound.set(false)
 
     // Check for victory, defeat, or flee
