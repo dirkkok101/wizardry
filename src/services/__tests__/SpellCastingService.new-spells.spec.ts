@@ -108,4 +108,32 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
       expect(effect.message).toContain('LOMILWA')
     })
   })
+
+  describe('BAMORDI (Harm Greater)', () => {
+    it('deals 3d8 holy damage to single target', () => {
+      const caster = createTestCharacter({
+        spellPoints: { priest: { level4: { current: 1, max: 1 } } }
+      })
+      const target = createTestCharacter({ id: 't1' })
+
+      const effect = SpellCastingService.resolveSpellEffect('bamordi', caster, [target])
+
+      expect(effect.damage).toHaveLength(1)
+      expect(effect.damage![0]).toBeGreaterThanOrEqual(3)
+      expect(effect.damage![0]).toBeLessThanOrEqual(24)
+    })
+  })
+
+  describe('KATU (Talisman)', () => {
+    it('applies massive -6 AC buff to all allies', () => {
+      const caster = createTestCharacter({
+        spellPoints: { priest: { level4: { current: 1, max: 1 } } }
+      })
+      const allies = [createTestCharacter({ id: 'a1' })]
+
+      const effect = SpellCastingService.resolveSpellEffect('katu', caster, allies)
+
+      expect(effect.acBuffs![0].acModifier).toBe(-6)
+    })
+  })
 })

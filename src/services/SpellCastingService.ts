@@ -23,7 +23,7 @@ export interface SpellData {
   healingDice?: string     // Healing amount (e.g., "1d8", "2d8")
   healToFull?: boolean     // If true, heals to maximum HP (MALIKTO)
   acModifier?: number      // AC buff modifier (negative = better AC, e.g., -2 for MOGREF)
-  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light'  // Utility effects
+  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light' | 'locate_person'  // Utility effects
   instantDeath?: boolean   // If true, instant kill (MAKANITO)
   resurrection?: boolean   // If true, resurrects dead (KADORTO)
   statusCure?: StatusCure  // Cures status ailments (LITOKAN, LATUMOFIS)
@@ -305,6 +305,53 @@ SPELL_CACHE.set('latumofis', {
   statusCure: 'paralysis'
 })
 
+SPELL_CACHE.set('bamordi', {
+  id: 'bamordi',
+  name: 'BAMORDI',
+  level: 4,
+  type: 'priest',
+  target: 'single',
+  damageType: 'holy',
+  damageDice: '3d8'
+})
+
+SPELL_CACHE.set('dalto_priest', {
+  id: 'dalto_priest',
+  name: 'DALTO',
+  level: 4,
+  type: 'priest',
+  target: 'all_enemies',
+  damageType: 'cold',
+  damageDice: '4d6'
+})
+
+SPELL_CACHE.set('kandi', {
+  id: 'kandi',
+  name: 'KANDI',
+  level: 4,
+  type: 'priest',
+  target: 'self',
+  utility: 'locate_person'
+})
+
+SPELL_CACHE.set('katu', {
+  id: 'katu',
+  name: 'KATU',
+  level: 4,
+  type: 'priest',
+  target: 'all_allies',
+  acModifier: -6
+})
+
+SPELL_CACHE.set('maporfic', {
+  id: 'maporfic',
+  name: 'MAPORFIC',
+  level: 4,
+  type: 'priest',
+  target: 'all_allies',
+  acModifier: -4
+})
+
 // Priest Level 5 Spells
 SPELL_CACHE.set('dialko', {
   id: 'dialko',
@@ -521,6 +568,8 @@ export class SpellCastingService {
         message = `${spell.name} reveals any traps nearby!`
       } else if (spell.utility === 'extended_light') {
         message = `${spell.name} creates extended light!`
+      } else if (spell.utility === 'locate_person') {
+        message = `${spell.name} locates missing persons!`
       }
 
       return {
