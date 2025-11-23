@@ -23,11 +23,16 @@ export interface SpellData {
   healingDice?: string     // Healing amount (e.g., "1d8", "2d8")
   healToFull?: boolean     // If true, heals to maximum HP (MALIKTO)
   acModifier?: number      // AC buff modifier (negative = better AC, e.g., -2 for MOGREF)
-  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light' | 'locate_person'  // Utility effects
+  utility?: 'reveal_stats' | 'identify_foe' | 'identify_trap' | 'extended_light' | 'locate_person' | 'teleport' | 'recall'  // Utility effects
   instantDeath?: boolean   // If true, instant kill (MAKANITO)
   resurrection?: boolean   // If true, resurrects dead (KADORTO)
   statusCure?: StatusCure  // Cures status ailments (LITOKAN, LATUMOFIS)
   causeFear?: boolean      // If true, causes fear/flee (MORLIS)
+  dispelMagic?: boolean  // If true, dispels magic effects (ZILWAN)
+  transformation?: boolean  // If true, transforms monsters (HAMAN, MAHAMAN)
+  teleportSuccessRate?: number  // Success rate for teleport (MALOR)
+  recallSuccessRate?: number  // Success rate for recall (LOKTOFEIT) - calculated as level × 2%
+  ignoresAC?: boolean  // If true, ignores AC (LAKANITO)
 }
 
 const SPELL_CACHE = new Map<string, SpellData>()
@@ -273,6 +278,36 @@ SPELL_CACHE.set('makanito', {
   instantDeath: true
 })
 
+SPELL_CACHE.set('lakanito', {
+  id: 'lakanito',
+  name: 'LAKANITO',
+  level: 5,
+  type: 'mage',
+  target: 'group',
+  damageType: 'air',
+  damageDice: '6d6',
+  ignoresAC: true
+})
+
+SPELL_CACHE.set('zilwan', {
+  id: 'zilwan',
+  name: 'ZILWAN',
+  level: 5,
+  type: 'mage',
+  target: 'group',
+  dispelMagic: true
+})
+
+SPELL_CACHE.set('madalto', {
+  id: 'madalto',
+  name: 'MADALTO',
+  level: 5,
+  type: 'mage',
+  target: 'all_enemies',
+  damageType: 'cold',
+  damageDice: '8d6'
+})
+
 // Mage Level 7 Spells
 SPELL_CACHE.set('tiltowait', {
   id: 'tiltowait',
@@ -382,6 +417,24 @@ SPELL_CACHE.set('litokan', {
   statusCure: 'all'  // Cures poison, paralysis, silence, blind, asleep
 })
 
+SPELL_CACHE.set('badi', {
+  id: 'badi',
+  name: 'BADI',
+  level: 5,
+  type: 'priest',
+  target: 'single',
+  instantDeath: true
+})
+
+SPELL_CACHE.set('loktofeit', {
+  id: 'loktofeit',
+  name: 'LOKTOFEIT',
+  level: 5,
+  type: 'priest',
+  target: 'self',
+  utility: 'recall'
+})
+
 // Priest Level 6 Spells
 SPELL_CACHE.set('madi', {
   id: 'madi',
@@ -484,6 +537,15 @@ export class SpellCastingService {
     const spell = SPELL_CACHE.get(spellId)
     if (!spell) {
       return { message: 'Unknown spell' }
+    }
+
+    // Handle dispel magic (ZILWAN)
+    if (spell.dispelMagic) {
+      const targetIds = targets.map(t => t.id)
+      return {
+        dispelEffects: targetIds,
+        message: `${spell.name} dispels all magic effects!`
+      }
     }
 
     // Handle offensive spells (damage)

@@ -136,4 +136,46 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
       expect(effect.acBuffs![0].acModifier).toBe(-6)
     })
   })
+
+  describe('LAKANITO (Suffocation)', () => {
+    it('deals 6d6 air damage that ignores AC', () => {
+      const caster = createTestCharacter({
+        spellPoints: { mage: { level5: { current: 1, max: 1 } } }
+      })
+      const targets = [createTestCharacter({ id: 't1' })]
+
+      const effect = SpellCastingService.resolveSpellEffect('lakanito', caster, targets)
+
+      expect(effect.damage![0]).toBeGreaterThanOrEqual(6)
+      expect(effect.damage![0]).toBeLessThanOrEqual(36)
+      expect(effect.message).toContain('LAKANITO')
+    })
+  })
+
+  describe('ZILWAN (Dispel Magic)', () => {
+    it('dispels magic effects from group', () => {
+      const caster = createTestCharacter({
+        spellPoints: { mage: { level5: { current: 1, max: 1 } } }
+      })
+      const targets = [createTestCharacter({ id: 't1' })]
+
+      const effect = SpellCastingService.resolveSpellEffect('zilwan', caster, targets)
+
+      expect(effect.message).toContain('dispels')
+    })
+  })
+
+  describe('BADI (Death)', () => {
+    it('attempts instant death on single target', () => {
+      const caster = createTestCharacter({
+        spellPoints: { priest: { level5: { current: 1, max: 1 } } }
+      })
+      const target = createTestCharacter({ id: 't1' })
+
+      const effect = SpellCastingService.resolveSpellEffect('badi', caster, [target])
+
+      expect(effect.instantDeath).toBeDefined()
+      expect(effect.instantDeath).toContain('t1')
+    })
+  })
 })
