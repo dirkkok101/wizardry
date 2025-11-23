@@ -23,6 +23,9 @@ interface SelectedAction {
   styleUrls: ['./combat.scss']
 })
 export class CombatComponent implements OnInit {
+  // Expose Array for template use
+  readonly Array = Array
+
   // Computed from GameStateService
   readonly combatState = computed(() => this.gameState.state().combat)
   readonly party = computed(() => this.gameState.state().party)
@@ -33,6 +36,7 @@ export class CombatComponent implements OnInit {
   readonly isExecutingRound = signal<boolean>(false)
   readonly showVictoryModal = signal<boolean>(false)
   readonly victoryRewards = signal<VictoryRewards | null>(null)
+  readonly itemDistribution = signal<Map<string, string[]>>(new Map()) // characterId -> itemIds[]
   readonly showDefeatModal = signal<boolean>(false)
   readonly activeCharacterIndex = signal<number>(0)
   readonly selectedActionType = signal<CombatActionType | null>(null)
@@ -351,6 +355,9 @@ export class CombatComponent implements OnInit {
     )
     newRoster = itemResult.roster
 
+    // Store item distribution for display
+    this.itemDistribution.set(itemResult.itemsAdded)
+
     // Update game state
     this.gameState.updateState(state => ({
       ...state,
@@ -381,8 +388,13 @@ export class CombatComponent implements OnInit {
     this.showDefeatModal.set(true)
   }
 
+  getCharacterName(charId: string): string {
+    return this.roster().get(charId)?.name || 'Unknown'
+  }
+
   returnToMaze(): void {
     this.showVictoryModal.set(false)
+    this.itemDistribution.set(new Map()) // Clear distribution
     this.router.navigate(['/maze'])
   }
 

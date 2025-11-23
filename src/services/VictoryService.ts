@@ -18,6 +18,16 @@ export interface VictoryRewards {
 }
 
 export class VictoryService {
+  // Drop rate configuration
+  private static readonly DROP_CHANCE = 0.15  // 15% base chance per monster level group
+  private static readonly HIGH_LEVEL_THRESHOLD = 6  // Monsters at this level can drop multiple items
+  private static readonly MAX_DROPS_HIGH_LEVEL = 2  // Maximum drops for high level monsters
+  private static readonly MAX_DROPS_LOW_LEVEL = 1   // Maximum drops for low level monsters
+  private static readonly UNIDENTIFIED_LEVEL_THRESHOLD = 5  // Monsters at this level drop unidentified items
+  private static readonly UNIDENTIFIED_CHANCE = 0.7  // 70% chance items are unidentified for high level
+  private static readonly MAX_MONSTER_LEVEL = 10  // Cap monster level for item selection
+  private static readonly MAX_INVENTORY_SIZE = 8  // Maximum items per character inventory
+
   // Item pools by monster level
   private static readonly ITEM_POOLS = {
     level1: ['dagger', 'short_sword', 'leather_armor', 'small_shield', 'staff', 'robes'],
@@ -148,14 +158,13 @@ export class VictoryService {
 
     // Generate drops per level group
     for (const [level, groupMonsters] of monstersByLevel.entries()) {
-      // 15% base chance per group
-      const dropChance = 0.15
-
-      // Higher level monsters can drop multiple items (1-2 items for level 6+)
-      const maxDrops = level >= 6 ? 2 : 1
+      // Higher level monsters can drop multiple items
+      const maxDrops = level >= this.HIGH_LEVEL_THRESHOLD
+        ? this.MAX_DROPS_HIGH_LEVEL
+        : this.MAX_DROPS_LOW_LEVEL
 
       for (let i = 0; i < maxDrops; i++) {
-        if (Math.random() < dropChance) {
+        if (Math.random() < this.DROP_CHANCE) {
           const item = this.selectItemForLevel(level)
           if (item) {
             items.push(item)
@@ -172,8 +181,8 @@ export class VictoryService {
    * Lower level items are identified, higher level items (level 5+) are unidentified
    */
   private static selectItemForLevel(monsterLevel: number): ItemDrop | null {
-    // Cap level at 10
-    const level = Math.min(monsterLevel, 10)
+    // Cap level at maximum
+    const level = Math.min(monsterLevel, this.MAX_MONSTER_LEVEL)
 
     // Get appropriate item pool
     const poolKey = `level${level}` as keyof typeof this.ITEM_POOLS
@@ -187,12 +196,13 @@ export class VictoryService {
     const itemId = pool[Math.floor(Math.random() * pool.length)]
     const itemName = this.ITEM_NAMES[itemId] || itemId
 
-    // Items from level 5+ monsters start unidentified (70% chance)
-    const identified = level < 5 || Math.random() < 0.3
+    // Items from high level monsters start unidentified
+    const identified = level < this.UNIDENTIFIED_LEVEL_THRESHOLD
+      || Math.random() > this.UNIDENTIFIED_CHANCE
 
     return {
       itemId,
-      itemName: identified ? itemName : '??? (Unidentified)',
+      itemName,  // Always store real name, UI handles display logic
       identified
     }
   }
@@ -245,7 +255,6 @@ export class VictoryService {
   ): { roster: Map<string, Character>; itemsAdded: Map<string, string[]> } {
     const newRoster = new Map(roster)
     const itemsAdded = new Map<string, string[]>() // characterId -> itemIds[]
-    const MAX_INVENTORY = 8
 
     // Get living party members
     const livingMembers = partyMembers.filter(id => {
@@ -253,12 +262,16 @@ export class VictoryService {
       return char && char.status !== CharacterStatus.DEAD && char.hp > 0
     })
 
+    // Early return if no living members (prevents division by zero)
+    if (livingMembers.length === 0) {
+      return { roster: newRoster, itemsAdded }
+    }
+
     // Round-robin distribution
     let currentMemberIndex = 0
 
     // Distribute each item
     for (const item of items) {
-      let itemAdded = false
       const startIndex = currentMemberIndex
 
       // Try to find a character with space, starting from current index
@@ -267,7 +280,7 @@ export class VictoryService {
         if (!memberId) break
 
         const character = newRoster.get(memberId)
-        if (character && character.inventory.length < MAX_INVENTORY) {
+        if (character && character.inventory.length < this.MAX_INVENTORY_SIZE) {
           // Add item to inventory
           newRoster.set(memberId, {
             ...character,
@@ -280,7 +293,6 @@ export class VictoryService {
           }
           itemsAdded.get(memberId)!.push(item.itemId)
 
-          itemAdded = true
           // Move to next character for next item (round-robin)
           currentMemberIndex = (currentMemberIndex + 1) % livingMembers.length
           break

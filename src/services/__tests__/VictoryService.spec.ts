@@ -312,5 +312,26 @@ describe('VictoryService', () => {
       expect(result.roster.get('c1')!.inventory).toContain('item1')
       expect(result.roster.get('c1')!.inventory).not.toContain('item2')  // Lost
     })
+
+    it('handles all dead party members gracefully', () => {
+      const char1 = createTestCharacter({ id: 'c1', inventory: [], hp: 0, status: 'DEAD' as any })
+      const char2 = createTestCharacter({ id: 'c2', inventory: [], hp: 0, status: 'DEAD' as any })
+      const roster = new Map([
+        ['c1', char1],
+        ['c2', char2]
+      ])
+      const partyMembers = ['c1', 'c2']
+      const items = [
+        { itemId: 'dagger', itemName: 'Dagger', identified: true },
+        { itemId: 'sword', itemName: 'Sword', identified: true }
+      ]
+
+      const result = VictoryService.distributeItems(roster, partyMembers, items)
+
+      // No items distributed to dead characters
+      expect(result.roster.get('c1')!.inventory.length).toBe(0)
+      expect(result.roster.get('c2')!.inventory.length).toBe(0)
+      expect(result.itemsAdded.size).toBe(0)
+    })
   })
 })

@@ -93,7 +93,7 @@
           <button class="action-btn parry-btn" (click)="selectActionType('PARRY')">
             (P)ARRY
           </button>
-          <button class="action-btn flee-btn" (click)="selectActionType('FLEE')"
+          <button class="action-btn flee-btn" (click)="selectActionType('RUN')"
                   [disabled]="!combat.canFlee">
             (F)LEE
           </button>
@@ -186,19 +186,30 @@
               </div>
               @if (rewards.items.length > 0) {
                 <div class="items-section">
-                  <h3>Items Found:</h3>
+                  <h3>Items Found ({{ rewards.items.length }}):</h3>
                   <div class="item-list">
                     @for (item of rewards.items; track $index) {
                       <div class="item-entry" [class.unidentified]="!item.identified">
                         @if (item.identified) {
                           <span class="item-name">{{ item.itemName }}</span>
                         } @else {
-                          <span class="item-name unidentified-text">{{ item.itemName }}</span>
+                          <span class="item-name unidentified-text">??? (Unidentified)</span>
                           <span class="identify-hint">(Requires Temple identification)</span>
                         }
                       </div>
                     }
                   </div>
+                  @if (itemDistribution().size > 0) {
+                    <div class="distribution-info">
+                      <h4>Added to Inventory:</h4>
+                      @for (entry of Array.from(itemDistribution().entries()); track entry[0]) {
+                        <div class="distribution-line">
+                          <span class="char-label">{{ getCharacterName(entry[0]) }}:</span>
+                          <span class="items-count">{{ entry[1].length }} item{{ entry[1].length > 1 ? 's' : '' }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
               }
             </div>
