@@ -10,6 +10,7 @@ import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
+import { MonsterDataLoader } from './MonsterDataLoader'
 
 let gameState: GameState | null = null
 
@@ -84,12 +85,21 @@ async function initializeGame(): Promise<void> {
     console.log(`Loaded ${spellCount} spells successfully`)
   }
 
-  // Initialize data services in parallel
+  // Initialize data services in parallel (including common monsters)
   await Promise.all([
     RaceService.initialize(),
     ClassService.initialize(),
-    ItemDataService.loadAllItems()
+    ItemDataService.loadAllItems(),
+    MonsterDataLoader.preloadCommonMonsters()
   ])
+
+  // Report monster loading statistics
+  const monsterStats = MonsterDataLoader.getStats()
+  if (monsterStats.failed > 0) {
+    console.warn(`Loaded ${monsterStats.loaded} monsters (${monsterStats.failed} failed)`)
+  } else {
+    console.log(`Pre-loaded ${monsterStats.loaded} common monsters`)
+  }
 
   console.log('Game data initialized successfully')
 

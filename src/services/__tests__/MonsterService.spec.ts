@@ -15,7 +15,7 @@ describe('MonsterService', () => {
     })
 
     it('throws error for non-existent monster', () => {
-      expect(() => MonsterService.loadMonster('nonexistent')).toThrow('Monster not loaded: nonexistent. Call loadMonsterAsync() first.')
+      expect(() => MonsterService.loadMonster('nonexistent')).toThrow('Monster not loaded: nonexistent. Call loadMonster() first.')
     })
   })
 
