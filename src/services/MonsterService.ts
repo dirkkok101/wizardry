@@ -27,13 +27,48 @@ const MONSTER_CACHE = new Map<string, MonsterTemplate>()
 MONSTER_CACHE.set('kobold', koboldData as MonsterTemplate)
 
 export class MonsterService {
+  /**
+   * Load monster synchronously from cache or throw error.
+   * For runtime use, call loadMonsterAsync() first to populate cache.
+   */
   static loadMonster(monsterId: string): MonsterTemplate {
     const cached = MONSTER_CACHE.get(monsterId)
     if (cached) return cached
 
-    // For now, only kobold is pre-loaded
-    // TODO: Add other monsters to cache as needed
-    throw new Error(`Monster not found: ${monsterId}`)
+    throw new Error(`Monster not loaded: ${monsterId}. Call loadMonsterAsync() first.`)
+  }
+
+  /**
+   * Load monster asynchronously from assets and cache it.
+   * This is the primary method for loading monsters at runtime.
+   */
+  static async loadMonsterAsync(monsterId: string): Promise<MonsterTemplate> {
+    // Check cache first
+    const cached = MONSTER_CACHE.get(monsterId)
+    if (cached) return cached
+
+    try {
+      // Fetch from assets folder
+      const response = await fetch(`/assets/monsters/${monsterId}.json`)
+      if (!response.ok) {
+        throw new Error(`Failed to load monster: ${monsterId} (HTTP ${response.status})`)
+      }
+
+      const monsterData = await response.json() as MonsterTemplate
+
+      // Validate required fields
+      if (!monsterData.id || !monsterData.name) {
+        throw new Error(`Invalid monster data for: ${monsterId}`)
+      }
+
+      // Cache the monster for future use
+      MONSTER_CACHE.set(monsterId, monsterData)
+
+      return monsterData
+    } catch (error) {
+      console.error(`[MonsterService] Failed to load monster "${monsterId}":`, error)
+      throw error
+    }
   }
 
   static createMonsterInstance(monsterId: string): MonsterInstance {
