@@ -1,5 +1,6 @@
 import { Race, RaceData, getRaceId } from '../types/Race'
 import { AssetLoadingService } from './AssetLoadingService'
+import { validateAndLoadRaceData } from '../types/RaceValidation'
 
 type SaveType = 'death' | 'wand' | 'breath' | 'petrify' | 'spell'
 
@@ -8,10 +9,35 @@ class RaceServiceClass {
 
   /**
    * Initialize the race service by loading all race data
+   * Validates all race data against Zod schema and source material
    */
   async initialize(): Promise<void> {
     const service = new AssetLoadingService()
-    this.raceData = await service.loadDataFiles<RaceData>('races')
+    const rawData = await service.loadDataFiles<RaceData>('races')
+
+    // Validate each race data file
+    const validatedData = new Map<string, RaceData>()
+    const errors: string[] = []
+
+    for (const [raceId, data] of rawData.entries()) {
+      const validation = validateAndLoadRaceData(data)
+
+      if (!validation.success) {
+        const errorDetails = [
+          ...(validation.schemaErrors || []),
+          ...(validation.sourceErrors || [])
+        ]
+        errors.push(`Race ${raceId} validation failed:\n  ${errorDetails.join('\n  ')}`)
+      } else {
+        validatedData.set(raceId, validation.data!)
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Race data validation failed:\n${errors.join('\n\n')}`)
+    }
+
+    this.raceData = validatedData
   }
 
   /**
