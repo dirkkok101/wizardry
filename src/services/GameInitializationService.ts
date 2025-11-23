@@ -84,9 +84,21 @@ async function initializeGame(): Promise<void> {
     console.log(`Loaded ${spellCount} spells successfully`)
   }
 
-  // Initialize data services in parallel
+  // Initialize race service (critical - must succeed)
+  try {
+    await RaceService.initialize()
+
+    // Report race loading statistics
+    const raceCount = RaceService.getLoadedCount()
+    const totalRaces = RaceService.getTotalCount()
+    console.log(`Loaded ${raceCount} races successfully`)
+  } catch (error) {
+    console.error('Failed to initialize races:', error)
+    throw error // Races are critical, re-throw error
+  }
+
+  // Initialize other data services in parallel
   await Promise.all([
-    RaceService.initialize(),
     ClassService.initialize(),
     ItemDataService.loadAllItems()
   ])
