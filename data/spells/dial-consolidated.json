@@ -1,0 +1,31 @@
+{
+  "name": "DIAL",
+  "casterType": "priest",
+  "category": "healing",
+  "castableIn": [
+    "combat",
+    "dungeon",
+    "town"
+  ],
+  "levels": [
+    {
+      "level": 3,
+      "id": "dial",
+      "description": "Restore 2d8 HP",
+      "target": "single",
+      "healing": {
+        "dice": "2d8",
+        "type": "normal"
+      }
+    },
+    {
+      "level": 5,
+      "id": "dial_5",
+      "description": "Full HP restore",
+      "target": "single",
+      "healing": {
+        "type": "full"
+      }
+    }
+  ]
+}
