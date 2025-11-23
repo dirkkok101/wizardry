@@ -56,10 +56,14 @@ describe('CombatService', () => {
       ]
 
       const state = CombatService.initiateCombat('kobold', party, true)
+      const monsters = CombatService.getAllMonsters(state)
 
-      expect(state.monsters.length).toBeGreaterThanOrEqual(3)
-      expect(state.monsters.length).toBeLessThanOrEqual(5)
-      expect(state.monsters.every(m => m.monsterId === 'kobold')).toBe(true)
+      expect(monsters.length).toBeGreaterThanOrEqual(3)
+      expect(monsters.length).toBeLessThanOrEqual(5)
+      expect(monsters.every(m => m.monsterId === 'kobold')).toBe(true)
+      expect(state.monsterGroups.length).toBe(1)
+      expect(state.monsterGroups[0].id).toBe('A')
+      expect(state.monsterGroups[0].formation).toBe('front')
       expect(state.commandQueue).toEqual([])
       expect(state.roundNumber).toBe(1)
       expect(state.combatLog).toEqual([])

@@ -8,8 +8,15 @@ describe('SpellCastingService', () => {
     it('allows casting with sufficient spell points', () => {
       const caster = createTestCharacter({
         spellPoints: {
-          mage: [0, 3, 2, 0, 0, 0, 0],
-          priest: [0, 0, 0, 0, 0, 0, 0]
+          mage: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 2, max: 2 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
         }
       })
 
@@ -21,8 +28,15 @@ describe('SpellCastingService', () => {
     it('prevents casting with insufficient spell points', () => {
       const caster = createTestCharacter({
         spellPoints: {
-          mage: [0, 0, 0, 0, 0, 0, 0],
-          priest: [0, 0, 0, 0, 0, 0, 0]
+          mage: {
+            level1: { current: 0, max: 3 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
         }
       })
 
@@ -36,8 +50,15 @@ describe('SpellCastingService', () => {
       const caster = createTestCharacter({
         status: CharacterStatus.ASLEEP,
         spellPoints: {
-          mage: [0, 9, 0, 0, 0, 0, 0],
-          priest: [0, 0, 0, 0, 0, 0, 0]
+          mage: {
+            level1: { current: 9, max: 9 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
         }
       })
 
@@ -52,22 +73,36 @@ describe('SpellCastingService', () => {
     it('deducts one point from correct spell level', () => {
       const caster = createTestCharacter({
         spellPoints: {
-          mage: [0, 5, 3, 2, 0, 0, 0],
-          priest: [0, 0, 0, 0, 0, 0, 0]
+          mage: {
+            level1: { current: 5, max: 5 },
+            level2: { current: 3, max: 3 },
+            level3: { current: 2, max: 2 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
         }
       })
 
       const newCaster = SpellCastingService.deductSpellPoints(caster, 'halito')
 
-      expect(newCaster.spellPoints!.mage[1]).toBe(4)
-      expect(newCaster.spellPoints!.mage[2]).toBe(3)
+      expect(newCaster.spellPoints!.mage!.level1.current).toBe(4)
+      expect(newCaster.spellPoints!.mage!.level2.current).toBe(3)
     })
 
     it('returns new character object (immutable)', () => {
       const caster = createTestCharacter({
         spellPoints: {
-          mage: [0, 5, 0, 0, 0, 0, 0],
-          priest: [0, 0, 0, 0, 0, 0, 0]
+          mage: {
+            level1: { current: 5, max: 5 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
         }
       })
 
