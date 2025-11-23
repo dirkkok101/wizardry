@@ -43,9 +43,11 @@ export class CombatComponent implements OnInit {
       .filter((char): char is Character => char !== undefined)
   })
 
+  // Get all monsters from all groups (flattened)
   readonly monsters = computed(() => {
     const combat = this.combatState()
-    return combat?.monsters || []
+    if (!combat) return []
+    return CombatService.getAllMonsters(combat)
   })
 
   readonly combatLog = computed(() => {
@@ -110,7 +112,7 @@ export class CombatComponent implements OnInit {
     const partyCommands = Array.from(actions.values())
 
     // Create monster commands using AI
-    const aliveMonsters = combat.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD')
+    const aliveMonsters = CombatService.getAllAliveMonsters(combat)
     const frontRow = this.party().formation.frontRow
     const monsterCommands = aliveMonsters.map(m =>
       CombatService.selectMonsterAction(m, chars, frontRow)
@@ -122,26 +124,27 @@ export class CombatComponent implements OnInit {
       commandQueue: [...partyCommands, ...monsterCommands]
     }
 
-    // Execute round
+    // Execute round with party for damage tracking
     this.isExecutingRound.set(true)
-    const result = CombatService.executeRound(stateWithCommands)
+    const result = CombatService.executeRound(stateWithCommands, chars)
 
     // Update game state with result
     this.gameState.updateState(state => {
-      // Update combat state
-      const newState = {
-        ...state,
-        combat: result.newState
+      // Update roster with damaged characters
+      let newRoster = new Map(state.roster)
+      for (const [charId, damagedChar] of result.damagedCharacters.entries()) {
+        newRoster.set(charId, damagedChar)
       }
 
-      // Update combat log
+      // Update combat state with log
       const updatedCombat = {
         ...result.newState,
         combatLog: [...result.newState.combatLog, ...result.messages]
       }
 
       return {
-        ...newState,
+        ...state,
+        roster: newRoster,
         combat: updatedCombat
       }
     })
@@ -163,17 +166,24 @@ export class CombatComponent implements OnInit {
     if (!combat) return
 
     const party = this.party()
-    const partySize = party.members.length
+    const roster = this.roster()
+    const partyMembers = party.members
 
-    // Calculate rewards
-    const rewards = VictoryService.calculateVictoryRewards(combat.monsters, partySize)
+    // Get all defeated monsters from all groups
+    const allMonsters = CombatService.getAllMonsters(combat)
 
-    // Distribute rewards to roster
+    // Calculate rewards (using living character count)
+    const rewards = VictoryService.calculateVictoryRewards(
+      allMonsters,
+      roster,
+      partyMembers
+    )
+
+    // Distribute rewards to roster (only living characters get XP)
     const newRoster = VictoryService.distributeRewards(
-      this.roster(),
-      party.members,
-      rewards.xpPerCharacter,
-      rewards.totalGold
+      roster,
+      partyMembers,
+      rewards.xpPerCharacter
     )
 
     // Update game state
@@ -193,6 +203,9 @@ export class CombatComponent implements OnInit {
   }
 
   private handleDefeat(): void {
+    // TODO: Place dead bodies at current dungeon position
+    // TODO: Send to Castle scene, not Temple
+
     // Clear combat state
     this.gameState.updateState(state => ({
       ...state,
@@ -209,6 +222,7 @@ export class CombatComponent implements OnInit {
   }
 
   returnToTemple(): void {
+    // TODO: Change to navigate to castle instead
     this.showDefeatModal.set(false)
     this.router.navigate(['/temple'])
   }

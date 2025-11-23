@@ -1,5 +1,5 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance } from '../types/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup } from '../types/Combat'
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
 import { CharacterStatus } from '../types/CharacterStatus'
@@ -25,8 +25,18 @@ export class CombatService {
   ): CombatState {
     const monsters = MonsterService.generateMonsterGroup(monsterId)
 
+    // Create single monster group (Group A, front row)
+    // TODO: Support multiple groups when implementing encounter system
+    const monsterGroups: MonsterGroup[] = [
+      {
+        id: 'A',
+        monsters,
+        formation: 'front'
+      }
+    ]
+
     return {
-      monsters,
+      monsterGroups,
       commandQueue: [],
       roundNumber: 1,
       combatLog: [],
@@ -192,29 +202,53 @@ export class CombatService {
   ): CombatState {
     // Apply damage to monster
     if ('monsterId' in target) {
-      const newMonsters = state.monsters.map(m => {
-        if (m.id !== target.id) return m
-        const newHp = Math.max(0, m.hp - damage)
-        return {
-          ...m,
-          hp: newHp,
-          status: newHp === 0 ? 'DEAD' : m.status
-        }
-      })
-      return { ...state, monsters: newMonsters }
+      const newMonsterGroups = state.monsterGroups.map(group => ({
+        ...group,
+        monsters: group.monsters.map(m => {
+          if (m.id !== target.id) return m
+          const newHp = Math.max(0, m.hp - damage)
+          return {
+            ...m,
+            hp: newHp,
+            status: newHp === 0 ? 'DEAD' : m.status
+          }
+        })
+      }))
+      return { ...state, monsterGroups: newMonsterGroups }
     }
 
-    // TODO: Apply damage to character
+    // Apply damage to character (handled in component via GameStateService)
+    // We return the character with updated HP for the component to handle
+    // Note: The component needs to update the roster with the damaged character
     return state
+  }
+
+  /**
+   * Apply damage to a character and update status if dead
+   * Returns updated character (for use by components)
+   */
+  static applyDamageToCharacter(character: Character, damage: number): Character {
+    const newHp = Math.max(0, character.hp - damage)
+    const isDead = newHp === 0
+
+    return {
+      ...character,
+      hp: newHp,
+      status: isDead ? CharacterStatus.DEAD : character.status
+    }
   }
 
   private static getCombatantName(combatant: Combatant): string {
     return combatant.name || 'Unknown'
   }
 
-  static executeRound(state: CombatState): {
+  static executeRound(
+    state: CombatState,
+    party: Character[]
+  ): {
     newState: CombatState
     messages: string[]
+    damagedCharacters: Map<string, Character>  // Characters that took damage this round
     victory: boolean
     defeat: boolean
   } {
@@ -225,6 +259,7 @@ export class CombatService {
 
     let currentState: CombatState = { ...state, commandQueue: [] }
     const messages: string[] = []
+    const damagedCharacters = new Map<string, Character>()
 
     // Execute each command
     for (const command of sortedQueue) {
@@ -235,29 +270,109 @@ export class CombatService {
       currentState = result.newState
       messages.push(result.message)
 
-      // Check victory/defeat after each action
-      const allMonstersDead = currentState.monsters.every(m => m.status === 'DEAD')
-      if (allMonstersDead) {
-        return { newState: currentState, messages, victory: true, defeat: false }
+      // Track character damage for component to update roster
+      if (command.target && !('monsterId' in command.target)) {
+        const target = command.target as Character
+        const existingDamage = damagedCharacters.get(target.id)
+        if (existingDamage) {
+          // Accumulate damage
+          const attackResult = this.resolveAttack(command.actor, target)
+          if (attackResult.hit) {
+            const updated = this.applyDamageToCharacter(existingDamage, attackResult.damage)
+            damagedCharacters.set(target.id, updated)
+          }
+        } else {
+          // First damage to this character
+          const attackResult = this.resolveAttack(command.actor, target)
+          if (attackResult.hit) {
+            const updated = this.applyDamageToCharacter(target, attackResult.damage)
+            damagedCharacters.set(target.id, updated)
+          }
+        }
       }
 
-      // TODO: Check party wipe (defeat)
+      // Check victory after each action
+      const allMonstersDead = this.areAllMonstersDead(currentState)
+      if (allMonstersDead) {
+        return {
+          newState: currentState,
+          messages,
+          damagedCharacters,
+          victory: true,
+          defeat: false
+        }
+      }
+
+      // Check defeat after each action
+      const allPartyDead = this.areAllCharactersDead(party, damagedCharacters)
+      if (allPartyDead) {
+        return {
+          newState: currentState,
+          messages,
+          damagedCharacters,
+          victory: false,
+          defeat: true
+        }
+      }
     }
 
     // Final victory/defeat check after all commands executed
-    const allMonstersDead = currentState.monsters.every(m => m.status === 'DEAD')
+    const allMonstersDead = this.areAllMonstersDead(currentState)
     if (allMonstersDead) {
-      return { newState: currentState, messages, victory: true, defeat: false }
+      return {
+        newState: currentState,
+        messages,
+        damagedCharacters,
+        victory: true,
+        defeat: false
+      }
     }
 
-    // TODO: Check party wipe (defeat)
+    const allPartyDead = this.areAllCharactersDead(party, damagedCharacters)
+    if (allPartyDead) {
+      return {
+        newState: currentState,
+        messages,
+        damagedCharacters,
+        victory: false,
+        defeat: true
+      }
+    }
 
     return {
       newState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
       messages,
+      damagedCharacters,
       victory: false,
       defeat: false
     }
+  }
+
+  /**
+   * Check if all monsters in all groups are dead
+   */
+  private static areAllMonstersDead(state: CombatState): boolean {
+    return state.monsterGroups.every(group =>
+      group.monsters.every(m => m.status === 'DEAD' || m.hp <= 0)
+    )
+  }
+
+  /**
+   * Check if all party members are dead
+   */
+  private static areAllCharactersDead(
+    party: Character[],
+    damagedCharacters: Map<string, Character>
+  ): boolean {
+    return party.every(char => {
+      // Check if character was damaged this round
+      const damaged = damagedCharacters.get(char.id)
+      if (damaged) {
+        return damaged.status === CharacterStatus.DEAD || damaged.hp <= 0
+      }
+      // Otherwise check original state
+      return char.status === CharacterStatus.DEAD || char.hp <= 0
+    })
   }
 
   private static isCombatantDead(combatant: Combatant): boolean {
@@ -270,5 +385,19 @@ export class CombatService {
       return combatant.status === CharacterStatus.DEAD || combatant.hp <= 0
     }
     return false
+  }
+
+  /**
+   * Get all monsters from all groups (flattened array)
+   */
+  static getAllMonsters(state: CombatState): MonsterInstance[] {
+    return state.monsterGroups.flatMap(group => group.monsters)
+  }
+
+  /**
+   * Get all alive monsters from all groups
+   */
+  static getAllAliveMonsters(state: CombatState): MonsterInstance[] {
+    return this.getAllMonsters(state).filter(m => m.status !== 'DEAD' && m.hp > 0)
   }
 }

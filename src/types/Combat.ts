@@ -36,8 +36,14 @@ export interface CombatCommand {
   data?: any  // spell ID, item ID, etc.
 }
 
-export interface CombatState {
+export interface MonsterGroup {
+  id: 'A' | 'B' | 'C' | 'D'
   monsters: MonsterInstance[]
+  formation: 'front' | 'back'  // Row position
+}
+
+export interface CombatState {
+  monsterGroups: MonsterGroup[]  // 1-4 groups (A, B, C, D)
   commandQueue: CombatCommand[]
   roundNumber: number
   combatLog: string[]

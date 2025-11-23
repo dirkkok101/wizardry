@@ -6,7 +6,7 @@ import { CharacterClass } from '../types/CharacterClass'
 import { Alignment } from '../types/Alignment'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SceneType } from '../types/SceneType'
-import { MonsterInstance, CombatState, CombatCommand } from '../types/Combat'
+import { MonsterInstance, CombatState, CombatCommand, MonsterGroup } from '../types/Combat'
 import { MonsterService } from '../services/MonsterService'
 
 /**
@@ -153,8 +153,16 @@ export function createTestMonster(overrides: Partial<MonsterInstance> = {}): Mon
  * @param overrides - Partial combat state properties to override defaults
  */
 export function createTestCombatState(overrides: Partial<CombatState> = {}): CombatState {
+  const defaultGroups: MonsterGroup[] = [
+    {
+      id: 'A',
+      monsters: [createTestMonster()],
+      formation: 'front'
+    }
+  ]
+
   return {
-    monsters: [createTestMonster()],
+    monsterGroups: defaultGroups,
     commandQueue: [],
     roundNumber: 1,
     combatLog: [],
@@ -197,16 +205,23 @@ export function createCombatParty(): { party: Character[], roster: Map<string, C
  * @param overrides - Partial combat state properties to override defaults
  */
 export function createTestCombatStateForUI(overrides?: {
-  monsters?: MonsterInstance[]
+  monsterGroups?: MonsterGroup[]
   roundNumber?: number
   canFlee?: boolean
   commandQueue?: CombatCommand[]
   combatLog?: string[]
 }): CombatState {
   const defaultMonsters = MonsterService.generateMonsterGroup('kobold')
+  const defaultGroups: MonsterGroup[] = [
+    {
+      id: 'A',
+      monsters: defaultMonsters,
+      formation: 'front'
+    }
+  ]
 
   return {
-    monsters: overrides?.monsters || defaultMonsters,
+    monsterGroups: overrides?.monsterGroups || defaultGroups,
     commandQueue: overrides?.commandQueue || [],
     roundNumber: overrides?.roundNumber || 1,
     combatLog: overrides?.combatLog || ['Combat begins!'],
