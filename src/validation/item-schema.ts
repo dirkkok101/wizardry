@@ -177,7 +177,15 @@ export const ItemSchema = z.discriminatedUnion('category', [
 ])
 
 /**
- * TypeScript type inferred from the schema
+ * TypeScript type inferred from the ItemSchema
+ *
+ * This represents the validated JSON format loaded from data/items/*.json files.
+ * It differs from the runtime Item interface in that:
+ * - Uses JSON property names (e.g., 'usableBy' vs 'classRestrictions')
+ * - Uses discriminated union on 'category' field for type safety
+ * - Includes all original JSON fields before transformation to runtime format
+ *
+ * After validation, items are transformed to the runtime Item format by ItemDataService.
  */
 export type ValidatedItem = z.infer<typeof ItemSchema>
 
