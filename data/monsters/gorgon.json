@@ -14,7 +14,7 @@
   "specialAbilities": ["breath_weapon"],
   "breathWeapon": {
     "type": "petrify",
-    "damage": "0",
+    "damage": "0d0",
     "target": "party"
   },
   "resistances": [],
