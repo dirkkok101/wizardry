@@ -81,10 +81,10 @@ describe('CombatComponent', () => {
   })
 
   describe('Character-by-character Action Selection', () => {
-    it('shows target selection when selecting ATTACK', () => {
+    it('shows group selection dialog when selecting ATTACK', () => {
       component.selectActionType('ATTACK')
 
-      expect(component.showTargetSelection()).toBe(true)
+      expect(component.showGroupSelectionDialog()).toBe(true)
       expect(component.selectedActionType()).toBe('ATTACK')
     })
 
@@ -105,11 +105,11 @@ describe('CombatComponent', () => {
       expect(actions.get(activeChar.id)!.type).toBe('PARRY')
     })
 
-    it('shows target selection when selecting RUN', () => {
+    it('does not show selection dialog for RUN (removed feature)', () => {
       component.selectActionType('RUN')
 
-      expect(component.showTargetSelection()).toBe(true)
-      expect(component.selectedActionType()).toBe('RUN')
+      // RUN action removed - no dialog shown
+      expect(component.showGroupSelectionDialog()).toBe(false)
     })
 
     it('creates command when target is selected', () => {
@@ -117,7 +117,7 @@ describe('CombatComponent', () => {
       const monster = component.monsters()[0]
 
       component.selectActionType('ATTACK')
-      component.selectTarget(monster)
+      component.selectGroup('A')
 
       const actions = component.selectedActions()
       expect(actions.has(activeChar.id)).toBe(true)
@@ -130,7 +130,7 @@ describe('CombatComponent', () => {
       const monster = component.monsters()[0]
 
       component.selectActionType('ATTACK')
-      component.selectTarget(monster)
+      component.selectGroup('A')
 
       const secondChar = component.activeCharacter()!
       expect(secondChar.id).not.toBe(firstChar.id)
@@ -142,7 +142,7 @@ describe('CombatComponent', () => {
 
       // First character selects attack
       component.selectActionType('ATTACK')
-      component.selectTarget(monster)
+      component.selectGroup('A')
 
       expect(component.selectedActions().has(chars[0].id)).toBe(true)
       expect(component.selectedActions().has(chars[1].id)).toBe(false)
@@ -163,7 +163,7 @@ describe('CombatComponent', () => {
       // Select actions for all characters
       chars.forEach(() => {
         component.selectActionType('ATTACK')
-        component.selectTarget(monster)
+        component.selectGroup('A')
       })
 
       expect(component.allActionsSelected()).toBe(true)
@@ -171,11 +171,11 @@ describe('CombatComponent', () => {
 
     it('cancels action selection and resets UI state', () => {
       component.selectActionType('ATTACK')
-      expect(component.showTargetSelection()).toBe(true)
+      expect(component.showGroupSelectionDialog()).toBe(true)
 
       component.cancelActionSelection()
 
-      expect(component.showTargetSelection()).toBe(false)
+      expect(component.showGroupSelectionDialog()).toBe(false)
       expect(component.selectedActionType()).toBe(null)
     })
 
@@ -248,8 +248,8 @@ describe('CombatComponent', () => {
         component.selectActionType('CAST_SPELL')
         component.selectSpell(alliesSpell.id)
 
-        // Should NOT show target selection
-        expect(component.showTargetSelection()).toBe(false)
+        // Should NOT show group selection dialog
+        expect(component.showGroupSelectionDialog()).toBe(false)
         // Should have created the action
         expect(component.selectedActions().size).toBe(1)
       }
@@ -265,8 +265,8 @@ describe('CombatComponent', () => {
         component.selectActionType('CAST_SPELL')
         component.selectSpell(singleSpell.id)
 
-        // Should show target selection
-        expect(component.showTargetSelection()).toBe(true)
+        // Should show group selection dialog
+        expect(component.showGroupSelectionDialog()).toBe(true)
         // Should NOT have created action yet
         expect(component.selectedActions().size).toBe(0)
       }
@@ -282,8 +282,8 @@ describe('CombatComponent', () => {
         component.selectActionType('CAST_SPELL')
         component.selectSpell(groupSpell.id)
 
-        // Should show target selection
-        expect(component.showTargetSelection()).toBe(true)
+        // Should show group selection dialog
+        expect(component.showGroupSelectionDialog()).toBe(true)
         // Should NOT have created action yet
         expect(component.selectedActions().size).toBe(0)
       }
@@ -316,9 +316,8 @@ describe('CombatComponent', () => {
         component.selectActionType('CAST_SPELL')
         component.selectedSpellId.set(singleSpell.id)
 
-        const prompt = component.targetSelectionPrompt()
-        expect(prompt.title).toContain(singleSpell.name)
-        expect(prompt.title).toContain('SINGLE TARGET')
+        const prompt = component.groupSelectionPrompt()
+        expect(prompt).toContain(singleSpell.name.toUpperCase())
       }
     })
 
@@ -345,8 +344,8 @@ describe('CombatComponent', () => {
         component.selectActionType('CAST_SPELL')
         component.selectSpell(allEnemiesSpell.id)
 
-        // Should NOT show target selection
-        expect(component.showTargetSelection()).toBe(false)
+        // Should NOT show group selection dialog
+        expect(component.showGroupSelectionDialog()).toBe(false)
         // Should have created the action
         expect(component.selectedActions().size).toBe(1)
         // Should have spell ID attached
@@ -369,7 +368,7 @@ describe('CombatComponent', () => {
 
       chars.forEach(() => {
         component.selectActionType('ATTACK')
-        component.selectTarget(monster)
+        component.selectGroup('A')
       })
     })
 
@@ -559,7 +558,7 @@ describe('CombatComponent', () => {
       const monster = component.monsters()[0]
       chars.forEach(() => {
         component.selectActionType('ATTACK')
-        component.selectTarget(monster)
+        component.selectGroup('A')
       })
 
       const executeRoundSpy = jest.spyOn(component, 'executeRound')

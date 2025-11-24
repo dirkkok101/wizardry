@@ -30,15 +30,15 @@ describe('Combat Flow E2E', () => {
   })
 
   // Helper function to select actions for characters using new character-by-character API
-  const selectActionsForParty = (actionType: 'ATTACK' | 'PARRY' | 'RUN', target?: any) => {
+  const selectActionsForParty = (actionType: 'ATTACK' | 'PARRY' | 'RUN', groupId?: 'A' | 'B' | 'C' | 'D') => {
     const aliveChars = component.partyCharacters().filter(c => c.hp > 0)
     aliveChars.forEach(() => {
       if (actionType === 'PARRY') {
         component.selectActionType('PARRY')
       } else {
         component.selectActionType(actionType)
-        if (target) {
-          component.selectTarget(target)
+        if (groupId) {
+          component.selectGroup(groupId)
         }
       }
     })
@@ -115,7 +115,7 @@ describe('Combat Flow E2E', () => {
       const monster = component.monsters()[0]
       expect(monster.hp).toBe(1)
 
-      selectActionsForParty('ATTACK', monster)
+      selectActionsForParty('ATTACK', 'A')
 
       // Verify actions were selected
       expect(component.selectedActions().size).toBe(2)
@@ -207,7 +207,7 @@ describe('Combat Flow E2E', () => {
 
       // Select attack actions for all characters targeting first monster
       const monster = component.monsters()[0]
-      selectActionsForParty('ATTACK', monster)
+      selectActionsForParty('ATTACK', 'A')
 
       expect(component.allActionsSelected()).toBe(true)
 
@@ -375,7 +375,7 @@ describe('Combat Flow E2E', () => {
 
       // Select an action for first character
       component.selectActionType('ATTACK')
-      component.selectTarget(monster)
+      component.selectGroup('A')
       expect(component.selectedActions().size).toBe(1)
 
       // Handle defeat
@@ -426,7 +426,7 @@ describe('Combat Flow E2E', () => {
 
       // Combat won't end quickly with monsters at 50hp
       // Just verify we can execute without immediate victory/defeat
-      selectActionsForParty('ATTACK', component.monsters()[0])
+      selectActionsForParty('ATTACK', 'A')
       component.executeRound()
 
       // Combat state should still exist (not victory or defeat)
@@ -471,7 +471,7 @@ describe('Combat Flow E2E', () => {
       expect(initialLogLength).toBe(1) // Should have the initial message
 
       // Execute round
-      selectActionsForParty('ATTACK', component.monsters()[0])
+      selectActionsForParty('ATTACK', 'A')
       component.executeRound()
 
       // After victory, combat state is cleared so log disappears from component

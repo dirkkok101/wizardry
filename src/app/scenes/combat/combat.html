@@ -16,11 +16,8 @@
           <div class="monster-group" [attr.data-group]="group.id">
             <!-- Simplified Group Display (Original Wizardry 1981 Format) -->
             <div class="group-summary"
-                 [class.targetable-group]="isGroupTargetMode() && hasAliveMonsters(group)"
-                 [class.targetable-monster]="isMonsterTargetMode() && hasAliveMonsters(group)"
                  [class.selected]="selectedGroupId() === group.id"
-                 [class.defeated]="!hasAliveMonsters(group)"
-                 (click)="handleGroupClick(group)">
+                 [class.defeated]="!hasAliveMonsters(group)">
               <div class="group-info">
                 <span class="group-label">GROUP {{ group.id }}</span>
                 <span class="group-formation">{{ group.formation | uppercase }} ROW</span>
@@ -29,9 +26,6 @@
               <div class="group-monsters-text">
                 {{ getGroupDisplayName(group) }}
               </div>
-              @if (isMonsterTargetMode() && hasAliveMonsters(group)) {
-                <div class="target-hint">(click to target)</div>
-              }
             </div>
           </div>
         }
@@ -82,7 +76,7 @@
     </div>
 
     <!-- Action Selection Status (shown for active character) -->
-    @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showTargetSelection()) {
+    @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showGroupSelectionDialog()) {
       <div class="action-status">
         <p>{{ activeCharacter()!.name }} - SELECT ACTION</p>
       </div>
@@ -132,18 +126,14 @@
       </div>
     }
 
-    <!-- Target Selection Overlay -->
-    @if (showTargetSelection()) {
-      <div class="target-selection-overlay">
-        <div class="target-selection-prompt">
-          <h3>{{ targetSelectionPrompt().title }}</h3>
-          <p>{{ targetSelectionPrompt().subtitle }}</p>
-          <button class="cancel-btn" (click)="cancelActionSelection()">
-            (Esc) Cancel
-          </button>
-        </div>
-      </div>
-    }
+    <!-- Monster Group Selection Dialog -->
+    <app-monster-group-selection-dialog
+      [visible]="showGroupSelectionDialog()"
+      [groups]="groupSelectionOptions()"
+      [prompt]="groupSelectionPrompt()"
+      (groupSelected)="selectGroup($event)"
+      (cancelled)="cancelGroupSelection()"
+    />
 
     <!-- Combat Log -->
     <div class="combat-log">
@@ -159,7 +149,7 @@
     </div>
 
     <!-- Footer with action menu -->
-    @if (!showSpellMenu() && !showTargetSelection() && !showVictoryModal() && !showDefeatModal()) {
+    @if (!showSpellMenu() && !showGroupSelectionDialog() && !showVictoryModal() && !showDefeatModal()) {
       @if (allActionsSelected()) {
         <!-- Show execute round menu -->
         <app-scene-footer

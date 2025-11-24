@@ -12,6 +12,7 @@ import { Character } from '../../../types/Character'
 import { MenuItem } from '../../../components/menu/menu.component'
 import { SceneTitleComponent } from '../../../components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '../../../components/scene-footer/scene-footer.component'
+import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '../../../components/monster-group-selection-dialog/monster-group-selection-dialog.component'
 import { getGroupDisplayText } from '../../../utils/MonsterNameUtils'
 
 interface SelectedAction {
@@ -25,7 +26,8 @@ interface SelectedAction {
   imports: [
     CommonModule,
     SceneTitleComponent,
-    SceneFooterComponent
+    SceneFooterComponent,
+    MonsterGroupSelectionDialogComponent
   ],
   templateUrl: './combat.html',
   styleUrls: ['./combat.scss']
@@ -50,60 +52,8 @@ export class CombatComponent implements OnInit {
   readonly selectedActionType = signal<CombatActionType | null>(null)
   readonly selectedSpellId = signal<string | null>(null)
   readonly showSpellMenu = signal<boolean>(false)
-  readonly showTargetSelection = signal<boolean>(false)
+  readonly showGroupSelectionDialog = signal<boolean>(false)
   readonly selectedGroupId = signal<'A' | 'B' | 'C' | 'D' | null>(null)
-
-  // Target selection prompt (dynamic based on action type and spell)
-  readonly targetSelectionPrompt = computed(() => {
-    const actionType = this.selectedActionType()
-    const spellId = this.selectedSpellId()
-
-    // For spell casting with target selection
-    if (actionType === 'CAST_SPELL' && spellId) {
-      const spell = SpellCastingService.getSpell(spellId)
-      if (spell) {
-        // Spell-specific prompt
-        if (spell.target === 'single') {
-          return {
-            title: `${spell.name} - SELECT SINGLE TARGET`,
-            subtitle: 'Click on a monster to target'
-          }
-        } else if (spell.target === 'group') {
-          return {
-            title: `${spell.name} - SELECT MONSTER GROUP`,
-            subtitle: 'Click on any monster in the target group'
-          }
-        } else if (spell.target === 'all_enemies') {
-          return {
-            title: `${spell.name} - TARGETING ALL ENEMIES`,
-            subtitle: 'Spell will affect all monster groups'
-          }
-        }
-      }
-    }
-
-    // For attack action
-    if (actionType === 'ATTACK') {
-      return {
-        title: 'ATTACK - SELECT TARGET',
-        subtitle: 'Click on a monster to attack'
-      }
-    }
-
-    // For flee action
-    if (actionType === 'RUN') {
-      return {
-        title: 'FLEE - SELECT DIRECTION',
-        subtitle: 'Click on a monster group to flee from'
-      }
-    }
-
-    // Default fallback
-    return {
-      title: 'SELECT TARGET',
-      subtitle: 'Click on a monster to target'
-    }
-  })
 
   // Computed party characters
   readonly partyCharacters = computed(() => {
@@ -278,6 +228,36 @@ export class CombatComponent implements OnInit {
     { id: 'temple', label: 'Go to Temple', shortcut: 'ENTER', enabled: true }
   ])
 
+  // Group selection options (only alive groups)
+  readonly groupSelectionOptions = computed((): MonsterGroupOption[] => {
+    return this.monsterGroups()
+      .filter(group => this.hasAliveMonsters(group))
+      .map(group => ({
+        id: group.id,
+        displayName: this.getGroupDisplayName(group),
+        enabled: true
+      }))
+  })
+
+  // Dialog prompt based on action type
+  readonly groupSelectionPrompt = computed((): string => {
+    const actionType = this.selectedActionType()
+    const spellId = this.selectedSpellId()
+
+    if (actionType === 'ATTACK') {
+      return 'SELECT TARGET GROUP'
+    }
+
+    if (actionType === 'CAST_SPELL' && spellId) {
+      const spell = SpellCastingService.getSpell(spellId)
+      if (spell) {
+        return `${spell.name.toUpperCase()} - SELECT TARGET`
+      }
+    }
+
+    return 'SELECT TARGET GROUP'
+  })
+
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -315,10 +295,10 @@ export class CombatComponent implements OnInit {
   }
 
   selectActionType(actionType: CombatActionType): void {
-    // If ATTACK or RUN - show target selection
-    if (actionType === 'ATTACK' || actionType === 'RUN') {
+    // If ATTACK - show group selection dialog
+    if (actionType === 'ATTACK') {
       this.selectedActionType.set(actionType)
-      this.showTargetSelection.set(true)
+      this.showGroupSelectionDialog.set(true)
     } else if (actionType === 'PARRY') {
       // PARRY doesn't need a target
       this.confirmAction(actionType, undefined)
@@ -347,58 +327,50 @@ export class CombatComponent implements OnInit {
       // No target selection needed - confirm action immediately
       this.confirmAction('CAST_SPELL', undefined)
     } else {
-      // Show target selection for single and group target spells
-      this.showTargetSelection.set(true)
+      // Show group selection dialog for single and group target spells
+      this.showGroupSelectionDialog.set(true)
     }
   }
 
-  selectTarget(target: Combatant): void {
-    const actionType = this.selectedActionType()
-    if (!actionType) return
-
-    this.confirmAction(actionType, target)
-    this.showTargetSelection.set(false)
-  }
-
   /**
-   * Select a monster group (for group-targeting spells and DISPEL)
+   * Select a monster group from dialog
+   * Handles both group-targeting (spells) and single-target (attacks, single-target spells)
    */
   selectGroup(groupId: 'A' | 'B' | 'C' | 'D'): void {
-    if (!this.isGroupTargetMode()) return
-
     const group = this.monsterGroups().find(g => g.id === groupId)
     if (!group || !this.hasAliveMonsters(group)) return
 
     // Set selected group ID
     this.selectedGroupId.set(groupId)
 
-    // Confirm action with no specific target (group ID will be used)
     const actionType = this.selectedActionType()
-    if (actionType) {
+    if (!actionType) return
+
+    // For group-targeting mode (group spells, DISPEL)
+    if (this.isGroupTargetMode()) {
       this.confirmAction(actionType, undefined)
-      this.showTargetSelection.set(false)
-    }
-  }
-
-  /**
-   * Select an individual monster (for single-target spells and ATTACK)
-   */
-  selectMonster(monster: MonsterInstance): void {
-    if (!this.isMonsterTargetMode()) return
-    if (monster.hp <= 0) return
-
-    // Find which group contains this monster
-    const group = this.findGroupContainingMonster(monster.id)
-    if (group) {
-      this.selectedGroupId.set(group.id)
+      this.showGroupSelectionDialog.set(false)
+      return
     }
 
-    // Confirm action with this monster as target
-    const actionType = this.selectedActionType()
-    if (actionType) {
-      this.confirmAction(actionType, monster)
-      this.showTargetSelection.set(false)
+    // For single-target mode (ATTACK, single-target spells)
+    if (this.isMonsterTargetMode()) {
+      // Pick a random alive monster from the group
+      const aliveMonsters = group.monsters.filter(m => m.hp > 0)
+      if (aliveMonsters.length > 0) {
+        const randomIndex = Math.floor(Math.random() * aliveMonsters.length)
+        const targetMonster = aliveMonsters[randomIndex]
+        this.confirmAction(actionType, targetMonster)
+      } else {
+        // No alive monsters (shouldn't happen, but handle gracefully)
+        this.confirmAction(actionType, undefined)
+      }
+      this.showGroupSelectionDialog.set(false)
+      return
     }
+
+    // Neither mode active - just close dialog
+    this.showGroupSelectionDialog.set(false)
   }
 
   confirmAction(actionType: CombatActionType, target?: Combatant): void {
@@ -438,10 +410,20 @@ export class CombatComponent implements OnInit {
     this.selectedSpellId.set(null)
     this.selectedGroupId.set(null)
     this.showSpellMenu.set(false)
-    this.showTargetSelection.set(false)
+    this.showGroupSelectionDialog.set(false)
 
     // Advance to next character
     this.advanceToNextCharacter()
+  }
+
+  /**
+   * Cancel group selection and return to action menu
+   */
+  cancelGroupSelection(): void {
+    this.showGroupSelectionDialog.set(false)
+    this.selectedActionType.set(null)
+    this.selectedSpellId.set(null)
+    this.selectedGroupId.set(null)
   }
 
   advanceToNextCharacter(): void {
@@ -467,7 +449,7 @@ export class CombatComponent implements OnInit {
   cancelActionSelection(): void {
     this.selectedActionType.set(null)
     this.showSpellMenu.set(false)
-    this.showTargetSelection.set(false)
+    this.showGroupSelectionDialog.set(false)
   }
 
   executeRound(): void {
@@ -690,30 +672,6 @@ export class CombatComponent implements OnInit {
     // Get monster name from first monster in group (all have same name)
     const monsterName = group.monsters[0]?.name || 'UNKNOWN'
     return getGroupDisplayText(aliveCount, monsterName)
-  }
-
-  /**
-   * Handle click on monster group
-   * Routes to appropriate handler based on targeting mode
-   */
-  handleGroupClick(group: MonsterGroup): void {
-    if (!this.hasAliveMonsters(group)) return
-
-    // Group targeting mode (DISPEL, group spells)
-    if (this.isGroupTargetMode()) {
-      this.selectGroup(group.id)
-      return
-    }
-
-    // Monster targeting mode (ATTACK, single-target spells)
-    if (this.isMonsterTargetMode()) {
-      // Select first alive monster in group
-      const firstAlive = group.monsters.find(m => m.hp > 0)
-      if (firstAlive) {
-        this.selectMonster(firstAlive)
-      }
-      return
-    }
   }
 
   // Keyboard handling now delegated to MenuComponent via SceneFooterComponent
