@@ -166,147 +166,115 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
   })
 
   describe('Advanced Healing Spells', () => {
-    describe('DIALKO (Priest Level 5 - Critical Healing)', () => {
-      it('resolves DIALKO with 4d8 healing', () => {
+    describe('DIAL Level 5 (Priest - Full HP Restore)', () => {
+      it('resolves DIAL_5 with full HP restoration', () => {
         const caster = createTestCharacter({ level: 6 })
         const injured = createTestCharacter({ id: 'fighter', hp: 10, maxHp: 50 })
 
-        const effect = SpellCastingService.resolveSpellEffect('dialko', caster, [injured])
+        const effect = SpellCastingService.resolveSpellEffect('dial_5', caster, [injured])
 
         expect(effect.healing).toBeDefined()
         expect(effect.healing).toHaveLength(1)
-        expect(effect.healing![0]).toBeGreaterThanOrEqual(4)
-        expect(effect.healing![0]).toBeLessThanOrEqual(32)
-        expect(effect.message).toContain('DIALKO')
+        expect(effect.healing![0]).toBe(40)  // Restores to max HP (50 - 10 = 40 healed)
+        expect(effect.message).toContain('DIAL')
       })
 
-      it('DIALKO heals more than DIAL', () => {
+      it('DIAL_5 heals more than DIAL', () => {
         const caster = createTestCharacter({ level: 6 })
         const injured = [createTestCharacter({ id: 'c1', hp: 5, maxHp: 50 })]
 
-        const dialRolls: number[] = []
-        const dialkoRolls: number[] = []
+        const dialEffect = SpellCastingService.resolveSpellEffect('dial', caster, injured)
+        const dial5Effect = SpellCastingService.resolveSpellEffect('dial_5', caster, injured)
 
-        for (let i = 0; i < 100; i++) {
-          const dialEffect = SpellCastingService.resolveSpellEffect('dial', caster, injured)
-          const dialkoEffect = SpellCastingService.resolveSpellEffect('dialko', caster, injured)
-
-          dialRolls.push(dialEffect.healing![0])
-          dialkoRolls.push(dialkoEffect.healing![0])
-        }
-
-        const dialAvg = dialRolls.reduce((a, b) => a + b, 0) / dialRolls.length
-        const dialkoAvg = dialkoRolls.reduce((a, b) => a + b, 0) / dialkoRolls.length
-
-        expect(dialkoAvg).toBeGreaterThan(dialAvg)
+        // DIAL is 2d8 (2-16), DIAL_5 is full restore (45 HP)
+        expect(dial5Effect.healing![0]).toBeGreaterThan(dialEffect.healing![0])
+        expect(dial5Effect.healing![0]).toBe(45)  // Full restore
       })
     })
+  })
 
-    describe('MADI (Priest Level 6 - Party Healing)', () => {
-      it('resolves MADI healing entire party with 3d8 each', () => {
+  describe('Status Effect Spells', () => {
+    describe('MALIKTO (Priest Level 6 - Petrification)', () => {
+      it('resolves MALIKTO to petrify enemy group', () => {
         const caster = createTestCharacter({ level: 7 })
-        const party = [
-          createTestCharacter({ id: 'c1', hp: 5, maxHp: 30 }),
-          createTestCharacter({ id: 'c2', hp: 10, maxHp: 35 }),
-          createTestCharacter({ id: 'c3', hp: 8, maxHp: 28 })
+        const enemies = [
+          createTestMonster({ id: 'm1' }),
+          createTestMonster({ id: 'm2' }),
+          createTestMonster({ id: 'm3' })
         ]
 
-        const effect = SpellCastingService.resolveSpellEffect('madi', caster, party)
+        const effect = SpellCastingService.resolveSpellEffect('malikto', caster, enemies)
 
-        expect(effect.healing).toBeDefined()
-        expect(effect.healing).toHaveLength(3)
-        effect.healing!.forEach(heal => {
-          expect(heal).toBeGreaterThanOrEqual(3)
-          expect(heal).toBeLessThanOrEqual(24)
-        })
-      })
-    })
-
-    describe('MALIKTO (Priest Level 7 - Full Party Restoration)', () => {
-      it('resolves MALIKTO for full party heal', () => {
-        const caster = createTestCharacter({ level: 8 })
-        const party = [
-          createTestCharacter({ id: 'c1', hp: 5, maxHp: 50 }),
-          createTestCharacter({ id: 'c2', hp: 10, maxHp: 60 }),
-          createTestCharacter({ id: 'c3', hp: 1, maxHp: 40 })
-        ]
-
-        const effect = SpellCastingService.resolveSpellEffect('malikto', caster, party)
-
-        expect(effect.fullHeal).toBeDefined()
-        expect(effect.fullHeal).toEqual(['c1', 'c2', 'c3'])
-        expect(effect.message).toBe('MALIKTO fully restores the party!')
+        expect(effect.statusEffects).toBeDefined()
+        expect(effect.statusEffects).toEqual([
+          { target: 'm1', effect: 'PETRIFIED' },
+          { target: 'm2', effect: 'PETRIFIED' },
+          { target: 'm3', effect: 'PETRIFIED' }
+        ])
+        expect(effect.message).toContain('stone')
       })
     })
   })
 
   describe('Instant Death & Resurrection', () => {
-    describe('MAKANITO (Mage Level 5 - Instant Death)', () => {
-      it('resolves MAKANITO for instant death', () => {
+    describe('BADI (Priest Level 5 - Instant Death)', () => {
+      it('resolves BADI for instant death to group', () => {
         const caster = createTestCharacter({ level: 6 })
-        const target = createTestMonster({ id: 'dragon', hp: 200, maxHp: 200 })
+        const enemies = [
+          createTestMonster({ id: 'goblin1', hp: 20, maxHp: 20 }),
+          createTestMonster({ id: 'goblin2', hp: 15, maxHp: 15 })
+        ]
 
-        const effect = SpellCastingService.resolveSpellEffect('makanito', caster, [target])
+        const effect = SpellCastingService.resolveSpellEffect('badi', caster, enemies)
 
         expect(effect.instantDeath).toBeDefined()
-        expect(effect.instantDeath).toEqual(['dragon'])
-        expect(effect.message).toBe('MAKANITO invokes instant death!')
+        expect(effect.instantDeath).toEqual(['goblin1', 'goblin2'])
+        expect(effect.message).toContain('BADI')
       })
 
-      it('targets single enemy only', () => {
+      it('affects entire enemy group', () => {
         const caster = createTestCharacter({ level: 6 })
-        const target = createTestMonster({ id: 'boss' })
+        const enemies = [
+          createTestMonster({ id: 'm1' }),
+          createTestMonster({ id: 'm2' }),
+          createTestMonster({ id: 'm3' })
+        ]
 
-        const effect = SpellCastingService.resolveSpellEffect('makanito', caster, [target])
+        const effect = SpellCastingService.resolveSpellEffect('badi', caster, enemies)
 
-        expect(effect.instantDeath).toHaveLength(1)
+        expect(effect.instantDeath!.length).toBe(3)
       })
     })
 
-    describe('KADORTO (Priest Level 7 - Resurrection)', () => {
+    describe('KADORTO (Priest Level 5 - Resurrection)', () => {
       it('resolves KADORTO for resurrection', () => {
-        const caster = createTestCharacter({ level: 8 })
+        const caster = createTestCharacter({ level: 6 })
         const deadAlly = createTestCharacter({ id: 'fallen', hp: 0, maxHp: 30, status: 'DEAD' as any })
 
         const effect = SpellCastingService.resolveSpellEffect('kadorto', caster, [deadAlly])
 
         expect(effect.resurrection).toBeDefined()
         expect(effect.resurrection).toEqual(['fallen'])
-        expect(effect.message).toBe('KADORTO resurrects the fallen!')
+        expect(effect.message).toContain('KADORTO')
       })
     })
   })
 
-  describe('Status Cure Spells', () => {
-    describe('LATUMOFIS (Priest Level 4 - Cure Paralysis)', () => {
-      it('resolves LATUMOFIS to cure paralysis', () => {
+  describe('Utility Spells', () => {
+    describe('LATUMOFIS (Priest Level 4 - Full Enemy Analysis)', () => {
+      it('resolves LATUMOFIS to reveal detailed enemy information', () => {
         const caster = createTestCharacter({ level: 5 })
-        const paralyzed = createTestCharacter({ id: 'fighter', status: 'PARALYZED' as any })
-
-        const effect = SpellCastingService.resolveSpellEffect('latumofis', caster, [paralyzed])
-
-        expect(effect.statusCures).toBeDefined()
-        expect(effect.statusCures!.targetIds).toEqual(['fighter'])
-        expect(effect.statusCures!.cureType).toBe('paralysis')
-        expect(effect.message).toBe('LATUMOFIS cures paralysis!')
-      })
-    })
-
-    describe('LITOKAN (Priest Level 5 - Cure All Ailments)', () => {
-      it('resolves LITOKAN to cure all status ailments', () => {
-        const caster = createTestCharacter({ level: 6 })
-        const party = [
-          createTestCharacter({ id: 'c1', status: 'POISONED' as any }),
-          createTestCharacter({ id: 'c2', status: 'PARALYZED' as any }),
-          createTestCharacter({ id: 'c3', status: 'ASLEEP' })
+        const enemies = [
+          createTestMonster({ id: 'dragon', hp: 100, maxHp: 100 }),
+          createTestMonster({ id: 'wyrm', hp: 80, maxHp: 80 })
         ]
 
-        const effect = SpellCastingService.resolveSpellEffect('litokan', caster, party)
+        const effect = SpellCastingService.resolveSpellEffect('latumofis', caster, enemies)
 
-        expect(effect.statusCures).toBeDefined()
-        expect(effect.statusCures!.targetIds).toEqual(['c1', 'c2', 'c3'])
-        expect(effect.statusCures!.cureType).toBe('all')
-        expect(effect.message).toBe('LITOKAN cures all ailments!')
+        expect(effect.enemyAnalysis).toBeDefined()
+        expect(effect.enemyAnalysis!.targetIds).toEqual(['dragon', 'wyrm'])
+        expect(effect.enemyAnalysis!.analysisType).toBe('full')
+        expect(effect.message).toContain('LATUMOFIS')
       })
     })
   })
@@ -366,22 +334,20 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
 
       const diosRolls: number[] = []
       const dialRolls: number[] = []
-      const dialkoRolls: number[] = []
-      const madiRolls: number[] = []
+      const dial5Rolls: number[] = []
 
       for (let i = 0; i < 100; i++) {
         diosRolls.push(SpellCastingService.resolveSpellEffect('dios', caster, target).healing![0])
         dialRolls.push(SpellCastingService.resolveSpellEffect('dial', caster, target).healing![0])
-        dialkoRolls.push(SpellCastingService.resolveSpellEffect('dialko', caster, target).healing![0])
-        madiRolls.push(SpellCastingService.resolveSpellEffect('madi', caster, target).healing![0])
+        dial5Rolls.push(SpellCastingService.resolveSpellEffect('dial_5', caster, target).healing![0])
       }
 
       const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length
 
-      // Verify healing progression
+      // Verify healing progression: DIOS (1d8) < DIAL (2d8) < DIAL_5 (full)
       expect(avg(dialRolls)).toBeGreaterThan(avg(diosRolls))
-      expect(avg(dialkoRolls)).toBeGreaterThan(avg(dialRolls))
-      expect(avg(madiRolls)).toBeGreaterThan(avg(diosRolls))
+      expect(avg(dial5Rolls)).toBeGreaterThan(avg(dialRolls))
+      expect(avg(dial5Rolls)).toBeGreaterThan(avg(diosRolls))
     })
 
     it('verifies anti-undead spell progression', () => {
@@ -407,17 +373,19 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
   })
 
   describe('Edge Cases', () => {
-    it('MALIKTO works on already full HP characters', () => {
-      const caster = createTestCharacter({ level: 8 })
-      const fullHP = createTestCharacter({ id: 'c1', hp: 50, maxHp: 50 })
+    it('MALIKTO petrifies already damaged enemies', () => {
+      const caster = createTestCharacter({ level: 7 })
+      const injured = createTestMonster({ id: 'goblin', hp: 5, maxHp: 20 })
 
-      const effect = SpellCastingService.resolveSpellEffect('malikto', caster, [fullHP])
+      const effect = SpellCastingService.resolveSpellEffect('malikto', caster, [injured])
 
-      expect(effect.fullHeal).toEqual(['c1'])
+      expect(effect.statusEffects).toEqual([
+        { target: 'goblin', effect: 'PETRIFIED' }
+      ])
     })
 
     it('KADORTO works on dead characters', () => {
-      const caster = createTestCharacter({ level: 8 })
+      const caster = createTestCharacter({ level: 6 })
       const dead = createTestCharacter({ id: 'fallen', hp: 0, maxHp: 30, status: 'DEAD' as any })
 
       const effect = SpellCastingService.resolveSpellEffect('kadorto', caster, [dead])
@@ -425,13 +393,13 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
       expect(effect.resurrection).toEqual(['fallen'])
     })
 
-    it('LITOKAN works on characters with no ailments', () => {
+    it('BADI instant death works on single target', () => {
       const caster = createTestCharacter({ level: 6 })
-      const healthy = createTestCharacter({ id: 'c1', status: 'OK' })
+      const target = createTestMonster({ id: 'boss', hp: 150, maxHp: 150 })
 
-      const effect = SpellCastingService.resolveSpellEffect('litokan', caster, [healthy])
+      const effect = SpellCastingService.resolveSpellEffect('badi', caster, [target])
 
-      expect(effect.statusCures!.targetIds).toEqual(['c1'])
+      expect(effect.instantDeath).toEqual(['boss'])
     })
 
     it('paralysis spell works on empty target array', () => {
