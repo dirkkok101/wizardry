@@ -16,5 +16,5 @@
   "description": "Hobbits are incredibly lucky and nimble, making them excellent thieves. They are the weakest physically.",
   "strengths": ["Exceptional luck", "High agility", "Excellent spell resistance"],
   "weaknesses": ["Very low strength", "Very fragile"],
-  "bestClasses": ["Thief", "Ninja"]
+  "bestClasses": ["thief", "ninja"]
 }

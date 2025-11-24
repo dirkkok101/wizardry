@@ -1,101 +1,97 @@
 import { Item } from '../types/Item';
 import { ItemType, ItemSlot } from '../types/ItemType';
 import { CharacterClass } from '../types/CharacterClass';
+import { ItemSchema, ValidatedItem } from '../validation/item-schema';
+import { AssetLoadingService } from './AssetLoadingService';
 
 /**
- * Manifest of all item IDs to load
- * Generated from data/items/ directory
- * TODO: Generate this automatically from build process
- */
-const ITEM_IDS = [
-  // Weapons
-  'bare_hand', 'broken_item', 'dagger', 'long_sword', 'short_sword', 'mace',
-  'staff', 'spear', 'axe', 'flail', 'katana', 'nunchaku', 'murasama_blade',
-  'shuriken', 'were_slayer', 'evil_slayer', 'blade_cusinart', 'staff_gnilda',
-  'staff_mogref',
-  // Armor
-  'robes', 'leather', 'chain_mail', 'breast_plate', 'plate_mail', 'banded_mail',
-  'plate_armor', 'lords_garb', 'plate_x',
-  // Shields
-  'small_shield', 'large_shield', 'shield_x',
-  // Helmets
-  'leather_helm', 'iron_helm', 'steel_helm', 'helm_x',
-  // Gauntlets
-  'leather_gloves', 'gauntlets', 'gauntlets_x',
-  // Consumables - Scrolls
-  'scroll_halito', 'scroll_mogref', 'scroll_katino', 'scroll_dumapic',
-  'scroll_dilto', 'scroll_sopic', 'scroll_mahalito', 'scroll_molito',
-  'scroll_morlis', 'scroll_dalto', 'scroll_lahalito', 'scroll_madalto',
-  'scroll_makanito', 'scroll_mamorlis', 'scroll_haman', 'scroll_malor',
-  'scroll_mahaman', 'scroll_tiltowait', 'scroll_zilwan', 'scroll_badios',
-  'scroll_lorto', 'scroll_mabadios', 'scroll_loktofeit', 'scroll_maporfic',
-  'scroll_deadly', 'scroll_kandi', 'scroll_di', 'scroll_badi', 'scroll_lorhi',
-  'scroll_madi', 'scroll_matu', 'scroll_calfo', 'scroll_manifo', 'scroll_montino',
-  'scroll_lomilwa', 'scroll_dialko', 'scroll_latumapic', 'scroll_bamatu',
-  'scroll_dial', 'scroll_badial', 'scroll_litokan', 'scroll_kadorto', 'scroll_zilwang',
-  'scroll_masopic', 'scroll_haman2', 'scroll_malor2', 'scroll_mahaman2', 'scroll_tiltowait2',
-  // Misc/Special
-  'amulet', 'bear_statue', 'bishops_necklace', 'blue_ribbon', 'bronze_key',
-  'dink_key', 'garlic', 'long_sword_x1', 'shield_x1', 'silver_key',
-  'werdnas_amulet', 'book'
-];
-
-/**
- * ItemDataService - Loads and caches item data from JSON files
- * Transforms JSON format to runtime Item format
+ * Service for loading and validating item data from JSON files
+ * Uses AssetLoadingService for centralized loading infrastructure
+ * Implements caching to prevent multiple loads
+ * Gracefully handles individual item failures
+ * Validates all items with Zod schemas at runtime
  */
 export class ItemDataService {
-  private static itemsCache: Map<string, Item> = new Map();
-  private static loaded = false;
+  private static itemsCache: Map<string, Item> | null = null;
+  private static loadPromise: Promise<Map<string, Item>> | null = null;
   private static loading = false;
+  private static loaded = false;
   private static loadError: Error | null = null;
   private static failedItems: Map<string, string> = new Map(); // itemId → error message
 
   /**
-   * Load all item data from individual JSON files in /assets/items/
-   * Called during game initialization
+   * Load all item JSON files and validate them
+   * Returns cached results on subsequent calls
+   * Gracefully handles individual item failures
    */
-  static async loadAllItems(): Promise<void> {
-    if (this.loaded) return;
-    if (this.loading) return; // Prevent duplicate loads
+  static async loadAllItems(): Promise<Map<string, Item>> {
+    // Return cached result if available
+    if (this.itemsCache) {
+      return this.itemsCache;
+    }
 
+    // Return in-progress load if one exists
+    if (this.loadPromise) {
+      return this.loadPromise;
+    }
+
+    // Start new load
+    this.loadPromise = this.performLoad();
+    this.itemsCache = await this.loadPromise;
+    return this.itemsCache;
+  }
+
+  /**
+   * Internal method to perform the actual loading
+   * Uses AssetLoadingService for centralized infrastructure
+   */
+  private static async performLoad(): Promise<Map<string, Item>> {
     this.loading = true;
     this.loadError = null;
     this.failedItems.clear();
 
-    try {
-      const loadPromises = ITEM_IDS.map(async (itemId) => {
-        try {
-          const response = await fetch(`/assets/items/${itemId}.json`);
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
+    const items = new Map<string, Item>();
 
-          const jsonData = await response.json();
-          const item = this.transformJsonToItem(jsonData);
-          this.itemsCache.set(item.id, item);
+    try {
+      // Use AssetLoadingService to load item JSON files
+      const assetLoader = new AssetLoadingService();
+      const rawItems = await assetLoader.loadDataFiles<any>('items');
+
+      // Validate each item with Zod and convert to runtime Item format
+      for (const [itemId, rawItem] of rawItems.entries()) {
+        try {
+          // Validate with Zod
+          const validated: ValidatedItem = ItemSchema.parse(rawItem);
+
+          // Transform to runtime Item format
+          const item = this.transformValidatedToItem(validated);
+
+          items.set(itemId, item);
         } catch (error) {
+          // Track validation failure but continue loading other items
           const errorMessage = error instanceof Error ? error.message : String(error);
           this.failedItems.set(itemId, errorMessage);
-          console.warn(`Failed to load item ${itemId}:`, errorMessage);
-          // Continue loading other items even if one fails
+          console.warn(`Failed to validate item ${itemId}:`, errorMessage);
         }
-      });
+      }
 
-      await Promise.all(loadPromises);
       this.loaded = true;
 
-      const successCount = this.itemsCache.size;
+      const successCount = items.size;
       const failCount = this.failedItems.size;
-      const totalCount = ITEM_IDS.length;
+      const totalCount = successCount + failCount;
 
       if (failCount > 0) {
         console.warn(`Loaded ${successCount}/${totalCount} items (${failCount} failed)`);
       } else {
-        console.log(`Loaded ${successCount}/${totalCount} items`)
+        console.log(`✅ Loaded and validated ${successCount}/${totalCount} items`);
       }
+
+      return items;
     } catch (error) {
+      // Catastrophic failure (e.g., directory not found)
       this.loadError = error as Error;
+      console.error('Failed to load items:', error);
       throw error;
     } finally {
       this.loading = false;
@@ -103,34 +99,32 @@ export class ItemDataService {
   }
 
   /**
-   * Transform JSON data to runtime Item format
+   * Transform validated JSON item to runtime Item format
    * Maps JSON schema to Item interface
    */
-  private static transformJsonToItem(json: any): Item {
+  private static transformValidatedToItem(validated: ValidatedItem): Item {
     // Determine ItemType from category
-    const type = this.mapCategoryToType(json.category);
+    const type = this.mapCategoryToType(validated.category);
 
     // Determine ItemSlot from type and subtypes
-    const slot = this.deriveSlot(json);
+    const slot = this.deriveSlot(validated);
 
     // Map class restrictions
-    const classRestrictions = json.usableBy
-      ? json.usableBy.map((cls: string) => this.mapClassString(cls))
-      : undefined;
+    const classRestrictions = validated.usableBy.map((cls) => this.mapClassString(cls));
 
     // Transform damage (use max value from damage roll)
-    const damage = json.damage?.max;
+    const damage = 'damage' in validated ? validated.damage.max : undefined;
 
     // Transform defense (ac in JSON)
-    const defense = json.ac;
+    const defense = 'ac' in validated ? validated.ac : undefined;
 
     // Price (cost in JSON)
-    const price = json.cost || 0;
+    const price = validated.cost;
 
     return {
       // Core identity
-      id: json.id,
-      name: json.name,
+      id: validated.id,
+      name: validated.name,
 
       // Transformed runtime fields
       type,
@@ -141,25 +135,26 @@ export class ItemDataService {
       classRestrictions,
 
       // Direct mappings
-      cursed: json.cursed || false,
+      cursed: validated.cursed,
       identified: false,  // Runtime default
       equipped: false,     // Runtime default
+      alignmentRestrictions: validated.alignmentRequired ? [validated.alignmentRequired] : undefined,
 
       // Preserve JSON fields for reference
-      category: json.category,
-      weaponType: json.weaponType,
-      armorType: json.armorType,
-      consumableType: json.consumableType,
-      cost: json.cost,
-      damageRoll: json.damage, // JSON uses "damage" field
-      ac: json.ac,
-      usableBy: json.usableBy,
-      enhancement: json.enhancement,
-      special: json.special,
-      singleUse: json.singleUse,
-      depletionChance: json.depletionChance,
-      transformsTo: json.transformsTo,
-      effect: json.effect
+      category: validated.category,
+      weaponType: 'weaponType' in validated ? validated.weaponType : undefined,
+      armorType: 'armorType' in validated ? validated.armorType : undefined,
+      consumableType: 'consumableType' in validated ? validated.consumableType : undefined,
+      cost: validated.cost,
+      damageRoll: 'damage' in validated ? validated.damage : undefined,
+      ac: defense,
+      usableBy: validated.usableBy,
+      enhancement: 'enhancement' in validated ? validated.enhancement : undefined,
+      special: validated.special || null,
+      singleUse: 'singleUse' in validated ? validated.singleUse : undefined,
+      depletionChance: 'depletionChance' in validated ? validated.depletionChance : undefined,
+      transformsTo: 'transformsTo' in validated ? validated.transformsTo : undefined,
+      effect: 'effect' in validated ? validated.effect : undefined
     };
   }
 
@@ -172,9 +167,10 @@ export class ItemDataService {
       'armor': ItemType.ARMOR,
       'shield': ItemType.SHIELD,
       'helmet': ItemType.HELMET,
-      'gauntlet': ItemType.GAUNTLET,
+      'gauntlets': ItemType.GAUNTLET,
+      'accessory': ItemType.MISC,
       'consumable': ItemType.CONSUMABLE,
-      'misc': ItemType.MISC
+      'special': ItemType.MISC
     };
 
     return mapping[category] || ItemType.MISC;
@@ -183,12 +179,12 @@ export class ItemDataService {
   /**
    * Derive ItemSlot from category and subtypes
    */
-  private static deriveSlot(json: any): ItemSlot {
-    if (json.category === 'weapon') return ItemSlot.WEAPON;
-    if (json.category === 'armor' && json.armorType === 'body') return ItemSlot.ARMOR;
-    if (json.category === 'shield') return ItemSlot.SHIELD;
-    if (json.category === 'helmet') return ItemSlot.HELMET;
-    if (json.category === 'gauntlet') return ItemSlot.GAUNTLETS;
+  private static deriveSlot(validated: ValidatedItem): ItemSlot {
+    if (validated.category === 'weapon') return ItemSlot.WEAPON;
+    if (validated.category === 'armor' && 'armorType' in validated && validated.armorType === 'body') return ItemSlot.ARMOR;
+    if (validated.category === 'shield') return ItemSlot.SHIELD;
+    if (validated.category === 'helmet') return ItemSlot.HELMET;
+    if (validated.category === 'gauntlets') return ItemSlot.GAUNTLETS;
     return ItemSlot.NONE;  // Consumables and misc items
   }
 
@@ -211,10 +207,24 @@ export class ItemDataService {
   }
 
   /**
-   * Get single item by ID
+   * Get a specific item by ID
+   * Must call loadAllItems first
    */
   static getItem(itemId: string): Item | null {
+    if (!this.itemsCache) {
+      throw new Error('Items not loaded. Call loadAllItems() first.');
+    }
     return this.itemsCache.get(itemId) ?? null;
+  }
+
+  /**
+   * Get all loaded items
+   */
+  static getAllItems(): Map<string, Item> {
+    if (!this.itemsCache) {
+      throw new Error('Items not loaded. Call loadAllItems() first.');
+    }
+    return this.itemsCache;
   }
 
   /**
@@ -231,6 +241,9 @@ export class ItemDataService {
    * Get all items of a specific type
    */
   static getItemsByType(type: ItemType): Item[] {
+    if (!this.itemsCache) {
+      throw new Error('Items not loaded. Call loadAllItems() first.');
+    }
     return Array.from(this.itemsCache.values())
       .filter(item => item.type === type);
   }
@@ -268,13 +281,25 @@ export class ItemDataService {
    * Get count of successfully loaded items
    */
   static getLoadedCount(): number {
-    return this.itemsCache.size;
+    return this.itemsCache?.size ?? 0;
   }
 
   /**
-   * Get total count of items in manifest
+   * Get total count of items attempted to load
    */
   static getTotalCount(): number {
-    return ITEM_IDS.length;
+    return this.getLoadedCount() + this.failedItems.size;
+  }
+
+  /**
+   * Clear cache (for testing)
+   */
+  static clearCache(): void {
+    this.itemsCache = null;
+    this.loadPromise = null;
+    this.loading = false;
+    this.loaded = false;
+    this.loadError = null;
+    this.failedItems.clear();
   }
 }
