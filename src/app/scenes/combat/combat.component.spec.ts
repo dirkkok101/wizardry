@@ -536,11 +536,11 @@ describe('CombatComponent', () => {
       expect(component.showDefeatModal()).toBe(true)
     })
 
-    it('navigates to temple on defeat', () => {
+    it('navigates to castle on defeat', () => {
       component['handleDefeat']()
-      component.returnToTemple()
+      component.returnToCastle()
 
-      expect(router.navigate).toHaveBeenCalledWith(['/temple'])
+      expect(router.navigate).toHaveBeenCalledWith(['/castle'])
     })
 
     it('clears combat state on defeat', () => {
@@ -548,6 +548,38 @@ describe('CombatComponent', () => {
 
       const combat = gameState.state().combat
       expect(combat).toBeUndefined()
+    })
+
+    it('creates body entries for dead party members', () => {
+      const initialParty = gameState.state().party
+      const initialMembers = [...initialParty.members]
+
+      component['handleDefeat']()
+
+      const state = gameState.state()
+      const bodies = state.bodies
+
+      expect(bodies).toBeDefined()
+      expect(bodies!.size).toBe(initialMembers.length)
+
+      // Each dead character should have a body at the party's death location
+      initialMembers.forEach(charId => {
+        const body = bodies!.get(charId)
+        expect(body).toBeDefined()
+        expect(body!.characterId).toBe(charId)
+        expect(body!.level).toBe(initialParty.position.level)
+        expect(body!.x).toBe(initialParty.position.x)
+        expect(body!.y).toBe(initialParty.position.y)
+      })
+    })
+
+    it('clears party members on defeat', () => {
+      component['handleDefeat']()
+
+      const party = gameState.state().party
+      expect(party.members).toEqual([])
+      expect(party.formation.frontRow).toEqual([])
+      expect(party.formation.backRow).toEqual([])
     })
   })
 
@@ -584,12 +616,12 @@ describe('CombatComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/maze'])
     })
 
-    it('returns to temple when temple action selected', () => {
+    it('returns to castle when castle action selected', () => {
       component.showDefeatModal.set(true)
 
-      component.handleActionSelection('temple')
+      component.handleActionSelection('castle')
 
-      expect(router.navigate).toHaveBeenCalledWith(['/temple'])
+      expect(router.navigate).toHaveBeenCalledWith(['/castle'])
     })
   })
 })

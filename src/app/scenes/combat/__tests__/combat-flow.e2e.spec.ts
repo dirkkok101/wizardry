@@ -232,12 +232,12 @@ describe('Combat Flow E2E', () => {
   })
 
   describe('Defeat Flow', () => {
-    it('handles party wipe: all dead → defeat modal → temple navigation', () => {
-      // Setup with weak character and strong monster
-      const weakChar = createTestCharacter({
+    it('handles party wipe: all dead → defeat modal → castle navigation', () => {
+      // Setup with dead character
+      const deadChar = createTestCharacter({
         id: 'c1',
-        name: 'Weakling',
-        hp: 1,
+        name: 'Fallen',
+        hp: 0,
         maxHp: 10
       })
 
@@ -248,11 +248,11 @@ describe('Combat Flow E2E', () => {
 
       gameState.updateState(() =>
         createTestGameStateWithCombat({
-          roster: new Map([['c1', weakChar]]),
+          roster: new Map([['c1', deadChar]]),
           party: {
             members: ['c1'],
             formation: { frontRow: ['c1'], backRow: [] },
-            position: { x: 0, y: 0, facing: 'north', level: 1 },
+            position: { x: 5, y: 10, facing: 'NORTH', level: 3 },
             gold: 0
           },
           combat: {
@@ -287,10 +287,23 @@ describe('Combat Flow E2E', () => {
       expect(component.showDefeatModal()).toBe(true)
       expect(gameState.state().combat).toBeUndefined()
 
-      // Navigate to temple
-      component.returnToTemple()
+      // Verify bodies were created and party was cleared
+      const state = gameState.state()
+      expect(state.bodies).toBeDefined()
+      expect(state.bodies!.size).toBe(1)
+      expect(state.party.members).toEqual([])
 
-      expect(router.navigate).toHaveBeenCalledWith(['/temple'])
+      // Verify body has correct position
+      const body = state.bodies!.get('c1')
+      expect(body).toBeDefined()
+      expect(body!.level).toBe(3)
+      expect(body!.x).toBe(5)
+      expect(body!.y).toBe(10)
+
+      // Navigate to castle
+      component.returnToCastle()
+
+      expect(router.navigate).toHaveBeenCalledWith(['/castle'])
       expect(component.showDefeatModal()).toBe(false)
     })
 

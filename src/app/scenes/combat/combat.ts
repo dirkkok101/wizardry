@@ -48,6 +48,7 @@ export class CombatComponent implements OnInit {
   readonly victoryRewards = signal<VictoryRewards | null>(null)
   readonly itemDistribution = signal<Map<string, string[]>>(new Map()) // characterId -> itemIds[]
   readonly showDefeatModal = signal<boolean>(false)
+  readonly deathLocation = signal<{ level: number; x: number; y: number } | null>(null)
   readonly activeCharacterIndex = signal<number>(0)
   readonly selectedActionType = signal<CombatActionType | null>(null)
   readonly selectedSpellId = signal<string | null>(null)
@@ -225,7 +226,7 @@ export class CombatComponent implements OnInit {
 
   // Defeat modal menu
   readonly defeatMenuItems = computed((): MenuItem[] => [
-    { id: 'temple', label: 'Go to Temple', shortcut: 'ENTER', enabled: true }
+    { id: 'castle', label: 'Return to Castle', shortcut: 'ENTER', enabled: true }
   ])
 
   // Group selection options (only alive groups)
@@ -264,6 +265,11 @@ export class CombatComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('[Combat] Initializing combat scene')
+    const state = this.gameState.state()
+    console.log('[Combat] Party members:', state.party.members)
+    console.log('[Combat] Monster groups:', state.combat?.monsterGroups.length || 0)
+
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.COMBAT
@@ -284,8 +290,8 @@ export class CombatComponent implements OnInit {
       return
     }
 
-    if (itemId === 'temple') {
-      this.returnToTemple()
+    if (itemId === 'castle') {
+      this.returnToCastle()
       return
     }
 
@@ -456,8 +462,17 @@ export class CombatComponent implements OnInit {
     const combat = this.combatState()
     if (!combat) return
 
+    console.log('[Combat] ===== EXECUTING ROUND', combat.roundNumber, '=====')
+
     const chars = this.partyCharacters()
     const actions = this.selectedActions()
+
+    console.log('[Combat] Party status before round:')
+    chars.forEach(c => console.log(`  ${c.name}: ${c.hp}/${c.maxHp} HP, Status: ${c.status}`))
+
+    const monsters = CombatService.getAllMonsters(combat)
+    console.log('[Combat] Monster status before round:')
+    monsters.forEach(m => console.log(`  ${m.name}: ${m.hp}/${m.maxHp} HP`))
 
     // Create party commands from selected actions
     // Expand attack commands into multiple attacks for multi-attack classes
@@ -475,12 +490,16 @@ export class CombatComponent implements OnInit {
       }
     }
 
+    console.log('[Combat] Party commands:', partyCommands.length)
+
     // Create monster commands using AI (only for monsters that can act)
     const actingMonsters = CombatService.getAllActingMonsters(combat)
     const frontRow = this.party().formation.frontRow
     const monsterCommands = actingMonsters.map(m =>
       CombatService.selectMonsterAction(m, chars, frontRow)
     )
+
+    console.log('[Combat] Monster commands:', monsterCommands.length)
 
     // Update combat state with all commands
     const stateWithCommands: CombatState = {
@@ -491,6 +510,13 @@ export class CombatComponent implements OnInit {
     // Execute round with party for damage tracking
     this.isExecutingRound.set(true)
     const result = CombatService.executeRound(stateWithCommands, chars)
+
+    console.log('[Combat] Round result:', {
+      victory: result.victory,
+      defeat: result.defeat,
+      fled: result.fled,
+      messages: result.messages.length
+    })
 
     // Update game state with result
     this.gameState.updateState(state => {
@@ -532,17 +558,38 @@ export class CombatComponent implements OnInit {
     this.activeCharacterIndex.set(0)
     this.isExecutingRound.set(false)
 
+    // Log final state after round
+    const updatedChars = this.partyCharacters()
+    console.log('[Combat] Party status after round:')
+    updatedChars.forEach(c => console.log(`  ${c.name}: ${c.hp}/${c.maxHp} HP, Status: ${c.status}`))
+
+    const alivePartyCount = updatedChars.filter(c => c.hp > 0).length
+    const deadPartyCount = updatedChars.filter(c => c.hp <= 0).length
+    console.log('[Combat] Alive:', alivePartyCount, 'Dead:', deadPartyCount)
+
+    const updatedMonsters = CombatService.getAllMonsters(this.combatState()!)
+    const aliveMonsterCount = updatedMonsters.filter(m => m.hp > 0).length
+    const deadMonsterCount = updatedMonsters.filter(m => m.hp <= 0).length
+    console.log('[Combat] Monsters - Alive:', aliveMonsterCount, 'Dead:', deadMonsterCount)
+
     // Check for victory, defeat, or flee
     if (result.victory) {
+      console.log('[Combat] VICTORY! All monsters defeated')
       this.handleVictory()
     } else if (result.defeat) {
+      console.log('[Combat] DEFEAT! All party members fallen')
       this.handleDefeat()
     } else if (result.fled) {
+      console.log('[Combat] FLED! Party escaped')
       this.handleFlee()
+    } else {
+      console.log('[Combat] Combat continues to next round')
     }
   }
 
   private handleFlee(): void {
+    console.log('[Combat] handleFlee() called - returning to maze')
+
     // Clear combat state
     this.gameState.updateState(state => ({
       ...state,
@@ -554,6 +601,8 @@ export class CombatComponent implements OnInit {
   }
 
   private handleVictory(): void {
+    console.log('[Combat] handleVictory() called')
+
     const combat = this.combatState()
     if (!combat) return
 
@@ -570,6 +619,13 @@ export class CombatComponent implements OnInit {
       roster,
       partyMembers
     )
+
+    console.log('[Combat] Victory rewards:', {
+      totalXP: rewards.totalXP,
+      xpPerCharacter: rewards.xpPerCharacter,
+      totalGold: rewards.totalGold,
+      items: rewards.items.length
+    })
 
     // Distribute XP to roster (only living characters get XP)
     let newRoster = VictoryService.distributeRewards(
@@ -603,20 +659,70 @@ export class CombatComponent implements OnInit {
     // Show victory modal
     this.victoryRewards.set(rewards)
     this.showVictoryModal.set(true)
+    console.log('[Combat] Victory modal shown')
   }
 
   private handleDefeat(): void {
-    // TODO: Place dead bodies at current dungeon position
-    // TODO: Send to Castle scene, not Temple
+    console.log('[Combat] handleDefeat() called')
 
-    // Clear combat state
-    this.gameState.updateState(state => ({
-      ...state,
+    const state = this.gameState.state()
+    const party = state.party
+    const roster = state.roster
+
+    // Store death location for modal display (before clearing party)
+    const deathLoc = {
+      level: party.position.level,
+      x: party.position.x,
+      y: party.position.y
+    }
+    this.deathLocation.set(deathLoc)
+
+    console.log('[Combat] Death location: Level', deathLoc.level, 'at (', deathLoc.x, ',', deathLoc.y, ')')
+
+    // Create body entries for all dead party members at current dungeon position
+    const bodies = new Map(state.bodies || new Map())
+
+    party.members.forEach(charId => {
+      const character = roster.get(charId)
+      if (character && character.hp <= 0) {
+        console.log('[Combat] Creating body for', character.name, 'at death location')
+        bodies.set(charId, {
+          characterId: charId,
+          level: party.position.level,
+          x: party.position.x,
+          y: party.position.y
+        })
+      }
+    })
+
+    console.log('[Combat] Total bodies created:', bodies.size)
+    console.log('[Combat] Clearing party members and showing defeat modal')
+
+    // Clear party members and combat state
+    this.gameState.updateState(currentState => ({
+      ...currentState,
+      party: {
+        ...currentState.party,
+        members: [],
+        formation: {
+          frontRow: [],
+          backRow: []
+        }
+      },
+      bodies,
       combat: undefined
     }))
 
     // Show defeat modal
     this.showDefeatModal.set(true)
+    console.log('[Combat] Defeat modal shown:', this.showDefeatModal())
+    console.log('[Combat] Death location stored:', this.deathLocation())
+
+    // Force change detection by logging after a microtask
+    queueMicrotask(() => {
+      console.log('[Combat] After microtask - modal still showing:', this.showDefeatModal())
+      console.log('[Combat] After microtask - death location:', this.deathLocation())
+    })
   }
 
   getCharacterName(charId: string): string {
@@ -629,10 +735,10 @@ export class CombatComponent implements OnInit {
     this.router.navigate(['/maze'])
   }
 
-  returnToTemple(): void {
-    // TODO: Change to navigate to castle instead
+  returnToCastle(): void {
     this.showDefeatModal.set(false)
-    this.router.navigate(['/temple'])
+    this.deathLocation.set(null)
+    this.router.navigate(['/castle'])
   }
 
   /**

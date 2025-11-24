@@ -223,26 +223,31 @@
       </div>
     }
 
-    <!-- Defeat Modal -->
-    @if (showDefeatModal()) {
-      <div class="defeat-modal-overlay">
-        <div class="defeat-modal">
-          <h2>DEFEAT</h2>
-          <p class="defeat-message">
-            Your party has been defeated!<br>
-            You awaken at the Temple of Cant...
-          </p>
-          <!-- Defeat footer menu -->
-          <app-scene-footer
-            [menuItems]="defeatMenuItems()"
-            (itemSelected)="handleActionSelection($event)"
-          />
-        </div>
-      </div>
-    }
   } @else {
     <div class="no-combat">
       <p>No combat active. Returning to maze...</p>
+    </div>
+  }
+
+  <!-- Defeat Modal (outside combat state check since combat is cleared on defeat) -->
+  @if (showDefeatModal() && deathLocation()) {
+    <div class="defeat-modal-overlay">
+      <div class="defeat-modal">
+        <h2>YOUR PARTY HAS BEEN DEFEATED!</h2>
+        <p class="defeat-message">
+          All party members have fallen...<br>
+          Their bodies remain in the dungeon at:<br>
+          <strong>Level {{ deathLocation()!.level }}, ({{ deathLocation()!.x }}, {{ deathLocation()!.y }})</strong>
+        </p>
+        <p class="defeat-instruction">
+          You must form a new party to recover them.
+        </p>
+        <!-- Defeat footer menu -->
+        <app-scene-footer
+          [menuItems]="defeatMenuItems()"
+          (itemSelected)="handleActionSelection($event)"
+        />
+      </div>
     </div>
   }
 </div>
