@@ -308,29 +308,25 @@ async function loadDataFiles<T extends { id: string }>(directory: string): Promi
 
 /**
  * Get list of data files for a directory
+ * Exported for use by data loaders that need direct file access
  */
-function getDataFileList(directory: string): string[] {
+export function getDataFileList(directory: string): string[] {
   switch (directory) {
     case 'races':
       return ['human.json', 'elf.json', 'dwarf.json', 'gnome.json', 'hobbit.json']
     case 'classes':
       return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
     case 'spells':
-      // Individual spell JSON files - matches actual files in data/spells/
+      // All 49 spell JSON files from data/spells/ (alphabetically sorted)
+      // 7 files (badi, dial, haman, mabadi, mahaman, malikto, tiltowait) use consolidated format with multiple levels
       return [
-        // Mage spells
-        'halito.json', 'mogref.json', 'katino.json', 'dumapic.json', 'dilto.json', 'sopic.json',
-        'mahalito.json', 'molito.json', 'morlis.json', 'dalto.json', 'lahalito.json',
-        'madalto.json', 'lakanito.json', 'zilwan.json', 'haman.json', 'malor.json',
-        'mahaman.json', 'tiltowait.json', 'melito.json',
-        // Priest spells
-        'dios.json', 'badios.json', 'milwa.json', 'porfic.json', 'calfo.json', 'manifo.json',
-        'montino.json', 'dial.json', 'latumapic.json', 'matu.json', 'bamatu.json',
-        'latumofis.json', 'lomilwa.json', 'dalto_priest.json', 'kandi.json',
-        'di.json', 'badi.json', 'lorto.json', 'mabadi.json', 'loktofeit.json', 'malikto.json',
-        'kadorto.json', 'bamordi.json',
-        'katu.json', 'maporfic.json', 'badial.json', 'badialma.json', 'kalki.json',
-        'badialma_5.json', 'lomilwa_priest.json'
+        'badi.json', 'badial.json', 'badialma.json', 'badialma_5.json', 'badios.json', 'bamatu.json', 'bamordi.json',
+        'calfo.json', 'dalto.json', 'dalto_priest.json', 'di.json', 'dial.json', 'dilto.json', 'dios.json', 'dumapic.json',
+        'halito.json', 'haman.json', 'kadorto.json', 'kalki.json', 'kandi.json', 'katino.json', 'katu.json',
+        'lahalito.json', 'lakanito.json', 'latumapic.json', 'latumofis.json', 'loktofeit.json', 'lomilwa.json', 'lomilwa_priest.json', 'lorto.json',
+        'mabadi.json', 'madalto.json', 'mahalito.json', 'mahaman.json', 'malikto.json', 'malor.json', 'manifo.json', 'maporfic.json', 'matu.json',
+        'melito.json', 'milwa.json', 'mogref.json', 'molito.json', 'montino.json', 'morlis.json',
+        'porfic.json', 'sopic.json', 'tiltowait.json', 'zilwan.json'
       ]
     case 'items':
       // Individual item JSON files (102 total) - matches actual files in data/items/

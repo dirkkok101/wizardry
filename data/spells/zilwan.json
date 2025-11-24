@@ -5,8 +5,9 @@
   "casterType": "mage",
   "category": "utility",
   "target": "group",
-  "description": "Removes magical effects",
+  "description": "Removes magical effects from enemy group",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "dispelMagic": true
 }

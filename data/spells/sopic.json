@@ -5,8 +5,9 @@
   "casterType": "mage",
   "category": "buff",
   "target": "single",
-  "description": "Makes ally invisible",
+  "description": "Makes ally invisible (-4 AC for battle duration)",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "acModifier": -4
 }

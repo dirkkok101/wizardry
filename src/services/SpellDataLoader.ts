@@ -1,7 +1,7 @@
 import { SpellDefinition, LoadedSpell } from '../types/SpellDefinition'
 import { SpellFileData, SpellLevelData } from '../types/SpellFileData'
 import { SpellDefinitionSchema } from '../validation/spell-schema'
-import { AssetLoadingService } from './AssetLoadingService'
+import { getDataFileList } from './AssetLoadingService'
 
 /**
  * Service for loading and validating spell data from JSON files
@@ -85,7 +85,46 @@ export class SpellDataLoader {
     // Copy optional fields if present
     if (levelData.damage) fields.damage = levelData.damage
     if (levelData.healing) fields.healing = levelData.healing
-    // Note: effect field from SpellLevelData is handled by specific fields below
+
+    // Handle effect field - convert to specific boolean flags
+    if (levelData.effect) {
+      switch (levelData.effect.type) {
+        case 'instant_death':
+          fields.instantDeath = true
+          break
+        case 'transformation':
+          fields.transformation = true
+          break
+        case 'dispel':
+          fields.dispelMagic = true
+          break
+        case 'petrification':
+          // Petrification is a form of instant death in Wizardry
+          fields.instantDeath = true
+          break
+        case 'sleep':
+          fields.statusEffect = 'ASLEEP'
+          break
+        case 'blind':
+          fields.statusEffect = 'BLIND'
+          break
+        case 'silence':
+          fields.statusEffect = 'SILENCED'
+          break
+        case 'invisible':
+          fields.statusEffect = 'INVISIBLE'
+          break
+        case 'paralysis':
+          fields.statusEffect = 'PARALYZED'
+          break
+        case 'fear':
+          // Fear could be handled as a status effect or special mechanic
+          // For now, treating it as a debuff without a specific status
+          break
+      }
+    }
+
+    // Direct boolean flags override effect field
     if (levelData.acModifier !== undefined) fields.acModifier = levelData.acModifier
     if (levelData.statusEffect) fields.statusEffect = levelData.statusEffect
     if (levelData.instantDeath !== undefined) fields.instantDeath = levelData.instantDeath
@@ -106,8 +145,9 @@ export class SpellDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Uses AssetLoadingService for centralized infrastructure
-   * Supports both legacy (single-level) and consolidated (multi-level) formats
+   * Gets file list from AssetLoadingService but loads files directly with fetch()
+   * to support both legacy (single-level) and consolidated (multi-level) formats.
+   * Cannot use loadDataFiles() since consolidated format lacks top-level `id` field.
    */
   private static async performLoad(): Promise<Map<string, LoadedSpell>> {
     this.loading = true
@@ -118,12 +158,18 @@ export class SpellDataLoader {
     const loadedAt = Date.now()
 
     try {
-      // Use AssetLoadingService to load spell JSON files
-      const assetLoader = new AssetLoadingService()
-      const rawSpells = await assetLoader.loadDataFiles<any>('spells')
+      // Get file list from AssetLoadingService
+      const fileList = getDataFileList('spells')
 
-      // Process each spell file
-      for (const [fileName, rawSpell] of rawSpells.entries()) {
+      // Load each spell file directly (not using loadDataFiles since consolidated format has no top-level id)
+      for (const filename of fileList) {
+        const path = `/assets/spells/${filename}`
+        try {
+          const response = await fetch(path)
+          if (!response.ok) {
+            throw new Error(`Failed to load ${path}: ${response.statusText}`)
+          }
+          const rawSpell = await response.json()
         try {
           // Detect format and convert to SpellDefinition array
           const spellDefinitions: SpellDefinition[] = this.isConsolidatedFormat(rawSpell)
@@ -151,11 +197,17 @@ export class SpellDataLoader {
               console.warn(`Failed to validate spell ${spellDef.id}:`, errorMessage)
             }
           }
+          } catch (error) {
+            // Track file parsing failure
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            this.failedSpells.set(filename, errorMessage)
+            console.warn(`Failed to process spell file ${filename}:`, errorMessage)
+          }
         } catch (error) {
-          // Track file parsing failure
+          // Track fetch error
           const errorMessage = error instanceof Error ? error.message : String(error)
-          this.failedSpells.set(fileName, errorMessage)
-          console.warn(`Failed to process spell file ${fileName}:`, errorMessage)
+          this.failedSpells.set(filename, errorMessage)
+          console.warn(`Failed to fetch spell file ${filename}:`, errorMessage)
         }
       }
 
@@ -163,12 +215,12 @@ export class SpellDataLoader {
 
       const successCount = spells.size
       const failCount = this.failedSpells.size
-      const totalCount = successCount + failCount
+      const totalCount = fileList.length  // Total files attempted
 
       if (failCount > 0) {
-        console.warn(`Loaded ${successCount}/${totalCount} spells (${failCount} failed)`)
+        console.warn(`Loaded ${successCount} spell definitions from ${fileList.length} files (${failCount} files failed)`)
       } else {
-        console.log(`Loaded ${successCount}/${totalCount} spells`)
+        console.log(`Loaded ${successCount} spell definitions from ${fileList.length} files`)
       }
 
       return spells

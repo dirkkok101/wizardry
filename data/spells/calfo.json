@@ -4,10 +4,10 @@
   "level": 2,
   "casterType": "priest",
   "category": "utility",
-  "target": "chest",
+  "target": "party",
   "description": "Identify trap type (95% success)",
   "castableIn": [
     "dungeon"
   ],
-  "successRate": 0.95
+  "utility": "identify_trap"
 }

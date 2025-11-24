@@ -10,13 +10,15 @@
       "level": 6,
       "id": "haman",
       "description": "Transforms monsters",
-      "target": "group"
+      "target": "group",
+      "transformation": true
     },
     {
       "level": 7,
       "id": "haman_7",
       "description": "Greater transform monsters",
-      "target": "group"
+      "target": "group",
+      "transformation": true
     }
   ]
 }

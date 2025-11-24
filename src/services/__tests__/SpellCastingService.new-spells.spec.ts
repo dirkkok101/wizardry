@@ -1,35 +1,8 @@
 import { SpellCastingService } from '../SpellCastingService'
 import { createTestCharacter } from '../../test-helpers/test-factories'
-import { SpellDataLoader } from '../SpellDataLoader'
 
-beforeAll(async () => {
-  global.fetch = jest.fn((url: string) => {
-    const spellId = url.split('/').pop()?.replace('.json', '')
-    const isMage = ['halito', 'mogref', 'katino', 'dumapic', 'dilto', 'sopic',
-      'mahalito', 'molito', 'morlis', 'dalto', 'lahalito', 'madalto',
-      'lakanito', 'zilwan', 'masopic', 'haman', 'malor', 'mahaman',
-      'tiltowait', 'melito', 'lomilwa_mage', 'haman_7', 'mahaman_7', 'tiltowait_7'
-    ].includes(spellId as string)
-    const mockSpellData = {
-      id: spellId,
-      name: spellId?.toUpperCase() || 'UNKNOWN',
-      level: 1,
-      casterType: isMage ? 'mage' : 'priest',
-      category: 'offensive',
-      target: 'group',
-      damage: { dice: '1d8', type: 'fire' },
-      description: `Mock spell ${spellId}`,
-      castableIn: ['combat']
-    }
-    return Promise.resolve({ ok: true, json: () => Promise.resolve(mockSpellData) } as Response)
-  }) as jest.Mock
-  await SpellDataLoader.loadAllSpells()
-})
-
-afterAll(() => {
-  SpellDataLoader.clearCache()
-  ;(global.fetch as jest.Mock).mockRestore()
-})
+// Note: Real spell data is loaded from data/spells/ via setup-jest.ts
+// This follows the project philosophy: "No mocks for services - test with real data"
 
 describe('SpellCastingService - Level 1-2 Spells', () => {
   describe('PORFIC (Shield)', () => {
@@ -69,7 +42,7 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
   })
 
   describe('SOPIC (Invisibility)', () => {
-    it('applies INVISIBLE status to single target', () => {
+    it('applies -4 AC buff to single target (invisibility buff)', () => {
       const caster = createTestCharacter({
         spellPoints: { mage: { level2: { current: 2, max: 2 } } }
       })
@@ -77,8 +50,12 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
 
       const effect = SpellCastingService.resolveSpellEffect('sopic', caster, [target])
 
-      expect(effect.statusEffects).toBeDefined()
-      expect(effect.statusEffects![0].effect).toBe('INVISIBLE')
+      // SOPIC provides -4 AC (better defense) like PORFIC, via invisibility in Wizardry
+      expect(effect.acBuffs).toBeDefined()
+      expect(effect.acBuffs).toHaveLength(1)
+      expect(effect.acBuffs![0].target).toBe('target1')
+      expect(effect.acBuffs![0].acModifier).toBe(-4)
+      expect(effect.message).toContain('SOPIC')
     })
   })
 

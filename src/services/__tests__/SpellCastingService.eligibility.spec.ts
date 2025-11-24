@@ -1,43 +1,9 @@
 import { SpellCastingService } from '../SpellCastingService'
 import { createTestCharacter } from '../../test-helpers/test-factories'
 import { CharacterClass } from '../../types/CharacterClass'
-import { SpellDataLoader } from '../SpellDataLoader'
 
-// Mock global.fetch for spell loading
-beforeAll(async () => {
-  global.fetch = jest.fn((url: string) => {
-    const spellId = url.split('/').pop()?.replace('.json', '')
-    const isMage = ['halito', 'mogref', 'katino', 'dumapic', 'dilto', 'sopic',
-      'mahalito', 'molito', 'morlis', 'dalto', 'lahalito', 'madalto',
-      'lakanito', 'zilwan', 'masopic', 'haman', 'malor', 'mahaman',
-      'tiltowait', 'melito', 'lomilwa_mage', 'haman_7', 'mahaman_7', 'tiltowait_7'
-    ].includes(spellId as string)
-
-    const mockSpellData = {
-      id: spellId,
-      name: spellId?.toUpperCase() || 'UNKNOWN',
-      level: 1,
-      casterType: isMage ? 'mage' : 'priest',
-      category: 'offensive',
-      target: 'group',
-      damage: { dice: '1d8', type: 'fire' },
-      description: `Mock spell ${spellId}`,
-      castableIn: ['combat']
-    }
-
-    return Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve(mockSpellData)
-    } as Response)
-  }) as jest.Mock
-
-  await SpellDataLoader.loadAllSpells()
-})
-
-afterAll(() => {
-  SpellDataLoader.clearCache()
-  ;(global.fetch as jest.Mock).mockRestore()
-})
+// Note: Real spell data is loaded from data/spells/ via setup-jest.ts
+// This follows the project philosophy: "No mocks for services - test with real data"
 
 describe('SpellCastingService - Spell Eligibility', () => {
   describe('Mage spell eligibility', () => {
@@ -154,7 +120,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
         }
       })
 
-      const result = SpellCastingService.canCastSpell(mage, 'mahaman')
+      const result = SpellCastingService.canCastSpell(mage, 'mahaman_7')
       expect(result.canCast).toBe(false)
     })
 
@@ -168,7 +134,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
         }
       })
 
-      const result = SpellCastingService.canCastSpell(mage, 'mahaman')
+      const result = SpellCastingService.canCastSpell(mage, 'mahaman_7')
       expect(result.canCast).toBe(true)
     })
   })
@@ -312,17 +278,17 @@ describe('SpellCastingService - Spell Eligibility', () => {
       expect(spell?.id).toBe('dumapic')
       expect(spell?.name).toBe('DUMAPIC')
       expect(spell?.level).toBe(1)
-      expect(spell?.type).toBe('mage')
+      expect(spell?.casterType).toBe('mage')
     })
 
     it('getSpell returns correct data for high-level spell', () => {
-      const spell = SpellCastingService.getSpell('mahaman')
+      const spell = SpellCastingService.getSpell('mahaman_7')
 
       expect(spell).toBeDefined()
-      expect(spell?.id).toBe('mahaman')
+      expect(spell?.id).toBe('mahaman_7')
       expect(spell?.name).toBe('MAHAMAN')
       expect(spell?.level).toBe(7)
-      expect(spell?.type).toBe('mage')
+      expect(spell?.casterType).toBe('mage')
       expect(spell?.transformation).toBe(true)
     })
 
@@ -333,7 +299,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
       expect(spell?.id).toBe('katu')
       expect(spell?.name).toBe('KATU')
       expect(spell?.level).toBe(4)
-      expect(spell?.type).toBe('priest')
+      expect(spell?.casterType).toBe('priest')
       expect(spell?.acModifier).toBe(-6)
     })
   })
