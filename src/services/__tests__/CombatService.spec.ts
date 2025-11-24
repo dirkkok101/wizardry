@@ -49,13 +49,13 @@ describe('CombatService', () => {
   })
 
   describe('initiateCombat', () => {
-    it('creates combat state with monster group', () => {
+    it('creates combat state with monster group', async () => {
       const party = [
         createTestCharacter({ id: 'char1' }),
         createTestCharacter({ id: 'char2' })
       ]
 
-      const state = CombatService.initiateCombat('kobold', party, true)
+      const state = await CombatService.initiateCombat('kobold', party, true)
       const monsters = CombatService.getAllMonsters(state)
 
       expect(monsters.length).toBeGreaterThanOrEqual(3)
@@ -70,9 +70,9 @@ describe('CombatService', () => {
       expect(state.canFlee).toBe(true)
     })
 
-    it('sets canFlee to false for fixed encounters', () => {
+    it('sets canFlee to false for fixed encounters', async () => {
       const party = [createTestCharacter()]
-      const state = CombatService.initiateCombat('kobold', party, false)
+      const state = await CombatService.initiateCombat('kobold', party, false)
 
       expect(state.canFlee).toBe(false)
     })
