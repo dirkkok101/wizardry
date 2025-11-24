@@ -717,12 +717,6 @@ export class CombatComponent implements OnInit {
     this.showDefeatModal.set(true)
     console.log('[Combat] Defeat modal shown:', this.showDefeatModal())
     console.log('[Combat] Death location stored:', this.deathLocation())
-
-    // Force change detection by logging after a microtask
-    queueMicrotask(() => {
-      console.log('[Combat] After microtask - modal still showing:', this.showDefeatModal())
-      console.log('[Combat] After microtask - death location:', this.deathLocation())
-    })
   }
 
   getCharacterName(charId: string): string {

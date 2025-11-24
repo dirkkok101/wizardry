@@ -525,6 +525,14 @@
     color: var(--color-text);
   }
 
+  .defeat-instruction {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 15px 0;
+    color: var(--color-warning);
+    font-style: italic;
+  }
+
   .temple-btn {
     margin-top: 20px;
     padding: 12px 30px;
