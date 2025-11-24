@@ -536,26 +536,31 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initiateEncounter(monsterId, false);  // false = cannot flee
   }
 
-  private initiateEncounter(monsterId: string, canFlee: boolean): void {
+  private async initiateEncounter(monsterId: string, canFlee: boolean): Promise<void> {
     const monsterName = this.formatMonsterName(monsterId);
     this.addMessage(`You encounter ${monsterName}!`);
 
-    // Get party characters for combat
-    const partyChars = this.partyCharacters();
+    try {
+      // Get party characters for combat
+      const partyChars = this.partyCharacters();
 
-    // Initialize combat state using CombatService
-    const combatState = CombatService.initiateCombat(monsterId, partyChars, canFlee);
+      // Initialize combat state using CombatService (async - loads monster data)
+      const combatState = await CombatService.initiateCombat(monsterId, partyChars, canFlee);
 
-    // Update game state with combat
-    this.gameState.updateState(state => ({
-      ...state,
-      combat: combatState
-    }));
+      // Update game state with combat
+      this.gameState.updateState(state => ({
+        ...state,
+        combat: combatState
+      }));
 
-    // Navigate to combat
-    queueMicrotask(() => {
-      this.router.navigate(['/combat']);
-    });
+      // Navigate to combat
+      queueMicrotask(() => {
+        this.router.navigate(['/combat']);
+      });
+    } catch (error) {
+      console.error('[MazeComponent] Failed to initiate encounter:', error);
+      this.addMessage(`Error: Failed to load monster data. Please try again.`);
+    }
   }
 
   private formatMonsterName(monsterId: string): string {
