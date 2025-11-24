@@ -30,6 +30,25 @@ interface SpellData {
   effect?: any;
 }
 
+interface SpellLevelData {
+  level: number;
+  id: string;
+  description: string;
+  target: string;
+  damage?: any;
+  healing?: any;
+  effect?: any;
+  [key: string]: any;
+}
+
+interface ConsolidatedSpellData {
+  name: string;
+  casterType: 'mage' | 'priest';
+  category: string;
+  castableIn: string[];
+  levels: SpellLevelData[];
+}
+
 interface ValidationResult {
   totalSpells: number;
   mageSpells: number;
@@ -38,6 +57,36 @@ interface ValidationResult {
   errors: string[];
   warnings: string[];
   spells: SpellData[];
+}
+
+// Helper functions for consolidated format
+function isConsolidatedFormat(rawSpell: any): rawSpell is ConsolidatedSpellData {
+  return Array.isArray(rawSpell.levels) && rawSpell.levels.length > 0;
+}
+
+function flattenConsolidatedSpell(fileData: ConsolidatedSpellData): SpellData[] {
+  const spells: SpellData[] = [];
+
+  for (const levelData of fileData.levels) {
+    const spell: SpellData = {
+      id: levelData.id,
+      name: fileData.name,
+      level: levelData.level,
+      casterType: fileData.casterType,
+      category: fileData.category,
+      target: levelData.target,
+      castableIn: fileData.castableIn,
+      description: levelData.description,
+      // Copy level-specific fields
+      ...(levelData.damage && { damage: levelData.damage }),
+      ...(levelData.healing && { healing: levelData.healing }),
+      ...(levelData.effect && { effect: levelData.effect })
+    };
+
+    spells.push(spell);
+  }
+
+  return spells;
 }
 
 // Expected spell counts from research documentation
@@ -61,48 +110,69 @@ const EXPECTED_PRIEST_SPELLS: Record<number, string[]> = {
   7: ['DI', 'MABADI', 'MALIKTO']
 };
 
-function validateSpellFile(filePath: string): { spell: SpellData | null; errors: string[] } {
+function validateSpellObject(spell: SpellData, filePath: string): string[] {
   const errors: string[] = [];
+
+  // Required fields
+  if (!spell.id) errors.push(`${filePath}: Missing 'id' field`);
+  if (!spell.name) errors.push(`${filePath}: Missing 'name' field`);
+  if (!spell.level) errors.push(`${filePath}: Missing 'level' field`);
+  if (!spell.casterType) errors.push(`${filePath}: Missing 'casterType' field`);
+  if (!spell.category) errors.push(`${filePath}: Missing 'category' field`);
+  if (!spell.target) errors.push(`${filePath}: Missing 'target' field`);
+  if (!spell.description) errors.push(`${filePath}: Missing 'description' field`);
+  if (!spell.castableIn || spell.castableIn.length === 0) {
+    errors.push(`${filePath}: Missing or empty 'castableIn' field`);
+  }
+
+  // Validate casterType
+  if (spell.casterType && !['mage', 'priest'].includes(spell.casterType)) {
+    errors.push(`${filePath}: Invalid casterType '${spell.casterType}' (must be 'mage' or 'priest')`);
+  }
+
+  // Validate level range
+  if (spell.level && (spell.level < 1 || spell.level > 7)) {
+    errors.push(`${filePath}: Invalid level ${spell.level} (must be 1-7)`);
+  }
+
+  // Validate category-specific fields
+  // Offensive spells need either 'damage' OR 'effect' (instant death, petrification use 'effect')
+  if (spell.category === 'offensive' && !spell.damage && !spell.effect) {
+    errors.push(`${filePath}: Offensive spell missing 'damage' or 'effect' field`);
+  }
+  if (spell.category === 'healing' && !spell.healing) {
+    errors.push(`${filePath}: Healing spell missing 'healing' field`);
+  }
+
+  return errors;
+}
+
+function validateSpellFile(filePath: string): { spells: SpellData[]; errors: string[] } {
+  const allErrors: string[] = [];
+  const spells: SpellData[] = [];
 
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const spell: SpellData = JSON.parse(content);
+    const rawData: any = JSON.parse(content);
 
-    // Required fields
-    if (!spell.id) errors.push(`${filePath}: Missing 'id' field`);
-    if (!spell.name) errors.push(`${filePath}: Missing 'name' field`);
-    if (!spell.level) errors.push(`${filePath}: Missing 'level' field`);
-    if (!spell.casterType) errors.push(`${filePath}: Missing 'casterType' field`);
-    if (!spell.category) errors.push(`${filePath}: Missing 'category' field`);
-    if (!spell.target) errors.push(`${filePath}: Missing 'target' field`);
-    if (!spell.description) errors.push(`${filePath}: Missing 'description' field`);
-    if (!spell.castableIn || spell.castableIn.length === 0) {
-      errors.push(`${filePath}: Missing or empty 'castableIn' field`);
+    // Detect format and convert to array of spells
+    const spellObjects = isConsolidatedFormat(rawData)
+      ? flattenConsolidatedSpell(rawData)
+      : [rawData as SpellData];
+
+    // Validate each spell
+    for (const spell of spellObjects) {
+      const errors = validateSpellObject(spell, filePath);
+      allErrors.push(...errors);
+      if (errors.length === 0) {
+        spells.push(spell);
+      }
     }
 
-    // Validate casterType
-    if (spell.casterType && !['mage', 'priest'].includes(spell.casterType)) {
-      errors.push(`${filePath}: Invalid casterType '${spell.casterType}' (must be 'mage' or 'priest')`);
-    }
-
-    // Validate level range
-    if (spell.level && (spell.level < 1 || spell.level > 7)) {
-      errors.push(`${filePath}: Invalid level ${spell.level} (must be 1-7)`);
-    }
-
-    // Validate category-specific fields
-    // Offensive spells need either 'damage' OR 'effect' (instant death, petrification use 'effect')
-    if (spell.category === 'offensive' && !spell.damage && !spell.effect) {
-      errors.push(`${filePath}: Offensive spell missing 'damage' or 'effect' field`);
-    }
-    if (spell.category === 'healing' && !spell.healing) {
-      errors.push(`${filePath}: Healing spell missing 'healing' field`);
-    }
-
-    return { spell, errors };
+    return { spells, errors: allErrors };
   } catch (e) {
-    errors.push(`${filePath}: Failed to parse JSON - ${(e as Error).message}`);
-    return { spell: null, errors };
+    allErrors.push(`${filePath}: Failed to parse JSON - ${(e as Error).message}`);
+    return { spells: [], errors: allErrors };
   }
 }
 
@@ -123,13 +193,14 @@ function validateAllSpells(): ValidationResult {
   // Validate each spell file
   for (const file of files) {
     const filePath = path.join(spellsDir, file);
-    const { spell, errors } = validateSpellFile(filePath);
+    const { spells, errors } = validateSpellFile(filePath);
 
     if (errors.length > 0) {
       result.errors.push(...errors);
     }
 
-    if (spell) {
+    // A file can contain multiple spells (consolidated format)
+    for (const spell of spells) {
       result.spells.push(spell);
       result.totalSpells++;
 
