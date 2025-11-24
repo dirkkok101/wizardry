@@ -80,11 +80,24 @@ export interface Item {
 
   // Enhancement and special properties
   enhancement?: number           // +1, +2, etc. (bonus to damage/AC)
-  special?: string | null        // Special item properties
+  special?: {                    // Special item properties
+    invoke?: 'cast_spell' | 'str_bonus' | 'hp_bonus' | 'party_heal' | 'change_class' | 'class_change'
+    spellId?: string
+    targetClass?: string
+    invokeEffect?: {
+      stat: string
+      bonus: number
+    }
+    regeneration?: number
+    protection?: string
+    protections?: string[]
+    ac?: number
+    partyHealing?: boolean
+  } | null
 
   // Consumable-specific fields
   singleUse?: boolean            // Item is consumed on use
   depletionChance?: number       // Chance (0-100) item breaks after use
-  transformsTo?: string          // Item ID to transform into when depleted
+  transformsTo?: string | null   // Item ID to transform into when depleted
   effect?: ItemEffect            // Effect when used (healing, spell, etc.)
 }

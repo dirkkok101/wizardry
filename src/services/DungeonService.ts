@@ -52,11 +52,11 @@ export const DungeonService = {
    * Format Zod validation errors into readable messages
    */
   formatZodError(error: ZodError): string {
-    if (!error.errors || error.errors.length === 0) {
+    if (!error.issues || error.issues.length === 0) {
       return error.message || 'Unknown validation error'
     }
-    return error.errors
-      .map(err => `${err.path.join('.')}: ${err.message}`)
+    return error.issues
+      .map((err: any) => `${err.path.join('.')}: ${err.message}`)
       .join('; ')
   },
 

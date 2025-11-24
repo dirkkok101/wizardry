@@ -1,6 +1,7 @@
 import { Item } from '../types/Item';
 import { ItemType, ItemSlot } from '../types/ItemType';
 import { CharacterClass } from '../types/CharacterClass';
+import { Alignment } from '../types/Alignment';
 import { ItemSchema, ValidatedItem } from '../validation/item-schema';
 import { AssetLoadingService } from './AssetLoadingService';
 
@@ -138,7 +139,8 @@ export class ItemDataService {
       cursed: validated.cursed,
       identified: false,  // Runtime default
       equipped: false,     // Runtime default
-      alignmentRestrictions: validated.alignmentRequired ? [validated.alignmentRequired] : undefined,
+      alignmentRestrictions: validated.alignmentRequired ?
+        [validated.alignmentRequired.toUpperCase() as Alignment] : undefined,
 
       // Preserve JSON fields for reference
       category: validated.category,
