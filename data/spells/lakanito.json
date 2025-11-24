@@ -10,7 +10,8 @@
     "combat"
   ],
   "damage": {
-    "dice": "variable",
-    "type": "vacuum"
-  }
+    "dice": "6d6",
+    "type": "air"
+  },
+  "ignoresAC": true
 }

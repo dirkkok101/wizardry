@@ -4,9 +4,11 @@
   "level": 6,
   "casterType": "mage",
   "category": "utility",
-  "target": "location",
+  "target": "party",
   "description": "Teleport party to any coordinates (DANGEROUS - wrong coordinates = rock = death)",
   "castableIn": [
     "dungeon"
-  ]
+  ],
+  "utility": "teleport",
+  "teleportSuccessRate": 0.75
 }
