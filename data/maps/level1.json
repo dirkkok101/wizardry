@@ -1769,10 +1769,26 @@
           },
           "type": "elevator",
           "destinations": [
-            { "level": 1, "x": 10, "y": 8 },
-            { "level": 2, "x": 10, "y": 8 },
-            { "level": 3, "x": 10, "y": 8 },
-            { "level": 4, "x": 10, "y": 8 }
+            {
+              "level": 1,
+              "x": 10,
+              "y": 8
+            },
+            {
+              "level": 2,
+              "x": 10,
+              "y": 8
+            },
+            {
+              "level": 3,
+              "x": 10,
+              "y": 8
+            },
+            {
+              "level": 4,
+              "x": 10,
+              "y": 8
+            }
           ]
         },
         {
@@ -1950,26 +1966,6 @@
             "east": "open",
             "south": "wall",
             "west": "open"
-          }
-        },
-        {
-          "x": 4,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 4,
-          "y": 9,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
           }
         },
         {
@@ -3112,16 +3108,6 @@
             "east": "door",
             "south": "open",
             "west": "open"
-          }
-        },
-        {
-          "x": 2,
-          "y": 15,
-          "walls": {
-            "north": "door",
-            "east": "door",
-            "south": "door",
-            "west": "door"
           }
         },
         {

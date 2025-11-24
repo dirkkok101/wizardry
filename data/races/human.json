@@ -16,5 +16,5 @@
   "description": "Humans are the most balanced race with no exceptional strengths or weaknesses. They can pursue any class effectively.",
   "strengths": ["Balanced stats", "No penalties", "Can be any class"],
   "weaknesses": ["No exceptional stats", "Minimal saving throw bonuses"],
-  "bestClasses": ["Fighter", "Lord", "Samurai"]
+  "bestClasses": ["fighter", "lord", "samurai"]
 }

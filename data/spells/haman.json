@@ -1,12 +1,22 @@
 {
-  "id": "haman",
   "name": "HAMAN",
-  "level": 6,
   "casterType": "mage",
   "category": "utility",
-  "target": "group",
-  "description": "Transforms monsters",
   "castableIn": [
     "combat"
+  ],
+  "levels": [
+    {
+      "level": 6,
+      "id": "haman",
+      "description": "Transforms monsters",
+      "target": "group"
+    },
+    {
+      "level": 7,
+      "id": "haman_7",
+      "description": "Greater transform monsters",
+      "target": "group"
+    }
   ]
 }

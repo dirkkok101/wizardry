@@ -6,6 +6,8 @@
  * Gracefully handles individual monster failures
  */
 
+import { MonsterTemplateSchema } from '../validation/monster-schema'
+
 export interface MonsterTemplate {
   id: string
   name: string
@@ -104,14 +106,12 @@ export class MonsterDataLoader {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      const monsterData = await response.json() as MonsterTemplate
+      const rawMonsterData = await response.json()
 
-      // Validate required fields
-      if (!monsterData.id || !monsterData.name) {
-        throw new Error('Invalid monster data: missing id or name')
-      }
+      // Validate with Zod schema
+      const validated = MonsterTemplateSchema.parse(rawMonsterData)
 
-      return monsterData
+      return validated as MonsterTemplate
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       console.error(`[MonsterDataLoader] Failed to load monster "${monsterId}":`, errorMessage)
