@@ -9,6 +9,7 @@ import { RaceService } from './RaceService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
+import { MonsterDataLoader } from './MonsterDataLoader'
 import { ClassDataLoader } from './ClassDataLoader'
 
 let gameState: GameState | null = null
@@ -115,8 +116,19 @@ async function initializeGame(): Promise<void> {
     throw error // Races are critical, re-throw error
   }
 
-  // Initialize remaining data services
-  await ItemDataService.loadAllItems()
+  // Initialize remaining data services in parallel (including common monsters)
+  await Promise.all([
+    ItemDataService.loadAllItems(),
+    MonsterDataLoader.preloadCommonMonsters()
+  ])
+
+  // Report monster loading statistics
+  const monsterStats = MonsterDataLoader.getStats()
+  if (monsterStats.failed > 0) {
+    console.warn(`Loaded ${monsterStats.loaded} monsters (${monsterStats.failed} failed)`)
+  } else {
+    console.log(`Pre-loaded ${monsterStats.loaded} common monsters`)
+  }
 
   console.log('Game data initialized successfully')
 
