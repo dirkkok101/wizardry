@@ -49,30 +49,48 @@ describe('CombatService', () => {
   })
 
   describe('initiateCombat', () => {
-    it('creates combat state with monster group', () => {
+    it('creates combat state with 1-2 monster groups for level 1', () => {
       const party = [
         createTestCharacter({ id: 'char1' }),
         createTestCharacter({ id: 'char2' })
       ]
 
-      const state = CombatService.initiateCombat('kobold', party, true)
+      const state = CombatService.initiateCombat(1, party, true)
       const monsters = CombatService.getAllMonsters(state)
 
-      expect(monsters.length).toBeGreaterThanOrEqual(3)
-      expect(monsters.length).toBeLessThanOrEqual(5)
-      expect(monsters.every(m => m.monsterId === 'kobold')).toBe(true)
-      expect(state.monsterGroups.length).toBe(1)
-      expect(state.monsterGroups[0].id).toBe('A')
-      expect(state.monsterGroups[0].formation).toBe('front')
+      // Level 1 generates 1-2 groups
+      expect(state.monsterGroups.length).toBeGreaterThanOrEqual(1)
+      expect(state.monsterGroups.length).toBeLessThanOrEqual(2)
+
+      // Each group should have valid ID
+      const groupIds = state.monsterGroups.map(g => g.id)
+      expect(groupIds.every(id => ['A', 'B', 'C', 'D'].includes(id))).toBe(true)
+
+      // Should have at least 1 monster total
+      expect(monsters.length).toBeGreaterThan(0)
+
+      // All monsters should be valid
+      expect(monsters.every(m => m.id && m.monsterId && m.hp > 0)).toBe(true)
+
+      // State initialization
       expect(state.commandQueue).toEqual([])
       expect(state.roundNumber).toBe(1)
       expect(state.combatLog).toEqual([])
       expect(state.canFlee).toBe(true)
     })
 
+    it('creates combat state with 1-4 groups for higher levels', () => {
+      const party = [createTestCharacter()]
+      const state = CombatService.initiateCombat(5, party, true)
+
+      // Level 5+ generates 1-4 groups
+      expect(state.monsterGroups.length).toBeGreaterThanOrEqual(1)
+      expect(state.monsterGroups.length).toBeLessThanOrEqual(4)
+    })
+
     it('sets canFlee to false for fixed encounters', () => {
       const party = [createTestCharacter()]
-      const state = CombatService.initiateCombat('kobold', party, false)
+      const state = CombatService.initiateCombat(1, party, false)
 
       expect(state.canFlee).toBe(false)
     })

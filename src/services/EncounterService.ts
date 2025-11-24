@@ -1,4 +1,6 @@
 import { EncounterTable, MonsterEntry } from '../types/Dungeon'
+import { MonsterGroup, MonsterInstance, ENCOUNTER_CONFIG } from '../types/Combat'
+import { MonsterService } from './MonsterService'
 
 // Import encounter tables
 import level1Encounters from '../../data/encounters/level-1-encounters.json'
@@ -65,5 +67,57 @@ export const EncounterService = {
 
     // Fallback (should never reach here)
     return table.monsters[0].monsterId
+  },
+
+  /**
+   * Generate a complete encounter with 1-4 monster groups
+   * Based on original Wizardry 1 mechanics
+   * @param dungeonLevel - Current dungeon level (1-10)
+   * @returns Array of MonsterGroups (1-4 groups)
+   */
+  generateEncounter(dungeonLevel: number): MonsterGroup[] {
+    const maxGroups = ENCOUNTER_CONFIG.getMaxGroupsForLevel(dungeonLevel)
+    const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
+
+    // Roll number of groups (1 to maxGroups)
+    const numGroups = Math.floor(Math.random() * maxGroups) + 1
+
+    const groups: MonsterGroup[] = []
+    const groupIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D']
+    const encounterTable = this.getEncounterTable(dungeonLevel)
+
+    for (let i = 0; i < numGroups; i++) {
+      // Select monster type for this group
+      const monsterId = this.selectMonster(encounterTable)
+
+      // Generate monster instances (respecting level-based limits)
+      let monsters = MonsterService.generateMonsterGroup(monsterId)
+
+      // Enforce max monsters per group based on level
+      if (monsters.length > maxMonstersPerGroup) {
+        monsters = monsters.slice(0, maxMonstersPerGroup)
+      }
+
+      // Create the group
+      groups.push({
+        id: groupIds[i],
+        monsters: monsters,
+        formation: this.determineFormation(monsters)
+      })
+    }
+
+    return groups
+  },
+
+  /**
+   * Determine formation (front or back row) for a monster group
+   * Currently uses 50/50 random distribution
+   * Future enhancement: Could be based on monster type/tactics
+   * @param monsters - Monster instances in the group
+   * @returns 'front' or 'back'
+   */
+  determineFormation(monsters: MonsterInstance[]): 'front' | 'back' {
+    // 50% chance of front row, 50% chance of back row
+    return Math.random() < 0.5 ? 'front' : 'back'
   },
 }

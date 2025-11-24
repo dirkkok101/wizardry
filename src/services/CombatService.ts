@@ -4,6 +4,7 @@ import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
+import { EncounterService } from './EncounterService'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -19,23 +20,20 @@ export class CombatService {
     return Math.max(1, roll + agiMod)
   }
 
+  /**
+   * Initiate combat encounter with 1-4 monster groups
+   * @param dungeonLevel - Current dungeon level (1-10)
+   * @param party - Array of characters in the party
+   * @param canFlee - Whether the party can flee from this encounter
+   * @returns Initial combat state with monster groups
+   */
   static initiateCombat(
-    monsterId: string,
+    dungeonLevel: number,
     party: Character[],
     canFlee: boolean
   ): CombatState {
-    // Generate monster group (monsters are pre-loaded in GameInitializationService)
-    const monsters = MonsterService.generateMonsterGroup(monsterId)
-
-    // Create single monster group (Group A, front row)
-    // TODO: Support multiple groups when implementing encounter system
-    const monsterGroups: MonsterGroup[] = [
-      {
-        id: 'A',
-        monsters,
-        formation: 'front'
-      }
-    ]
+    // Generate 1-4 monster groups based on dungeon level
+    const monsterGroups = EncounterService.generateEncounter(dungeonLevel)
 
     return {
       monsterGroups,
@@ -413,8 +411,25 @@ export class CombatService {
       }
     }
 
-    // Get targets
-    const targets = Array.isArray(command.target) ? command.target : command.target ? [command.target] : []
+    // Get spell definition to check target type
+    const spell = SpellCastingService.getSpell(spellId)
+
+    // Determine targets based on spell type and command
+    let targets: Combatant[] = []
+
+    if (spell && spell.target === 'group' && command.targetGroupId) {
+      // Group-targeting spell: get all alive monsters from the target group
+      const group = state.monsterGroups.find(g => g.id === command.targetGroupId)
+      if (group) {
+        targets = group.monsters.filter(m => m.hp > 0)
+      }
+    } else if (spell && spell.target === 'all_enemies') {
+      // All-enemies spell: get all alive monsters from all groups
+      targets = this.getAllAliveMonsters(state)
+    } else {
+      // Single target or other: use command.target
+      targets = Array.isArray(command.target) ? command.target : command.target ? [command.target] : []
+    }
 
     // Resolve spell effect
     const spellEffect = SpellCastingService.resolveSpellEffect(spellId, caster, targets)
@@ -494,9 +509,20 @@ export class CombatService {
       )
     }
 
+    // Build message with group/target info
+    let message = `${actorName} casts ${spellId.toUpperCase()}`
+
+    if (spell && spell.target === 'group' && command.targetGroupId) {
+      message += ` on Group ${command.targetGroupId} (${targets.length} monsters)`
+    } else if (spell && spell.target === 'all_enemies') {
+      message += ` on all enemies (${targets.length} monsters)`
+    }
+
+    message += `: ${spellEffect.message}`
+
     return {
       newState,
-      message: `${actorName} casts ${spellId.toUpperCase()}: ${spellEffect.message}`
+      message
     }
   }
 
@@ -507,22 +533,12 @@ export class CombatService {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
 
-    // Must target a monster group
-    if (!command.target || !('monsterId' in command.target)) {
-      return {
-        newState: state,
-        message: `${actorName} cannot dispel that target!`
-      }
-    }
-
-    const targetMonster = command.target as MonsterInstance
-
-    // Find the group containing this monster
-    const groupId = command.data?.groupId as 'A' | 'B' | 'C' | 'D' | undefined
+    // Must have a target group specified
+    const groupId = command.targetGroupId
     if (!groupId) {
       return {
         newState: state,
-        message: `${actorName} DISPEL fails: no group specified!`
+        message: `${actorName} DISPEL fails: no group targeted!`
       }
     }
 
@@ -534,13 +550,22 @@ export class CombatService {
       }
     }
 
+    // Get first alive monster to determine level for dispel chance
+    const aliveMonsters = group.monsters.filter(m => m.hp > 0)
+    if (aliveMonsters.length === 0) {
+      return {
+        newState: state,
+        message: `${actorName} DISPEL fails: all monsters already dead!`
+      }
+    }
+
     // Check if group contains undead
     // TODO: Add isUndead property to monsters
     // For now, assume all monsters can be dispelled (simplified)
 
     // Calculate dispel chance: (CasterLevel - UndeadLevel) × 10, clamped to 5-95%
     const casterLevel = caster.level || 1
-    const undeadLevel = targetMonster.level || 1
+    const undeadLevel = aliveMonsters[0].level || 1
     const rawChance = (casterLevel - undeadLevel) * 10
     const dispelChance = Math.max(5, Math.min(95, rawChance))
 
@@ -564,13 +589,13 @@ export class CombatService {
 
       return {
         newState: { ...state, monsterGroups: newMonsterGroups },
-        message: `${actorName} DISPEL destroys Group ${groupId}!`
+        message: `${actorName} DISPEL destroys Group ${groupId}! (${aliveMonsters.length} monsters destroyed)`
       }
     } else {
       // Failure
       return {
         newState: state,
-        message: `${actorName} DISPEL fails!`
+        message: `${actorName} DISPEL fails! (${dispelChance}% chance)`
       }
     }
   }

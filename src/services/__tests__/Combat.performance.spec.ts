@@ -8,7 +8,7 @@ describe('Combat Performance', () => {
     const party = Array.from({ length: 6 }, (_, i) =>
       createTestCharacter({ id: `char${i}`, name: `Hero${i}`, hp: 100 })
     )
-    const state = CombatService.initiateCombat('kobold', party, true)
+    const state = CombatService.initiateCombat(1, party, true)
     const monsters = CombatService.getAllMonsters(state)
 
     // Create commands

@@ -44,6 +44,80 @@
   }
 }
 
+// Monster group containers
+.monster-group {
+  margin-bottom: 15px;
+  border-radius: 4px;
+  overflow: hidden;
+
+  // Color-coded borders for each group
+  &[data-group="A"] {
+    border: 2px solid #ff6b6b;
+  }
+
+  &[data-group="B"] {
+    border: 2px solid #4ecdc4;
+  }
+
+  &[data-group="C"] {
+    border: 2px solid #ffe66d;
+  }
+
+  &[data-group="D"] {
+    border: 2px solid #a8e6cf;
+  }
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: default;
+  transition: all 0.2s;
+
+  &.targetable {
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  &.selected {
+    background: rgba(255, 255, 0, 0.3);
+    border: 2px solid yellow;
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.5);
+  }
+}
+
+.group-label {
+  color: #ffeb3b;
+  letter-spacing: 1px;
+}
+
+.group-formation {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.group-count {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.group-monsters {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
 .monster-card,
 .character-combat-card {
   border: 1px solid var(--color-border);
@@ -65,6 +139,22 @@
   &.dead {
     opacity: 0.5;
     background: var(--color-dead-bg);
+  }
+
+  &.targetable {
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--color-primary);
+      background: rgba(64, 224, 208, 0.05);
+      transform: translateX(2px);
+    }
+  }
+
+  &.selected {
+    border: 2px solid yellow;
+    background: rgba(255, 255, 0, 0.15);
+    box-shadow: 0 0 6px rgba(255, 255, 0, 0.4);
   }
 }
 
