@@ -22,17 +22,17 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
     })
   })
 
-  describe('MELITO (Sparks)', () => {
+  describe('HALITO (Little Fire)', () => {
     it('deals 1d8 fire damage to group', () => {
       const caster = createTestCharacter({
-        spellPoints: { mage: { level2: { current: 2, max: 2 } } }
+        spellPoints: { mage: { level1: { current: 2, max: 2 } } }
       })
       const targets = [
         createTestCharacter({ id: 't1' }),
         createTestCharacter({ id: 't2' })
       ]
 
-      const effect = SpellCastingService.resolveSpellEffect('melito', caster, targets)
+      const effect = SpellCastingService.resolveSpellEffect('halito', caster, targets)
 
       expect(effect.damage).toBeDefined()
       expect(effect.damage).toHaveLength(2)
@@ -116,31 +116,31 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
     })
   })
 
-  describe('BAMORDI (Harm Greater)', () => {
-    it('deals 3d8 holy damage to single target', () => {
+  describe('LORTO (Blades)', () => {
+    it('deals 6d6 physical damage to group', () => {
       const caster = createTestCharacter({
-        spellPoints: { priest: { level4: { current: 1, max: 1 } } }
+        spellPoints: { priest: { level6: { current: 1, max: 1 } } }
       })
       const target = createTestCharacter({ id: 't1' })
 
-      const effect = SpellCastingService.resolveSpellEffect('bamordi', caster, [target])
+      const effect = SpellCastingService.resolveSpellEffect('lorto', caster, [target])
 
       expect(effect.damage).toHaveLength(1)
-      expect(effect.damage![0]).toBeGreaterThanOrEqual(3)
-      expect(effect.damage![0]).toBeLessThanOrEqual(24)
+      expect(effect.damage![0]).toBeGreaterThanOrEqual(6)
+      expect(effect.damage![0]).toBeLessThanOrEqual(36)
     })
   })
 
-  describe('KATU (Talisman)', () => {
-    it('applies massive -6 AC buff to all allies', () => {
+  describe('MAPORFIC (Shield All)', () => {
+    it('applies -4 AC buff to all allies', () => {
       const caster = createTestCharacter({
         spellPoints: { priest: { level4: { current: 1, max: 1 } } }
       })
       const allies = [createTestCharacter({ id: 'a1' })]
 
-      const effect = SpellCastingService.resolveSpellEffect('katu', caster, allies)
+      const effect = SpellCastingService.resolveSpellEffect('maporfic', caster, allies)
 
-      expect(effect.acBuffs![0].acModifier).toBe(-6)
+      expect(effect.acBuffs![0].acModifier).toBe(-4)
     })
   })
 
@@ -220,7 +220,7 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
   describe('MABADI (Death All)', () => {
     it('attempts instant death on all enemies', () => {
       const caster = createTestCharacter({
-        spellPoints: { priest: { level7: { current: 1, max: 1 } } }
+        spellPoints: { priest: { level6: { current: 1, max: 1 } } }
       })
       const targets = [
         createTestCharacter({ id: 't1' }),
