@@ -11,7 +11,7 @@ import { CharacterInspectionComponent } from './character-inspection/character-i
 import { SpellCastingComponent } from './spell-casting/spell-casting.component';
 import { MazeComponent } from './maze/maze.component';
 import { CampComponent } from './camp/camp.component';
-import { CombatComponent } from './scenes/combat/combat';
+import { CombatComponent } from './combat-scene/combat';
 
 export const routes: Routes = [
   {

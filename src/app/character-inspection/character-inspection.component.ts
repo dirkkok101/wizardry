@@ -10,12 +10,12 @@ import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
 import { Item } from '../../types/Item';
 import { ItemSlot } from '../../types/ItemType';
-import { ItemCardComponent, ItemAction } from '../components/item-card/item-card.component';
-import { TradeItemDialogComponent } from '../components/trade-item-dialog/trade-item-dialog.component';
-import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
-import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
-import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { MenuItem } from '../../components/menu/menu.component';
+import { ItemCardComponent, ItemAction } from '../shared/components/item-card/item-card.component';
+import { TradeItemDialogComponent } from '../shared/components/trade-item-dialog/trade-item-dialog.component';
+import { ConfirmationDialogComponent } from '../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
+import { MenuItem } from '../shared/components/menu/menu.component';
 
 /**
  * Character Inspection Component - Modernized with inline item actions

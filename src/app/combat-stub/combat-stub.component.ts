@@ -1,9 +1,9 @@
 import { Component, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
-import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { MenuItem } from '../../components/menu/menu.component';
+import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
+import { MenuItem } from '../shared/components/menu/menu.component';
 
 @Component({
   selector: 'app-combat-stub',

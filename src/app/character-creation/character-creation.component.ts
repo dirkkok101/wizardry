@@ -7,12 +7,12 @@ import { RaceService } from '../../services/RaceService';
 import { ClassService } from '../../services/ClassService';
 import { CharacterService } from '../../services/CharacterService';
 import { CharacterCreationService, RolledStats, BaseStats } from '../../services/CharacterCreationService';
-import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
-import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
+import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
 import { Race, parseRace } from '../../types/Race';
 import { CharacterClass, parseClass } from '../../types/CharacterClass';
 import { Alignment } from '../../types/Alignment';
-import { MenuItem } from '../../components/menu/menu.component';
+import { MenuItem } from '../shared/components/menu/menu.component';
 
 enum CreationStep {
   SELECT_RACE = 'SELECT_RACE',
