@@ -317,6 +317,7 @@ function getDataFileList(directory: string): string[] {
       return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
     case 'spells':
       // Individual spell JSON files - matches actual files in data/spells/
+      // Note: Some spells use consolidated format with multiple levels in one file
       return [
         // Mage spells
         'halito.json', 'mogref.json', 'katino.json', 'dumapic.json', 'dilto.json', 'sopic.json',
