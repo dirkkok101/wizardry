@@ -329,7 +329,8 @@ export class CombatComponent implements OnInit {
     }
 
     // Determine if target selection is needed based on spell target type
-    if (spell.target === 'all_allies' || spell.target === 'self' || spell.target === 'all_enemies') {
+    // 'party', 'all_allies', 'self', 'all_enemies' = no target selection needed
+    if (spell.target === 'party' || spell.target === 'all_allies' || spell.target === 'self' || spell.target === 'all_enemies') {
       // No target selection needed - confirm action immediately
       this.confirmAction('CAST_SPELL', undefined)
     } else {

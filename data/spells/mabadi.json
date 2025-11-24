@@ -9,7 +9,5 @@
   "castableIn": [
     "combat"
   ],
-  "effect": {
-    "type": "instant_death"
-  }
+  "instantDeath": true
 }

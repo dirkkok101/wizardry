@@ -393,14 +393,30 @@ describe('CharacterCreationComponent', () => {
           component.currentStep.set(CreationStep.ROLL_ALLOCATE_CLASS);
           await component.rollBonusPoints();
 
-          // Allocate all points
-          const stats = component.rolledStats()!;
-          for (let i = 0; i < stats.bonusPoints; i++) {
+          // First allocate 3 points to STR to meet Fighter requirement (Human base STR 8 + 3 = 11)
+          for (let i = 0; i < 3; i++) {
             component.allocatePoint('strength');
           }
 
-          // Select class
-          component.selectedClass.set(CharacterClass.FIGHTER);
+          // Allocate remaining points across all stats (to avoid 18 cap)
+          const statKeys: ('strength' | 'intelligence' | 'piety' | 'vitality' | 'agility' | 'luck')[] =
+            ['strength', 'intelligence', 'piety', 'vitality', 'agility', 'luck'];
+          let statIndex = 0;
+          while (component.rolledStats()!.bonusPoints > 0) {
+            const prevPoints = component.rolledStats()!.bonusPoints;
+            component.allocatePoint(statKeys[statIndex % statKeys.length]);
+            const newPoints = component.rolledStats()!.bonusPoints;
+            // If allocation failed (cap hit), try next stat
+            if (newPoints === prevPoints) {
+              statIndex++;
+              continue;
+            }
+            statIndex++;
+            if (statIndex > 100) break;
+          }
+
+          // Select class (use selectClass to ensure eligibility check)
+          component.selectClass(CharacterClass.FIGHTER);
           fixture.detectChanges();
 
           const items = component.footerMenuItems();
@@ -1304,10 +1320,26 @@ describe('CharacterCreationComponent', () => {
         component.selectedAlignment.set(Alignment.GOOD);
         await component.rollBonusPoints();
 
-        // Allocate all bonus points and select class
-        const stats = component.rolledStats()!;
-        for (let i = 0; i < stats.bonusPoints; i++) {
+        // First allocate 3 points to STR to meet Fighter requirement (Human base STR 8 + 3 = 11)
+        for (let i = 0; i < 3; i++) {
           component.allocatePoint('strength');
+        }
+
+        // Allocate remaining points across all stats (to avoid 18 cap)
+        const statKeys: ('strength' | 'intelligence' | 'piety' | 'vitality' | 'agility' | 'luck')[] =
+          ['strength', 'intelligence', 'piety', 'vitality', 'agility', 'luck'];
+        let statIndex = 0;
+        while (component.rolledStats()!.bonusPoints > 0) {
+          const prevPoints = component.rolledStats()!.bonusPoints;
+          component.allocatePoint(statKeys[statIndex % statKeys.length]);
+          const newPoints = component.rolledStats()!.bonusPoints;
+          // If allocation failed (cap hit), try next stat
+          if (newPoints === prevPoints) {
+            statIndex++;
+            continue;
+          }
+          statIndex++;
+          if (statIndex > 100) break;
         }
 
         expect(component.isClassEligible(CharacterClass.FIGHTER)).toBe(true);

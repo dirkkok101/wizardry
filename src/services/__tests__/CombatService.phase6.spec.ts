@@ -99,12 +99,13 @@ describe('CombatService - Phase 6: Healing & Support Spells', () => {
       it('executes DIAL spell command for party healing', () => {
         const caster = createTestCharacter({
           id: 'caster',
-          level: 3,
+          level: 7,
           spellPoints: {
             priest: {
               level1: { current: 3, max: 3 },
               level2: { current: 2, max: 2 },
-              level3: { current: 1, max: 1 }
+              level3: { current: 1, max: 1 },
+              level4: { current: 1, max: 1 }
             }
           }
         })

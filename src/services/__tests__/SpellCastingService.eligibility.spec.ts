@@ -100,7 +100,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
         }
       })
 
-      const result = SpellCastingService.canCastSpell(mage, 'melito')
+      const result = SpellCastingService.canCastSpell(mage, 'sopic')
       expect(result.canCast).toBe(false)
     })
 
@@ -120,7 +120,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
         }
       })
 
-      const result = SpellCastingService.canCastSpell(mage, 'mahaman_7')
+      const result = SpellCastingService.canCastSpell(mage, 'mahaman')
       expect(result.canCast).toBe(false)
     })
 
@@ -134,7 +134,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
         }
       })
 
-      const result = SpellCastingService.canCastSpell(mage, 'mahaman_7')
+      const result = SpellCastingService.canCastSpell(mage, 'mahaman')
       expect(result.canCast).toBe(true)
     })
   })
@@ -184,7 +184,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
         }
       })
 
-      const updated = SpellCastingService.deductSpellPoints(mage, 'melito')
+      const updated = SpellCastingService.deductSpellPoints(mage, 'sopic')
       expect(updated.spellPoints?.mage?.level2.current).toBe(1)
       expect(updated.spellPoints?.mage?.level1.current).toBe(3)  // Unchanged
     })
@@ -200,7 +200,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
             level2: { current: 2, max: 2 }
           }
         },
-        knownSpells: ['dumapic', 'melito', 'kalki']  // Mix of mage and priest
+        knownSpells: ['dumapic', 'sopic', 'kalki']  // Mix of mage and priest
       })
 
       const available = SpellCastingService.getAvailableSpells(mage)
@@ -208,7 +208,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
 
       // Should include mage spells
       expect(spellIds).toContain('dumapic')
-      expect(spellIds).toContain('melito')
+      expect(spellIds).toContain('sopic')
 
       // Should NOT include priest spell
       expect(spellIds).not.toContain('kalki')
@@ -256,7 +256,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
             level2: { current: 2, max: 2 }   // Available
           }
         },
-        knownSpells: ['dumapic', 'melito']
+        knownSpells: ['dumapic', 'sopic']
       })
 
       const available = SpellCastingService.getAvailableSpells(mage)
@@ -266,7 +266,7 @@ describe('SpellCastingService - Spell Eligibility', () => {
       expect(spellIds).not.toContain('dumapic')
 
       // Should include level 2 spell (has points)
-      expect(spellIds).toContain('melito')
+      expect(spellIds).toContain('sopic')
     })
   })
 
@@ -282,10 +282,10 @@ describe('SpellCastingService - Spell Eligibility', () => {
     })
 
     it('getSpell returns correct data for high-level spell', () => {
-      const spell = SpellCastingService.getSpell('mahaman_7')
+      const spell = SpellCastingService.getSpell('mahaman')
 
       expect(spell).toBeDefined()
-      expect(spell?.id).toBe('mahaman_7')
+      expect(spell?.id).toBe('mahaman')
       expect(spell?.name).toBe('MAHAMAN')
       expect(spell?.level).toBe(7)
       expect(spell?.casterType).toBe('mage')
@@ -293,14 +293,14 @@ describe('SpellCastingService - Spell Eligibility', () => {
     })
 
     it('getSpell returns correct data for priest spell', () => {
-      const spell = SpellCastingService.getSpell('katu')
+      const spell = SpellCastingService.getSpell('maporfic')
 
       expect(spell).toBeDefined()
-      expect(spell?.id).toBe('katu')
-      expect(spell?.name).toBe('KATU')
+      expect(spell?.id).toBe('maporfic')
+      expect(spell?.name).toBe('MAPORFIC')
       expect(spell?.level).toBe(4)
       expect(spell?.casterType).toBe('priest')
-      expect(spell?.acModifier).toBe(-6)
+      expect(spell?.acModifier).toBe(-4)
     })
   })
 })

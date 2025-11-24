@@ -92,16 +92,16 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
   })
 
   describe('Anti-Undead Progression', () => {
-    describe('BADIAL (Priest Level 4 - Hurt Undead Group)', () => {
-      it('resolves BADIAL with 2d8 damage to undead group', () => {
+    describe('BADIAL (Priest Level 3 - Hurt All Groups)', () => {
+      it('resolves BADIAL with 2d8 damage to all enemy groups', () => {
         const caster = createTestCharacter({ level: 5 })
-        const undeadGroup = [
+        const enemyGroup = [
           createTestMonster({ id: 'skeleton1', undead: true }),
-          createTestMonster({ id: 'skeleton2', undead: true }),
-          createTestMonster({ id: 'zombie', undead: true })
+          createTestMonster({ id: 'orc', undead: false }),
+          createTestMonster({ id: 'goblin', undead: false })
         ]
 
-        const effect = SpellCastingService.resolveSpellEffect('badial', caster, undeadGroup)
+        const effect = SpellCastingService.resolveSpellEffect('badial', caster, enemyGroup)
 
         expect(effect.damage).toBeDefined()
         expect(effect.damage).toHaveLength(3)
@@ -111,14 +111,15 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
         })
       })
 
-      it('has no effect on living creatures', () => {
+      it('damages living creatures as well as undead (authentic Wizardry 1 behavior)', () => {
         const caster = createTestCharacter({ level: 5 })
         const living = [createTestMonster({ id: 'orc', undead: false })]
 
         const effect = SpellCastingService.resolveSpellEffect('badial', caster, living)
 
-        expect(effect.damage).toBeUndefined()
-        expect(effect.message).toBe('BADIAL has no effect on living creatures!')
+        // BADIAL damages ALL enemies, not just undead (per research docs)
+        expect(effect.damage).toBeDefined()
+        expect(effect.damage).toHaveLength(1)
       })
     })
 
@@ -166,36 +167,40 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
   })
 
   describe('Advanced Healing Spells', () => {
-    describe('DIAL Level 5 (Priest - Full HP Restore)', () => {
-      it('resolves DIAL_5 with full HP restoration', () => {
+    describe('DIALMA (Priest Level 5 - Greater Healing)', () => {
+      it('resolves DIALMA with 3d8 healing', () => {
         const caster = createTestCharacter({ level: 6 })
         const injured = createTestCharacter({ id: 'fighter', hp: 10, maxHp: 50 })
 
-        const effect = SpellCastingService.resolveSpellEffect('dial_5', caster, [injured])
+        const effect = SpellCastingService.resolveSpellEffect('dialma', caster, [injured])
 
         expect(effect.healing).toBeDefined()
         expect(effect.healing).toHaveLength(1)
-        expect(effect.healing![0]).toBe(40)  // Restores to max HP (50 - 10 = 40 healed)
-        expect(effect.message).toContain('DIAL')
+        expect(effect.healing![0]).toBeGreaterThanOrEqual(3)  // 3d8 min
+        expect(effect.healing![0]).toBeLessThanOrEqual(24)    // 3d8 max
+        expect(effect.message).toContain('DIALMA')
       })
 
-      it('DIAL_5 heals more than DIAL', () => {
+      it('DIALMA heals more than DIAL on average', () => {
         const caster = createTestCharacter({ level: 6 })
         const injured = [createTestCharacter({ id: 'c1', hp: 5, maxHp: 50 })]
 
-        const dialEffect = SpellCastingService.resolveSpellEffect('dial', caster, injured)
-        const dial5Effect = SpellCastingService.resolveSpellEffect('dial_5', caster, injured)
+        // Run multiple times to compare averages
+        let dialTotal = 0, dialmaTotal = 0
+        for (let i = 0; i < 100; i++) {
+          dialTotal += SpellCastingService.resolveSpellEffect('dial', caster, injured).healing![0]
+          dialmaTotal += SpellCastingService.resolveSpellEffect('dialma', caster, injured).healing![0]
+        }
 
-        // DIAL is 2d8 (2-16), DIAL_5 is full restore (45 HP)
-        expect(dial5Effect.healing![0]).toBeGreaterThan(dialEffect.healing![0])
-        expect(dial5Effect.healing![0]).toBe(45)  // Full restore
+        // DIAL is 2d8 (avg 9), DIALMA is 3d8 (avg 13.5)
+        expect(dialmaTotal / 100).toBeGreaterThan(dialTotal / 100)
       })
     })
   })
 
   describe('Status Effect Spells', () => {
-    describe('MALIKTO (Priest Level 6 - Petrification)', () => {
-      it('resolves MALIKTO to petrify enemy group', () => {
+    describe('MALIKTO (Priest Level 7 - Mass Damage)', () => {
+      it('resolves MALIKTO with 12d6 damage to all enemies', () => {
         const caster = createTestCharacter({ level: 7 })
         const enemies = [
           createTestMonster({ id: 'm1' }),
@@ -205,13 +210,13 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
 
         const effect = SpellCastingService.resolveSpellEffect('malikto', caster, enemies)
 
-        expect(effect.statusEffects).toBeDefined()
-        expect(effect.statusEffects).toEqual([
-          { target: 'm1', effect: 'PETRIFIED' },
-          { target: 'm2', effect: 'PETRIFIED' },
-          { target: 'm3', effect: 'PETRIFIED' }
-        ])
-        expect(effect.message).toContain('stone')
+        expect(effect.damage).toBeDefined()
+        expect(effect.damage).toHaveLength(3)
+        effect.damage!.forEach(dmg => {
+          expect(dmg).toBeGreaterThanOrEqual(12)  // 12d6 min
+          expect(dmg).toBeLessThanOrEqual(72)     // 12d6 max
+        })
+        expect(effect.message).toContain('MALIKTO')
       })
     })
   })
@@ -262,7 +267,7 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
 
   describe('Utility Spells', () => {
     describe('LATUMOFIS (Priest Level 4 - Full Enemy Analysis)', () => {
-      it('resolves LATUMOFIS to reveal detailed enemy information', () => {
+      it('resolves LATUMOFIS to reveal enemy information', () => {
         const caster = createTestCharacter({ level: 5 })
         const enemies = [
           createTestMonster({ id: 'dragon', hp: 100, maxHp: 100 }),
@@ -271,10 +276,9 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
 
         const effect = SpellCastingService.resolveSpellEffect('latumofis', caster, enemies)
 
-        expect(effect.enemyAnalysis).toBeDefined()
-        expect(effect.enemyAnalysis!.targetIds).toEqual(['dragon', 'wyrm'])
-        expect(effect.enemyAnalysis!.analysisType).toBe('full')
+        // LATUMOFIS is a utility spell that reveals enemy info
         expect(effect.message).toContain('LATUMOFIS')
+        expect(effect.revealedInfo).toBeDefined()
       })
     })
   })
@@ -334,20 +338,20 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
 
       const diosRolls: number[] = []
       const dialRolls: number[] = []
-      const dial5Rolls: number[] = []
+      const dialmaRolls: number[] = []
 
       for (let i = 0; i < 100; i++) {
         diosRolls.push(SpellCastingService.resolveSpellEffect('dios', caster, target).healing![0])
         dialRolls.push(SpellCastingService.resolveSpellEffect('dial', caster, target).healing![0])
-        dial5Rolls.push(SpellCastingService.resolveSpellEffect('dial_5', caster, target).healing![0])
+        dialmaRolls.push(SpellCastingService.resolveSpellEffect('dialma', caster, target).healing![0])
       }
 
       const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length
 
-      // Verify healing progression: DIOS (1d8) < DIAL (2d8) < DIAL_5 (full)
+      // Verify healing progression: DIOS (1d8) < DIAL (2d8) < DIALMA (3d8)
       expect(avg(dialRolls)).toBeGreaterThan(avg(diosRolls))
-      expect(avg(dial5Rolls)).toBeGreaterThan(avg(dialRolls))
-      expect(avg(dial5Rolls)).toBeGreaterThan(avg(diosRolls))
+      expect(avg(dialmaRolls)).toBeGreaterThan(avg(dialRolls))
+      expect(avg(dialmaRolls)).toBeGreaterThan(avg(diosRolls))
     })
 
     it('verifies anti-undead spell progression', () => {
@@ -373,15 +377,16 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
   })
 
   describe('Edge Cases', () => {
-    it('MALIKTO petrifies already damaged enemies', () => {
+    it('MALIKTO damages already injured enemies', () => {
       const caster = createTestCharacter({ level: 7 })
       const injured = createTestMonster({ id: 'goblin', hp: 5, maxHp: 20 })
 
       const effect = SpellCastingService.resolveSpellEffect('malikto', caster, [injured])
 
-      expect(effect.statusEffects).toEqual([
-        { target: 'goblin', effect: 'PETRIFIED' }
-      ])
+      expect(effect.damage).toBeDefined()
+      expect(effect.damage).toHaveLength(1)
+      expect(effect.damage![0]).toBeGreaterThanOrEqual(12)
+      expect(effect.damage![0]).toBeLessThanOrEqual(72)
     })
 
     it('KADORTO works on dead characters', () => {

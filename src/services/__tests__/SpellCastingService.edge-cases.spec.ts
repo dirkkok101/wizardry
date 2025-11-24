@@ -41,10 +41,10 @@ describe('SpellCastingService - Edge Cases', () => {
   describe('Empty target arrays', () => {
     it('handles empty target array for group damage spell', () => {
       const caster = createTestCharacter({
-        spellPoints: { mage: { level2: { current: 2, max: 2 } } }
+        spellPoints: { mage: { level3: { current: 2, max: 2 } } }
       })
 
-      const effect = SpellCastingService.resolveSpellEffect('melito', caster, [])
+      const effect = SpellCastingService.resolveSpellEffect('molito', caster, [])
       expect(effect.damage).toBeDefined()
       expect(effect.damage).toHaveLength(0)
     })
@@ -61,7 +61,7 @@ describe('SpellCastingService - Edge Cases', () => {
 
     it('handles empty target array for instant death spell', () => {
       const caster = createTestCharacter({
-        spellPoints: { priest: { level7: { current: 1, max: 1 } } }
+        spellPoints: { priest: { level6: { current: 1, max: 1 } } }
       })
 
       const effect = SpellCastingService.resolveSpellEffect('mabadi', caster, [])

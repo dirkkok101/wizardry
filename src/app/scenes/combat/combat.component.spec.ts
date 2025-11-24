@@ -122,7 +122,8 @@ describe('CombatComponent', () => {
       const actions = component.selectedActions()
       expect(actions.has(activeChar.id)).toBe(true)
       expect(actions.get(activeChar.id)!.type).toBe('ATTACK')
-      expect(actions.get(activeChar.id)!.target).toBe(monster)
+      // Compare by ID since computed signals may return new object instances
+      expect(actions.get(activeChar.id)!.target?.id).toBe(monster.id)
     })
 
     it('advances to next character after action confirmed', () => {
@@ -192,7 +193,11 @@ describe('CombatComponent', () => {
 
   describe('Spell Selection', () => {
     beforeEach(() => {
-      // Setup a character with spell points
+      // Setup a character with spell points and known spells covering various target types:
+      // - single: mogref (level 1), sopic (level 2)
+      // - group: halito (level 1), mahalito (level 3)
+      // - party: masopic (level 6)
+      // - all_enemies: madalto (level 5)
       const mage = createTestCharacter({
         id: 'mage1',
         name: 'Gandalf',
@@ -201,9 +206,12 @@ describe('CombatComponent', () => {
           mage: {
             level1: { current: 3, max: 3 },
             level2: { current: 2, max: 2 },
-            level3: { current: 1, max: 1 }
+            level3: { current: 1, max: 1 },
+            level5: { current: 1, max: 1 },
+            level6: { current: 1, max: 1 }
           }
-        }
+        },
+        knownSpells: ['mogref', 'sopic', 'halito', 'mahalito', 'masopic', 'madalto']
       })
 
       gameState.updateState(state => ({
@@ -237,16 +245,16 @@ describe('CombatComponent', () => {
       expect(component.selectedSpellId()).toBe(firstSpell.id)
     })
 
-    it('skips target selection for all_allies spells', () => {
-      // Find a spell with all_allies target (e.g., MOGREF, DIAL)
+    it('skips target selection for party spells', () => {
+      // Find a spell with party target (e.g., MASOPIC at level 6)
       const spells = component.availableSpells()
-      const alliesSpell = spells.find(s => s.target === 'all_allies')
+      const partySpell = spells.find(s => s.target === 'party')
 
-      expect(alliesSpell).toBeDefined()
+      expect(partySpell).toBeDefined()
 
-      if (alliesSpell) {
+      if (partySpell) {
         component.selectActionType('CAST_SPELL')
-        component.selectSpell(alliesSpell.id)
+        component.selectSpell(partySpell.id)
 
         // Should NOT show group selection dialog
         expect(component.showGroupSelectionDialog()).toBe(false)
@@ -291,18 +299,18 @@ describe('CombatComponent', () => {
 
     it('attaches spell ID to combat command', () => {
       const spells = component.availableSpells()
-      const alliesSpell = spells.find(s => s.target === 'all_allies')
+      const partySpell = spells.find(s => s.target === 'party')
 
-      expect(alliesSpell).toBeDefined()
+      expect(partySpell).toBeDefined()
 
-      if (alliesSpell) {
+      if (partySpell) {
         component.selectActionType('CAST_SPELL')
-        component.selectSpell(alliesSpell.id)
+        component.selectSpell(partySpell.id)
 
         const action = component.selectedActions().get('mage1')
         expect(action).toBeDefined()
         expect(action!.type).toBe('CAST_SPELL')
-        expect(action!.data).toEqual({ spellId: alliesSpell.id })
+        expect(action!.data).toEqual({ spellId: partySpell.id })
       }
     })
 
