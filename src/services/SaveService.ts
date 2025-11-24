@@ -96,12 +96,23 @@ export class SaveService {
    * Handles backward compatibility with older save formats
    */
   private deserializeGameState(data: any): GameState {
+    // Ensure settings have proper defaults
+    // Force encountersEnabled to always be true (override old saves that had it disabled)
+    const settings = {
+      difficulty: 'NORMAL' as const,
+      soundEnabled: true,
+      musicEnabled: true,
+      ...data.settings,
+      encountersEnabled: true // Always enabled by default
+    }
+
     // Handle undefined/null dungeon state (castle/town)
     if (!data.dungeon) {
       return {
         ...data,
         roster: new Map(data.roster || []),
-        dungeon: undefined
+        dungeon: undefined,
+        settings
       }
     }
 
@@ -130,6 +141,7 @@ export class SaveService {
     return {
       ...data,
       roster: new Map(data.roster || []),
+      settings,
       dungeon: {
         ...data.dungeon,
         visitedTiles,
