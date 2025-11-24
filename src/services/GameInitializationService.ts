@@ -6,7 +6,7 @@ import { isDevMode } from '@angular/core'
 import { GameState } from '../types/GameState'
 import { SceneType } from '../types/SceneType'
 import { RaceService } from './RaceService'
-import { ItemDataService } from './ItemDataService'
+import { ItemDataLoader } from './ItemDataLoader'
 import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
 import { MonsterDataLoader } from './MonsterDataLoader'
@@ -134,7 +134,7 @@ async function initializeGame(): Promise<void> {
   }
 
   // Initialize remaining data services
-  await ItemDataService.loadAllItems()
+  await ItemDataLoader.loadAllItems()
 
   console.log('Game data initialized successfully')
 

@@ -1,5 +1,5 @@
 import { EquipmentService } from '../EquipmentService';
-import { ItemDataService } from '../ItemDataService';
+import { ItemDataLoader } from '../ItemDataLoader';
 import { Character } from '../../types/Character';
 import { Item } from '../../types/Item';
 import { ItemType } from '../../types/ItemType';
@@ -10,8 +10,8 @@ describe('EquipmentService', () => {
   let longSword: Item;
 
   beforeEach(() => {
-    // Mock ItemDataService.getItem
-    jest.spyOn(ItemDataService, 'getItem').mockImplementation((itemId: string) => {
+    // Mock ItemDataLoader.getItem
+    jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
       if (itemId === 'long_sword') return longSword;
       if (itemId === 'plate_mail') {
         return {
@@ -211,8 +211,8 @@ describe('EquipmentService', () => {
 
   describe('AC Calculation Integration', () => {
     it('calculates AC correctly with full equipment set from transformation layer', () => {
-      // Mock ItemDataService to return transformed items
-      jest.spyOn(ItemDataService, 'getItem').mockImplementation((id: string) => {
+      // Mock ItemDataLoader to return transformed items
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((id: string) => {
         const items: Record<string, Item> = {
           'plate_mail': {
             id: 'plate_mail',
@@ -298,7 +298,7 @@ describe('EquipmentService', () => {
     });
 
     it('confirms weapons do not contribute to AC', () => {
-      jest.spyOn(ItemDataService, 'getItem').mockImplementation((id: string) => {
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((id: string) => {
         if (id === 'long_sword') {
           return {
             id: 'long_sword',

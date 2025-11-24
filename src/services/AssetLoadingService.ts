@@ -333,7 +333,35 @@ function getDataFileList(directory: string): string[] {
         'badialma_5.json', 'lomilwa_priest.json'
       ]
     case 'items':
-      return ['weapons.json', 'armor.json', 'consumables.json']
+      // Individual item JSON files (102 total) - matches actual files in data/items/
+      return [
+        "amulet_makanito.json", "amulet_manifo.json", "anointed_flail.json", "anointed_mace.json",
+        "armor_heroes.json", "blade_cusinart.json", "blue_ribbon.json", "breast_plate.json",
+        "breast_plate_1.json", "breast_plate_2.json", "breast_plate_3.json", "breast_plate_cursed_1.json",
+        "breast_plate_cursed_2.json", "broken_item.json", "bronze_key.json", "chain_1.json",
+        "chain_2.json", "chain_cursed_1.json", "chain_cursed_2.json", "chain_mail.json",
+        "chain_pro_fire.json", "copper_gloves.json", "cursed_helmet.json", "cursed_robe.json",
+        "dagger.json", "dagger_1.json", "dagger_2.json", "dagger_speed.json",
+        "deadly_ring.json", "diadem_malor.json", "dragon_slayer.json", "evil_plate_3.json",
+        "evil_shield_3.json", "evil_sword_3.json", "gold_key.json", "great_helm.json",
+        "helm.json", "helm_1.json", "helm_2_evil.json", "jeweled_amulet.json",
+        "large_shield.json", "leather_1.json", "leather_2.json", "leather_armor.json",
+        "leather_cursed_1.json", "leather_cursed_2.json", "long_sword.json", "long_sword_1.json",
+        "long_sword_2.json", "long_sword_cursed_1.json", "lords_garb.json", "mace_1.json",
+        "mace_2.json", "mace_cursed_1.json", "mace_cursed_2.json", "mace_protection.json",
+        "mage_masher.json", "murasama_blade.json", "neut_pmail_2.json", "plate_mail.json",
+        "plate_mail_1.json", "plate_mail_2.json", "potion_dial.json", "potion_dios.json",
+        "potion_latumofis.json", "potion_sopic.json", "ring_healing.json", "ring_porfic.json",
+        "ring_pro_undead.json", "robes.json", "rod_flame.json", "scroll_badial.json",
+        "scroll_badios.json", "scroll_dilto.json", "scroll_halito.json", "scroll_katino.json",
+        "scroll_lomilwa.json", "shield_1.json", "shield_2.json", "shield_3.json",
+        "shield_cursed_1.json", "shield_cursed_2.json", "short_sword.json", "short_sword_1.json",
+        "short_sword_2.json", "short_sword_cursed_1.json", "short_sword_cursed_2.json", "shuriken.json",
+        "silver_gloves.json", "silver_key.json", "small_shield.json", "staff.json",
+        "staff_2.json", "staff_cursed_2.json", "staff_mogref.json", "staff_montino.json",
+        "statuette_bear.json", "statuette_frog.json", "thieves_dagger.json", "vorpal_blade.json",
+        "werdna_amulet.json", "were_slayer.json"
+      ]
     case 'monsters':
       // Individual monster JSON files (96 total) - matches actual files in data/monsters/
       return [

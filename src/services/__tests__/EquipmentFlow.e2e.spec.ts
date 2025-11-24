@@ -1,4 +1,4 @@
-import { ItemDataService } from '../ItemDataService';
+import { ItemDataLoader } from '../ItemDataLoader';
 import { EquipmentService } from '../EquipmentService';
 import { InventoryService } from '../InventoryService';
 import { Character } from '../../types/Character';
@@ -26,9 +26,9 @@ describe('Equipment Flow E2E', () => {
   let mage: Character;
 
   beforeEach(() => {
-    // Reset ItemDataService
-    ItemDataService['itemsCache'].clear();
-    ItemDataService['loaded'] = false;
+    // Reset ItemDataLoader
+    ItemDataLoader['itemsCache'].clear();
+    ItemDataLoader['loaded'] = false;
 
     // Create test characters
     fighter = {
@@ -74,16 +74,16 @@ describe('Equipment Flow E2E', () => {
       const longSwordData = JSON.parse(fs.readFileSync(path.join(dataPath, 'long_sword.json'), 'utf-8'));
       const plateMailData = JSON.parse(fs.readFileSync(path.join(dataPath, 'plate_mail.json'), 'utf-8'));
 
-      const longSword = ItemDataService['transformJsonToItem'](longSwordData);
-      const plateMail = ItemDataService['transformJsonToItem'](plateMailData);
+      const longSword = ItemDataLoader['transformJsonToItem'](longSwordData);
+      const plateMail = ItemDataLoader['transformJsonToItem'](plateMailData);
 
       // Mark items as identified so they can be equipped
       longSword.identified = true;
       plateMail.identified = true;
 
       // Cache items
-      ItemDataService['itemsCache'].set(longSword.id, longSword);
-      ItemDataService['itemsCache'].set(plateMail.id, plateMail);
+      ItemDataLoader['itemsCache'].set(longSword.id, longSword);
+      ItemDataLoader['itemsCache'].set(plateMail.id, plateMail);
 
       // Step 2: Add items to fighter's inventory
       fighter.inventory = ['long_sword', 'plate_mail'];
@@ -145,9 +145,9 @@ describe('Equipment Flow E2E', () => {
         const itemPath = path.join(dataPath, filename);
         if (fs.existsSync(itemPath)) {
           const jsonData = JSON.parse(fs.readFileSync(itemPath, 'utf-8'));
-          const item = ItemDataService['transformJsonToItem'](jsonData);
+          const item = ItemDataLoader['transformJsonToItem'](jsonData);
           item.identified = true; // Mark as identified so they can be equipped
-          ItemDataService['itemsCache'].set(item.id, item);
+          ItemDataLoader['itemsCache'].set(item.id, item);
           fighter.inventory.push(item.id);
         }
       }
@@ -169,7 +169,7 @@ describe('Equipment Flow E2E', () => {
 
       if (fighter.inventory.includes('large_shield')) {
         fighter = EquipmentService.equipItem(fighter, 'large_shield');
-        const shield = ItemDataService.getItem('large_shield');
+        const shield = ItemDataLoader.getItem('large_shield');
         if (shield?.defense) {
           currentAC -= shield.defense;
         }
@@ -187,10 +187,10 @@ describe('Equipment Flow E2E', () => {
     it('prevents equipping items without class permission', () => {
       const dataPath = path.join(__dirname, '../../../data/items');
       const plateMailData = JSON.parse(fs.readFileSync(path.join(dataPath, 'plate_mail.json'), 'utf-8'));
-      const plateMail = ItemDataService['transformJsonToItem'](plateMailData);
+      const plateMail = ItemDataLoader['transformJsonToItem'](plateMailData);
       plateMail.identified = true; // Mark as identified to test class restriction, not identification
 
-      ItemDataService['itemsCache'].set(plateMail.id, plateMail);
+      ItemDataLoader['itemsCache'].set(plateMail.id, plateMail);
       mage.inventory = ['plate_mail'];
 
       // Mage cannot wear plate mail (Fighter, Samurai, Lord, Ninja only)
@@ -204,7 +204,7 @@ describe('Equipment Flow E2E', () => {
     });
 
     it('prevents trading to character with full inventory', () => {
-      const longSword = ItemDataService['transformJsonToItem']({
+      const longSword = ItemDataLoader['transformJsonToItem']({
         id: 'long_sword',
         name: 'Long Sword',
         category: 'weapon',
@@ -216,7 +216,7 @@ describe('Equipment Flow E2E', () => {
       });
 
       longSword.identified = true;
-      ItemDataService['itemsCache'].set('long_sword', longSword);
+      ItemDataLoader['itemsCache'].set('long_sword', longSword);
 
       fighter.inventory = ['long_sword'];
       mage.inventory = new Array(8).fill('potion'); // Full inventory
@@ -227,7 +227,7 @@ describe('Equipment Flow E2E', () => {
     });
 
     it('prevents dropping equipped items directly', () => {
-      const longSword = ItemDataService['transformJsonToItem']({
+      const longSword = ItemDataLoader['transformJsonToItem']({
         id: 'long_sword',
         name: 'Long Sword',
         category: 'weapon',
@@ -239,7 +239,7 @@ describe('Equipment Flow E2E', () => {
       });
 
       longSword.identified = true;
-      ItemDataService['itemsCache'].set('long_sword', longSword);
+      ItemDataLoader['itemsCache'].set('long_sword', longSword);
 
       fighter.inventory = ['long_sword'];
       fighter = EquipmentService.equipItem(fighter, 'long_sword');
@@ -256,7 +256,7 @@ describe('Equipment Flow E2E', () => {
   describe('Cursed Item Workflow', () => {
     it('prevents unequipping cursed items', () => {
       // Create cursed sword
-      const cursedSword = ItemDataService['transformJsonToItem']({
+      const cursedSword = ItemDataLoader['transformJsonToItem']({
         id: 'cursed_sword',
         name: 'Cursed Sword',
         category: 'weapon',
@@ -268,7 +268,7 @@ describe('Equipment Flow E2E', () => {
       });
 
       cursedSword.identified = true; // Mark as identified so it can be equipped
-      ItemDataService['itemsCache'].set('cursed_sword', cursedSword);
+      ItemDataLoader['itemsCache'].set('cursed_sword', cursedSword);
 
       fighter.inventory = ['cursed_sword'];
       fighter = EquipmentService.equipItem(fighter, 'cursed_sword');
@@ -294,7 +294,7 @@ describe('Equipment Flow E2E', () => {
         inventory: []
       };
 
-      const longSword = ItemDataService['transformJsonToItem']({
+      const longSword = ItemDataLoader['transformJsonToItem']({
         id: 'long_sword',
         name: 'Long Sword',
         category: 'weapon',
@@ -306,7 +306,7 @@ describe('Equipment Flow E2E', () => {
       });
 
       longSword.identified = true; // Mark as identified so it can be equipped
-      ItemDataService['itemsCache'].set('long_sword', longSword);
+      ItemDataLoader['itemsCache'].set('long_sword', longSword);
 
       fighter.inventory = ['long_sword'];
 

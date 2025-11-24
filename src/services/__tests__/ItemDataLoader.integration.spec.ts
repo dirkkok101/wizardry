@@ -1,25 +1,25 @@
-import { ItemDataService } from '../ItemDataService';
+import { ItemDataLoader } from '../ItemDataLoader';
 import { ItemType, ItemSlot } from '../../types/ItemType';
 import { CharacterClass } from '../../types/CharacterClass';
 import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Integration tests for ItemDataService using real JSON files
+ * Integration tests for ItemDataLoader using real JSON files
  *
  * These tests verify that the transformation layer correctly handles
  * actual item data from the data/items/ directory.
  */
-describe('ItemDataService Integration', () => {
+describe('ItemDataLoader Integration', () => {
   const dataPath = path.join(__dirname, '../../../data/items');
 
   beforeEach(() => {
     // Reset service state
-    ItemDataService['itemsCache'].clear();
-    ItemDataService['loaded'] = false;
-    ItemDataService['loading'] = false;
-    ItemDataService['loadError'] = null;
-    ItemDataService['failedItems'].clear();
+    ItemDataLoader['itemsCache'].clear();
+    ItemDataLoader['loaded'] = false;
+    ItemDataLoader['loading'] = false;
+    ItemDataLoader['loadError'] = null;
+    ItemDataLoader['failedItems'].clear();
   });
 
   describe('Real JSON File Loading', () => {
@@ -28,7 +28,7 @@ describe('ItemDataService Integration', () => {
       const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
       const jsonData = JSON.parse(jsonContent);
 
-      const item = ItemDataService['transformJsonToItem'](jsonData);
+      const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
       // Verify core identity
       expect(item.id).toBe('long_sword');
@@ -64,7 +64,7 @@ describe('ItemDataService Integration', () => {
       const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
       const jsonData = JSON.parse(jsonContent);
 
-      const item = ItemDataService['transformJsonToItem'](jsonData);
+      const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
       // Verify core identity
       expect(item.id).toBe('plate_mail');
@@ -98,7 +98,7 @@ describe('ItemDataService Integration', () => {
       const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
       const jsonData = JSON.parse(jsonContent);
 
-      const item = ItemDataService['transformJsonToItem'](jsonData);
+      const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
       expect(item.type).toBe(ItemType.SHIELD);
       expect(item.slot).toBe(ItemSlot.SHIELD);
@@ -117,7 +117,7 @@ describe('ItemDataService Integration', () => {
       const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
       const jsonData = JSON.parse(jsonContent);
 
-      const item = ItemDataService['transformJsonToItem'](jsonData);
+      const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
       expect(item.type).toBe(ItemType.HELMET);
       expect(item.slot).toBe(ItemSlot.HELMET);
@@ -136,7 +136,7 @@ describe('ItemDataService Integration', () => {
       const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
       const jsonData = JSON.parse(jsonContent);
 
-      const item = ItemDataService['transformJsonToItem'](jsonData);
+      const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
       expect(item.type).toBe(ItemType.GAUNTLET);
       expect(item.slot).toBe(ItemSlot.GAUNTLETS);
@@ -155,7 +155,7 @@ describe('ItemDataService Integration', () => {
         if (fs.existsSync(jsonPath)) {
           const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
           const jsonData = JSON.parse(jsonContent);
-          const item = ItemDataService['transformJsonToItem'](jsonData);
+          const item = ItemDataLoader['transformJsonToItem'](jsonData);
           items.push(item);
         }
       }
@@ -191,7 +191,7 @@ describe('ItemDataService Integration', () => {
           const jsonData = JSON.parse(jsonContent);
 
           // Try to transform
-          const item = ItemDataService['transformJsonToItem'](jsonData);
+          const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
           // Verify basic structure
           expect(item.id).toBeDefined();
@@ -226,7 +226,7 @@ describe('ItemDataService Integration', () => {
 
         const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
         const jsonData = JSON.parse(jsonContent);
-        const item = ItemDataService['transformJsonToItem'](jsonData);
+        const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
         if (item.type === ItemType.WEAPON) {
           expect(item.damage).toBeGreaterThan(0);
@@ -244,7 +244,7 @@ describe('ItemDataService Integration', () => {
 
         const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
         const jsonData = JSON.parse(jsonContent);
-        const item = ItemDataService['transformJsonToItem'](jsonData);
+        const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
         if (item.type === ItemType.ARMOR || item.type === ItemType.SHIELD ||
             item.type === ItemType.HELMET || item.type === ItemType.GAUNTLET) {
@@ -263,7 +263,7 @@ describe('ItemDataService Integration', () => {
         const jsonPath = path.join(dataPath, filename);
         const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
         const jsonData = JSON.parse(jsonContent);
-        const item = ItemDataService['transformJsonToItem'](jsonData);
+        const item = ItemDataLoader['transformJsonToItem'](jsonData);
 
         expect(item.price).toBeGreaterThanOrEqual(0);
         expect(typeof item.price).toBe('number');

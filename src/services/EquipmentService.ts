@@ -1,7 +1,7 @@
 import { Character } from '../types/Character';
 import { Item } from '../types/Item';
 import { ItemSlot } from '../types/ItemType';
-import { ItemDataService } from './ItemDataService';
+import { ItemDataLoader } from './ItemDataLoader';
 import { InventoryService } from './InventoryService';
 
 /**
@@ -54,7 +54,7 @@ export class EquipmentService {
     }
 
     // Get item data
-    const item = ItemDataService.getItem(itemId);
+    const item = ItemDataLoader.getItem(itemId);
     if (!item) {
       throw new Error('Item not found in database');
     }
@@ -129,7 +129,7 @@ export class EquipmentService {
     for (const slotField of slots) {
       const itemId = character[slotField] as string | undefined;
       if (itemId) {
-        const item = ItemDataService.getItem(itemId);
+        const item = ItemDataLoader.getItem(itemId);
         if (item?.defense) {
           ac -= item.defense; // Lower is better
         }
@@ -161,7 +161,7 @@ export class EquipmentService {
     }
 
     // Check if cursed
-    const item = ItemDataService.getItem(itemId);
+    const item = ItemDataLoader.getItem(itemId);
     if (item?.cursed) {
       throw new Error('Cannot unequip cursed item');
     }

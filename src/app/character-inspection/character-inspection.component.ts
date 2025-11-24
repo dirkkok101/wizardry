@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { GameStateService } from '../../services/GameStateService';
-import { ItemDataService } from '../../services/ItemDataService';
+import { ItemDataLoader } from '../../services/ItemDataLoader';
 import { EquipmentService } from '../../services/EquipmentService';
 import { InventoryService } from '../../services/InventoryService';
 import { Character } from '../../types/Character';
@@ -86,7 +86,7 @@ export class CharacterInspectionComponent {
     if (!char) return [];
 
     return char.inventory
-      .map(id => ItemDataService.getItem(id))
+      .map(id => ItemDataLoader.getItem(id))
       .filter((item): item is Item => item !== null);
   });
 
@@ -115,7 +115,7 @@ export class CharacterInspectionComponent {
     const itemId = char[slotField] as string | undefined;
     if (!itemId) return null;
 
-    return ItemDataService.getItem(itemId);
+    return ItemDataLoader.getItem(itemId);
   }
 
   private getSlotField(slot: ItemSlot): keyof Character | null {

@@ -1,9 +1,9 @@
-import { ItemDataService } from '../ItemDataService';
+import { ItemDataLoader } from '../ItemDataLoader';
 import { Item } from '../../types/Item';
 import { ItemType, ItemSlot } from '../../types/ItemType';
 import { AssetLoadingService } from '../AssetLoadingService';
 
-describe('ItemDataService', () => {
+describe('ItemDataLoader', () => {
   // Mock JSON data (raw format from data files)
   const mockJsonData: Record<string, any> = {
     'long_sword': {
@@ -30,7 +30,7 @@ describe('ItemDataService', () => {
 
   beforeEach(() => {
     // Reset service state between tests
-    ItemDataService.clearCache();
+    ItemDataLoader.clearCache();
 
     // Mock fetch to return JSON format for individual item files
     global.fetch = jest.fn((url: string) => {
@@ -62,17 +62,17 @@ describe('ItemDataService', () => {
 
   describe('loadAllItems', () => {
     it('loads items from JSON files', async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      const sword = ItemDataService.getItem('long_sword');
+      const sword = ItemDataLoader.getItem('long_sword');
       expect(sword).toBeDefined();
       expect(sword?.name).toBe('Long Sword');
     });
 
     it('transforms JSON format to Item format', async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      const sword = ItemDataService.getItem('long_sword');
+      const sword = ItemDataLoader.getItem('long_sword');
       expect(sword).not.toBeNull();
 
       // Verify transformed fields
@@ -93,9 +93,9 @@ describe('ItemDataService', () => {
     });
 
     it('transforms armor defense correctly', async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      const armor = ItemDataService.getItem('plate_mail');
+      const armor = ItemDataLoader.getItem('plate_mail');
       expect(armor).not.toBeNull();
 
       expect(armor?.type).toBe(ItemType.ARMOR);
@@ -109,65 +109,65 @@ describe('ItemDataService', () => {
     });
 
     it('does not reload on subsequent calls', async () => {
-      await ItemDataService.loadAllItems();
-      const firstLoadCount = ItemDataService['itemsCache'].size;
+      await ItemDataLoader.loadAllItems();
+      const firstLoadCount = ItemDataLoader['itemsCache'].size;
 
-      await ItemDataService.loadAllItems();
-      const secondLoadCount = ItemDataService['itemsCache'].size;
+      await ItemDataLoader.loadAllItems();
+      const secondLoadCount = ItemDataLoader['itemsCache'].size;
 
       expect(secondLoadCount).toBe(firstLoadCount);
     });
 
     it('continues loading other items if one fails', async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
       // Should have loaded the items we mocked
-      expect(ItemDataService.getItem('long_sword')).not.toBeNull();
-      expect(ItemDataService.getItem('plate_mail')).not.toBeNull();
+      expect(ItemDataLoader.getItem('long_sword')).not.toBeNull();
+      expect(ItemDataLoader.getItem('plate_mail')).not.toBeNull();
 
       // Should complete without throwing despite missing items in manifest
-      expect(ItemDataService['loaded']).toBe(true);
+      expect(ItemDataLoader['loaded']).toBe(true);
     });
   });
 
   describe('getItem', () => {
     beforeEach(async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
     });
 
     it('returns item by ID', () => {
-      const item = ItemDataService.getItem('long_sword');
+      const item = ItemDataLoader.getItem('long_sword');
       expect(item).not.toBeNull();
       expect(item?.name).toBe('Long Sword');
     });
 
     it('returns null for unknown ID', () => {
-      const item = ItemDataService.getItem('unknown_item_xyz');
+      const item = ItemDataLoader.getItem('unknown_item_xyz');
       expect(item).toBeNull();
     });
   });
 
   describe('getItems', () => {
     beforeEach(async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
     });
 
     it('resolves multiple item IDs', () => {
-      const items = ItemDataService.getItems(['long_sword', 'plate_mail']);
+      const items = ItemDataLoader.getItems(['long_sword', 'plate_mail']);
       expect(items.length).toBe(2);
       expect(items[0].id).toBe('long_sword');
       expect(items[1].id).toBe('plate_mail');
     });
 
     it('filters out null values for missing items', () => {
-      const items = ItemDataService.getItems(['long_sword', 'unknown', 'plate_mail']);
+      const items = ItemDataLoader.getItems(['long_sword', 'unknown', 'plate_mail']);
       // Should only return valid items
       expect(items.length).toBe(2);
       expect(items.every(item => item !== null)).toBe(true);
     });
 
     it('returns empty array for empty input', () => {
-      const items = ItemDataService.getItems([]);
+      const items = ItemDataLoader.getItems([]);
       expect(items).toEqual([]);
     });
   });
@@ -175,41 +175,41 @@ describe('ItemDataService', () => {
   describe('State Accessors', () => {
     beforeEach(() => {
       // Reset state
-      ItemDataService['itemsCache'].clear();
-      ItemDataService['loaded'] = false;
-      ItemDataService['loading'] = false;
-      ItemDataService['loadError'] = null;
+      ItemDataLoader['itemsCache'].clear();
+      ItemDataLoader['loaded'] = false;
+      ItemDataLoader['loading'] = false;
+      ItemDataLoader['loadError'] = null;
     });
 
     it('reports not loaded initially', () => {
-      expect(ItemDataService.isLoaded()).toBe(false);
-      expect(ItemDataService.isLoading()).toBe(false);
-      expect(ItemDataService.getError()).toBeNull();
+      expect(ItemDataLoader.isLoaded()).toBe(false);
+      expect(ItemDataLoader.isLoading()).toBe(false);
+      expect(ItemDataLoader.getError()).toBeNull();
     });
 
     it('reports loading state during load', async () => {
-      const loadPromise = ItemDataService.loadAllItems();
+      const loadPromise = ItemDataLoader.loadAllItems();
 
       // Should be loading immediately after starting
-      expect(ItemDataService.isLoading()).toBe(true);
-      expect(ItemDataService.isLoaded()).toBe(false);
+      expect(ItemDataLoader.isLoading()).toBe(true);
+      expect(ItemDataLoader.isLoaded()).toBe(false);
 
       await loadPromise;
 
       // Should be loaded and not loading after completion
-      expect(ItemDataService.isLoading()).toBe(false);
-      expect(ItemDataService.isLoaded()).toBe(true);
-      expect(ItemDataService.getError()).toBeNull();
+      expect(ItemDataLoader.isLoading()).toBe(false);
+      expect(ItemDataLoader.isLoaded()).toBe(true);
+      expect(ItemDataLoader.getError()).toBeNull();
     });
 
     it('prevents duplicate concurrent loads', async () => {
-      const load1 = ItemDataService.loadAllItems();
-      const load2 = ItemDataService.loadAllItems(); // Should return immediately
+      const load1 = ItemDataLoader.loadAllItems();
+      const load2 = ItemDataLoader.loadAllItems(); // Should return immediately
 
       await Promise.all([load1, load2]);
 
-      expect(ItemDataService.isLoaded()).toBe(true);
-      expect(ItemDataService.isLoading()).toBe(false);
+      expect(ItemDataLoader.isLoaded()).toBe(true);
+      expect(ItemDataLoader.isLoading()).toBe(false);
     });
 
     it('stores error on catastrophic load failure', async () => {
@@ -218,25 +218,25 @@ describe('ItemDataService', () => {
       jest.spyOn(Promise, 'all').mockRejectedValueOnce(new Error('Catastrophic failure'));
 
       try {
-        await ItemDataService.loadAllItems();
+        await ItemDataLoader.loadAllItems();
       } catch (error) {
         // Expected to throw
       }
 
-      expect(ItemDataService.getError()).toBeInstanceOf(Error);
-      expect(ItemDataService.getError()?.message).toBe('Catastrophic failure');
-      expect(ItemDataService.isLoading()).toBe(false);
+      expect(ItemDataLoader.getError()).toBeInstanceOf(Error);
+      expect(ItemDataLoader.getError()?.message).toBe('Catastrophic failure');
+      expect(ItemDataLoader.isLoading()).toBe(false);
 
       // Restore
       jest.spyOn(Promise, 'all').mockRestore();
     });
 
     it('tracks failed item loads', async () => {
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      const failedItems = ItemDataService.getFailedItems();
-      const loadedCount = ItemDataService.getLoadedCount();
-      const totalCount = ItemDataService.getTotalCount();
+      const failedItems = ItemDataLoader.getFailedItems();
+      const loadedCount = ItemDataLoader.getLoadedCount();
+      const totalCount = ItemDataLoader.getTotalCount();
 
       // We only mock 2 items, so most will fail
       expect(loadedCount).toBe(2); // long_sword and plate_mail
@@ -253,23 +253,23 @@ describe('ItemDataService', () => {
 
     it('clears failed items on reload', async () => {
       // First load with some failures
-      await ItemDataService.loadAllItems();
-      const firstFailCount = ItemDataService.getFailedItems().size;
+      await ItemDataLoader.loadAllItems();
+      const firstFailCount = ItemDataLoader.getFailedItems().size;
       expect(firstFailCount).toBeGreaterThan(0);
 
       // Reset and reload
-      ItemDataService['loaded'] = false;
-      await ItemDataService.loadAllItems();
+      ItemDataLoader['loaded'] = false;
+      await ItemDataLoader.loadAllItems();
 
       // Failed items should be cleared and recounted
-      const secondFailCount = ItemDataService.getFailedItems().size;
+      const secondFailCount = ItemDataLoader.getFailedItems().size;
       expect(secondFailCount).toBe(firstFailCount); // Same failures expected
     });
   });
 
   describe('Zod Validation', () => {
     beforeEach(() => {
-      ItemDataService.clearCache();
+      ItemDataLoader.clearCache();
     });
 
     it('validates items with Zod schemas during load', async () => {
@@ -291,10 +291,10 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
 
-      const items = await ItemDataService.loadAllItems();
+      const items = await ItemDataLoader.loadAllItems();
 
       expect(items.size).toBe(1);
-      expect(ItemDataService.getFailedItems().size).toBe(0);
+      expect(ItemDataLoader.getFailedItems().size).toBe(0);
 
       jest.restoreAllMocks();
     });
@@ -317,11 +317,11 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
 
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      expect(ItemDataService.getLoadedCount()).toBe(0);
-      expect(ItemDataService.getFailedItems().size).toBe(1);
-      expect(ItemDataService.getFailedItems().get('bad_sword')).toContain('dice');
+      expect(ItemDataLoader.getLoadedCount()).toBe(0);
+      expect(ItemDataLoader.getFailedItems().size).toBe(1);
+      expect(ItemDataLoader.getFailedItems().get('bad_sword')).toContain('dice');
 
       jest.restoreAllMocks();
     });
@@ -344,10 +344,10 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
 
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      expect(ItemDataService.getLoadedCount()).toBe(0);
-      expect(ItemDataService.getFailedItems().size).toBe(1);
+      expect(ItemDataLoader.getLoadedCount()).toBe(0);
+      expect(ItemDataLoader.getFailedItems().size).toBe(1);
 
       jest.restoreAllMocks();
     });
@@ -370,10 +370,10 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
 
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      expect(ItemDataService.getLoadedCount()).toBe(0);
-      expect(ItemDataService.getFailedItems().size).toBe(1);
+      expect(ItemDataLoader.getLoadedCount()).toBe(0);
+      expect(ItemDataLoader.getFailedItems().size).toBe(1);
 
       jest.restoreAllMocks();
     });
@@ -396,10 +396,10 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
 
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
-      expect(ItemDataService.getLoadedCount()).toBe(0);
-      expect(ItemDataService.getFailedItems().size).toBe(1);
+      expect(ItemDataLoader.getLoadedCount()).toBe(0);
+      expect(ItemDataLoader.getFailedItems().size).toBe(1);
 
       jest.restoreAllMocks();
     });
@@ -422,12 +422,12 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
 
-      const items = await ItemDataService.loadAllItems();
+      const items = await ItemDataLoader.loadAllItems();
 
       expect(items.size).toBe(1);
-      expect(ItemDataService.getFailedItems().size).toBe(0);
+      expect(ItemDataLoader.getFailedItems().size).toBe(0);
 
-      const cursedArmor = ItemDataService.getItem('cursed_armor');
+      const cursedArmor = ItemDataLoader.getItem('cursed_armor');
       expect(cursedArmor?.cursed).toBe(true);
       expect(cursedArmor?.defense).toBe(-1);
 
@@ -453,11 +453,11 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
 
-      const items = await ItemDataService.loadAllItems();
+      const items = await ItemDataLoader.loadAllItems();
 
       expect(items.size).toBe(1);
 
-      const holySword = ItemDataService.getItem('holy_sword');
+      const holySword = ItemDataLoader.getItem('holy_sword');
       expect(holySword?.alignmentRestrictions).toEqual(['good']);
 
       jest.restoreAllMocks();
@@ -505,16 +505,16 @@ describe('ItemDataService', () => {
 
       jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(mixedItems);
 
-      await ItemDataService.loadAllItems();
+      await ItemDataLoader.loadAllItems();
 
       // Should load 2 valid items
-      expect(ItemDataService.getLoadedCount()).toBe(2);
-      expect(ItemDataService.getItem('valid_sword')).not.toBeNull();
-      expect(ItemDataService.getItem('valid_armor')).not.toBeNull();
+      expect(ItemDataLoader.getLoadedCount()).toBe(2);
+      expect(ItemDataLoader.getItem('valid_sword')).not.toBeNull();
+      expect(ItemDataLoader.getItem('valid_armor')).not.toBeNull();
 
       // Should track 1 failed item
-      expect(ItemDataService.getFailedItems().size).toBe(1);
-      expect(ItemDataService.getFailedItems().has('invalid_sword')).toBe(true);
+      expect(ItemDataLoader.getFailedItems().size).toBe(1);
+      expect(ItemDataLoader.getFailedItems().has('invalid_sword')).toBe(true);
 
       jest.restoreAllMocks();
     });
