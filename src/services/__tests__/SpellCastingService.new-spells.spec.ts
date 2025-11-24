@@ -42,7 +42,7 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
   })
 
   describe('SOPIC (Invisibility)', () => {
-    it('applies INVISIBLE status to single target', () => {
+    it('applies -4 AC buff to single target (invisibility buff)', () => {
       const caster = createTestCharacter({
         spellPoints: { mage: { level2: { current: 2, max: 2 } } }
       })
@@ -50,8 +50,12 @@ describe('SpellCastingService - Level 1-2 Spells', () => {
 
       const effect = SpellCastingService.resolveSpellEffect('sopic', caster, [target])
 
-      expect(effect.statusEffects).toBeDefined()
-      expect(effect.statusEffects![0].effect).toBe('INVISIBLE')
+      // SOPIC provides -4 AC (better defense) like PORFIC, via invisibility in Wizardry
+      expect(effect.acBuffs).toBeDefined()
+      expect(effect.acBuffs).toHaveLength(1)
+      expect(effect.acBuffs![0].target).toBe('target1')
+      expect(effect.acBuffs![0].acModifier).toBe(-4)
+      expect(effect.message).toContain('SOPIC')
     })
   })
 

@@ -9,5 +9,6 @@
   "castableIn": [
     "dungeon"
   ],
-  "successFormula": "level * 2%"
+  "utility": "recall",
+  "recallSuccessRate": "level_based"
 }

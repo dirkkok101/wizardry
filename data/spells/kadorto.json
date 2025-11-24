@@ -10,6 +10,7 @@
     "town",
     "dungeon"
   ],
-  "successRate": 0.5,
+  "resurrection": true,
+  "resurrectionSuccessRate": 0.5,
   "failureResult": "lost_forever"
 }

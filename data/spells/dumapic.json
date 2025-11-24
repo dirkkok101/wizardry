@@ -9,5 +9,6 @@
   "castableIn": [
     "dungeon",
     "combat"
-  ]
+  ],
+  "utility": "show_coordinates"
 }

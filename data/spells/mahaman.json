@@ -10,13 +10,15 @@
       "level": 6,
       "id": "mahaman",
       "description": "Transforms all monster groups",
-      "target": "all_enemies"
+      "target": "all_enemies",
+      "transformation": true
     },
     {
       "level": 7,
       "id": "mahaman_7",
       "description": "Transform all monster groups",
-      "target": "all_enemies"
+      "target": "all_enemies",
+      "transformation": true
     }
   ]
 }
