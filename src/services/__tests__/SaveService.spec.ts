@@ -282,4 +282,54 @@ describe('SaveService', () => {
       expect(metadata).toBeNull()
     })
   })
+
+  describe('encountersEnabled default behavior', () => {
+    it('should always load with encountersEnabled=true even if save has it disabled', async () => {
+      // Create a game state with encounters disabled
+      const gameState = GameInitializationService.createNewGame()
+      gameState.settings.encountersEnabled = false
+
+      // Save it
+      await service.saveGame(gameState, 1)
+
+      // Load it back
+      const loaded = await service.loadGame(1)
+
+      // Should be forced to true
+      expect(loaded?.settings.encountersEnabled).toBe(true)
+    })
+
+    it('should default to true for saves missing the encountersEnabled setting', async () => {
+      // Create a save without the encountersEnabled setting (simulating old save format)
+      const gameState = GameInitializationService.createNewGame()
+      const saveData = {
+        version: '1.0.0',
+        schemaVersion: 2,
+        timestamp: Date.now(),
+        state: {
+          ...gameState,
+          roster: Array.from(gameState.roster.entries()),
+          dungeon: gameState.dungeon ? {
+            ...gameState.dungeon,
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles),
+            unlockedDoors: Array.from(gameState.dungeon.unlockedDoors || []),
+            openDoors: Array.from(gameState.dungeon.openDoors || [])
+          } : undefined,
+          settings: {
+            difficulty: 'NORMAL',
+            soundEnabled: true,
+            musicEnabled: true
+            // Missing encountersEnabled
+          }
+        }
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(saveData))
+
+      // Load it
+      const loaded = await service.loadGame(1)
+
+      // Should default to true
+      expect(loaded?.settings.encountersEnabled).toBe(true)
+    })
+  })
 })
