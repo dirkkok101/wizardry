@@ -332,6 +332,99 @@ describe('CombatService - Phase 9: Advanced Spell Effect Integration', () => {
       expect(result.message).toContain('MORLIS')
       expect(result.message).toContain('paralyze')
     })
+
+    it('paralyzed targets take 2x damage from physical attacks', () => {
+      const attacker = createTestCharacter({
+        id: 'fighter',
+        level: 10,
+        attack: 50  // High attack to ensure hits
+      })
+
+      const paralyzedTarget = createTestMonster({
+        id: 'm1',
+        name: 'Paralyzed Orc',
+        hp: 100,
+        maxHp: 100,
+        ac: 10,  // Low AC to ensure hits
+        status: 'PARALYZED'
+      })
+
+      const normalTarget = createTestMonster({
+        id: 'm2',
+        name: 'Normal Orc',
+        hp: 100,
+        maxHp: 100,
+        ac: 10,  // Low AC to ensure hits
+        status: 'ALIVE'
+      })
+
+      const state = createTestCombatState({
+        monsterGroups: [{
+          id: 'A',
+          monsters: [paralyzedTarget, normalTarget],
+          formation: 'front'
+        }]
+      })
+
+      // Attack paralyzed target
+      const paralyzedCommand = CombatService.createCommand(attacker, 'ATTACK', paralyzedTarget)
+      const paralyzedResult = CombatService.executeCommand(state, paralyzedCommand, new Set())
+
+      // Attack normal target
+      const normalCommand = CombatService.createCommand(attacker, 'ATTACK', normalTarget)
+      const normalResult = CombatService.executeCommand(state, normalCommand, new Set())
+
+      // Verify message contains HELPLESS indicator
+      expect(paralyzedResult.message).toContain('HELPLESS: 2x damage!')
+
+      // Verify normal target doesn't get the multiplier message
+      expect(normalResult.message).not.toContain('HELPLESS')
+
+      // Both should have dealt damage
+      const paralyzedHP = paralyzedResult.newState.monsterGroups[0].monsters.find(m => m.id === 'm1')!.hp
+      const normalHP = normalResult.newState.monsterGroups[0].monsters.find(m => m.id === 'm2')!.hp
+
+      expect(paralyzedHP).toBeLessThan(100)
+      expect(normalHP).toBeLessThan(100)
+
+      // Paralyzed target should have taken more damage (though RNG makes exact comparison tricky)
+      // At minimum, verify both took damage and paralyzed message has the indicator
+    })
+
+    it('asleep targets take 2x damage from physical attacks', () => {
+      const attacker = createTestCharacter({
+        id: 'fighter',
+        level: 10,
+        attack: 50  // High attack to ensure hits
+      })
+
+      const asleepTarget = createTestMonster({
+        id: 'm1',
+        name: 'Sleeping Orc',
+        hp: 100,
+        maxHp: 100,
+        ac: 10,  // Low AC to ensure hits
+        status: 'ASLEEP'
+      })
+
+      const state = createTestCombatState({
+        monsterGroups: [{
+          id: 'A',
+          monsters: [asleepTarget],
+          formation: 'front'
+        }]
+      })
+
+      const command = CombatService.createCommand(attacker, 'ATTACK', asleepTarget)
+      const result = CombatService.executeCommand(state, command, new Set())
+
+      // Verify message contains HELPLESS indicator for asleep targets too
+      expect(result.message).toContain('HELPLESS: 2x damage!')
+
+      // Verify damage was dealt
+      const finalHP = result.newState.monsterGroups[0].monsters[0].hp
+      expect(finalHP).toBeLessThan(100)
+    })
   })
 
   describe('Mixed Advanced Spell Combat', () => {

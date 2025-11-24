@@ -134,10 +134,10 @@ Wizardry uses **spell points**, not D&D-style memorized slots.
 - **Use**: More powerful than MAHALITO
 - **Cost**: 1 level-4 point
 
-**MORLIS** (Fear)
+**MORLIS** (Paralyze)
 - **Effect**: Paralyze enemy group
 - **Target**: Enemy group
-- **Use**: Better than sleep; paralyzed enemies helpless
+- **Use**: Better than sleep; paralyzed enemies cannot act and take 2x damage from physical attacks
 - **Cost**: 1 level-4 point
 
 ### Level 5 Mage Spells

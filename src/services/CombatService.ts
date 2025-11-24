@@ -297,6 +297,17 @@ export class CombatService {
     return { newState: state, message: 'Unknown command type' }
   }
 
+  /**
+   * Execute a physical attack command
+   * @param state Current combat state
+   * @param command The attack command to execute
+   * @param parryingCombatants Set of combatant IDs that are currently parrying
+   * @returns Updated combat state and result message
+   *
+   * @remarks
+   * Authentic Wizardry mechanic: Helpless targets (ASLEEP or PARALYZED) take 2x damage
+   * from physical attacks. This multiplier is applied after hit/damage calculations.
+   */
   private static executeAttackCommand(
     state: CombatState,
     command: CombatCommand,
@@ -326,7 +337,12 @@ export class CombatService {
       }
     }
 
-    // Check if target is asleep or paralyzed (takes 2x damage - authentic Wizardry behavior)
+    /**
+     * Authentic Wizardry Damage Multiplier
+     * Helpless targets (ASLEEP or PARALYZED) take double damage from physical attacks.
+     * This represents the attacker taking advantage of a defenseless opponent.
+     * Source: docs/research/combat-formulas.md lines 266-270
+     */
     const isAsleep = target.status === 'ASLEEP'
     const isParalyzed = target.status === 'PARALYZED'
     const damageMultiplier = (isAsleep || isParalyzed) ? 2 : 1
@@ -425,9 +441,12 @@ export class CombatService {
         if (effect === 'BLIND' || effect === 'SILENCED') {
           newState = this.applyStatusEffect(newState, statusEffect.target, effect)
         }
-        // Handle CombatantStatus effects (ASLEEP)
+        // Handle CombatantStatus effects (ASLEEP, PARALYZED)
         else if (effect === 'ASLEEP') {
           newState = this.applyAsleepStatus(newState, statusEffect.target)
+        }
+        else if (effect === 'PARALYZED') {
+          newState = this.applyParalyzedStatus(newState, statusEffect.target)
         }
       }
     }
@@ -670,6 +689,30 @@ export class CombatService {
         // Only put alive monsters to sleep (can't sleep if dead)
         if (m.status === 'ALIVE') {
           return { ...m, status: 'ASLEEP' as const }
+        }
+        return m
+      })
+    }))
+
+    return { ...state, monsterGroups: newMonsterGroups }
+  }
+
+  /**
+   * Apply paralyzed status to a monster (MORLIS)
+   * Paralyzed monsters cannot act and take 2x damage from physical attacks
+   */
+  private static applyParalyzedStatus(
+    state: CombatState,
+    combatantId: string
+  ): CombatState {
+    // Find and update the monster
+    const newMonsterGroups = state.monsterGroups.map(group => ({
+      ...group,
+      monsters: group.monsters.map(m => {
+        if (m.id !== combatantId) return m
+        // Only paralyze alive monsters (can't paralyze if dead)
+        if (m.status === 'ALIVE') {
+          return { ...m, status: 'PARALYZED' as const }
         }
         return m
       })
