@@ -501,7 +501,7 @@ Final value = MAX(formula result, known spells count in that level)
 
 **Validation Status (2025-11-24):**
 - ✅ **ValueA/ValueB Formula**: Discovered via Thomas William Ewers' reverse-engineered Pascal source (Data Driven Gamer blog, 2012-2014)
-- ✅ **Complete Spell List**: 41 spells confirmed (21 Mage + 20 Priest) across authoritative sources
+- ✅ **Complete Spell List**: 50 unique spells confirmed (22 Mage + 29 Priest = 51 spell definitions) across authoritative sources
 - ✅ **Spell Point Pools**: Formula validated: `[Char Level] – ValueA + ValueB – (ValueB × Spell Level)` clamped to [0, 9]
 - ✅ **Class-Specific Values**: All six spellcasting classes have confirmed ValueA/ValueB parameters
 
@@ -533,5 +533,5 @@ Final value = MAX(formula result, known spells count in that level)
 ---
 
 **Last Updated**: 2025-11-24
-**Status**: Research Complete - All 41 spells validated and documented
+**Status**: Research Complete - All 50 unique spells (51 spell definitions) validated and documented
 **Next Steps**: Implement spell point calculations using ValueA/ValueB formula in SpellService
