@@ -1,0 +1,15 @@
+{
+  "id": "makanito",
+  "name": "MAKANITO",
+  "level": 5,
+  "casterType": "mage",
+  "category": "offensive",
+  "target": "single",
+  "description": "Invoke instant death on single target",
+  "castableIn": [
+    "combat"
+  ],
+  "effect": {
+    "type": "instant_death"
+  }
+}

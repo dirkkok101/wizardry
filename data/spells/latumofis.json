@@ -5,8 +5,10 @@
   "casterType": "priest",
   "category": "utility",
   "target": "group",
-  "description": "Full enemy analysis",
+  "description": "Cure paralysis",
+  "cure": "paralysis",
   "castableIn": [
-    "combat"
+    "combat",
+    "dungeon"
   ]
 }

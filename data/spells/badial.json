@@ -12,5 +12,8 @@
   "damage": {
     "dice": "2d8",
     "type": "holy"
-  }
+  },
+  "effectiveAgainst": [
+    "undead"
+  ]
 }

@@ -1,28 +1,17 @@
 {
+  "id": "malikto",
   "name": "MALIKTO",
+  "level": 7,
   "casterType": "priest",
-  "category": "offensive",
+  "category": "healing",
+  "target": "party",
+  "description": "Full party restoration - Restore all party members to full HP",
   "castableIn": [
-    "combat"
+    "combat",
+    "dungeon",
+    "town"
   ],
-  "levels": [
-    {
-      "level": 6,
-      "id": "malikto_6",
-      "description": "Turn enemies to stone",
-      "target": "group",
-      "effect": {
-        "type": "petrification"
-      }
-    },
-    {
-      "level": 7,
-      "id": "malikto_7",
-      "description": "Turn all enemies to stone",
-      "target": "all_enemies",
-      "effect": {
-        "type": "petrification"
-      }
-    }
-  ]
+  "healing": {
+    "type": "full"
+  }
 }

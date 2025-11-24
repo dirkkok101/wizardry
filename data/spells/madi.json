@@ -1,0 +1,18 @@
+{
+  "id": "madi",
+  "name": "MADI",
+  "level": 6,
+  "casterType": "priest",
+  "category": "healing",
+  "target": "party",
+  "description": "Party healing - Restore 3d8 HP to all party members",
+  "castableIn": [
+    "combat",
+    "dungeon",
+    "town"
+  ],
+  "healing": {
+    "dice": "3d8",
+    "type": "normal"
+  }
+}
