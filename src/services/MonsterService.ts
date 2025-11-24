@@ -1,28 +1,50 @@
 // src/services/MonsterService.ts
 import { MonsterInstance } from '../types/Combat'
-import { MonsterDataLoader, MonsterTemplate } from './MonsterDataLoader'
+import { MonsterTemplate } from '../validation/MonsterSchema'
+import { MonsterDataLoader } from './MonsterDataLoader'
 import { v4 as uuidv4 } from 'uuid'
+
+/**
+ * MonsterService - Pure function service for monster instance creation
+ *
+ * Responsibilities:
+ * - Create monster instances with randomized HP
+ * - Generate monster groups with randomized counts
+ * - Access monster templates from MonsterDataLoader
+ *
+ * Data-Driven Architecture:
+ * - All monster data loaded via MonsterDataLoader (uses AssetLoadingService)
+ * - Validated using Zod schema (see src/validation/MonsterSchema.ts)
+ * - No hardcoded monster data
+ *
+ * Pattern Consistency:
+ * - Follows same pattern as SpellDataLoader/SpellCastingService
+ * - MonsterDataLoader handles loading and caching
+ * - MonsterService handles instance creation from templates
+ */
 
 export class MonsterService {
   /**
-   * Load monster synchronously from cache or throw error.
-   * For runtime use, call loadMonsterAsync() first to populate cache.
+   * Create a single monster instance from template ID
+   * @param monsterId - Monster identifier (e.g., "kobold", "werdna")
+   * @returns Monster instance with randomized HP
+   * @throws Error if monsters not loaded or monster not found
    */
-  static loadMonster(monsterId: string): MonsterTemplate {
-    return MonsterDataLoader.getMonster(monsterId)
+  static createMonsterInstance(monsterId: string): MonsterInstance {
+    const template = MonsterDataLoader.getMonster(monsterId)
+    if (!template) {
+      throw new Error(`Monster not found: ${monsterId}`)
+    }
+    return this.createMonsterInstanceFromTemplate(template)
   }
 
   /**
-   * Load monster asynchronously from assets and cache it.
-   * This is the primary method for loading monsters at runtime.
+   * Create monster instance from template (synchronous)
+   * Useful when template is already loaded
+   * @param template - Validated monster template
+   * @returns Monster instance with randomized HP
    */
-  static async loadMonsterAsync(monsterId: string): Promise<MonsterTemplate> {
-    return MonsterDataLoader.loadMonster(monsterId)
-  }
-
-  static createMonsterInstance(monsterId: string): MonsterInstance {
-    const template = this.loadMonster(monsterId)
-
+  static createMonsterInstanceFromTemplate(template: MonsterTemplate): MonsterInstance {
     // Roll HP from min/max range
     const hp = this.rollInRange(template.hp.min, template.hp.max)
 
@@ -38,12 +60,22 @@ export class MonsterService {
       gold: template.gold,
       status: 'ALIVE',
       level: template.level,
-      agility: 10  // Default monster agility
+      agility: 10,  // Default monster agility
+      undead: template.type === 'undead'
     }
   }
 
+  /**
+   * Generate a group of monsters (randomized count)
+   * @param monsterId - Monster identifier
+   * @returns Array of monster instances
+   * @throws Error if monsters not loaded or monster not found
+   */
   static generateMonsterGroup(monsterId: string): MonsterInstance[] {
-    const template = this.loadMonster(monsterId)
+    const template = MonsterDataLoader.getMonster(monsterId)
+    if (!template) {
+      throw new Error(`Monster not found: ${monsterId}`)
+    }
 
     // Roll group size from numberAppearing range
     const count = this.rollInRange(
@@ -53,10 +85,42 @@ export class MonsterService {
 
     // Create that many instances
     return Array.from({ length: count }, () =>
-      this.createMonsterInstance(monsterId)
+      this.createMonsterInstanceFromTemplate(template)
     )
   }
 
+  /**
+   * Get monster template by ID
+   * @param monsterId - Monster identifier
+   * @returns Monster template or undefined if not found
+   */
+  static getMonsterTemplate(monsterId: string): MonsterTemplate | undefined {
+    return MonsterDataLoader.getMonster(monsterId)
+  }
+
+  /**
+   * Check if a monster is loaded and available
+   * @param monsterId - Monster identifier
+   * @returns true if monster is loaded
+   */
+  static hasMonster(monsterId: string): boolean {
+    return MonsterDataLoader.hasMonster(monsterId)
+  }
+
+  /**
+   * Get all loaded monster IDs
+   * @returns Array of monster IDs currently loaded
+   */
+  static getLoadedMonsterIds(): string[] {
+    return MonsterDataLoader.getLoadedMonsterIds()
+  }
+
+  /**
+   * Roll a random number in range [min, max] inclusive
+   * @param min - Minimum value
+   * @param max - Maximum value
+   * @returns Random integer in range
+   */
   private static rollInRange(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
   }

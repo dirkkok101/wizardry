@@ -1,6 +1,7 @@
 import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 import { SpellDataLoader } from './src/services/SpellDataLoader';
 import { MonsterDataLoader } from './src/services/MonsterDataLoader';
+import { ClassDataLoader } from './src/services/ClassDataLoader';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -45,14 +46,18 @@ global.fetch = jest.fn(async (url: string) => {
   }
 }) as jest.Mock;
 
-// Pre-load spells and common monsters for all tests using real data
+// Pre-load classes, spells, and monsters for all tests using real data
 beforeAll(async () => {
-  await SpellDataLoader.loadAllSpells();
-  await MonsterDataLoader.preloadCommonMonsters();
+  await Promise.all([
+    ClassDataLoader.loadAllClasses(),
+    SpellDataLoader.loadAllSpells(),
+    MonsterDataLoader.loadAllMonsters()
+  ]);
 });
 
 // Clear caches after all tests
 afterAll(() => {
+  ClassDataLoader.clearCache();
   SpellDataLoader.clearCache();
   MonsterDataLoader.clearCache();
 });

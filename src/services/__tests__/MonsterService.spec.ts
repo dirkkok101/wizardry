@@ -1,88 +1,207 @@
 // src/services/__tests__/MonsterService.spec.ts
 import { MonsterService } from '../MonsterService'
+import { MonsterDataLoader } from '../MonsterDataLoader'
 
 describe('MonsterService', () => {
-  describe('loadMonster', () => {
-    it('loads kobold template from JSON', () => {
-      const kobold = MonsterService.loadMonster('kobold')
-
-      expect(kobold.id).toBe('kobold')
-      expect(kobold.name).toBe('Kobold')
-      expect(kobold.ac).toBe(8)
-      expect(kobold.hp).toEqual({ min: 3, max: 7 })
-      expect(kobold.damage).toHaveLength(1)
-      expect(kobold.damage[0].dice).toBe('1d4')
-    })
-
-    it('throws error for non-existent monster', () => {
-      expect(() => MonsterService.loadMonster('nonexistent')).toThrow('Monster not loaded: nonexistent. Call loadMonster() first.')
-    })
-  })
+  // Monsters are preloaded in setup-jest.ts via MonsterDataLoader.loadAllMonsters()
+  // This follows the same pattern as SpellDataLoader
 
   describe('createMonsterInstance', () => {
-    it('creates instance with rolled HP', () => {
+    it('creates monster instance with randomized HP', () => {
       const instance = MonsterService.createMonsterInstance('kobold')
 
       expect(instance.id).toBeDefined()
-      expect(instance.id).not.toBe('kobold')  // Unique ID
       expect(instance.monsterId).toBe('kobold')
       expect(instance.name).toBe('Kobold')
       expect(instance.hp).toBeGreaterThanOrEqual(3)
       expect(instance.hp).toBeLessThanOrEqual(7)
       expect(instance.maxHp).toBe(instance.hp)
+      expect(instance.ac).toBe(8)
       expect(instance.status).toBe('ALIVE')
+      expect(instance.level).toBe(1)
+      expect(instance.undead).toBe(false)
     })
 
-    it('rolls different HP each time', () => {
-      const instances = Array.from({ length: 100 }, () =>
-        MonsterService.createMonsterInstance('kobold')
-      )
+    it('creates undead monster with undead flag', () => {
+      const instance = MonsterService.createMonsterInstance('murphy_ghost')
 
-      // Verify all HP in range
-      instances.forEach(m => {
-        expect(m.hp).toBeGreaterThanOrEqual(3)
-        expect(m.hp).toBeLessThanOrEqual(7)
-      })
+      expect(instance.undead).toBe(true)
+      expect(instance.monsterId).toBe('murphy_ghost')
+    })
 
-      // Verify variance (not all same HP)
-      const uniqueHP = new Set(instances.map(m => m.hp))
-      expect(uniqueHP.size).toBeGreaterThan(1)
+    it('creates unique monster instances with different IDs', () => {
+      const instance1 = MonsterService.createMonsterInstance('kobold')
+      const instance2 = MonsterService.createMonsterInstance('kobold')
+
+      expect(instance1.id).not.toBe(instance2.id)
+    })
+
+    it('creates boss monster correctly', () => {
+      const instance = MonsterService.createMonsterInstance('werdna')
+
+      expect(instance.monsterId).toBe('werdna')
+      expect(instance.name).toBe('W*E*R*D*N*A')
+      expect(instance.hp).toBeGreaterThanOrEqual(210)
+      expect(instance.hp).toBeLessThanOrEqual(300)
+      expect(instance.ac).toBe(-7)
+    })
+
+    it('throws error for non-existent monster', () => {
+      expect(() => {
+        MonsterService.createMonsterInstance('fake_monster')
+      }).toThrow('Monster not found')
     })
   })
 
   describe('generateMonsterGroup', () => {
-    it('generates group with correct size range', () => {
-      // Kobold: 3-5 monsters
+    it('generates group with randomized count', () => {
       const group = MonsterService.generateMonsterGroup('kobold')
 
+      // Kobold numberAppearing is 3-5
       expect(group.length).toBeGreaterThanOrEqual(3)
       expect(group.length).toBeLessThanOrEqual(5)
       expect(group.every(m => m.monsterId === 'kobold')).toBe(true)
-      expect(group.every(m => m.status === 'ALIVE')).toBe(true)
     })
 
-    it('generates unique instances', () => {
+    it('generates unique instances in group', () => {
       const group = MonsterService.generateMonsterGroup('kobold')
 
-      // All IDs should be unique
       const ids = group.map(m => m.id)
       const uniqueIds = new Set(ids)
-      expect(uniqueIds.size).toBe(group.length)
+      expect(uniqueIds.size).toBe(ids.length)
     })
 
-    it('rolls different HP for each monster', () => {
-      const runs = Array.from({ length: 20 }, () =>
-        MonsterService.generateMonsterGroup('kobold')
+    it('generates single monster for unique encounters', () => {
+      const group = MonsterService.generateMonsterGroup('werdna')
+
+      expect(group.length).toBe(1)
+      expect(group[0].monsterId).toBe('werdna')
+    })
+
+    it('throws error for non-existent monster', () => {
+      expect(() => {
+        MonsterService.generateMonsterGroup('fake_monster')
+      }).toThrow('Monster not found')
+    })
+  })
+
+  describe('getMonsterTemplate', () => {
+    it('returns monster template by ID', () => {
+      const template = MonsterService.getMonsterTemplate('kobold')
+
+      expect(template).toBeDefined()
+      expect(template?.id).toBe('kobold')
+      expect(template?.name).toBe('Kobold')
+      expect(template?.hp).toBeDefined()
+      expect(template?.ac).toBe(8)
+    })
+
+    it('returns undefined for non-existent monster', () => {
+      const template = MonsterService.getMonsterTemplate('fake_monster')
+
+      expect(template).toBeUndefined()
+    })
+  })
+
+  describe('hasMonster', () => {
+    it('returns true for loaded monster', () => {
+      expect(MonsterService.hasMonster('kobold')).toBe(true)
+    })
+
+    it('returns false for non-existent monster', () => {
+      expect(MonsterService.hasMonster('fake_monster')).toBe(false)
+    })
+  })
+
+  describe('getLoadedMonsterIds', () => {
+    it('returns array of loaded monster IDs', () => {
+      const ids = MonsterService.getLoadedMonsterIds()
+
+      expect(ids).toBeInstanceOf(Array)
+      expect(ids.length).toBeGreaterThan(0)
+      expect(ids).toContain('kobold')
+      expect(ids).toContain('werdna')
+    })
+  })
+
+  describe('createMonsterInstanceFromTemplate', () => {
+    it('creates instance from template with randomized HP', () => {
+      const template = MonsterDataLoader.getMonster('kobold')!
+      const instance = MonsterService.createMonsterInstanceFromTemplate(template)
+
+      expect(instance.monsterId).toBe('kobold')
+      expect(instance.hp).toBeGreaterThanOrEqual(3)
+      expect(instance.hp).toBeLessThanOrEqual(7)
+      expect(instance.maxHp).toBe(instance.hp)
+    })
+
+    it('creates multiple instances with different HP', () => {
+      const template = MonsterDataLoader.getMonster('kobold')!
+      const instances = Array.from({ length: 20 }, () =>
+        MonsterService.createMonsterInstanceFromTemplate(template)
       )
 
-      // At least one group should have variance
-      const hasVariance = runs.some(group => {
-        const hps = group.map(m => m.hp)
-        const unique = new Set(hps)
-        return unique.size > 1
-      })
+      // Should have some variety in HP rolls
+      const uniqueHP = new Set(instances.map(i => i.hp))
+      expect(uniqueHP.size).toBeGreaterThan(1)
+    })
+  })
 
-      expect(hasVariance).toBe(true)
+  describe('data validation against research', () => {
+    it('validates Level 1 monsters match research data', () => {
+      // Murphy's Ghost - Level 1 boss
+      const murphyTemplate = MonsterService.getMonsterTemplate('murphy_ghost')
+      expect(murphyTemplate?.hp).toEqual({ min: 20, max: 110 })
+      expect(murphyTemplate?.ac).toBe(-3)
+      expect(murphyTemplate?.xp).toBe(4450)
+      expect(murphyTemplate?.regeneration).toBe(1)
+
+      // Kobold
+      const koboldTemplate = MonsterService.getMonsterTemplate('kobold')
+      expect(koboldTemplate?.numberAppearing).toEqual({ min: 3, max: 5 })
+      expect(koboldTemplate?.hp).toEqual({ min: 3, max: 7 })
+      expect(koboldTemplate?.ac).toBe(8)
+      expect(koboldTemplate?.xp).toBe(415)
+      expect(koboldTemplate?.resistances).toContainEqual({ type: 'cold', value: 100 })
+    })
+
+    it('validates Level 9-10 boss monsters match research data', () => {
+      // Frost Giant
+      const frostGiant = MonsterService.getMonsterTemplate('frost_giant')
+      expect(frostGiant?.hp).toEqual({ min: 51, max: 58 })
+      expect(frostGiant?.ac).toBe(6)
+      expect(frostGiant?.xp).toBe(41355)
+      expect(frostGiant?.resistances).toContainEqual({ type: 'magic', value: 95 })
+
+      // Poison Giant
+      const poisonGiant = MonsterService.getMonsterTemplate('poison_giant')
+      expect(poisonGiant?.hp).toEqual({ min: 81, max: 81 })
+      expect(poisonGiant?.ac).toBe(3)
+      expect(poisonGiant?.xp).toBe(41320)
+
+      // Greater Demon
+      const greaterDemon = MonsterService.getMonsterTemplate('greater_demon')
+      expect(greaterDemon?.hp).toEqual({ min: 11, max: 88 })
+      expect(greaterDemon?.ac).toBe(-3)
+      expect(greaterDemon?.xp).toBe(44570)
+      expect(greaterDemon?.damage.length).toBe(5) // 5 attacks
+    })
+
+    it('validates all special abilities are properly defined', () => {
+      // Vorpal Bunny - decapitate
+      const vorpalBunny = MonsterService.getMonsterTemplate('vorpal_bunny')
+      expect(vorpalBunny?.specialAbilities).toContain('decapitate')
+
+      // Vampire Lord - level drain
+      const vampireLord = MonsterService.getMonsterTemplate('vampire_lord')
+      expect(vampireLord?.specialAbilities).toContain('level_drain')
+      expect(vampireLord?.levelDrain).toBe(4)
+
+      // Dragon Zombie - breath weapon + spellcasting
+      const dragonZombie = MonsterService.getMonsterTemplate('dragon_zombie')
+      expect(dragonZombie?.specialAbilities).toContain('breath_weapon')
+      expect(dragonZombie?.specialAbilities).toContain('spellcasting')
+      expect(dragonZombie?.breathWeapon).toBeDefined()
     })
   })
 })

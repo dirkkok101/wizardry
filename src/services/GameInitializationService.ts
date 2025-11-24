@@ -85,9 +85,12 @@ async function initializeGame(): Promise<void> {
     console.log(`Loaded ${classCount} classes successfully`)
   }
 
-  // Load spells with Zod validation (required for character creation, combat, etc.)
-  console.log('Loading spells...')
-  await SpellDataLoader.loadAllSpells()
+  // Load spells and monsters in parallel (required for character creation, combat, etc.)
+  console.log('Loading spells and monsters...')
+  await Promise.all([
+    SpellDataLoader.loadAllSpells(),
+    MonsterDataLoader.loadAllMonsters()
+  ])
 
   // Report spell loading statistics
   const spellCount = SpellDataLoader.getLoadedCount()
@@ -103,6 +106,20 @@ async function initializeGame(): Promise<void> {
     console.log(`Loaded ${spellCount} spells successfully`)
   }
 
+  // Report monster loading statistics
+  const monsterCount = MonsterDataLoader.getLoadedCount()
+  const failedMonsters = MonsterDataLoader.getFailedMonsters()
+  const totalMonsters = MonsterDataLoader.getTotalCount()
+
+  if (failedMonsters.size > 0) {
+    console.warn(`Loaded ${monsterCount}/${totalMonsters} monsters (${failedMonsters.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed monsters:', Array.from(failedMonsters.entries()))
+    }
+  } else {
+    console.log(`Loaded ${monsterCount} monsters successfully`)
+  }
+
   // Initialize race service (critical - must succeed)
   try {
     await RaceService.initialize()
@@ -116,19 +133,8 @@ async function initializeGame(): Promise<void> {
     throw error // Races are critical, re-throw error
   }
 
-  // Initialize remaining data services in parallel (including common monsters)
-  await Promise.all([
-    ItemDataService.loadAllItems(),
-    MonsterDataLoader.preloadCommonMonsters()
-  ])
-
-  // Report monster loading statistics
-  const monsterStats = MonsterDataLoader.getStats()
-  if (monsterStats.failed > 0) {
-    console.warn(`Loaded ${monsterStats.loaded} monsters (${monsterStats.failed} failed)`)
-  } else {
-    console.log(`Pre-loaded ${monsterStats.loaded} common monsters`)
-  }
+  // Initialize remaining data services
+  await ItemDataService.loadAllItems()
 
   console.log('Game data initialized successfully')
 

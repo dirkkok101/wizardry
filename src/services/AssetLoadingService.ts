@@ -317,7 +317,6 @@ function getDataFileList(directory: string): string[] {
       return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
     case 'spells':
       // Individual spell JSON files - matches actual files in data/spells/
-      // Note: Some spells use consolidated format with multiple levels in one file
       return [
         // Mage spells
         'halito.json', 'mogref.json', 'katino.json', 'dumapic.json', 'dilto.json', 'sopic.json',
@@ -336,7 +335,33 @@ function getDataFileList(directory: string): string[] {
     case 'items':
       return ['weapons.json', 'armor.json', 'consumables.json']
     case 'monsters':
-      return ['monsters.json']
+      // Individual monster JSON files (96 total) - matches actual files in data/monsters/
+      return [
+        "arch_mage_greater.json", "arch_mage_lesser.json", "attack_dog.json", "bishop.json",
+        "bleeb.json", "boring_beetle.json", "bubbly_slime.json", "bushwacker.json",
+        "capybara.json", "champ_samurai.json", "chimera.json", "coyote.json",
+        "creeping_coin.json", "creeping_crud.json", "dragon_fly.json", "dragon_puppy.json",
+        "dragon_zombie.json", "earth_giant.json", "fire_dragon.json", "fire_giant.json",
+        "flack.json", "frost_giant.json", "gargoyle.json", "gas_cloud.json",
+        "gas_dragon.json", "gaze_hound.json", "giant_spider.json", "giant_toad.json",
+        "gorgon.json", "grave_mist.json", "greater_demon.json", "hatamoto.json",
+        "high_master.json", "high_ninja.json", "high_priest_greater.json", "high_priest_lesser.json",
+        "high_wizard.json", "highwayman.json", "huge_spider.json", "killer_wolf.json",
+        "kobold.json", "lesser_demon.json", "lifestealer.json", "lvl_10_fighter.json",
+        "lvl_10_mage.json", "lvl_1_mage.json", "lvl_1_ninja.json", "lvl_1_priest.json",
+        "lvl_3_ninja.json", "lvl_3_priest.json", "lvl_3_samurai.json", "lvl_4_thief.json",
+        "lvl_5_mage.json", "lvl_5_priest.json", "lvl_6_ninja.json", "lvl_7_fighter.json",
+        "lvl_7_mage.json", "lvl_7_thief.json", "lvl_8_bishop.json", "lvl_8_fighter.json",
+        "lvl_8_ninja.json", "lvl_8_priest.json", "maelific.json", "major_daimyo.json",
+        "master_ninja.json", "master_thief_greater.json", "master_thief_lesser.json", "medusalizard.json",
+        "minor_daimyo.json", "murphy_ghost.json", "nightstalker.json", "ogre.json",
+        "ogre_lord.json", "orc.json", "poison_giant.json", "priestess.json",
+        "raver_lord.json", "rogue.json", "rotting_corpse.json", "shade.json",
+        "spirit.json", "swordsman.json", "thief.json", "troll.json",
+        "undead_kobold.json", "vampire.json", "vampire_lord.json", "vorpal_bunny.json",
+        "werdna.json", "were_bear.json", "wererat.json", "weretiger.json",
+        "werewolf.json", "will_o_wisp.json", "wyvern.json", "zombie.json"
+      ]
     case 'maps':
       return Array.from({ length: 10 }, (_, i) => `level-${String(i + 1).padStart(2, '0')}.json`)
     default:

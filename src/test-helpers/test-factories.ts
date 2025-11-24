@@ -128,7 +128,11 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
 }
 
 /**
- * Test factory: Create a test monster instance
+ * Test factory: Create a test monster instance (synchronous, for simple tests)
+ *
+ * WARNING: This creates a hardcoded kobold monster for testing purposes only.
+ * For realistic monster data from JSON, use createMonsterFromData() or MonsterService directly.
+ *
  * @param overrides - Partial monster properties to override defaults
  */
 export function createTestMonster(overrides: Partial<MonsterInstance> = {}): MonsterInstance {
@@ -144,8 +148,35 @@ export function createTestMonster(overrides: Partial<MonsterInstance> = {}): Mon
     status: 'ALIVE',
     level: 1,
     agility: 10,
+    undead: false,
     ...overrides
   }
+}
+
+/**
+ * Test factory: Create monster instance from real data (synchronous)
+ *
+ * Uses MonsterService to create instance from loaded monster data.
+ * Monsters are preloaded in setup-jest.ts via MonsterDataLoader.
+ *
+ * @param monsterId - Monster ID (e.g., 'kobold', 'werdna', 'greater_demon')
+ * @returns MonsterInstance with validated data
+ */
+export function createMonsterFromData(monsterId: string): MonsterInstance {
+  return MonsterService.createMonsterInstance(monsterId)
+}
+
+/**
+ * Test factory: Create monster group from real data (synchronous)
+ *
+ * Creates a group of monsters with randomized count based on template.
+ * Monsters are preloaded in setup-jest.ts via MonsterDataLoader.
+ *
+ * @param monsterId - Monster ID
+ * @returns Array of MonsterInstances
+ */
+export function createMonsterGroup(monsterId: string): MonsterInstance[] {
+  return MonsterService.generateMonsterGroup(monsterId)
 }
 
 /**

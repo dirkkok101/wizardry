@@ -1,167 +1,185 @@
+import { MonsterTemplate, validateMonster } from '../validation/MonsterSchema'
+import { AssetLoadingService } from './AssetLoadingService'
+
 /**
- * MonsterDataLoader - Service for loading and caching monster data
- *
- * Supports both pre-loading (for common monsters) and on-demand loading
- * Uses centralized cache to prevent duplicate loads
+ * Service for loading and validating monster data from JSON files
+ * Uses AssetLoadingService for centralized loading infrastructure
+ * Implements caching to prevent multiple loads
  * Gracefully handles individual monster failures
- */
-
-import { MonsterTemplateSchema } from '../validation/monster-schema'
-
-export interface MonsterTemplate {
-  id: string
-  name: string
-  level: number
-  numberAppearing: { min: number; max: number }
-  hp: { min: number; max: number }
-  ac: number
-  damage: Array<{ dice: string; min: number; max: number }>
-  xp: number
-  gold?: number
-  type: string
-  specialAbilities: string[]
-  resistances: Array<{ type: string; value: number }>
-  regeneration: number
-  isBoss: boolean
-  canFlee: boolean
-}
-
-/**
- * MonsterDataLoader - Centralized monster data loading and caching
+ *
+ * Follows the same pattern as SpellDataLoader for consistency
  */
 export class MonsterDataLoader {
-  private static monsterCache: Map<string, MonsterTemplate> = new Map()
-  private static loadingPromises: Map<string, Promise<MonsterTemplate>> = new Map()
+  private static monsterCache: Map<string, MonsterTemplate> | null = null
+  private static loadPromise: Promise<Map<string, MonsterTemplate>> | null = null
+  private static loading = false
+  private static loaded = false
+  private static loadError: Error | null = null
   private static failedMonsters: Map<string, string> = new Map() // monsterId → error message
 
   /**
-   * Pre-load common monsters (typically called during game initialization)
-   * Loads monsters from encounter tables for levels 1-3
+   * Load all monster JSON files and validate them
+   * Returns cached results on subsequent calls
+   * Gracefully handles individual monster failures
    */
-  static async preloadCommonMonsters(): Promise<void> {
-    console.log('Pre-loading common monsters...')
-
-    // Common monsters from levels 1-3 (most frequently encountered)
-    const commonMonsters = [
-      'kobold', 'orc', 'zombie', 'bubbly_slime', 'rogue', 'bushwacker',
-      'highwayman', 'undead_kobold', 'lvl_1_mage', 'lvl_1_priest',
-      'lvl_1_ninja', 'giant_spider', 'rotting_corpse', 'grave_mist'
-    ]
-
-    const results = await Promise.allSettled(
-      commonMonsters.map(id => this.loadMonster(id))
-    )
-
-    const loaded = results.filter(r => r.status === 'fulfilled').length
-    const failed = results.filter(r => r.status === 'rejected').length
-
-    if (failed > 0) {
-      console.warn(`Pre-loaded ${loaded}/${commonMonsters.length} common monsters (${failed} failed)`)
-    } else {
-      console.log(`Pre-loaded ${loaded} common monsters`)
-    }
-  }
-
-  /**
-   * Load a single monster by ID (async)
-   * Uses cache if available, otherwise fetches from assets
-   */
-  static async loadMonster(monsterId: string): Promise<MonsterTemplate> {
-    // Check cache first
-    const cached = this.monsterCache.get(monsterId)
-    if (cached) {
-      return cached
+  static async loadAllMonsters(): Promise<Map<string, MonsterTemplate>> {
+    // Return cached result if available
+    if (this.monsterCache) {
+      return this.monsterCache
     }
 
-    // Check if already loading
-    const loadingPromise = this.loadingPromises.get(monsterId)
-    if (loadingPromise) {
-      return loadingPromise
+    // Return in-progress load if one exists
+    if (this.loadPromise) {
+      return this.loadPromise
     }
 
     // Start new load
-    const promise = this.performLoad(monsterId)
-    this.loadingPromises.set(monsterId, promise)
-
-    try {
-      const monster = await promise
-      this.monsterCache.set(monsterId, monster)
-      return monster
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      this.failedMonsters.set(monsterId, errorMessage)
-      throw error
-    } finally {
-      this.loadingPromises.delete(monsterId)
-    }
+    this.loadPromise = this.performLoad()
+    this.monsterCache = await this.loadPromise
+    return this.monsterCache
   }
 
   /**
    * Internal method to perform the actual loading
+   * Uses AssetLoadingService for centralized infrastructure
    */
-  private static async performLoad(monsterId: string): Promise<MonsterTemplate> {
+  private static async performLoad(): Promise<Map<string, MonsterTemplate>> {
+    this.loading = true
+    this.loadError = null
+    this.failedMonsters.clear()
+
+    const monsters = new Map<string, MonsterTemplate>()
+    const loadedAt = Date.now()
+
     try {
-      const response = await fetch(`/assets/monsters/${monsterId}.json`)
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      // Use AssetLoadingService to load monster JSON files
+      const assetLoader = new AssetLoadingService()
+      const rawMonsters = await assetLoader.loadDataFiles<any>('monsters')
+
+      // Validate each monster with Zod
+      for (const [monsterId, rawMonster] of rawMonsters.entries()) {
+        try {
+          // Validate with Zod
+          const validated = validateMonster(rawMonster)
+          monsters.set(monsterId, validated)
+        } catch (error) {
+          // Track validation failure but continue loading other monsters
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          this.failedMonsters.set(monsterId, errorMessage)
+          console.warn(`Failed to validate monster ${monsterId}:`, errorMessage)
+        }
       }
 
-      const rawMonsterData = await response.json()
+      this.loaded = true
 
-      // Validate with Zod schema
-      const validated = MonsterTemplateSchema.parse(rawMonsterData)
+      const successCount = monsters.size
+      const failCount = this.failedMonsters.size
+      const totalCount = successCount + failCount
 
-      return validated as MonsterTemplate
+      if (failCount > 0) {
+        console.warn(`Loaded ${successCount}/${totalCount} monsters (${failCount} failed)`)
+      } else {
+        console.log(`Loaded ${successCount}/${totalCount} monsters`)
+      }
+
+      return monsters
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error(`[MonsterDataLoader] Failed to load monster "${monsterId}":`, errorMessage)
-      throw new Error(`Failed to load monster: ${monsterId} (${errorMessage})`)
+      // Catastrophic failure (e.g., directory not found)
+      this.loadError = error as Error
+      console.error('Failed to load monsters:', error)
+      throw error
+    } finally {
+      this.loading = false
     }
   }
 
   /**
-   * Get monster from cache synchronously (throws if not loaded)
+   * Get a specific monster by ID
+   * Must call loadAllMonsters first
    */
-  static getMonster(monsterId: string): MonsterTemplate {
-    const cached = this.monsterCache.get(monsterId)
-    if (cached) {
-      return cached
+  static getMonster(monsterId: string): MonsterTemplate | undefined {
+    if (!this.monsterCache) {
+      throw new Error('Monsters not loaded. Call loadAllMonsters() first.')
     }
-
-    throw new Error(`Monster not loaded: ${monsterId}. Call loadMonster() first.`)
+    return this.monsterCache.get(monsterId)
   }
 
   /**
-   * Check if a monster is loaded in cache
+   * Get all loaded monsters
    */
-  static isLoaded(monsterId: string): boolean {
-    return this.monsterCache.has(monsterId)
-  }
-
-  /**
-   * Get statistics about loaded monsters
-   */
-  static getStats() {
-    return {
-      loaded: this.monsterCache.size,
-      failed: this.failedMonsters.size,
-      total: this.monsterCache.size + this.failedMonsters.size
+  static getAllMonsters(): Map<string, MonsterTemplate> {
+    if (!this.monsterCache) {
+      throw new Error('Monsters not loaded. Call loadAllMonsters() first.')
     }
+    return this.monsterCache
   }
 
   /**
-   * Get failed monsters map
+   * Check if monsters are currently being loaded
    */
-  static getFailedMonsters(): Map<string, string> {
-    return new Map(this.failedMonsters)
+  static isLoading(): boolean {
+    return this.loading
   }
 
   /**
-   * Clear cache (mainly for testing)
+   * Check if monsters have been successfully loaded
+   */
+  static isLoaded(): boolean {
+    return this.loaded
+  }
+
+  /**
+   * Get any error that occurred during loading
+   */
+  static getError(): Error | null {
+    return this.loadError
+  }
+
+  /**
+   * Get map of failed monster loads
+   * @returns Map of monsterId → error message for monsters that failed to load or validate
+   */
+  static getFailedMonsters(): ReadonlyMap<string, string> {
+    return this.failedMonsters
+  }
+
+  /**
+   * Get count of successfully loaded monsters
+   */
+  static getLoadedCount(): number {
+    return this.monsterCache?.size ?? 0
+  }
+
+  /**
+   * Get total count of monsters attempted to load
+   */
+  static getTotalCount(): number {
+    return this.getLoadedCount() + this.failedMonsters.size
+  }
+
+  /**
+   * Check if a specific monster is loaded
+   */
+  static hasMonster(monsterId: string): boolean {
+    return this.monsterCache?.has(monsterId) ?? false
+  }
+
+  /**
+   * Get all loaded monster IDs
+   */
+  static getLoadedMonsterIds(): string[] {
+    return this.monsterCache ? Array.from(this.monsterCache.keys()) : []
+  }
+
+  /**
+   * Clear cache (for testing)
    */
   static clearCache(): void {
-    this.monsterCache.clear()
-    this.loadingPromises.clear()
+    this.monsterCache = null
+    this.loadPromise = null
+    this.loading = false
+    this.loaded = false
+    this.loadError = null
     this.failedMonsters.clear()
   }
 }
