@@ -1,4 +1,6 @@
 import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls } from '../types/Dungeon'
+import { ValidatedLevelDataSchema } from '../schemas/dungeon-schemas'
+import { ZodError } from 'zod'
 
 // Import JSON data
 import level1Data from '../../data/maps/level1.json'
@@ -14,7 +16,8 @@ const LEVEL_DATA_MAP: Record<number, any> = {
 
 export const DungeonService = {
   /**
-   * Load dungeon level data from JSON
+   * Load dungeon level data from JSON with Zod validation
+   * @throws {Error} If level is invalid or data structure is incorrect
    */
   loadLevel(level: number): LevelData {
     if (level < 1 || level > 10) {
@@ -26,23 +29,35 @@ export const DungeonService = {
       throw new Error(`Map data not found for level ${level}`)
     }
 
-    // Parse JSON structure (levels[0] contains the level)
-    const levelData = rawData.levels[0]
+    try {
+      // Parse JSON structure (levels[0] contains the level)
+      const levelData = rawData.levels[0]
 
-    return {
-      level: levelData.level,
-      name: levelData.name,
-      size: levelData.size,
-      startPosition: {
-        x: levelData.startPosition.x,
-        y: levelData.startPosition.y,
-        facing: levelData.startPosition.facing.toUpperCase() as Direction
-      },
-      edgeWrapping: levelData.edgeWrapping,
-      tiles: levelData.tiles,
-      encounterRate: levelData.encounterRate,
-      encounterTable: levelData.encounterTable
+      // Validate with all business logic rules (includes direction transform)
+      const levelValidation = ValidatedLevelDataSchema.safeParse(levelData)
+      if (!levelValidation.success) {
+        throw new Error(`Invalid level data for level ${level}: ${this.formatZodError(levelValidation.error)}`)
+      }
+
+      // Schema validates structure and transforms lowercase direction to uppercase
+      return levelValidation.data as LevelData
+    } catch (error) {
+      throw new Error(
+        `Failed to load level ${level}: ${error instanceof Error ? error.message : String(error)}`
+      )
     }
+  },
+
+  /**
+   * Format Zod validation errors into readable messages
+   */
+  formatZodError(error: ZodError): string {
+    if (!error.errors || error.errors.length === 0) {
+      return error.message || 'Unknown validation error'
+    }
+    return error.errors
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
   },
 
   /**
@@ -125,28 +140,6 @@ export const DungeonService = {
     }
 
     return { allowed: true }
-  },
-
-  /**
-   * Validate that all stairs walls have destination data
-   * Returns array of error messages (empty if valid)
-   */
-  validateStairsWalls(level: LevelData): string[] {
-    const errors: string[] = []
-
-    for (const tile of level.tiles) {
-      // Check if any wall on this tile is a stairs type
-      const hasStairsWall = Object.values(tile.walls).some(
-        wallType => wallType === 'stairs_up' || wallType === 'stairs_down'
-      )
-
-      // If has stairs wall but no destination, that's an error
-      if (hasStairsWall && !tile.destination) {
-        errors.push(`Tile (${tile.x}, ${tile.y}) has stairs wall but no destination`)
-      }
-    }
-
-    return errors
   },
 
   /**

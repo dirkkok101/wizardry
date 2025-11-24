@@ -6,10 +6,11 @@ import { isDevMode } from '@angular/core'
 import { GameState } from '../types/GameState'
 import { SceneType } from '../types/SceneType'
 import { RaceService } from './RaceService'
-import { ClassService } from './ClassService'
 import { ItemDataService } from './ItemDataService'
 import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
+import { MonsterDataLoader } from './MonsterDataLoader'
+import { ClassDataLoader } from './ClassDataLoader'
 
 let gameState: GameState | null = null
 
@@ -66,7 +67,25 @@ function createNewGame(): GameState {
 async function initializeGame(): Promise<void> {
   console.log('Initializing game data...')
 
-  // Load spells first (required for character creation, combat, etc.)
+  // Load classes first with Zod validation (required for character creation)
+  console.log('Loading classes...')
+  await ClassDataLoader.loadAllClasses()
+
+  // Report class loading statistics
+  const classCount = ClassDataLoader.getLoadedCount()
+  const failedClasses = ClassDataLoader.getFailedClasses()
+  const totalClasses = ClassDataLoader.getTotalCount()
+
+  if (failedClasses.size > 0) {
+    console.warn(`Loaded ${classCount}/${totalClasses} classes (${failedClasses.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed classes:', Array.from(failedClasses.entries()))
+    }
+  } else {
+    console.log(`Loaded ${classCount} classes successfully`)
+  }
+
+  // Load spells with Zod validation (required for character creation, combat, etc.)
   console.log('Loading spells...')
   await SpellDataLoader.loadAllSpells()
 
@@ -97,11 +116,19 @@ async function initializeGame(): Promise<void> {
     throw error // Races are critical, re-throw error
   }
 
-  // Initialize other data services in parallel
+  // Initialize remaining data services in parallel (including common monsters)
   await Promise.all([
-    ClassService.initialize(),
-    ItemDataService.loadAllItems()
+    ItemDataService.loadAllItems(),
+    MonsterDataLoader.preloadCommonMonsters()
   ])
+
+  // Report monster loading statistics
+  const monsterStats = MonsterDataLoader.getStats()
+  if (monsterStats.failed > 0) {
+    console.warn(`Loaded ${monsterStats.loaded} monsters (${monsterStats.failed} failed)`)
+  } else {
+    console.log(`Pre-loaded ${monsterStats.loaded} common monsters`)
+  }
 
   console.log('Game data initialized successfully')
 
