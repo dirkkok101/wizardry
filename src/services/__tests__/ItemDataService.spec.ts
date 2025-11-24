@@ -1,6 +1,7 @@
 import { ItemDataService } from '../ItemDataService';
 import { Item } from '../../types/Item';
 import { ItemType, ItemSlot } from '../../types/ItemType';
+import { AssetLoadingService } from '../AssetLoadingService';
 
 describe('ItemDataService', () => {
   // Mock JSON data (raw format from data files)
@@ -29,8 +30,7 @@ describe('ItemDataService', () => {
 
   beforeEach(() => {
     // Reset service state between tests
-    ItemDataService['itemsCache'].clear();
-    ItemDataService['loaded'] = false;
+    ItemDataService.clearCache();
 
     // Mock fetch to return JSON format for individual item files
     global.fetch = jest.fn((url: string) => {
@@ -264,6 +264,259 @@ describe('ItemDataService', () => {
       // Failed items should be cleared and recounted
       const secondFailCount = ItemDataService.getFailedItems().size;
       expect(secondFailCount).toBe(firstFailCount); // Same failures expected
+    });
+  });
+
+  describe('Zod Validation', () => {
+    beforeEach(() => {
+      ItemDataService.clearCache();
+    });
+
+    it('validates items with Zod schemas during load', async () => {
+      // Mock AssetLoadingService to return valid item data
+      const validItems = new Map([
+        ['test_sword', {
+          id: 'test_sword',
+          name: 'Test Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: '1d8', min: 1, max: 8 },
+          enhancement: 0,
+          cost: 100,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
+
+      const items = await ItemDataService.loadAllItems();
+
+      expect(items.size).toBe(1);
+      expect(ItemDataService.getFailedItems().size).toBe(0);
+
+      jest.restoreAllMocks();
+    });
+
+    it('rejects items with invalid damage dice format', async () => {
+      const invalidItems = new Map([
+        ['bad_sword', {
+          id: 'bad_sword',
+          name: 'Bad Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: 'invalid', min: 1, max: 8 }, // Invalid dice format
+          enhancement: 0,
+          cost: 100,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+
+      await ItemDataService.loadAllItems();
+
+      expect(ItemDataService.getLoadedCount()).toBe(0);
+      expect(ItemDataService.getFailedItems().size).toBe(1);
+      expect(ItemDataService.getFailedItems().get('bad_sword')).toContain('dice');
+
+      jest.restoreAllMocks();
+    });
+
+    it('rejects items with min > max damage', async () => {
+      const invalidItems = new Map([
+        ['bad_sword', {
+          id: 'bad_sword',
+          name: 'Bad Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: '1d8', min: 10, max: 5 }, // min > max
+          enhancement: 0,
+          cost: 100,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+
+      await ItemDataService.loadAllItems();
+
+      expect(ItemDataService.getLoadedCount()).toBe(0);
+      expect(ItemDataService.getFailedItems().size).toBe(1);
+
+      jest.restoreAllMocks();
+    });
+
+    it('rejects items with invalid character class', async () => {
+      const invalidItems = new Map([
+        ['bad_sword', {
+          id: 'bad_sword',
+          name: 'Bad Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: '1d8', min: 1, max: 8 },
+          enhancement: 0,
+          cost: 100,
+          usableBy: ['invalid_class'], // Invalid class
+          cursed: false,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+
+      await ItemDataService.loadAllItems();
+
+      expect(ItemDataService.getLoadedCount()).toBe(0);
+      expect(ItemDataService.getFailedItems().size).toBe(1);
+
+      jest.restoreAllMocks();
+    });
+
+    it('rejects armor with AC out of range', async () => {
+      const invalidItems = new Map([
+        ['bad_armor', {
+          id: 'bad_armor',
+          name: 'Bad Armor',
+          category: 'armor',
+          armorType: 'body',
+          ac: 15, // Max is 10
+          enhancement: 0,
+          cost: 1000,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+
+      await ItemDataService.loadAllItems();
+
+      expect(ItemDataService.getLoadedCount()).toBe(0);
+      expect(ItemDataService.getFailedItems().size).toBe(1);
+
+      jest.restoreAllMocks();
+    });
+
+    it('accepts cursed armor with negative AC', async () => {
+      const validItems = new Map([
+        ['cursed_armor', {
+          id: 'cursed_armor',
+          name: 'Cursed Armor',
+          category: 'armor',
+          armorType: 'body',
+          ac: -1, // Negative AC is valid for cursed items
+          enhancement: -1,
+          cost: 0,
+          usableBy: ['fighter', 'mage', 'priest', 'thief', 'bishop', 'samurai', 'lord', 'ninja'],
+          cursed: true,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
+
+      const items = await ItemDataService.loadAllItems();
+
+      expect(items.size).toBe(1);
+      expect(ItemDataService.getFailedItems().size).toBe(0);
+
+      const cursedArmor = ItemDataService.getItem('cursed_armor');
+      expect(cursedArmor?.cursed).toBe(true);
+      expect(cursedArmor?.defense).toBe(-1);
+
+      jest.restoreAllMocks();
+    });
+
+    it('validates alignment restrictions', async () => {
+      const validItems = new Map([
+        ['holy_sword', {
+          id: 'holy_sword',
+          name: 'Holy Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: '2d8', min: 2, max: 16 },
+          enhancement: 2,
+          cost: 10000,
+          usableBy: ['fighter', 'lord'],
+          cursed: false,
+          alignmentRequired: 'good',
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
+
+      const items = await ItemDataService.loadAllItems();
+
+      expect(items.size).toBe(1);
+
+      const holySword = ItemDataService.getItem('holy_sword');
+      expect(holySword?.alignmentRestrictions).toEqual(['good']);
+
+      jest.restoreAllMocks();
+    });
+
+    it('continues loading valid items when some items fail validation', async () => {
+      const mixedItems = new Map([
+        ['valid_sword', {
+          id: 'valid_sword',
+          name: 'Valid Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: '1d8', min: 1, max: 8 },
+          enhancement: 0,
+          cost: 100,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }],
+        ['invalid_sword', {
+          id: 'invalid_sword',
+          name: 'Invalid Sword',
+          category: 'weapon',
+          weaponType: 'sword',
+          damage: { dice: 'bad', min: 1, max: 8 }, // Invalid
+          enhancement: 0,
+          cost: 100,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }],
+        ['valid_armor', {
+          id: 'valid_armor',
+          name: 'Valid Armor',
+          category: 'armor',
+          armorType: 'body',
+          ac: 5,
+          enhancement: 0,
+          cost: 500,
+          usableBy: ['fighter'],
+          cursed: false,
+          special: null
+        }]
+      ]);
+
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(mixedItems);
+
+      await ItemDataService.loadAllItems();
+
+      // Should load 2 valid items
+      expect(ItemDataService.getLoadedCount()).toBe(2);
+      expect(ItemDataService.getItem('valid_sword')).not.toBeNull();
+      expect(ItemDataService.getItem('valid_armor')).not.toBeNull();
+
+      // Should track 1 failed item
+      expect(ItemDataService.getFailedItems().size).toBe(1);
+      expect(ItemDataService.getFailedItems().has('invalid_sword')).toBe(true);
+
+      jest.restoreAllMocks();
     });
   });
 });
