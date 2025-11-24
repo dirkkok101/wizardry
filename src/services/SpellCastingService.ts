@@ -168,6 +168,9 @@ export class SpellCastingService {
         case 'SILENCED':
           effectMsg = 'silences the enemy group!'
           break
+        case 'PARALYZED':
+          effectMsg = 'paralyzes the enemy group!'
+          break
       }
 
       return {
@@ -318,15 +321,6 @@ export class SpellCastingService {
           cureType: spell.statusCure
         },
         message
-      }
-    }
-
-    // Handle fear spell (MORLIS)
-    if (spell.causeFear) {
-      const causeFear = targets.map(t => t.id)
-      return {
-        causeFear,
-        message: `${spell.name} strikes fear into the enemies!`
       }
     }
 

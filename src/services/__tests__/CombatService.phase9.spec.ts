@@ -301,8 +301,8 @@ describe('CombatService - Phase 9: Advanced Spell Effect Integration', () => {
     })
   })
 
-  describe('Fear Integration (MORLIS)', () => {
-    it('executes MORLIS causing fear', () => {
+  describe('Paralysis Integration (MORLIS)', () => {
+    it('executes MORLIS causing paralysis', () => {
       const caster = createTestCharacter({
         id: 'mage',
         level: 5,
@@ -330,7 +330,7 @@ describe('CombatService - Phase 9: Advanced Spell Effect Integration', () => {
       const result = CombatService.executeCommand(state, command)
 
       expect(result.message).toContain('MORLIS')
-      expect(result.message).toContain('fear')
+      expect(result.message).toContain('paralyze')
     })
   })
 
@@ -500,7 +500,7 @@ describe('CombatService - Phase 9: Advanced Spell Effect Integration', () => {
       expect(result.message).toContain('LITOKAN')
     })
 
-    it('fear spell on empty target array executes without error', () => {
+    it('paralysis spell on empty target array executes without error', () => {
       const caster = createTestCharacter({
         id: 'mage',
         level: 5,

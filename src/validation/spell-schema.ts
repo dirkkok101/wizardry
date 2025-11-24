@@ -49,7 +49,6 @@ export const SpellDefinitionSchema = z.object({
   recallSuccessRate: z.literal('level_based').optional(),
 
   statusCure: z.enum(['poison', 'paralysis', 'silence', 'blind', 'asleep', 'all']).optional(),
-  causeFear: z.boolean().optional(),
 
   description: z.string(),
   failureResult: z.string().optional()

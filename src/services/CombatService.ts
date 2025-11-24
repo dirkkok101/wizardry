@@ -311,11 +311,9 @@ export class CombatService {
     const isParrying = parryingCombatants.has(target.id)
     const acModifier = isParrying ? -2 : 0
 
-    // Check if attacker has status penalties
+    // Check if attacker is blind (-4 attack penalty)
     const isBlind = this.hasStatusEffect(state, command.actor.id, 'BLIND')
-    const isFeared = this.hasStatusEffect(state, command.actor.id, 'FEARED')
-    // Both blind and feared apply -4 attack penalty (cumulative if both active)
-    const attackerPenalty = (isBlind ? -4 : 0) + (isFeared ? -4 : 0)
+    const attackerPenalty = isBlind ? -4 : 0
 
     const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
     const actorName = this.getCombatantName(command.actor)
@@ -328,12 +326,22 @@ export class CombatService {
       }
     }
 
+    // Check if target is asleep or paralyzed (takes 2x damage - authentic Wizardry behavior)
+    const isAsleep = target.status === 'ASLEEP'
+    const isParalyzed = target.status === 'PARALYZED'
+    const damageMultiplier = (isAsleep || isParalyzed) ? 2 : 1
+    const finalDamage = Math.floor(attackResult.damage * damageMultiplier)
+
     // Apply damage to target
-    const newState = this.applyDamage(state, target, attackResult.damage)
+    const newState = this.applyDamage(state, target, finalDamage)
+
+    const damageMsg = (isAsleep || isParalyzed)
+      ? `${attackResult.message} (HELPLESS: 2x damage!)`
+      : attackResult.message
 
     return {
       newState,
-      message: `${actorName} attacks ${targetName}: ${attackResult.message}`
+      message: `${actorName} attacks ${targetName}: ${damageMsg}`
     }
   }
 
@@ -468,11 +476,6 @@ export class CombatService {
         spellEffect.statusCures.targetIds,
         spellEffect.statusCures.cureType
       )
-    }
-
-    // Apply fear to targets (MORLIS)
-    if (spellEffect.causeFear && spellEffect.causeFear.length > 0) {
-      newState = this.applyFear(newState, spellEffect.causeFear)
     }
 
     return {
@@ -877,29 +880,6 @@ export class CombatService {
     return { ...state, monsterGroups: newMonsterGroups }
   }
 
-  /**
-   * Apply fear status effect to monsters (MORLIS)
-   * Feared monsters have -4 attack penalty
-   * Fear lasts for 1d4 rounds (1-4 rounds)
-   */
-  private static applyFear(
-    state: CombatState,
-    targetIds: string[]
-  ): CombatState {
-    let newState = state
-
-    for (const targetId of targetIds) {
-      // Apply FEARED status effect
-      newState = this.applyStatusEffect(newState, targetId, 'FEARED')
-
-      // Set duration: 1d4 rounds (1-4 rounds)
-      const duration = Math.floor(Math.random() * 4) + 1
-      newState = this.setStatusDuration(newState, targetId, 'FEARED', duration)
-    }
-
-    return newState
-  }
-
   private static getCombatantName(combatant: Combatant): string {
     return combatant.name || 'Unknown'
   }
@@ -980,10 +960,9 @@ export class CombatService {
         const isParrying = parryingCombatants.has(target.id)
         const acModifier = isParrying ? -2 : 0
 
-        // Check if attacker has status penalties
+        // Check if attacker is blind (-4 attack penalty)
         const isBlind = this.hasStatusEffect(currentState, command.actor.id, 'BLIND')
-        const isFeared = this.hasStatusEffect(currentState, command.actor.id, 'FEARED')
-        const attackerPenalty = (isBlind ? -4 : 0) + (isFeared ? -4 : 0)
+        const attackerPenalty = isBlind ? -4 : 0
 
         const existingDamage = damagedCharacters.get(target.id)
         if (existingDamage) {

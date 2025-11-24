@@ -99,7 +99,6 @@ export class SpellDataLoader {
     if (levelData.teleportSuccessRate !== undefined) fields.teleportSuccessRate = levelData.teleportSuccessRate
     if (levelData.recallSuccessRate) fields.recallSuccessRate = levelData.recallSuccessRate
     if (levelData.statusCure) fields.statusCure = levelData.statusCure
-    if (levelData.causeFear !== undefined) fields.causeFear = levelData.causeFear
     if (levelData.failureResult) fields.failureResult = levelData.failureResult
 
     return fields

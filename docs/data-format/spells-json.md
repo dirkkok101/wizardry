@@ -207,8 +207,6 @@ Used for spells that appear at multiple levels (e.g., BADI at levels 5 and 6).
 
 **ignoresAC**: `boolean` - Ignores armor class (LAKANITO)
 
-**causeFear**: `boolean` - Causes fear effect (MORLIS)
-
 **failureResult**: `string` - What happens on spell failure
 - Used for resurrection spells
 

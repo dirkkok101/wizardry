@@ -56,9 +56,6 @@ export interface SpellDefinition {
   // Status Cure
   statusCure?: 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
 
-  // Fear Effect
-  causeFear?: boolean  // MORLIS
-
   // Description
   description: string
 

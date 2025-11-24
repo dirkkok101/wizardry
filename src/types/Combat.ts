@@ -8,7 +8,7 @@ export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
  * Temporary status effects that only last during combat
  * These are cleared when combat ends
  */
-export type CombatStatusEffect = 'BLIND' | 'SILENCED' | 'FEARED'
+export type CombatStatusEffect = 'BLIND' | 'SILENCED'
 
 /**
  * All status effects that can have durations tracked during combat
@@ -107,7 +107,6 @@ export interface SpellEffect {
     targetIds: string[]
     cureType: 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
   }
-  causeFear?: string[]  // Target IDs that become feared (MORLIS)
   dispelEffects?: string[]  // Target IDs to dispel magic effects from (ZILWAN)
   transformations?: Array<{  // Monster transformations (HAMAN, MAHAMAN)
     monsterId: string
