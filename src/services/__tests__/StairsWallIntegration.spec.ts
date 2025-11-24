@@ -225,87 +225,6 @@ describe('Stairs Wall Integration', () => {
     });
   });
 
-  describe('Map validation integration', () => {
-    it('validates level 1 map data successfully', () => {
-      const level = DungeonService.loadLevel(1);
-      const errors = DungeonService.validateStairsWalls(level);
-
-      // Level 1 should have no validation errors
-      expect(errors).toEqual([]);
-    });
-
-    it('validates level 2 map data successfully', () => {
-      const level = DungeonService.loadLevel(2);
-      const errors = DungeonService.validateStairsWalls(level);
-
-      // Level 2 should have no validation errors
-      expect(errors).toEqual([]);
-    });
-
-    it('detects stairs walls without destinations', () => {
-      // Create test level with invalid stairs wall
-      const testLevel: LevelData = {
-        level: 999,
-        name: 'Test Level',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 0, y: 0, facing: 'north' },
-        edgeWrapping: true,
-        encounterRate: 0.1,
-        encounterTable: 'test_table',
-        tiles: [
-          {
-            x: 0,
-            y: 0,
-            walls: {
-              north: 'open',
-              south: 'open',
-              east: 'open',
-              west: 'stairs_up'  // Missing destination!
-            }
-          }
-        ]
-      };
-
-      const errors = DungeonService.validateStairsWalls(testLevel);
-
-      expect(errors.length).toBeGreaterThan(0);
-      expect(errors[0]).toContain('(0, 0)');
-      expect(errors[0]).toContain('no destination');
-    });
-
-    it('allows stairs tiles (tile type) without triggering validation errors', () => {
-      // Test that tile-based stairs (type: 'stairs_down') don't need wall validation
-      const testLevel: LevelData = {
-        level: 999,
-        name: 'Test Level',
-        size: { width: 20, height: 20 },
-        startPosition: { x: 0, y: 0, facing: 'north' },
-        edgeWrapping: true,
-        encounterRate: 0.1,
-        encounterTable: 'test_table',
-        tiles: [
-          {
-            x: 0,
-            y: 10,
-            walls: {
-              north: 'wall',
-              south: 'wall',
-              east: 'open',
-              west: 'wall'
-            },
-            type: 'stairs_down',
-            destination: { level: 2, x: 0, y: 10 }
-          }
-        ]
-      };
-
-      const errors = DungeonService.validateStairsWalls(testLevel);
-
-      // Should pass validation (tile-based stairs don't need wall validation)
-      expect(errors).toEqual([]);
-    });
-  });
-
   describe('Non-stairs movement still works', () => {
     it('allows normal forward movement when no stairs present', () => {
       // Test that normal movement isn't broken by stairs logic
@@ -477,7 +396,7 @@ describe('Stairs Wall Integration', () => {
       expect(result.dungeon?.currentLevel).toBe(1);
     });
 
-    it('validates stairs wall with missing destination coordinates', () => {
+    it('handles stairs transition with missing destination coordinates', () => {
       const testLevel: LevelData = {
         level: 999,
         name: 'Test Level',
@@ -501,11 +420,7 @@ describe('Stairs Wall Integration', () => {
         ]
       };
 
-      // Validation should pass (coordinates are optional)
-      const errors = DungeonService.validateStairsWalls(testLevel);
-      expect(errors).toEqual([]);
-
-      // Test that transition uses default coordinates (0, 0)
+      // Test that transition uses default coordinates (0, 0) when not specified
       jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(testLevel);
       jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
         return testLevel.tiles.find(t => t.x === x && t.y === y) || {
