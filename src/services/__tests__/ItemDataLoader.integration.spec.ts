@@ -15,7 +15,8 @@ describe('ItemDataLoader Integration', () => {
 
   beforeEach(() => {
     // Reset service state
-    ItemDataLoader['itemsCache'].clear();
+    ItemDataLoader['itemsCache'] = null;
+    ItemDataLoader['loadPromise'] = null;
     ItemDataLoader['loaded'] = false;
     ItemDataLoader['loading'] = false;
     ItemDataLoader['loadError'] = null;

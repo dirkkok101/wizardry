@@ -30,7 +30,7 @@ describe('CharacterService', () => {
             description: 'Balanced race',
             strengths: ['Balanced stats'],
             weaknesses: ['No exceptional stats'],
-            bestClasses: ['Fighter', 'Lord']
+            bestClasses: ['fighter', 'lord']
           })
         } as Response)
       }
@@ -46,7 +46,7 @@ describe('CharacterService', () => {
             description: 'Intelligent and pious',
             strengths: ['High intelligence and piety'],
             weaknesses: ['Low strength and vitality'],
-            bestClasses: ['Mage', 'Priest', 'Bishop']
+            bestClasses: ['mage', 'priest', 'bishop']
           })
         } as Response)
       }
@@ -62,7 +62,7 @@ describe('CharacterService', () => {
             description: 'Strong and tough',
             strengths: ['High strength and vitality'],
             weaknesses: ['Low agility'],
-            bestClasses: ['Fighter', 'Priest']
+            bestClasses: ['fighter', 'priest']
           })
         } as Response)
       }
@@ -78,7 +78,7 @@ describe('CharacterService', () => {
             description: 'Clever and agile',
             strengths: ['High piety and agility'],
             weaknesses: ['Low strength'],
-            bestClasses: ['Priest', 'Thief']
+            bestClasses: ['priest', 'thief']
           })
         } as Response)
       }
@@ -88,13 +88,13 @@ describe('CharacterService', () => {
           json: () => Promise.resolve({
             id: 'hobbit',
             name: 'Hobbit',
-            baseStats: { str: 5, int: 7, pie: 7, vit: 6, agi: 10, luc: 12 },
-            statTotal: 47,
+            baseStats: { str: 5, int: 7, pie: 7, vit: 6, agi: 10, luc: 15 },
+            statTotal: 50,
             savingThrowBonus: { spell: -3 },
             description: 'Lucky and agile',
             strengths: ['High luck and agility'],
             weaknesses: ['Low strength and vitality'],
-            bestClasses: ['Thief']
+            bestClasses: ['thief']
           })
         } as Response)
       }
