@@ -19,15 +19,12 @@ export class CombatService {
     return Math.max(1, roll + agiMod)
   }
 
-  static async initiateCombat(
+  static initiateCombat(
     monsterId: string,
     party: Character[],
     canFlee: boolean
-  ): Promise<CombatState> {
-    // Load monster data asynchronously
-    await MonsterService.loadMonsterAsync(monsterId)
-
-    // Generate monster group (now safe because monster is cached)
+  ): CombatState {
+    // Generate monster group (monsters are pre-loaded in GameInitializationService)
     const monsters = MonsterService.generateMonsterGroup(monsterId)
 
     // Create single monster group (Group A, front row)

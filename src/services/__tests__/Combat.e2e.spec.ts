@@ -4,13 +4,13 @@ import { CombatService } from '../CombatService'
 import { createTestCharacter } from '../../test-helpers/test-factories'
 
 describe('Combat E2E Flow', () => {
-  it('completes full combat from encounter to victory', async () => {
+  it('completes full combat from encounter to victory', () => {
     // 1. Initialize combat
     const party = [
       createTestCharacter({ id: 'fighter', name: 'Conan', strength: 16, hp: 20, maxHp: 20 }),
       createTestCharacter({ id: 'mage', name: 'Gandalf', intelligence: 16, hp: 8, maxHp: 8 })
     ]
-    const state = await CombatService.initiateCombat('kobold', party, true)
+    const state = CombatService.initiateCombat('kobold', party, true)
 
     // 2. Verify initial state
     expect(state.roundNumber).toBe(1)
@@ -67,9 +67,9 @@ describe('Combat E2E Flow', () => {
     fail(`Combat did not resolve within ${maxRounds} rounds`)
   })
 
-  it('tracks fixed encounter correctly', async () => {
+  it('tracks fixed encounter correctly', () => {
     const party = [createTestCharacter({ strength: 18, hp: 30, maxHp: 30 })]
-    const state = await CombatService.initiateCombat('kobold', party, false)
+    const state = CombatService.initiateCombat('kobold', party, false)
 
     // Verify fixed encounter (cannot flee)
     expect(state.canFlee).toBe(false)

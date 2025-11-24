@@ -831,7 +831,7 @@ describe('NavigationService', () => {
       it('returns state unchanged if encounter not yet defeated', () => {
         const tile = {
           type: 'fixed_encounter',
-          encounterId: 'murphys_ghosts'
+          encounterId: 'murphy_ghost'
         } as TileData;
 
         const state: GameState = {
@@ -855,7 +855,7 @@ describe('NavigationService', () => {
       it('returns state unchanged if encounter already defeated', () => {
         const tile = {
           type: 'fixed_encounter',
-          encounterId: 'murphys_ghosts'
+          encounterId: 'murphy_ghost'
         } as TileData;
 
         const state: GameState = {
@@ -866,7 +866,7 @@ describe('NavigationService', () => {
             lightActive: false,
             lightRadius: 0,
             teleportCount: 0,
-            defeatedEncounters: ['murphys_ghosts'],
+            defeatedEncounters: ['murphy_ghost'],
           },
         };
 

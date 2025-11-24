@@ -4,11 +4,11 @@ import { CombatService } from '../CombatService'
 import { createTestCharacter } from '../../test-helpers/test-factories'
 
 describe('Combat Performance', () => {
-  it('executes combat round in <100ms', async () => {
+  it('executes combat round in <100ms', () => {
     const party = Array.from({ length: 6 }, (_, i) =>
       createTestCharacter({ id: `char${i}`, name: `Hero${i}`, hp: 100 })
     )
-    const state = await CombatService.initiateCombat('kobold', party, true)
+    const state = CombatService.initiateCombat('kobold', party, true)
     const monsters = CombatService.getAllMonsters(state)
 
     // Create commands

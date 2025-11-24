@@ -1189,7 +1189,7 @@
             "west": "wall"
           },
           "type": "fixed_encounter",
-          "encounterId": "murphys_ghosts",
+          "encounterId": "murphy_ghost",
           "repeatable": true,
           "cannotFlee": true,
           "message": "A gem-encrusted statue glows with a golden light"

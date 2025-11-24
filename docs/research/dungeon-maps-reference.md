@@ -393,7 +393,7 @@
     {
       "x": 13, "y": 5,
       "type": "fixed_encounter",
-      "encounter": "murphys_ghosts"
+      "encounter": "murphy_ghost"
     }
   ]
 }
