@@ -2,56 +2,46 @@ import { ItemDataLoader } from '../ItemDataLoader';
 import { Item } from '../../types/Item';
 import { ItemType, ItemSlot } from '../../types/ItemType';
 import { AssetLoadingService } from '../AssetLoadingService';
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe('ItemDataLoader', () => {
-  // Mock JSON data (raw format from data files)
-  const mockJsonData: Record<string, any> = {
-    'long_sword': {
-      id: 'long_sword',
-      name: 'Long Sword',
-      category: 'weapon',
-      weaponType: 'sword',
-      damage: { dice: '1d8', min: 1, max: 8 }, // Real JSON uses "damage" not "damageRoll"
-      cost: 25,
-      usableBy: ['fighter', 'lord', 'samurai'],
-      cursed: false
-    },
-    'plate_mail': {
-      id: 'plate_mail',
-      name: 'Plate Mail',
-      category: 'armor',
-      armorType: 'body',
-      ac: 5,
-      cost: 750,
-      usableBy: ['fighter', 'lord'],
-      cursed: false
-    }
-  };
-
   beforeEach(() => {
     // Reset service state between tests
     ItemDataLoader.clearCache();
 
-    // Mock fetch to return JSON format for individual item files
+    // Mock fetch to load real data files from data/ directory
     global.fetch = jest.fn((url: string) => {
-      // Extract item ID from URL: /assets/items/{itemId}.json
-      const match = url.match(/\/assets\/items\/(.+)\.json$/);
-      if (match) {
-        const itemId = match[1];
-        const jsonData = mockJsonData[itemId];
+      const urlPath = url.toString();
 
-        if (jsonData) {
+      // Extract filename from URL
+      const match = urlPath.match(/\/(items)\/([^/]+\.json)$/);
+      if (match) {
+        const [, directory, filename] = match;
+        const dataPath = path.join(__dirname, '../../../data', directory, filename);
+
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8');
+          const jsonData = JSON.parse(fileContent);
+
           return Promise.resolve({
             ok: true,
             json: () => Promise.resolve(jsonData)
           } as Response);
+        } catch (error) {
+          return Promise.resolve({
+            ok: false,
+            status: 404,
+            statusText: 'Not Found'
+          } as Response);
         }
       }
 
-      // Return 404 for unknown items
+      // Return 404 for unknown paths
       return Promise.resolve({
         ok: false,
-        status: 404
+        status: 404,
+        statusText: 'Not Found'
       } as Response);
     });
   });
@@ -458,7 +448,7 @@ describe('ItemDataLoader', () => {
       expect(items.size).toBe(1);
 
       const holySword = ItemDataLoader.getItem('holy_sword');
-      expect(holySword?.alignmentRestrictions).toEqual(['good']);
+      expect(holySword?.alignmentRestrictions).toEqual(['GOOD']);
 
       jest.restoreAllMocks();
     });
