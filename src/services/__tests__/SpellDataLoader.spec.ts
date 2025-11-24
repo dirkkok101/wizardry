@@ -13,10 +13,11 @@ describe('SpellDataLoader', () => {
     it('loads and validates all spell JSON files', async () => {
       const spells = await SpellDataLoader.loadAllSpells()
 
-      // 43 spells pass validation, 13 fail due to schema mismatches in source data
-      // This demonstrates graceful error handling - failed spells don't crash the game
-      expect(spells.size).toBe(43)
-      expect(SpellDataLoader.getFailedSpells().size).toBe(13)
+      // All 56 spells pass validation after PR #37 fixes
+      // 49 JSON files contain 56 spell definitions (consolidated format for multi-level spells)
+      // This demonstrates both consolidated format support and graceful error handling
+      expect(spells.size).toBe(56)
+      expect(SpellDataLoader.getFailedSpells().size).toBe(0)
 
       // Verify some successfully loaded spells
       expect(spells.has('halito')).toBe(true)
@@ -116,7 +117,7 @@ describe('SpellDataLoader', () => {
       await SpellDataLoader.loadAllSpells()
       const spells = SpellDataLoader.getAllSpells()
 
-      expect(spells.size).toBe(43)  // Successfully validated spells only
+      expect(spells.size).toBe(56)  // All 56 spell definitions validated
     })
 
     it('throws error if spells not loaded', () => {
@@ -143,7 +144,7 @@ describe('SpellDataLoader', () => {
 
       await SpellDataLoader.loadAllSpells()
 
-      expect(SpellDataLoader.getLoadedCount()).toBe(43)  // Successfully validated spells
+      expect(SpellDataLoader.getLoadedCount()).toBe(56)  // All 56 spell definitions validated
     })
 
     it('returns total count including failed spells', async () => {

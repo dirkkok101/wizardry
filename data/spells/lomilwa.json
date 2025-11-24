@@ -2,7 +2,7 @@
   "id": "lomilwa",
   "name": "LOMILWA",
   "level": 6,
-  "casterType": "priest",
+  "casterType": "mage",
   "category": "utility",
   "target": "party",
   "description": "Extended light radius",

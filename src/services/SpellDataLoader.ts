@@ -1,9 +1,13 @@
 import { SpellDefinition, LoadedSpell } from '../types/SpellDefinition'
+import { SpellFileData, SpellLevelData } from '../types/SpellFileData'
 import { SpellDefinitionSchema } from '../validation/spell-schema'
 import { AssetLoadingService } from './AssetLoadingService'
 
 /**
  * Service for loading and validating spell data from JSON files
+ * Supports both formats:
+ * - Legacy: Single-level spells with all fields at top level
+ * - Consolidated: Multi-level spells with shared metadata and `levels` array
  * Uses AssetLoadingService for centralized loading infrastructure
  * Implements caching to prevent multiple loads
  * Gracefully handles individual spell failures
@@ -39,8 +43,72 @@ export class SpellDataLoader {
   }
 
   /**
+   * Check if a raw spell object is in consolidated format (has `levels` array)
+   */
+  private static isConsolidatedFormat(rawSpell: any): rawSpell is SpellFileData {
+    return Array.isArray(rawSpell.levels) && rawSpell.levels.length > 0
+  }
+
+  /**
+   * Flatten a consolidated spell into individual SpellDefinition objects
+   */
+  private static flattenConsolidatedSpell(fileData: SpellFileData): SpellDefinition[] {
+    const spells: SpellDefinition[] = []
+
+    for (const levelData of fileData.levels) {
+      // Merge shared metadata with level-specific data
+      const spell: SpellDefinition = {
+        id: levelData.id,
+        name: fileData.name,
+        level: levelData.level,
+        casterType: fileData.casterType,
+        category: fileData.category,
+        target: levelData.target,
+        castableIn: fileData.castableIn,
+        description: levelData.description,
+        // Copy all level-specific fields
+        ...this.extractLevelSpecificFields(levelData)
+      }
+
+      spells.push(spell)
+    }
+
+    return spells
+  }
+
+  /**
+   * Extract level-specific fields from SpellLevelData
+   */
+  private static extractLevelSpecificFields(levelData: SpellLevelData): Partial<SpellDefinition> {
+    const fields: Partial<SpellDefinition> = {}
+
+    // Copy optional fields if present
+    if (levelData.damage) fields.damage = levelData.damage
+    if (levelData.healing) fields.healing = levelData.healing
+    if (levelData.effect) fields.effect = levelData.effect
+    if (levelData.acModifier !== undefined) fields.acModifier = levelData.acModifier
+    if (levelData.statusEffect) fields.statusEffect = levelData.statusEffect
+    if (levelData.instantDeath !== undefined) fields.instantDeath = levelData.instantDeath
+    if (levelData.resurrection !== undefined) fields.resurrection = levelData.resurrection
+    if (levelData.resurrectionSuccessRate !== undefined) fields.resurrectionSuccessRate = levelData.resurrectionSuccessRate
+    if (levelData.dispelMagic !== undefined) fields.dispelMagic = levelData.dispelMagic
+    if (levelData.transformation !== undefined) fields.transformation = levelData.transformation
+    if (levelData.undeadOnly !== undefined) fields.undeadOnly = levelData.undeadOnly
+    if (levelData.ignoresAC !== undefined) fields.ignoresAC = levelData.ignoresAC
+    if (levelData.utility) fields.utility = levelData.utility
+    if (levelData.teleportSuccessRate !== undefined) fields.teleportSuccessRate = levelData.teleportSuccessRate
+    if (levelData.recallSuccessRate) fields.recallSuccessRate = levelData.recallSuccessRate
+    if (levelData.statusCure) fields.statusCure = levelData.statusCure
+    if (levelData.causeFear !== undefined) fields.causeFear = levelData.causeFear
+    if (levelData.failureResult) fields.failureResult = levelData.failureResult
+
+    return fields
+  }
+
+  /**
    * Internal method to perform the actual loading
    * Uses AssetLoadingService for centralized infrastructure
+   * Supports both legacy (single-level) and consolidated (multi-level) formats
    */
   private static async performLoad(): Promise<Map<string, LoadedSpell>> {
     this.loading = true
@@ -53,27 +121,42 @@ export class SpellDataLoader {
     try {
       // Use AssetLoadingService to load spell JSON files
       const assetLoader = new AssetLoadingService()
-      const rawSpells = await assetLoader.loadDataFiles<SpellDefinition>('spells')
+      const rawSpells = await assetLoader.loadDataFiles<any>('spells')
 
-      // Validate each spell with Zod and convert to LoadedSpell
-      for (const [spellId, rawSpell] of rawSpells.entries()) {
+      // Process each spell file
+      for (const [fileName, rawSpell] of rawSpells.entries()) {
         try {
-          // Validate with Zod
-          const validated = SpellDefinitionSchema.parse(rawSpell)
+          // Detect format and convert to SpellDefinition array
+          const spellDefinitions: SpellDefinition[] = this.isConsolidatedFormat(rawSpell)
+            ? this.flattenConsolidatedSpell(rawSpell)
+            : [rawSpell as SpellDefinition]
 
-          // Convert to LoadedSpell
-          const loadedSpell: LoadedSpell = {
-            ...validated,
-            loaded: true,
-            validatedAt: loadedAt
+          // Validate and load each spell definition
+          for (const spellDef of spellDefinitions) {
+            try {
+              // Validate with Zod
+              const validated = SpellDefinitionSchema.parse(spellDef)
+
+              // Convert to LoadedSpell
+              const loadedSpell: LoadedSpell = {
+                ...validated,
+                loaded: true,
+                validatedAt: loadedAt
+              }
+
+              spells.set(spellDef.id, loadedSpell)
+            } catch (error) {
+              // Track validation failure but continue loading other spells
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              this.failedSpells.set(spellDef.id, errorMessage)
+              console.warn(`Failed to validate spell ${spellDef.id}:`, errorMessage)
+            }
           }
-
-          spells.set(spellId, loadedSpell)
         } catch (error) {
-          // Track validation failure but continue loading other spells
+          // Track file parsing failure
           const errorMessage = error instanceof Error ? error.message : String(error)
-          this.failedSpells.set(spellId, errorMessage)
-          console.warn(`Failed to validate spell ${spellId}:`, errorMessage)
+          this.failedSpells.set(fileName, errorMessage)
+          console.warn(`Failed to process spell file ${fileName}:`, errorMessage)
         }
       }
 
