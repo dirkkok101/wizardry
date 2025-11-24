@@ -5,8 +5,9 @@
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Paralyze enemy group",
+  "description": "Causes fear in enemy group, reducing combat effectiveness",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "causeFear": true
 }

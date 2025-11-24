@@ -13,7 +13,7 @@ export const SpellDefinitionSchema = z.object({
   ]),
   casterType: z.enum(['mage', 'priest']),
   category: z.enum(['offensive', 'healing', 'utility', 'buff', 'debuff']),
-  target: z.enum(['single', 'group', 'all_enemies', 'all_allies', 'self', 'dead_body', 'ashes']),
+  target: z.enum(['single', 'group', 'all_enemies', 'all_allies', 'self', 'dead_body', 'ashes', 'party']),
   castableIn: z.array(z.enum(['combat', 'dungeon', 'town'])),
 
   // Optional fields
@@ -28,6 +28,8 @@ export const SpellDefinitionSchema = z.object({
   }).optional(),
 
   acModifier: z.number().optional(),
+  // Legacy field for backward compatibility - will be migrated to acModifier
+  acBonus: z.number().optional(),
   statusEffect: z.enum(['ASLEEP', 'BLIND', 'SILENCED', 'INVISIBLE', 'PARALYZED', 'POISONED']).optional(),
 
   instantDeath: z.boolean().optional(),
@@ -51,6 +53,13 @@ export const SpellDefinitionSchema = z.object({
 
   description: z.string(),
   failureResult: z.string().optional()
+}).transform((data) => {
+  // Migrate legacy acBonus to acModifier
+  if (data.acBonus !== undefined && data.acModifier === undefined) {
+    console.warn(`Spell ${data.id}: 'acBonus' is deprecated, use 'acModifier' instead`)
+    return { ...data, acModifier: data.acBonus, acBonus: undefined }
+  }
+  return data
 })
 
 export type ValidatedSpell = z.infer<typeof SpellDefinitionSchema>

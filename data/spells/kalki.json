@@ -9,5 +9,5 @@
   "castableIn": [
     "combat"
   ],
-  "acBonus": -1
+  "acModifier": -1
 }

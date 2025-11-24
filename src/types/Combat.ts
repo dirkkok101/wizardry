@@ -8,7 +8,7 @@ export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
  * Temporary status effects that only last during combat
  * These are cleared when combat ends
  */
-export type CombatStatusEffect = 'BLIND' | 'SILENCED'
+export type CombatStatusEffect = 'BLIND' | 'SILENCED' | 'FEARED'
 
 /**
  * All status effects that can have durations tracked during combat

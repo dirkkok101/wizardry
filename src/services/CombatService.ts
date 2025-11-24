@@ -311,9 +311,11 @@ export class CombatService {
     const isParrying = parryingCombatants.has(target.id)
     const acModifier = isParrying ? -2 : 0
 
-    // Check if attacker is blind (-4 attack penalty)
+    // Check if attacker has status penalties
     const isBlind = this.hasStatusEffect(state, command.actor.id, 'BLIND')
-    const attackerPenalty = isBlind ? -4 : 0
+    const isFeared = this.hasStatusEffect(state, command.actor.id, 'FEARED')
+    // Both blind and feared apply -4 attack penalty (cumulative if both active)
+    const attackerPenalty = (isBlind ? -4 : 0) + (isFeared ? -4 : 0)
 
     const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
     const actorName = this.getCombatantName(command.actor)
@@ -876,18 +878,26 @@ export class CombatService {
   }
 
   /**
-   * Apply fear to monsters (MORLIS)
-   * Causes monsters to flee/become inactive
-   * For now, we mark them as fled by setting their status
+   * Apply fear status effect to monsters (MORLIS)
+   * Feared monsters have -4 attack penalty
+   * Fear lasts for 1d4 rounds (1-4 rounds)
    */
   private static applyFear(
     state: CombatState,
     targetIds: string[]
   ): CombatState {
-    // Fear causes monsters to flee
-    // We can implement this as making them inactive/fled
-    // For now, this is a placeholder that the component can use
-    return state
+    let newState = state
+
+    for (const targetId of targetIds) {
+      // Apply FEARED status effect
+      newState = this.applyStatusEffect(newState, targetId, 'FEARED')
+
+      // Set duration: 1d4 rounds (1-4 rounds)
+      const duration = Math.floor(Math.random() * 4) + 1
+      newState = this.setStatusDuration(newState, targetId, 'FEARED', duration)
+    }
+
+    return newState
   }
 
   private static getCombatantName(combatant: Combatant): string {
@@ -970,9 +980,10 @@ export class CombatService {
         const isParrying = parryingCombatants.has(target.id)
         const acModifier = isParrying ? -2 : 0
 
-        // Check if attacker is blind (-4 attack penalty)
+        // Check if attacker has status penalties
         const isBlind = this.hasStatusEffect(currentState, command.actor.id, 'BLIND')
-        const attackerPenalty = isBlind ? -4 : 0
+        const isFeared = this.hasStatusEffect(currentState, command.actor.id, 'FEARED')
+        const attackerPenalty = (isBlind ? -4 : 0) + (isFeared ? -4 : 0)
 
         const existingDamage = damagedCharacters.get(target.id)
         if (existingDamage) {
