@@ -1,95 +1,35 @@
 import { CharacterCreationService } from '../CharacterCreationService'
 import { Race } from '../../types/Race'
 import { RaceService } from '../RaceService'
+import * as fs from 'fs'
+import * as path from 'path'
 
 describe('CharacterCreationService', () => {
   beforeAll(async () => {
-    // Mock fetch for race data files
+    // Mock fetch to load real data files from data/ directory
     global.fetch = jest.fn((url: string) => {
-      const path = url.toString()
+      const urlPath = url.toString()
 
-      if (path.includes('/assets/races/human.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'human',
-            name: 'Human',
-            baseStats: { str: 8, int: 8, pie: 5, vit: 8, agi: 8, luc: 9 },
-            savingThrowBonus: { death: -1 },
-            statTotal: 46,
-            description: 'Humans are versatile',
-            strengths: ['Balanced'],
-            weaknesses: ['None'],
-            bestClasses: ['fighter', 'mage']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/elf.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'elf',
-            name: 'Elf',
-            baseStats: { str: 7, int: 10, pie: 10, vit: 6, agi: 9, luc: 6 },
-            savingThrowBonus: { wand: -2 },
-            statTotal: 48,
-            description: 'Elves are magical',
-            strengths: ['High INT, PIE'],
-            weaknesses: ['Low VIT'],
-            bestClasses: ['mage', 'priest']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/dwarf.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'dwarf',
-            name: 'Dwarf',
-            baseStats: { str: 10, int: 7, pie: 10, vit: 10, agi: 5, luc: 6 },
-            savingThrowBonus: { breath: -4 },
-            statTotal: 48,
-            description: 'Dwarves are tough',
-            strengths: ['High STR, VIT'],
-            weaknesses: ['Low AGI'],
-            bestClasses: ['fighter', 'priest']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/gnome.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'gnome',
-            name: 'Gnome',
-            baseStats: { str: 7, int: 7, pie: 10, vit: 8, agi: 10, luc: 7 },
-            savingThrowBonus: { petrify: -2 },
-            statTotal: 49,
-            description: 'Gnomes are clever',
-            strengths: ['Balanced'],
-            weaknesses: ['Low STR'],
-            bestClasses: ['thief', 'mage']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/hobbit.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'hobbit',
-            name: 'Hobbit',
-            baseStats: { str: 5, int: 7, pie: 7, vit: 6, agi: 10, luc: 15 },
-            savingThrowBonus: { spell: -3 },
-            statTotal: 50,
-            description: 'Hobbits are lucky',
-            strengths: ['High LUC, AGI'],
-            weaknesses: ['Low STR, VIT'],
-            bestClasses: ['thief']
-          })
-        } as Response)
+      // Extract filename from URL (e.g., '/assets/races/human.json' -> 'human.json')
+      const match = urlPath.match(/\/(races|classes)\/([^/]+\.json)/)
+      if (match) {
+        const [, directory, filename] = match
+        const dataPath = path.join(__dirname, '../../../data', directory, filename)
+
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8')
+          const jsonData = JSON.parse(fileContent)
+
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response)
+        } catch (error) {
+          return Promise.reject(new Error(`File not found: ${dataPath}`))
+        }
       }
 
-      return Promise.reject(new Error(`Not found: ${path}`))
+      return Promise.reject(new Error(`Not found: ${urlPath}`))
     }) as jest.Mock
 
     // Initialize RaceService for tests

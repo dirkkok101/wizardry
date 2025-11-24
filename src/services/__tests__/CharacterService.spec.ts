@@ -8,268 +8,37 @@ import { CharacterStatus } from '../../types/CharacterStatus'
 import { BaseStats } from '../CharacterCreationService'
 import { ClassService } from '../ClassService'
 import { RaceService } from '../RaceService'
+import * as fs from 'fs'
+import * as path from 'path'
 
 describe('CharacterService', () => {
   let gameState: GameState
 
   beforeAll(async () => {
-    // Mock fetch for ClassService and RaceService data files
+    // Mock fetch to load real data files from data/ directory
     global.fetch = jest.fn((url: string) => {
-      const path = url.toString()
+      const urlPath = url.toString()
 
-      // Race data mocks
-      if (path.includes('/assets/races/human.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'human',
-            name: 'Human',
-            baseStats: { str: 8, int: 8, pie: 5, vit: 8, agi: 8, luc: 9 },
-            statTotal: 46,
-            savingThrowBonus: { death: -1 },
-            description: 'Balanced race',
-            strengths: ['Balanced stats'],
-            weaknesses: ['No exceptional stats'],
-            bestClasses: ['fighter', 'lord']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/elf.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'elf',
-            name: 'Elf',
-            baseStats: { str: 7, int: 10, pie: 10, vit: 6, agi: 9, luc: 6 },
-            statTotal: 48,
-            savingThrowBonus: { wand: -2 },
-            description: 'Intelligent and pious',
-            strengths: ['High intelligence and piety'],
-            weaknesses: ['Low strength and vitality'],
-            bestClasses: ['mage', 'priest', 'bishop']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/dwarf.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'dwarf',
-            name: 'Dwarf',
-            baseStats: { str: 10, int: 7, pie: 10, vit: 10, agi: 5, luc: 6 },
-            statTotal: 48,
-            savingThrowBonus: { breath: -4 },
-            description: 'Strong and tough',
-            strengths: ['High strength and vitality'],
-            weaknesses: ['Low agility'],
-            bestClasses: ['fighter', 'priest']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/gnome.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'gnome',
-            name: 'Gnome',
-            baseStats: { str: 7, int: 7, pie: 10, vit: 8, agi: 10, luc: 7 },
-            statTotal: 49,
-            savingThrowBonus: { petrify: -2 },
-            description: 'Clever and agile',
-            strengths: ['High piety and agility'],
-            weaknesses: ['Low strength'],
-            bestClasses: ['priest', 'thief']
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/races/hobbit.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'hobbit',
-            name: 'Hobbit',
-            baseStats: { str: 5, int: 7, pie: 7, vit: 6, agi: 10, luc: 15 },
-            statTotal: 50,
-            savingThrowBonus: { spell: -3 },
-            description: 'Lucky and agile',
-            strengths: ['High luck and agility'],
-            weaknesses: ['Low strength and vitality'],
-            bestClasses: ['thief']
-          })
-        } as Response)
+      // Extract filename from URL (e.g., '/assets/races/human.json' -> 'human.json')
+      const match = urlPath.match(/\/(races|classes|spells|monsters|items)\/([^/]+\.json)/)
+      if (match) {
+        const [, directory, filename] = match
+        const dataPath = path.join(__dirname, '../../../data', directory, filename)
+
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8')
+          const jsonData = JSON.parse(fileContent)
+
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response)
+        } catch (error) {
+          return Promise.reject(new Error(`File not found: ${dataPath}`))
+        }
       }
 
-      // Class data mocks
-      if (path.includes('/assets/classes/fighter.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'fighter',
-            name: 'Fighter',
-            description: 'Master of combat',
-            requirements: { str: 11 },
-            alignmentRestrictions: [],
-            equipmentRestrictions: { weapons: ['all'], armor: ['all'], shields: ['all'], helmets: ['all'] },
-            hitDice: '1d10',
-            spellAccess: null,
-            attacksPerLevel: { '1-4': 1, '5-9': 2, '10+': 3 },
-            xpTable: [2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 900000, 1300000],
-            specialAbilities: [],
-            canIdentifyItems: false,
-            canDispelUndead: false,
-            canCriticalHit: true
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/mage.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'mage',
-            name: 'Mage',
-            description: 'Master of arcane magic',
-            requirements: {},
-            alignmentRestrictions: [],
-            equipmentRestrictions: { weapons: ['dagger', 'staff'], armor: ['robes'], shields: [], helmets: [] },
-            hitDice: '1d4',
-            spellAccess: { mage: { minLevel: 1, maxLevel: 7 } },
-            attacksPerLevel: { '1+': 1 },
-            xpTable: [2400, 4800, 9600, 19200, 38400, 76800, 150000, 300000, 600000, 1080000, 1560000],
-            specialAbilities: ['Cast mage spells'],
-            canIdentifyItems: false,
-            canDispelUndead: false,
-            canCriticalHit: false
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/priest.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'priest',
-            name: 'Priest',
-            description: 'Divine spellcaster',
-            requirements: {},
-            alignmentRestrictions: [],
-            equipmentRestrictions: { weapons: ['mace', 'staff', 'flail'], armor: ['all'], shields: ['all'], helmets: ['all'] },
-            hitDice: '1d8',
-            spellAccess: { priest: { minLevel: 1, maxLevel: 7 } },
-            attacksPerLevel: { '1+': 1 },
-            xpTable: [2200, 4400, 8800, 17600, 35200, 70400, 137500, 275000, 550000, 990000, 1430000],
-            specialAbilities: ['Cast priest spells'],
-            canIdentifyItems: false,
-            canDispelUndead: true,
-            canCriticalHit: false
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/thief.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'thief',
-            name: 'Thief',
-            description: 'Sneaky rogue',
-            requirements: {},
-            alignmentRestrictions: [],
-            equipmentRestrictions: { weapons: ['dagger', 'short-sword'], armor: ['leather'], shields: [], helmets: [] },
-            hitDice: '1d6',
-            spellAccess: null,
-            attacksPerLevel: { '1+': 1 },
-            xpTable: [1800, 3600, 7200, 14400, 28800, 57600, 112500, 225000, 450000, 810000, 1170000],
-            specialAbilities: ['Pick locks', 'Disarm traps', 'Hide in shadows'],
-            canIdentifyItems: true,
-            canDispelUndead: false,
-            canCriticalHit: true
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/bishop.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'bishop',
-            name: 'Bishop',
-            description: 'Dual spellcaster',
-            requirements: { int: 12, pie: 12 },
-            alignmentRestrictions: ['good', 'evil'],
-            equipmentRestrictions: { weapons: ['mace', 'staff'], armor: ['robes'], shields: [], helmets: [] },
-            hitDice: '1d6',
-            spellAccess: { mage: { minLevel: 1, maxLevel: 7 }, priest: { minLevel: 1, maxLevel: 7 } },
-            attacksPerLevel: { '1+': 1 },
-            xpTable: [2600, 5200, 10400, 20800, 41600, 83200, 162500, 325000, 650000, 1170000, 1690000],
-            specialAbilities: ['Cast both mage and priest spells'],
-            canIdentifyItems: true,
-            canDispelUndead: true,
-            canCriticalHit: false
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/samurai.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'samurai',
-            name: 'Samurai',
-            description: 'Elite warrior-mage',
-            requirements: { str: 15, int: 11, pie: 10, vit: 14, agi: 10 },
-            alignmentRestrictions: ['good'],
-            equipmentRestrictions: { weapons: ['all'], armor: ['all'], shields: ['all'], helmets: ['all'] },
-            hitDice: '1d8',
-            spellAccess: { mage: { minLevel: 4, maxLevel: 6 } },
-            attacksPerLevel: { '1-4': 1, '5-9': 2, '10+': 3 },
-            xpTable: [3000, 6000, 12000, 24000, 48000, 96000, 187500, 375000, 750000, 1350000, 1950000],
-            specialAbilities: ['Cast mage spells (limited)'],
-            canIdentifyItems: false,
-            canDispelUndead: false,
-            canCriticalHit: true
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/lord.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'lord',
-            name: 'Lord',
-            description: 'Holy warrior',
-            requirements: { str: 15, int: 12, pie: 12, vit: 15, agi: 14 },
-            alignmentRestrictions: ['good'],
-            equipmentRestrictions: { weapons: ['all'], armor: ['all'], shields: ['all'], helmets: ['all'] },
-            hitDice: '1d10',
-            spellAccess: { priest: { minLevel: 3, maxLevel: 6 } },
-            attacksPerLevel: { '1-4': 1, '5-9': 2, '10+': 3 },
-            xpTable: [2800, 5600, 11200, 22400, 44800, 89600, 175000, 350000, 700000, 1260000, 1820000],
-            specialAbilities: ['Cast priest spells (limited)', 'Dispel undead'],
-            canIdentifyItems: false,
-            canDispelUndead: true,
-            canCriticalHit: true
-          })
-        } as Response)
-      }
-      if (path.includes('/assets/classes/ninja.json')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            id: 'ninja',
-            name: 'Ninja',
-            description: 'Elite assassin',
-            requirements: { str: 17, int: 17, pie: 17, vit: 17, agi: 17 },
-            alignmentRestrictions: ['evil'],
-            equipmentRestrictions: { weapons: ['all'], armor: ['leather', 'chain'], shields: [], helmets: [] },
-            hitDice: '1d6',
-            spellAccess: null,
-            attacksPerLevel: { '1-4': 2, '5-9': 3, '10+': 4 },
-            xpTable: [3200, 6400, 12800, 25600, 51200, 102400, 200000, 400000, 800000, 1440000, 2080000],
-            specialAbilities: ['Critical hit', 'Extra attacks', 'AC bonus'],
-            canIdentifyItems: true,
-            canDispelUndead: false,
-            canCriticalHit: true
-          })
-        } as Response)
-      }
-
-      return Promise.reject(new Error(`Not found: ${path}`))
+      return Promise.reject(new Error(`Not found: ${urlPath}`))
     }) as jest.Mock
 
     // Initialize ClassService and RaceService for data-driven character creation
