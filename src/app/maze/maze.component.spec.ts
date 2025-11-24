@@ -489,8 +489,8 @@ describe('MazeComponent - Encounter Detection', () => {
       encounterTable: []
     } as any);
 
-    // Mock MonsterService.loadMonster to return test monster data
-    jest.spyOn(MonsterService, 'loadMonster').mockReturnValue({
+    // Mock MonsterService.getMonsterTemplate to return test monster data
+    jest.spyOn(MonsterService, 'getMonsterTemplate').mockReturnValue({
       id: 'orc',
       name: 'Orc',
       level: 1,

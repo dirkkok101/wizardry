@@ -321,7 +321,7 @@ describe('CombatService - Phase 4: Status Effects', () => {
         const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
         const updatedMonster = result.newState.monsterGroups[0].monsters[0]
-        expect(updatedMonster.hp).toBe(40) // 50 - 10
+        expect(updatedMonster.hp).toBe(30) // 50 - 20 (double damage when asleep)
         expect(updatedMonster.status).toBe('ALIVE') // Woke up!
 
         jest.restoreAllMocks()

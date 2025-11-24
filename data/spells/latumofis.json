@@ -5,7 +5,8 @@
   "casterType": "priest",
   "category": "utility",
   "target": "group",
-  "description": "Full enemy analysis",
+  "description": "Full enemy analysis - reveals detailed monster information",
+  "utility": "identify_enemy_full",
   "castableIn": [
     "combat"
   ]

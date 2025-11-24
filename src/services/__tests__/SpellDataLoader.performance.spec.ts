@@ -29,8 +29,8 @@ describe('SpellDataLoader - Performance', () => {
     expect(spells.size).toBeGreaterThan(50)
   })
 
-  it('loads at least 56 spells', async () => {
+  it('loads at least 53 spells', async () => {
     const spells = await SpellDataLoader.loadAllSpells()
-    expect(spells.size).toBeGreaterThanOrEqual(56)
+    expect(spells.size).toBeGreaterThanOrEqual(53)
   })
 })

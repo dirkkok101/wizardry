@@ -9,7 +9,7 @@
     {
       "level": 6,
       "id": "tiltowait_6",
-      "description": "Massive damage to all groups",
+      "description": "Massive damage to all enemy groups",
       "target": "all_enemies",
       "damage": {
         "dice": "8d10",
@@ -18,8 +18,8 @@
     },
     {
       "level": 7,
-      "id": "tiltowait_7",
-      "description": "Ultimate damage spell",
+      "id": "tiltowait",
+      "description": "Ultimate damage spell - Nuclear explosion",
       "target": "all_enemies",
       "damage": {
         "dice": "10d10",

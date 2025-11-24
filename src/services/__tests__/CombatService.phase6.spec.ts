@@ -103,7 +103,8 @@ describe('CombatService - Phase 6: Healing & Support Spells', () => {
           spellPoints: {
             priest: {
               level1: { current: 3, max: 3 },
-              level2: { current: 2, max: 2 }
+              level2: { current: 2, max: 2 },
+              level3: { current: 1, max: 1 }
             }
           }
         })

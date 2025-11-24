@@ -8,21 +8,17 @@
   "levels": [
     {
       "level": 6,
-      "id": "malikto_6",
+      "id": "malikto",
       "description": "Turn enemies to stone",
       "target": "group",
-      "effect": {
-        "type": "petrification"
-      }
+      "statusEffect": "PETRIFIED"
     },
     {
       "level": 7,
       "id": "malikto_7",
       "description": "Turn all enemies to stone",
       "target": "all_enemies",
-      "effect": {
-        "type": "petrification"
-      }
+      "statusEffect": "PETRIFIED"
     }
   ]
 }

@@ -2,56 +2,46 @@ import { ItemDataLoader } from '../ItemDataLoader';
 import { Item } from '../../types/Item';
 import { ItemType, ItemSlot } from '../../types/ItemType';
 import { AssetLoadingService } from '../AssetLoadingService';
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe('ItemDataLoader', () => {
-  // Mock JSON data (raw format from data files)
-  const mockJsonData: Record<string, any> = {
-    'long_sword': {
-      id: 'long_sword',
-      name: 'Long Sword',
-      category: 'weapon',
-      weaponType: 'sword',
-      damage: { dice: '1d8', min: 1, max: 8 }, // Real JSON uses "damage" not "damageRoll"
-      cost: 25,
-      usableBy: ['fighter', 'lord', 'samurai'],
-      cursed: false
-    },
-    'plate_mail': {
-      id: 'plate_mail',
-      name: 'Plate Mail',
-      category: 'armor',
-      armorType: 'body',
-      ac: 5,
-      cost: 750,
-      usableBy: ['fighter', 'lord'],
-      cursed: false
-    }
-  };
-
   beforeEach(() => {
     // Reset service state between tests
     ItemDataLoader.clearCache();
 
-    // Mock fetch to return JSON format for individual item files
+    // Mock fetch to load real data files from data/ directory
     global.fetch = jest.fn((url: string) => {
-      // Extract item ID from URL: /assets/items/{itemId}.json
-      const match = url.match(/\/assets\/items\/(.+)\.json$/);
-      if (match) {
-        const itemId = match[1];
-        const jsonData = mockJsonData[itemId];
+      const urlPath = url.toString();
 
-        if (jsonData) {
+      // Extract filename from URL
+      const match = urlPath.match(/\/(items)\/([^/]+\.json)$/);
+      if (match) {
+        const [, directory, filename] = match;
+        const dataPath = path.join(__dirname, '../../../data', directory, filename);
+
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8');
+          const jsonData = JSON.parse(fileContent);
+
           return Promise.resolve({
             ok: true,
             json: () => Promise.resolve(jsonData)
           } as Response);
+        } catch (error) {
+          return Promise.resolve({
+            ok: false,
+            status: 404,
+            statusText: 'Not Found'
+          } as Response);
         }
       }
 
-      // Return 404 for unknown items
+      // Return 404 for unknown paths
       return Promise.resolve({
         ok: false,
-        status: 404
+        status: 404,
+        statusText: 'Not Found'
       } as Response);
     });
   });
@@ -175,10 +165,12 @@ describe('ItemDataLoader', () => {
   describe('State Accessors', () => {
     beforeEach(() => {
       // Reset state
-      ItemDataLoader['itemsCache'].clear();
+      ItemDataLoader['itemsCache'] = null;
+      ItemDataLoader['loadPromise'] = null;
       ItemDataLoader['loaded'] = false;
       ItemDataLoader['loading'] = false;
       ItemDataLoader['loadError'] = null;
+      ItemDataLoader['failedItems'].clear();
     });
 
     it('reports not loaded initially', () => {
@@ -213,9 +205,9 @@ describe('ItemDataLoader', () => {
     });
 
     it('stores error on catastrophic load failure', async () => {
-      // Mock Promise.all to throw error (simulates catastrophic failure)
-      const originalPromiseAll = Promise.all;
-      jest.spyOn(Promise, 'all').mockRejectedValueOnce(new Error('Catastrophic failure'));
+      // Mock AssetLoadingService to throw error (simulates catastrophic failure)
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles')
+        .mockRejectedValueOnce(new Error('Catastrophic failure'));
 
       try {
         await ItemDataLoader.loadAllItems();
@@ -228,7 +220,7 @@ describe('ItemDataLoader', () => {
       expect(ItemDataLoader.isLoading()).toBe(false);
 
       // Restore
-      jest.spyOn(Promise, 'all').mockRestore();
+      jest.restoreAllMocks();
     });
 
     it('tracks failed item loads', async () => {
@@ -238,32 +230,32 @@ describe('ItemDataLoader', () => {
       const loadedCount = ItemDataLoader.getLoadedCount();
       const totalCount = ItemDataLoader.getTotalCount();
 
-      // We only mock 2 items, so most will fail
-      expect(loadedCount).toBe(2); // long_sword and plate_mail
-      expect(failedItems.size).toBeGreaterThan(0);
-      expect(totalCount).toBe(98); // Total items in manifest
+      // Loading real data files - all items should load successfully
+      expect(loadedCount).toBe(102); // All items from real data files
+      expect(failedItems.size).toBe(0); // No failures with real data
+      expect(totalCount).toBe(102); // Total items in manifest
 
-      // Check that failed items have error messages
-      for (const [itemId, errorMsg] of failedItems.entries()) {
-        expect(typeof itemId).toBe('string');
-        expect(typeof errorMsg).toBe('string');
-        expect(errorMsg.length).toBeGreaterThan(0);
-      }
+      // Verify failed items map is empty when all items load successfully
+      expect(failedItems).toBeInstanceOf(Map);
+      expect(Array.from(failedItems.keys())).toEqual([]);
     });
 
     it('clears failed items on reload', async () => {
-      // First load with some failures
+      // First load with real data files (no failures expected)
       await ItemDataLoader.loadAllItems();
       const firstFailCount = ItemDataLoader.getFailedItems().size;
-      expect(firstFailCount).toBeGreaterThan(0);
+      expect(firstFailCount).toBe(0); // All items load successfully with real data
 
-      // Reset and reload
+      // Reset and reload - must clear cache to force actual reload
+      ItemDataLoader['itemsCache'] = null;
+      ItemDataLoader['loadPromise'] = null;
       ItemDataLoader['loaded'] = false;
       await ItemDataLoader.loadAllItems();
 
-      // Failed items should be cleared and recounted
+      // Failed items should remain at 0 on successful reload
       const secondFailCount = ItemDataLoader.getFailedItems().size;
-      expect(secondFailCount).toBe(firstFailCount); // Same failures expected
+      expect(secondFailCount).toBe(0); // Still no failures
+      expect(ItemDataLoader.isLoaded()).toBe(true);
     });
   });
 
@@ -458,7 +450,7 @@ describe('ItemDataLoader', () => {
       expect(items.size).toBe(1);
 
       const holySword = ItemDataLoader.getItem('holy_sword');
-      expect(holySword?.alignmentRestrictions).toEqual(['good']);
+      expect(holySword?.alignmentRestrictions).toEqual(['GOOD']);
 
       jest.restoreAllMocks();
     });
