@@ -308,8 +308,9 @@ async function loadDataFiles<T extends { id: string }>(directory: string): Promi
 
 /**
  * Get list of data files for a directory
+ * Exported for use by data loaders that need direct file access
  */
-function getDataFileList(directory: string): string[] {
+export function getDataFileList(directory: string): string[] {
   switch (directory) {
     case 'races':
       return ['human.json', 'elf.json', 'dwarf.json', 'gnome.json', 'hobbit.json']

@@ -1,7 +1,7 @@
 import { SpellDefinition, LoadedSpell } from '../types/SpellDefinition'
 import { SpellFileData, SpellLevelData } from '../types/SpellFileData'
 import { SpellDefinitionSchema } from '../validation/spell-schema'
-import { AssetLoadingService } from './AssetLoadingService'
+import { getDataFileList } from './AssetLoadingService'
 
 /**
  * Service for loading and validating spell data from JSON files
@@ -145,8 +145,9 @@ export class SpellDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Uses AssetLoadingService to get file list but loads files directly
-   * to support both legacy (single-level) and consolidated (multi-level) formats
+   * Gets file list from AssetLoadingService but loads files directly with fetch()
+   * to support both legacy (single-level) and consolidated (multi-level) formats.
+   * Cannot use loadDataFiles() since consolidated format lacks top-level `id` field.
    */
   private static async performLoad(): Promise<Map<string, LoadedSpell>> {
     this.loading = true
@@ -158,8 +159,7 @@ export class SpellDataLoader {
 
     try {
       // Get file list from AssetLoadingService
-      const assetLoader = new AssetLoadingService()
-      const fileList = this.getSpellFileList()
+      const fileList = getDataFileList('spells')
 
       // Load each spell file directly (not using loadDataFiles since consolidated format has no top-level id)
       for (const filename of fileList) {
@@ -232,22 +232,6 @@ export class SpellDataLoader {
     } finally {
       this.loading = false
     }
-  }
-
-  /**
-   * Get list of all spell JSON files to load
-   * Matches the file list in AssetLoadingService
-   */
-  private static getSpellFileList(): string[] {
-    return [
-      'badi.json', 'badial.json', 'badialma.json', 'badialma_5.json', 'badios.json', 'bamatu.json', 'bamordi.json',
-      'calfo.json', 'dalto.json', 'dalto_priest.json', 'di.json', 'dial.json', 'dilto.json', 'dios.json', 'dumapic.json',
-      'halito.json', 'haman.json', 'kadorto.json', 'kalki.json', 'kandi.json', 'katino.json', 'katu.json',
-      'lahalito.json', 'lakanito.json', 'latumapic.json', 'latumofis.json', 'loktofeit.json', 'lomilwa.json', 'lomilwa_priest.json', 'lorto.json',
-      'mabadi.json', 'madalto.json', 'mahalito.json', 'mahaman.json', 'malikto.json', 'malor.json', 'manifo.json', 'maporfic.json', 'matu.json',
-      'melito.json', 'milwa.json', 'mogref.json', 'molito.json', 'montino.json', 'morlis.json',
-      'porfic.json', 'sopic.json', 'tiltowait.json', 'zilwan.json'
-    ]
   }
 
   /**
