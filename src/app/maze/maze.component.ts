@@ -559,7 +559,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     } catch (error) {
       console.error('[MazeComponent] Failed to initiate encounter:', error);
-      this.addMessage(`Error: Failed to load monster data. Please try again.`);
+      this.addMessage(`Error: Failed to create encounter. Please try again.`);
     }
   }
 

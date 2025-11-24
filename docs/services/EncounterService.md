@@ -86,11 +86,11 @@ function getFixedEncounter(
 
 **Example**:
 ```typescript
-// Murphy's Ghosts at Level 1, (13E, 5N)
+// Murphy's Ghost at Level 1, (13E, 5N)
 const fixed = EncounterService.getFixedEncounter(1, { x: 13, y: 5 })
 // fixed = {
-//   id: "murphys_ghosts",
-//   groups: [{ monsterId: "murphys_ghost", count: 1 }],
+//   id: "murphy_ghost",
+//   groups: [{ monsterId: "murphy_ghost", count: 1 }],
 //   repeatable: true,
 //   cannotFlee: true
 // }
