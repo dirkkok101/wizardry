@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { CharacterInspectionComponent } from '../character-inspection.component';
 import { GameStateService } from '../../../services/GameStateService';
-import { ItemDataService } from '../../../services/ItemDataService';
+import { ItemDataLoader } from '../../../services/ItemDataLoader';
 import { Character } from '../../../types/Character';
 import { CharacterClass } from '../../../types/CharacterClass';
 import { Alignment } from '../../../types/Alignment';
@@ -46,8 +46,8 @@ describe('CharacterInspectionComponent', () => {
   };
 
   beforeEach(() => {
-    // Mock ItemDataService.getItem to return null
-    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(null);
+    // Mock ItemDataLoader.getItem to return null
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(null);
 
     TestBed.configureTestingModule({
       imports: [CharacterInspectionComponent],
@@ -141,7 +141,7 @@ describe('CharacterInspectionComponent', () => {
       equipped: false
     };
 
-    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(mockItem as any);
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockItem as any);
 
     gameState.updateState(state => {
       const char = state.roster.get('char-123')!;
@@ -177,7 +177,7 @@ describe('CharacterInspectionComponent', () => {
       classRestrictions: ['NINJA'] as any[]
     };
 
-    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(mockItem as any);
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockItem as any);
 
     fixture.detectChanges();
 
@@ -202,7 +202,7 @@ describe('CharacterInspectionComponent', () => {
       equipped: false
     };
 
-    jest.spyOn(ItemDataService, 'getItem').mockReturnValue(mockItem as any);
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockItem as any);
 
     gameState.updateState(state => {
       const char = state.roster.get('char-123')!;

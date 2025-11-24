@@ -185,7 +185,7 @@ export const ItemSchema = z.discriminatedUnion('category', [
  * - Uses discriminated union on 'category' field for type safety
  * - Includes all original JSON fields before transformation to runtime format
  *
- * After validation, items are transformed to the runtime Item format by ItemDataService.
+ * After validation, items are transformed to the runtime Item format by ItemDataLoader.
  */
 export type ValidatedItem = z.infer<typeof ItemSchema>
 

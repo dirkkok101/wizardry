@@ -12,7 +12,7 @@ import { AssetLoadingService } from './AssetLoadingService';
  * Gracefully handles individual item failures
  * Validates all items with Zod schemas at runtime
  */
-export class ItemDataService {
+export class ItemDataLoader {
   private static itemsCache: Map<string, Item> | null = null;
   private static loadPromise: Promise<Map<string, Item>> | null = null;
   private static loading = false;
