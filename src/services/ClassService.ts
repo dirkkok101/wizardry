@@ -1,28 +1,25 @@
 import { CharacterClass, ClassData, getClassId, getAttacksForLevel, parseAlignmentRestrictions } from '../types/CharacterClass'
 import { Alignment } from '../types/Alignment'
-import { AssetLoadingService } from './AssetLoadingService'
+import { ClassDataLoader, LoadedClassData } from './ClassDataLoader'
 
 class ClassServiceClass {
-  private classData: Map<string, ClassData> | null = null
-
   /**
    * Initialize the class service by loading all class data
+   * Uses ClassDataLoader which performs Zod validation
    */
   async initialize(): Promise<void> {
-    const service = new AssetLoadingService()
-    this.classData = await service.loadDataFiles<ClassData>('classes')
+    await ClassDataLoader.loadAllClasses()
   }
 
   /**
    * Get class data for a specific class
    */
-  getClassData(charClass: CharacterClass): ClassData {
-    if (!this.classData) {
+  getClassData(charClass: CharacterClass): LoadedClassData {
+    if (!ClassDataLoader.isLoaded()) {
       throw new Error('ClassService not initialized. Call initialize() first.')
     }
 
-    const id = getClassId(charClass)
-    const data = this.classData.get(id)
+    const data = ClassDataLoader.getClass(charClass)
 
     if (!data) {
       throw new Error(`Class data not found for: ${charClass}`)
@@ -34,12 +31,12 @@ class ClassServiceClass {
   /**
    * Get all class data
    */
-  getAllClasses(): ClassData[] {
-    if (!this.classData) {
+  getAllClasses(): LoadedClassData[] {
+    if (!ClassDataLoader.isLoaded()) {
       throw new Error('ClassService not initialized. Call initialize() first.')
     }
 
-    return Array.from(this.classData.values())
+    return ClassDataLoader.getAllClassesArray()
   }
 
   /**
@@ -88,7 +85,25 @@ class ClassServiceClass {
    * Check if service is initialized
    */
   isInitialized(): boolean {
-    return this.classData !== null
+    return ClassDataLoader.isLoaded()
+  }
+
+  /**
+   * Get loading statistics (for debugging)
+   */
+  getLoadingStats(): { loaded: number; failed: number; total: number } {
+    return {
+      loaded: ClassDataLoader.getLoadedCount(),
+      failed: ClassDataLoader.getFailedClasses().size,
+      total: ClassDataLoader.getTotalCount()
+    }
+  }
+
+  /**
+   * Get failed classes (for debugging)
+   */
+  getFailedClasses(): ReadonlyMap<string, string> {
+    return ClassDataLoader.getFailedClasses()
   }
 }
 
