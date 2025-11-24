@@ -311,9 +311,9 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
     })
   })
 
-  describe('Fear Spell', () => {
-    describe('MORLIS (Mage Level 4 - Cause Fear)', () => {
-      it('resolves MORLIS to cause fear', () => {
+  describe('Paralysis Spell', () => {
+    describe('MORLIS (Mage Level 4 - Paralyze)', () => {
+      it('resolves MORLIS to paralyze enemy group', () => {
         const caster = createTestCharacter({ level: 5 })
         const enemies = [
           createTestMonster({ id: 'm1' }),
@@ -322,9 +322,12 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
 
         const effect = SpellCastingService.resolveSpellEffect('morlis', caster, enemies)
 
-        expect(effect.causeFear).toBeDefined()
-        expect(effect.causeFear).toEqual(['m1', 'm2'])
-        expect(effect.message).toBe('MORLIS strikes fear into the enemies!')
+        expect(effect.statusEffects).toBeDefined()
+        expect(effect.statusEffects).toEqual([
+          { target: 'm1', effect: 'PARALYZED' },
+          { target: 'm2', effect: 'PARALYZED' }
+        ])
+        expect(effect.message).toContain('paralyze')
       })
     })
   })
@@ -431,12 +434,12 @@ describe('CombatService - Phase 8: Advanced Spells (Levels 4-7)', () => {
       expect(effect.statusCures!.targetIds).toEqual(['c1'])
     })
 
-    it('fear spell works on empty target array', () => {
+    it('paralysis spell works on empty target array', () => {
       const caster = createTestCharacter({ level: 5 })
 
       const effect = SpellCastingService.resolveSpellEffect('morlis', caster, [])
 
-      expect(effect.causeFear).toEqual([])
+      expect(effect.statusEffects).toEqual([])
     })
   })
 })

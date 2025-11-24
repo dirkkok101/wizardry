@@ -5,8 +5,9 @@
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Paralyze enemy group",
+  "description": "Paralyze enemy group (paralyzed enemies cannot act and take 2x damage)",
   "castableIn": [
     "combat"
-  ]
+  ],
+  "statusEffect": "PARALYZED"
 }

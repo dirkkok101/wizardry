@@ -297,6 +297,17 @@ export class CombatService {
     return { newState: state, message: 'Unknown command type' }
   }
 
+  /**
+   * Execute a physical attack command
+   * @param state Current combat state
+   * @param command The attack command to execute
+   * @param parryingCombatants Set of combatant IDs that are currently parrying
+   * @returns Updated combat state and result message
+   *
+   * @remarks
+   * Authentic Wizardry mechanic: Helpless targets (ASLEEP or PARALYZED) take 2x damage
+   * from physical attacks. This multiplier is applied after hit/damage calculations.
+   */
   private static executeAttackCommand(
     state: CombatState,
     command: CombatCommand,
@@ -326,12 +337,27 @@ export class CombatService {
       }
     }
 
+    /**
+     * Authentic Wizardry Damage Multiplier
+     * Helpless targets (ASLEEP or PARALYZED) take double damage from physical attacks.
+     * This represents the attacker taking advantage of a defenseless opponent.
+     * Source: docs/research/combat-formulas.md lines 266-270
+     */
+    const isAsleep = target.status === 'ASLEEP'
+    const isParalyzed = target.status === 'PARALYZED'
+    const damageMultiplier = (isAsleep || isParalyzed) ? 2 : 1
+    const finalDamage = Math.floor(attackResult.damage * damageMultiplier)
+
     // Apply damage to target
-    const newState = this.applyDamage(state, target, attackResult.damage)
+    const newState = this.applyDamage(state, target, finalDamage)
+
+    const damageMsg = (isAsleep || isParalyzed)
+      ? `${attackResult.message} (HELPLESS: 2x damage!)`
+      : attackResult.message
 
     return {
       newState,
-      message: `${actorName} attacks ${targetName}: ${attackResult.message}`
+      message: `${actorName} attacks ${targetName}: ${damageMsg}`
     }
   }
 
@@ -415,9 +441,12 @@ export class CombatService {
         if (effect === 'BLIND' || effect === 'SILENCED') {
           newState = this.applyStatusEffect(newState, statusEffect.target, effect)
         }
-        // Handle CombatantStatus effects (ASLEEP)
+        // Handle CombatantStatus effects (ASLEEP, PARALYZED)
         else if (effect === 'ASLEEP') {
           newState = this.applyAsleepStatus(newState, statusEffect.target)
+        }
+        else if (effect === 'PARALYZED') {
+          newState = this.applyParalyzedStatus(newState, statusEffect.target)
         }
       }
     }
@@ -466,11 +495,6 @@ export class CombatService {
         spellEffect.statusCures.targetIds,
         spellEffect.statusCures.cureType
       )
-    }
-
-    // Apply fear to targets (MORLIS)
-    if (spellEffect.causeFear && spellEffect.causeFear.length > 0) {
-      newState = this.applyFear(newState, spellEffect.causeFear)
     }
 
     return {
@@ -665,6 +689,30 @@ export class CombatService {
         // Only put alive monsters to sleep (can't sleep if dead)
         if (m.status === 'ALIVE') {
           return { ...m, status: 'ASLEEP' as const }
+        }
+        return m
+      })
+    }))
+
+    return { ...state, monsterGroups: newMonsterGroups }
+  }
+
+  /**
+   * Apply paralyzed status to a monster (MORLIS)
+   * Paralyzed monsters cannot act and take 2x damage from physical attacks
+   */
+  private static applyParalyzedStatus(
+    state: CombatState,
+    combatantId: string
+  ): CombatState {
+    // Find and update the monster
+    const newMonsterGroups = state.monsterGroups.map(group => ({
+      ...group,
+      monsters: group.monsters.map(m => {
+        if (m.id !== combatantId) return m
+        // Only paralyze alive monsters (can't paralyze if dead)
+        if (m.status === 'ALIVE') {
+          return { ...m, status: 'PARALYZED' as const }
         }
         return m
       })
@@ -873,21 +921,6 @@ export class CombatService {
       })
     }))
     return { ...state, monsterGroups: newMonsterGroups }
-  }
-
-  /**
-   * Apply fear to monsters (MORLIS)
-   * Causes monsters to flee/become inactive
-   * For now, we mark them as fled by setting their status
-   */
-  private static applyFear(
-    state: CombatState,
-    targetIds: string[]
-  ): CombatState {
-    // Fear causes monsters to flee
-    // We can implement this as making them inactive/fled
-    // For now, this is a placeholder that the component can use
-    return state
   }
 
   private static getCombatantName(combatant: Combatant): string {

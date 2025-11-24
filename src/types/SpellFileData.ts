@@ -61,9 +61,6 @@ export interface SpellLevelData {
   // Status Cure
   statusCure?: 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
 
-  // Fear Effect
-  causeFear?: boolean  // MORLIS
-
   // Failure (from JSON)
   failureResult?: string  // What happens on failure
 }

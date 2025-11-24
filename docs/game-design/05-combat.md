@@ -263,11 +263,12 @@ Encounters can have **multiple enemy groups** (1-4 groups)
 
 **Sleep** (KATINO spell):
 - Affected enemies cannot act
-- Easy to hit while sleeping
+- Takes 2x damage from physical attacks (authentic Wizardry mechanic)
 - Damage may wake them
 
 **Paralyze** (MORLIS spell, some monsters):
 - Cannot act
+- Takes 2x damage from physical attacks (authentic Wizardry mechanic)
 - Stays paralyzed until combat ends or cured
 
 **Blind** (DILTO spell):

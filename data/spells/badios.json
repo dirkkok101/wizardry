@@ -13,7 +13,5 @@
     "dice": "1d8",
     "type": "holy"
   },
-  "effectiveAgainst": [
-    "undead"
-  ]
+  "undeadOnly": true
 }

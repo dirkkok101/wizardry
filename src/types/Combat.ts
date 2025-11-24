@@ -107,7 +107,6 @@ export interface SpellEffect {
     targetIds: string[]
     cureType: 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
   }
-  causeFear?: string[]  // Target IDs that become feared (MORLIS)
   dispelEffects?: string[]  // Target IDs to dispel magic effects from (ZILWAN)
   transformations?: Array<{  // Monster transformations (HAMAN, MAHAMAN)
     monsterId: string
