@@ -5,19 +5,20 @@ import { createTestCharacter } from '../../test-helpers/test-factories'
 
 describe('Combat E2E Flow', () => {
   it('completes full combat from encounter to victory', () => {
-    // 1. Initialize combat
+    // 1. Initialize combat (level 1 dungeon)
     const party = [
       createTestCharacter({ id: 'fighter', name: 'Conan', strength: 16, hp: 20, maxHp: 20 }),
       createTestCharacter({ id: 'mage', name: 'Gandalf', intelligence: 16, hp: 8, maxHp: 8 })
     ]
-    const state = CombatService.initiateCombat('kobold', party, true)
+    const state = CombatService.initiateCombat(1, party, true)
 
     // 2. Verify initial state
     expect(state.roundNumber).toBe(1)
     expect(state.canFlee).toBe(true)
     const initialMonsters = CombatService.getAllMonsters(state)
-    expect(initialMonsters.length).toBeGreaterThanOrEqual(3)
-    expect(initialMonsters.length).toBeLessThanOrEqual(8)
+    // Level 1: 1-2 groups, up to 5 monsters per group = max 10 monsters
+    expect(initialMonsters.length).toBeGreaterThan(0)
+    expect(initialMonsters.length).toBeLessThanOrEqual(10)
 
     // 3. Simulate multiple rounds until victory
     let currentState = state
@@ -69,7 +70,7 @@ describe('Combat E2E Flow', () => {
 
   it('tracks fixed encounter correctly', () => {
     const party = [createTestCharacter({ strength: 18, hp: 30, maxHp: 30 })]
-    const state = CombatService.initiateCombat('kobold', party, false)
+    const state = CombatService.initiateCombat(1, party, false)
 
     // Verify fixed encounter (cannot flee)
     expect(state.canFlee).toBe(false)

@@ -526,26 +526,24 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const encounterOccurs = EncounterService.rollRandomEncounter();
     if (!encounterOccurs) return;
 
-    const encounterTable = EncounterService.getEncounterTable(this.currentLevel());
-    const monsterId = EncounterService.selectMonster(encounterTable);
-
-    this.initiateEncounter(monsterId, true);  // true = can flee
+    // Initiate random encounter for current dungeon level
+    this.initiateEncounter(this.currentLevel(), true);  // true = can flee
   }
 
   private handleFixedEncounter(monsterId: string): void {
-    this.initiateEncounter(monsterId, false);  // false = cannot flee
+    // For fixed encounters, still use level-based generation
+    this.initiateEncounter(this.currentLevel(), false);  // false = cannot flee
   }
 
-  private initiateEncounter(monsterId: string, canFlee: boolean): void {
-    const monsterName = this.formatMonsterName(monsterId);
-    this.addMessage(`You encounter ${monsterName}!`);
+  private initiateEncounter(dungeonLevel: number, canFlee: boolean): void {
+    this.addMessage(`You encounter monsters!`);
 
     try {
       // Get party characters for combat
       const partyChars = this.partyCharacters();
 
-      // Initialize combat state using CombatService
-      const combatState = CombatService.initiateCombat(monsterId, partyChars, canFlee);
+      // Initialize combat state with encounter generation
+      const combatState = CombatService.initiateCombat(dungeonLevel, partyChars, canFlee);
 
       // Update game state with combat
       this.gameState.updateState(state => ({

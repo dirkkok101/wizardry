@@ -4,6 +4,7 @@ import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
+import { EncounterService } from './EncounterService'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -19,23 +20,20 @@ export class CombatService {
     return Math.max(1, roll + agiMod)
   }
 
+  /**
+   * Initiate combat encounter with 1-4 monster groups
+   * @param dungeonLevel - Current dungeon level (1-10)
+   * @param party - Array of characters in the party
+   * @param canFlee - Whether the party can flee from this encounter
+   * @returns Initial combat state with monster groups
+   */
   static initiateCombat(
-    monsterId: string,
+    dungeonLevel: number,
     party: Character[],
     canFlee: boolean
   ): CombatState {
-    // Generate monster group (monsters are pre-loaded in GameInitializationService)
-    const monsters = MonsterService.generateMonsterGroup(monsterId)
-
-    // Create single monster group (Group A, front row)
-    // TODO: Support multiple groups when implementing encounter system
-    const monsterGroups: MonsterGroup[] = [
-      {
-        id: 'A',
-        monsters,
-        formation: 'front'
-      }
-    ]
+    // Generate 1-4 monster groups based on dungeon level
+    const monsterGroups = EncounterService.generateEncounter(dungeonLevel)
 
     return {
       monsterGroups,

@@ -64,6 +64,7 @@ export interface CombatCommand {
   type: CombatActionType
   initiative: number
   target?: Combatant | Combatant[]
+  targetGroupId?: 'A' | 'B' | 'C' | 'D'  // For group-based targeting (DISPEL, group spells)
   data?: any  // spell ID, item ID, etc.
 }
 
@@ -129,3 +130,36 @@ export interface CombatVictoryResult {
   gold: number
   items?: string[]
 }
+
+/**
+ * Encounter configuration based on original Wizardry 1 mechanics
+ */
+export const ENCOUNTER_CONFIG = {
+  /**
+   * Maximum number of monster groups by dungeon level
+   * Level 1: 1-2 groups
+   * Level 2: 1-3 groups
+   * Level 3+: 1-4 groups
+   */
+  getMaxGroupsForLevel(level: number): number {
+    if (level === 1) return 2
+    if (level === 2) return 3
+    return 4
+  },
+
+  /**
+   * Maximum monsters per group by dungeon level
+   * Level 1: 1-5 monsters
+   * Level 2: 1-6 monsters
+   * Level 3: 1-7 monsters
+   * Level 4+: 1-8 monsters
+   * Deep levels (5+): 1-9 monsters
+   */
+  getMaxMonstersPerGroupForLevel(level: number): number {
+    if (level === 1) return 5
+    if (level === 2) return 6
+    if (level === 3) return 7
+    if (level === 4) return 8
+    return 9
+  }
+} as const
