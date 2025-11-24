@@ -1,0 +1,15 @@
+{
+  "id": "dialko",
+  "name": "DIALKO",
+  "level": 3,
+  "casterType": "priest",
+  "category": "healing",
+  "target": "single",
+  "description": "Removes paralysis and sleep from one ally",
+  "castableIn": [
+    "combat",
+    "dungeon",
+    "town"
+  ],
+  "removeStatusEffect": "PARALYZED"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "mamorlis",
+  "name": "MAMORLIS",
+  "level": 5,
+  "casterType": "mage",
+  "category": "debuff",
+  "target": "all_enemies",
+  "description": "Paralyze all enemy groups",
+  "castableIn": [
+    "combat"
+  ],
+  "statusEffect": "PARALYZED"
+}

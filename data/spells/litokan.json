@@ -1,0 +1,13 @@
+{
+  "id": "litokan",
+  "name": "LITOKAN",
+  "level": 5,
+  "casterType": "priest",
+  "category": "utility",
+  "target": "party",
+  "description": "Teleport party back to last safe location (stairs or entrance)",
+  "castableIn": [
+    "dungeon"
+  ],
+  "utility": "recall"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "masopic",
+  "name": "MASOPIC",
+  "level": 6,
+  "casterType": "mage",
+  "category": "buff",
+  "target": "party",
+  "description": "Makes entire party invisible (-4 AC for battle duration)",
+  "castableIn": [
+    "combat"
+  ],
+  "acModifier": -4
+}

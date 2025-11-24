@@ -1,0 +1,16 @@
+{
+  "id": "makanito",
+  "name": "MAKANITO",
+  "level": 5,
+  "casterType": "mage",
+  "category": "offensive",
+  "target": "group",
+  "description": "Instant death to all enemies in group (effective on enemies ≤7 HD)",
+  "castableIn": [
+    "combat"
+  ],
+  "effect": {
+    "type": "instant_death",
+    "hdLimit": 7
+  }
+}

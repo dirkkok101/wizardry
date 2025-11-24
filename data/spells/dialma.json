@@ -1,18 +1,18 @@
 {
-  "id": "dial",
-  "name": "DIAL",
-  "level": 4,
+  "id": "dialma",
+  "name": "DIALMA",
+  "level": 5,
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Restore 2d8 HP",
+  "description": "Restore 3d8 HP",
   "castableIn": [
     "combat",
     "dungeon",
     "town"
   ],
   "healing": {
-    "dice": "2d8",
+    "dice": "3d8",
     "type": "normal"
   }
 }

@@ -1,0 +1,17 @@
+{
+  "id": "madi",
+  "name": "MADI",
+  "level": 6,
+  "casterType": "priest",
+  "category": "healing",
+  "target": "party",
+  "description": "Restore 1d8 HP to entire party",
+  "castableIn": [
+    "combat",
+    "dungeon"
+  ],
+  "healing": {
+    "dice": "1d8",
+    "type": "normal"
+  }
+}

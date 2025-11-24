@@ -5,12 +5,12 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "group",
-  "description": "Massive damage",
+  "description": "Blades of energy strike all enemies in group",
   "castableIn": [
     "combat"
   ],
   "damage": {
-    "dice": "10d10",
+    "dice": "6d6",
     "type": "physical"
   }
 }

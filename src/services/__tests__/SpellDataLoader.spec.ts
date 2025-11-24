@@ -13,10 +13,11 @@ describe('SpellDataLoader', () => {
     it('loads and validates all spell JSON files', async () => {
       const spells = await SpellDataLoader.loadAllSpells()
 
-      // All 53 authentic Wizardry spells pass validation
-      // 49 JSON files contain 53 spell definitions (consolidated format for multi-level spells)
-      // This demonstrates both consolidated format support and graceful error handling
-      expect(spells.size).toBe(53)
+      // All 51 authentic Wizardry 1 spell definitions pass validation (22 Mage + 29 Priest)
+      // 51 JSON files contain 51 spell definitions (single-level format after Phase 3 cleanup)
+      // Multi-level variants and Wizardry 5 spells have been removed
+      // Note: Some spells like LOMILWA appear in both Mage and Priest spell lists at different levels
+      expect(spells.size).toBe(51)
       expect(SpellDataLoader.getFailedSpells().size).toBe(0)
 
       // Verify some successfully loaded spells
@@ -117,7 +118,7 @@ describe('SpellDataLoader', () => {
       await SpellDataLoader.loadAllSpells()
       const spells = SpellDataLoader.getAllSpells()
 
-      expect(spells.size).toBe(53)  // All 53 spell definitions validated
+      expect(spells.size).toBe(51)  // All 51 spell definitions validated
     })
 
     it('throws error if spells not loaded', () => {
@@ -144,7 +145,7 @@ describe('SpellDataLoader', () => {
 
       await SpellDataLoader.loadAllSpells()
 
-      expect(SpellDataLoader.getLoadedCount()).toBe(53)  // All 53 spell definitions validated
+      expect(SpellDataLoader.getLoadedCount()).toBe(51)  // All 51 spell definitions validated
     })
 
     it('returns total count including failed spells', async () => {

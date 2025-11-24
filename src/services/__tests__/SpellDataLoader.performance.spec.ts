@@ -29,8 +29,8 @@ describe('SpellDataLoader - Performance', () => {
     expect(spells.size).toBeGreaterThan(50)
   })
 
-  it('loads at least 53 spells', async () => {
+  it('loads all 51 authentic Wizardry 1 spells', async () => {
     const spells = await SpellDataLoader.loadAllSpells()
-    expect(spells.size).toBeGreaterThanOrEqual(53)
+    expect(spells.size).toBe(51)  // 22 Mage + 29 Priest spell definitions
   })
 })

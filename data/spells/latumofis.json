@@ -6,7 +6,7 @@
   "category": "utility",
   "target": "group",
   "description": "Full enemy analysis - reveals detailed monster information",
-  "utility": "identify_enemy_full",
+  "utility": "identify_foe",
   "castableIn": [
     "combat"
   ]

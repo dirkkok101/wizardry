@@ -317,15 +317,16 @@ export function getDataFileList(directory: string): string[] {
     case 'classes':
       return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
     case 'spells':
-      // All 49 spell JSON files from data/spells/ (alphabetically sorted)
-      // 7 files (badi, dial, haman, mabadi, mahaman, malikto, tiltowait) use consolidated format with multiple levels
+      // All 51 spell JSON files from data/spells/ (alphabetically sorted)
+      // All spells now use single-level format (multi-level variants removed)
+      // Contains all 41 authentic Wizardry 1 spells (21 Mage + 20 Priest)
       return [
-        'badi.json', 'badial.json', 'badialma.json', 'badialma_5.json', 'badios.json', 'bamatu.json', 'bamordi.json',
-        'calfo.json', 'dalto.json', 'dalto_priest.json', 'di.json', 'dial.json', 'dilto.json', 'dios.json', 'dumapic.json',
-        'halito.json', 'haman.json', 'kadorto.json', 'kalki.json', 'kandi.json', 'katino.json', 'katu.json',
-        'lahalito.json', 'lakanito.json', 'latumapic.json', 'latumofis.json', 'loktofeit.json', 'lomilwa.json', 'lomilwa_priest.json', 'lorto.json',
-        'mabadi.json', 'madalto.json', 'mahalito.json', 'mahaman.json', 'malikto.json', 'malor.json', 'manifo.json', 'maporfic.json', 'matu.json',
-        'melito.json', 'milwa.json', 'mogref.json', 'molito.json', 'montino.json', 'morlis.json',
+        'badi.json', 'badial.json', 'badialma.json', 'badios.json', 'bamatu.json',
+        'calfo.json', 'dalto.json', 'di.json', 'dial.json', 'dialko.json', 'dialma.json', 'dilto.json', 'dios.json', 'dumapic.json',
+        'halito.json', 'haman.json', 'kadorto.json', 'kalki.json', 'kandi.json', 'katino.json',
+        'lahalito.json', 'lakanito.json', 'latumapic.json', 'latumofis.json', 'litokan.json', 'loktofeit.json', 'lomilwa.json', 'lomilwa_priest.json', 'lorto.json',
+        'mabadi.json', 'madalto.json', 'madi.json', 'mahalito.json', 'mahaman.json', 'makanito.json', 'malikto.json', 'malor.json', 'mamorlis.json', 'manifo.json', 'maporfic.json', 'masopic.json', 'matu.json',
+        'milwa.json', 'mogref.json', 'molito.json', 'montino.json', 'morlis.json',
         'porfic.json', 'sopic.json', 'tiltowait.json', 'zilwan.json'
       ]
     case 'items':

@@ -1,24 +1,17 @@
 {
+  "id": "mahaman",
   "name": "MAHAMAN",
+  "level": 7,
   "casterType": "mage",
   "category": "utility",
+  "target": "all_enemies",
+  "description": "Transform all monster groups (costs 1 experience level, spell must be relearned)",
   "castableIn": [
     "combat"
   ],
-  "levels": [
-    {
-      "level": 6,
-      "id": "mahaman",
-      "description": "Transforms all monster groups",
-      "target": "all_enemies",
-      "transformation": true
-    },
-    {
-      "level": 7,
-      "id": "mahaman_7",
-      "description": "Transform all monster groups",
-      "target": "all_enemies",
-      "transformation": true
-    }
-  ]
+  "transformation": true,
+  "cost": {
+    "experienceLevels": 1,
+    "mustRelearn": true
+  }
 }

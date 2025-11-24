@@ -1,30 +1,16 @@
 {
+  "id": "tiltowait",
   "name": "TILTOWAIT",
+  "level": 7,
   "casterType": "mage",
   "category": "offensive",
+  "target": "all_enemies",
+  "description": "Ultimate damage spell - Nuclear explosion",
   "castableIn": [
     "combat"
   ],
-  "levels": [
-    {
-      "level": 6,
-      "id": "tiltowait_6",
-      "description": "Massive damage to all enemy groups",
-      "target": "all_enemies",
-      "damage": {
-        "dice": "8d10",
-        "type": "magic"
-      }
-    },
-    {
-      "level": 7,
-      "id": "tiltowait",
-      "description": "Ultimate damage spell - Nuclear explosion",
-      "target": "all_enemies",
-      "damage": {
-        "dice": "10d10",
-        "type": "magic"
-      }
-    }
-  ]
+  "damage": {
+    "dice": "10d10",
+    "type": "magic"
+  }
 }

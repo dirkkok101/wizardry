@@ -1,24 +1,16 @@
 {
+  "id": "malikto",
   "name": "MALIKTO",
+  "level": 7,
   "casterType": "priest",
   "category": "offensive",
+  "target": "all_enemies",
+  "description": "Turn all enemies to stone (permanent removal from combat)",
   "castableIn": [
     "combat"
   ],
-  "levels": [
-    {
-      "level": 6,
-      "id": "malikto",
-      "description": "Turn enemies to stone",
-      "target": "group",
-      "statusEffect": "PETRIFIED"
-    },
-    {
-      "level": 7,
-      "id": "malikto_7",
-      "description": "Turn all enemies to stone",
-      "target": "all_enemies",
-      "statusEffect": "PETRIFIED"
-    }
-  ]
+  "damage": {
+    "dice": "12d6",
+    "type": "magic"
+  }
 }

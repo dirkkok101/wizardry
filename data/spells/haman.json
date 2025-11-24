@@ -1,24 +1,17 @@
 {
+  "id": "haman",
   "name": "HAMAN",
+  "level": 6,
   "casterType": "mage",
   "category": "utility",
+  "target": "group",
+  "description": "Transforms monsters (costs 1 experience level, spell must be relearned)",
   "castableIn": [
     "combat"
   ],
-  "levels": [
-    {
-      "level": 6,
-      "id": "haman",
-      "description": "Transforms monsters",
-      "target": "group",
-      "transformation": true
-    },
-    {
-      "level": 7,
-      "id": "haman_7",
-      "description": "Greater transform monsters",
-      "target": "group",
-      "transformation": true
-    }
-  ]
+  "transformation": true,
+  "cost": {
+    "experienceLevels": 1,
+    "mustRelearn": true
+  }
 }

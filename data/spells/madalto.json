@@ -10,7 +10,7 @@
     "combat"
   ],
   "damage": {
-    "dice": "variable",
+    "dice": "8d8",
     "type": "cold"
   }
 }
