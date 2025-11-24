@@ -332,7 +332,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).toContain('no group specified')
+      expect(result.message).toContain('no group targeted')
     })
   })
 

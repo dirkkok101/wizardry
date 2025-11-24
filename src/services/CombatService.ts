@@ -53,12 +53,16 @@ export class CombatService {
     target?: Combatant | Combatant[],
     data?: any
   ): CombatCommand {
+    // Extract targetGroupId from data if present (for DISPEL and group spells)
+    const targetGroupId = data?.groupId
+
     return {
       id: uuidv4(),
       actor,
       type: actionType,
       initiative: this.calculateInitiative(actor),
       target,
+      targetGroupId,
       data
     }
   }
