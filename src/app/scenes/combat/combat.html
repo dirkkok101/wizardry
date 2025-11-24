@@ -14,38 +14,23 @@
         <h3>MONSTER GROUPS</h3>
         @for (group of monsterGroups(); track group.id) {
           <div class="monster-group" [attr.data-group]="group.id">
-            <!-- Group Header -->
-            <div class="group-header"
-                 [class.targetable]="isGroupTargetMode() && hasAliveMonsters(group)"
+            <!-- Simplified Group Display (Original Wizardry 1981 Format) -->
+            <div class="group-summary"
+                 [class.targetable-group]="isGroupTargetMode() && hasAliveMonsters(group)"
+                 [class.targetable-monster]="isMonsterTargetMode() && hasAliveMonsters(group)"
                  [class.selected]="selectedGroupId() === group.id"
-                 (click)="isGroupTargetMode() && hasAliveMonsters(group) ? selectGroup(group.id) : null">
-              <span class="group-label">GROUP {{ group.id }}</span>
-              <span class="group-formation">{{ group.formation | uppercase }} ROW</span>
-              <span class="group-count">{{ getAliveCount(group) }}/{{ group.monsters.length }}</span>
-            </div>
-
-            <!-- Monster Cards in Group -->
-            <div class="group-monsters">
-              @for (monster of group.monsters; track monster.id) {
-                <div class="monster-card"
-                     [class.dead]="monster.status === 'DEAD'"
-                     [class.targetable]="isMonsterTargetMode() && monster.hp > 0"
-                     [class.selected]="selectedGroupId() === group.id"
-                     (click)="isMonsterTargetMode() && monster.hp > 0 ? selectMonster(monster) : null">
-                  <div class="monster-name">{{ monster.name }}</div>
-                  <div class="monster-stats">
-                    <span class="hp">HP: {{ monster.hp }}/{{ monster.maxHp }}</span>
-                    <span class="ac">AC: {{ monster.ac }}</span>
-                    <span class="status" [class]="'status-' + monster.status.toLowerCase()">
-                      {{ monster.status }}
-                    </span>
-                  </div>
-                  @if (monster.hp > 0) {
-                    <div class="hp-bar">
-                      <div class="hp-fill" [style.width.%]="(monster.hp / monster.maxHp) * 100"></div>
-                    </div>
-                  }
-                </div>
+                 [class.defeated]="!hasAliveMonsters(group)"
+                 (click)="handleGroupClick(group)">
+              <div class="group-info">
+                <span class="group-label">GROUP {{ group.id }}</span>
+                <span class="group-formation">{{ group.formation | uppercase }} ROW</span>
+                <span class="group-count">{{ getAliveCount(group) }}/{{ group.monsters.length }}</span>
+              </div>
+              <div class="group-monsters-text">
+                {{ getGroupDisplayName(group) }}
+              </div>
+              @if (isMonsterTargetMode() && hasAliveMonsters(group)) {
+                <div class="target-hint">(click to target)</div>
               }
             </div>
           </div>

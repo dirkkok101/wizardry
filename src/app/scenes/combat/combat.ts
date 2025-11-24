@@ -12,6 +12,7 @@ import { Character } from '../../../types/Character'
 import { MenuItem } from '../../../components/menu/menu.component'
 import { SceneTitleComponent } from '../../../components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '../../../components/scene-footer/scene-footer.component'
+import { getGroupDisplayText } from '../../../utils/MonsterNameUtils'
 
 interface SelectedAction {
   characterId: string
@@ -673,6 +674,46 @@ export class CombatComponent implements OnInit {
    */
   getAliveCount(group: MonsterGroup): number {
     return group.monsters.filter(m => m.hp > 0).length
+  }
+
+  /**
+   * Get formatted display text for a monster group
+   * Format: "{count} {PLURAL_NAME}" (e.g., "3 ORCS", "5 ZOMBIES")
+   * Matches original Wizardry (1981) display format
+   */
+  getGroupDisplayName(group: MonsterGroup): string {
+    const aliveCount = this.getAliveCount(group)
+    if (aliveCount === 0 || group.monsters.length === 0) {
+      return 'DEFEATED'
+    }
+
+    // Get monster name from first monster in group (all have same name)
+    const monsterName = group.monsters[0]?.name || 'UNKNOWN'
+    return getGroupDisplayText(aliveCount, monsterName)
+  }
+
+  /**
+   * Handle click on monster group
+   * Routes to appropriate handler based on targeting mode
+   */
+  handleGroupClick(group: MonsterGroup): void {
+    if (!this.hasAliveMonsters(group)) return
+
+    // Group targeting mode (DISPEL, group spells)
+    if (this.isGroupTargetMode()) {
+      this.selectGroup(group.id)
+      return
+    }
+
+    // Monster targeting mode (ATTACK, single-target spells)
+    if (this.isMonsterTargetMode()) {
+      // Select first alive monster in group
+      const firstAlive = group.monsters.find(m => m.hp > 0)
+      if (firstAlive) {
+        this.selectMonster(firstAlive)
+      }
+      return
+    }
   }
 
   // Keyboard handling now delegated to MenuComponent via SceneFooterComponent

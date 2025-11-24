@@ -44,7 +44,7 @@
   }
 }
 
-// Monster group containers
+// Monster group containers (simplified for Wizardry 1981 format)
 .monster-group {
   margin-bottom: 15px;
   border-radius: 4px;
@@ -68,23 +68,20 @@
   }
 }
 
-.group-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
+.group-summary {
+  padding: 12px;
   background: rgba(0, 0, 0, 0.3);
   font-family: 'VT323', monospace;
-  font-size: 1.1rem;
-  font-weight: bold;
   cursor: default;
   transition: all 0.2s;
 
-  &.targetable {
+  &.targetable-group,
+  &.targetable-monster {
     cursor: pointer;
 
     &:hover {
       background: rgba(255, 255, 255, 0.1);
+      transform: translateX(2px);
     }
   }
 
@@ -93,29 +90,51 @@
     border: 2px solid yellow;
     box-shadow: 0 0 8px rgba(255, 255, 0, 0.5);
   }
+
+  &.defeated {
+    opacity: 0.5;
+  }
+}
+
+.group-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
 }
 
 .group-label {
   color: #ffeb3b;
   letter-spacing: 1px;
+  font-weight: bold;
 }
 
 .group-formation {
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .group-count {
   color: #4caf50;
   font-weight: bold;
+  font-size: 0.9rem;
 }
 
-.group-monsters {
-  display: flex;
-  flex-direction: column;
-  padding: 8px;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.15);
+.group-monsters-text {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--color-text);
+  letter-spacing: 1px;
+  padding: 8px 0;
+}
+
+.target-hint {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-style: italic;
+  margin-top: 4px;
+  opacity: 0.8;
 }
 
 .monster-card,
