@@ -5,7 +5,8 @@
   "casterType": "priest",
   "category": "utility",
   "target": "group",
-  "description": "Shows enemy stats and abilities",
+  "description": "Identifies enemy type and abilities",
+  "utility": "identify_foe",
   "castableIn": [
     "combat"
   ]
