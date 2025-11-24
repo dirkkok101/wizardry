@@ -316,14 +316,14 @@ function getDataFileList(directory: string): string[] {
     case 'classes':
       return ['fighter.json', 'mage.json', 'priest.json', 'thief.json', 'bishop.json', 'samurai.json', 'lord.json', 'ninja.json']
     case 'spells':
-      // Individual spell JSON files (56 total) - matches actual files in data/spells/
+      // Individual spell JSON files - matches actual files in data/spells/
+      // Note: Some spells use consolidated format with multiple levels in one file
       return [
         // Mage spells
         'halito.json', 'mogref.json', 'katino.json', 'dumapic.json', 'dilto.json', 'sopic.json',
         'mahalito.json', 'molito.json', 'morlis.json', 'dalto.json', 'lahalito.json',
         'madalto.json', 'lakanito.json', 'zilwan.json', 'haman.json', 'malor.json',
         'mahaman.json', 'tiltowait.json', 'melito.json',
-        'haman_7.json', 'mahaman_7.json', 'tiltowait_7.json',
         // Priest spells
         'dios.json', 'badios.json', 'milwa.json', 'porfic.json', 'calfo.json', 'manifo.json',
         'montino.json', 'dial.json', 'latumapic.json', 'matu.json', 'bamatu.json',
@@ -331,7 +331,7 @@ function getDataFileList(directory: string): string[] {
         'di.json', 'badi.json', 'lorto.json', 'mabadi.json', 'loktofeit.json', 'malikto.json',
         'kadorto.json', 'bamordi.json',
         'katu.json', 'maporfic.json', 'badial.json', 'badialma.json', 'kalki.json',
-        'badi_6.json', 'dial_5.json', 'badialma_5.json', 'mabadi_7.json', 'malikto_7.json', 'lomilwa_priest.json'
+        'badialma_5.json', 'lomilwa_priest.json'
       ]
     case 'items':
       return ['weapons.json', 'armor.json', 'consumables.json']

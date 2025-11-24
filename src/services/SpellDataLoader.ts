@@ -85,7 +85,7 @@ export class SpellDataLoader {
     // Copy optional fields if present
     if (levelData.damage) fields.damage = levelData.damage
     if (levelData.healing) fields.healing = levelData.healing
-    if (levelData.effect) fields.effect = levelData.effect
+    // Note: effect field from SpellLevelData is handled by specific fields below
     if (levelData.acModifier !== undefined) fields.acModifier = levelData.acModifier
     if (levelData.statusEffect) fields.statusEffect = levelData.statusEffect
     if (levelData.instantDeath !== undefined) fields.instantDeath = levelData.instantDeath
