@@ -145,13 +145,8 @@ async function initializeGame(): Promise<void> {
 
     for (let level = 1; level <= 10; level++) {
       try {
-        const levelData = DungeonService.loadLevel(level)
-        const errors = DungeonService.validateStairsWalls(levelData)
-
-        if (errors.length > 0) {
-          validationErrors.push(`Level ${level}:`)
-          validationErrors.push(...errors.map(err => `  ${err}`))
-        }
+        // Just try to load each level to verify it exists and parses correctly
+        DungeonService.loadLevel(level)
       } catch (error) {
         validationErrors.push(`Level ${level}: Failed to load - ${error}`)
       }

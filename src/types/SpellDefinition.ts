@@ -13,7 +13,7 @@ export interface SpellDefinition {
   category: 'offensive' | 'healing' | 'utility' | 'buff' | 'debuff'  // Was "type" in JSON
 
   // Targeting
-  target: 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self' | 'dead_body' | 'ashes'
+  target: 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self' | 'dead_body' | 'ashes' | 'party'
 
   // Context
   castableIn: Array<'combat' | 'dungeon' | 'town'>
