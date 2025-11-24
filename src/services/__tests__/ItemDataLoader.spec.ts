@@ -165,10 +165,12 @@ describe('ItemDataLoader', () => {
   describe('State Accessors', () => {
     beforeEach(() => {
       // Reset state
-      ItemDataLoader['itemsCache'].clear();
+      ItemDataLoader['itemsCache'] = null;
+      ItemDataLoader['loadPromise'] = null;
       ItemDataLoader['loaded'] = false;
       ItemDataLoader['loading'] = false;
       ItemDataLoader['loadError'] = null;
+      ItemDataLoader['failedItems'].clear();
     });
 
     it('reports not loaded initially', () => {
@@ -203,9 +205,9 @@ describe('ItemDataLoader', () => {
     });
 
     it('stores error on catastrophic load failure', async () => {
-      // Mock Promise.all to throw error (simulates catastrophic failure)
-      const originalPromiseAll = Promise.all;
-      jest.spyOn(Promise, 'all').mockRejectedValueOnce(new Error('Catastrophic failure'));
+      // Mock AssetLoadingService to throw error (simulates catastrophic failure)
+      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles')
+        .mockRejectedValueOnce(new Error('Catastrophic failure'));
 
       try {
         await ItemDataLoader.loadAllItems();
@@ -218,7 +220,7 @@ describe('ItemDataLoader', () => {
       expect(ItemDataLoader.isLoading()).toBe(false);
 
       // Restore
-      jest.spyOn(Promise, 'all').mockRestore();
+      jest.restoreAllMocks();
     });
 
     it('tracks failed item loads', async () => {
@@ -228,32 +230,32 @@ describe('ItemDataLoader', () => {
       const loadedCount = ItemDataLoader.getLoadedCount();
       const totalCount = ItemDataLoader.getTotalCount();
 
-      // We only mock 2 items, so most will fail
-      expect(loadedCount).toBe(2); // long_sword and plate_mail
-      expect(failedItems.size).toBeGreaterThan(0);
-      expect(totalCount).toBe(98); // Total items in manifest
+      // Loading real data files - all items should load successfully
+      expect(loadedCount).toBe(102); // All items from real data files
+      expect(failedItems.size).toBe(0); // No failures with real data
+      expect(totalCount).toBe(102); // Total items in manifest
 
-      // Check that failed items have error messages
-      for (const [itemId, errorMsg] of failedItems.entries()) {
-        expect(typeof itemId).toBe('string');
-        expect(typeof errorMsg).toBe('string');
-        expect(errorMsg.length).toBeGreaterThan(0);
-      }
+      // Verify failed items map is empty when all items load successfully
+      expect(failedItems).toBeInstanceOf(Map);
+      expect(Array.from(failedItems.keys())).toEqual([]);
     });
 
     it('clears failed items on reload', async () => {
-      // First load with some failures
+      // First load with real data files (no failures expected)
       await ItemDataLoader.loadAllItems();
       const firstFailCount = ItemDataLoader.getFailedItems().size;
-      expect(firstFailCount).toBeGreaterThan(0);
+      expect(firstFailCount).toBe(0); // All items load successfully with real data
 
-      // Reset and reload
+      // Reset and reload - must clear cache to force actual reload
+      ItemDataLoader['itemsCache'] = null;
+      ItemDataLoader['loadPromise'] = null;
       ItemDataLoader['loaded'] = false;
       await ItemDataLoader.loadAllItems();
 
-      // Failed items should be cleared and recounted
+      // Failed items should remain at 0 on successful reload
       const secondFailCount = ItemDataLoader.getFailedItems().size;
-      expect(secondFailCount).toBe(firstFailCount); // Same failures expected
+      expect(secondFailCount).toBe(0); // Still no failures
+      expect(ItemDataLoader.isLoaded()).toBe(true);
     });
   });
 

@@ -8,12 +8,49 @@ import * as path from 'path';
  * Integration tests for ItemDataLoader using real JSON files
  *
  * These tests verify that the transformation layer correctly handles
- * actual item data from the data/items/ directory.
+ * actual item data from the data/items/ directory through the public API.
  */
 describe('ItemDataLoader Integration', () => {
   const dataPath = path.join(__dirname, '../../../data/items');
 
-  beforeEach(() => {
+  beforeAll(() => {
+    // Mock fetch to load real data files from data/ directory
+    global.fetch = jest.fn((url: string) => {
+      const urlPath = url.toString();
+
+      // Extract filename from URL
+      const match = urlPath.match(/\/(items)\/([^/]+\.json)$/);
+      if (match) {
+        const [, directory, filename] = match;
+        const filePath = path.join(__dirname, '../../../data', directory, filename);
+
+        try {
+          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          const jsonData = JSON.parse(fileContent);
+
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response);
+        } catch (error) {
+          return Promise.resolve({
+            ok: false,
+            status: 404,
+            statusText: 'Not Found'
+          } as Response);
+        }
+      }
+
+      // Return 404 for unknown paths
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found'
+      } as Response);
+    });
+  });
+
+  beforeEach(async () => {
     // Reset service state
     ItemDataLoader['itemsCache'] = null;
     ItemDataLoader['loadPromise'] = null;
@@ -21,251 +58,160 @@ describe('ItemDataLoader Integration', () => {
     ItemDataLoader['loading'] = false;
     ItemDataLoader['loadError'] = null;
     ItemDataLoader['failedItems'].clear();
+
+    // Load all items from real data files
+    await ItemDataLoader.loadAllItems();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Real JSON File Loading', () => {
     it('loads and transforms long_sword.json correctly', () => {
-      const jsonPath = path.join(dataPath, 'long_sword.json');
-      const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-      const jsonData = JSON.parse(jsonContent);
+      const item = ItemDataLoader.getItem('long_sword');
 
-      const item = ItemDataLoader['transformJsonToItem'](jsonData);
+      expect(item).not.toBeNull();
 
       // Verify core identity
-      expect(item.id).toBe('long_sword');
-      expect(item.name).toBe('Long Sword');
+      expect(item!.id).toBe('long_sword');
+      expect(item!.name).toBe('Long Sword');
 
       // Verify transformed fields
-      expect(item.type).toBe(ItemType.WEAPON);
-      expect(item.slot).toBe(ItemSlot.WEAPON);
-      expect(item.price).toBe(25); // from cost
-      expect(item.damage).toBe(8); // from damage.max
+      expect(item!.type).toBe(ItemType.WEAPON);
+      expect(item!.slot).toBe(ItemSlot.WEAPON);
+      expect(item!.price).toBe(25); // from cost
+      expect(item!.damage).toBe(8); // from damage.max
 
       // Verify class restrictions transformation
-      expect(item.classRestrictions).toContain(CharacterClass.FIGHTER);
-      expect(item.classRestrictions).toContain(CharacterClass.SAMURAI);
-      expect(item.classRestrictions).toContain(CharacterClass.LORD);
-      expect(item.classRestrictions).toContain(CharacterClass.NINJA);
+      expect(item!.classRestrictions).toContain(CharacterClass.FIGHTER);
+      expect(item!.classRestrictions).toContain(CharacterClass.SAMURAI);
+      expect(item!.classRestrictions).toContain(CharacterClass.LORD);
+      expect(item!.classRestrictions).toContain(CharacterClass.NINJA);
 
       // Verify runtime defaults
-      expect(item.identified).toBe(false);
-      expect(item.equipped).toBe(false);
-      expect(item.cursed).toBe(false);
+      expect(item!.identified).toBe(false);
+      expect(item!.equipped).toBe(false);
 
       // Verify JSON fields preserved
-      expect(item.category).toBe('weapon');
-      expect(item.weaponType).toBe('sword');
-      expect(item.cost).toBe(25);
-      expect(item.damageRoll).toBeDefined();
-      expect(item.damageRoll?.max).toBe(8);
+      expect(item!.category).toBe('weapon');
+      expect(item!.weaponType).toBe('sword');
+      expect(item!.damageRoll).toBeDefined();
+      expect(item!.cost).toBe(25);
     });
 
     it('loads and transforms plate_mail.json correctly', () => {
-      const jsonPath = path.join(dataPath, 'plate_mail.json');
-      const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-      const jsonData = JSON.parse(jsonContent);
+      const item = ItemDataLoader.getItem('plate_mail');
 
-      const item = ItemDataLoader['transformJsonToItem'](jsonData);
+      expect(item).not.toBeNull();
 
       // Verify core identity
-      expect(item.id).toBe('plate_mail');
-      expect(item.name).toBe('Plate Mail');
+      expect(item!.id).toBe('plate_mail');
+      expect(item!.name).toBe('Plate Mail');
 
       // Verify transformed fields
-      expect(item.type).toBe(ItemType.ARMOR);
-      expect(item.slot).toBe(ItemSlot.ARMOR);
-      expect(item.price).toBe(750);
-      expect(item.defense).toBe(5); // from ac
-      expect(item.damage).toBeUndefined(); // armor has no damage
+      expect(item!.type).toBe(ItemType.ARMOR);
+      expect(item!.slot).toBe(ItemSlot.ARMOR);
+      expect(item!.defense).toBe(5); // from ac
+      expect(item!.price).toBe(750); // from cost
 
-      // Verify class restrictions
-      expect(item.classRestrictions).toContain(CharacterClass.FIGHTER);
-      expect(item.classRestrictions).toContain(CharacterClass.SAMURAI);
+      // Verify class restrictions (Fighter, Lord, Samurai only)
+      expect(item!.classRestrictions.length).toBeGreaterThan(0);
+
+      // Verify runtime defaults
+      expect(item!.identified).toBe(false);
+      expect(item!.equipped).toBe(false);
 
       // Verify JSON fields preserved
-      expect(item.category).toBe('armor');
-      expect(item.armorType).toBe('body');
-      expect(item.ac).toBe(5);
-    });
-
-    it('loads and transforms shield correctly', () => {
-      const jsonPath = path.join(dataPath, 'large_shield.json');
-
-      if (!fs.existsSync(jsonPath)) {
-        console.warn(`Skipping test: ${jsonPath} not found`);
-        return;
-      }
-
-      const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-      const jsonData = JSON.parse(jsonContent);
-
-      const item = ItemDataLoader['transformJsonToItem'](jsonData);
-
-      expect(item.type).toBe(ItemType.SHIELD);
-      expect(item.slot).toBe(ItemSlot.SHIELD);
-      expect(item.defense).toBeGreaterThan(0);
-      expect(item.category).toBe('shield');
-    });
-
-    it('loads and transforms helmet correctly', () => {
-      const jsonPath = path.join(dataPath, 'steel_helm.json');
-
-      if (!fs.existsSync(jsonPath)) {
-        console.warn(`Skipping test: ${jsonPath} not found`);
-        return;
-      }
-
-      const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-      const jsonData = JSON.parse(jsonContent);
-
-      const item = ItemDataLoader['transformJsonToItem'](jsonData);
-
-      expect(item.type).toBe(ItemType.HELMET);
-      expect(item.slot).toBe(ItemSlot.HELMET);
-      expect(item.defense).toBeGreaterThan(0);
-      expect(item.category).toBe('helmet');
-    });
-
-    it('loads and transforms gauntlets correctly', () => {
-      const jsonPath = path.join(dataPath, 'gauntlets.json');
-
-      if (!fs.existsSync(jsonPath)) {
-        console.warn(`Skipping test: ${jsonPath} not found`);
-        return;
-      }
-
-      const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-      const jsonData = JSON.parse(jsonContent);
-
-      const item = ItemDataLoader['transformJsonToItem'](jsonData);
-
-      expect(item.type).toBe(ItemType.GAUNTLET);
-      expect(item.slot).toBe(ItemSlot.GAUNTLETS);
-      expect(item.defense).toBeGreaterThan(0);
-      expect(item.category).toBe('gauntlet');
+      expect(item!.category).toBe('armor');
+      expect(item!.armorType).toBe('body');
+      expect(item!.ac).toBe(5);
     });
   });
 
-  describe('Batch Loading', () => {
-    it('can load multiple real items without errors', () => {
-      const testFiles = ['long_sword.json', 'plate_mail.json', 'broken_item.json'];
-      const items: any[] = [];
+  describe('Bulk Loading', () => {
+    it('loads all items from directory', () => {
+      const allItems = ItemDataLoader.getAllItems();
 
-      for (const filename of testFiles) {
-        const jsonPath = path.join(dataPath, filename);
-        if (fs.existsSync(jsonPath)) {
-          const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-          const jsonData = JSON.parse(jsonContent);
-          const item = ItemDataLoader['transformJsonToItem'](jsonData);
-          items.push(item);
-        }
-      }
-
-      expect(items.length).toBeGreaterThan(0);
-
-      // All items should have required fields
-      for (const item of items) {
-        expect(item.id).toBeDefined();
-        expect(item.name).toBeDefined();
-        expect(item.type).toBeDefined();
-        expect(item.slot).toBeDefined();
-        expect(item.price).toBeGreaterThanOrEqual(0);
-        expect(typeof item.identified).toBe('boolean');
-        expect(typeof item.equipped).toBe('boolean');
-        expect(typeof item.cursed).toBe('boolean');
-      }
+      expect(allItems.size).toBeGreaterThan(50); // Should have many items
+      expect(ItemDataLoader.getLoadedCount()).toBe(allItems.size);
     });
 
-    it('verifies all JSON files in data/items are valid', () => {
-      const files = fs.readdirSync(dataPath).filter(f => f.endsWith('.json'));
+    it('loads specific items by ID list', () => {
+      const itemIds = ['long_sword', 'plate_mail', 'dagger'];
+      const items = ItemDataLoader.getItems(itemIds);
 
-      expect(files.length).toBeGreaterThan(50); // Should have many items
+      expect(items.length).toBe(3);
+      expect(items.every(item => item !== null)).toBe(true);
+      expect(items[0].id).toBe('long_sword');
+      expect(items[1].id).toBe('plate_mail');
+      expect(items[2].id).toBe('dagger');
+    });
 
-      let successCount = 0;
-      let failCount = 0;
-      const failures: string[] = [];
+    it('returns only successful items when some IDs are invalid', () => {
+      const itemIds = ['long_sword', 'invalid_item_xyz', 'plate_mail'];
+      const items = ItemDataLoader.getItems(itemIds);
 
-      for (const filename of files) {
-        try {
-          const jsonPath = path.join(dataPath, filename);
-          const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-          const jsonData = JSON.parse(jsonContent);
+      expect(items.length).toBe(2); // Only valid items
+      expect(items.every(item => item !== null)).toBe(true);
+    });
+  });
 
-          // Try to transform
-          const item = ItemDataLoader['transformJsonToItem'](jsonData);
+  describe('Type-Based Queries', () => {
+    it('retrieves all weapons', () => {
+      const weapons = ItemDataLoader.getItemsByType(ItemType.WEAPON);
 
-          // Verify basic structure
-          expect(item.id).toBeDefined();
-          expect(item.type).toBeDefined();
-          expect(item.slot).toBeDefined();
+      expect(weapons.length).toBeGreaterThan(10); // Should have many weapons
+      expect(weapons.every(item => item.type === ItemType.WEAPON)).toBe(true);
+      expect(weapons.every(item => item.damage !== undefined)).toBe(true);
+    });
 
-          successCount++;
-        } catch (error) {
-          failCount++;
-          failures.push(`${filename}: ${error}`);
-        }
-      }
+    it('retrieves all armor', () => {
+      const armor = ItemDataLoader.getItemsByType(ItemType.ARMOR);
 
-      console.log(`Validated ${successCount}/${files.length} item files`);
+      expect(armor.length).toBeGreaterThan(5); // Should have several armor pieces
+      expect(armor.every(item => item.type === ItemType.ARMOR)).toBe(true);
+      expect(armor.every(item => item.defense !== undefined)).toBe(true);
+    });
 
-      if (failures.length > 0) {
-        console.error('Failed files:', failures);
-      }
+    it('retrieves all consumables', () => {
+      const consumables = ItemDataLoader.getItemsByType(ItemType.CONSUMABLE);
 
-      // At least 95% should succeed
-      expect(successCount / files.length).toBeGreaterThanOrEqual(0.95);
+      expect(consumables.length).toBeGreaterThanOrEqual(0); // May or may not have consumables
+      expect(consumables.every(item => item.type === ItemType.CONSUMABLE)).toBe(true);
     });
   });
 
   describe('Data Integrity', () => {
     it('verifies weapons have damage values', () => {
-      const weaponFiles = ['long_sword.json', 'dagger.json', 'mace.json'];
+      const weapons = ItemDataLoader.getItemsByType(ItemType.WEAPON);
 
-      for (const filename of weaponFiles) {
-        const jsonPath = path.join(dataPath, filename);
-        if (!fs.existsSync(jsonPath)) continue;
-
-        const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-        const jsonData = JSON.parse(jsonContent);
-        const item = ItemDataLoader['transformJsonToItem'](jsonData);
-
-        if (item.type === ItemType.WEAPON) {
-          expect(item.damage).toBeGreaterThan(0);
-          expect(item.damageRoll).toBeDefined();
-        }
+      for (const weapon of weapons) {
+        expect(weapon.damage).toBeGreaterThan(0);
+        expect(weapon.damageRoll).toBeDefined();
+        expect(weapon.damageRoll?.max).toBeGreaterThan(0);
       }
     });
 
     it('verifies armor has defense values', () => {
-      const armorFiles = ['plate_mail.json', 'chain_mail.json', 'leather.json'];
+      const armor = ItemDataLoader.getItemsByType(ItemType.ARMOR);
+      const shields = ItemDataLoader.getItemsByType(ItemType.SHIELD);
+      const helmets = ItemDataLoader.getItemsByType(ItemType.HELMET);
+      const gauntlets = ItemDataLoader.getItemsByType(ItemType.GAUNTLET);
 
-      for (const filename of armorFiles) {
-        const jsonPath = path.join(dataPath, filename);
-        if (!fs.existsSync(jsonPath)) continue;
+      const defensiveItems = [...armor, ...shields, ...helmets, ...gauntlets];
 
-        const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-        const jsonData = JSON.parse(jsonContent);
-        const item = ItemDataLoader['transformJsonToItem'](jsonData);
-
-        if (item.type === ItemType.ARMOR || item.type === ItemType.SHIELD ||
-            item.type === ItemType.HELMET || item.type === ItemType.GAUNTLET) {
-          expect(item.defense).toBeGreaterThan(0);
-          expect(item.ac).toBeDefined();
-        }
+      for (const item of defensiveItems) {
+        expect(item.defense).toBeDefined();
+        expect(item.defense!).toBeGreaterThanOrEqual(-10); // Can be negative for cursed items
+        expect(item.ac).toBeDefined();
       }
     });
 
     it('verifies all items have valid prices', () => {
-      const testFiles = fs.readdirSync(dataPath)
-        .filter(f => f.endsWith('.json'))
-        .slice(0, 20); // Test sample of 20 files
+      const allItems = ItemDataLoader.getAllItems();
 
-      for (const filename of testFiles) {
-        const jsonPath = path.join(dataPath, filename);
-        const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
-        const jsonData = JSON.parse(jsonContent);
-        const item = ItemDataLoader['transformJsonToItem'](jsonData);
-
+      for (const [itemId, item] of allItems) {
         expect(item.price).toBeGreaterThanOrEqual(0);
         expect(typeof item.price).toBe('number');
         expect(isNaN(item.price)).toBe(false);

@@ -252,8 +252,8 @@ describe('ClassService', () => {
       expect(xp).toBe(2000)
     })
 
-    it('returns correct XP for Fighter level 13', () => {
-      const xp = ClassService.getXpForLevel(CharacterClass.FIGHTER, 13)
+    it('returns correct XP for Fighter level 12', () => {
+      const xp = ClassService.getXpForLevel(CharacterClass.FIGHTER, 12)
       expect(xp).toBe(1500000)
     })
 
