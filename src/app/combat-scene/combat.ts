@@ -1119,25 +1119,27 @@ export class CombatComponent implements OnInit, OnDestroy {
    * Get display text for a combat command (for showing selected action on character card)
    */
   getActionDisplayText(command: CombatCommand): string {
-    switch (command.action) {
+    switch (command.type) {
       case 'ATTACK':
         return 'ATTACK'
       case 'PARRY':
         return 'PARRY'
-      case 'FLEE':
+      case 'RUN':
         return 'FLEE'
-      case 'HIDE':
-        return 'HIDE'
       case 'DISPEL':
         return 'DISPEL'
       case 'CAST_SPELL':
-        if (command.spellId) {
-          const spell = SpellCastingService.getSpell(command.spellId)
+        if (command.data?.spellId) {
+          const spell = SpellCastingService.getSpell(command.data.spellId)
           return spell ? spell.name.toUpperCase() : 'CAST'
         }
         return 'CAST'
+      case 'USE_ITEM':
+        return 'USE ITEM'
+      case 'ADVANCE':
+        return 'ADVANCE'
       default:
-        return command.action
+        return command.type
     }
   }
 

@@ -23,7 +23,8 @@ export class CharacterStatsComponent {
       level: 'Level',
       hp: 'HP',
       ac: 'AC',
-      alignment: 'Alignment'
+      alignment: 'Alignment',
+      status: 'Status'
     };
     return labels[field];
   }

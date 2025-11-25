@@ -85,6 +85,8 @@ export function formatStatValue(field: CharacterField, character: Character): st
       return character.ac.toString();
     case 'alignment':
       return character.alignment;
+    case 'status':
+      return character.status;
     default:
       return '';
   }
