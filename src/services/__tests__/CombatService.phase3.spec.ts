@@ -39,8 +39,8 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).toContain('Gandalf')
-      expect(result.message).toContain('HALITO')
+      expect(result.messages.join(' ')).toContain('Gandalf')
+      expect(result.messages.join(' ')).toContain('HALITO')
     })
 
     it('fails when character has no spell points', () => {
@@ -69,7 +69,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).toContain('cannot cast spell')
+      expect(result.messages.join(' ')).toContain('cannot cast spell')
     })
 
     it('applies damage to target monster', () => {
@@ -181,7 +181,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
       // (10 - 5) × 10 = 50% chance, 30% roll < 50% = success
-      expect(result.message).toContain('DISPEL destroys Group A')
+      expect(result.messages.join(' ')).toContain('undead destroyed')
 
       Math.random = originalRandom
     })
@@ -246,7 +246,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
       // (5 - 3) × 10 = 20% chance, 90% roll > 20% = failure
-      expect(result.message).toContain('DISPEL fails')
+      expect(result.messages.join(' ')).toContain('undead resist')
 
       // Monster should be unchanged
       const group = result.newState.monsterGroups.find(g => g.id === 'A')
@@ -282,7 +282,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
 
       // (1 - 10) × 10 = -90 → clamped to 5%
       // 4% roll < 5% = success
-      expect(result.message).toContain('DISPEL destroys Group A')
+      expect(result.messages.join(' ')).toContain('undead destroyed')
 
       Math.random = originalRandom
     })
@@ -313,7 +313,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
 
       // (50 - 1) × 10 = 490 → clamped to 95%
       // 96% roll > 95% = failure
-      expect(result.message).toContain('DISPEL fails')
+      expect(result.messages.join(' ')).toContain('undead resist')
 
       Math.random = originalRandom
     })
@@ -332,7 +332,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).toContain('no group targeted')
+      expect(result.messages.join(' ')).toContain('no group targeted')
     })
   })
 
