@@ -1,5 +1,7 @@
 import { EncounterService } from '../EncounterService'
 import { MonsterDataLoader } from '../MonsterDataLoader'
+import { RandomService } from '../RandomService'
+import { ENCOUNTER_CONFIG } from '../../types/Combat'
 
 // Load monster data before tests
 beforeAll(async () => {
@@ -105,6 +107,80 @@ describe('EncounterService', () => {
           const groups = EncounterService.generateEncounter(5)
           expect(groups.length).toBeGreaterThanOrEqual(1)
           expect(groups.length).toBeLessThanOrEqual(4)
+        }
+      })
+    })
+
+    describe('weighted group count distribution', () => {
+      it('generates single group on level 1 when random falls in 85% range', () => {
+        // Queue value at 0.5 (50%) which is within the 85% single-group threshold
+        RandomService.queueNextValues([0.5])
+        const groups = EncounterService.generateEncounter(1)
+        expect(groups.length).toBe(1)
+      })
+
+      it('generates two groups on level 1 when random falls in 15% range', () => {
+        // Queue value at 0.90 (90%) which exceeds the 85% threshold
+        RandomService.queueNextValues([0.90])
+        const groups = EncounterService.generateEncounter(1)
+        expect(groups.length).toBe(2)
+      })
+
+      it('statistically favors single groups on level 1 (~85%)', () => {
+        // Generate 200 encounters and check distribution
+        const groupCounts = Array.from({ length: 200 }, () =>
+          EncounterService.generateEncounter(1).length
+        )
+
+        const singleGroupCount = groupCounts.filter(c => c === 1).length
+        const twoGroupCount = groupCounts.filter(c => c === 2).length
+
+        // With 85/15 weights, expect ~170 single groups (allow ±30 for variance)
+        expect(singleGroupCount).toBeGreaterThan(140)
+        expect(singleGroupCount).toBeLessThan(200)
+        expect(twoGroupCount).toBeGreaterThan(0)
+        expect(twoGroupCount).toBeLessThan(60)
+      })
+
+      it('has more varied distribution on deeper levels', () => {
+        // Generate 200 encounters on level 5 and check for all group sizes
+        const groupCounts = Array.from({ length: 200 }, () =>
+          EncounterService.generateEncounter(5).length
+        )
+
+        // Level 4+ has 25/35/25/15 weights, so all sizes should appear
+        const uniqueSizes = new Set(groupCounts)
+        expect(uniqueSizes.size).toBeGreaterThanOrEqual(3) // Should see at least 3 different group sizes
+      })
+    })
+
+    describe('ENCOUNTER_CONFIG.getGroupCountWeights', () => {
+      it('returns correct weights for level 1', () => {
+        const weights = ENCOUNTER_CONFIG.getGroupCountWeights(1)
+        expect(weights).toEqual([85, 15])
+      })
+
+      it('returns correct weights for level 2', () => {
+        const weights = ENCOUNTER_CONFIG.getGroupCountWeights(2)
+        expect(weights).toEqual([60, 30, 10])
+      })
+
+      it('returns correct weights for level 3', () => {
+        const weights = ENCOUNTER_CONFIG.getGroupCountWeights(3)
+        expect(weights).toEqual([40, 35, 20, 5])
+      })
+
+      it('returns correct weights for level 4+', () => {
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(4)).toEqual([25, 35, 25, 15])
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(5)).toEqual([25, 35, 25, 15])
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(10)).toEqual([25, 35, 25, 15])
+      })
+
+      it('weights sum to 100 for all levels', () => {
+        for (let level = 1; level <= 10; level++) {
+          const weights = ENCOUNTER_CONFIG.getGroupCountWeights(level)
+          const sum = weights.reduce((a, b) => a + b, 0)
+          expect(sum).toBe(100)
         }
       })
     })

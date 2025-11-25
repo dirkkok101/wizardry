@@ -65,15 +65,22 @@ export const EncounterService = {
   /**
    * Generate a complete encounter with 1-4 monster groups
    * Based on original Wizardry 1 mechanics
+   *
+   * Uses weighted probability for group count based on dungeon level:
+   * - Level 1: 85% single group, 15% two groups (multi-group is "rare")
+   * - Level 2: 60% single, 30% two, 10% three groups
+   * - Level 3+: Progressively more multi-group encounters
+   *
    * @param dungeonLevel - Current dungeon level (1-10)
    * @returns Array of MonsterGroups (1-4 groups)
    */
   generateEncounter(dungeonLevel: number): MonsterGroup[] {
-    const maxGroups = ENCOUNTER_CONFIG.getMaxGroupsForLevel(dungeonLevel)
     const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
 
-    // Roll number of groups (1 to maxGroups)
-    const numGroups = RandomService.random(1, maxGroups)
+    // Roll number of groups using weighted probability
+    const groupCountWeights = ENCOUNTER_CONFIG.getGroupCountWeights(dungeonLevel)
+    const groupCounts = [1, 2, 3, 4].slice(0, groupCountWeights.length)
+    const numGroups = RandomService.weightedRandom(groupCounts, groupCountWeights)
 
     const groups: MonsterGroup[] = []
     const groupIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D']

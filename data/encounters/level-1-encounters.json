@@ -2,15 +2,14 @@
   "levelId": "level_1_monsters",
   "encounterRate": 0.10,
   "monsters": [
+    { "monsterId": "bubbly_slime", "weight": 25 },
+    { "monsterId": "orc", "weight": 25 },
     { "monsterId": "kobold", "weight": 20 },
-    { "monsterId": "orc", "weight": 20 },
-    { "monsterId": "zombie", "weight": 15 },
-    { "monsterId": "bubbly_slime", "weight": 15 },
     { "monsterId": "rogue", "weight": 10 },
-    { "monsterId": "bushwacker", "weight": 8 },
-    { "monsterId": "highwayman", "weight": 7 },
-    { "monsterId": "undead_kobold", "weight": 3 },
-    { "monsterId": "lvl_1_mage", "weight": 1 },
-    { "monsterId": "lvl_1_priest", "weight": 1 }
+    { "monsterId": "zombie", "weight": 8 },
+    { "monsterId": "undead_kobold", "weight": 5 },
+    { "monsterId": "bushwacker", "weight": 4 },
+    { "monsterId": "highwayman", "weight": 2 },
+    { "monsterId": "lvl_1_mage", "weight": 1 }
   ]
 }

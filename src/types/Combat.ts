@@ -133,6 +133,10 @@ export interface CombatVictoryResult {
 
 /**
  * Encounter configuration based on original Wizardry 1 mechanics
+ *
+ * Research source: Original Wizardry used weighted encounter tables where
+ * multi-group encounters were rare on early levels. On Level 1, it was
+ * noted that "it is rare to encounter more than two groups at one time."
  */
 export const ENCOUNTER_CONFIG = {
   /**
@@ -151,6 +155,22 @@ export const ENCOUNTER_CONFIG = {
     if (level === 1) return 2
     if (level === 2) return 3
     return 4
+  },
+
+  /**
+   * Get weighted probabilities for number of groups by dungeon level
+   * Returns array of weights for [1 group, 2 groups, 3 groups, 4 groups]
+   *
+   * Level 1: 85% single group, 15% two groups (multi-group is "rare")
+   * Level 2: 60% single, 30% two, 10% three groups
+   * Level 3: 40% single, 35% two, 20% three, 5% four groups
+   * Level 4+: 25% single, 35% two, 25% three, 15% four groups
+   */
+  getGroupCountWeights(level: number): number[] {
+    if (level === 1) return [85, 15]  // Heavily favor single groups
+    if (level === 2) return [60, 30, 10]
+    if (level === 3) return [40, 35, 20, 5]
+    return [25, 35, 25, 15]  // Deeper levels have more multi-group encounters
   },
 
   /**
