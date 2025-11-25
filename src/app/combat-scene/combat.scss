@@ -298,7 +298,7 @@
   }
 }
 
-// Combat log - more compact
+// Combat log - expanded height
 .combat-log {
   border: 1px solid var(--color-border, #00ff00);
   padding: 0.5rem;
@@ -312,7 +312,7 @@
   }
 
   .log-messages {
-    max-height: 80px;
+    max-height: 160px;
     overflow-y: auto;
     font-size: 0.8rem;
     line-height: 1.3;
@@ -326,17 +326,6 @@
       }
     }
   }
-}
-
-// Action status indicator
-.action-status {
-  text-align: center;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-primary, #00ff00);
-  font-size: 0.9rem;
-  color: var(--color-primary, #00ff00);
 }
 
 .no-combat {

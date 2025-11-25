@@ -56,13 +56,6 @@
       </div>
     </div>
 
-    <!-- Action Selection Status (shown for active character) -->
-    @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showGroupSelectionDialog() && !showCharacterSelectionDialog()) {
-      <div class="action-status">
-        <p>{{ activeCharacter()!.name }} - SELECT ACTION</p>
-      </div>
-    }
-
     <!-- Spell Selection Menu -->
     @if (showSpellMenu()) {
       <div class="spell-menu-overlay">
