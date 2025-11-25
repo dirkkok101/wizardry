@@ -24,7 +24,7 @@ import { GameState } from '../../types/GameState';
 import { Character } from '../../types/Character';
 import { CharacterStatus } from '../../types/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
-import { DungeonState, TileData } from '../../types/Dungeon';
+import { DungeonState } from '../../types/Dungeon';
 import { TextureAtlas } from '../../types/texture.types';
 import { ViewportConfig } from '../../types/rendering.types';
 import * as TextureAtlasService from '../../services/TextureAtlasService';
@@ -695,6 +695,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Open character selection dialog for single-target spells
    */
   private openTargetDialog(spell: SpellData): void {
+    const caster = this.selectedCaster();
     const partyChars = this.partyCharacters();
 
     // Build character options based on spell target type
@@ -719,6 +720,24 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         enabled
       };
     });
+
+    // Check if there are any valid targets
+    const hasValidTargets = options.some(opt => opt.enabled);
+    if (!hasValidTargets) {
+      // Show helpful message based on spell target type
+      let message = `${caster?.name || 'Caster'} casts ${spell.name}... but there are no valid targets!`;
+      if (spell.target === 'dead_body') {
+        message = `${spell.name} requires a dead body to resurrect, but no one is dead.`;
+      } else if (spell.target === 'ashes') {
+        message = `${spell.name} requires ashes to resurrect, but no one has been reduced to ashes.`;
+      }
+      this.addMessage(message);
+
+      // Clear spell selection state
+      this.selectedSpell.set(null);
+      this.selectedCaster.set(null);
+      return;
+    }
 
     this.targetOptions.set(options);
     this.showTargetDialog.set(true);
