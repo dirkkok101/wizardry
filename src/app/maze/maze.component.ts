@@ -8,6 +8,7 @@ import { MessageLogComponent } from '../shared/components/message-log/message-lo
 import { SpellSelectionDialogComponent, SpellOption } from '../shared/components/spell-selection-dialog/spell-selection-dialog.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component';
 import { GameStateService } from '../../services/GameStateService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
 import { DungeonMovementService } from '../../services/DungeonMovementService';
 import { DungeonService } from '../../services/DungeonService';
 import { WebGLRenderingService } from '../../services/WebGLRenderingService';
@@ -154,10 +155,17 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Get actions for a character card in the maze
+   * All characters get an "Inspect" button
    * Spellcasters get a "Cast" button if they have dungeon-castable spells
    */
   getActionsForCharacter = (char: Character): CharacterAction[] => {
     const actions: CharacterAction[] = [];
+
+    // All characters can be inspected (except lost forever)
+    actions.push({
+      type: 'inspect',
+      enabled: char.status !== CharacterStatus.LOST_FOREVER
+    });
 
     // Check if character is a spellcaster with available dungeon spells
     if (SpellLearningService.isCaster(char) &&
@@ -180,14 +188,20 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Handle action clicks from character cards
    */
   handleCharacterAction(event: CharacterActionEvent): void {
-    if (event.actionType === 'cast-spell') {
-      this.openSpellDialog(event.characterId);
+    switch (event.actionType) {
+      case 'inspect':
+        this.navigation.inspectCharacter(event.characterId, 'maze');
+        break;
+      case 'cast-spell':
+        this.openSpellDialog(event.characterId);
+        break;
     }
   }
 
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private navigation: SceneNavigationService
   ) {}
 
   async ngOnInit(): Promise<void> {
