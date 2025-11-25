@@ -745,7 +745,7 @@ describe('MazeComponent - Tile Inspection', () => {
       ...state,
       party: {
         members: ['char1'],
-        formation: { front: ['char1'], back: [] },
+        formation: { frontRow: ['char1'], backRow: [] },
         gold: 0,
       },
       roster: new Map([['char1', character]]),

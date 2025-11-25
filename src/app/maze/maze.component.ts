@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
-import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
+import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component';
 import { MessageLogComponent } from '../shared/components/message-log/message-log.component';
 import { GameStateService } from '../../services/GameStateService';
 import { DungeonMovementService } from '../../services/DungeonMovementService';
@@ -29,7 +29,7 @@ import * as TextureAtlasService from '../../services/TextureAtlasService';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterCardComponent,
+    PartyCharacterGridComponent,
     MessageLogComponent
   ],
   templateUrl: './maze.component.html',
@@ -53,6 +53,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly position = computed(() => this.dungeonState()?.position);
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly party = computed(() => this.gameState.state().party);
+  // Note: partyCharacters is used for combat initialization (CombatService.initiateCombat),
+  // not for template rendering (which uses PartyCharacterGridComponent)
   readonly partyCharacters = computed(() => {
     const roster = this.gameState.state().roster;
     return this.party().members.map(id => roster.get(id)!).filter(c => c);
