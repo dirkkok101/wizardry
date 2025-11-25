@@ -98,6 +98,7 @@ function rollHitDice(hitDice: string): number {
 /**
  * Initialize spell points for caster classes
  * Returns undefined for non-casters, appropriate pools for Mage/Priest/Bishop
+ * Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
  */
 function initializeSpellPoints(characterClass: CharacterClass): CharacterSpellPoints | undefined {
   const classData = ClassService.getClassData(characterClass)
@@ -108,8 +109,21 @@ function initializeSpellPoints(characterClass: CharacterClass): CharacterSpellPo
   }
 
   const spellPoints: CharacterSpellPoints = {}
-  const emptyPool = {
-    level1: { current: 0, max: 0 },
+
+  // Level 1 casters start with 2 spell points for level 1 spells
+  // Higher levels start at 0 and are gained through leveling up
+  const magePool = {
+    level1: { current: 2, max: 2 },
+    level2: { current: 0, max: 0 },
+    level3: { current: 0, max: 0 },
+    level4: { current: 0, max: 0 },
+    level5: { current: 0, max: 0 },
+    level6: { current: 0, max: 0 },
+    level7: { current: 0, max: 0 }
+  }
+
+  const priestPool = {
+    level1: { current: 2, max: 2 },
     level2: { current: 0, max: 0 },
     level3: { current: 0, max: 0 },
     level4: { current: 0, max: 0 },
@@ -120,11 +134,11 @@ function initializeSpellPoints(characterClass: CharacterClass): CharacterSpellPo
 
   // Initialize pools based on spell access
   if (classData.spellAccess.mage) {
-    spellPoints.mage = { ...emptyPool }
+    spellPoints.mage = { ...magePool }
   }
 
   if (classData.spellAccess.priest) {
-    spellPoints.priest = { ...emptyPool }
+    spellPoints.priest = { ...priestPool }
   }
 
   return spellPoints
