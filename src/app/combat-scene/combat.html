@@ -121,7 +121,7 @@
     <!-- Combat Log -->
     <div class="combat-log">
       <h3>COMBAT LOG</h3>
-      <div class="log-messages">
+      <div class="log-messages" #logMessages>
         @for (msg of combatLog(); track $index) {
           <div class="log-message">{{ msg }}</div>
         }
