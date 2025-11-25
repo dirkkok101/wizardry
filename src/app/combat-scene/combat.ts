@@ -771,7 +771,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // Execute round with party for damage tracking
     this.isExecutingRound.set(true)
-    const result = CombatService.executeRound(stateWithCommands, chars)
+    const result = CombatService.executeRound(stateWithCommands, chars, frontRow)
 
     console.log('[Combat] Round result:', {
       victory: result.victory,
