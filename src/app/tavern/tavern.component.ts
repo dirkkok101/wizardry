@@ -109,15 +109,12 @@ export class TavernComponent implements OnInit {
         }
       }
     }));
-
-    this.messages.showSuccess(`${character.name} joined the party`);
   }
 
   onRemoveCharacter(characterId: string): void {
     const state = this.gameStateService.state();
-    const character = state.roster.get(characterId);
 
-    if (!character) {
+    if (!state.roster.has(characterId)) {
       this.messages.showError('Character not found');
       return;
     }
@@ -133,8 +130,6 @@ export class TavernComponent implements OnInit {
         }
       }
     }));
-
-    this.messages.showSuccess(`${character.name} left the party`);
   }
 
   onMoveUp(characterId: string): void {

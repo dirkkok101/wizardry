@@ -302,7 +302,6 @@ describe('TavernComponent (redesigned)', () => {
       const state = gameStateService.state();
       expect(state.party.members).toContain(character.id);
       expect(state.party.formation.frontRow).toContain(character.id);
-      expect(messageService.messageText()).toBe('Gandalf joined the party');
     });
 
     it('should add character to front row when front row has space', () => {
@@ -449,28 +448,6 @@ describe('TavernComponent (redesigned)', () => {
       jest.useRealTimers();
     });
 
-    it('should clear success message after 3 seconds', () => {
-      jest.useFakeTimers();
-
-      const character = createTestCharacter({
-        id: 'char-1',
-        name: 'Gandalf',
-        status: CharacterStatus.OK
-      });
-
-      gameStateService.updateState(state => ({
-        ...state,
-        roster: new Map([[character.id, character]])
-      }));
-
-      component.onAddCharacter(character.id);
-      expect(messageService.messageText()).toBe('Gandalf joined the party');
-
-      jest.advanceTimersByTime(3000);
-      expect(messageService.hasMessage()).toBe(false);
-
-      jest.useRealTimers();
-    });
   });
 
   describe('onRemoveCharacter()', () => {
@@ -495,7 +472,6 @@ describe('TavernComponent (redesigned)', () => {
       const state = gameStateService.state();
       expect(state.party.members).not.toContain(character.id);
       expect(state.party.formation.frontRow).not.toContain(character.id);
-      expect(messageService.messageText()).toBe('Gandalf left the party');
     });
 
     it('should remove character from back row', () => {
