@@ -56,6 +56,15 @@ const SpellLevelsSchema = z.object({
   { message: 'At least one spell type (mage or priest) must be defined' }
 )
 
+/**
+ * Attack range determines how a monster can attack:
+ * - 'melee': Can only attack from front row (must advance if in back)
+ * - 'ranged': Can attack from any row (spells, breath, bows)
+ * - 'both': Has both melee and ranged options
+ */
+export const AttackRangeSchema = z.enum(['melee', 'ranged', 'both'])
+export type AttackRange = z.infer<typeof AttackRangeSchema>
+
 export const MonsterSchema = z.object({
   // Required fields
   id: z.string().min(1),
@@ -113,7 +122,11 @@ export const MonsterSchema = z.object({
   fixedEncounter: z.boolean().optional(),
   location: LocationSchema.optional(),
   dropItems: z.array(z.string()).optional(),
-  levelDrain: z.number().int().min(1).max(4).optional()
+  levelDrain: z.number().int().min(1).max(4).optional(),
+
+  // Combat positioning (optional - inferred from abilities if not specified)
+  attackRange: AttackRangeSchema.optional(),
+  prefersBack: z.boolean().optional()
 }).strict() // Strict mode: reject unknown properties
 
 // Refinements for cross-field validation

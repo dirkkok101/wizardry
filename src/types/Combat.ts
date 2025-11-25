@@ -1,7 +1,7 @@
 // src/types/Combat.ts
 import { Character } from './Character'
 
-export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL'
+export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL' | 'ADVANCE'
 export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
 
 /**
@@ -135,6 +135,12 @@ export interface CombatVictoryResult {
  * Encounter configuration based on original Wizardry 1 mechanics
  */
 export const ENCOUNTER_CONFIG = {
+  /**
+   * Maximum number of monster groups that can occupy the front row
+   * Similar to party's 3-member front row limit
+   */
+  MAX_FRONT_ROW_GROUPS: 2,
+
   /**
    * Maximum number of monster groups by dungeon level
    * Level 1: 1-2 groups

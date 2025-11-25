@@ -1,6 +1,7 @@
 import { EncounterTable, MonsterEntry } from '../types/Dungeon'
 import { MonsterGroup, MonsterInstance, ENCOUNTER_CONFIG } from '../types/Combat'
 import { MonsterService } from './MonsterService'
+import { MonsterDataLoader } from './MonsterDataLoader'
 
 // Import encounter tables
 import level1Encounters from '../../data/encounters/level-1-encounters.json'
@@ -111,13 +112,41 @@ export const EncounterService = {
 
   /**
    * Determine formation (front or back row) for a monster group
-   * Currently uses 50/50 random distribution
-   * Future enhancement: Could be based on monster type/tactics
+   * Uses intelligent placement based on monster attack capabilities:
+   * - Melee-only monsters: 90% front row (need to be in front to attack)
+   * - Ranged/spell monsters: 80% back row (protected while casting)
+   * - Mixed attackers: 60% front row (can attack from either, slight front preference)
+   *
    * @param monsters - Monster instances in the group
    * @returns 'front' or 'back'
    */
   determineFormation(monsters: MonsterInstance[]): 'front' | 'back' {
-    // 50% chance of front row, 50% chance of back row
-    return Math.random() < 0.5 ? 'front' : 'back'
+    if (monsters.length === 0) {
+      return 'front'
+    }
+
+    // Get template for the first monster (all monsters in group are same type)
+    const template = MonsterDataLoader.getMonster(monsters[0].monsterId)
+    if (!template) {
+      // Fallback to 50/50 if template not found
+      return Math.random() < 0.5 ? 'front' : 'back'
+    }
+
+    // Check if monster prefers back row (spellcasters, ranged attackers)
+    if (MonsterService.prefersBackRow(template)) {
+      // 80% chance back row for ranged/spell monsters
+      return Math.random() < 0.8 ? 'back' : 'front'
+    }
+
+    // Check attack range for melee vs mixed
+    const attackRange = MonsterService.getAttackRange(template)
+
+    if (attackRange === 'melee') {
+      // 90% chance front row for melee-only monsters
+      return Math.random() < 0.9 ? 'front' : 'back'
+    }
+
+    // Mixed attackers (both melee and ranged): 60% front
+    return Math.random() < 0.6 ? 'front' : 'back'
   },
 }

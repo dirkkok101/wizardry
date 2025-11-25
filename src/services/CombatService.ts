@@ -1,7 +1,8 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup } from '../types/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG } from '../types/Combat'
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
+import { MonsterDataLoader } from './MonsterDataLoader'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
 import { EncounterService } from './EncounterService'
@@ -191,11 +192,44 @@ export class CombatService {
     return 1
   }
 
+  /**
+   * Select action for a monster during combat
+   *
+   * @param monster - The monster selecting an action
+   * @param party - The party characters
+   * @param frontRow - Array of character IDs in the front row
+   * @param monsterGroup - The group this monster belongs to (optional, for formation checks)
+   * @param allGroups - All monster groups in combat (optional, for advancement checks)
+   * @returns CombatCommand representing the monster's action
+   */
   static selectMonsterAction(
     monster: MonsterInstance,
     party: Character[],
-    frontRow: string[]
+    frontRow: string[],
+    monsterGroup?: MonsterGroup,
+    allGroups?: MonsterGroup[]
   ): CombatCommand {
+    // Check if monster is in back row and needs to advance
+    if (monsterGroup && allGroups && monsterGroup.formation === 'back') {
+      const template = MonsterDataLoader.getMonster(monster.monsterId)
+
+      // If melee-only monster in back row, need to advance to attack
+      if (template && !MonsterService.canAttackFromBackRow(template)) {
+        // Check if front row has room (at least one front group is wiped out or empty)
+        const frontGroups = allGroups.filter(g =>
+          g.formation === 'front' && g.monsters.some(m => m.hp > 0)
+        )
+
+        // Allow advancement if front row has room
+        if (frontGroups.length < ENCOUNTER_CONFIG.MAX_FRONT_ROW_GROUPS) {
+          return this.createCommand(monster, 'ADVANCE')
+        }
+
+        // Can't advance, front row is full - just parry/wait
+        return this.createCommand(monster, 'PARRY')
+      }
+    }
+
     // Get alive front row members that can be targeted
     const aliveFront = party.filter(c =>
       frontRow.includes(c.id) && this.canCombatantAct(c)
@@ -292,6 +326,10 @@ export class CombatService {
       return this.executeDispelCommand(state, command)
     }
 
+    if (command.type === 'ADVANCE') {
+      return this.executeAdvanceCommand(state, command)
+    }
+
     // TODO: Handle other command types (USE_ITEM)
     return { newState: state, message: 'Unknown command type' }
   }
@@ -383,6 +421,60 @@ export class CombatService {
     return {
       newState: state, // State doesn't change, flee is checked at end of round
       message: `${actorName} attempts to flee!`
+    }
+  }
+
+  /**
+   * Execute an advance command - monster group moves from back row to front row
+   * This is used when melee-only monsters are in the back row and need to advance
+   * to be able to attack.
+   */
+  private static executeAdvanceCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): { newState: CombatState; message: string } {
+    const monster = command.actor as MonsterInstance
+
+    // Find the group this monster belongs to
+    const group = state.monsterGroups.find(g =>
+      g.monsters.some(m => m.id === monster.id)
+    )
+
+    if (!group) {
+      return {
+        newState: state,
+        message: `${monster.name} tries to advance but can't find their group!`
+      }
+    }
+
+    // If already in front row, just return (shouldn't happen)
+    if (group.formation === 'front') {
+      return {
+        newState: state,
+        message: `${monster.name} is already in the front row!`
+      }
+    }
+
+    // Count alive monsters in the group for the message
+    const aliveCount = group.monsters.filter(m => m.hp > 0).length
+
+    // Move the entire group to front row
+    const newMonsterGroups = state.monsterGroups.map(g =>
+      g.id === group.id
+        ? { ...g, formation: 'front' as const }
+        : g
+    )
+
+    const message = aliveCount > 1
+      ? `The ${monster.name}s advance to the front row!`
+      : `${monster.name} advances to the front row!`
+
+    return {
+      newState: {
+        ...state,
+        monsterGroups: newMonsterGroups
+      },
+      message
     }
   }
 
@@ -1228,6 +1320,65 @@ export class CombatService {
     return this.getAllMonsters(state).filter(m =>
       m.status === 'ALIVE' && m.hp > 0
     )
+  }
+
+  /**
+   * Check if back-row melee monsters should auto-advance when front row is wiped out.
+   * This should be called at the end of each round or after casualties occur.
+   *
+   * When there are no alive monsters in the front row, the first back-row group
+   * with melee-only monsters will automatically advance to the front.
+   *
+   * @param state - Current combat state
+   * @returns Updated combat state with advanced groups and log message, or original state if no advancement needed
+   */
+  static checkAndAdvanceMonsters(state: CombatState): { newState: CombatState; message?: string } {
+    // Check if any alive monsters are in the front row
+    const frontGroups = state.monsterGroups.filter(g =>
+      g.formation === 'front' && g.monsters.some(m => m.hp > 0)
+    )
+
+    // If there are still alive front row monsters, no auto-advance needed
+    if (frontGroups.length > 0) {
+      return { newState: state }
+    }
+
+    // Find the first back-row group with melee-only monsters that can advance
+    const backMeleeGroup = state.monsterGroups.find(g => {
+      if (g.formation !== 'back') return false
+      if (!g.monsters.some(m => m.hp > 0)) return false
+
+      // Check if the group has melee-only monsters
+      const template = MonsterDataLoader.getMonster(g.monsters[0].monsterId)
+      return template && !MonsterService.canAttackFromBackRow(template)
+    })
+
+    if (!backMeleeGroup) {
+      // No back-row melee groups to advance
+      return { newState: state }
+    }
+
+    // Advance the group
+    const aliveCount = backMeleeGroup.monsters.filter(m => m.hp > 0).length
+    const monsterName = backMeleeGroup.monsters[0].name
+
+    const newMonsterGroups = state.monsterGroups.map(g =>
+      g.id === backMeleeGroup.id
+        ? { ...g, formation: 'front' as const }
+        : g
+    )
+
+    const message = aliveCount > 1
+      ? `The ${monsterName}s rush forward to fill the gap!`
+      : `${monsterName} rushes forward to fill the gap!`
+
+    return {
+      newState: {
+        ...state,
+        monsterGroups: newMonsterGroups
+      },
+      message
+    }
   }
 
   /**
