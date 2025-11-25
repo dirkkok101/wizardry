@@ -12,7 +12,6 @@ export type ReturnDestination =
   | 'shop'
   | 'inn'
   | 'training-grounds'
-  | 'camp'
   | 'maze';
 
 /**
@@ -38,7 +37,7 @@ export class SceneNavigationService {
 
   /**
    * Return to castle menu (most common navigation)
-   * Used by: Tavern, Temple, Shop, Inn, Training Grounds, Camp
+   * Used by: Tavern, Temple, Shop, Inn, Training Grounds, Maze
    */
   returnToCastle(): Promise<boolean> {
     return this.router.navigate(['/castle-menu']);
@@ -53,7 +52,7 @@ export class SceneNavigationService {
 
   /**
    * Navigate to character inspection with return destination
-   * Used by: Castle Menu, Tavern, Temple, Training Grounds, Shop, Inn, Camp
+   * Used by: Castle Menu, Tavern, Temple, Training Grounds, Shop, Inn, Maze
    */
   inspectCharacter(characterId: string, returnTo: ReturnDestination = 'castle-menu'): Promise<boolean> {
     return this.router.navigate(['/character-inspection'], {
@@ -63,9 +62,9 @@ export class SceneNavigationService {
 
   /**
    * Navigate to spell casting with return destination
-   * Used by: Camp (for pre-dungeon spell casting)
+   * Used by: Maze (for dungeon spell casting via navigation)
    */
-  castSpell(characterId: string, returnTo: ReturnDestination = 'camp'): Promise<boolean> {
+  castSpell(characterId: string, returnTo: ReturnDestination = 'maze'): Promise<boolean> {
     return this.router.navigate(['/spell-casting'], {
       queryParams: { characterId, returnTo }
     });
@@ -80,16 +79,8 @@ export class SceneNavigationService {
   }
 
   /**
-   * Navigate to camp (pre-dungeon staging)
-   * Used by: Castle Menu
-   */
-  enterCamp(): Promise<boolean> {
-    return this.router.navigate(['/camp']);
-  }
-
-  /**
    * Navigate to maze (dungeon)
-   * Used by: Camp
+   * Used by: Castle Menu
    */
   enterMaze(): Promise<boolean> {
     return this.router.navigate(['/maze']);
@@ -111,7 +102,7 @@ export class SceneNavigationService {
     // Validate returnTo is a valid destination, default to castle-menu if not
     const validDestinations: ReturnDestination[] = [
       'castle-menu', 'tavern', 'temple', 'shop', 'inn',
-      'training-grounds', 'camp', 'maze'
+      'training-grounds', 'maze'
     ];
 
     const destination = validDestinations.includes(returnTo as ReturnDestination)

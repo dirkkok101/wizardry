@@ -7,6 +7,7 @@ import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { MonsterService } from '../../services/MonsterService';
 import { WebGLRenderingService } from '../../services/WebGLRenderingService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
 import { SceneType } from '../../types/SceneType';
 import { createTestCharacter } from '../../test-helpers/test-factories';
 
@@ -820,6 +821,7 @@ describe('MazeComponent - Navigation & Error Handling', () => {
   let fixture: ComponentFixture<MazeComponent>;
   let gameState: GameStateService;
   let router: Router;
+  let navigation: SceneNavigationService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -830,8 +832,10 @@ describe('MazeComponent - Navigation & Error Handling', () => {
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
     router = TestBed.inject(Router);
+    navigation = TestBed.inject(SceneNavigationService);
 
     jest.spyOn(router, 'navigate');
+    jest.spyOn(navigation, 'returnToCastle').mockResolvedValue(true);
 
     // Mock loadLevel to avoid level data issues
     jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
@@ -860,17 +864,17 @@ describe('MazeComponent - Navigation & Error Handling', () => {
     }));
   });
 
-  it('handles camp action to return to camp', () => {
-    const returnSpy = jest.spyOn(component, 'returnToCamp');
-    component.handleFooterAction('camp');
+  it('handles castle action to return to castle', () => {
+    const returnSpy = jest.spyOn(component, 'returnToCastle');
+    component.handleFooterAction('castle');
     expect(returnSpy).toHaveBeenCalled();
   });
 
-  it('navigates to camp when returnToCamp is called', () => {
-    const navigateSpy = jest.spyOn(router, 'navigate');
-    component.returnToCamp();
-    expect(component.messages()).toContain('Returning to camp...');
-    expect(navigateSpy).toHaveBeenCalledWith(['/camp']);
+  it('navigates to castle when returnToCastle is called', () => {
+    const navigateSpy = jest.spyOn(navigation, 'returnToCastle');
+    component.returnToCastle();
+    expect(component.messages()).toContain('Returning to castle...');
+    expect(navigateSpy).toHaveBeenCalled();
   });
 
   it('shows error when dungeon state is missing', () => {
@@ -883,7 +887,7 @@ describe('MazeComponent - Navigation & Error Handling', () => {
     component.ngOnInit();
     fixture.detectChanges();
 
-    expect(component.errorMessage()).toBe('Error: No active dungeon. Return to camp to enter the dungeon.');
+    expect(component.errorMessage()).toBe('Error: No active dungeon. Return to castle and enter the maze.');
   });
 
   it('does not initialize movement when dungeon missing', () => {

@@ -18,6 +18,8 @@ import { DoorService } from '../../services/DoorService';
 import { TileInspectionService } from '../../services/TileInspectionService';
 import { SpellCastingService, SpellData } from '../../services/SpellCastingService';
 import { SpellLearningService } from '../../services/SpellLearningService';
+import { moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../shared/components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
@@ -149,7 +151,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
       { id: 'open', label: 'Open Door (O)', shortcut: 'O', enabled: canOpen },
       { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect },
-      { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
+      { id: 'castle', label: 'Return to Castle (ESC)', shortcut: 'ESC', enabled: true }
     ];
   });
 
@@ -157,9 +159,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Get actions for a character card in the maze
    * All characters get an "Inspect" button
    * Spellcasters get a "Cast" button if they have dungeon-castable spells
+   * All characters get moveUp/moveDown for formation adjustment
    */
   getActionsForCharacter = (char: Character): CharacterAction[] => {
     const actions: CharacterAction[] = [];
+    const state = this.gameState.state();
 
     // All characters can be inspected (except lost forever)
     actions.push({
@@ -181,6 +185,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    // Formation adjustment actions
+    const canMoveUp = GameStateQueries.canMoveUp(state, char.id);
+    const canMoveDown = GameStateQueries.canMoveDown(state, char.id);
+    actions.push({ type: 'moveUp', enabled: canMoveUp });
+    actions.push({ type: 'moveDown', enabled: canMoveDown });
+
     return actions;
   };
 
@@ -195,7 +205,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'cast-spell':
         this.openSpellDialog(event.characterId);
         break;
+      case 'moveUp':
+        this.onMoveUp(event.characterId);
+        break;
+      case 'moveDown':
+        this.onMoveDown(event.characterId);
+        break;
     }
+  }
+
+  onMoveUp(characterId: string): void {
+    const newState = moveCharacterUp(this.gameState.state(), characterId);
+    this.gameState.updateState(() => newState);
+  }
+
+  onMoveDown(characterId: string): void {
+    const newState = moveCharacterDown(this.gameState.state(), characterId);
+    this.gameState.updateState(() => newState);
   }
 
   constructor(
@@ -214,7 +240,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Validate dungeon state
     const dungeon = this.dungeonState();
     if (!dungeon) {
-      this.errorMessage.set('Error: No active dungeon. Return to camp to enter the dungeon.');
+      this.errorMessage.set('Error: No active dungeon. Return to castle and enter the maze.');
       return;
     }
 
@@ -349,7 +375,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.router.navigate(['/camp']);
+    this.returnToCastle();
   }
 
   @HostListener('window:keydown.control.e')
@@ -369,9 +395,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addMessage(`Random encounters ${status} (Ctrl+E to toggle)`);
   }
 
-  returnToCamp(): void {
-    this.addMessage('Returning to camp...');
-    this.router.navigate(['/camp']);
+  returnToCastle(): void {
+    this.addMessage('Returning to castle...');
+    this.navigation.returnToCastle();
   }
 
   moveForward(): void {
@@ -540,8 +566,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'inspect':
         this.inspectTile();
         break;
-      case 'camp':
-        this.returnToCamp();
+      case 'castle':
+        this.returnToCastle();
         break;
     }
   }
