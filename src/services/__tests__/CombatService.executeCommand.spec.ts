@@ -28,7 +28,10 @@ describe('CombatService.executeCommand', () => {
     const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
     expect(result.newState.monsterGroups[0].monsters[0].hp).toBe(5)
-    expect(result.message).toContain('5 damage')
+    // Messages are now split into action + result
+    expect(result.messages).toHaveLength(2)
+    expect(result.messages[0]).toContain('attacks')
+    expect(result.messages[1]).toContain('5 damage')
 
     jest.restoreAllMocks()
   })

@@ -92,8 +92,8 @@ describe('CombatService - Phase 6: Healing & Support Spells', () => {
 
         // State should be updated (healing tracked)
         expect(result.newState).toBeDefined()
-        expect(result.message).toContain('casts DIOS')
-        expect(result.message).toContain('heals')
+        expect(result.messages.join(' ')).toContain('casts DIOS')
+        expect(result.messages.join(' ')).toContain('heals')
       })
 
       it('executes DIAL spell command for party healing', () => {
@@ -121,8 +121,8 @@ describe('CombatService - Phase 6: Healing & Support Spells', () => {
         const result = CombatService.executeCommand(state, command)
 
         expect(result.newState).toBeDefined()
-        expect(result.message).toContain('casts DIAL')
-        expect(result.message).toContain('heals')
+        expect(result.messages.join(' ')).toContain('casts DIAL')
+        expect(result.messages.join(' ')).toContain('heals')
       })
     })
   })
@@ -280,8 +280,8 @@ describe('CombatService - Phase 6: Healing & Support Spells', () => {
 
       const result = CombatService.executeCommand(state, healCommand)
 
-      expect(result.message).toContain('casts DIOS')
-      expect(result.message).toContain('heals')
+      expect(result.messages.join(' ')).toContain('casts DIOS')
+      expect(result.messages.join(' ')).toContain('heals')
       expect(result.newState).toBeDefined()
     })
 

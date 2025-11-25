@@ -50,7 +50,7 @@ describe('CombatService - Phase 7: Core Combat Spells', () => {
 
         const result = CombatService.executeCommand(state, command)
 
-        expect(result.message).toContain('MAHALITO')
+        expect(result.messages.join(' ')).toContain('MAHALITO')
         expect(result.newState).toBeDefined()
       })
     })
@@ -160,7 +160,7 @@ describe('CombatService - Phase 7: Core Combat Spells', () => {
 
         const result = CombatService.executeCommand(state, command)
 
-        expect(result.message).toContain('BADIOS')
+        expect(result.messages.join(' ')).toContain('BADIOS')
         expect(result.newState).toBeDefined()
       })
     })
@@ -203,7 +203,7 @@ describe('CombatService - Phase 7: Core Combat Spells', () => {
 
         const result = CombatService.executeCommand(state, command)
 
-        expect(result.message).toContain('MILWA')
+        expect(result.messages.join(' ')).toContain('MILWA')
         expect(result.newState).toBeDefined()
       })
     })
@@ -245,7 +245,7 @@ describe('CombatService - Phase 7: Core Combat Spells', () => {
 
         const result = CombatService.executeCommand(state, command)
 
-        expect(result.message).toContain('LATUMAPIC')
+        expect(result.messages.join(' ')).toContain('LATUMAPIC')
         expect(result.newState).toBeDefined()
       })
     })

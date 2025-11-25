@@ -313,7 +313,7 @@ describe('CombatService - Monster Positioning', () => {
 
       // Group should now be in front row
       expect(result.newState.monsterGroups[0].formation).toBe('front')
-      expect(result.message).toContain('advance')
+      expect(result.messages[0]).toContain('advance')
     })
 
     it('generates correct message for single monster', () => {
@@ -341,7 +341,7 @@ describe('CombatService - Monster Positioning', () => {
       const command = CombatService.createCommand(monster, 'ADVANCE')
       const result = CombatService.executeCommand(state, command, new Set())
 
-      expect(result.message).toBe('Kobold advances to the front row!')
+      expect(result.messages[0]).toBe('Kobold advances to the front row!')
     })
 
     it('generates correct message for multiple monsters', () => {
@@ -361,7 +361,7 @@ describe('CombatService - Monster Positioning', () => {
       const command = CombatService.createCommand(kobolds[0], 'ADVANCE')
       const result = CombatService.executeCommand(state, command, new Set())
 
-      expect(result.message).toMatch(/The \w+s advance to the front row!/i)
+      expect(result.messages[0]).toMatch(/The \w+s advance to the front row!/i)
     })
 
     it('handles already front row gracefully', () => {
@@ -379,7 +379,7 @@ describe('CombatService - Monster Positioning', () => {
 
       // Should remain front and indicate already there
       expect(result.newState.monsterGroups[0].formation).toBe('front')
-      expect(result.message).toContain('already')
+      expect(result.messages[0]).toContain('already')
     })
   })
 

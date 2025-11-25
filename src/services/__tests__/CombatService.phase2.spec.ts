@@ -185,8 +185,9 @@ describe('CombatService - Phase 2 Features', () => {
       const cmd = CombatService.createCommand(char, 'PARRY')
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).toContain('Fighter')
-      expect(result.message).toContain('defensive stance')
+      // Messages are now returned as an array
+      expect(result.messages[0]).toContain('Fighter')
+      expect(result.messages[0]).toContain('defensive stance')
       expect(parryingCombatants.has('c1')).toBe(true)
     })
   })
@@ -314,8 +315,9 @@ describe('CombatService - Phase 2 Features', () => {
       const cmd = CombatService.createCommand(char, 'RUN')
       const result = CombatService.executeCommand(state, cmd, new Set())
 
-      expect(result.message).toContain('Fighter')
-      expect(result.message).toContain('flee')
+      // Messages are now returned as an array
+      expect(result.messages[0]).toContain('Fighter')
+      expect(result.messages[0]).toContain('flee')
     })
 
     it('successfully flees when all characters select RUN and roll succeeds', () => {

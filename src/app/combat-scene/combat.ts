@@ -17,7 +17,7 @@ import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '../sha
 import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component'
 import { getGroupDisplayText } from '../../utils/MonsterNameUtils'
 import { CharacterStatus } from '../../types/CharacterStatus'
-import { getCombatMessageDelay } from '../../settings/CombatSettings'
+import { getCombatMessageDelay, getActionResultDelay } from '../../settings/CombatSettings'
 import { CharacterField } from '../../types/CharacterCardTypes'
 
 interface SelectedAction {
@@ -433,16 +433,23 @@ export class CombatComponent implements OnInit, OnDestroy {
 
   /**
    * Start animating combat messages one at a time with delays
+   * Messages are displayed with different delays based on type:
+   * - Action messages use messageDelayMs (longer delay between different actions)
+   * - Result messages (prefixed with →) use actionResultDelayMs (shorter delay for suspense)
+   *
    * @param messages Array of messages to display
    * @param onComplete Callback when all messages are displayed
    */
   private startMessageAnimation(messages: string[], onComplete: () => void): void {
-    const delay = getCombatMessageDelay()
+    const actionDelay = getCombatMessageDelay()
+    const resultDelay = getActionResultDelay()
 
-    // If delay is 0, show all messages immediately
-    if (delay === 0) {
-      this.animatingMessages.set(messages)  // Must set for commitAnimatedMessages()
-      this.displayedAnimatingMessages.set(messages)
+    // If both delays are 0, show all messages immediately
+    if (actionDelay === 0 && resultDelay === 0) {
+      // Strip result markers for display
+      const displayMessages = messages.map(msg => CombatService.stripResultMarker(msg))
+      this.animatingMessages.set(messages)  // Keep original for commitAnimatedMessages()
+      this.displayedAnimatingMessages.set(displayMessages)
       onComplete()
       return
     }
@@ -454,12 +461,29 @@ export class CombatComponent implements OnInit, OnDestroy {
     let currentIndex = 0
 
     const showNextMessage = () => {
-      if (currentIndex < messages.length) {
-        // Add next message to displayed
-        this.displayedAnimatingMessages.update(displayed => [...displayed, messages[currentIndex]])
-        currentIndex++
+      if (currentIndex >= messages.length) {
+        // All messages shown
+        this.isAnimatingMessages.set(false)
+        this.messageAnimationTimer = null
+        onComplete()
+        return
+      }
 
-        // Schedule next message
+      const message = messages[currentIndex]
+
+      // Strip result marker for display
+      const displayMessage = CombatService.stripResultMarker(message)
+
+      // Add message to displayed
+      this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
+      currentIndex++
+
+      // Determine delay for NEXT message (if any)
+      if (currentIndex < messages.length) {
+        const nextMessage = messages[currentIndex]
+        const nextIsResult = CombatService.isResultMessage(nextMessage)
+        // Use result delay if next message is a result, otherwise use action delay
+        const delay = nextIsResult ? resultDelay : actionDelay
         this.messageAnimationTimer = setTimeout(showNextMessage, delay)
       } else {
         // All messages shown
@@ -469,16 +493,20 @@ export class CombatComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Show first message immediately, then start timer for rest
+    // Show first message immediately
     showNextMessage()
   }
 
   /**
    * Commit animated messages to the combat log in game state
+   * Strips result markers before storing
    */
   private commitAnimatedMessages(): void {
     const messages = this.animatingMessages()
     if (messages.length === 0) return
+
+    // Strip result markers before committing to log
+    const cleanMessages = messages.map(msg => CombatService.stripResultMarker(msg))
 
     this.gameState.updateState(state => {
       if (!state.combat) return state
@@ -486,7 +514,7 @@ export class CombatComponent implements OnInit, OnDestroy {
         ...state,
         combat: {
           ...state.combat,
-          combatLog: [...state.combat.combatLog, ...messages]
+          combatLog: [...state.combat.combatLog, ...cleanMessages]
         }
       }
     })

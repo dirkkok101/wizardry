@@ -7,7 +7,7 @@ import { createTestGameStateWithCombat, createTestCharacter } from '../../test-h
 import { Router } from '@angular/router'
 import { VictoryService } from '../../services/VictoryService'
 import { CharacterStatus } from '../../types/CharacterStatus'
-import { setCombatMessageDelay } from '../../settings/CombatSettings'
+import { setCombatMessageDelay, setActionResultDelay } from '../../settings/CombatSettings'
 
 describe('CombatComponent', () => {
   let component: CombatComponent
@@ -18,8 +18,9 @@ describe('CombatComponent', () => {
   beforeEach(() => {
     // Use fake timers to control animation timing
     jest.useFakeTimers()
-    // Use small delay to test animation code path without slowing tests
+    // Use small delays to test animation code path without slowing tests
     setCombatMessageDelay(10)
+    setActionResultDelay(10)
 
     TestBed.configureTestingModule({
       imports: [CombatComponent]
@@ -669,8 +670,9 @@ describe('CombatComponent', () => {
     })
 
     it('commits messages to combat log even with instant display (delay=0)', () => {
-      // Set delay to 0 for instant display
+      // Set both delays to 0 for instant display
       setCombatMessageDelay(0)
+      setActionResultDelay(0)
 
       const initialLogLength = gameState.state().combat?.combatLog.length || 0
 
