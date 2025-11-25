@@ -2,6 +2,7 @@ import { GameState } from '../types/GameState';
 import { LevelData, Position } from '../types/Dungeon';
 import { DungeonMovementService } from './DungeonMovementService';
 import { DungeonService } from './DungeonService';
+import { RandomService } from './RandomService';
 
 export class DoorService {
   /**
@@ -104,17 +105,16 @@ export class DoorService {
 
     // Calculate success chance: (STR × 4%) + 20%
     const successChance = (character.strength * 4) + 20;
-    const roll = Math.random() * 100;
+    const success = RandomService.chance(successChance);
 
-    if (roll < successChance) {
+    if (success) {
       // Success - unlock door
       const doorKey = `${state.dungeon.currentLevel}_${doorY}_${doorX}`;
       const newUnlockedDoors = new Set(state.dungeon.unlockedDoors);
       newUnlockedDoors.add(doorKey);
 
       // 12.5% encounter chance
-      const encounterRoll = Math.random() * 100;
-      const encounterTriggered = encounterRoll < 12.5;
+      const encounterTriggered = RandomService.chance(12.5);
 
       return {
         ...state,
@@ -126,7 +126,7 @@ export class DoorService {
       };
     } else {
       // Failure - deal 1d3 damage to kicker
-      const damage = Math.floor(Math.random() * 3) + 1;
+      const damage = RandomService.rollDie(3);
       const newRoster = new Map(state.roster);
       newRoster.set(characterId, {
         ...character,

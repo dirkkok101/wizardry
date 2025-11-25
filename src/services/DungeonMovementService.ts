@@ -1,6 +1,7 @@
 import { GameState } from '../types/GameState'
 import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '../types/Dungeon'
 import { DungeonService } from './DungeonService'
+import { RandomService } from './RandomService'
 
 /**
  * DungeonMovementService - Pure function service for dungeon navigation logic
@@ -458,7 +459,7 @@ export const DungeonMovementService = {
   handleSpinner(state: GameState): GameState {
     const dungeon = this.requireDungeon(state)
     const directions: Direction[] = ['NORTH', 'SOUTH', 'EAST', 'WEST']
-    const randomDirection = directions[Math.floor(Math.random() * directions.length)]
+    const randomDirection = RandomService.pickRandom(directions)
 
     return {
       ...state,
@@ -480,7 +481,7 @@ export const DungeonMovementService = {
     const dungeon = this.requireDungeon(state)
 
     // Roll for fall distance (1-3 levels)
-    const levelsFallen = Math.floor(Math.random() * 3) + 1
+    const levelsFallen = RandomService.random(1, 3)
     const newLevel = Math.min(10, dungeon.currentLevel + levelsFallen)
 
     // Calculate damage (1d6 per level fallen)
@@ -490,7 +491,7 @@ export const DungeonMovementService = {
     for (const memberId of state.party.members) {
       let totalDamage = 0
       for (let i = 0; i < actualFall; i++) {
-        totalDamage += Math.floor(Math.random() * 6) + 1 // 1d6
+        totalDamage += RandomService.rollDie(6) // 1d6
       }
       damagePerCharacter.set(memberId, totalDamage)
     }
@@ -529,11 +530,11 @@ export const DungeonMovementService = {
 
       // Calculate avoidance chance: (AGI - Level) × 4%
       const avoidanceChance = (character.agility - dungeon.currentLevel) * 4;
-      const roll = Math.random() * 100;
+      const avoided = RandomService.chance(avoidanceChance);
 
       // Failed avoidance - take 1d6 damage
-      if (roll >= avoidanceChance) {
-        const damage = Math.floor(Math.random() * 6) + 1;
+      if (!avoided) {
+        const damage = RandomService.rollDie(6);
         newRoster.set(memberId, {
           ...character,
           hp: Math.max(0, character.hp - damage),

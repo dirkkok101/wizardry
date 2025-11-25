@@ -1,5 +1,6 @@
 import { Character } from '../types/Character'
 import { ServiceType } from '../types/ServiceType'
+import { RandomService } from './RandomService'
 
 /**
  * ResurrectionService - Handles resurrection and restoration success rates
@@ -42,7 +43,6 @@ export class ResurrectionService {
    */
   static attemptService(character: Character, service: ServiceType): boolean {
     const successRate = this.getSuccessRate(character, service)
-    const roll = Math.random() * 100
-    return roll < successRate
+    return RandomService.chance(successRate)
   }
 }

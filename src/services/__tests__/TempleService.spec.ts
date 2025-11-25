@@ -1,4 +1,5 @@
 import { TempleService } from '../TempleService'
+import { RandomService } from '../RandomService'
 import { ServiceType } from '../../types/ServiceType'
 import { Character } from '../../types/Character'
 import { CharacterClass } from '../../types/CharacterClass'
@@ -134,13 +135,10 @@ describe('TempleService', () => {
       const state = createTestGameState(2000)
       state.roster.set(mockCharacter.id, deadChar)
 
-      // Mock Math.random to guarantee success
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.5) // Will succeed (50% + 36% = 86% success rate)
+      // Queue random value: 50% < 86% (50% + 36%) = success
+      RandomService.queueNextValues([0.5])
 
       const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESURRECT)
-
-      Math.random = originalRandom
 
       expect(result.success).toBe(true)
       const updatedChar = result.state!.roster.get(mockCharacter.id)
@@ -153,13 +151,10 @@ describe('TempleService', () => {
       const state = createTestGameState(2000)
       state.roster.set(mockCharacter.id, deadChar)
 
-      // Mock Math.random to guarantee failure
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.9) // Will fail (50% + 6% = 56% success rate)
+      // Queue random value: 90% >= 56% (50% + 6%) = failure
+      RandomService.queueNextValues([0.9])
 
       const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESURRECT)
-
-      Math.random = originalRandom
 
       expect(result.success).toBe(false)
       expect(result.error).toBe('Resurrection failed. Gandalf has turned to ashes.')
@@ -173,13 +168,10 @@ describe('TempleService', () => {
       const state = createTestGameState(3000)
       state.roster.set(mockCharacter.id, ashesChar)
 
-      // Mock Math.random to guarantee success
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.3) // Will succeed (40% + 18% = 58% success rate)
+      // Queue random value: 30% < 58% (40% + 18%) = success
+      RandomService.queueNextValues([0.3])
 
       const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESTORE)
-
-      Math.random = originalRandom
 
       expect(result.success).toBe(true)
       const updatedChar = result.state!.roster.get(mockCharacter.id)
@@ -192,13 +184,10 @@ describe('TempleService', () => {
       const state = createTestGameState(3000)
       state.roster.set(mockCharacter.id, ashesChar)
 
-      // Mock Math.random to guarantee failure
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.9) // Will fail (40% + 3% = 43% success rate)
+      // Queue random value: 90% >= 43% (40% + 3%) = failure
+      RandomService.queueNextValues([0.9])
 
       const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESTORE)
-
-      Math.random = originalRandom
 
       expect(result.success).toBe(false)
       expect(result.error).toBe('Restoration failed. Gandalf is lost forever.')

@@ -2,6 +2,7 @@ import { EncounterTable, MonsterEntry } from '../types/Dungeon'
 import { MonsterGroup, MonsterInstance, ENCOUNTER_CONFIG } from '../types/Combat'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
+import { RandomService } from './RandomService'
 
 // Import encounter tables
 import level1Encounters from '../../data/encounters/level-1-encounters.json'
@@ -33,7 +34,7 @@ export const EncounterService = {
    * Roll for random encounter (10% chance)
    */
   rollRandomEncounter(): boolean {
-    return Math.random() < 0.10
+    return RandomService.roll(0.10)
   },
 
   /**
@@ -56,18 +57,9 @@ export const EncounterService = {
    * Select random monster from encounter table using weighted probability
    */
   selectMonster(table: EncounterTable): string {
-    const totalWeight = table.monsters.reduce((sum, m) => sum + m.weight, 0)
-    let random = Math.random() * totalWeight
-
-    for (const entry of table.monsters) {
-      random -= entry.weight
-      if (random <= 0) {
-        return entry.monsterId
-      }
-    }
-
-    // Fallback (should never reach here)
-    return table.monsters[0].monsterId
+    const monsterIds = table.monsters.map(m => m.monsterId)
+    const weights = table.monsters.map(m => m.weight)
+    return RandomService.weightedRandom(monsterIds, weights)
   },
 
   /**
@@ -81,7 +73,7 @@ export const EncounterService = {
     const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
 
     // Roll number of groups (1 to maxGroups)
-    const numGroups = Math.floor(Math.random() * maxGroups) + 1
+    const numGroups = RandomService.random(1, maxGroups)
 
     const groups: MonsterGroup[] = []
     const groupIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D']
@@ -129,13 +121,13 @@ export const EncounterService = {
     const template = MonsterDataLoader.getMonster(monsters[0].monsterId)
     if (!template) {
       // Fallback to 50/50 if template not found
-      return Math.random() < 0.5 ? 'front' : 'back'
+      return RandomService.roll(0.5) ? 'front' : 'back'
     }
 
     // Check if monster prefers back row (spellcasters, ranged attackers)
     if (MonsterService.prefersBackRow(template)) {
       // 80% chance back row for ranged/spell monsters
-      return Math.random() < 0.8 ? 'back' : 'front'
+      return RandomService.roll(0.8) ? 'back' : 'front'
     }
 
     // Check attack range for melee vs mixed
@@ -143,10 +135,10 @@ export const EncounterService = {
 
     if (attackRange === 'melee') {
       // 90% chance front row for melee-only monsters
-      return Math.random() < 0.9 ? 'front' : 'back'
+      return RandomService.roll(0.9) ? 'front' : 'back'
     }
 
     // Mixed attackers (both melee and ranged): 60% front
-    return Math.random() < 0.6 ? 'front' : 'back'
+    return RandomService.roll(0.6) ? 'front' : 'back'
   },
 }

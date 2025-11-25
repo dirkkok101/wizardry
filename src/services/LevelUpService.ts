@@ -1,5 +1,6 @@
 import { Character } from '../types/Character'
 import { CharacterClass } from '../types/CharacterClass'
+import { RandomService } from './RandomService'
 
 interface StatIncreases {
   strength?: number
@@ -144,7 +145,7 @@ export class LevelUpService {
    */
   static rollHPIncrease(character: Character): number {
     const hitDie = CLASS_HIT_DICE[character.class]
-    const roll = Math.floor(Math.random() * hitDie) + 1 // 1 to hitDie
+    const roll = RandomService.rollDie(hitDie) // 1 to hitDie
     const vitBonus = this.getVitalityBonus(character.vitality)
     return Math.max(1, roll + vitBonus)
   }
@@ -183,8 +184,7 @@ export class LevelUpService {
 
     stats.forEach(stat => {
       const chance = chances[stat] || 0
-      const roll = Math.random() * 100
-      if (roll < chance) {
+      if (RandomService.chance(chance)) {
         increases[stat] = 1
       }
     })

@@ -1,5 +1,6 @@
 // Phase 2 Combat Features Tests
 import { CombatService } from '../CombatService'
+import { RandomService } from '../RandomService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '../../test-helpers/test-factories'
 import { MonsterGroup } from '../../types/Combat'
 import { CharacterStatus } from '../../types/CharacterStatus'
@@ -11,85 +12,48 @@ describe('CombatService - Phase 2 Features', () => {
       const attacker = createTestCharacter({ level: 1 })
       const defender = createTestMonster()
 
-      // Mock Math.random to control crit roll
-      const originalRandom = Math.random
-      let callCount = 0
-      Math.random = jest.fn(() => {
-        callCount++
-        if (callCount === 1) return 0.5 // Hit roll (50%)
-        if (callCount === 2) return 0.5 // Damage roll
-        if (callCount === 3) return 0.01 // Crit roll (1%)
-        return 0.5
-      })
+      // Queue random values: hit roll, damage roll, crit roll
+      RandomService.queueNextValues([0.5, 0.5, 0.01])
 
       const result = CombatService.resolveAttack(attacker, defender)
 
       expect(result.critical).toBe(true) // 1% < 2% (level 1 = 2% crit chance)
-
-      Math.random = originalRandom
     })
 
     it('calculates critical chance as (2 × Level)% for level 10', () => {
       const attacker = createTestCharacter({ level: 10 })
       const defender = createTestMonster()
 
-      const originalRandom = Math.random
-      let callCount = 0
-      Math.random = jest.fn(() => {
-        callCount++
-        if (callCount === 1) return 0.5 // Hit roll
-        if (callCount === 2) return 0.5 // Damage roll
-        if (callCount === 3) return 0.15 // Crit roll (15%)
-        return 0.5
-      })
+      // Queue random values: hit roll, damage roll, crit roll
+      RandomService.queueNextValues([0.5, 0.5, 0.15])
 
       const result = CombatService.resolveAttack(attacker, defender)
 
       expect(result.critical).toBe(true) // 15% < 20% (level 10 = 20% crit chance)
-
-      Math.random = originalRandom
     })
 
     it('caps critical chance at 50% for high levels', () => {
       const attacker = createTestCharacter({ level: 50 })
       const defender = createTestMonster()
 
-      const originalRandom = Math.random
-      let callCount = 0
-      Math.random = jest.fn(() => {
-        callCount++
-        if (callCount === 1) return 0.5 // Hit roll
-        if (callCount === 2) return 0.5 // Damage roll
-        if (callCount === 3) return 0.49 // Crit roll (49%)
-        return 0.5
-      })
+      // Queue random values: hit roll, damage roll, crit roll
+      RandomService.queueNextValues([0.5, 0.5, 0.49])
 
       const result = CombatService.resolveAttack(attacker, defender)
 
       expect(result.critical).toBe(true) // 49% < 50% (capped at 50%)
-
-      Math.random = originalRandom
     })
 
     it('does not crit when roll exceeds crit chance', () => {
       const attacker = createTestCharacter({ level: 10 })
       const defender = createTestMonster()
 
-      const originalRandom = Math.random
-      let callCount = 0
-      Math.random = jest.fn(() => {
-        callCount++
-        if (callCount === 1) return 0.5 // Hit roll
-        if (callCount === 2) return 0.5 // Damage roll
-        if (callCount === 3) return 0.25 // Crit roll (25%)
-        return 0.5
-      })
+      // Queue random values: hit roll, damage roll, crit roll
+      RandomService.queueNextValues([0.5, 0.5, 0.25])
 
       const result = CombatService.resolveAttack(attacker, defender)
 
       expect(result.critical).toBe(false) // 25% >= 20% (no crit)
-
-      Math.random = originalRandom
     })
   })
 

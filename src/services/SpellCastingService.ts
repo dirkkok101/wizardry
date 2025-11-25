@@ -4,6 +4,7 @@ import { CharacterStatus } from '../types/CharacterStatus'
 import { SpellEffect, Combatant } from '../types/Combat'
 import { SpellDataLoader } from './SpellDataLoader'
 import { LoadedSpell } from '../types/SpellDefinition'
+import { RandomService } from './RandomService'
 
 // Spell targeting types
 export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self'
@@ -220,7 +221,7 @@ export class SpellCastingService {
        */
       if (spell.utility === 'teleport') {
         // Success rate from spell data, default 75%
-        const success = Math.random() < (spell.teleportSuccessRate || 0.75)
+        const success = RandomService.roll(spell.teleportSuccessRate || 0.75)
         return {
           teleport: {
             success
@@ -246,7 +247,7 @@ export class SpellCastingService {
           casterLevel * SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER,
           SPELL_SUCCESS_RATES.LOKTOFEIT_MAX_RATE
         )
-        const success = Math.random() * 100 < successRate
+        const success = RandomService.chance(successRate)
         return {
           recall: { success },
           message: success
@@ -331,11 +332,7 @@ export class SpellCastingService {
   private static rollDice(dice: string): number {
     // Parse "1d8" format
     const [count, sides] = dice.split('d').map(Number)
-    let total = 0
-    for (let i = 0; i < count; i++) {
-      total += Math.floor(Math.random() * sides) + 1
-    }
-    return total
+    return RandomService.rollDice(count, sides)
   }
 
   /**
