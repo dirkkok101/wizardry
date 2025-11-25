@@ -386,7 +386,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // ESC only closes dialogs - to exit the maze, use the stairs on level 1
+    // ESC only closes dialogs - to exit the maze, use stairs on level 1 or cast LOKTOFEIT
   }
 
   @HostListener('window:keydown.control.e')
