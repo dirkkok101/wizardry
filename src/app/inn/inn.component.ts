@@ -1,10 +1,12 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { InnService, RoomType } from '../../services/InnService';
 import { LevelUpService } from '../../services/LevelUpService';
 import { SpellLearningService } from '../../services/SpellLearningService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { MenuComponent, MenuItem } from '../shared/components/menu/menu.component';
 import { CharacterListComponent } from '../shared/components/character-list/character-list.component';
 import { SceneType } from '../../types/SceneType';
@@ -38,6 +40,10 @@ interface LevelUpDisplayData {
   styleUrls: ['./inn.component.scss']
 })
 export class InnComponent implements OnInit {
+  private readonly gameState = inject(GameStateService);
+  private readonly navigation = inject(SceneNavigationService);
+  readonly messages = inject(MessageService);
+
   // Expose RoomType enum and Object to template
   readonly RoomType = RoomType;
   readonly Object = Object;
@@ -99,42 +105,33 @@ export class InnComponent implements OnInit {
   // View state
   readonly currentView = signal<InnView>('main');
   readonly selectedCharacterId = signal<string | null>(null);
-  readonly errorMessage = signal<string | null>(null);
-  readonly successMessage = signal<string | null>(null);
   readonly processing = signal<boolean>(false);
   readonly levelUpData = signal<LevelUpDisplayData | null>(null);
 
-  // Party
-  readonly currentParty = computed(() => this.gameState.party());
-  readonly partyCharacters = computed(() => {
-    const party = this.currentParty();
-    const state = this.gameState.state();
-    return party.members
-      .map(id => state.roster.get(id))
-      .filter((char): char is Character => char !== undefined);
-  });
+  // Party characters using GameStateQueries
+  readonly partyCharacters = computed(() =>
+    GameStateQueries.partyCharacters(this.gameState.state())
+  );
 
-  // Party gold
-  readonly partyGold = computed(() => this.gameState.state().party.gold);
+  // Party gold using GameStateQueries
+  readonly partyGold = computed(() =>
+    GameStateQueries.partyGold(this.gameState.state())
+  );
 
-  // Roster
-  readonly allCharacters = computed(() => {
-    const state = this.gameState.state();
-    return Array.from(state.roster.values());
-  });
+  // All roster characters using GameStateQueries
+  readonly allCharacters = computed(() =>
+    GameStateQueries.allCharacters(this.gameState.state())
+  );
 
+  // Selected character using GameStateQueries
   readonly selectedCharacter = computed(() => {
     const charId = this.selectedCharacterId();
     if (!charId) return null;
-    return this.gameState.state().roster.get(charId) || null;
+    return GameStateQueries.getCharacter(this.gameState.state(), charId) || null;
   });
 
-  constructor(
-    private gameState: GameStateService,
-    private router: Router
-  ) {}
-
   ngOnInit(): void {
+    this.messages.clear();
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.INN
@@ -142,8 +139,7 @@ export class InnComponent implements OnInit {
   }
 
   handleMenuSelect(itemId: string): void {
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
+    this.messages.clear();
 
     switch (itemId) {
       case 'rest':
@@ -155,13 +151,12 @@ export class InnComponent implements OnInit {
         break;
 
       case 'castle':
-        this.router.navigate(['/castle-menu']);
+        this.navigation.returnToCastle();
         break;
     }
   }
 
   private rest(): void {
-    // Prevent race condition from rapid clicks
     if (this.processing()) {
       return;
     }
@@ -169,29 +164,25 @@ export class InnComponent implements OnInit {
     this.processing.set(true);
 
     try {
-      const party = this.currentParty();
+      const partyMembers = this.partyCharacters();
 
-      // Validate party exists
-      if (party.members.length === 0) {
-        this.errorMessage.set('You need a party to rest');
+      if (partyMembers.length === 0) {
+        this.messages.showError('You need a party to rest');
         return;
       }
 
-      // Calculate cost
-      const cost = party.members.length * REST_COST_PER_MEMBER;
-      const partyGold = party.gold || 0;
+      const cost = partyMembers.length * REST_COST_PER_MEMBER;
+      const gold = this.partyGold();
 
-      // Check if party can afford
-      if (partyGold < cost) {
-        this.errorMessage.set(`Cannot afford rest. Need ${cost} gold (${REST_COST_PER_MEMBER} per member)`);
+      if (gold < cost) {
+        this.messages.showError(`Cannot afford rest. Need ${cost} gold (${REST_COST_PER_MEMBER} per member)`);
         return;
       }
 
-      // Restore all party members to full HP and deduct gold atomically
       this.gameState.updateState(state => {
         const newRoster = new Map(state.roster);
 
-        party.members.forEach(charId => {
+        state.party.members.forEach(charId => {
           const char = newRoster.get(charId);
           if (char) {
             newRoster.set(charId, {
@@ -206,14 +197,13 @@ export class InnComponent implements OnInit {
           roster: newRoster,
           party: {
             ...state.party,
-            gold: (state.party.gold || 0) - cost // Re-read current gold from state
+            gold: (state.party.gold || 0) - cost
           }
         };
       });
 
-      this.successMessage.set(`Party rested well! All HP restored. (-${cost} gold)`);
+      this.messages.showSuccess(`Party rested well! All HP restored. (-${cost} gold)`);
     } finally {
-      // Always reset processing flag, even if error occurs
       this.processing.set(false);
     }
   }
@@ -221,56 +211,47 @@ export class InnComponent implements OnInit {
   selectCharacterToRest(charId: string): void {
     this.selectedCharacterId.set(charId);
     this.currentView.set('room-select');
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
+    this.messages.clear();
   }
 
   async restInRoom(roomType: RoomType): Promise<void> {
     const character = this.selectedCharacter();
     if (!character) {
-      this.errorMessage.set('No character selected');
+      this.messages.showError('No character selected');
       return;
     }
 
     const currentState = this.gameState.state();
 
-    // Check affordability
     const validation = InnService.canAffordRoom(currentState, roomType);
     if (!validation.allowed) {
-      this.errorMessage.set(validation.reason || 'Cannot afford room');
+      this.messages.showError(validation.reason || 'Cannot afford room');
       return;
     }
 
-    // Rest one week
     const restResult = InnService.restOneWeek(currentState, character, roomType);
 
-    // Update character in roster and party gold
     this.gameState.updateState(state => ({
       ...restResult.updatedState,
       roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
     }));
 
-    // Check for level up if fully healed
     if (restResult.isFullyHealed) {
       const updatedChar = restResult.updatedCharacter;
       if (LevelUpService.canLevelUp(updatedChar)) {
-        // Perform level up
         const levelUpResult = LevelUpService.performLevelUp(updatedChar);
 
-        // Learn new spells if caster
         const spellResult = SpellLearningService.learnNewSpells(
           levelUpResult.updatedCharacter,
           updatedChar.level,
           levelUpResult.updatedCharacter.level
         );
 
-        // Update character with level up and spells
         this.gameState.updateState(state => ({
           ...state,
           roster: new Map(state.roster).set(character.id, spellResult.updatedCharacter)
         }));
 
-        // Show level up screen
         this.levelUpData.set({
           newLevel: levelUpResult.levelUpData.newLevel,
           hpIncrease: levelUpResult.levelUpData.hpIncrease,
@@ -282,33 +263,30 @@ export class InnComponent implements OnInit {
       }
     }
 
-    // Show rest results if no level up
-    this.successMessage.set(
+    this.messages.showSuccess(
       `Rested for 1 week. HP: ${character.hp} → ${restResult.updatedCharacter.hp} (+${restResult.hpRecovered})`
     );
 
-    // Continue resting if not fully healed
     if (!restResult.isFullyHealed) {
       this.currentView.set('room-select');
     } else {
-      this.successMessage.set('Fully healed!');
+      this.messages.showSuccess('Fully healed!');
     }
   }
 
   continueLevelUp(): void {
     this.levelUpData.set(null);
     this.currentView.set('room-select');
-    this.successMessage.set('Level up complete! Continue resting or return to castle.');
+    this.messages.showSuccess('Level up complete! Continue resting or return to castle.');
   }
 
   returnToCastle(): void {
-    this.router.navigate(['/castle-menu']);
+    this.navigation.returnToCastle();
   }
 
   cancelView(): void {
     this.currentView.set('main');
     this.selectedCharacterId.set(null);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
+    this.messages.clear();
   }
 }

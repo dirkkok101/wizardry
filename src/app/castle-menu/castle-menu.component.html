@@ -2,21 +2,14 @@
   <app-scene-title title="CASTLE" [showPartyGold]="true" />
 
   <section class="party-section">
-    <h2>PARTY</h2>
-    <div class="party-members">
-      @for (char of partyCharacters(); track char.id) {
-        <app-character-card
-          [character]="char"
-          [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
-          [actions]="[{ type: 'inspect' }]"
-          variant="default"
-          (actionClick)="handleActionClick($event)">
-        </app-character-card>
-      }
-      @empty {
-        <p class="no-party">No party members</p>
-      }
-    </div>
+    <app-party-character-grid
+      source="party"
+      title="PARTY"
+      [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
+      [actions]="[{ type: 'inspect' }]"
+      emptyMessage="No party members"
+      (actionClick)="handleActionClick($event)"
+    />
   </section>
 
   <main class="content-area">

@@ -1,16 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { TavernComponent } from './tavern.component';
 import { GameStateService } from '../../services/GameStateService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
 import { CharacterStatus } from '../../types/CharacterStatus';
 import { Alignment } from '../../types/Alignment';
-import { createTestCharacter, createTestGameState } from '../../test-helpers/test-factories';
+import { createTestCharacter } from '../../test-helpers/test-factories';
 
 describe('TavernComponent (redesigned)', () => {
   let component: TavernComponent;
   let fixture: ComponentFixture<TavernComponent>;
   let gameStateService: GameStateService;
-  let router: Router;
+  let navigationService: SceneNavigationService;
+  let messageService: MessageService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -20,9 +22,13 @@ describe('TavernComponent (redesigned)', () => {
     fixture = TestBed.createComponent(TavernComponent);
     component = fixture.componentInstance;
     gameStateService = TestBed.inject(GameStateService);
-    router = TestBed.inject(Router);
+    navigationService = TestBed.inject(SceneNavigationService);
+    messageService = TestBed.inject(MessageService);
 
-    jest.spyOn(router, 'navigate');
+    jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
+
+    fixture.detectChanges(); // Trigger ngOnInit
   });
 
   describe('component creation', () => {
@@ -30,9 +36,8 @@ describe('TavernComponent (redesigned)', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should initialize signals', () => {
-      expect(component.errorMessage()).toBeNull();
-      expect(component.successMessage()).toBeNull();
+    it('should initialize with no messages', () => {
+      expect(messageService.hasMessage()).toBe(false);
     });
   });
 
@@ -297,7 +302,7 @@ describe('TavernComponent (redesigned)', () => {
       const state = gameStateService.state();
       expect(state.party.members).toContain(character.id);
       expect(state.party.formation.frontRow).toContain(character.id);
-      expect(component.successMessage()).toBe('Gandalf joined the party');
+      expect(messageService.messageText()).toBe('Gandalf joined the party');
     });
 
     it('should add character to front row when front row has space', () => {
@@ -354,7 +359,7 @@ describe('TavernComponent (redesigned)', () => {
 
     it('should show error when adding non-existent character', () => {
       component.onAddCharacter('non-existent-id');
-      expect(component.errorMessage()).toBe('Character not found');
+      expect(messageService.messageText()).toBe('Character not found');
     });
 
     it('should show error when party is full', () => {
@@ -377,7 +382,7 @@ describe('TavernComponent (redesigned)', () => {
 
       component.onAddCharacter(chars[6].id);
 
-      expect(component.errorMessage()).toBe('Party is full (maximum 6 members)');
+      expect(messageService.messageText()).toBe('Party is full (maximum 6 members)');
       expect(gameStateService.state().party.members.length).toBe(6);
     });
 
@@ -395,8 +400,8 @@ describe('TavernComponent (redesigned)', () => {
 
       component.onAddCharacter(deadChar.id);
 
-      expect(component.errorMessage()).toContain('not available');
-      expect(component.errorMessage()).toContain('DEAD');
+      expect(messageService.messageText()).toContain('not available');
+      expect(messageService.messageText()).toContain('DEAD');
       expect(gameStateService.state().party.members).not.toContain(deadChar.id);
     });
 
@@ -428,7 +433,7 @@ describe('TavernComponent (redesigned)', () => {
 
       component.onAddCharacter(evilChar.id);
 
-      expect(component.errorMessage()).toBe('Good and Evil cannot party together');
+      expect(messageService.messageText()).toBe('Good and Evil cannot party together');
       expect(gameStateService.state().party.members).not.toContain(evilChar.id);
     });
 
@@ -436,10 +441,10 @@ describe('TavernComponent (redesigned)', () => {
       jest.useFakeTimers();
 
       component.onAddCharacter('non-existent-id');
-      expect(component.errorMessage()).toBe('Character not found');
+      expect(messageService.messageText()).toBe('Character not found');
 
       jest.advanceTimersByTime(3000);
-      expect(component.errorMessage()).toBeNull();
+      expect(messageService.hasMessage()).toBe(false);
 
       jest.useRealTimers();
     });
@@ -459,10 +464,10 @@ describe('TavernComponent (redesigned)', () => {
       }));
 
       component.onAddCharacter(character.id);
-      expect(component.successMessage()).toBe('Gandalf joined the party');
+      expect(messageService.messageText()).toBe('Gandalf joined the party');
 
       jest.advanceTimersByTime(3000);
-      expect(component.successMessage()).toBeNull();
+      expect(messageService.hasMessage()).toBe(false);
 
       jest.useRealTimers();
     });
@@ -490,7 +495,7 @@ describe('TavernComponent (redesigned)', () => {
       const state = gameStateService.state();
       expect(state.party.members).not.toContain(character.id);
       expect(state.party.formation.frontRow).not.toContain(character.id);
-      expect(component.successMessage()).toBe('Gandalf left the party');
+      expect(messageService.messageText()).toBe('Gandalf left the party');
     });
 
     it('should remove character from back row', () => {
@@ -523,7 +528,7 @@ describe('TavernComponent (redesigned)', () => {
 
     it('should show error when character not found', () => {
       component.onRemoveCharacter('non-existent-id');
-      expect(component.errorMessage()).toBe('Character not found');
+      expect(messageService.messageText()).toBe('Character not found');
     });
   });
 
@@ -591,16 +596,14 @@ describe('TavernComponent (redesigned)', () => {
 
       component.onInspect(character.id);
 
-      expect(router.navigate).toHaveBeenCalledWith(['/character-inspection'], {
-        queryParams: { characterId: character.id, returnTo: 'tavern' }
-      });
+      expect(navigationService.inspectCharacter).toHaveBeenCalledWith(character.id, 'tavern');
     });
   });
 
   describe('handleEscape()', () => {
     it('should navigate to castle menu', () => {
       component.handleEscape();
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
     it('should navigate to castle menu on ESC key press', () => {
@@ -608,47 +611,38 @@ describe('TavernComponent (redesigned)', () => {
       window.dispatchEvent(escapeEvent);
       fixture.detectChanges();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
   });
 
   describe('error and success message display', () => {
     it('should display error message in template', () => {
-      component.errorMessage.set('Test error message');
+      messageService.showError('Test error message');
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement;
-      const errorElement = compiled.querySelector('.error-message');
+      const errorElement = compiled.querySelector('.message.error');
       expect(errorElement).toBeTruthy();
       expect(errorElement.textContent).toContain('Test error message');
     });
 
     it('should display success message in template', () => {
-      component.successMessage.set('Test success message');
+      messageService.showSuccess('Test success message');
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement;
-      const successElement = compiled.querySelector('.success-message');
+      const successElement = compiled.querySelector('.message.success');
       expect(successElement).toBeTruthy();
       expect(successElement.textContent).toContain('Test success message');
     });
 
-    it('should not display error message when null', () => {
-      component.errorMessage.set(null);
+    it('should not display message when none', () => {
+      messageService.clear();
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement;
-      const errorElement = compiled.querySelector('.error-message');
-      expect(errorElement).toBeFalsy();
-    });
-
-    it('should not display success message when null', () => {
-      component.successMessage.set(null);
-      fixture.detectChanges();
-
-      const compiled = fixture.nativeElement;
-      const successElement = compiled.querySelector('.success-message');
-      expect(successElement).toBeFalsy();
+      const messageElement = compiled.querySelector('.message');
+      expect(messageElement).toBeFalsy();
     });
   });
 });

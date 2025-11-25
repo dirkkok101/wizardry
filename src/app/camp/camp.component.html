@@ -1,26 +1,21 @@
 <div class="camp-container">
   <app-scene-title title="CAMP" />
 
-  @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
+  @if (messages.hasMessage()) {
+    <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      {{ messages.messageText() }}
+    </div>
   }
 
   <section class="party-section">
-    <h2>PARTY</h2>
-    <div class="party-members">
-      @for (char of partyCharacters(); track char.id) {
-        <app-character-card
-          [character]="char"
-          [visibleFields]="['class', 'level', 'hp', 'ac']"
-          [actions]="getActionsForCharacter(char)"
-          variant="default"
-          (actionClick)="handleActionClick($event)">
-        </app-character-card>
-      }
-      @empty {
-        <p class="no-party">No party members</p>
-      }
-    </div>
+    <app-party-character-grid
+      source="party"
+      title="PARTY"
+      [visibleFields]="['class', 'level', 'hp', 'ac']"
+      [actions]="getActionsForCharacter"
+      emptyMessage="No party members"
+      (actionClick)="handleActionClick($event)"
+    />
   </section>
 
   <app-scene-footer

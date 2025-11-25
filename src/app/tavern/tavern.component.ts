@@ -1,7 +1,9 @@
-import { Component, computed, signal, HostListener, inject } from '@angular/core';
+import { Component, OnInit, computed, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
 import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
@@ -17,86 +19,69 @@ import { CharacterStatus } from '../../types/CharacterStatus';
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
-export class TavernComponent {
-  private gameStateService = inject(GameStateService);
-  private router = inject(Router);
+export class TavernComponent implements OnInit {
+  private readonly gameStateService = inject(GameStateService);
+  private readonly navigation = inject(SceneNavigationService);
+  readonly messages = inject(MessageService);
 
-  gameState = this.gameStateService.state;
-  errorMessage = signal<string | null>(null);
-  successMessage = signal<string | null>(null);
+  ngOnInit(): void {
+    this.messages.clear();
+  }
 
-  // Computed properties
-  availableCharacters = computed(() => {
-    const state = this.gameState();
-    return Array.from(state.roster.values())
-      .filter(char => !state.party.members.includes(char.id))
-      .filter(char => char.status === CharacterStatus.OK);
-  });
+  // Computed properties using GameStateQueries
+  readonly availableCharacters = computed(() =>
+    GameStateQueries.availableCharacters(this.gameStateService.state(), CharacterStatus.OK)
+  );
 
-  frontRowCharacters = computed(() => {
-    const state = this.gameState();
-    return state.party.formation.frontRow
-      .map(id => state.roster.get(id))
-      .filter(char => char !== undefined);
-  });
+  readonly frontRowCharacters = computed(() =>
+    GameStateQueries.frontRowCharacters(this.gameStateService.state())
+  );
 
-  backRowCharacters = computed(() => {
-    const state = this.gameState();
-    return state.party.formation.backRow
-      .map(id => state.roster.get(id))
-      .filter(char => char !== undefined);
-  });
+  readonly backRowCharacters = computed(() =>
+    GameStateQueries.backRowCharacters(this.gameStateService.state())
+  );
 
-  partyGold = computed(() => this.gameState().party.gold);
+  readonly partyGold = computed(() =>
+    GameStateQueries.partyGold(this.gameStateService.state())
+  );
 
-  // Footer menu items
   readonly footerMenuItems = computed((): MenuItem[] => [
     { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true }
   ]);
 
   // Helper methods for character card inputs
   canCharacterMoveUp(characterId: string): boolean {
-    const state = this.gameState();
-    const index = state.party.members.indexOf(characterId);
-    return index > 0;
+    return GameStateQueries.canMoveUp(this.gameStateService.state(), characterId);
   }
 
   canCharacterMoveDown(characterId: string): boolean {
-    const state = this.gameState();
-    const index = state.party.members.indexOf(characterId);
-    return index < state.party.members.length - 1;
+    return GameStateQueries.canMoveDown(this.gameStateService.state(), characterId);
   }
 
   getCharacterActions(characterId: string, isInParty: boolean): CharacterAction[] {
     if (isInParty) {
-      const canMoveUp = this.canCharacterMoveUp(characterId);
-      const canMoveDown = this.canCharacterMoveDown(characterId);
-
       return [
         { type: 'remove' },
         { type: 'inspect' },
-        { type: 'moveUp', enabled: canMoveUp },
-        { type: 'moveDown', enabled: canMoveDown }
-      ];
-    } else {
-      return [
-        { type: 'add' },
-        { type: 'inspect' }
+        { type: 'moveUp', enabled: this.canCharacterMoveUp(characterId) },
+        { type: 'moveDown', enabled: this.canCharacterMoveDown(characterId) }
       ];
     }
+    return [
+      { type: 'add' },
+      { type: 'inspect' }
+    ];
   }
 
-  // Action handlers
   onAddCharacter(characterId: string): void {
-    const state = this.gameState();
+    const state = this.gameStateService.state();
     const character = state.roster.get(characterId);
 
     if (!character) {
-      this.showError('Character not found');
+      this.messages.showError('Character not found');
       return;
     }
 
-    // Validate using PartyService
     const validation = PartyService.canAddCharacterToParty(
       state.party,
       character,
@@ -104,11 +89,10 @@ export class TavernComponent {
     );
 
     if (!validation.allowed) {
-      this.showError(validation.reason || 'Cannot add character');
+      this.messages.showError(validation.reason || 'Cannot add character');
       return;
     }
 
-    // Add character to party (immutable update)
     this.gameStateService.updateState(state => ({
       ...state,
       party: {
@@ -116,7 +100,6 @@ export class TavernComponent {
         members: [...state.party.members, characterId],
         formation: {
           ...state.party.formation,
-          // Add to back row if front row is full, otherwise front row
           frontRow: state.party.formation.frontRow.length < 3
             ? [...state.party.formation.frontRow, characterId]
             : state.party.formation.frontRow,
@@ -127,19 +110,18 @@ export class TavernComponent {
       }
     }));
 
-    this.showSuccess(`${character.name} joined the party`);
+    this.messages.showSuccess(`${character.name} joined the party`);
   }
 
   onRemoveCharacter(characterId: string): void {
-    const state = this.gameState();
+    const state = this.gameStateService.state();
     const character = state.roster.get(characterId);
 
     if (!character) {
-      this.showError('Character not found');
+      this.messages.showError('Character not found');
       return;
     }
 
-    // Remove character from party (immutable update)
     this.gameStateService.updateState(state => ({
       ...state,
       party: {
@@ -152,23 +134,21 @@ export class TavernComponent {
       }
     }));
 
-    this.showSuccess(`${character.name} left the party`);
+    this.messages.showSuccess(`${character.name} left the party`);
   }
 
   onMoveUp(characterId: string): void {
-    const newState = moveCharacterUp(this.gameState(), characterId);
+    const newState = moveCharacterUp(this.gameStateService.state(), characterId);
     this.gameStateService.updateState(() => newState);
   }
 
   onMoveDown(characterId: string): void {
-    const newState = moveCharacterDown(this.gameState(), characterId);
+    const newState = moveCharacterDown(this.gameStateService.state(), characterId);
     this.gameStateService.updateState(() => newState);
   }
 
   onInspect(characterId: string): void {
-    this.router.navigate(['/character-inspection'], {
-      queryParams: { characterId, returnTo: 'tavern' }
-    });
+    this.navigation.inspectCharacter(characterId, 'tavern');
   }
 
   handleActionClick(event: CharacterActionEvent): void {
@@ -192,25 +172,13 @@ export class TavernComponent {
   }
 
   handleFooterAction(itemId: string): void {
-    switch(itemId) {
-      case 'leave':
-        this.router.navigate(['/castle-menu']);
-        break;
+    if (itemId === 'leave') {
+      this.navigation.returnToCastle();
     }
   }
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    this.router.navigate(['/castle-menu']);
-  }
-
-  private showError(message: string): void {
-    this.errorMessage.set(message);
-    setTimeout(() => this.errorMessage.set(null), 3000);
-  }
-
-  private showSuccess(message: string): void {
-    this.successMessage.set(message);
-    setTimeout(() => this.successMessage.set(null), 3000);
+    this.navigation.returnToCastle();
   }
 }

@@ -1,11 +1,13 @@
 import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { GameStateService } from '../../services/GameStateService';
 import { ItemDataLoader } from '../../services/ItemDataLoader';
 import { EquipmentService } from '../../services/EquipmentService';
 import { InventoryService } from '../../services/InventoryService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
 import { Item } from '../../types/Item';
@@ -43,7 +45,7 @@ import { MenuItem } from '../shared/components/menu/menu.component';
 })
 export class CharacterInspectionComponent {
   private readonly gameState = inject(GameStateService);
-  private readonly router = inject(Router);
+  private readonly navigation = inject(SceneNavigationService);
   private readonly route = inject(ActivatedRoute);
 
   private readonly queryParams = toSignal(this.route.queryParams, {
@@ -61,16 +63,14 @@ export class CharacterInspectionComponent {
   readonly character = computed(() => {
     const id = this.characterId();
     if (!id) return null;
-    return this.gameState.state().roster.get(id) || null;
+    return GameStateQueries.getCharacter(this.gameState.state(), id) || null;
   });
 
-  // Get party members for trading
+  // Get party members for trading (excluding current character)
   readonly partyMembers = computed(() => {
-    const state = this.gameState.state();
     const currentId = this.characterId();
-    return state.party.members
-      .map(id => state.roster.get(id))
-      .filter((char): char is Character => char !== undefined && char.id !== currentId);
+    return GameStateQueries.partyCharacters(this.gameState.state())
+      .filter(char => char.id !== currentId);
   });
 
   // Equipment slots
@@ -221,7 +221,7 @@ export class CharacterInspectionComponent {
   }
 
   returnToPrevious(): void {
-    this.router.navigate([`/${this.returnTo()}`]);
+    this.navigation.returnFromInspection(this.returnTo());
   }
 
   handleFooterAction(itemId: string): void {
@@ -232,7 +232,6 @@ export class CharacterInspectionComponent {
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    // Don't navigate if a dialog is open
     if (this.showTradeDialog() || this.showDropDialog()) {
       return;
     }

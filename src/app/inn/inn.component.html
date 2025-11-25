@@ -23,7 +23,7 @@
           />
 
           <div class="party-gold">
-            Gold: {{ currentParty().gold || 0 }}
+            Gold: {{ partyGold() }}
           </div>
         </div>
       </div>
@@ -70,11 +70,10 @@
             }
           </div>
 
-          @if (errorMessage()) {
-            <div class="error-message">{{ errorMessage() }}</div>
-          }
-          @if (successMessage()) {
-            <div class="success-message">{{ successMessage() }}</div>
+          @if (messages.hasMessage()) {
+            <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+              {{ messages.messageText() }}
+            </div>
           }
 
           <button class="cancel-btn" (click)="cancelView()">
@@ -150,17 +149,10 @@
     }
   </main>
 
-  <!-- Success message -->
-  @if (successMessage()) {
-    <div class="success-message">
-      <p>{{ successMessage() }}</p>
-    </div>
-  }
-
-  <!-- Error message -->
-  @if (errorMessage()) {
-    <div class="error-message">
-      <p>{{ errorMessage() }}</p>
+  <!-- Message display -->
+  @if (messages.hasMessage()) {
+    <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      <p>{{ messages.messageText() }}</p>
     </div>
   }
 </div>

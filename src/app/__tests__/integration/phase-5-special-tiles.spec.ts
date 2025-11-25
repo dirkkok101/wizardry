@@ -1,4 +1,4 @@
-import { NavigationService } from '../../../services/NavigationService';
+import { DungeonMovementService } from '../../../services/DungeonMovementService';
 import { DoorService } from '../../../services/DoorService';
 import { TileInspectionService } from '../../../services/TileInspectionService';
 import { DungeonService } from '../../../services/DungeonService';
@@ -50,7 +50,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       expect(tile.destination).toBeDefined();
 
       // Move forward onto teleporter at (13, 4)
-      let result = NavigationService.moveForward(state);
+      let result = DungeonMovementService.moveForward(state);
 
       // Should teleport based on destination
       if (tile.destination) {
@@ -105,7 +105,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
         type: 'chute'
       };
 
-      const result = NavigationService.handleSpecialTile(state, chuteTile);
+      const result = DungeonMovementService.handleSpecialTile(state, chuteTile);
 
       // Verify level change (chute goes down 1-3 levels)
       expect(result.dungeon.currentLevel).toBeGreaterThan(5);
@@ -404,7 +404,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       let damageOccurred = false;
 
       for (let i = 0; i < 30; i++) {
-        const result = NavigationService.handleSpecialTile(state, pitTile);
+        const result = DungeonMovementService.handleSpecialTile(state, pitTile);
         const charAfter = result.roster.get('char1')!;
 
         if (charAfter.hp === 50) {
@@ -466,7 +466,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       const trials = 20;
 
       for (let i = 0; i < trials; i++) {
-        const result = NavigationService.handleSpecialTile(state, pitTile);
+        const result = DungeonMovementService.handleSpecialTile(state, pitTile);
         const charAfter = result.roster.get('char1')!;
 
         if (charAfter.hp < 50) {
@@ -497,7 +497,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Descend via stairs (level 1 -> level 2)
-      const descendState = NavigationService.enterLevel(state, 2, 'STAIRS_DOWN');
+      const descendState = DungeonMovementService.enterLevel(state, 2, 'STAIRS_DOWN');
 
       expect(descendState.dungeon.currentLevel).toBe(2);
       expect(descendState.dungeon.position.facing).toBe('NORTH'); // Maintains facing
@@ -520,7 +520,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Ascend via stairs (level 2 -> level 1)
-      const ascendState = NavigationService.enterLevel(state, 1, 'STAIRS_UP');
+      const ascendState = DungeonMovementService.enterLevel(state, 1, 'STAIRS_UP');
 
       expect(ascendState.dungeon.currentLevel).toBe(1);
       expect(ascendState.dungeon.position.facing).toBe('EAST'); // Maintains facing
@@ -543,15 +543,15 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Try to go below level 1
-      const clampedBelow = NavigationService.enterLevel(state, 0, 'STAIRS_UP');
+      const clampedBelow = DungeonMovementService.enterLevel(state, 0, 'STAIRS_UP');
       expect(clampedBelow.dungeon.currentLevel).toBe(1);
 
       // Test transition within available levels (1 -> 3)
-      const state1to3 = NavigationService.enterLevel(state, 3, 'STAIRS_DOWN');
+      const state1to3 = DungeonMovementService.enterLevel(state, 3, 'STAIRS_DOWN');
       expect(state1to3.dungeon.currentLevel).toBe(3);
 
       // Test transition back (3 -> 1)
-      const state3to1 = NavigationService.enterLevel(state1to3, 1, 'STAIRS_UP');
+      const state3to1 = DungeonMovementService.enterLevel(state1to3, 1, 'STAIRS_UP');
       expect(state3to1.dungeon.currentLevel).toBe(1);
     });
   });
@@ -584,7 +584,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       const facings = new Set<string>();
 
       for (let i = 0; i < 20; i++) {
-        const result = NavigationService.handleSpecialTile(state, spinnerTile);
+        const result = DungeonMovementService.handleSpecialTile(state, spinnerTile);
         facings.add(result.dungeon.position.facing);
       }
 
@@ -621,18 +621,18 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Test basic movement
-      const movedState = NavigationService.moveForward(state);
+      const movedState = DungeonMovementService.moveForward(state);
 
       // Position should have changed
       expect(movedState.dungeon!.position.x !== state.dungeon!.position.x ||
              movedState.dungeon!.position.y !== state.dungeon!.position.y).toBe(true);
 
       // Test turning
-      const turnedState = NavigationService.turnLeft(movedState);
+      const turnedState = DungeonMovementService.turnLeft(movedState);
       expect(turnedState.dungeon!.position.facing).not.toBe(movedState.dungeon!.position.facing);
 
       // Test strafing
-      const strafedState = NavigationService.strafeRight(turnedState);
+      const strafedState = DungeonMovementService.strafeRight(turnedState);
       expect(strafedState.dungeon!.position.x !== turnedState.dungeon!.position.x ||
              strafedState.dungeon!.position.y !== turnedState.dungeon!.position.y).toBe(true);
     });
@@ -678,7 +678,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
 
       const start = performance.now();
       for (let i = 0; i < 100; i++) {
-        NavigationService.handleSpecialTile(state, chuteTile);
+        DungeonMovementService.handleSpecialTile(state, chuteTile);
       }
       const end = performance.now();
 

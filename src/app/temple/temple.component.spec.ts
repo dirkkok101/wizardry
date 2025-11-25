@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { TempleComponent } from './temple.component';
 import { GameStateService } from '../../services/GameStateService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
 import { CharacterStatus } from '../../types/CharacterStatus';
-import { ServiceType } from '../../types/ServiceType';
 import { Race } from '../../types/Race';
 import { Alignment } from '../../types/Alignment';
 
@@ -14,7 +14,8 @@ describe('TempleComponent', () => {
   let component: TempleComponent;
   let fixture: ComponentFixture<TempleComponent>;
   let gameState: GameStateService;
-  let router: Router;
+  let navigationService: SceneNavigationService;
+  let messageService: MessageService;
 
   const mockCharacter: Character = {
     id: 'char-1',
@@ -48,9 +49,10 @@ describe('TempleComponent', () => {
     fixture = TestBed.createComponent(TempleComponent);
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
-    router = TestBed.inject(Router);
+    navigationService = TestBed.inject(SceneNavigationService);
+    messageService = TestBed.inject(MessageService);
 
-    jest.spyOn(router, 'navigate');
+    jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
 
     // Setup party with afflicted character
     gameState.updateState(state => ({
@@ -154,7 +156,7 @@ describe('TempleComponent', () => {
       component.handleFooterAction('cure-poison');
       component.confirmService();
 
-      expect(component.errorMessage()).toContain('Cannot afford');
+      expect(messageService.messageText()).toContain('Cannot afford');
 
       // Restore gold and select same service - error should be cleared
       gameState.updateState(state => ({
@@ -164,7 +166,7 @@ describe('TempleComponent', () => {
 
       component.handleFooterAction('cure-poison');
 
-      expect(component.errorMessage()).toBeNull();
+      expect(messageService.hasMessage()).toBe(false);
     });
   });
 
@@ -200,7 +202,7 @@ describe('TempleComponent', () => {
       component.handleFooterAction('cure-poison');
       component.confirmService();
 
-      expect(component.errorMessage()).toContain('Cannot afford');
+      expect(messageService.messageText()).toContain('Cannot afford');
     });
   });
 
@@ -261,7 +263,7 @@ describe('TempleComponent', () => {
 
       component.handleEscape();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
     it('does not navigate when confirmation dialog is open', () => {
@@ -270,7 +272,7 @@ describe('TempleComponent', () => {
 
       component.handleEscape();
 
-      expect(router.navigate).not.toHaveBeenCalled();
+      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
     });
   });
 });

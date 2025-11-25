@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CastleMenuComponent } from '../castle-menu.component';
 import { provideRouter } from '@angular/router';
+import { SceneNavigationService } from '../../../services/SceneNavigationService';
 
 describe('CastleMenuComponent', () => {
   let component: CastleMenuComponent;
   let fixture: ComponentFixture<CastleMenuComponent>;
+  let navigationService: SceneNavigationService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -14,6 +16,7 @@ describe('CastleMenuComponent', () => {
 
     fixture = TestBed.createComponent(CastleMenuComponent);
     component = fixture.componentInstance;
+    navigationService = TestBed.inject(SceneNavigationService);
     fixture.detectChanges();
   });
 
@@ -87,56 +90,52 @@ describe('CastleMenuComponent', () => {
   });
 
   describe('Party Display', () => {
-    it('should display character cards for each party member', () => {
-      // This test will need GameStateService mock - skip for now and test manually
-      // Focus on template structure
-      const characterCards = fixture.nativeElement.querySelectorAll('app-castle-menu-character-card');
-      expect(characterCards.length).toBeGreaterThanOrEqual(0);
+    it('should display party character grid', () => {
+      const characterGrid = fixture.nativeElement.querySelector('app-party-character-grid');
+      expect(characterGrid).toBeTruthy();
     });
 
     it('should handle inspect event from character card', () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
-      component.handleInspectCharacter('char-123');
+      const navigateSpy = jest.spyOn(navigationService, 'inspectCharacter');
+      component.handleActionClick({ characterId: 'char-123', actionType: 'inspect' });
 
-      expect(navigateSpy).toHaveBeenCalledWith(['/character-inspection'], {
-        queryParams: { characterId: 'char-123', returnTo: 'castle-menu' }
-      });
+      expect(navigateSpy).toHaveBeenCalledWith('char-123', 'castle-menu');
     });
   });
 
   describe('Footer Navigation Integration', () => {
     it('should navigate to Tavern when tavern action triggered', () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'goToTavern');
       component.handleFooterAction('tavern');
-      expect(navigateSpy).toHaveBeenCalledWith(['/tavern']);
+      expect(navigateSpy).toHaveBeenCalled();
     });
 
     it('should navigate to Temple when temple action triggered', () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'goToTemple');
       component.handleFooterAction('temple');
-      expect(navigateSpy).toHaveBeenCalledWith(['/temple']);
+      expect(navigateSpy).toHaveBeenCalled();
     });
 
     it('should navigate to Shop when shop action triggered', () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'goToShop');
       component.handleFooterAction('shop');
-      expect(navigateSpy).toHaveBeenCalledWith(['/shop']);
+      expect(navigateSpy).toHaveBeenCalled();
     });
 
     it('should navigate to Inn when inn action triggered', () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'goToInn');
       component.handleFooterAction('inn');
-      expect(navigateSpy).toHaveBeenCalledWith(['/inn']);
+      expect(navigateSpy).toHaveBeenCalled();
     });
 
     it('should navigate to Training Grounds when training action triggered', () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'goToTrainingGrounds');
       component.handleFooterAction('training');
-      expect(navigateSpy).toHaveBeenCalledWith(['/training-grounds']);
+      expect(navigateSpy).toHaveBeenCalled();
     });
 
     it('should not navigate to Maze when party is empty', async () => {
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'enterCamp');
       component.handleFooterAction('maze');
       await fixture.whenStable();
       expect(navigateSpy).not.toHaveBeenCalled();

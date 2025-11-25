@@ -1,8 +1,10 @@
-import { Component, OnInit, HostListener, computed, signal } from '@angular/core';
+import { Component, OnInit, HostListener, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { CharacterService } from '../../services/CharacterService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
 import { CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { ConfirmationDialogComponent } from '../shared/components/confirmation-dialog/confirmation-dialog.component';
@@ -43,21 +45,21 @@ interface CharacterWithStatus {
   styleUrls: ['./training-grounds.component.scss']
 })
 export class TrainingGroundsComponent implements OnInit {
+  private readonly gameState = inject(GameStateService);
+  private readonly navigation = inject(SceneNavigationService);
+  readonly messages = inject(MessageService);
+
   // Confirmation dialog state
   readonly showDeleteConfirmation = signal(false);
   readonly deleteConfirmationMessage = signal('');
   private pendingDeleteId: string | null = null;
 
-  // Error message state
-  readonly errorMessage = signal<string | null>(null);
-
-  // Computed available characters
+  // Computed available characters using GameStateQueries
   readonly availableCharacters = computed<CharacterWithStatus[]>(() => {
     const state = this.gameState.state();
     const party = this.gameState.party();
 
-    return Array.from(state.roster.values())
-      .filter(char => !party.members.includes(char.id))
+    return GameStateQueries.availableCharacters(state)
       .map(char => ({
         character: char,
         status: this.getCharacterStatus(char, party)
@@ -70,41 +72,22 @@ export class TrainingGroundsComponent implements OnInit {
     { id: 'return', label: 'Return to Castle (ESC)', shortcut: 'ESC', enabled: true }
   ]);
 
-  constructor(
-    private gameState: GameStateService,
-    private router: Router
-  ) {}
-
   ngOnInit(): void {
-    // Update scene type
+    this.messages.clear();
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.TRAINING_GROUNDS
     }));
   }
 
-  /**
-   * Navigate to character creation wizard
-   */
   handleCreateCharacter(): void {
-    this.router.navigate(['/character-creation']);
+    this.navigation.createCharacter();
   }
 
-  /**
-   * Navigate to character inspection
-   */
   handleInspectCharacter(characterId: string): void {
-    this.router.navigate(['/character-inspection'], {
-      queryParams: {
-        characterId,
-        returnTo: 'training-grounds'
-      }
-    });
+    this.navigation.inspectCharacter(characterId, 'training-grounds');
   }
 
-  /**
-   * Show confirmation dialog for character deletion
-   */
   handleDeleteCharacter(characterId: string): void {
     const character = this.gameState.state().roster.get(characterId);
     if (!character) return;
@@ -116,9 +99,6 @@ export class TrainingGroundsComponent implements OnInit {
     this.showDeleteConfirmation.set(true);
   }
 
-  /**
-   * Confirm deletion and update state
-   */
   confirmDelete(): void {
     if (!this.pendingDeleteId) return;
 
@@ -127,54 +107,37 @@ export class TrainingGroundsComponent implements OnInit {
       this.gameState.updateState(state =>
         CharacterService.deleteCharacter(state, characterId)
       );
-      this.errorMessage.set(null); // Clear any previous errors
+      this.messages.clear();
     } catch (error) {
       console.error('Failed to delete character:', error);
-      this.errorMessage.set((error as Error).message);
+      this.messages.showError((error as Error).message);
     }
 
     this.closeDeleteDialog();
   }
 
-  /**
-   * Cancel deletion
-   */
   cancelDelete(): void {
     this.closeDeleteDialog();
   }
 
-  /**
-   * Return to castle menu
-   */
-  returnToCastleMenu(): void {
-    this.router.navigate(['/castle-menu']);
-  }
-
-  /**
-   * Handle footer menu actions
-   */
   handleFooterAction(itemId: string): void {
-    switch(itemId) {
+    switch (itemId) {
       case 'create':
         this.handleCreateCharacter();
         break;
       case 'return':
-        this.returnToCastleMenu();
+        this.navigation.returnToCastle();
         break;
     }
   }
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    // Don't navigate if confirmation dialog is open
     if (!this.showDeleteConfirmation()) {
-      this.returnToCastleMenu();
+      this.navigation.returnToCastle();
     }
   }
 
-  /**
-   * Handle actions from character cards
-   */
   handleActionClick(event: CharacterActionEvent): void {
     if (event.actionType === 'inspect') {
       this.handleInspectCharacter(event.characterId);
@@ -183,17 +146,10 @@ export class TrainingGroundsComponent implements OnInit {
     }
   }
 
-  /**
-   * Get character status for display
-   */
   private getCharacterStatus(char: Character, party: Party): CharacterStatus {
-    // Return actual character status (being in party doesn't change it)
     return char.status;
   }
 
-  /**
-   * Close confirmation dialog and reset state
-   */
   private closeDeleteDialog(): void {
     this.showDeleteConfirmation.set(false);
     this.deleteConfirmationMessage.set('');

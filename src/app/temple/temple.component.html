@@ -1,19 +1,13 @@
 <div class="temple-scene">
-  <!-- Header -->
   <app-scene-title title="TEMPLE OF CANT" />
 
-  <!-- Content: Afflicted Characters -->
   <div class="temple-content">
     @if (afflictedCharacters().length > 0) {
-      <div class="character-grid">
-        @for (char of afflictedCharacters(); track char.id) {
-          <app-character-card
-            [character]="char"
-            [actions]="[{type: 'inspect'}]"
-            (actionClick)="handleCharacterAction($event)"
-          />
-        }
-      </div>
+      <app-party-character-grid
+        source="afflicted"
+        [actions]="[{type: 'inspect'}]"
+        (actionClick)="handleCharacterAction($event)"
+      />
     } @else {
       <div class="empty-state">
         <p>Your party is in good health.</p>
@@ -21,19 +15,18 @@
       </div>
     }
 
-    <!-- Error Message -->
-    @if (errorMessage()) {
-      <div class="error-message">{{ errorMessage() }}</div>
+    @if (messages.hasMessage()) {
+      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+        {{ messages.messageText() }}
+      </div>
     }
   </div>
 
-  <!-- Footer: Service Menu -->
   <app-scene-footer
     [menuItems]="footerMenuItems()"
     (itemSelected)="handleFooterAction($event)"
   />
 
-  <!-- Confirmation Dialog -->
   @if (showConfirmation()) {
     <app-confirmation-dialog
       [message]="confirmationMessage()"

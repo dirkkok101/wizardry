@@ -6,7 +6,7 @@ import { SceneFooterComponent } from '../shared/components/scene-footer/scene-fo
 import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
 import { MessageLogComponent } from '../shared/components/message-log/message-log.component';
 import { GameStateService } from '../../services/GameStateService';
-import { NavigationService } from '../../services/NavigationService';
+import { DungeonMovementService } from '../../services/DungeonMovementService';
 import { DungeonService } from '../../services/DungeonService';
 import { WebGLRenderingService } from '../../services/WebGLRenderingService';
 import { EncounterService } from '../../services/EncounterService';
@@ -309,16 +309,16 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   moveForward(): void {
-    this.executeMovement('FORWARD', (state: GameState) => NavigationService.moveForward(state));
+    this.executeMovement('FORWARD', (state: GameState) => DungeonMovementService.moveForward(state));
   }
 
   moveBackward(): void {
-    this.executeMovement('BACKWARD', (state: GameState) => NavigationService.moveBackward(state));
+    this.executeMovement('BACKWARD', (state: GameState) => DungeonMovementService.moveBackward(state));
   }
 
   turnLeft(): void {
     const state = this.gameState.state();
-    const newState = NavigationService.turnLeft(state);
+    const newState = DungeonMovementService.turnLeft(state);
     this.gameState.updateState(() => newState);
     this.addMessage('You turn left.');
     this.render();
@@ -326,18 +326,18 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   turnRight(): void {
     const state = this.gameState.state();
-    const newState = NavigationService.turnRight(state);
+    const newState = DungeonMovementService.turnRight(state);
     this.gameState.updateState(() => newState);
     this.addMessage('You turn right.');
     this.render();
   }
 
   strafeLeft(): void {
-    this.executeMovement('STRAFE_LEFT', (state: GameState) => NavigationService.strafeLeft(state));
+    this.executeMovement('STRAFE_LEFT', (state: GameState) => DungeonMovementService.strafeLeft(state));
   }
 
   strafeRight(): void {
-    this.executeMovement('STRAFE_RIGHT', (state: GameState) => NavigationService.strafeRight(state));
+    this.executeMovement('STRAFE_RIGHT', (state: GameState) => DungeonMovementService.strafeRight(state));
   }
 
   openDoor(): void {
@@ -437,7 +437,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectElevatorLevel(level: number): void {
     const state = this.gameState.state();
-    const newState = NavigationService.enterLevel(state, level, 'ELEVATOR');
+    const newState = DungeonMovementService.enterLevel(state, level, 'ELEVATOR');
     this.gameState.updateState(() => newState);
     this.addMessage(`Elevator descends to Level ${level}...`);
   }

@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { ShopComponent } from './shop.component';
 import { GameStateService } from '../../services/GameStateService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { Item } from '../../types/Item';
@@ -15,7 +16,8 @@ describe('ShopComponent', () => {
   let component: ShopComponent;
   let fixture: ComponentFixture<ShopComponent>;
   let gameState: GameStateService;
-  let router: Router;
+  let navigationService: SceneNavigationService;
+  let messageService: MessageService;
 
   const mockCharacter: Character = {
     id: 'char-1',
@@ -49,9 +51,10 @@ describe('ShopComponent', () => {
     fixture = TestBed.createComponent(ShopComponent);
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
-    router = TestBed.inject(Router);
+    navigationService = TestBed.inject(SceneNavigationService);
+    messageService = TestBed.inject(MessageService);
 
-    jest.spyOn(router, 'navigate');
+    jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
 
     // Setup roster with character and party with gold
     gameState.updateState(state => ({
@@ -99,7 +102,7 @@ describe('ShopComponent', () => {
 
     it('shows error when character not found', () => {
       component.selectCharacter('nonexistent');
-      expect(component.errorMessage()).toBeTruthy();
+      expect(messageService.hasMessage()).toBe(true);
     });
   });
 
@@ -139,7 +142,7 @@ describe('ShopComponent', () => {
 
       component.buyItem(expensiveItem.id);
 
-      expect(component.errorMessage()).toContain('afford');
+      expect(messageService.messageText()).toContain('afford');
     });
 
     it('shows error when inventory is full', () => {
@@ -153,7 +156,7 @@ describe('ShopComponent', () => {
 
       component.buyItem(SHOP_INVENTORY[0].id);
 
-      expect(component.errorMessage()).toContain('full');
+      expect(messageService.messageText()).toContain('full');
     });
 
     it('shows error when no character selected', () => {
@@ -161,7 +164,7 @@ describe('ShopComponent', () => {
 
       component.buyItem(SHOP_INVENTORY[0].id);
 
-      expect(component.errorMessage()).toContain('No character selected');
+      expect(messageService.messageText()).toContain('No character selected');
     });
   });
 
@@ -185,7 +188,7 @@ describe('ShopComponent', () => {
   describe('navigation', () => {
     it('returns to castle when selected', () => {
       component.handleMenuSelect('castle');
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
   });
 
@@ -335,9 +338,9 @@ describe('ShopComponent', () => {
 
       component.sellItem(itemId)
 
-      expect(component.successMessage()).toContain('Sold')
-      expect(component.successMessage()).toContain('Long Sword')
-      expect(component.successMessage()).toContain('100')
+      expect(messageService.messageText()).toContain('Sold')
+      expect(messageService.messageText()).toContain('Long Sword')
+      expect(messageService.messageText()).toContain('100')
     })
 
     it('cannot sell equipped cursed item', () => {
@@ -356,7 +359,7 @@ describe('ShopComponent', () => {
     it('shows error when item not found', () => {
       component.sellItem('nonexistent-item')
 
-      expect(component.errorMessage()).toContain('not found')
+      expect(messageService.messageText()).toContain('not found')
     })
 
     it('shows error when no character selected', () => {
@@ -364,7 +367,7 @@ describe('ShopComponent', () => {
 
       component.sellItem('weapon-long-sword')
 
-      expect(component.errorMessage()).toContain('No character selected')
+      expect(messageService.messageText()).toContain('No character selected')
     })
 
     it('shows confirmation before selling item', () => {
@@ -504,7 +507,7 @@ describe('ShopComponent', () => {
 
       component.identifyItem(item.id)
 
-      expect(component.successMessage()).toContain(trueName)
+      expect(messageService.messageText()).toContain(trueName)
     })
 
     it('reveals item properties after identification', () => {
@@ -516,7 +519,7 @@ describe('ShopComponent', () => {
       const identifiedItem = char.inventory.find(i => (typeof i === 'object' ? i.id : i) === item.id)! as Item
 
       expect(identifiedItem.damage).toBeDefined()
-      expect(component.successMessage()).toContain('Damage')
+      expect(messageService.messageText()).toContain('Damage')
     })
 
     it('reveals curse status if cursed', () => {
@@ -524,8 +527,8 @@ describe('ShopComponent', () => {
 
       component.identifyItem(cursedItem.id)
 
-      expect(component.successMessage()).toContain('CURSED')
-      expect(component.successMessage()).toContain('WARNING')
+      expect(messageService.messageText()).toContain('CURSED')
+      expect(messageService.messageText()).toContain('WARNING')
     })
 
     it('shows error when cannot afford identification', () => {
@@ -539,13 +542,13 @@ describe('ShopComponent', () => {
 
       component.identifyItem(UNIDENTIFIED_ITEMS[0].id)
 
-      expect(component.errorMessage()).toContain('afford')
+      expect(messageService.messageText()).toContain('afford')
     })
 
     it('shows error when item not found', () => {
       component.identifyItem('nonexistent-item')
 
-      expect(component.errorMessage()).toContain('not found')
+      expect(messageService.messageText()).toContain('not found')
     })
 
     it('shows error when item already identified', () => {
@@ -564,7 +567,7 @@ describe('ShopComponent', () => {
 
       component.identifyItem(identifiedItem.id)
 
-      expect(component.errorMessage()).toContain('already identified')
+      expect(messageService.messageText()).toContain('already identified')
     })
 
     it('shows error when no character selected', () => {
@@ -572,7 +575,7 @@ describe('ShopComponent', () => {
 
       component.identifyItem(UNIDENTIFIED_ITEMS[0].id)
 
-      expect(component.errorMessage()).toContain('No character selected')
+      expect(messageService.messageText()).toContain('No character selected')
     })
 
     it('displays item properties after identification', () => {

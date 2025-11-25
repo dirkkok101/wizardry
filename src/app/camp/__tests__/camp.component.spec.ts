@@ -2,7 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CampComponent } from '../camp.component';
 import { GameStateService } from '../../../services/GameStateService';
 import { SaveService } from '../../../services/SaveService';
-import { Router } from '@angular/router';
+import { SceneNavigationService } from '../../../services/SceneNavigationService';
+import { MessageService } from '../../../services/MessageService';
+import { GameStateQueries } from '../../../utils/GameStateQueries';
 import { Character } from '../../../types/Character';
 import { CharacterStatus } from '../../../types/CharacterStatus';
 
@@ -11,29 +13,32 @@ describe('CampComponent', () => {
   let fixture: ComponentFixture<CampComponent>;
   let gameState: GameStateService;
   let mockSaveService: jest.Mocked<SaveService>;
-  let mockRouter: jest.Mocked<Router>;
+  let navigationService: SceneNavigationService;
+  let messageService: MessageService;
 
   beforeEach(async () => {
     mockSaveService = {
       saveGame: jest.fn().mockResolvedValue(undefined)
     } as any;
 
-    mockRouter = {
-      navigate: jest.fn()
-    } as any;
-
     await TestBed.configureTestingModule({
       imports: [CampComponent],
       providers: [
         GameStateService,
-        { provide: SaveService, useValue: mockSaveService },
-        { provide: Router, useValue: mockRouter }
+        { provide: SaveService, useValue: mockSaveService }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(CampComponent);
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
+    navigationService = TestBed.inject(SceneNavigationService);
+    messageService = TestBed.inject(MessageService);
+
+    jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'castSpell').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'enterMaze').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
   });
 
   it('should create', () => {
@@ -108,7 +113,7 @@ describe('CampComponent', () => {
 
       fixture.detectChanges();
 
-      const chars = component.partyCharacters();
+      const chars = GameStateQueries.partyCharacters(gameState.state());
       expect(chars).toHaveLength(2);
       expect(chars[0].name).toBe('Fighter');
       expect(chars[1].name).toBe('Mage');
@@ -118,7 +123,7 @@ describe('CampComponent', () => {
       // Game state starts empty, no need to update
       fixture.detectChanges();
 
-      expect(component.partyCharacters()).toHaveLength(0);
+      expect(GameStateQueries.partyCharacters(gameState.state())).toHaveLength(0);
     });
   });
 
@@ -223,19 +228,13 @@ describe('CampComponent', () => {
     it('should navigate to character inspection on inspect action', () => {
       component.handleActionClick({ characterId: 'char1', actionType: 'inspect' });
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/character-inspection'],
-        { queryParams: { characterId: 'char1', returnTo: 'camp' } }
-      );
+      expect(navigationService.inspectCharacter).toHaveBeenCalledWith('char1', 'camp');
     });
 
     it('should navigate to spell casting on cast action', () => {
       component.handleActionClick({ characterId: 'char1', actionType: 'cast' });
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/spell-casting'],
-        { queryParams: { characterId: 'char1', returnTo: 'camp' } }
-      );
+      expect(navigationService.castSpell).toHaveBeenCalledWith('char1', 'camp');
     });
   });
 
@@ -483,8 +482,8 @@ describe('CampComponent', () => {
 
       component.enterMaze();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/maze']);
-      expect(component.errorMessage()).toBeNull();
+      expect(navigationService.enterMaze).toHaveBeenCalled();
+      expect(messageService.hasMessage()).toBe(false);
     });
 
     it('should show error when entering maze with dead party member', () => {
@@ -527,13 +526,13 @@ describe('CampComponent', () => {
 
       component.enterMaze();
 
-      expect(mockRouter.navigate).not.toHaveBeenCalledWith(['/maze']);
-      expect(component.errorMessage()).toBe('Some party members are dead - visit Temple first');
+      expect(navigationService.enterMaze).not.toHaveBeenCalled();
+      expect(messageService.messageText()).toBe('Some party members are dead - visit Temple first');
     });
 
     it('should navigate to castle on castle menu action', () => {
       component.handleFooterAction('castle');
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
   });
 });

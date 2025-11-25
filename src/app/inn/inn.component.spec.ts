@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { InnComponent } from './inn.component';
 import { GameStateService } from '../../services/GameStateService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
@@ -12,7 +13,8 @@ describe('InnComponent', () => {
   let component: InnComponent;
   let fixture: ComponentFixture<InnComponent>;
   let gameState: GameStateService;
-  let router: Router;
+  let navigationService: SceneNavigationService;
+  let messageService: MessageService;
 
   const mockCharacter: Character = {
     id: 'char-1',
@@ -33,9 +35,10 @@ describe('InnComponent', () => {
     fixture = TestBed.createComponent(InnComponent);
     component = fixture.componentInstance;
     gameState = TestBed.inject(GameStateService);
-    router = TestBed.inject(Router);
+    navigationService = TestBed.inject(SceneNavigationService);
+    messageService = TestBed.inject(MessageService);
 
-    jest.spyOn(router, 'navigate');
+    jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
 
     // Setup party with character and party gold
     gameState.updateState(state => ({
@@ -81,8 +84,8 @@ describe('InnComponent', () => {
 
     it('shows success message after resting', () => {
       component.handleMenuSelect('rest');
-      expect(component.successMessage()).toBeTruthy();
-      expect(component.successMessage()).toContain('rested');
+      expect(messageService.hasMessage()).toBe(true);
+      expect(messageService.messageText()).toContain('rested');
     });
 
     it('costs 10 gold per party member', () => {
@@ -103,8 +106,8 @@ describe('InnComponent', () => {
       }));
 
       component.handleMenuSelect('rest');
-      expect(component.errorMessage()).toBeTruthy();
-      expect(component.errorMessage()).toContain('afford');
+      expect(messageService.hasMessage()).toBe(true);
+      expect(messageService.messageText()).toContain('afford');
     });
 
     it('shows error when no party exists', () => {
@@ -117,7 +120,7 @@ describe('InnComponent', () => {
       }));
 
       component.handleMenuSelect('rest');
-      expect(component.errorMessage()).toBeTruthy();
+      expect(messageService.hasMessage()).toBe(true);
     });
 
     it('prevents race condition by checking processing flag', () => {
@@ -176,7 +179,7 @@ describe('InnComponent', () => {
   describe('navigation', () => {
     it('returns to castle when selected', () => {
       component.handleMenuSelect('castle');
-      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
   });
 
@@ -241,7 +244,7 @@ describe('InnComponent', () => {
 
       await component.restInRoom(RoomType.BARRACKS);
 
-      expect(component.errorMessage()).toContain('Not enough gold');
+      expect(messageService.messageText()).toContain('Not enough gold');
     });
 
     it('triggers level up when HP reaches max and has XP', async () => {

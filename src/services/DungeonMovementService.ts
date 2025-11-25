@@ -2,7 +2,18 @@ import { GameState } from '../types/GameState'
 import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '../types/Dungeon'
 import { DungeonService } from './DungeonService'
 
-export const NavigationService = {
+/**
+ * DungeonMovementService - Pure function service for dungeon navigation logic
+ *
+ * Handles all movement-related state changes in the dungeon:
+ * - Movement (forward, backward, strafe)
+ * - Turning (left, right)
+ * - Level transitions (stairs, chutes, elevators)
+ * - Special tile effects (teleporters, spinners, pits)
+ *
+ * Note: This is distinct from SceneNavigationService which handles route navigation.
+ */
+export const DungeonMovementService = {
   /**
    * Type guard to check if dungeon is DungeonState
    */

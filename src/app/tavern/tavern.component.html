@@ -1,12 +1,10 @@
 <app-scene-title title="GILGAMESH'S TAVERN" [showPartyGold]="true" />
 
 <div class="tavern-container">
-  <!-- Error/Success Messages -->
-  @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
-  }
-  @if (successMessage()) {
-    <div class="success-message">{{ successMessage() }}</div>
+  @if (messages.hasMessage()) {
+    <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      {{ messages.messageText() }}
+    </div>
   }
 
   <!-- Left Column: Available Characters -->
