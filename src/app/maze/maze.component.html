@@ -31,11 +31,14 @@
 
     <!-- Right: Character Cards + Message Log -->
     <div class="right-panel">
-      <!-- Character Grid (3×2) -->
+      <!-- Character Grid (Front Row / Back Row) -->
       <div class="party-grid">
-        @for (char of partyCharacters(); track char.id) {
-          <app-character-card [character]="char" />
-        }
+        <app-party-character-grid
+          source="party"
+          [showFormation]="true"
+          [visibleFields]="['class', 'level', 'hp', 'ac']"
+          variant="compact"
+        />
       </div>
 
       <!-- Message Log (under character cards) -->

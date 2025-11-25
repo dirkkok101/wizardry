@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
-import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
+import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component';
 import { MessageLogComponent } from '../shared/components/message-log/message-log.component';
 import { GameStateService } from '../../services/GameStateService';
 import { DungeonMovementService } from '../../services/DungeonMovementService';
@@ -29,7 +29,7 @@ import * as TextureAtlasService from '../../services/TextureAtlasService';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterCardComponent,
+    PartyCharacterGridComponent,
     MessageLogComponent
   ],
   templateUrl: './maze.component.html',
