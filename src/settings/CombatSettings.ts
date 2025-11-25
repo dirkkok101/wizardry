@@ -24,8 +24,8 @@ export interface CombatDisplaySettings {
  * Can be modified at runtime or via game options
  */
 export const DEFAULT_COMBAT_SETTINGS: CombatDisplaySettings = {
-  messageDelayMs: 1200,      // 1200ms delay between different actions for readability
-  actionResultDelayMs: 800   // 800ms delay between action and its result for suspense
+  messageDelayMs: 1000,      // 1000ms delay between different actions for readability
+  actionResultDelayMs: 600   // 600ms delay between action and its result for suspense
 }
 
 /**

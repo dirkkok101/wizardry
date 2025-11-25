@@ -442,30 +442,30 @@ export class CombatComponent implements OnInit, OnDestroy {
     let currentIndex = 0
 
     const showNextMessage = () => {
+      if (currentIndex >= messages.length) {
+        // All messages shown
+        this.isAnimatingMessages.set(false)
+        this.messageAnimationTimer = null
+        onComplete()
+        return
+      }
+
+      const message = messages[currentIndex]
+
+      // Strip result marker for display
+      const displayMessage = CombatService.stripResultMarker(message)
+
+      // Add message to displayed
+      this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
+      currentIndex++
+
+      // Determine delay for NEXT message (if any)
       if (currentIndex < messages.length) {
-        const message = messages[currentIndex]
-        const isResult = CombatService.isResultMessage(message)
-
-        // Strip result marker for display
-        const displayMessage = CombatService.stripResultMarker(message)
-
-        // Add message to displayed
-        this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
-        currentIndex++
-
-        // Determine delay for NEXT message
-        if (currentIndex < messages.length) {
-          const nextMessage = messages[currentIndex]
-          const nextIsResult = CombatService.isResultMessage(nextMessage)
-          // Use result delay if next message is a result, otherwise use action delay
-          const delay = nextIsResult ? resultDelay : actionDelay
-          this.messageAnimationTimer = setTimeout(showNextMessage, delay)
-        } else {
-          // All messages shown
-          this.isAnimatingMessages.set(false)
-          this.messageAnimationTimer = null
-          onComplete()
-        }
+        const nextMessage = messages[currentIndex]
+        const nextIsResult = CombatService.isResultMessage(nextMessage)
+        // Use result delay if next message is a result, otherwise use action delay
+        const delay = nextIsResult ? resultDelay : actionDelay
+        this.messageAnimationTimer = setTimeout(showNextMessage, delay)
       } else {
         // All messages shown
         this.isAnimatingMessages.set(false)

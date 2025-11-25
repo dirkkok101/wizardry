@@ -23,12 +23,12 @@ describe('CombatSettings', () => {
   })
 
   describe('DEFAULT_COMBAT_SETTINGS', () => {
-    it('has a default message delay of 1200ms', () => {
-      expect(DEFAULT_COMBAT_SETTINGS.messageDelayMs).toBe(1200)
+    it('has a default message delay of 1000ms', () => {
+      expect(DEFAULT_COMBAT_SETTINGS.messageDelayMs).toBe(1000)
     })
 
-    it('has a default action-result delay of 800ms', () => {
-      expect(DEFAULT_COMBAT_SETTINGS.actionResultDelayMs).toBe(800)
+    it('has a default action-result delay of 600ms', () => {
+      expect(DEFAULT_COMBAT_SETTINGS.actionResultDelayMs).toBe(600)
     })
   })
 
