@@ -6,11 +6,6 @@ import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 import { CharacterStatsComponent } from '../character-stats/character-stats.component';
 import { CharacterActionsComponent } from '../character-actions/character-actions.component';
 
-/**
- * Combat status for character action selection
- */
-export type CombatStatus = 'active' | 'ready' | 'waiting' | null;
-
 @Component({
   selector: 'app-character-card',
   standalone: true,
@@ -32,8 +27,6 @@ export class CharacterCardComponent {
   @Input() highlighted = false;
   /** Show HP bar below stats */
   @Input() showHpBar = false;
-  /** Combat action status indicator */
-  @Input() combatStatus: CombatStatus = null;
   /** Status text to display (e.g., selected action in combat) */
   @Input() statusText?: string | null;
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
@@ -61,15 +54,6 @@ export class CharacterCardComponent {
 
   get isDead(): boolean {
     return this.character.hp <= 0;
-  }
-
-  get combatStatusIcon(): string {
-    switch (this.combatStatus) {
-      case 'ready': return '\u2713'; // ✓
-      case 'active': return '\u23F3'; // ⏳
-      case 'waiting': return '\u23F8'; // ⏸
-      default: return '';
-    }
   }
 
   handleActionClick(event: CharacterActionEvent): void {
