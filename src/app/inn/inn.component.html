@@ -15,11 +15,13 @@
         </div>
 
         <div class="party-section">
-          <h2>PARTY STATUS:</h2>
-          <app-character-list
-            [characters]="partyCharacters()"
-            [selectable]="false"
-            [emptyMessage]="'No party (visit Tavern to form party)'"
+          <app-party-character-grid
+            source="party"
+            [showFormation]="true"
+            [visibleFields]="['class', 'level', 'hp', 'ac']"
+            [actions]="[]"
+            emptyMessage="No party (visit Tavern to form party)"
+            variant="compact"
           />
 
           <div class="party-gold">
@@ -138,10 +140,13 @@
         <h2>STABLES (Character Storage):</h2>
         <p class="info">Board characters here for safekeeping.</p>
 
-        <app-character-list
-          [characters]="partyCharacters()"
-          [selectable]="false"
-          [emptyMessage]="'No characters to board'"
+        <app-party-character-grid
+          source="party"
+          [showFormation]="true"
+          [visibleFields]="['class', 'level', 'hp', 'ac']"
+          [actions]="[]"
+          emptyMessage="No characters to board"
+          variant="compact"
         />
 
         <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>

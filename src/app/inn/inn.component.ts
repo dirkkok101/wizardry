@@ -9,6 +9,7 @@ import { MessageService } from '../../services/MessageService';
 import { GameStateQueries } from '../../utils/GameStateQueries';
 import { MenuComponent, MenuItem } from '../shared/components/menu/menu.component';
 import { CharacterListComponent } from '../shared/components/character-list/character-list.component';
+import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 
@@ -35,7 +36,7 @@ interface LevelUpDisplayData {
 @Component({
   selector: 'app-inn',
   standalone: true,
-  imports: [CommonModule, MenuComponent, CharacterListComponent],
+  imports: [CommonModule, MenuComponent, CharacterListComponent, PartyCharacterGridComponent],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']
 })
