@@ -1,4 +1,4 @@
-import { Component, computed, HostListener, inject } from '@angular/core';
+import { Component, OnInit, computed, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '../../services/GameStateService';
 import { SceneNavigationService } from '../../services/SceneNavigationService';
@@ -19,10 +19,14 @@ import { CharacterStatus } from '../../types/CharacterStatus';
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
-export class TavernComponent {
+export class TavernComponent implements OnInit {
   private readonly gameStateService = inject(GameStateService);
   private readonly navigation = inject(SceneNavigationService);
   readonly messages = inject(MessageService);
+
+  ngOnInit(): void {
+    this.messages.clear();
+  }
 
   // Computed properties using GameStateQueries
   readonly availableCharacters = computed(() =>

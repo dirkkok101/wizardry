@@ -58,6 +58,7 @@ export class ShopComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.messages.clear();
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.SHOP

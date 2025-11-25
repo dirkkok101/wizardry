@@ -131,6 +131,7 @@ export class InnComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.messages.clear();
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.INN

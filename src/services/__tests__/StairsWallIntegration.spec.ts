@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { DungeonService } from '../DungeonService';
-import { NavigationService } from '../NavigationService';
+import { DungeonMovementService } from '../DungeonMovementService';
 import { GameState } from '../../types/GameState';
 import { DungeonState, LevelData, TileData } from '../../types/Dungeon';
 import { SceneType } from '../../types/SceneType';
@@ -71,7 +71,7 @@ describe('Stairs Wall Integration', () => {
       expect(validation.destination).toEqual({ type: 'castle' });
 
       // Act 2: Execute movement through NavigationService
-      const resultState = NavigationService.moveForward(state);
+      const resultState = DungeonMovementService.moveForward(state);
 
       // Assert 2: Should transition to castle (dungeon becomes undefined)
       expect(resultState.dungeon).toBeUndefined();
@@ -97,7 +97,7 @@ describe('Stairs Wall Integration', () => {
       };
 
       // Act
-      const resultState = NavigationService.moveForward(state);
+      const resultState = DungeonMovementService.moveForward(state);
 
       // Assert: All non-dungeon state should be preserved
       expect(resultState.roster).toEqual(state.roster);
@@ -135,7 +135,7 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Act: Move forward (WEST) should move to (0, 10) and trigger tile-based stairs transition
-      const resultState = NavigationService.moveForward(state);
+      const resultState = DungeonMovementService.moveForward(state);
 
       // Assert: Should transition to level 2 via handleSpecialTile
       // Note: Tile-based stairs_down uses enterLevel(), which finds stairs_up on target level
@@ -211,7 +211,7 @@ describe('Stairs Wall Integration', () => {
         expect(validation.destination?.y).toBe(15);
 
         // Act 2: Execute transition
-        const resultState = NavigationService.moveForward(state);
+        const resultState = DungeonMovementService.moveForward(state);
 
         // Assert 2: Should transition to level 3 at specified coordinates
         expect(resultState.dungeon!.currentLevel).toBe(3);
@@ -242,7 +242,7 @@ describe('Stairs Wall Integration', () => {
       };
       const state: GameState = { ...baseState, dungeon };
 
-      const result = NavigationService.moveForward(state);
+      const result = DungeonMovementService.moveForward(state);
 
       // Should move to (0, 1) - normal movement
       expect(result.dungeon?.position.y).toBe(1);
@@ -266,7 +266,7 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Strafe left (should move south)
-      const result = NavigationService.strafeLeft(state);
+      const result = DungeonMovementService.strafeLeft(state);
 
       // Should move without triggering stairs
       expect(result.dungeon).toBeDefined();
@@ -290,7 +290,7 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Move backward
-      const result = NavigationService.moveBackward(state);
+      const result = DungeonMovementService.moveBackward(state);
 
       // Should move without triggering stairs
       expect(result.dungeon).toBeDefined();
@@ -314,7 +314,7 @@ describe('Stairs Wall Integration', () => {
       };
       const state: GameState = { ...baseState, dungeon };
 
-      const result = NavigationService.turnLeft(state);
+      const result = DungeonMovementService.turnLeft(state);
 
       // Should rotate to SOUTH without triggering stairs
       expect(result.dungeon?.position.facing).toBe('SOUTH');
@@ -337,7 +337,7 @@ describe('Stairs Wall Integration', () => {
       };
       const state: GameState = { ...baseState, dungeon };
 
-      const result = NavigationService.turnRight(state);
+      const result = DungeonMovementService.turnRight(state);
 
       // Should rotate to NORTH without triggering stairs
       expect(result.dungeon?.position.facing).toBe('NORTH');
@@ -362,11 +362,11 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Test rotation doesn't trigger
-      let result = NavigationService.turnLeft(state);
+      let result = DungeonMovementService.turnLeft(state);
       expect(result.dungeon).toBeDefined();
 
       // Test forward movement DOES trigger
-      result = NavigationService.moveForward(state);
+      result = DungeonMovementService.moveForward(state);
       expect(result.dungeon).toBeUndefined(); // Castle transition
     });
 
@@ -387,7 +387,7 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Move south to (0,0)
-      const result = NavigationService.moveForward(state);
+      const result = DungeonMovementService.moveForward(state);
 
       // Should be at (0,0) now, facing south
       expect(result.dungeon?.position.x).toBe(0);
@@ -443,7 +443,7 @@ describe('Stairs Wall Integration', () => {
         };
         const state: GameState = { ...baseState, dungeon };
 
-        const result = NavigationService.moveForward(state);
+        const result = DungeonMovementService.moveForward(state);
 
         // Should use default coordinates (0, 0)
         expect(result.dungeon!.currentLevel).toBe(2);
@@ -456,7 +456,7 @@ describe('Stairs Wall Integration', () => {
   });
 
   describe('Cross-service integration', () => {
-    it('chains DungeonService.canMove → NavigationService.moveForward → handleStairsTransition', () => {
+    it('chains DungeonService.canMove → DungeonMovementService.moveForward → handleStairsTransition', () => {
       // Full integration test of the complete flow
       const level = DungeonService.loadLevel(1);
       const position = { x: 0, y: 0, facing: 'WEST' };
@@ -481,7 +481,7 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Step 3: NavigationService executes movement
-      const result = NavigationService.moveForward(state);
+      const result = DungeonMovementService.moveForward(state);
 
       // Step 4: Verify handleStairsTransition was called and worked
       expect(result.dungeon).toBeUndefined(); // Castle transition completed
@@ -506,7 +506,7 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...originalState };
 
       // Execute transition
-      const result = NavigationService.moveForward(state);
+      const result = DungeonMovementService.moveForward(state);
 
       // Verify original state wasn't mutated
       expect(state.dungeon).toBeDefined();

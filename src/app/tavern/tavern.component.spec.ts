@@ -27,6 +27,8 @@ describe('TavernComponent (redesigned)', () => {
 
     jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
     jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
+
+    fixture.detectChanges(); // Trigger ngOnInit
   });
 
   describe('component creation', () => {

@@ -2,7 +2,7 @@ import { Component, OnInit, computed, HostListener, inject } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
-import { NavigationService } from '../../services/NavigationService';
+import { DungeonMovementService } from '../../services/DungeonMovementService';
 import { SceneNavigationService } from '../../services/SceneNavigationService';
 import { MessageService } from '../../services/MessageService';
 import { GameStateQueries } from '../../utils/GameStateQueries';
@@ -130,7 +130,7 @@ export class CampComponent implements OnInit {
     }
 
     const state = this.gameState.state();
-    const newState = NavigationService.enterDungeon(state, 1);
+    const newState = DungeonMovementService.enterDungeon(state, 1);
     this.gameState.updateState(() => newState);
 
     this.navigation.enterMaze();

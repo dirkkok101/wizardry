@@ -1,4 +1,4 @@
-import { NavigationService } from '../NavigationService'
+import { DungeonMovementService } from '../DungeonMovementService'
 import { GameState } from '../../types/GameState'
 import { Position, TileData } from '../../types/Dungeon'
 import { createTestCharacter, createTestGameState as createTestGameStateHelper } from '../../test-helpers/test-factories'
@@ -18,7 +18,7 @@ function createTestGameState(position?: Position): GameState {
   } as GameState
 }
 
-describe('NavigationService', () => {
+describe('DungeonMovementService', () => {
   // Mock DungeonService for basic movement tests to avoid special tile triggers
   const mockEmptyLevelData = {
     level: 1,
@@ -48,7 +48,7 @@ describe('NavigationService', () => {
   describe('moveForward', () => {
     it('increments y when facing north', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
-      const newState = NavigationService.moveForward(state)
+      const newState = DungeonMovementService.moveForward(state)
 
       expect(newState.dungeon!.position.y).toBe(11)
       expect(newState.dungeon!.position.x).toBe(10)
@@ -56,35 +56,35 @@ describe('NavigationService', () => {
 
     it('decrements y when facing south', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'SOUTH' })
-      const newState = NavigationService.moveForward(state)
+      const newState = DungeonMovementService.moveForward(state)
 
       expect(newState.dungeon!.position.y).toBe(9)
     })
 
     it('increments x when facing east', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'EAST' })
-      const newState = NavigationService.moveForward(state)
+      const newState = DungeonMovementService.moveForward(state)
 
       expect(newState.dungeon!.position.x).toBe(11)
     })
 
     it('decrements x when facing west', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'WEST' })
-      const newState = NavigationService.moveForward(state)
+      const newState = DungeonMovementService.moveForward(state)
 
       expect(newState.dungeon!.position.x).toBe(9)
     })
 
     it('wraps x from 19 to 0 when moving east', () => {
       const state = createTestGameState({ x: 19, y: 10, facing: 'EAST' })
-      const newState = NavigationService.moveForward(state)
+      const newState = DungeonMovementService.moveForward(state)
 
       expect(newState.dungeon!.position.x).toBe(0)
     })
 
     it('wraps x from 0 to 19 when moving west', () => {
       const state = createTestGameState({ x: 0, y: 10, facing: 'WEST' })
-      const newState = NavigationService.moveForward(state)
+      const newState = DungeonMovementService.moveForward(state)
 
       expect(newState.dungeon!.position.x).toBe(19)
     })
@@ -93,14 +93,14 @@ describe('NavigationService', () => {
   describe('turnLeft', () => {
     it('rotates from NORTH to WEST', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
-      const newState = NavigationService.turnLeft(state)
+      const newState = DungeonMovementService.turnLeft(state)
 
       expect(newState.dungeon!.position.facing).toBe('WEST')
     })
 
     it('rotates from WEST to SOUTH', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'WEST' })
-      const newState = NavigationService.turnLeft(state)
+      const newState = DungeonMovementService.turnLeft(state)
 
       expect(newState.dungeon!.position.facing).toBe('SOUTH')
     })
@@ -109,14 +109,14 @@ describe('NavigationService', () => {
   describe('turnRight', () => {
     it('rotates from NORTH to EAST', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
-      const newState = NavigationService.turnRight(state)
+      const newState = DungeonMovementService.turnRight(state)
 
       expect(newState.dungeon!.position.facing).toBe('EAST')
     })
 
     it('rotates from EAST to SOUTH', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'EAST' })
-      const newState = NavigationService.turnRight(state)
+      const newState = DungeonMovementService.turnRight(state)
 
       expect(newState.dungeon!.position.facing).toBe('SOUTH')
     })
@@ -125,7 +125,7 @@ describe('NavigationService', () => {
   describe('strafeLeft', () => {
     it('moves west when facing north', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
-      const newState = NavigationService.strafeLeft(state)
+      const newState = DungeonMovementService.strafeLeft(state)
 
       expect(newState.dungeon!.position.x).toBe(9)
       expect(newState.dungeon!.position.y).toBe(10)
@@ -137,7 +137,7 @@ describe('NavigationService', () => {
     it('initializes dungeon state with default position {x: 0, y: 0, facing: NORTH}', () => {
       const state = createTestGameStateHelper()
 
-      const result = NavigationService.enterDungeon(state, 1)
+      const result = DungeonMovementService.enterDungeon(state, 1)
 
       expect(result.dungeon!.position).toEqual({ x: 0, y: 0, facing: 'NORTH' })
     })
@@ -145,7 +145,7 @@ describe('NavigationService', () => {
     it('enables torch light with radius 3 and lightActive true', () => {
       const state = createTestGameStateHelper()
 
-      const result = NavigationService.enterDungeon(state, 1)
+      const result = DungeonMovementService.enterDungeon(state, 1)
 
       expect(result.dungeon!.lightRadius).toBe(3)
       expect(result.dungeon!.lightActive).toBe(true)
@@ -154,7 +154,7 @@ describe('NavigationService', () => {
     it('initializes all tracking sets as empty', () => {
       const state = createTestGameStateHelper()
 
-      const result = NavigationService.enterDungeon(state, 1)
+      const result = DungeonMovementService.enterDungeon(state, 1)
 
       expect(result.dungeon!.visitedTiles).toEqual(new Set())
       expect(result.dungeon!.defeatedEncounters).toEqual([])
@@ -164,7 +164,7 @@ describe('NavigationService', () => {
     it('sets correct dungeon level', () => {
       const state = createTestGameStateHelper()
 
-      const result = NavigationService.enterDungeon(state, 5)
+      const result = DungeonMovementService.enterDungeon(state, 5)
 
       expect(result.dungeon!.currentLevel).toBe(5)
     })
@@ -186,7 +186,7 @@ describe('NavigationService', () => {
         }
       }
 
-      const result = NavigationService.enterDungeon(state, 1)
+      const result = DungeonMovementService.enterDungeon(state, 1)
 
       expect(result.roster).toEqual(state.roster)
       expect(result.party).toEqual(state.party)
@@ -207,7 +207,7 @@ describe('NavigationService', () => {
         },
       };
 
-      const result = NavigationService.enterLevel(state, 2, 'STAIRS_DOWN');
+      const result = DungeonMovementService.enterLevel(state, 2, 'STAIRS_DOWN');
 
       expect(result.dungeon!.currentLevel).toBe(2);
       // Position should be set to stairs_up tile on new level (implementation detail)
@@ -225,7 +225,7 @@ describe('NavigationService', () => {
         },
       };
 
-      const result = NavigationService.enterLevel(state, 2, 'STAIRS_UP');
+      const result = DungeonMovementService.enterLevel(state, 2, 'STAIRS_UP');
 
       expect(result.dungeon!.position.facing).toBe('WEST');
     });
@@ -255,7 +255,7 @@ describe('NavigationService', () => {
           }
         }
 
-        const result = NavigationService.handleSpecialTile(state, tile)
+        const result = DungeonMovementService.handleSpecialTile(state, tile)
 
         expect(result.dungeon!.position.x).toBe(5)
         expect(result.dungeon!.position.y).toBe(5)
@@ -284,7 +284,7 @@ describe('NavigationService', () => {
           }
         }
 
-        const result = NavigationService.handleSpecialTile(state, tile)
+        const result = DungeonMovementService.handleSpecialTile(state, tile)
 
         // Should NOT teleport
         expect(result.dungeon!.position.x).toBe(1)
@@ -312,7 +312,7 @@ describe('NavigationService', () => {
           }
         }
 
-        const result = NavigationService.handleSpecialTile(state, tile)
+        const result = DungeonMovementService.handleSpecialTile(state, tile)
 
         expect(result.dungeon!.teleportCount).toBe(0)
       })
@@ -340,7 +340,7 @@ describe('NavigationService', () => {
           }
         }
 
-        const result = NavigationService.handleSpecialTile(state, tile)
+        const result = DungeonMovementService.handleSpecialTile(state, tile)
 
         // Facing should be one of the four directions
         expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.dungeon!.position.facing)
@@ -370,7 +370,7 @@ describe('NavigationService', () => {
         // Run spinner 10 times, at least one should change facing
         let facingChanged = false
         for (let i = 0; i < 10; i++) {
-          const result = NavigationService.handleSpecialTile(state, tile)
+          const result = DungeonMovementService.handleSpecialTile(state, tile)
           if (result.dungeon!.position.facing !== 'NORTH') {
             facingChanged = true
             break
@@ -396,7 +396,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // Should fall 1-3 levels
         expect(result.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
@@ -429,7 +429,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         const char1After = result.roster.get('char1')!;
         const char2After = result.roster.get('char2')!;
@@ -457,7 +457,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(10);
       });
@@ -494,7 +494,7 @@ describe('NavigationService', () => {
         // Run multiple times to ensure damage occurs
         let damageOccurred = false;
         for (let i = 0; i < 10; i++) {
-          const result = NavigationService.handleSpecialTile(state, tile);
+          const result = DungeonMovementService.handleSpecialTile(state, tile);
           const charAfter = result.roster.get('char1')!;
           if (charAfter.hp < 50) {
             damageOccurred = true;
@@ -537,7 +537,7 @@ describe('NavigationService', () => {
         // Run multiple times to ensure avoidance occurs
         let avoidanceOccurred = false;
         for (let i = 0; i < 10; i++) {
-          const result = NavigationService.handleSpecialTile(state, tile);
+          const result = DungeonMovementService.handleSpecialTile(state, tile);
           const charAfter = result.roster.get('char1')!;
           if (charAfter.hp === 50) {
             avoidanceOccurred = true;
@@ -561,7 +561,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         expect(result.dungeon!.currentLevel).toBe(5);
       });
@@ -582,7 +582,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // Note: This sets a per-tile flag, actual lightRadius override happens in MazeComponent
         expect(result.dungeon!.lightActive).toBe(true); // Spell still active
@@ -605,7 +605,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         expect(result.dungeon!.currentLevel).toBe(2);
       });
@@ -624,7 +624,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         expect(result.dungeon!.currentLevel).toBe(2);
       });
@@ -643,7 +643,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         expect(result.dungeon!.currentLevel).toBe(1);
       });
@@ -654,7 +654,7 @@ describe('NavigationService', () => {
         const destination = { type: 'castle' as const };
         const state = createTestGameStateHelper();
 
-        const result = NavigationService.handleStairsTransition(state, destination);
+        const result = DungeonMovementService.handleStairsTransition(state, destination);
 
         // Should return undefined dungeon (indicates castle/town)
         expect(result.dungeon).toBeUndefined();
@@ -681,7 +681,7 @@ describe('NavigationService', () => {
           }
         };
 
-        const result = NavigationService.handleStairsTransition(state, destination);
+        const result = DungeonMovementService.handleStairsTransition(state, destination);
 
         expect(result.dungeon!.currentLevel).toBe(2);
         expect(result.dungeon!.position.x).toBe(10);
@@ -706,7 +706,7 @@ describe('NavigationService', () => {
           }
         };
 
-        const result = NavigationService.handleStairsTransition(state, destination);
+        const result = DungeonMovementService.handleStairsTransition(state, destination);
 
         expect(result.dungeon!.currentLevel).toBe(3);
         expect(result.dungeon!.position.facing).toBe('EAST');
@@ -715,7 +715,7 @@ describe('NavigationService', () => {
       it('returns unchanged state when destination is undefined', () => {
         const state = createTestGameStateHelper();
 
-        const result = NavigationService.handleStairsTransition(state, undefined);
+        const result = DungeonMovementService.handleStairsTransition(state, undefined);
 
         expect(result).toEqual(state); // State unchanged
       });
@@ -724,7 +724,7 @@ describe('NavigationService', () => {
         const invalidDestination = {} as any;
         const state = createTestGameStateHelper();
 
-        const result = NavigationService.handleStairsTransition(state, invalidDestination);
+        const result = DungeonMovementService.handleStairsTransition(state, invalidDestination);
 
         expect(result).toEqual(state); // State unchanged
       });
@@ -748,7 +748,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // Elevator UI handled by MazeComponent
         expect(result).toEqual(state);
@@ -770,7 +770,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // Anti-magic doesn't modify state directly - MazeComponent checks tile type
         expect(result).toEqual(state);
@@ -795,7 +795,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // Message display handled by MazeComponent, state unchanged
         expect(result).toEqual(state);
@@ -820,7 +820,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // State unchanged - requires explicit inspect action
         expect(result).toEqual(state);
@@ -846,7 +846,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         // MazeComponent will check and trigger combat
         expect(result).toEqual(state);
@@ -870,7 +870,7 @@ describe('NavigationService', () => {
           },
         };
 
-        const result = NavigationService.handleSpecialTile(state, tile);
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
 
         expect(result).toEqual(state);
       });
@@ -913,7 +913,7 @@ describe('NavigationService', () => {
         return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
       });
 
-      const result = NavigationService.moveForward(state);
+      const result = DungeonMovementService.moveForward(state);
 
       // Should move to (1, 0) then teleport to (10, 10)
       expect(result.dungeon!.position.x).toBe(10);
@@ -958,7 +958,7 @@ describe('NavigationService', () => {
         return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
       });
 
-      const result = NavigationService.strafeLeft(state);
+      const result = DungeonMovementService.strafeLeft(state);
 
       // Should move to (0, 0) then spin
       expect(result.dungeon!.position.x).toBe(0);
@@ -1009,7 +1009,7 @@ describe('NavigationService', () => {
         return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
       });
 
-      const result = NavigationService.moveBackward(state);
+      const result = DungeonMovementService.moveBackward(state);
 
       // Should move to (10, 9) then fall down levels
       expect(result.dungeon!.position.x).toBe(10);
@@ -1066,7 +1066,7 @@ describe('NavigationService', () => {
         return levelData.tiles.find(t => t.x === x && t.y === y) || levelData.tiles[0];
       });
 
-      const result = NavigationService.strafeRight(state);
+      const result = DungeonMovementService.strafeRight(state);
 
       // Should move to (1, 0)
       expect(result.dungeon!.position.x).toBe(1);
@@ -1118,7 +1118,7 @@ describe('NavigationService', () => {
       // Restore real DungeonService for this test
       jest.restoreAllMocks()
 
-      const result = NavigationService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
       // Should trigger castle transition (dungeon becomes undefined)
       expect(result.dungeon).toBeUndefined()
@@ -1160,7 +1160,7 @@ describe('NavigationService', () => {
       // Restore real DungeonService for this test
       jest.restoreAllMocks()
 
-      const result = NavigationService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
       // Should update position normally
       expect(result.dungeon?.position.y).toBe(1)
@@ -1207,7 +1207,7 @@ describe('NavigationService', () => {
 
       // This test will pass once we have proper stairs_down test data
       // For now, verify the method exists and handles the case
-      const result = NavigationService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
       expect(result).toBeDefined()
     })
   })

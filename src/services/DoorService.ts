@@ -1,6 +1,6 @@
 import { GameState } from '../types/GameState';
 import { LevelData, Position } from '../types/Dungeon';
-import { NavigationService } from './NavigationService';
+import { DungeonMovementService } from './DungeonMovementService';
 import { DungeonService } from './DungeonService';
 
 export class DoorService {
@@ -23,7 +23,7 @@ export class DoorService {
    */
   static canKickDoor(level: LevelData, position: Position): boolean {
     // Get tile in front of party
-    const delta = NavigationService.getFacingDelta(position.facing);
+    const delta = DungeonMovementService.getFacingDelta(position.facing);
     const targetX = position.x + delta.x;
     const targetY = position.y + delta.y;
 
@@ -55,7 +55,7 @@ export class DoorService {
     newOpenDoors.add(currentDoorKey);
 
     // Calculate adjacent tile position based on facing direction
-    const delta = NavigationService.getFacingDelta(position.facing);
+    const delta = DungeonMovementService.getFacingDelta(position.facing);
     const adjX = position.x + delta.x;
     const adjY = position.y + delta.y;
 
@@ -98,7 +98,7 @@ export class DoorService {
     const position = state.dungeon.position;
 
     // Get door location
-    const delta = NavigationService.getFacingDelta(position.facing);
+    const delta = DungeonMovementService.getFacingDelta(position.facing);
     const doorX = position.x + delta.x;
     const doorY = position.y + delta.y;
 
