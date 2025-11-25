@@ -361,7 +361,7 @@ describe('CombatService - Monster Positioning', () => {
       const command = CombatService.createCommand(kobolds[0], 'ADVANCE')
       const result = CombatService.executeCommand(state, command, new Set())
 
-      expect(result.message).toMatch(/\d+ \w+S advance/i)
+      expect(result.message).toMatch(/The \w+s advance to the front row!/i)
     })
 
     it('handles already front row gracefully', () => {

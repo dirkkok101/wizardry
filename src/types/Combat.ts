@@ -136,6 +136,12 @@ export interface CombatVictoryResult {
  */
 export const ENCOUNTER_CONFIG = {
   /**
+   * Maximum number of monster groups that can occupy the front row
+   * Similar to party's 3-member front row limit
+   */
+  MAX_FRONT_ROW_GROUPS: 2,
+
+  /**
    * Maximum number of monster groups by dungeon level
    * Level 1: 1-2 groups
    * Level 2: 1-3 groups

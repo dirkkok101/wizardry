@@ -1,5 +1,5 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup } from '../types/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG } from '../types/Combat'
 import { Character } from '../types/Character'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
@@ -220,9 +220,8 @@ export class CombatService {
           g.formation === 'front' && g.monsters.some(m => m.hp > 0)
         )
 
-        // Allow advancement if less than 2 front groups with alive monsters
-        // (This limits front row to 2 groups max, similar to party's 3-member front row)
-        if (frontGroups.length < 2) {
+        // Allow advancement if front row has room
+        if (frontGroups.length < ENCOUNTER_CONFIG.MAX_FRONT_ROW_GROUPS) {
           return this.createCommand(monster, 'ADVANCE')
         }
 
@@ -467,7 +466,7 @@ export class CombatService {
     )
 
     const message = aliveCount > 1
-      ? `${aliveCount} ${monster.name}S advance to the front row!`
+      ? `The ${monster.name}s advance to the front row!`
       : `${monster.name} advances to the front row!`
 
     return {
@@ -1370,7 +1369,7 @@ export class CombatService {
     )
 
     const message = aliveCount > 1
-      ? `${aliveCount} ${monsterName}S rush forward to fill the gap!`
+      ? `The ${monsterName}s rush forward to fill the gap!`
       : `${monsterName} rushes forward to fill the gap!`
 
     return {
