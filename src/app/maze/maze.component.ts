@@ -163,7 +163,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // All characters can be inspected (except lost forever)
     actions.push({
       type: 'inspect',
-      enabled: char.status !== CharacterStatus.LOST_FOREVER
+      enabled: char.status !== CharacterStatus.LOST
     });
 
     // Check if character is a spellcaster with available dungeon spells

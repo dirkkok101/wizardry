@@ -191,11 +191,12 @@ export class CombatComponent implements OnInit, OnDestroy {
   })
 
   // Combine committed combat log with currently animating messages
+  // Reverse order so newest messages appear at top (no scrolling needed)
   readonly combatLog = computed(() => {
     const combat = this.combatState()
     const committedLog = combat?.combatLog || []
     const animating = this.displayedAnimatingMessages()
-    return [...committedLog, ...animating]
+    return [...committedLog, ...animating].reverse()
   })
 
   readonly roundNumber = computed(() => {
