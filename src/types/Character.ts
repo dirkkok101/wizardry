@@ -54,6 +54,9 @@ export interface Character {
   // Inventory
   inventory: (string | any)[]  // Item IDs or Item objects (max 8 items)
 
+  // Gold (individual gold before joining party, pooled when added to party)
+  gold: number  // Starting gold: 90 + random(0-100), authentic Wizardry 1 (1981)
+
   // Password (for character access protection)
   password?: string  // Password for character deletion/access
 

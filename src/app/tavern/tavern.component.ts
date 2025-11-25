@@ -93,22 +93,34 @@ export class TavernComponent implements OnInit {
       return;
     }
 
-    this.gameStateService.updateState(state => ({
-      ...state,
-      party: {
-        ...state.party,
-        members: [...state.party.members, characterId],
-        formation: {
-          ...state.party.formation,
-          frontRow: state.party.formation.frontRow.length < 3
-            ? [...state.party.formation.frontRow, characterId]
-            : state.party.formation.frontRow,
-          backRow: state.party.formation.frontRow.length >= 3
-            ? [...state.party.formation.backRow, characterId]
-            : state.party.formation.backRow
+    // Pool character's gold to party and add to party
+    const characterGold = character.gold || 0;
+
+    this.gameStateService.updateState(state => {
+      // Create updated character with gold set to 0 (pooled to party)
+      const updatedCharacter = { ...character, gold: 0 };
+      const newRoster = new Map(state.roster);
+      newRoster.set(characterId, updatedCharacter);
+
+      return {
+        ...state,
+        roster: newRoster,
+        party: {
+          ...state.party,
+          members: [...state.party.members, characterId],
+          gold: state.party.gold + characterGold,
+          formation: {
+            ...state.party.formation,
+            frontRow: state.party.formation.frontRow.length < 3
+              ? [...state.party.formation.frontRow, characterId]
+              : state.party.formation.frontRow,
+            backRow: state.party.formation.frontRow.length >= 3
+              ? [...state.party.formation.backRow, characterId]
+              : state.party.formation.backRow
+          }
         }
-      }
-    }));
+      };
+    });
   }
 
   onRemoveCharacter(characterId: string): void {

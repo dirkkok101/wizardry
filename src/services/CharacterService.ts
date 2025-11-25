@@ -153,6 +153,22 @@ function generateCharacterId(): string {
 }
 
 /**
+ * Generate starting gold for new character
+ *
+ * Formula: 90 + random(0-100) = 90-190 gold pieces
+ *
+ * Based on original Wizardry 1 (1981) mechanics where new characters
+ * received random starting gold to purchase equipment at Boltac's.
+ * This enabled the "gold pool exploit" where players could create
+ * dummy characters, pool their gold, then delete them.
+ *
+ * Sources: zimlab.com/wizardry, strategywiki.org
+ */
+function generateStartingGold(): number {
+  return 90 + RandomService.random(0, 100)
+}
+
+/**
  * Create new character with rolled stats
  */
 function createCharacter(
@@ -193,6 +209,9 @@ function createCharacter(
   // Initialize spell points for caster classes
   const spellPoints = initializeSpellPoints(params.class)
 
+  // Generate starting gold (90 + random 0-100, authentic Wizardry 1)
+  const gold = generateStartingGold()
+
   const character: Character = {
     id: generateCharacterId(),
     name: params.name,
@@ -216,6 +235,7 @@ function createCharacter(
     spellPoints,
     knownSpells: [],
     inventory: [],
+    gold,
     password: params.password,
     createdAt: Date.now(),
     lastModified: Date.now()
@@ -453,6 +473,9 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
   // Initialize spell points for caster classes
   const spellPoints = initializeSpellPoints(selectedClass)
 
+  // Generate starting gold (90 + random 0-100, authentic Wizardry 1)
+  const gold = generateStartingGold()
+
   // Create character
   const character: Character = {
     id: uuidv4(),
@@ -496,7 +519,10 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     equippedGauntlets: undefined,
 
     // Inventory
-    inventory: []
+    inventory: [],
+
+    // Gold (pooled to party when character joins)
+    gold
   }
 
   return character

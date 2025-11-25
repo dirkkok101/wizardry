@@ -903,5 +903,66 @@ describe('CharacterService', () => {
       expect(mageChar.hp).toBeGreaterThanOrEqual(1)
       expect(mageChar.hp).toBeLessThanOrEqual(4)
     })
+
+    it('initializes character with starting gold in range 90-190 (authentic Wizardry 1)', () => {
+      const char = CharacterService.createCharacterFromStats({
+        name: 'Test',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: validStats,
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      // Starting gold formula: 90 + random(0-100) = 90-190 gold
+      expect(char.gold).toBeDefined()
+      expect(char.gold).toBeGreaterThanOrEqual(90)
+      expect(char.gold).toBeLessThanOrEqual(190)
+    })
+
+    it('generates different starting gold for different characters (random)', () => {
+      // Create multiple characters and verify gold varies
+      const characters = []
+      for (let i = 0; i < 10; i++) {
+        characters.push(CharacterService.createCharacterFromStats({
+          name: `Test${i}`,
+          password: 'test',
+          race: Race.HUMAN,
+          alignment: Alignment.GOOD,
+          stats: validStats,
+          selectedClass: CharacterClass.FIGHTER
+        }))
+      }
+
+      // All should be in valid range
+      characters.forEach(char => {
+        expect(char.gold).toBeGreaterThanOrEqual(90)
+        expect(char.gold).toBeLessThanOrEqual(190)
+      })
+
+      // At least some variation should exist (not all the same)
+      const uniqueGoldValues = new Set(characters.map(c => c.gold))
+      expect(uniqueGoldValues.size).toBeGreaterThan(1)
+    })
+  })
+
+  describe('createCharacter (with gold)', () => {
+    it('creates character with starting gold in range 90-190', () => {
+      const params: CreateCharacterParams = {
+        name: 'GoldTest',
+        race: Race.HUMAN,
+        class: CharacterClass.FIGHTER,
+        alignment: Alignment.GOOD,
+        password: 'secret'
+      }
+
+      const result = CharacterService.createCharacter(gameState, params)
+      const character = Array.from(result.state.roster.values())[0]
+
+      // Starting gold formula: 90 + random(0-100) = 90-190 gold
+      expect(character.gold).toBeDefined()
+      expect(character.gold).toBeGreaterThanOrEqual(90)
+      expect(character.gold).toBeLessThanOrEqual(190)
+    })
   })
 })

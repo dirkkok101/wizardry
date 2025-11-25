@@ -205,6 +205,27 @@
 
 **Must hit 17 in all six stats** - No wiggle room!
 
+## Starting Gold
+
+**Formula**: 90 + random(0-100) = **90-190 gold pieces** per character
+
+New characters receive random starting gold upon creation. This is authentic to the original Wizardry 1 (1981) mechanics.
+
+**How Gold Pooling Works**:
+1. Character is created at Training Grounds with starting gold (90-190)
+2. Character joins party at Tavern
+3. Character's gold is automatically pooled into party gold
+4. Character's individual gold is set to 0
+
+**Gold Pool Exploit** (original game feature):
+Players can create multiple characters, add them to party, pool their gold, then remove and delete the characters. This can be repeated to accumulate gold for equipment purchases.
+
+**Recommended Early Equipment** (using starting gold):
+- **Fighter**: Long Sword (25g) + Chain Mail (90g) + Large Shield (40g) = 155g
+- **Priest**: Anointed Mace (30g) + Leather Armor (50g) + Small Shield (20g) = 100g
+- **Mage**: Staff (10g) + Robes (15g) = 25g
+- **Thief**: Short Sword (15g) + Leather Armor (50g) + Small Shield (20g) = 85g
+
 ## Common Mistakes
 
 1. **Spreading points too thin**: Focus on class requirements
