@@ -536,6 +536,9 @@ export class CombatComponent implements OnInit, OnDestroy {
     } else if (actionType === 'PARRY') {
       // PARRY doesn't need a target
       this.confirmAction(actionType, undefined)
+    } else if (actionType === 'RUN') {
+      // RUN (flee) doesn't need a target
+      this.confirmAction(actionType, undefined)
     } else if (actionType === 'CAST_SPELL') {
       // Show spell selection menu
       this.selectedActionType.set(actionType)
@@ -787,7 +790,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // Execute round with party for damage tracking
     this.isExecutingRound.set(true)
-    const result = CombatService.executeRound(stateWithCommands, chars)
+    const result = CombatService.executeRound(stateWithCommands, chars, frontRow)
 
     console.log('[Combat] Round result:', {
       victory: result.victory,
