@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, computed, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '../../../../services/GameStateService';
 import { GameStateQueries } from '../../../../utils/GameStateQueries';
@@ -47,6 +47,7 @@ export type CharacterSource =
   selector: 'app-party-character-grid',
   standalone: true,
   imports: [CommonModule, CharacterCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="character-grid" [class.compact]="variant === 'compact'">
       @if (title) {
