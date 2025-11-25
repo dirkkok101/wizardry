@@ -2,18 +2,36 @@
   "id": "priestess",
   "name": "Priestess",
   "level": 4,
-  "numberAppearing": { "min": 1, "max": 6 },
-  "hp": { "min": 4, "max": 25 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 6
+  },
+  "hp": {
+    "min": 4,
+    "max": 25
+  },
   "ac": 4,
   "damage": [
-    { "dice": "1d6", "min": 1, "max": 6 }
+    {
+      "dice": "1d6",
+      "min": 1,
+      "max": 6
+    }
   ],
   "xp": 870,
+  "gold": 218,
   "type": "humanoid",
   "class": "priest",
-  "spellLevels": { "priest": 2 },
-  "spells": ["badios", "milwa"],
-  "specialAbilities": ["spellcasting"],
+  "spellLevels": {
+    "priest": 2
+  },
+  "spells": [
+    "badios",
+    "milwa"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

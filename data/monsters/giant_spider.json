@@ -2,16 +2,29 @@
   "id": "giant_spider",
   "name": "Giant Spider",
   "level": 5,
-  "numberAppearing": { "min": 1, "max": 6 },
-  "hp": { "min": 8, "max": 36 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 6
+  },
+  "hp": {
+    "min": 8,
+    "max": 36
+  },
   "ac": 4,
   "damage": [
-    { "dice": "1d8", "min": 1, "max": 8 }
+    {
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
+    }
   ],
   "xp": 960,
+  "gold": 264,
   "type": "normal",
   "class": null,
-  "specialAbilities": ["poison"],
+  "specialAbilities": [
+    "poison"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

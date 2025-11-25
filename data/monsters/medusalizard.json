@@ -2,16 +2,29 @@
   "id": "medusalizard",
   "name": "Medusalizard",
   "level": 6,
-  "numberAppearing": { "min": 1, "max": 6 },
-  "hp": { "min": 5, "max": 40 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 6
+  },
+  "hp": {
+    "min": 5,
+    "max": 40
+  },
   "ac": 6,
   "damage": [
-    { "dice": "1d8", "min": 1, "max": 8 }
+    {
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
+    }
   ],
   "xp": 1040,
+  "gold": 309,
   "type": "mythical",
   "class": null,
-  "specialAbilities": ["petrify"],
+  "specialAbilities": [
+    "petrify"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

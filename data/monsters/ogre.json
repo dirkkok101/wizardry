@@ -2,13 +2,24 @@
   "id": "ogre",
   "name": "Ogre",
   "level": 4,
-  "numberAppearing": { "min": 1, "max": 8 },
-  "hp": { "min": 5, "max": 33 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 8
+  },
+  "hp": {
+    "min": 5,
+    "max": 33
+  },
   "ac": 5,
   "damage": [
-    { "dice": "1d10", "min": 1, "max": 10 }
+    {
+      "dice": "1d10",
+      "min": 1,
+      "max": 10
+    }
   ],
   "xp": 960,
+  "gold": 224,
   "type": "humanoid",
   "class": null,
   "specialAbilities": [],

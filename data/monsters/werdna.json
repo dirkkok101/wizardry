@@ -2,18 +2,40 @@
   "id": "werdna",
   "name": "W*E*R*D*N*A",
   "level": 10,
-  "numberAppearing": { "min": 1, "max": 1 },
-  "hp": { "min": 210, "max": 300 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 1
+  },
+  "hp": {
+    "min": 210,
+    "max": 300
+  },
   "ac": -7,
   "damage": [
-    { "dice": "4d10", "min": 4, "max": 40 },
-    { "dice": "4d10", "min": 4, "max": 40 }
+    {
+      "dice": "4d10",
+      "min": 4,
+      "max": 40
+    },
+    {
+      "dice": "4d10",
+      "min": 4,
+      "max": 40
+    }
   ],
   "xp": 15880,
+  "gold": 3645,
   "type": "humanoid",
   "class": "mage",
-  "spellLevels": { "mage": 7 },
-  "spells": ["tiltowait", "mahaman", "haman", "malor"],
+  "spellLevels": {
+    "mage": 7
+  },
+  "spells": [
+    "tiltowait",
+    "mahaman",
+    "haman",
+    "malor"
+  ],
   "specialAbilities": [
     "spellcasting",
     "multiple_attacks",
@@ -25,7 +47,10 @@
     "magic_resistance"
   ],
   "resistances": [
-    { "type": "magic", "value": 70 }
+    {
+      "type": "magic",
+      "value": 70
+    }
   ],
   "regeneration": 5,
   "isBoss": true,
@@ -33,6 +58,12 @@
   "isFinalBoss": true,
   "canFlee": false,
   "fixedEncounter": true,
-  "location": { "level": 10, "x": 17, "y": 3 },
-  "dropItems": ["werdna_amulet"]
+  "location": {
+    "level": 10,
+    "x": 17,
+    "y": 3
+  },
+  "dropItems": [
+    "werdna_amulet"
+  ]
 }
