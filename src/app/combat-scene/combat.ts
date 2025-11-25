@@ -421,6 +421,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // If delay is 0, show all messages immediately
     if (delay === 0) {
+      this.animatingMessages.set(messages)  // Must set for commitAnimatedMessages()
       this.displayedAnimatingMessages.set(messages)
       onComplete()
       return

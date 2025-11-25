@@ -661,6 +661,20 @@ describe('CombatComponent', () => {
       flushMessageAnimation()
       expect(component.isExecutingRound()).toBe(false)
     })
+
+    it('commits messages to combat log even with instant display (delay=0)', () => {
+      // Set delay to 0 for instant display
+      setCombatMessageDelay(0)
+
+      const initialLogLength = gameState.state().combat?.combatLog.length || 0
+
+      component.executeRound()
+      // No need to flush timers - delay=0 means instant
+
+      // Messages should be committed to the combat log
+      const newLogLength = gameState.state().combat?.combatLog.length || 0
+      expect(newLogLength).toBeGreaterThan(initialLogLength)
+    })
   })
 
   describe('Victory Handling', () => {
