@@ -57,60 +57,80 @@
 
 See [Architecture Diagram](./diagrams/architecture-layers.md) for detailed visual.
 
-### 1.3 Code Organization: Vertical Slice by Scene
+### 1.3 Code Organization: Angular Best Practices
 
-**Decision**: Organize code by game scenes using vertical slice architecture, with shared infrastructure in services.
+**Decision**: Organize code following Angular best practices with `core/`, `shared/`, and feature modules.
 
 **Rationale**: In a game remake, scenes ARE the features from a player's perspective. Each scene (Title Screen, Castle Menu, Training Grounds, Tavern, Maze, Combat, etc.) represents a distinct player-facing feature with its own UI, commands, and logic.
 
 **Structure**:
 ```
 /src
-  /scenes
-    /title-screen-scene
-      - TitleScreenScene.ts (scene implementation)
-      /commands
-        - StartGameCommand.ts (scene-specific commands)
-      /components (future: reusable UI components)
-    /castle-menu-scene
-      - CastleMenuScene.ts
-      /commands (future: menu navigation commands)
-    /camp-scene
-      - CampScene.ts
-      /commands (future: camp commands)
-  /services (truly shared infrastructure)
-    - SceneNavigationService.ts
-    - AssetLoadingService.ts
-    - InputService.ts
-    - SaveService.ts
-    - GameInitializationService.ts
-  /managers
-    - SceneManager.ts (scene lifecycle orchestration)
-  /types
-    - SceneType.ts (scene enumeration)
+  /app
+    /core                     # Singleton services & guards
+      /guards                 # Route guards
+        - party-exists.guard.ts
+        - party-not-in-maze.guard.ts
+    /shared                   # Reusable across the app
+      /components             # 15 shared UI components
+        - character-card/
+        - scene-title/
+        - scene-footer/
+        - menu/
+        - confirmation-dialog/
+        - ...
+      /directives             # Custom directives
+        - keystroke-input.directive.ts
+    /<scene>/                 # 13 scene/page components
+      - title-screen/
+      - castle-menu/
+      - tavern/
+      - temple/
+      - shop/
+      - inn/
+      - training-grounds/
+      - character-creation/
+      - character-inspection/
+      - spell-casting/
+      - maze/
+      - camp/
+      - combat-scene/
+    - app.component.ts
+    - app.config.ts
+    - app.routes.ts
+  /services                   # Business logic (40+ services)
+  /types                      # TypeScript interfaces
+  /helpers                    # Display helpers
+  /utils                      # Utility functions
+  /validation                 # Data validation schemas
+  /test-helpers               # Test factory functions
 ```
 
 **Benefits**:
-- **Scene-Focused Development**: All code for a scene lives together (scene class, commands, components)
-- **Clear Feature Boundaries**: Each scene folder represents a distinct game feature
-- **Easier Navigation**: Developers can find all title screen code in `/scenes/title-screen-scene`
-- **Reduced Coupling**: Commands are scoped to scenes that use them
-- **Shared Services**: Truly common infrastructure (input, assets, saves) remains in `/services`
+- **Clear Module Boundaries**: `core/` for singletons, `shared/` for reusables, scenes for features
+- **Scene-Focused Development**: All code for a scene lives together in its folder
+- **Easy Component Discovery**: All shared components in one location (`shared/components/`)
+- **Consistent Imports**: Predictable import paths for shared resources
+- **Angular Conventions**: Follows standard Angular project structure
 
-**Example - Title Screen Scene**:
-- **TitleScreenScene.ts**: Canvas rendering, animation, scene lifecycle
-- **commands/StartGameCommand.ts**: Business logic for starting game (new game vs load game)
-- Future: **components/Button.ts**: Reusable button component
+**Example - Temple Scene**:
+- **temple.component.ts**: Scene logic and state management
+- **temple.component.html**: Template with shared components
+- Uses `SceneTitleComponent`, `SceneFooterComponent`, `CharacterCardComponent` from `shared/`
 
 ### 1.4 Reusable UI Components
 
-Beyond scene-specific components, certain UI patterns appear across multiple scenes and are implemented as shared, reusable components:
+Shared components in `src/app/shared/components/` enforce UI consistency across scenes:
 
-- **SceneTitleComponent**: Standardized header for scenes with consistent styling and layout. Used in Training Grounds, Character Creation, and other scenes.
-- **SceneFooterComponent**: Standardized footer containing navigation menu and scene-specific actions. Wraps MenuComponent for consistent navigation across scenes.
-- **MenuComponent**: Horizontal button menu for scene navigation and actions. Used within SceneFooter.
+- **SceneTitleComponent**: Standardized header for scenes with consistent styling and layout
+- **SceneFooterComponent**: Standardized footer containing navigation menu and scene-specific actions
+- **MenuComponent**: Horizontal button menu for scene navigation and actions
+- **CharacterCardComponent**: Displays character info with action buttons
+- **ConfirmationDialogComponent**: Yes/no confirmation dialogs
+- **StatusBadgeComponent**: Character status indicators
+- **MessageLogComponent**: Combat/action message history
 
-These components enforce UI consistency across scenes while allowing scenes to customize which menu options are available.
+These components are imported by scenes via `../shared/components/<component-name>/`.
 
 See [Scene Architecture](./scenes/README.md) for detailed scene implementation patterns.
 

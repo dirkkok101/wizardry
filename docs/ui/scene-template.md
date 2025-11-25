@@ -119,7 +119,7 @@ All scenes MUST use `SceneTitleComponent` - no hardcoded headers in templates.
 
 Import in component:
 ```typescript
-import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
+import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
 
 @Component({
   // ...
@@ -184,8 +184,8 @@ All scenes MUST use `SceneFooterComponent` for horizontal interactive menu.
 
 Import in component:
 ```typescript
-import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { MenuItem } from '../../components/menu/menu.component';
+import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
+import { MenuItem } from '../shared/components/menu/menu.component';
 
 @Component({
   // ...
