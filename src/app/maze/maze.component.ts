@@ -161,10 +161,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   getActionsForCharacter = (char: Character): CharacterAction[] => {
     const actions: CharacterAction[] = [];
 
-    // All characters can be inspected
+    // All characters can be inspected (except lost forever)
     actions.push({
       type: 'inspect',
-      enabled: true
+      enabled: char.status !== CharacterStatus.LOST_FOREVER
     });
 
     // Check if character is a spellcaster with available dungeon spells
