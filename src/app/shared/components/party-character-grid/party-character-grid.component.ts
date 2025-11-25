@@ -75,6 +75,9 @@ export type CharacterSource =
                     [visibleFields]="visibleFields"
                     [actions]="getActionsForCharacter(char)"
                     [variant]="variant"
+                    [highlighted]="isHighlighted(char)"
+                    [showHpBar]="showHpBar"
+                    [statusText]="getStatusText(char)"
                     (actionClick)="onActionClick($event)"
                   />
                 }
@@ -94,6 +97,9 @@ export type CharacterSource =
                     [visibleFields]="visibleFields"
                     [actions]="getActionsForCharacter(char)"
                     [variant]="variant"
+                    [highlighted]="isHighlighted(char)"
+                    [showHpBar]="showHpBar"
+                    [statusText]="getStatusText(char)"
                     (actionClick)="onActionClick($event)"
                   />
                 }
@@ -113,6 +119,9 @@ export type CharacterSource =
                 [visibleFields]="visibleFields"
                 [actions]="getActionsForCharacter(char)"
                 [variant]="variant"
+                [highlighted]="isHighlighted(char)"
+                [showHpBar]="showHpBar"
+                [statusText]="getStatusText(char)"
                 (actionClick)="onActionClick($event)"
               />
             }
@@ -254,6 +263,22 @@ export class PartyCharacterGridComponent {
   @Input() showFormation = false;
 
   /**
+   * ID of the highlighted character (e.g., active character in combat)
+   */
+  @Input() highlightedCharacterId?: string | null;
+
+  /**
+   * Show HP bar on character cards
+   */
+  @Input() showHpBar = false;
+
+  /**
+   * Status text map (character ID -> status text)
+   * Used to display selected actions or other status info on cards
+   */
+  @Input() statusTexts?: Map<string, string>;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
@@ -321,5 +346,19 @@ export class PartyCharacterGridComponent {
    */
   onActionClick(event: CharacterActionEvent): void {
     this.actionClick.emit(event);
+  }
+
+  /**
+   * Check if a character is highlighted
+   */
+  isHighlighted(char: Character): boolean {
+    return this.highlightedCharacterId === char.id;
+  }
+
+  /**
+   * Get status text for a character
+   */
+  getStatusText(char: Character): string | null {
+    return this.statusTexts?.get(char.id) ?? null;
   }
 }

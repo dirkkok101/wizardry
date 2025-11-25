@@ -23,6 +23,12 @@ export class CharacterCardComponent {
   @Input() visibleFields?: CharacterField[];
   @Input() actions?: CharacterAction[];
   @Input() variant: 'default' | 'compact' = 'default';
+  /** Highlight the card (e.g., active character in combat) */
+  @Input() highlighted = false;
+  /** Show HP bar below stats */
+  @Input() showHpBar = false;
+  /** Status text to display (e.g., selected action in combat) */
+  @Input() statusText?: string | null;
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
 
   get displayFields(): CharacterField[] {
@@ -39,6 +45,15 @@ export class CharacterCardComponent {
 
   get hasActions(): boolean {
     return !!this.actions && this.actions.length > 0;
+  }
+
+  get hpPercent(): number {
+    if (!this.character || this.character.maxHp <= 0) return 0;
+    return Math.max(0, Math.min(100, (this.character.hp / this.character.maxHp) * 100));
+  }
+
+  get isDead(): boolean {
+    return this.character.hp <= 0;
   }
 
   handleActionClick(event: CharacterActionEvent): void {
