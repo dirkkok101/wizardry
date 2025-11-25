@@ -144,4 +144,83 @@ describe('SpellLearningService', () => {
       expect(count).toBe(1)
     })
   })
+
+  describe('learnInitialSpells', () => {
+    it('returns empty array for non-casters', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        level: 1,
+        knownSpells: []
+      })
+
+      const result = SpellLearningService.learnInitialSpells(character)
+
+      expect(result.newSpells).toEqual([])
+      expect(result.updatedCharacter.knownSpells).toEqual([])
+    })
+
+    it('learns all level 1 mage spells for new Mage', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.MAGE,
+        level: 1,
+        knownSpells: []
+      })
+
+      const result = SpellLearningService.learnInitialSpells(character)
+
+      // Should learn at least halito and katino (level 1 mage spells)
+      expect(result.newSpells.length).toBeGreaterThan(0)
+      expect(result.newSpells.every(s => s.level === 1)).toBe(true)
+      expect(result.newSpells.every(s => s.type === 'MAGE')).toBe(true)
+      expect(result.updatedCharacter.knownSpells.length).toBeGreaterThan(0)
+    })
+
+    it('learns all level 1 priest spells for new Priest', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.PRIEST,
+        level: 1,
+        knownSpells: []
+      })
+
+      const result = SpellLearningService.learnInitialSpells(character)
+
+      // Should learn level 1 priest spells (e.g., dios, kalki)
+      expect(result.newSpells.length).toBeGreaterThan(0)
+      expect(result.newSpells.every(s => s.level === 1)).toBe(true)
+      expect(result.newSpells.every(s => s.type === 'PRIEST')).toBe(true)
+      expect(result.updatedCharacter.knownSpells.length).toBeGreaterThan(0)
+    })
+
+    it('learns both mage and priest level 1 spells for new Bishop', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.BISHOP,
+        level: 1,
+        knownSpells: []
+      })
+
+      const result = SpellLearningService.learnInitialSpells(character)
+
+      // Bishop should learn both mage and priest spells
+      const mageSpells = result.newSpells.filter(s => s.type === 'MAGE')
+      const priestSpells = result.newSpells.filter(s => s.type === 'PRIEST')
+
+      expect(mageSpells.length).toBeGreaterThan(0)
+      expect(priestSpells.length).toBeGreaterThan(0)
+      expect(result.newSpells.every(s => s.level === 1)).toBe(true)
+    })
+
+    it('does not duplicate already known spells', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.MAGE,
+        level: 1,
+        knownSpells: ['halito'] // Already knows halito
+      })
+
+      const result = SpellLearningService.learnInitialSpells(character)
+
+      // Should still have halito but not duplicated
+      const halitoCount = result.updatedCharacter.knownSpells.filter(id => id === 'halito').length
+      expect(halitoCount).toBe(1)
+    })
+  })
 })

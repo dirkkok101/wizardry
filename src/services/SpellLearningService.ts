@@ -75,6 +75,71 @@ export class SpellLearningService {
   }
 
   /**
+   * Learn initial spells for a newly created spellcaster.
+   * Level 1 spellcasters learn all level 1 spells of their type.
+   * Bishops learn all level 1 spells from both mage and priest lists.
+   * Returns updated character with initial spells added to knownSpells.
+   */
+  static learnInitialSpells(character: Character): SpellLearningResult {
+    if (!this.isCaster(character)) {
+      return { updatedCharacter: character, newSpells: [] }
+    }
+
+    // Check if spells are loaded
+    if (!SpellDataLoader.isLoaded()) {
+      console.warn('SpellDataLoader not loaded, cannot learn initial spells')
+      return { updatedCharacter: character, newSpells: [] }
+    }
+
+    const isMagic = [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(character.class)
+    const isPriestly = [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(character.class)
+
+    const allSpells = SpellDataLoader.getAllSpells()
+    const knownSpellIds = new Set(character.knownSpells || [])
+    const learnedSpells: Spell[] = []
+
+    // Learn all level 1 mage spells if character has mage casting
+    if (isMagic) {
+      for (const spell of allSpells.values()) {
+        if (spell.casterType === 'mage' && spell.level === 1 && !knownSpellIds.has(spell.id)) {
+          learnedSpells.push({
+            id: spell.id,
+            name: spell.name,
+            level: spell.level,
+            type: 'MAGE'
+          })
+          knownSpellIds.add(spell.id)
+        }
+      }
+    }
+
+    // Learn all level 1 priest spells if character has priest casting
+    if (isPriestly) {
+      for (const spell of allSpells.values()) {
+        if (spell.casterType === 'priest' && spell.level === 1 && !knownSpellIds.has(spell.id)) {
+          learnedSpells.push({
+            id: spell.id,
+            name: spell.name,
+            level: spell.level,
+            type: 'PRIEST'
+          })
+          knownSpellIds.add(spell.id)
+        }
+      }
+    }
+
+    const updatedCharacter: Character = {
+      ...character,
+      knownSpells: Array.from(knownSpellIds)
+    }
+
+    return {
+      updatedCharacter,
+      newSpells: learnedSpells
+    }
+  }
+
+  /**
    * Learn new spells when leveling up
    * Returns updated character with new spells added to knownSpells
    */
