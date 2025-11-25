@@ -122,10 +122,16 @@ describe('CombatComponent', () => {
       expect(actions.get(activeChar.id)!.type).toBe('PARRY')
     })
 
-    it('does not show selection dialog for RUN (removed feature)', () => {
+    it('immediately confirms RUN (flee) action without target', () => {
+      const activeChar = component.activeCharacter()!
+
       component.selectActionType('RUN')
 
-      // RUN action removed - no dialog shown
+      // RUN (flee) should be confirmed immediately like PARRY
+      const actions = component.selectedActions()
+      expect(actions.has(activeChar.id)).toBe(true)
+      expect(actions.get(activeChar.id)!.type).toBe('RUN')
+      // No dialog should be shown
       expect(component.showGroupSelectionDialog()).toBe(false)
     })
 

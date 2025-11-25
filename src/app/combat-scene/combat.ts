@@ -517,6 +517,9 @@ export class CombatComponent implements OnInit, OnDestroy {
     } else if (actionType === 'PARRY') {
       // PARRY doesn't need a target
       this.confirmAction(actionType, undefined)
+    } else if (actionType === 'RUN') {
+      // RUN (flee) doesn't need a target
+      this.confirmAction(actionType, undefined)
     } else if (actionType === 'CAST_SPELL') {
       // Show spell selection menu
       this.selectedActionType.set(actionType)
