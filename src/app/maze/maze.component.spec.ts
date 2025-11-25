@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MazeComponent } from './maze.component';
 import { GameStateService } from '../../services/GameStateService';
 import { DungeonService } from '../../services/DungeonService';
+import { DungeonMovementService } from '../../services/DungeonMovementService';
 import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { MonsterService } from '../../services/MonsterService';
@@ -1147,6 +1148,187 @@ describe('MazeComponent - Combat Integration', () => {
 
     const combat = gameState.state().combat;
     expect(combat?.canFlee).toBe(false);
+  });
+});
+
+describe('MazeComponent - Stairs Exit', () => {
+  let component: MazeComponent;
+  let fixture: ComponentFixture<MazeComponent>;
+  let gameState: GameStateService;
+  let router: Router;
+
+  beforeEach(() => {
+    // Restore all mocks to prevent bleeding between tests
+    jest.restoreAllMocks();
+
+    TestBed.configureTestingModule({
+      imports: [MazeComponent]
+    });
+
+    fixture = TestBed.createComponent(MazeComponent);
+    component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+    router = TestBed.inject(Router);
+
+    jest.spyOn(router, 'navigate').mockImplementation(() => Promise.resolve(true));
+  });
+
+  it('navigates to castle-menu when moving through stairs_up wall', async () => {
+    // Mock level with stairs_up wall at (0,0) facing WEST (matches level1.json)
+    const tilesWithStairs: any[] = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        tilesWithStairs.push({
+          x,
+          y,
+          walls: {
+            north: 'open',
+            south: 'open',
+            east: 'open',
+            west: (x === 0 && y === 0) ? 'stairs_up' : 'open'
+          },
+          destination: (x === 0 && y === 0) ? { type: 'castle' } : undefined
+        });
+      }
+    }
+
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: tilesWithStairs,
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
+    // Mock canMove to return stairs action
+    jest.spyOn(DungeonService, 'canMove').mockReturnValue({
+      allowed: true,
+      triggersSpecialAction: 'stairs',
+      destination: { type: 'castle' }
+    });
+
+    // Mock DungeonMovementService.moveForward to return state with dungeon undefined
+    jest.spyOn(DungeonMovementService, 'moveForward').mockImplementation((state) => ({
+      ...state,
+      dungeon: undefined
+    }));
+
+    // Set up test state at stairs position facing WEST
+    const char1 = createTestCharacter({ id: 'c1', name: 'Fighter' });
+    gameState.updateState(state => ({
+      ...state,
+      roster: new Map([['c1', char1]]),
+      party: {
+        members: ['c1'],
+        formation: { frontRow: ['c1'], backRow: [] },
+        gold: 100
+      },
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 0, y: 0, facing: 'WEST' as const },
+        lightActive: false,
+        lightRadius: 1,
+        teleportCount: 0,
+        visitedTiles: new Set<string>(),
+        defeatedEncounters: [],
+        unlockedDoors: new Set<string>(),
+        openDoors: new Set<string>()
+      }
+    }));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    // Clear any init messages
+    component.messages.set([]);
+
+    // Move forward through the stairs
+    component.moveForward();
+
+    // Wait for queueMicrotask to complete
+    await new Promise(resolve => queueMicrotask(resolve));
+
+    // Verify exit message was displayed
+    expect(component.messages()).toContain('You climb the stairs and exit the dungeon...');
+
+    // Verify navigation to castle-menu
+    expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+
+    // Verify dungeon state is cleared
+    expect(gameState.state().dungeon).toBeUndefined();
+  });
+
+  it('does not navigate when moving normally (not through stairs)', async () => {
+    // Mock normal level without stairs in movement path
+    jest.spyOn(DungeonService, 'loadLevel').mockReturnValue({
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      width: 20,
+      height: 20,
+      startPosition: { x: 0, y: 0, facing: 'NORTH' },
+      edgeWrapping: true,
+      tiles: Array(400).fill(null).map((_, i) => ({
+        x: i % 20,
+        y: Math.floor(i / 20),
+        walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
+      })),
+      encounterRate: 0,
+      encounterTable: []
+    } as any);
+
+    jest.spyOn(DungeonService, 'canMove').mockReturnValue({ allowed: true });
+
+    // Set up test state
+    const char1 = createTestCharacter({ id: 'c1', name: 'Fighter' });
+    gameState.updateState(state => ({
+      ...state,
+      roster: new Map([['c1', char1]]),
+      party: {
+        members: ['c1'],
+        formation: { frontRow: ['c1'], backRow: [] },
+        gold: 100
+      },
+      dungeon: {
+        currentLevel: 1,
+        position: { x: 5, y: 5, facing: 'NORTH' as const },
+        lightActive: false,
+        lightRadius: 1,
+        teleportCount: 0,
+        visitedTiles: new Set<string>(),
+        defeatedEncounters: [],
+        unlockedDoors: new Set<string>(),
+        openDoors: new Set<string>()
+      },
+      settings: { encountersEnabled: false }
+    }));
+
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    // Clear any init messages
+    component.messages.set([]);
+
+    // Move forward normally
+    component.moveForward();
+
+    // Wait for any async operations
+    await new Promise(resolve => queueMicrotask(resolve));
+
+    // Verify normal movement message (not exit message)
+    expect(component.messages()).toContain('You move forward.');
+    expect(component.messages()).not.toContain('You climb the stairs and exit the dungeon...');
+
+    // Verify no navigation to castle-menu
+    expect(router.navigate).not.toHaveBeenCalledWith(['/castle-menu']);
+
+    // Verify dungeon state still exists
+    expect(gameState.state().dungeon).toBeDefined();
   });
 });
 

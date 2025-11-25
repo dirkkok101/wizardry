@@ -168,7 +168,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // All characters can be inspected (except lost forever)
     actions.push({
       type: 'inspect',
-      enabled: char.status !== CharacterStatus.LOST_FOREVER
+      enabled: char.status !== CharacterStatus.LOST
     });
 
     // Check if character is a spellcaster with available dungeon spells
@@ -372,6 +372,18 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Check if elevator dialog is open
     if (this.showElevatorDialog()) {
       this.cancelElevator();
+      return;
+    }
+
+    // Check if spell dialog is open
+    if (this.showSpellDialog()) {
+      this.onSpellDialogCancelled();
+      return;
+    }
+
+    // Check if target dialog is open
+    if (this.showTargetDialog()) {
+      this.onTargetDialogCancelled();
       return;
     }
 
@@ -592,6 +604,15 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Execute movement
     const newState = serviceFn(state);
     this.gameState.updateState(() => newState);
+
+    // Check if stairs transition to castle occurred (dungeon becomes undefined)
+    if (newState.dungeon === undefined) {
+      this.addMessage('You climb the stairs and exit the dungeon...');
+      queueMicrotask(() => {
+        this.router.navigate(['/castle-menu']);
+      });
+      return;
+    }
 
     // Dynamic messages based on moveType
     const messages = {
