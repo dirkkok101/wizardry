@@ -131,10 +131,10 @@
               }
             </div>
 
-            @if (successMessage()) {
+            @if (messages.isSuccess()) {
               <div class="identification-result">
                 <h3>Identification Result:</h3>
-                <p class="result-text">{{ successMessage() }}</p>
+                <p class="result-text">{{ messages.messageText() }}</p>
               </div>
             }
           } @else {
