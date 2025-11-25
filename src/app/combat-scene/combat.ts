@@ -1,5 +1,5 @@
 // src/app/scenes/combat/combat.ts
-import { Component, computed, signal, OnInit, OnDestroy } from '@angular/core'
+import { Component, computed, signal, OnInit, OnDestroy, ViewChild, ElementRef, effect } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../services/GameStateService'
@@ -41,6 +41,9 @@ interface SelectedAction {
   styleUrls: ['./combat.scss']
 })
 export class CombatComponent implements OnInit, OnDestroy {
+  // ViewChild for auto-scrolling combat log
+  @ViewChild('logMessages') private logMessagesRef!: ElementRef<HTMLDivElement>
+
   // Expose Array for template use
   readonly Array = Array
 
@@ -195,12 +198,12 @@ export class CombatComponent implements OnInit, OnDestroy {
   })
 
   // Combine committed combat log with currently animating messages
-  // Reverse order so newest messages appear at top (no scrolling needed)
+  // Sequential order (oldest first) with auto-scroll to show newest
   readonly combatLog = computed(() => {
     const combat = this.combatState()
     const committedLog = combat?.combatLog || []
     const animating = this.displayedAnimatingMessages()
-    return [...committedLog, ...animating].reverse()
+    return [...committedLog, ...animating]
   })
 
   readonly roundNumber = computed(() => {
@@ -410,7 +413,25 @@ export class CombatComponent implements OnInit, OnDestroy {
   constructor(
     private gameState: GameStateService,
     private router: Router
-  ) {}
+  ) {
+    // Auto-scroll combat log to bottom when new messages are added
+    effect(() => {
+      // Access the combatLog to track changes
+      this.combatLog()
+      // Schedule scroll after Angular renders the new messages
+      queueMicrotask(() => this.scrollLogToBottom())
+    })
+  }
+
+  /**
+   * Scroll the combat log container to the bottom to show newest messages
+   */
+  private scrollLogToBottom(): void {
+    const el = this.logMessagesRef?.nativeElement
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  }
 
   ngOnInit(): void {
     console.log('[Combat] Initializing combat scene')
