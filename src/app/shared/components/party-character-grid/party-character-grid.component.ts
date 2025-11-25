@@ -60,43 +60,49 @@ export type CharacterSource =
 
       @if (showFormation) {
         <!-- Formation layout with front/back rows -->
-        <div class="formation-section">
-          <h3 class="row-title">Front Row</h3>
-          @if (frontRowCharacters().length > 0) {
-            <div class="row-grid">
-              @for (char of frontRowCharacters(); track char.id) {
-                <app-character-card
-                  [character]="char"
-                  [visibleFields]="visibleFields"
-                  [actions]="getActionsForCharacter(char)"
-                  [variant]="variant"
-                  (actionClick)="onActionClick($event)"
-                />
-              }
-            </div>
-          } @else {
-            <div class="empty-row">Front row is empty</div>
-          }
-        </div>
+        @if (isPartyEmpty()) {
+          <div class="empty-state">
+            <p>{{ emptyMessage }}</p>
+          </div>
+        } @else {
+          <div class="formation-section">
+            <h3 class="row-title">Front Row</h3>
+            @if (frontRowCharacters().length > 0) {
+              <div class="row-grid">
+                @for (char of frontRowCharacters(); track char.id) {
+                  <app-character-card
+                    [character]="char"
+                    [visibleFields]="visibleFields"
+                    [actions]="getActionsForCharacter(char)"
+                    [variant]="variant"
+                    (actionClick)="onActionClick($event)"
+                  />
+                }
+              </div>
+            } @else {
+              <div class="empty-row">Front row is empty</div>
+            }
+          </div>
 
-        <div class="formation-section">
-          <h3 class="row-title">Back Row</h3>
-          @if (backRowCharacters().length > 0) {
-            <div class="row-grid">
-              @for (char of backRowCharacters(); track char.id) {
-                <app-character-card
-                  [character]="char"
-                  [visibleFields]="visibleFields"
-                  [actions]="getActionsForCharacter(char)"
-                  [variant]="variant"
-                  (actionClick)="onActionClick($event)"
-                />
-              }
-            </div>
-          } @else {
-            <div class="empty-row">Back row is empty</div>
-          }
-        </div>
+          <div class="formation-section">
+            <h3 class="row-title">Back Row</h3>
+            @if (backRowCharacters().length > 0) {
+              <div class="row-grid">
+                @for (char of backRowCharacters(); track char.id) {
+                  <app-character-card
+                    [character]="char"
+                    [visibleFields]="visibleFields"
+                    [actions]="getActionsForCharacter(char)"
+                    [variant]="variant"
+                    (actionClick)="onActionClick($event)"
+                  />
+                }
+              </div>
+            } @else {
+              <div class="empty-row">Back row is empty</div>
+            }
+          </div>
+        }
       } @else {
         <!-- Standard list layout -->
         @if (displayCharacters().length > 0) {
@@ -291,6 +297,13 @@ export class PartyCharacterGridComponent {
    */
   readonly backRowCharacters = computed(() =>
     GameStateQueries.backRowCharacters(this.gameState.state())
+  );
+
+  /**
+   * Check if party is completely empty (no characters in either row)
+   */
+  readonly isPartyEmpty = computed(() =>
+    this.frontRowCharacters().length === 0 && this.backRowCharacters().length === 0
   );
 
   /**

@@ -53,6 +53,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly position = computed(() => this.dungeonState()?.position);
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly party = computed(() => this.gameState.state().party);
+  // Note: partyCharacters is used for combat initialization (CombatService.initiateCombat),
+  // not for template rendering (which uses PartyCharacterGridComponent)
   readonly partyCharacters = computed(() => {
     const roster = this.gameState.state().roster;
     return this.party().members.map(id => roster.get(id)!).filter(c => c);
