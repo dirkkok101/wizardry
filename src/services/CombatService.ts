@@ -742,11 +742,11 @@ export class CombatService {
 
   /**
    * Calculate flee chance percentage
-   * Formula: 50% base + modifiers
-   * Modifiers:
-   * - Boss fight (canFlee = false): 0%
-   * - Party >50% casualties: +20%
-   * - Enemy surprised: +30% (not implemented yet)
+   * Formula based on Wizardry 1 research (docs/commands/combat/FleeCommand.md):
+   * - Base chance: 50%
+   * - Speed difference: ±5% per AGI point difference (party avg vs monster avg)
+   * - Luck factor: ±2% per LUC point above/below 10
+   * - Clamped to 10-90% (always some chance to succeed/fail)
    */
   static calculateFleeChance(
     state: CombatState,
@@ -765,16 +765,99 @@ export class CombatService {
 
     let chance = 50 // Base 50%
 
-    // Check party casualties
-    const totalParty = party.length
-    const aliveParty = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0).length
-    const casualties = totalParty - aliveParty
-
-    if (casualties > totalParty / 2) {
-      chance += 20  // +20% if >50% dead
+    // Calculate party average AGI (only alive members)
+    const aliveParty = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    if (aliveParty.length === 0) {
+      return 0
     }
 
-    return chance
+    const partyAvgAgi = aliveParty.reduce((sum, c) => sum + c.agility, 0) / aliveParty.length
+
+    // Calculate monster average AGI (only alive monsters)
+    const aliveMonsters = this.getAllAliveMonsters(state)
+    const monsterAvgAgi = aliveMonsters.length > 0
+      ? aliveMonsters.reduce((sum, m) => sum + (m.agility || 10), 0) / aliveMonsters.length
+      : 10
+
+    // Speed difference modifier: ±5% per AGI point
+    const speedDifference = partyAvgAgi - monsterAvgAgi
+    chance += speedDifference * 5
+
+    // Luck factor: average party LUC, ±2% per point above/below 10
+    const partyAvgLuck = aliveParty.reduce((sum, c) => sum + c.luck, 0) / aliveParty.length
+    chance += (partyAvgLuck - 10) * 2
+
+    // Clamp to 10-90% (always some chance to succeed/fail)
+    return Math.max(10, Math.min(90, chance))
+  }
+
+  /**
+   * Execute flee failure penalty - monsters get a free attack round
+   * Per Wizardry research: when flee fails, all monsters attack without party retaliation
+   */
+  static executeFleeFailurePenalty(
+    state: CombatState,
+    party: Character[],
+    frontRow: string[]
+  ): {
+    newState: CombatState
+    messages: string[]
+    damagedCharacters: Map<string, Character>
+  } {
+    const messages: string[] = ['The monsters take advantage of the failed escape!']
+    const damagedCharacters = new Map<string, Character>()
+    let currentState = state
+
+    // All alive monsters get a free attack
+    const actingMonsters = this.getAllActingMonsters(state)
+
+    for (const monster of actingMonsters) {
+      // Get alive front row members that can be targeted
+      const aliveFront = party.filter(c =>
+        frontRow.includes(c.id) && c.hp > 0 && c.status !== CharacterStatus.DEAD
+      )
+
+      // Check if character was already damaged this penalty round
+      const getEffectiveChar = (c: Character): Character => {
+        return damagedCharacters.get(c.id) || c
+      }
+
+      // Filter to only alive targets after previous penalty attacks
+      const effectiveAliveFront = aliveFront.filter(c => getEffectiveChar(c).hp > 0)
+
+      // If no alive front row, target back row
+      const aliveBack = party.filter(c =>
+        !frontRow.includes(c.id) && c.hp > 0 && c.status !== CharacterStatus.DEAD
+      )
+      const effectiveAliveBack = aliveBack.filter(c => getEffectiveChar(c).hp > 0)
+
+      const targetPool = effectiveAliveFront.length > 0
+        ? effectiveAliveFront
+        : effectiveAliveBack
+
+      if (targetPool.length === 0) continue
+
+      // Select random target
+      const target = targetPool[Math.floor(Math.random() * targetPool.length)]
+      const effectiveTarget = getEffectiveChar(target)
+
+      // Resolve attack (no parrying during penalty round)
+      const attackResult = this.resolveAttack(monster, effectiveTarget, 0, 0)
+
+      if (attackResult.hit) {
+        const damaged = this.applyDamageToCharacter(effectiveTarget, attackResult.damage)
+        damagedCharacters.set(target.id, damaged)
+        messages.push(`${monster.name} attacks ${target.name}: ${attackResult.damage} damage!`)
+      } else {
+        messages.push(`${monster.name} attacks ${target.name}: Miss!`)
+      }
+    }
+
+    return {
+      newState: currentState,
+      messages,
+      damagedCharacters
+    }
   }
 
   /**
@@ -1091,7 +1174,8 @@ export class CombatService {
 
   static executeRound(
     state: CombatState,
-    party: Character[]
+    party: Character[],
+    frontRow: string[] = []
   ): {
     newState: CombatState
     messages: string[]
@@ -1270,6 +1354,37 @@ export class CombatService {
         }
       } else {
         messages.push(`The party fails to escape!`)
+
+        // Apply flee failure penalty - monsters get free attacks
+        const penaltyResult = this.executeFleeFailurePenalty(currentState, party, frontRow)
+        currentState = penaltyResult.newState
+        messages.push(...penaltyResult.messages)
+
+        // Merge penalty damage into damagedCharacters
+        for (const [charId, char] of penaltyResult.damagedCharacters.entries()) {
+          const existing = damagedCharacters.get(charId)
+          if (existing) {
+            // Accumulate damage if character was already damaged
+            damagedCharacters.set(charId, char)
+          } else {
+            damagedCharacters.set(charId, char)
+          }
+        }
+
+        // Check for defeat after penalty round
+        const allPartyDeadFromPenalty = this.areAllCharactersDead(party, damagedCharacters)
+        if (allPartyDeadFromPenalty) {
+          return {
+            newState: currentState,
+            messages,
+            damagedCharacters,
+            spellCasters,
+            curedCharacters,
+            victory: false,
+            defeat: true,
+            fled: false
+          }
+        }
       }
     }
 

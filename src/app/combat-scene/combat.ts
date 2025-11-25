@@ -12,11 +12,13 @@ import { Character } from '../../types/Character'
 import { MenuItem } from '../shared/components/menu/menu.component'
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component'
+import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component'
 import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '../shared/components/monster-group-selection-dialog/monster-group-selection-dialog.component'
 import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component'
 import { getGroupDisplayText } from '../../utils/MonsterNameUtils'
 import { CharacterStatus } from '../../types/CharacterStatus'
 import { getCombatMessageDelay, getActionResultDelay } from '../../settings/CombatSettings'
+import { CharacterField } from '../../types/CharacterCardTypes'
 
 interface SelectedAction {
   characterId: string
@@ -30,6 +32,7 @@ interface SelectedAction {
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
+    PartyCharacterGridComponent,
     MonsterGroupSelectionDialogComponent,
     CharacterSelectionDialogComponent
   ],
@@ -212,6 +215,22 @@ export class CombatComponent implements OnInit, OnDestroy {
     return chars
       .filter(c => c.hp > 0)
       .every(c => actions.has(c.id))
+  })
+
+  // Visible fields for combat character cards (same as maze)
+  readonly combatCharacterFields: CharacterField[] = ['class', 'level', 'hp', 'ac']
+
+  // Selected action texts for character cards (shows what action each character will take)
+  readonly selectedActionTexts = computed((): Map<string, string> => {
+    const actions = this.selectedActions()
+    const textMap = new Map<string, string>()
+
+    for (const [charId, command] of actions.entries()) {
+      const actionText = this.getActionDisplayText(command)
+      textMap.set(charId, actionText)
+    }
+
+    return textMap
   })
 
   // Get alive party members (for action selection)
@@ -545,6 +564,9 @@ export class CombatComponent implements OnInit, OnDestroy {
     } else if (actionType === 'PARRY') {
       // PARRY doesn't need a target
       this.confirmAction(actionType, undefined)
+    } else if (actionType === 'RUN') {
+      // RUN (flee) doesn't need a target
+      this.confirmAction(actionType, undefined)
     } else if (actionType === 'CAST_SPELL') {
       // Show spell selection menu
       this.selectedActionType.set(actionType)
@@ -796,7 +818,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // Execute round with party for damage tracking
     this.isExecutingRound.set(true)
-    const result = CombatService.executeRound(stateWithCommands, chars)
+    const result = CombatService.executeRound(stateWithCommands, chars, frontRow)
 
     console.log('[Combat] Round result:', {
       victory: result.victory,
@@ -1091,6 +1113,32 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Get monster name from first monster in group (all have same name)
     const monsterName = group.monsters[0]?.name || 'UNKNOWN'
     return getGroupDisplayText(aliveCount, monsterName)
+  }
+
+  /**
+   * Get display text for a combat command (for showing selected action on character card)
+   */
+  getActionDisplayText(command: CombatCommand): string {
+    switch (command.action) {
+      case 'ATTACK':
+        return 'ATTACK'
+      case 'PARRY':
+        return 'PARRY'
+      case 'FLEE':
+        return 'FLEE'
+      case 'HIDE':
+        return 'HIDE'
+      case 'DISPEL':
+        return 'DISPEL'
+      case 'CAST_SPELL':
+        if (command.spellId) {
+          const spell = SpellCastingService.getSpell(command.spellId)
+          return spell ? spell.name.toUpperCase() : 'CAST'
+        }
+        return 'CAST'
+      default:
+        return command.action
+    }
   }
 
   // Keyboard handling now delegated to MenuComponent via SceneFooterComponent
