@@ -795,7 +795,8 @@ describe('CharacterService', () => {
       expect(char.spellPoints).toBeDefined()
       expect(char.spellPoints?.mage).toBeDefined()
       expect(char.spellPoints?.priest).toBeUndefined()
-      expect(char.spellPoints?.mage?.level1).toEqual({ current: 0, max: 0 })
+      // Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
+      expect(char.spellPoints?.mage?.level1).toEqual({ current: 2, max: 2 })
     })
 
     it('initializes spell points for priest class', () => {
@@ -811,7 +812,8 @@ describe('CharacterService', () => {
       expect(char.spellPoints).toBeDefined()
       expect(char.spellPoints?.priest).toBeDefined()
       expect(char.spellPoints?.mage).toBeUndefined()
-      expect(char.spellPoints?.priest?.level1).toEqual({ current: 0, max: 0 })
+      // Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
+      expect(char.spellPoints?.priest?.level1).toEqual({ current: 2, max: 2 })
     })
 
     it('initializes spell points for bishop class (both mage and priest)', () => {
@@ -827,8 +829,9 @@ describe('CharacterService', () => {
       expect(char.spellPoints).toBeDefined()
       expect(char.spellPoints?.mage).toBeDefined()
       expect(char.spellPoints?.priest).toBeDefined()
-      expect(char.spellPoints?.mage?.level1).toEqual({ current: 0, max: 0 })
-      expect(char.spellPoints?.priest?.level1).toEqual({ current: 0, max: 0 })
+      // Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
+      expect(char.spellPoints?.mage?.level1).toEqual({ current: 2, max: 2 })
+      expect(char.spellPoints?.priest?.level1).toEqual({ current: 2, max: 2 })
     })
 
     it('does not initialize spell points for fighter class', () => {

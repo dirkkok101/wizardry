@@ -7,6 +7,7 @@ import { RaceService } from '../../services/RaceService';
 import { ClassService } from '../../services/ClassService';
 import { CharacterService } from '../../services/CharacterService';
 import { CharacterCreationService, RolledStats, BaseStats } from '../../services/CharacterCreationService';
+import { SpellLearningService } from '../../services/SpellLearningService';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
 import { Race, parseRace } from '../../types/Race';
@@ -381,7 +382,7 @@ export class CharacterCreationComponent implements OnInit {
     try {
       const stats = this.finalStats()!;
       // Create character
-      const character = CharacterService.createCharacterFromStats({
+      let character = CharacterService.createCharacterFromStats({
         name: name.trim(),
         password: '', // password (deprecated, empty string)
         race: this.selectedRace()!,
@@ -396,6 +397,10 @@ export class CharacterCreationComponent implements OnInit {
           luck: stats.luck
         }
       });
+
+      // Learn initial spells for spellcasters (Mage, Priest, Bishop, Samurai, Lord)
+      const spellResult = SpellLearningService.learnInitialSpells(character);
+      character = spellResult.updatedCharacter;
 
       // Add to roster
       this.gameState.updateState(state => ({
