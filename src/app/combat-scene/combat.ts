@@ -65,6 +65,34 @@ export class CombatComponent implements OnInit {
       .filter((char): char is Character => char !== undefined)
   })
 
+  // Front row party characters (for formation layout)
+  readonly frontRowCharacters = computed(() => {
+    const frontRowIds = this.party().formation.frontRow
+    const roster = this.roster()
+    return frontRowIds
+      .map(id => roster.get(id))
+      .filter((char): char is Character => char !== undefined)
+  })
+
+  // Back row party characters (for formation layout)
+  readonly backRowCharacters = computed(() => {
+    const backRowIds = this.party().formation.backRow
+    const roster = this.roster()
+    return backRowIds
+      .map(id => roster.get(id))
+      .filter((char): char is Character => char !== undefined)
+  })
+
+  // Front row monster groups
+  readonly frontRowMonsterGroups = computed(() => {
+    return this.monsterGroups().filter(g => g.formation === 'front')
+  })
+
+  // Back row monster groups
+  readonly backRowMonsterGroups = computed(() => {
+    return this.monsterGroups().filter(g => g.formation === 'back')
+  })
+
   // Get all monsters from all groups (flattened)
   readonly monsters = computed(() => {
     const combat = this.combatState()
