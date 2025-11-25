@@ -37,7 +37,9 @@
           source="party"
           [showFormation]="true"
           [visibleFields]="['class', 'level', 'hp', 'ac']"
+          [actions]="getActionsForCharacter"
           variant="compact"
+          (actionClick)="handleCharacterAction($event)"
         />
       </div>
 
@@ -74,4 +76,23 @@
       </div>
     </div>
   }
+
+  <!-- Spell Selection Dialog -->
+  <app-spell-selection-dialog
+    [visible]="showSpellDialog()"
+    [spells]="availableSpellOptions()"
+    [caster]="selectedCaster()"
+    [prompt]="'SELECT SPELL'"
+    (spellSelected)="onSpellSelected($event)"
+    (cancelled)="onSpellDialogCancelled()"
+  />
+
+  <!-- Character Target Selection Dialog -->
+  <app-character-selection-dialog
+    [visible]="showTargetDialog()"
+    [characters]="targetOptions()"
+    [prompt]="'SELECT TARGET'"
+    (characterSelected)="onTargetSelected($event)"
+    (cancelled)="onTargetDialogCancelled()"
+  />
 </div>
