@@ -1,6 +1,6 @@
 // src/services/MonsterService.ts
 import { MonsterInstance } from '../types/Combat'
-import { MonsterTemplate } from '../validation/MonsterSchema'
+import { MonsterTemplate, AttackRange } from '../validation/MonsterSchema'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -123,5 +123,74 @@ export class MonsterService {
    */
   private static rollInRange(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
+  }
+
+  /**
+   * Get the effective attack range for a monster.
+   * Uses explicit attackRange if defined, otherwise infers from abilities.
+   *
+   * Inference rules:
+   * - Has spellcasting or breath_weapon → 'ranged' (unless has melee damage)
+   * - Has spellcasting/breath AND melee damage → 'both'
+   * - Has only melee damage → 'melee'
+   *
+   * @param template - Monster template
+   * @returns Attack range classification
+   */
+  static getAttackRange(template: MonsterTemplate): AttackRange {
+    // Use explicit value if defined
+    if (template.attackRange) {
+      return template.attackRange
+    }
+
+    // Infer from abilities
+    const hasRangedAbility =
+      template.specialAbilities.includes('spellcasting') ||
+      template.specialAbilities.includes('breath_weapon')
+
+    const hasMeleeDamage = template.damage.length > 0
+
+    if (hasRangedAbility && hasMeleeDamage) {
+      return 'both'
+    }
+    if (hasRangedAbility) {
+      return 'ranged'
+    }
+    return 'melee'
+  }
+
+  /**
+   * Determine if a monster prefers the back row.
+   * Uses explicit prefersBack if defined, otherwise infers from attack range.
+   *
+   * Inference rules:
+   * - 'ranged' attack range → prefers back (protect spellcasters)
+   * - 'melee' attack range → prefers front (needs to attack)
+   * - 'both' attack range → prefers front (can attack from either, but front is stronger)
+   *
+   * @param template - Monster template
+   * @returns true if monster prefers back row
+   */
+  static prefersBackRow(template: MonsterTemplate): boolean {
+    // Use explicit value if defined
+    if (template.prefersBack !== undefined) {
+      return template.prefersBack
+    }
+
+    // Infer from attack range
+    const attackRange = this.getAttackRange(template)
+    return attackRange === 'ranged'
+  }
+
+  /**
+   * Check if a monster can attack from the back row.
+   * Monsters with 'ranged' or 'both' attack range can attack from back row.
+   *
+   * @param template - Monster template
+   * @returns true if monster can attack from back row
+   */
+  static canAttackFromBackRow(template: MonsterTemplate): boolean {
+    const attackRange = this.getAttackRange(template)
+    return attackRange === 'ranged' || attackRange === 'both'
   }
 }
