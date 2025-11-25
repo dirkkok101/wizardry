@@ -860,17 +860,13 @@ describe('MazeComponent - Navigation & Error Handling', () => {
     }));
   });
 
-  it('handles camp action to return to camp', () => {
-    const returnSpy = jest.spyOn(component, 'returnToCamp');
-    component.handleFooterAction('camp');
-    expect(returnSpy).toHaveBeenCalled();
-  });
+  it('does not have camp action in footer menu (player must use stairs to exit)', () => {
+    component.ngOnInit();
+    fixture.detectChanges();
 
-  it('navigates to camp when returnToCamp is called', () => {
-    const navigateSpy = jest.spyOn(router, 'navigate');
-    component.returnToCamp();
-    expect(component.messages()).toContain('Returning to camp...');
-    expect(navigateSpy).toHaveBeenCalledWith(['/camp']);
+    const menuItems = component.footerMenuItems();
+    const campItem = menuItems.find(item => item.id === 'camp');
+    expect(campItem).toBeUndefined();
   });
 
   it('shows error when dungeon state is missing', () => {
