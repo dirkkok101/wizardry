@@ -1,0 +1,199 @@
+import { Component, Input, Output, EventEmitter, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { GameStateService } from '../../../../services/GameStateService';
+import { GameStateQueries } from '../../../../utils/GameStateQueries';
+import { Character } from '../../../../types/Character';
+import { CharacterStatus } from '../../../../types/CharacterStatus';
+import { CharacterField, CharacterAction, CharacterActionEvent } from '../../../../types/CharacterCardTypes';
+import { CharacterCardComponent } from '../character-card/character-card.component';
+
+/**
+ * Character source options for the grid
+ */
+export type CharacterSource =
+  | 'party'           // All party members
+  | 'available'       // Characters not in party
+  | 'afflicted'       // Party members with status != OK
+  | 'all'             // All characters in roster
+  | 'custom';         // Use provided characters array
+
+/**
+ * PartyCharacterGridComponent - Reusable character display grid
+ *
+ * This component eliminates duplicate character grid code across scenes.
+ * Previously, each scene had:
+ * - A computed signal to get/filter characters
+ * - A @for loop with character cards
+ * - An @empty block for empty state
+ * - Action handlers for each card
+ *
+ * Now scenes can use:
+ * <app-party-character-grid
+ *   source="party"
+ *   [visibleFields]="['race', 'class', 'level', 'hp']"
+ *   [actions]="[{ type: 'inspect' }]"
+ *   emptyMessage="No party members"
+ *   (actionClick)="handleAction($event)"
+ * />
+ *
+ * Supports multiple character sources:
+ * - party: All current party members
+ * - available: Characters not in party (optionally filtered by status)
+ * - afflicted: Party members needing healing (status != OK)
+ * - all: All roster characters
+ * - custom: Use the provided [characters] input
+ */
+@Component({
+  selector: 'app-party-character-grid',
+  standalone: true,
+  imports: [CommonModule, CharacterCardComponent],
+  template: `
+    <div class="character-grid" [class.compact]="variant === 'compact'">
+      @if (title) {
+        <h2 class="grid-title">{{ title }}</h2>
+      }
+
+      @if (displayCharacters().length > 0) {
+        <div class="grid-content">
+          @for (char of displayCharacters(); track char.id) {
+            <app-character-card
+              [character]="char"
+              [visibleFields]="visibleFields"
+              [actions]="getActionsForCharacter(char)"
+              [variant]="variant"
+              (actionClick)="onActionClick($event)"
+            />
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <p>{{ emptyMessage }}</p>
+        </div>
+      }
+    </div>
+  `,
+  styles: [`
+    .character-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .grid-title {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: var(--color-text-secondary, #aaa);
+    }
+
+    .grid-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--color-text-muted, #666);
+      padding: 1rem;
+      font-style: italic;
+    }
+
+    .compact .grid-content {
+      gap: 0.25rem;
+    }
+  `]
+})
+export class PartyCharacterGridComponent {
+  private readonly gameState = inject(GameStateService);
+
+  /**
+   * Source of characters to display
+   * Default: 'party' (show current party members)
+   */
+  @Input() source: CharacterSource = 'party';
+
+  /**
+   * Custom characters array (used when source='custom')
+   */
+  @Input() characters: Character[] = [];
+
+  /**
+   * Filter by status (used with 'available' source)
+   */
+  @Input() filterStatus?: CharacterStatus;
+
+  /**
+   * Which fields to display on character cards
+   */
+  @Input() visibleFields: CharacterField[] = ['race', 'class', 'level', 'hp'];
+
+  /**
+   * Actions to display on each character card
+   * Can be a static array or a function that returns actions per character
+   */
+  @Input() actions: CharacterAction[] | ((char: Character) => CharacterAction[]) = [{ type: 'inspect' }];
+
+  /**
+   * Message to display when no characters
+   */
+  @Input() emptyMessage = 'No characters';
+
+  /**
+   * Optional title above the grid
+   */
+  @Input() title?: string;
+
+  /**
+   * Card variant
+   */
+  @Input() variant: 'default' | 'compact' = 'default';
+
+  /**
+   * Event emitted when an action is clicked on a character card
+   */
+  @Output() actionClick = new EventEmitter<CharacterActionEvent>();
+
+  /**
+   * Computed characters based on source
+   */
+  readonly displayCharacters = computed(() => {
+    const state = this.gameState.state();
+
+    switch (this.source) {
+      case 'party':
+        return GameStateQueries.partyCharacters(state);
+
+      case 'available':
+        return GameStateQueries.availableCharacters(state, this.filterStatus);
+
+      case 'afflicted':
+        return GameStateQueries.afflictedCharacters(state);
+
+      case 'all':
+        return GameStateQueries.allCharacters(state);
+
+      case 'custom':
+        return this.characters;
+
+      default:
+        return [];
+    }
+  });
+
+  /**
+   * Get actions for a specific character
+   */
+  getActionsForCharacter(char: Character): CharacterAction[] {
+    if (typeof this.actions === 'function') {
+      return this.actions(char);
+    }
+    return this.actions;
+  }
+
+  /**
+   * Handle action click from character card
+   */
+  onActionClick(event: CharacterActionEvent): void {
+    this.actionClick.emit(event);
+  }
+}

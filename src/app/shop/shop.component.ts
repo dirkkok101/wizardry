@@ -1,9 +1,11 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { ShopService } from '../../services/ShopService';
 import { InventoryService } from '../../services/InventoryService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { MessageService } from '../../services/MessageService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { MenuComponent, MenuItem } from '../shared/components/menu/menu.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
@@ -28,6 +30,10 @@ type ShopView = 'main' | 'character-select' | 'buy' | 'sell' | 'identify';
   styleUrls: ['./shop.component.scss']
 })
 export class ShopComponent implements OnInit {
+  protected readonly gameState = inject(GameStateService);
+  private readonly navigation = inject(SceneNavigationService);
+  readonly messages = inject(MessageService);
+
   readonly menuItems: MenuItem[] = [
     { id: 'buy', label: 'BUY ITEMS', enabled: true, shortcut: 'B' },
     { id: 'sell', label: 'SELL ITEMS', enabled: true, shortcut: 'S' },
@@ -38,25 +44,18 @@ export class ShopComponent implements OnInit {
   // View state
   readonly currentView = signal<ShopView>('character-select');
   readonly selectedCharacterId = signal<string | null>(null);
-  readonly errorMessage = signal<string | null>(null);
-  readonly successMessage = signal<string | null>(null);
   readonly showSellConfirmation = signal<boolean>(false);
   readonly pendingSellItemId = signal<string | null>(null);
 
   // Shop data
   readonly shopInventory = signal<Item[]>(SHOP_INVENTORY);
 
-  // Selected character
+  // Selected character using GameStateQueries
   readonly selectedCharacter = computed(() => {
     const charId = this.selectedCharacterId();
     if (!charId) return null;
-    return this.gameState.state().roster.get(charId) || null;
+    return GameStateQueries.getCharacter(this.gameState.state(), charId) || null;
   });
-
-  constructor(
-    protected gameState: GameStateService,
-    private router: Router
-  ) {}
 
   ngOnInit(): void {
     this.gameState.updateState(state => ({
@@ -68,18 +67,17 @@ export class ShopComponent implements OnInit {
   selectCharacter(charId: string): void {
     const char = this.gameState.state().roster.get(charId);
     if (!char) {
-      this.errorMessage.set('Character not found');
+      this.messages.showError('Character not found');
       return;
     }
 
     this.selectedCharacterId.set(charId);
     this.currentView.set('main');
-    this.errorMessage.set(null);
+    this.messages.clear();
   }
 
   handleMenuSelect(itemId: string): void {
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
+    this.messages.clear();
 
     switch (itemId) {
       case 'buy':
@@ -95,7 +93,7 @@ export class ShopComponent implements OnInit {
         break;
 
       case 'castle':
-        this.router.navigate(['/castle-menu']);
+        this.navigation.returnToCastle();
         break;
     }
   }
@@ -103,37 +101,33 @@ export class ShopComponent implements OnInit {
   buyItem(itemId: string): void {
     const character = this.selectedCharacter();
     if (!character) {
-      this.errorMessage.set('No character selected');
+      this.messages.showError('No character selected');
       return;
     }
 
     const item = this.shopInventory().find(i => i.id === itemId);
     if (!item) {
-      this.errorMessage.set('Item not found');
+      this.messages.showError('Item not found');
       return;
     }
 
-    const partyGold = this.gameState.state().party.gold || 0;
+    const partyGold = GameStateQueries.partyGold(this.gameState.state());
 
-    // Check if party can afford
     if (!ShopService.canAfford(partyGold, item)) {
-      this.errorMessage.set(`Cannot afford ${item.name}. Need ${item.price} gold.`);
+      this.messages.showError(`Cannot afford ${item.name}. Need ${item.price} gold.`);
       return;
     }
 
-    // Check inventory space
     if (!InventoryService.hasSpace(character)) {
-      this.errorMessage.set('Inventory full (max 8 items)');
+      this.messages.showError('Inventory full (max 8 items)');
       return;
     }
 
-    // Check class restrictions
     if (!InventoryService.canEquip(character, item)) {
-      this.errorMessage.set(`${character.class} cannot use this item`);
+      this.messages.showError(`${character.class} cannot use this item`);
       return;
     }
 
-    // Process purchase
     const charId = this.selectedCharacterId()!;
     this.gameState.updateState(state => {
       const updatedChar = {
@@ -151,7 +145,7 @@ export class ShopComponent implements OnInit {
       };
     });
 
-    this.successMessage.set(`Purchased ${item.name} for ${item.price} gold`);
+    this.messages.showSuccess(`Purchased ${item.name} for ${item.price} gold`);
   }
 
   cancelView(): void {
@@ -208,40 +202,35 @@ export class ShopComponent implements OnInit {
   sellItem(itemId: string): void {
     const character = this.selectedCharacter()
     if (!character) {
-      this.errorMessage.set('No character selected')
+      this.messages.showError('No character selected')
       return
     }
 
-    // Find item in inventory (need to resolve ID to Item object)
     const item = this.shopInventory().find(i => i.id === itemId)
     if (!item) {
-      this.errorMessage.set('Item not found in inventory')
+      this.messages.showError('Item not found in inventory')
       return
     }
 
-    // Check if character actually has this item
     if (!character.inventory.includes(itemId)) {
-      this.errorMessage.set('Item not found in inventory')
+      this.messages.showError('Item not found in inventory')
       return
     }
 
-    // Check if item can be sold (not equipped cursed)
     if (item.equipped && item.cursed) {
-      this.errorMessage.set('Cannot sell equipped cursed item')
+      this.messages.showError('Cannot sell equipped cursed item')
       return
     }
 
-    // Calculate sell price
     const sellPrice = ShopService.calculateSellPrice(item)
 
     if (sellPrice === 0) {
-      this.errorMessage.set('Cursed items cannot be sold')
+      this.messages.showError('Cursed items cannot be sold')
       return
     }
 
-    // Remove item from character inventory
     const charId = this.selectedCharacterId()!
-    const party = this.gameState.party()
+    const partyGold = GameStateQueries.partyGold(this.gameState.state())
 
     this.gameState.updateState(state => {
       const updatedChar = {
@@ -254,13 +243,12 @@ export class ShopComponent implements OnInit {
         roster: new Map(state.roster).set(charId, updatedChar),
         party: {
           ...state.party,
-          gold: (party.gold || 0) + sellPrice
+          gold: partyGold + sellPrice
         }
       }
     })
 
-    this.successMessage.set(`Sold ${item.name} for ${sellPrice} gold`)
-    this.errorMessage.set(null)
+    this.messages.showSuccess(`Sold ${item.name} for ${sellPrice} gold`)
   }
 
   /**
@@ -325,40 +313,33 @@ export class ShopComponent implements OnInit {
   identifyItem(itemId: string): void {
     const character = this.selectedCharacter()
     if (!character) {
-      this.errorMessage.set('No character selected')
+      this.messages.showError('No character selected')
       return
     }
 
-    // Find item in inventory
     const item = this.getCharacterInventory().find(i => i.id === itemId)
     if (!item) {
-      this.errorMessage.set('Item not found in inventory')
+      this.messages.showError('Item not found in inventory')
       return
     }
 
-    // Check if already identified
     if (item.identified) {
-      this.errorMessage.set('Item is already identified')
+      this.messages.showError('Item is already identified')
       return
     }
 
-    // Check if party can afford (100 gold flat fee)
     const identifyCost = this.getIdentifyCost()
-    const party = this.gameState.party()
-    const partyGold = party.gold || 0
+    const partyGold = GameStateQueries.partyGold(this.gameState.state())
 
     if (partyGold < identifyCost) {
-      this.errorMessage.set(`Cannot afford identification. Need ${identifyCost} gold.`)
+      this.messages.showError(`Cannot afford identification. Need ${identifyCost} gold.`)
       return
     }
 
-    // Mark item as identified
     const charId = this.selectedCharacterId()!
 
     this.gameState.updateState(state => {
-      // Update inventory items - handle both string IDs and Item objects
       const updatedInventory = character.inventory.map(invItem => {
-        // If it's an Item object with matching ID, mark as identified
         if (typeof invItem === 'object' && 'id' in invItem && invItem.id === itemId) {
           return { ...invItem, identified: true }
         }
@@ -380,24 +361,18 @@ export class ShopComponent implements OnInit {
       }
     })
 
-    // Build success message with item details
     let message = `Identified: ${item.name}`
-
-    // Add properties
     if (item.damage) {
       message += ` (Damage: ${item.damage})`
     }
     if (item.defense) {
       message += ` (Defense: ${item.defense})`
     }
-
-    // Warn if cursed
     if (item.cursed) {
       message += ' - WARNING: CURSED! Cannot be removed once equipped!'
     }
 
-    this.successMessage.set(message)
-    this.errorMessage.set(null)
+    this.messages.showSuccess(message)
   }
 
   /**

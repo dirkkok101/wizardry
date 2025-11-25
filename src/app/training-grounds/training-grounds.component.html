@@ -26,9 +26,9 @@
   </main>
 
   <!-- Error Message -->
-  @if (errorMessage()) {
-    <div class="error-message">
-      <p>{{ errorMessage() }}</p>
+  @if (messages.hasMessage()) {
+    <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      <p>{{ messages.messageText() }}</p>
     </div>
   }
 

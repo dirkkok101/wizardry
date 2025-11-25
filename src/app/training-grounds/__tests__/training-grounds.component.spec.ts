@@ -1,8 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { TrainingGroundsComponent } from '../training-grounds.component';
 import { GameStateService } from '../../../services/GameStateService';
-import { CharacterService } from '../../../services/CharacterService';
+import { SceneNavigationService } from '../../../services/SceneNavigationService';
 import { createTestCharacter, createEmptyParty } from '../../../test-helpers/test-factories';
 import { SceneType } from '../../../types/SceneType';
 import { CharacterStatus } from '../../../types/CharacterStatus';
@@ -10,25 +9,22 @@ import { CharacterStatus } from '../../../types/CharacterStatus';
 describe('TrainingGroundsComponent', () => {
   let component: TrainingGroundsComponent;
   let fixture: ComponentFixture<TrainingGroundsComponent>;
-  let mockRouter: jest.Mocked<Router>;
+  let navigationService: SceneNavigationService;
   let gameStateService: GameStateService;
 
   beforeEach(async () => {
-    mockRouter = {
-      navigate: jest.fn()
-    } as any;
-
     await TestBed.configureTestingModule({
-      imports: [TrainingGroundsComponent],
-      providers: [
-        GameStateService,
-        { provide: Router, useValue: mockRouter }
-      ]
+      imports: [TrainingGroundsComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TrainingGroundsComponent);
     component = fixture.componentInstance;
     gameStateService = TestBed.inject(GameStateService);
+    navigationService = TestBed.inject(SceneNavigationService);
+
+    jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'createCharacter').mockImplementation(() => Promise.resolve(true));
   });
 
   it('should create', () => {
@@ -141,15 +137,7 @@ describe('TrainingGroundsComponent', () => {
     it('navigates to character-inspection with correct params', () => {
       component.handleInspectCharacter('char-123');
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/character-inspection'],
-        {
-          queryParams: {
-            characterId: 'char-123',
-            returnTo: 'training-grounds'
-          }
-        }
-      );
+      expect(navigationService.inspectCharacter).toHaveBeenCalledWith('char-123', 'training-grounds');
     });
   });
 
@@ -157,7 +145,7 @@ describe('TrainingGroundsComponent', () => {
     it('navigates to character-creation', () => {
       component.handleCreateCharacter();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/character-creation']);
+      expect(navigationService.createCharacter).toHaveBeenCalled();
     });
   });
 
@@ -241,14 +229,6 @@ describe('TrainingGroundsComponent', () => {
     });
   });
 
-  describe('returnToCastleMenu', () => {
-    it('navigates to castle-menu', () => {
-      component.returnToCastleMenu();
-
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
-    });
-  });
-
   describe('handleFooterAction', () => {
     it('calls handleCreateCharacter when create action selected', () => {
       const spy = jest.spyOn(component, 'handleCreateCharacter');
@@ -258,12 +238,10 @@ describe('TrainingGroundsComponent', () => {
       expect(spy).toHaveBeenCalled();
     });
 
-    it('calls returnToCastleMenu when return action selected', () => {
-      const spy = jest.spyOn(component, 'returnToCastleMenu');
-
+    it('navigates to castle when return action selected', () => {
       component.handleFooterAction('return');
 
-      expect(spy).toHaveBeenCalled();
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
   });
 
@@ -271,7 +249,7 @@ describe('TrainingGroundsComponent', () => {
     it('navigates to castle-menu when ESC key pressed', () => {
       component.handleEscape();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/castle-menu']);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
     it('does not navigate when confirmation dialog is open', () => {
@@ -295,13 +273,13 @@ describe('TrainingGroundsComponent', () => {
 
       // Open confirmation dialog
       component.handleDeleteCharacter('char-1');
-      mockRouter.navigate.mockClear();
+      (navigationService.returnToCastle as jest.Mock).mockClear();
 
       // Try to escape
       component.handleEscape();
 
       // Should NOT navigate when dialog is open
-      expect(mockRouter.navigate).not.toHaveBeenCalled();
+      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
     });
   });
 
@@ -332,7 +310,7 @@ describe('TrainingGroundsComponent', () => {
       fixture.detectChanges();
 
       // Spy on navigation (menu would normally trigger this)
-      mockRouter.navigate.mockClear();
+      (navigationService.returnToCastle as jest.Mock).mockClear();
       const handleFooterActionSpy = jest.spyOn(component, 'handleFooterAction');
 
       // Simulate Enter key press while dialog is visible
@@ -346,7 +324,7 @@ describe('TrainingGroundsComponent', () => {
 
       // Verify: Menu navigation should NOT have been triggered
       expect(handleFooterActionSpy).not.toHaveBeenCalled();
-      expect(mockRouter.navigate).not.toHaveBeenCalled();
+      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
 
       // Verify: Dialog should still be open (confirmDelete wasn't called by menu)
       expect(component.showDeleteConfirmation()).toBe(true);
@@ -382,7 +360,7 @@ describe('TrainingGroundsComponent', () => {
       // The handleFooterAction method would be called by the menu when Enter is pressed
       component.handleFooterAction('create');
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/character-creation']);
+      expect(navigationService.createCharacter).toHaveBeenCalled();
     });
   });
 });

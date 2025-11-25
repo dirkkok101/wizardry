@@ -1,15 +1,15 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
+import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { GameStateQueries } from '../../utils/GameStateQueries';
 import { MenuItem } from '../shared/components/menu/menu.component';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
-import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
+import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component';
 import { CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { SceneType } from '../../types/SceneType';
-import { Character } from '../../types/Character';
 
 /**
  * Castle Menu Component
@@ -29,24 +29,18 @@ import { Character } from '../../types/Character';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterCardComponent
+    PartyCharacterGridComponent
   ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
 })
 export class CastleMenuComponent implements OnInit {
-  // Party display signals
-  readonly currentParty = computed(() => this.gameState.party());
-  readonly partyCharacters = computed(() => {
-    const party = this.currentParty();
-    const state = this.gameState.state();
-    return party.members
-      .map(id => state.roster.get(id))
-      .filter((char): char is Character => char !== undefined);
-  });
+  private readonly gameState = inject(GameStateService);
+  private readonly saveService = inject(SaveService);
+  private readonly navigation = inject(SceneNavigationService);
 
   readonly footerMenuItems = computed((): MenuItem[] => {
-    const hasParty = (this.currentParty().members?.length ?? 0) > 0;
+    const hasParty = GameStateQueries.hasPartyMembers(this.gameState.state());
 
     return [
       { id: 'tavern', label: 'Tavern', shortcut: 'A', enabled: true },
@@ -58,14 +52,7 @@ export class CastleMenuComponent implements OnInit {
     ];
   });
 
-  constructor(
-    private gameState: GameStateService,
-    private router: Router,
-    private saveService: SaveService
-  ) {}
-
   ngOnInit(): void {
-    // Update game state to CASTLE_MENU
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.CASTLE_MENU
@@ -74,32 +61,26 @@ export class CastleMenuComponent implements OnInit {
 
   handleActionClick(event: CharacterActionEvent): void {
     if (event.actionType === 'inspect') {
-      this.handleInspectCharacter(event.characterId);
+      this.navigation.inspectCharacter(event.characterId, 'castle-menu');
     }
   }
 
-  handleInspectCharacter(charId: string): void {
-    this.router.navigate(['/character-inspection'], {
-      queryParams: { characterId: charId, returnTo: 'castle-menu' }
-    });
-  }
-
   handleFooterAction(itemId: string): void {
-    switch(itemId) {
+    switch (itemId) {
       case 'tavern':
-        this.router.navigate(['/tavern']);
+        this.navigation.goToTavern();
         break;
       case 'temple':
-        this.router.navigate(['/temple']);
+        this.navigation.goToTemple();
         break;
       case 'shop':
-        this.router.navigate(['/shop']);
+        this.navigation.goToShop();
         break;
       case 'inn':
-        this.router.navigate(['/inn']);
+        this.navigation.goToInn();
         break;
       case 'training':
-        this.router.navigate(['/training-grounds']);
+        this.navigation.goToTrainingGrounds();
         break;
       case 'maze':
         this.navigateToMaze();
@@ -108,18 +89,13 @@ export class CastleMenuComponent implements OnInit {
   }
 
   async navigateToMaze(): Promise<void> {
-    const party = this.currentParty();
-
-    // Validate party exists and has members
-    if (!party || party.members.length === 0) {
+    if (!GameStateQueries.hasPartyMembers(this.gameState.state())) {
       console.warn('Cannot enter maze without party members');
       return;
     }
 
     // Trigger auto-save before entering dungeon
     await this.saveService.saveGame(this.gameState.state(), 1);
-
-    // Navigate to Camp (pre-dungeon staging area)
-    this.router.navigate(['/camp']);
+    this.navigation.enterCamp();
   }
 }

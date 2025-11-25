@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { TavernComponent } from '../../tavern/tavern.component';
 import { GameStateService } from '../../../services/GameStateService';
+import { SceneNavigationService } from '../../../services/SceneNavigationService';
+import { MessageService } from '../../../services/MessageService';
 import { createTestCharacter } from '../../../test-helpers/test-factories';
 import { Alignment } from '../../../types/Alignment';
 import { CharacterStatus } from '../../../types/CharacterStatus';
@@ -10,7 +11,8 @@ describe('Tavern Integration Tests', () => {
   let component: TavernComponent;
   let fixture: ComponentFixture<TavernComponent>;
   let gameStateService: GameStateService;
-  let router: Router;
+  let navigationService: SceneNavigationService;
+  let messageService: MessageService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -20,7 +22,8 @@ describe('Tavern Integration Tests', () => {
     fixture = TestBed.createComponent(TavernComponent);
     component = fixture.componentInstance;
     gameStateService = TestBed.inject(GameStateService);
-    router = TestBed.inject(Router);
+    navigationService = TestBed.inject(SceneNavigationService);
+    messageService = TestBed.inject(MessageService);
     fixture.detectChanges();
   });
 
@@ -49,7 +52,7 @@ describe('Tavern Integration Tests', () => {
       // Verify all added
       const party = gameStateService.party();
       expect(party.members.length).toBe(6);
-      expect(component.errorMessage()).toBeNull();
+      expect(messageService.isError()).toBe(false);
     });
 
     it('prevents adding 7th character to full party', () => {
@@ -69,7 +72,7 @@ describe('Tavern Integration Tests', () => {
       // Attempt to add 7th
       component.onAddCharacter('char-6');
 
-      expect(component.errorMessage()).toBe('Party is full (maximum 6 members)');
+      expect(messageService.messageText()).toBe('Party is full (maximum 6 members)');
       expect(gameStateService.party().members.length).toBe(6);
     });
   });
@@ -95,7 +98,7 @@ describe('Tavern Integration Tests', () => {
 
       // Attempt to add Evil character
       component.onAddCharacter(evilChar.id);
-      expect(component.errorMessage()).toBe('Good and Evil cannot party together');
+      expect(messageService.messageText()).toBe('Good and Evil cannot party together');
       expect(gameStateService.party().members).not.toContain(evilChar.id);
     });
 
@@ -119,7 +122,7 @@ describe('Tavern Integration Tests', () => {
       const party = gameStateService.party();
       expect(party.members).toContain(goodChar.id);
       expect(party.members).toContain(neutralChar.id);
-      expect(component.errorMessage()).toBeNull();
+      expect(messageService.isError()).toBe(false);
     });
   });
 
@@ -137,16 +140,11 @@ describe('Tavern Integration Tests', () => {
           members: [character.id]
         }
       }));
-      const navigateSpy = jest.spyOn(router, 'navigate');
+      const navigateSpy = jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
 
       component.onInspect(character.id);
 
-      expect(navigateSpy).toHaveBeenCalledWith(['/character-inspection'], {
-        queryParams: {
-          characterId: character.id,
-          returnTo: 'tavern'
-        }
-      });
+      expect(navigateSpy).toHaveBeenCalledWith(character.id, 'tavern');
     });
   });
 
@@ -191,7 +189,7 @@ describe('Tavern Integration Tests', () => {
 
       component.onAddCharacter(deadChar.id);
 
-      expect(component.errorMessage()).toContain('not available');
+      expect(messageService.messageText()).toContain('not available');
       expect(gameStateService.party().members).not.toContain(deadChar.id);
     });
   });
