@@ -29,10 +29,17 @@ describe('CombatService.executeRound', () => {
     const result = CombatService.executeRound(state, party)
 
     // Should execute in order: cmd2 (10), cmd3 (7), cmd1 (5)
-    expect(result.messages).toHaveLength(3)
+    // Each action produces 2 messages (action + result), so 6 total
+    expect(result.messages).toHaveLength(6)
+    // First action (Mage attacks - highest initiative)
     expect(result.messages[0]).toContain('Mage')
-    expect(result.messages[1]).toContain('Kobold')
-    expect(result.messages[2]).toContain('Fighter')
+    expect(result.messages[0]).toContain('attacks')
+    // Second action (Kobold attacks)
+    expect(result.messages[2]).toContain('Kobold')
+    expect(result.messages[2]).toContain('attacks')
+    // Third action (Fighter attacks - lowest initiative)
+    expect(result.messages[4]).toContain('Fighter')
+    expect(result.messages[4]).toContain('attacks')
   })
 
   it('detects victory when all monsters dead', () => {

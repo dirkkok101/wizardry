@@ -300,11 +300,18 @@ export class CombatService {
     })
   }
 
+  /**
+   * Result message marker prefix
+   * Messages prefixed with this are "results" of actions and use actionResultDelay
+   * The marker is stripped before display
+   */
+  static readonly RESULT_MARKER = '→ '
+
   static executeCommand(
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     // Handle different command types
     if (command.type === 'ATTACK') {
       return this.executeAttackCommand(state, command, parryingCombatants)
@@ -331,7 +338,23 @@ export class CombatService {
     }
 
     // TODO: Handle other command types (USE_ITEM)
-    return { newState: state, message: 'Unknown command type' }
+    return { newState: state, messages: ['Unknown command type'] }
+  }
+
+  /**
+   * Check if a message is a result message (has the result marker prefix)
+   */
+  static isResultMessage(message: string): boolean {
+    return message.startsWith(this.RESULT_MARKER)
+  }
+
+  /**
+   * Strip the result marker from a message for display
+   */
+  static stripResultMarker(message: string): string {
+    return message.startsWith(this.RESULT_MARKER)
+      ? message.substring(this.RESULT_MARKER.length)
+      : message
   }
 
   /**
@@ -339,7 +362,7 @@ export class CombatService {
    * @param state Current combat state
    * @param command The attack command to execute
    * @param parryingCombatants Set of combatant IDs that are currently parrying
-   * @returns Updated combat state and result message
+   * @returns Updated combat state and result messages (action + result split)
    *
    * @remarks
    * Authentic Wizardry mechanic: Helpless targets (ASLEEP or PARALYZED) take 2x damage
@@ -349,10 +372,10 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     const target = command.target as Combatant
     if (!target) {
-      return { newState: state, message: 'No target specified' }
+      return { newState: state, messages: ['No target specified'] }
     }
 
     // Check if target is parrying (apply -2 AC bonus)
@@ -367,10 +390,15 @@ export class CombatService {
     const actorName = this.getCombatantName(command.actor)
     const targetName = this.getCombatantName(target)
 
+    // Action message (always shown first)
+    const actionMessage = `${actorName} attacks ${targetName}`
+
     if (!attackResult.hit) {
+      // Result message for miss
+      const resultMessage = `${this.RESULT_MARKER}${actorName} misses!`
       return {
         newState: state,
-        message: `${actorName} attacks ${targetName}: ${attackResult.message}`
+        messages: [actionMessage, resultMessage]
       }
     }
 
@@ -388,13 +416,23 @@ export class CombatService {
     // Apply damage to target
     const newState = this.applyDamage(state, target, finalDamage)
 
-    const damageMsg = (isAsleep || isParalyzed)
-      ? `${attackResult.message} (HELPLESS: 2x damage!)`
-      : attackResult.message
+    // Build result message
+    let resultText: string
+    if (attackResult.critical) {
+      resultText = `${actorName} scores a CRITICAL HIT for ${finalDamage} damage!`
+    } else {
+      resultText = `${actorName} hits for ${finalDamage} damage!`
+    }
+
+    if (isAsleep || isParalyzed) {
+      resultText += ' (HELPLESS: 2x damage!)'
+    }
+
+    const resultMessage = `${this.RESULT_MARKER}${resultText}`
 
     return {
       newState,
-      message: `${actorName} attacks ${targetName}: ${damageMsg}`
+      messages: [actionMessage, resultMessage]
     }
   }
 
@@ -402,25 +440,25 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     // Add actor to parrying set
     parryingCombatants.add(command.actor.id)
 
     const actorName = this.getCombatantName(command.actor)
     return {
       newState: state, // State doesn't change for PARRY, return as-is
-      message: `${actorName} assumes a defensive stance! (AC -2)`
+      messages: [`${actorName} assumes a defensive stance! (AC -2)`]
     }
   }
 
   private static executeRunCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     const actorName = this.getCombatantName(command.actor)
     return {
       newState: state, // State doesn't change, flee is checked at end of round
-      message: `${actorName} attempts to flee!`
+      messages: [`${actorName} attempts to flee!`]
     }
   }
 
@@ -432,7 +470,7 @@ export class CombatService {
   private static executeAdvanceCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     const monster = command.actor as MonsterInstance
 
     // Find the group this monster belongs to
@@ -443,7 +481,7 @@ export class CombatService {
     if (!group) {
       return {
         newState: state,
-        message: `${monster.name} tries to advance but can't find their group!`
+        messages: [`${monster.name} tries to advance but can't find their group!`]
       }
     }
 
@@ -451,7 +489,7 @@ export class CombatService {
     if (group.formation === 'front') {
       return {
         newState: state,
-        message: `${monster.name} is already in the front row!`
+        messages: [`${monster.name} is already in the front row!`]
       }
     }
 
@@ -474,27 +512,27 @@ export class CombatService {
         ...state,
         monsterGroups: newMonsterGroups
       },
-      message
+      messages: [message]
     }
   }
 
   private static executeCastSpellCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
     const spellId = command.data?.spellId
 
     if (!spellId) {
-      return { newState: state, message: `${actorName} casts nothing!` }
+      return { newState: state, messages: [`${actorName} casts nothing!`] }
     }
 
     // Check if silenced
     if (this.hasStatusEffect(state, caster.id, 'SILENCED')) {
       return {
         newState: state,
-        message: `${actorName} is silenced and cannot cast spells!`
+        messages: [`${actorName} is silenced and cannot cast spells!`]
       }
     }
 
@@ -503,7 +541,7 @@ export class CombatService {
     if (!canCastResult.canCast) {
       return {
         newState: state,
-        message: `${actorName} cannot cast spell: ${canCastResult.reason}`
+        messages: [`${actorName} cannot cast spell: ${canCastResult.reason}`]
       }
     }
 
@@ -605,27 +643,28 @@ export class CombatService {
       )
     }
 
-    // Build message with group/target info
-    let message = `${actorName} casts ${spellId.toUpperCase()}`
+    // Build action message (casting announcement)
+    let actionMessage = `${actorName} casts ${spellId.toUpperCase()}`
 
     if (spell && spell.target === 'group' && command.targetGroupId) {
-      message += ` on Group ${command.targetGroupId} (${targets.length} monsters)`
+      actionMessage += ` on Group ${command.targetGroupId}`
     } else if (spell && spell.target === 'all_enemies') {
-      message += ` on all enemies (${targets.length} monsters)`
+      actionMessage += ` on all enemies`
     }
 
-    message += `: ${spellEffect.message}`
+    // Build result message (spell effect)
+    const resultMessage = `${this.RESULT_MARKER}${spellEffect.message}`
 
     return {
       newState,
-      message
+      messages: [actionMessage, resultMessage]
     }
   }
 
   private static executeDispelCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; message: string } {
+  ): { newState: CombatState; messages: string[] } {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
 
@@ -634,7 +673,7 @@ export class CombatService {
     if (!groupId) {
       return {
         newState: state,
-        message: `${actorName} DISPEL fails: no group targeted!`
+        messages: [`${actorName} attempts to DISPEL but no group targeted!`]
       }
     }
 
@@ -642,7 +681,7 @@ export class CombatService {
     if (!group || group.monsters.length === 0) {
       return {
         newState: state,
-        message: `${actorName} DISPEL fails: group empty!`
+        messages: [`${actorName} attempts to DISPEL Group ${groupId}`, `${this.RESULT_MARKER}The group is empty!`]
       }
     }
 
@@ -651,9 +690,12 @@ export class CombatService {
     if (aliveMonsters.length === 0) {
       return {
         newState: state,
-        message: `${actorName} DISPEL fails: all monsters already dead!`
+        messages: [`${actorName} attempts to DISPEL Group ${groupId}`, `${this.RESULT_MARKER}All monsters already dead!`]
       }
     }
+
+    // Action message
+    const actionMessage = `${actorName} attempts to DISPEL Group ${groupId}`
 
     // Check if group contains undead
     // TODO: Add isUndead property to monsters
@@ -683,26 +725,28 @@ export class CombatService {
           : g
       )
 
+      const resultMessage = `${this.RESULT_MARKER}${aliveMonsters.length} undead destroyed!`
       return {
         newState: { ...state, monsterGroups: newMonsterGroups },
-        message: `${actorName} DISPEL destroys Group ${groupId}! (${aliveMonsters.length} monsters destroyed)`
+        messages: [actionMessage, resultMessage]
       }
     } else {
       // Failure
+      const resultMessage = `${this.RESULT_MARKER}The undead resist! (${dispelChance}% chance)`
       return {
         newState: state,
-        message: `${actorName} DISPEL fails! (${dispelChance}% chance)`
+        messages: [actionMessage, resultMessage]
       }
     }
   }
 
   /**
    * Calculate flee chance percentage
-   * Formula: 50% base + modifiers
-   * Modifiers:
-   * - Boss fight (canFlee = false): 0%
-   * - Party >50% casualties: +20%
-   * - Enemy surprised: +30% (not implemented yet)
+   * Formula based on Wizardry 1 research (docs/commands/combat/FleeCommand.md):
+   * - Base chance: 50%
+   * - Speed difference: ±5% per AGI point difference (party avg vs monster avg)
+   * - Luck factor: ±2% per LUC point above/below 10
+   * - Clamped to 10-90% (always some chance to succeed/fail)
    */
   static calculateFleeChance(
     state: CombatState,
@@ -721,16 +765,99 @@ export class CombatService {
 
     let chance = 50 // Base 50%
 
-    // Check party casualties
-    const totalParty = party.length
-    const aliveParty = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0).length
-    const casualties = totalParty - aliveParty
-
-    if (casualties > totalParty / 2) {
-      chance += 20  // +20% if >50% dead
+    // Calculate party average AGI (only alive members)
+    const aliveParty = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    if (aliveParty.length === 0) {
+      return 0
     }
 
-    return chance
+    const partyAvgAgi = aliveParty.reduce((sum, c) => sum + c.agility, 0) / aliveParty.length
+
+    // Calculate monster average AGI (only alive monsters)
+    const aliveMonsters = this.getAllAliveMonsters(state)
+    const monsterAvgAgi = aliveMonsters.length > 0
+      ? aliveMonsters.reduce((sum, m) => sum + (m.agility || 10), 0) / aliveMonsters.length
+      : 10
+
+    // Speed difference modifier: ±5% per AGI point
+    const speedDifference = partyAvgAgi - monsterAvgAgi
+    chance += speedDifference * 5
+
+    // Luck factor: average party LUC, ±2% per point above/below 10
+    const partyAvgLuck = aliveParty.reduce((sum, c) => sum + c.luck, 0) / aliveParty.length
+    chance += (partyAvgLuck - 10) * 2
+
+    // Clamp to 10-90% (always some chance to succeed/fail)
+    return Math.max(10, Math.min(90, chance))
+  }
+
+  /**
+   * Execute flee failure penalty - monsters get a free attack round
+   * Per Wizardry research: when flee fails, all monsters attack without party retaliation
+   */
+  static executeFleeFailurePenalty(
+    state: CombatState,
+    party: Character[],
+    frontRow: string[]
+  ): {
+    newState: CombatState
+    messages: string[]
+    damagedCharacters: Map<string, Character>
+  } {
+    const messages: string[] = ['The monsters take advantage of the failed escape!']
+    const damagedCharacters = new Map<string, Character>()
+    let currentState = state
+
+    // All alive monsters get a free attack
+    const actingMonsters = this.getAllActingMonsters(state)
+
+    for (const monster of actingMonsters) {
+      // Get alive front row members that can be targeted
+      const aliveFront = party.filter(c =>
+        frontRow.includes(c.id) && c.hp > 0 && c.status !== CharacterStatus.DEAD
+      )
+
+      // Check if character was already damaged this penalty round
+      const getEffectiveChar = (c: Character): Character => {
+        return damagedCharacters.get(c.id) || c
+      }
+
+      // Filter to only alive targets after previous penalty attacks
+      const effectiveAliveFront = aliveFront.filter(c => getEffectiveChar(c).hp > 0)
+
+      // If no alive front row, target back row
+      const aliveBack = party.filter(c =>
+        !frontRow.includes(c.id) && c.hp > 0 && c.status !== CharacterStatus.DEAD
+      )
+      const effectiveAliveBack = aliveBack.filter(c => getEffectiveChar(c).hp > 0)
+
+      const targetPool = effectiveAliveFront.length > 0
+        ? effectiveAliveFront
+        : effectiveAliveBack
+
+      if (targetPool.length === 0) continue
+
+      // Select random target
+      const target = targetPool[Math.floor(Math.random() * targetPool.length)]
+      const effectiveTarget = getEffectiveChar(target)
+
+      // Resolve attack (no parrying during penalty round)
+      const attackResult = this.resolveAttack(monster, effectiveTarget, 0, 0)
+
+      if (attackResult.hit) {
+        const damaged = this.applyDamageToCharacter(effectiveTarget, attackResult.damage)
+        damagedCharacters.set(target.id, damaged)
+        messages.push(`${monster.name} attacks ${target.name}: ${attackResult.damage} damage!`)
+      } else {
+        messages.push(`${monster.name} attacks ${target.name}: Miss!`)
+      }
+    }
+
+    return {
+      newState: currentState,
+      messages,
+      damagedCharacters
+    }
   }
 
   /**
@@ -1047,7 +1174,8 @@ export class CombatService {
 
   static executeRound(
     state: CombatState,
-    party: Character[]
+    party: Character[],
+    frontRow: string[] = []
   ): {
     newState: CombatState
     messages: string[]
@@ -1102,7 +1230,7 @@ export class CombatService {
 
       const result = this.executeCommand(currentState, command, parryingCombatants)
       currentState = result.newState
-      messages.push(result.message)
+      messages.push(...result.messages)
 
       // Track RUN commands
       if (command.type === 'RUN' && !('monsterId' in command.actor)) {
@@ -1226,6 +1354,37 @@ export class CombatService {
         }
       } else {
         messages.push(`The party fails to escape!`)
+
+        // Apply flee failure penalty - monsters get free attacks
+        const penaltyResult = this.executeFleeFailurePenalty(currentState, party, frontRow)
+        currentState = penaltyResult.newState
+        messages.push(...penaltyResult.messages)
+
+        // Merge penalty damage into damagedCharacters
+        for (const [charId, char] of penaltyResult.damagedCharacters.entries()) {
+          const existing = damagedCharacters.get(charId)
+          if (existing) {
+            // Accumulate damage if character was already damaged
+            damagedCharacters.set(charId, char)
+          } else {
+            damagedCharacters.set(charId, char)
+          }
+        }
+
+        // Check for defeat after penalty round
+        const allPartyDeadFromPenalty = this.areAllCharactersDead(party, damagedCharacters)
+        if (allPartyDeadFromPenalty) {
+          return {
+            newState: currentState,
+            messages,
+            damagedCharacters,
+            spellCasters,
+            curedCharacters,
+            victory: false,
+            defeat: true,
+            fled: false
+          }
+        }
       }
     }
 

@@ -37,8 +37,8 @@ describe('CombatService - Phase 5: Status Effect Spells', () => {
 
       const updatedMonster = result.newState.monsterGroups[0].monsters[0]
       expect(updatedMonster.status).toBe('ASLEEP')
-      expect(result.message).toContain('KATINO')
-      expect(result.message).toContain('sleep')
+      expect(result.messages.join(' ')).toContain('KATINO')
+      expect(result.messages.join(' ')).toContain('sleep')
     })
 
     it('does not put dead monsters to sleep', () => {
@@ -146,8 +146,8 @@ describe('CombatService - Phase 5: Status Effect Spells', () => {
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
       expect(CombatService.hasStatusEffect(result.newState, 'm1', 'BLIND')).toBe(true)
-      expect(result.message).toContain('DILTO')
-      expect(result.message).toContain('blind')
+      expect(result.messages.join(' ')).toContain('DILTO')
+      expect(result.messages.join(' ')).toContain('blind')
     })
 
     it('blinds multiple monsters when targeting group', () => {
@@ -268,8 +268,8 @@ describe('CombatService - Phase 5: Status Effect Spells', () => {
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
       expect(CombatService.hasStatusEffect(result.newState, 'm1', 'SILENCED')).toBe(true)
-      expect(result.message).toContain('MONTINO')
-      expect(result.message).toContain('silence')
+      expect(result.messages.join(' ')).toContain('MONTINO')
+      expect(result.messages.join(' ')).toContain('silence')
     })
 
     it('silences multiple monsters when targeting group', () => {

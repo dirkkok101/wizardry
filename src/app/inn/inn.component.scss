@@ -1,262 +1,201 @@
 @use '../../styles/variables' as *;
 
-.inn {
+.inn-scene {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: $spacing-md;
+  height: 100vh;
+}
 
-  header {
-    margin-bottom: $spacing-xl;
+.inn-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
 
-    h1 {
-      font-size: 24px;
-      color: $color-text-bright;
-      margin: 0;
-      text-align: center;
-    }
-  }
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: $color-text-dim;
 
-  main {
-    flex: 1;
+  p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
   }
 }
 
-.main-view {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-xl;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.menu-section {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.party-section {
-  h2 {
-    font-size: 16px;
-    color: $color-text-green;
-    margin: 0 0 $spacing-md 0;
-  }
-
-  .party-gold {
-    margin-top: $spacing-md;
-    padding: $spacing-sm;
-    border-top: 1px solid $color-text-dim;
-    color: $color-amber;
-    font-weight: bold;
-    text-align: right;
-  }
-}
-
-.character-select-view,
-.room-select-view,
-.level-up-view {
-  max-width: 600px;
+// Room Selection View
+.room-selection {
+  max-width: 500px;
   margin: 0 auto;
 
-  h2, h3 {
-    font-size: 18px;
+  h2 {
+    font-size: 20px;
     color: $color-text-bright;
-    margin-bottom: $spacing-lg;
+    margin: 0 0 $spacing-md 0;
     text-align: center;
   }
 
   h3 {
     font-size: 16px;
     color: $color-text-green;
-  }
-}
-
-.character-info {
-  background-color: rgba($color-text-dim, 0.1);
-  border: 1px solid $color-text-dim;
-  padding: $spacing-md;
-  margin-bottom: $spacing-lg;
-
-  h2 {
-    margin: 0 0 $spacing-sm 0;
-    text-align: left;
-  }
-
-  .stats {
-    display: flex;
-    gap: $spacing-lg;
-    color: $color-text-dim;
-
-    span {
-      font-size: 14px;
-    }
-  }
-}
-
-.room-options {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-lg;
-
-  .room-option {
-    background: none;
-    border: 1px solid $color-text-dim;
-    color: $color-text-bright;
-    font-family: $font-mono;
-    padding: $spacing-md;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.2s;
-
-    &:hover {
-      border-color: $color-text-green;
-      background-color: rgba($color-text-green, 0.1);
-    }
-
-    .room-label {
-      font-size: 14px;
-    }
-  }
-}
-
-.level-up-view {
-  h2 {
-    color: $color-amber;
-    font-size: 24px;
-    margin-bottom: $spacing-xl;
-  }
-
-  .level-up-message {
-    color: $color-text-bright;
-    font-size: 16px;
+    margin: $spacing-lg 0 $spacing-md 0;
     text-align: center;
-    margin-bottom: $spacing-lg;
   }
 
-  .stat-changes {
-    background-color: rgba($color-text-green, 0.1);
-    border: 1px solid $color-text-green;
-    padding: $spacing-lg;
-    margin-bottom: $spacing-xl;
+  .character-info {
+    background-color: rgba($color-text-dim, 0.1);
+    border: 1px solid $color-text-dim;
+    padding: $spacing-md;
+    margin-bottom: $spacing-md;
 
-    .hp-increase {
-      color: $color-text-green;
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: $spacing-md;
-    }
+    .stats {
+      display: flex;
+      gap: $spacing-lg;
+      margin-top: $spacing-sm;
 
-    .stat-increases {
-      margin-bottom: $spacing-md;
-
-      .stat-increase {
-        color: $color-text-bright;
+      .class {
+        color: $color-text-dim;
         font-size: 14px;
-        margin-bottom: $spacing-xs;
-      }
-    }
-
-    .new-spells {
-      h4 {
-        color: $color-amber;
-        font-size: 14px;
-        margin-bottom: $spacing-sm;
       }
 
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+      .hp {
+        color: $color-text-green;
+        font-size: 14px;
 
-        li {
-          color: $color-text-bright;
-          font-size: 14px;
-          margin-bottom: $spacing-xs;
+        &.injured {
+          color: $color-amber;
         }
       }
     }
   }
+}
 
-  .continue-btn {
-    background: none;
-    border: 1px solid $color-text-green;
-    color: $color-text-green;
-    font-family: $font-mono;
-    padding: $spacing-sm $spacing-lg;
-    cursor: pointer;
-    display: block;
-    margin: 0 auto;
-    font-size: 16px;
+// Level Up Display
+.level-up-display {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
 
-    &:hover {
-      background-color: rgba($color-text-green, 0.2);
+  h2 {
+    color: $color-amber;
+    font-size: 28px;
+    margin-bottom: $spacing-lg;
+    text-shadow: 0 0 10px rgba($color-amber, 0.5);
+  }
+
+  .level-up-content {
+    .congratulations {
+      color: $color-text-bright;
+      font-size: 18px;
+      margin-bottom: $spacing-lg;
+    }
+
+    .stat-changes {
+      background-color: rgba($color-text-green, 0.1);
+      border: 1px solid $color-text-green;
+      padding: $spacing-lg;
+      margin-bottom: $spacing-xl;
+      text-align: left;
+
+      .hp-increase {
+        display: flex;
+        justify-content: space-between;
+        color: $color-text-green;
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: $spacing-md;
+        padding-bottom: $spacing-md;
+        border-bottom: 1px solid rgba($color-text-green, 0.3);
+      }
+
+      .stat-increases {
+        margin-bottom: $spacing-md;
+
+        h4 {
+          color: $color-text-bright;
+          font-size: 14px;
+          margin-bottom: $spacing-sm;
+        }
+
+        .stat-row {
+          display: flex;
+          justify-content: space-between;
+          padding: $spacing-xs 0;
+
+          .stat-name {
+            color: $color-text-dim;
+            font-size: 14px;
+          }
+
+          .stat-change {
+            color: $color-text-green;
+            font-size: 14px;
+            font-weight: bold;
+          }
+        }
+      }
+
+      .new-spells {
+        h4 {
+          color: $color-amber;
+          font-size: 14px;
+          margin-bottom: $spacing-sm;
+        }
+
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+
+          li {
+            color: $color-text-bright;
+            font-size: 14px;
+            padding: $spacing-xs 0;
+
+            &::before {
+              content: '★ ';
+              color: $color-amber;
+            }
+          }
+        }
+      }
+    }
+
+    .continue-btn {
+      background: none;
+      border: 2px solid $color-text-green;
+      color: $color-text-green;
+      font-family: $font-mono;
+      padding: $spacing-sm $spacing-xl;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: rgba($color-text-green, 0.2);
+        transform: scale(1.05);
+      }
     }
   }
 }
 
-.stables-view {
-  max-width: 600px;
-  margin: 0 auto;
+// Message styling
+.message {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
 
-  h2 {
-    font-size: 16px;
-    color: $color-text-bright;
-    margin: 0 0 $spacing-md 0;
-    text-align: center;
-  }
-
-  .info {
-    text-align: center;
-    color: $color-text-dim;
-    font-size: 14px;
-    margin-bottom: $spacing-lg;
-  }
-}
-
-.cancel-btn {
-  background: none;
-  border: 1px solid $color-text-dim;
-  color: $color-text-dim;
-  font-family: $font-mono;
-  padding: $spacing-sm $spacing-md;
-  cursor: pointer;
-  display: block;
-  margin: $spacing-lg auto 0;
-
-  &:hover {
-    border-color: $color-text-green;
+  &.success {
+    background-color: rgba($color-text-green, 0.1);
     color: $color-text-green;
+    border: 1px solid $color-text-green;
   }
-}
 
-.success-message {
-  color: $color-text-green;
-  background-color: rgba($color-text-green, 0.1);
-  border: 1px solid $color-text-green;
-  padding: $spacing-sm $spacing-md;
-  margin: $spacing-md 0;
-  text-align: center;
-
-  p {
-    color: $color-text-bright;
-    font-weight: bold;
-  }
-}
-
-.error-message {
-  color: $color-red;
-  background-color: rgba($color-red, 0.1);
-  border: 1px solid $color-red;
-  padding: $spacing-sm $spacing-md;
-  margin: $spacing-md 0;
-  text-align: center;
-
-  p {
-    color: $color-error;
-    font-weight: bold;
+  &.error {
+    background-color: rgba($color-red, 0.1);
+    color: $color-red;
+    border: 1px solid $color-red;
   }
 }

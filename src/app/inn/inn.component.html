@@ -1,163 +1,122 @@
-<div class="inn">
-  <header>
-    <h1>ADVENTURER'S INN</h1>
-  </header>
+<div class="inn-scene">
+  <app-scene-title title="ADVENTURER'S INN" [showPartyGold]="true" />
 
-  <main>
-    <!-- Main menu view -->
-    @if (currentView() === 'main') {
-      <div class="main-view">
-        <div class="menu-section">
-          <app-menu
-            [items]="menuItems"
-            (select)="handleMenuSelect($event)"
-          />
-        </div>
-
-        <div class="party-section">
-          <app-party-character-grid
-            source="party"
-            [showFormation]="true"
-            [visibleFields]="['class', 'level', 'hp', 'ac']"
-            [actions]="[]"
-            emptyMessage="No party (visit Tavern to form party)"
-            variant="compact"
-          />
-
-          <div class="party-gold">
-            Gold: {{ partyGold() }}
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- Character Selection View -->
-    @if (currentView() === 'character-select') {
-      <div class="character-select-view">
-        <h2>SELECT CHARACTER TO REST</h2>
-        <app-character-list
-          [characters]="allCharacters()"
-          [selectable]="true"
-          (characterSelected)="selectCharacterToRest($event)"
+  <div class="inn-content">
+    <!-- Main view: Party characters with rest action -->
+    @if (!showRoomSelection() && !levelUpData()) {
+      @if (partyCharacters().length > 0) {
+        <app-party-character-grid
+          source="party"
+          [showFormation]="true"
+          [visibleFields]="['class', 'level', 'hp', 'status']"
+          [actions]="[{type: 'inspect'}, {type: 'rest', label: 'Rest'}]"
+          (actionClick)="handleCharacterAction($event)"
+          emptyMessage="No party members"
+          variant="default"
         />
-
-        <button class="cancel-btn" (click)="returnToCastle()">
-          RETURN TO CASTLE
-        </button>
-      </div>
+      } @else {
+        <div class="empty-state">
+          <p>No party formed.</p>
+          <p>Visit the Tavern to form a party.</p>
+        </div>
+      }
     }
 
     <!-- Room Selection View -->
-    @if (currentView() === 'room-select') {
-      <div class="room-select-view">
+    @if (showRoomSelection() && !showConfirmation()) {
+      <div class="room-selection">
         @if (selectedCharacter(); as character) {
           <div class="character-info">
-            <h2>{{ character.name }} ({{ character.class }} {{ character.level }})</h2>
+            <h2>{{ character.name }}</h2>
             <div class="stats">
-              <span>HP: {{ character.hp }}/{{ character.maxHp }}</span>
-              <span>Party Gold: {{ partyGold() }} GP</span>
+              <span class="class">{{ character.class }} Level {{ character.level }}</span>
+              <span class="hp" [class.injured]="character.hp < character.maxHp">
+                HP: {{ character.hp }}/{{ character.maxHp }}
+              </span>
             </div>
           </div>
 
           <h3>SELECT ROOM TYPE</h3>
 
-          <div class="room-options">
-            @for (room of roomMenuItems; track room.id) {
-              <button
-                class="room-option"
-                (click)="restInRoom($any(room.id))"
-              >
-                <span class="room-label">{{ room.label }}</span>
-              </button>
-            }
-          </div>
-
-          @if (messages.hasMessage()) {
-            <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
-              {{ messages.messageText() }}
-            </div>
-          }
-
-          <button class="cancel-btn" (click)="cancelView()">
-            BACK
-          </button>
+          <app-menu
+            [items]="roomMenuItems"
+            (select)="handleRoomSelect($event)"
+          />
         }
       </div>
     }
 
-    <!-- Level Up View -->
-    @if (currentView() === 'level-up') {
-      <div class="level-up-view">
+    <!-- Level Up Display -->
+    @if (levelUpData(); as data) {
+      <div class="level-up-display">
         @if (selectedCharacter(); as character) {
-          @if (levelUpData(); as data) {
-            <h2>LEVEL UP!</h2>
+          <h2>LEVEL UP!</h2>
 
-            <div class="level-up-content">
-              <p class="level-up-message">
-                {{ character.name }} has reached level {{ data.newLevel }}!
-              </p>
+          <div class="level-up-content">
+            <p class="congratulations">
+              {{ character.name }} has reached Level {{ data.newLevel }}!
+            </p>
 
-              <div class="stat-changes">
-                <div class="hp-increase">
-                  HP: {{ character.maxHp - data.hpIncrease }} → {{ character.maxHp }}
-                  (+{{ data.hpIncrease }})
-                </div>
-
-                @if (Object.keys(data.statIncreases).length > 0) {
-                  <div class="stat-increases">
-                    @for (stat of Object.keys(data.statIncreases); track stat) {
-                      <div class="stat-increase">
-                        {{ stat.toUpperCase() }}: +{{ data.statIncreases[stat] }}
-                      </div>
-                    }
-                  </div>
-                }
-
-                @if (data.newSpells.length > 0) {
-                  <div class="new-spells">
-                    <h4>New Spells Learned:</h4>
-                    <ul>
-                      @for (spell of data.newSpells; track spell.id) {
-                        <li>{{ spell.name }}</li>
-                      }
-                    </ul>
-                  </div>
-                }
+            <div class="stat-changes">
+              <div class="hp-increase">
+                <span class="label">Max HP:</span>
+                <span class="value">+{{ data.hpIncrease }}</span>
               </div>
 
-              <button class="continue-btn" (click)="continueLevelUp()">
-                CONTINUE
-              </button>
+              @if (Object.keys(data.statIncreases).length > 0) {
+                <div class="stat-increases">
+                  <h4>Stat Increases:</h4>
+                  @for (stat of Object.keys(data.statIncreases); track stat) {
+                    <div class="stat-row">
+                      <span class="stat-name">{{ stat | uppercase }}:</span>
+                      <span class="stat-change">+{{ data.statIncreases[stat] }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (data.newSpells.length > 0) {
+                <div class="new-spells">
+                  <h4>New Spells Learned:</h4>
+                  <ul>
+                    @for (spell of data.newSpells; track spell.id) {
+                      <li>{{ spell.name }}</li>
+                    }
+                  </ul>
+                </div>
+              }
             </div>
-          }
+
+            <button class="continue-btn" (click)="dismissLevelUp()">
+              CONTINUE (Enter)
+            </button>
+          </div>
         }
       </div>
     }
 
-    <!-- Stables view -->
-    @if (currentView() === 'stables') {
-      <div class="stables-view">
-        <h2>STABLES (Character Storage):</h2>
-        <p class="info">Board characters here for safekeeping.</p>
-
-        <app-party-character-grid
-          source="party"
-          [showFormation]="true"
-          [visibleFields]="['class', 'level', 'hp', 'ac']"
-          [actions]="[]"
-          emptyMessage="No characters to board"
-          variant="compact"
-        />
-
-        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
+    <!-- Messages -->
+    @if (messages.hasMessage()) {
+      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+        {{ messages.messageText() }}
       </div>
     }
-  </main>
+  </div>
 
-  <!-- Message display -->
-  @if (messages.hasMessage()) {
-    <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
-      <p>{{ messages.messageText() }}</p>
-    </div>
+  <!-- Footer menu (only show when not in room selection or level-up) -->
+  @if (!showRoomSelection() && !levelUpData()) {
+    <app-scene-footer
+      [menuItems]="footerMenuItems()"
+      (itemSelected)="handleFooterAction($event)"
+    />
+  }
+
+  <!-- Confirmation Dialog -->
+  @if (showConfirmation()) {
+    <app-confirmation-dialog
+      [message]="confirmationMessage()"
+      (confirm)="confirmRest()"
+      (cancel)="cancelConfirmation()"
+    />
   }
 </div>
