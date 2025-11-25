@@ -397,7 +397,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (newState.encounterTriggered) {
       this.addMessage('The door bursts open! You encounter a monster!');
       queueMicrotask(() => {
-        this.router.navigate(['/combat-stub']);
+        this.router.navigate(['/combat']);
       });
     } else {
       const kicker = newState.roster.get(kickerId)!;
