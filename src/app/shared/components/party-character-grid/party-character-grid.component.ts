@@ -5,7 +5,7 @@ import { GameStateQueries } from '../../../../utils/GameStateQueries';
 import { Character } from '../../../../types/Character';
 import { CharacterStatus } from '../../../../types/CharacterStatus';
 import { CharacterField, CharacterAction, CharacterActionEvent } from '../../../../types/CharacterCardTypes';
-import { CharacterCardComponent } from '../character-card/character-card.component';
+import { CharacterCardComponent, CombatStatus } from '../character-card/character-card.component';
 
 /**
  * Character source options for the grid
@@ -75,6 +75,9 @@ export type CharacterSource =
                     [visibleFields]="visibleFields"
                     [actions]="getActionsForCharacter(char)"
                     [variant]="variant"
+                    [highlighted]="isHighlighted(char)"
+                    [showHpBar]="showHpBar"
+                    [combatStatus]="getCombatStatus(char)"
                     (actionClick)="onActionClick($event)"
                   />
                 }
@@ -94,6 +97,9 @@ export type CharacterSource =
                     [visibleFields]="visibleFields"
                     [actions]="getActionsForCharacter(char)"
                     [variant]="variant"
+                    [highlighted]="isHighlighted(char)"
+                    [showHpBar]="showHpBar"
+                    [combatStatus]="getCombatStatus(char)"
                     (actionClick)="onActionClick($event)"
                   />
                 }
@@ -113,6 +119,9 @@ export type CharacterSource =
                 [visibleFields]="visibleFields"
                 [actions]="getActionsForCharacter(char)"
                 [variant]="variant"
+                [highlighted]="isHighlighted(char)"
+                [showHpBar]="showHpBar"
+                [combatStatus]="getCombatStatus(char)"
                 (actionClick)="onActionClick($event)"
               />
             }
@@ -254,6 +263,22 @@ export class PartyCharacterGridComponent {
   @Input() showFormation = false;
 
   /**
+   * ID of the highlighted character (e.g., active character in combat)
+   */
+  @Input() highlightedCharacterId?: string | null;
+
+  /**
+   * Show HP bar on character cards
+   */
+  @Input() showHpBar = false;
+
+  /**
+   * Combat status map (character ID -> combat status)
+   * Used to show action status indicators in combat
+   */
+  @Input() combatStatuses?: Map<string, CombatStatus>;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
@@ -321,5 +346,19 @@ export class PartyCharacterGridComponent {
    */
   onActionClick(event: CharacterActionEvent): void {
     this.actionClick.emit(event);
+  }
+
+  /**
+   * Check if a character is highlighted
+   */
+  isHighlighted(char: Character): boolean {
+    return this.highlightedCharacterId === char.id;
+  }
+
+  /**
+   * Get combat status for a character
+   */
+  getCombatStatus(char: Character): CombatStatus {
+    return this.combatStatuses?.get(char.id) ?? null;
   }
 }

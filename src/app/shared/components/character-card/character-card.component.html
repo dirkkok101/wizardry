@@ -1,4 +1,19 @@
-<div class="character-card" [ngClass]="{ 'default': variant === 'default', 'compact': variant === 'compact' }">
+<div class="character-card"
+     [ngClass]="{
+       'default': variant === 'default',
+       'compact': variant === 'compact',
+       'highlighted': highlighted,
+       'dead': isDead,
+       'action-ready': combatStatus === 'ready'
+     }">
+  <!-- Combat Status Indicator (top-right corner) -->
+  <div class="combat-status-indicator" *ngIf="combatStatus">
+    <span [ngClass]="'status-' + combatStatus">{{ combatStatusIcon }}</span>
+  </div>
+
+  <!-- Active Indicator (pulsing arrow) -->
+  <span class="active-indicator" *ngIf="highlighted && !isDead">&#9654;</span>
+
   <!-- Header: Name + Status -->
   <div class="card-header">
     <div class="character-name">{{ character.name }}</div>
@@ -15,6 +30,16 @@
       [layout]="variant === 'compact' ? 'horizontal' : 'vertical'">
     </app-character-stats>
   </div>
+
+  <!-- HP Bar (optional, for combat) -->
+  <div class="hp-bar-container" *ngIf="showHpBar && !isDead">
+    <div class="hp-bar">
+      <div class="hp-fill" [style.width.%]="hpPercent"></div>
+    </div>
+  </div>
+
+  <!-- Dead Badge (for combat) -->
+  <div class="dead-badge" *ngIf="isDead && showHpBar">DEAD</div>
 
   <div class="card-divider" *ngIf="hasActions"></div>
 

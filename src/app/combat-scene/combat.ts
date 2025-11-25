@@ -12,11 +12,14 @@ import { Character } from '../../types/Character'
 import { MenuItem } from '../shared/components/menu/menu.component'
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component'
+import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component'
+import { CombatStatus } from '../shared/components/character-card/character-card.component'
 import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '../shared/components/monster-group-selection-dialog/monster-group-selection-dialog.component'
 import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component'
 import { getGroupDisplayText } from '../../utils/MonsterNameUtils'
 import { CharacterStatus } from '../../types/CharacterStatus'
 import { getCombatMessageDelay } from '../../settings/CombatSettings'
+import { CharacterField } from '../../types/CharacterCardTypes'
 
 interface SelectedAction {
   characterId: string
@@ -30,6 +33,7 @@ interface SelectedAction {
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
+    PartyCharacterGridComponent,
     MonsterGroupSelectionDialogComponent,
     CharacterSelectionDialogComponent
   ],
@@ -212,6 +216,32 @@ export class CombatComponent implements OnInit, OnDestroy {
     return chars
       .filter(c => c.hp > 0)
       .every(c => actions.has(c.id))
+  })
+
+  // Visible fields for combat character cards (same as maze)
+  readonly combatCharacterFields: CharacterField[] = ['class', 'level', 'hp', 'ac']
+
+  // Combat statuses map for character cards
+  readonly combatStatuses = computed((): Map<string, CombatStatus> => {
+    const chars = this.partyCharacters()
+    const actions = this.selectedActions()
+    const activeId = this.activeCharacterId()
+    const statusMap = new Map<string, CombatStatus>()
+
+    for (const char of chars) {
+      if (char.hp <= 0) {
+        // Dead characters have no combat status
+        statusMap.set(char.id, null)
+      } else if (actions.has(char.id)) {
+        statusMap.set(char.id, 'ready')
+      } else if (char.id === activeId) {
+        statusMap.set(char.id, 'active')
+      } else {
+        statusMap.set(char.id, 'waiting')
+      }
+    }
+
+    return statusMap
   })
 
   // Get alive party members (for action selection)

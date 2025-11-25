@@ -10,10 +10,12 @@ $card-min-height-compact: 80px;
   flex-direction: column;
   gap: $spacing-md;
   background-color: $color-bg-black;
-  border: 1px solid $color-border;
+  border: 2px solid $color-border;
   padding: $spacing-md;
   font-family: $font-mono;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  border-radius: 4px;
 
   &.default {
     min-height: $card-min-height-default;
@@ -26,6 +28,24 @@ $card-min-height-compact: 80px;
   &:hover {
     background-color: color.adjust($color-bg-black, $lightness: 5%);
     border-color: $color-text-bright;
+  }
+
+  // Highlighted state (active character in combat)
+  &.highlighted {
+    border-color: $color-primary;
+    background-color: rgba(0, 255, 0, 0.1);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+  }
+
+  // Dead state
+  &.dead {
+    opacity: 0.5;
+    background-color: rgba(100, 0, 0, 0.3);
+  }
+
+  // Action ready state (has selected action in combat)
+  &.action-ready {
+    border-color: $color-success;
   }
 }
 
@@ -56,4 +76,75 @@ $card-min-height-compact: 80px;
 .card-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+// Active indicator (pulsing arrow for current character in combat)
+.active-indicator {
+  position: absolute;
+  top: 50%;
+  left: -20px;
+  transform: translateY(-50%);
+  color: $color-primary;
+  font-size: 1rem;
+  animation: pulse 1s infinite;
+}
+
+// Combat status indicator (top-right corner)
+.combat-status-indicator {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  font-size: 0.85rem;
+
+  .status-ready {
+    color: $color-success;
+  }
+
+  .status-active {
+    color: $color-warning;
+  }
+
+  .status-waiting {
+    color: $color-text-muted;
+  }
+}
+
+// HP Bar
+.hp-bar-container {
+  margin-top: $spacing-xs;
+}
+
+.hp-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+
+  .hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b6b, #4caf50);
+    transition: width 0.3s ease;
+  }
+}
+
+// Dead badge
+.dead-badge {
+  color: $color-danger;
+  font-weight: bold;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 0.15rem;
+  background: rgba(255, 0, 0, 0.2);
+  border-radius: 2px;
+  margin-top: $spacing-xs;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
