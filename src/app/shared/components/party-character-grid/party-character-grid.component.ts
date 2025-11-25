@@ -78,6 +78,7 @@ export type CharacterSource =
                     [highlighted]="isHighlighted(char)"
                     [showHpBar]="showHpBar"
                     [combatStatus]="getCombatStatus(char)"
+                    [statusText]="getStatusText(char)"
                     (actionClick)="onActionClick($event)"
                   />
                 }
@@ -100,6 +101,7 @@ export type CharacterSource =
                     [highlighted]="isHighlighted(char)"
                     [showHpBar]="showHpBar"
                     [combatStatus]="getCombatStatus(char)"
+                    [statusText]="getStatusText(char)"
                     (actionClick)="onActionClick($event)"
                   />
                 }
@@ -122,6 +124,7 @@ export type CharacterSource =
                 [highlighted]="isHighlighted(char)"
                 [showHpBar]="showHpBar"
                 [combatStatus]="getCombatStatus(char)"
+                [statusText]="getStatusText(char)"
                 (actionClick)="onActionClick($event)"
               />
             }
@@ -279,6 +282,12 @@ export class PartyCharacterGridComponent {
   @Input() combatStatuses?: Map<string, CombatStatus>;
 
   /**
+   * Status text map (character ID -> status text)
+   * Used to display selected actions or other status info on cards
+   */
+  @Input() statusTexts?: Map<string, string>;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
@@ -360,5 +369,12 @@ export class PartyCharacterGridComponent {
    */
   getCombatStatus(char: Character): CombatStatus {
     return this.combatStatuses?.get(char.id) ?? null;
+  }
+
+  /**
+   * Get status text for a character
+   */
+  getStatusText(char: Character): string | null {
+    return this.statusTexts?.get(char.id) ?? null;
   }
 }

@@ -42,11 +42,6 @@ $card-min-height-compact: 80px;
     opacity: 0.5;
     background-color: rgba(100, 0, 0, 0.3);
   }
-
-  // Action ready state (has selected action in combat)
-  &.action-ready {
-    border-color: $color-success;
-  }
 }
 
 .card-header {
@@ -89,27 +84,20 @@ $card-min-height-compact: 80px;
   animation: pulse 1s infinite;
 }
 
-// Combat status indicator (top-right corner)
-.combat-status-indicator {
-  position: absolute;
-  top: 0.35rem;
-  right: 0.35rem;
-  font-size: 0.85rem;
-
-  .status-ready {
-    color: $color-success;
-  }
-
-  .status-active {
-    color: $color-warning;
-  }
-
-  .status-waiting {
-    color: $color-text-muted;
-  }
+// Status text (e.g., selected action in combat)
+.status-text {
+  font-size: 0.8rem;
+  color: $color-primary;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.25rem;
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid $color-primary;
+  border-radius: 2px;
+  margin-top: $spacing-xs;
 }
 
-// HP Bar
+// HP Bar (kept for optional use)
 .hp-bar-container {
   margin-top: $spacing-xs;
 }

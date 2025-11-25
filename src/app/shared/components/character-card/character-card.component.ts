@@ -34,6 +34,8 @@ export class CharacterCardComponent {
   @Input() showHpBar = false;
   /** Combat action status indicator */
   @Input() combatStatus: CombatStatus = null;
+  /** Status text to display (e.g., selected action in combat) */
+  @Input() statusText?: string | null;
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
 
   get displayFields(): CharacterField[] {

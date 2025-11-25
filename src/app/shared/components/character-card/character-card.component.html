@@ -3,14 +3,8 @@
        'default': variant === 'default',
        'compact': variant === 'compact',
        'highlighted': highlighted,
-       'dead': isDead,
-       'action-ready': combatStatus === 'ready'
+       'dead': isDead
      }">
-  <!-- Combat Status Indicator (top-right corner) -->
-  <div class="combat-status-indicator" *ngIf="combatStatus">
-    <span [ngClass]="'status-' + combatStatus">{{ combatStatusIcon }}</span>
-  </div>
-
   <!-- Active Indicator (pulsing arrow) -->
   <span class="active-indicator" *ngIf="highlighted && !isDead">&#9654;</span>
 
@@ -31,15 +25,18 @@
     </app-character-stats>
   </div>
 
-  <!-- HP Bar (optional, for combat) -->
+  <!-- HP Bar (optional) -->
   <div class="hp-bar-container" *ngIf="showHpBar && !isDead">
     <div class="hp-bar">
       <div class="hp-fill" [style.width.%]="hpPercent"></div>
     </div>
   </div>
 
-  <!-- Dead Badge (for combat) -->
+  <!-- Dead Badge -->
   <div class="dead-badge" *ngIf="isDead && showHpBar">DEAD</div>
+
+  <!-- Status Text (e.g., selected action in combat) -->
+  <div class="status-text" *ngIf="statusText">{{ statusText }}</div>
 
   <div class="card-divider" *ngIf="hasActions"></div>
 
