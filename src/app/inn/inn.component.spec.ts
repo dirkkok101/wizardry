@@ -6,6 +6,7 @@ import { MessageService } from '../../services/MessageService';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterClass } from '../../types/CharacterClass';
+import { CharacterStatus } from '../../types/CharacterStatus';
 import { RoomType } from '../../services/InnService';
 import { createTestCharacter } from '../../test-helpers/test-factories';
 
@@ -16,16 +17,19 @@ describe('InnComponent', () => {
   let navigationService: SceneNavigationService;
   let messageService: MessageService;
 
-  const mockCharacter: Character = {
-    id: 'char-1',
-    name: 'Gandalf',
-    class: CharacterClass.MAGE,
-    level: 5,
-    hp: 15,
-    maxHp: 25,
-    status: 'OK',
-    experience: 10000
-  } as Character;
+  const createCharacterInParty = (overrides: Partial<Character> = {}): Character => {
+    return createTestCharacter({
+      id: 'char-1',
+      name: 'Gandalf',
+      class: CharacterClass.MAGE,
+      level: 5,
+      hp: 15,
+      maxHp: 25,
+      status: CharacterStatus.OK,
+      experience: 10000,
+      ...overrides
+    });
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -39,8 +43,10 @@ describe('InnComponent', () => {
     messageService = TestBed.inject(MessageService);
 
     jest.spyOn(navigationService, 'returnToCastle').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
 
     // Setup party with character and party gold
+    const mockCharacter = createCharacterInParty();
     gameState.updateState(state => ({
       ...state,
       roster: new Map(state.roster).set('char-1', mockCharacter),
@@ -58,198 +64,217 @@ describe('InnComponent', () => {
       expect(gameState.currentScene()).toBe(SceneType.INN);
     });
 
-    it('displays inn title', () => {
+    it('displays inn title via SceneTitleComponent', () => {
       fixture.detectChanges();
       const compiled = fixture.nativeElement;
-      expect(compiled.querySelector('h1').textContent).toContain('INN');
+      const sceneTitle = compiled.querySelector('app-scene-title');
+      expect(sceneTitle).toBeTruthy();
     });
 
-    it('shows menu options', () => {
+    it('shows party character grid', () => {
       fixture.detectChanges();
-      expect(component.menuItems.length).toBe(3);
-      expect(component.menuItems[0].id).toBe('rest');
-      expect(component.menuItems[1].id).toBe('stables');
-      expect(component.menuItems[2].id).toBe('castle');
-    });
-  });
-
-  describe('rest functionality', () => {
-    it('restores all party HP to maximum', () => {
-      component.handleMenuSelect('rest');
-
-      const state = gameState.state();
-      const character = state.roster.get('char-1')!;
-      expect(character.hp).toBe(character.maxHp);
+      const compiled = fixture.nativeElement;
+      const characterGrid = compiled.querySelector('app-party-character-grid');
+      expect(characterGrid).toBeTruthy();
     });
 
-    it('shows success message after resting', () => {
-      component.handleMenuSelect('rest');
-      expect(messageService.hasMessage()).toBe(true);
-      expect(messageService.messageText()).toContain('rested');
-    });
-
-    it('costs 10 gold per party member', () => {
-      const initialGold = gameState.party().gold || 0;
-      component.handleMenuSelect('rest');
-
-      const finalGold = gameState.party().gold || 0;
-      expect(finalGold).toBe(initialGold - 10);
-    });
-
-    it('shows error when party cannot afford rest', () => {
-      gameState.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          gold: 5
-        }
-      }));
-
-      component.handleMenuSelect('rest');
-      expect(messageService.hasMessage()).toBe(true);
-      expect(messageService.messageText()).toContain('afford');
-    });
-
-    it('shows error when no party exists', () => {
-      gameState.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          members: []
-        }
-      }));
-
-      component.handleMenuSelect('rest');
-      expect(messageService.hasMessage()).toBe(true);
-    });
-
-    it('prevents race condition by checking processing flag', () => {
-      // Set party gold to sufficient amount
-      gameState.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          gold: 100
-        }
-      }));
-
-      const initialGold = gameState.party().gold || 0;
-
-      // Manually set processing flag to simulate in-progress operation
-      component.processing.set(true);
-
-      // Attempt to rest while processing is true
-      component.handleMenuSelect('rest');
-
-      const goldAfterBlockedAttempt = gameState.party().gold || 0;
-
-      // Gold should not be deducted because processing flag blocked the operation
-      expect(goldAfterBlockedAttempt).toBe(initialGold);
-
-      // Reset processing flag
-      component.processing.set(false);
-
-      // Now rest should succeed
-      component.handleMenuSelect('rest');
-
-      const finalGold = gameState.party().gold || 0;
-
-      // Gold should be deducted once
-      expect(finalGold).toBe(initialGold - 10);
-
-      // Verify processing flag is reset after successful operation
-      expect(component.processing()).toBe(false);
-    });
-  });
-
-  describe('stables functionality', () => {
-    it('shows stables view when selected', () => {
-      component.handleMenuSelect('stables');
-      expect(component.currentView()).toBe('stables');
-    });
-
-    it('displays party characters for stable boarding', () => {
-      component.currentView.set('stables');
+    it('has footer menu with return option', () => {
       fixture.detectChanges();
-
-      expect(component.partyCharacters().length).toBe(1);
+      expect(component.footerMenuItems().length).toBeGreaterThan(0);
+      expect(component.footerMenuItems().some(item => item.id === 'return')).toBe(true);
     });
   });
 
   describe('navigation', () => {
-    it('returns to castle when selected', () => {
-      component.handleMenuSelect('castle');
+    it('returns to castle when footer return action is selected', () => {
+      component.handleFooterAction('return');
       expect(navigationService.returnToCastle).toHaveBeenCalled();
+    });
+
+    it('returns to castle on ESC key when not in dialogs', () => {
+      // Ensure no dialogs are open
+      component.showRoomSelection.set(false);
+      component.showConfirmation.set(false);
+      component.levelUpData.set(null);
+
+      component.handleEscape();
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
+    });
+
+    it('navigates to character inspection on inspect action', () => {
+      component.handleCharacterAction({
+        actionType: 'inspect',
+        characterId: 'char-1'
+      });
+      expect(navigationService.inspectCharacter).toHaveBeenCalledWith('char-1', 'inn');
     });
   });
 
-  describe('room selection and rest', () => {
-    it('allows selecting character to rest', () => {
-      const character = createTestCharacter({
-        id: 'char-1',
-        hp: 10,
-        maxHp: 20,
-        gold: 100
+  describe('character selection', () => {
+    it('selects character and shows room selection when rest action clicked', () => {
+      component.handleCharacterAction({
+        actionType: 'rest',
+        characterId: 'char-1'
       });
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map([[character.id, character]])
-      }));
 
-      component.selectCharacterToRest(character.id);
-
-      expect(component.selectedCharacterId()).toBe(character.id);
-      expect(component.currentView()).toBe('room-select');
+      expect(component.selectedCharacterId()).toBe('char-1');
+      expect(component.showRoomSelection()).toBe(true);
     });
 
-    it('rests character in BARRACKS for one week', async () => {
-      const character = createTestCharacter({
-        id: 'char-1',
-        hp: 10,
-        maxHp: 20
+    it('shows error for dead characters', () => {
+      const deadChar = createCharacterInParty({
+        id: 'dead-char',
+        status: CharacterStatus.DEAD
       });
       gameState.updateState(state => ({
         ...state,
-        roster: new Map([[character.id, character]]),
-        party: {
-          ...state.party,
-          gold: 100
-        }
+        roster: new Map(state.roster).set('dead-char', deadChar)
       }));
-      component.selectCharacterToRest(character.id);
 
-      await component.restInRoom(RoomType.BARRACKS);
+      component.selectCharacterToRest('dead-char');
+
+      expect(messageService.isError()).toBe(true);
+      expect(component.showRoomSelection()).toBe(false);
+    });
+
+    it('closes room selection and resets state on cancel', () => {
+      component.selectedCharacterId.set('char-1');
+      component.showRoomSelection.set(true);
+
+      component.cancelRoomSelection();
+
+      expect(component.selectedCharacterId()).toBeNull();
+      expect(component.showRoomSelection()).toBe(false);
+    });
+  });
+
+  describe('room selection', () => {
+    beforeEach(() => {
+      component.selectCharacterToRest('char-1');
+    });
+
+    it('has all 5 room types in menu plus back option', () => {
+      expect(component.roomMenuItems.length).toBe(6);
+      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.STABLES);
+      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.BARRACKS);
+      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.DOUBLE);
+      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.PRIVATE);
+      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.ROYAL_SUITE);
+      expect(component.roomMenuItems.map(m => m.id)).toContain('back');
+    });
+
+    it('shows confirmation dialog when room is selected', () => {
+      component.handleRoomSelect(RoomType.BARRACKS);
+
+      expect(component.showConfirmation()).toBe(true);
+      expect(component.pendingRoomType()).toBe(RoomType.BARRACKS);
+      expect(component.confirmationMessage()).toContain('barracks');
+    });
+
+    it('cancels room selection on back', () => {
+      component.handleRoomSelect('back');
+
+      expect(component.showRoomSelection()).toBe(false);
+      expect(component.selectedCharacterId()).toBeNull();
+    });
+
+    it('shows error when cannot afford room', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, gold: 5 }
+      }));
+
+      component.handleRoomSelect(RoomType.ROYAL_SUITE);
+
+      expect(messageService.isError()).toBe(true);
+      expect(component.showConfirmation()).toBe(false);
+    });
+  });
+
+  describe('rest mechanics', () => {
+    beforeEach(() => {
+      const char = createCharacterInParty({ hp: 10, maxHp: 20 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
+      }));
+      component.selectCharacterToRest('char-1');
+    });
+
+    it('heals character when rest is confirmed', () => {
+      component.handleRoomSelect(RoomType.BARRACKS);
+      component.confirmRest();
 
       const state = gameState.state();
       const updatedChar = state.roster.get('char-1')!;
-      expect(updatedChar.hp).toBe(11); // 10 + 1
-      expect(state.party.gold).toBe(90); // 100 - 10 (deducted from party)
+      expect(updatedChar.hp).toBe(11); // 10 + 1 (barracks heal rate)
     });
 
-    it('shows error when character cannot afford room', async () => {
-      const character = createTestCharacter({
-        id: 'char-1',
-        hp: 10,
-        maxHp: 20
+    it('deducts gold from party when resting', () => {
+      const initialGold = gameState.party().gold || 0;
+
+      component.handleRoomSelect(RoomType.BARRACKS);
+      component.confirmRest();
+
+      const finalGold = gameState.party().gold || 0;
+      expect(finalGold).toBe(initialGold - 10); // barracks costs 10
+    });
+
+    it('stables are free', () => {
+      const initialGold = gameState.party().gold || 0;
+
+      component.handleRoomSelect(RoomType.STABLES);
+      component.confirmRest();
+
+      const finalGold = gameState.party().gold || 0;
+      expect(finalGold).toBe(initialGold); // stables are free
+    });
+
+    it('shows success message after resting', () => {
+      component.handleRoomSelect(RoomType.BARRACKS);
+      component.confirmRest();
+
+      expect(messageService.hasMessage()).toBe(true);
+      expect(messageService.isSuccess()).toBe(true);
+    });
+
+    it('cancels confirmation without performing rest', () => {
+      component.handleRoomSelect(RoomType.BARRACKS);
+      const initialGold = gameState.party().gold || 0;
+
+      component.cancelConfirmation();
+
+      expect(component.showConfirmation()).toBe(false);
+      expect(gameState.party().gold).toBe(initialGold);
+    });
+  });
+
+  describe('level up', () => {
+    it('triggers level up when fully healed and has sufficient XP', () => {
+      const char = createCharacterInParty({
+        hp: 19,
+        maxHp: 20,
+        level: 1,
+        experience: 3000, // Enough XP for level 2
+        class: CharacterClass.FIGHTER
       });
       gameState.updateState(state => ({
         ...state,
-        roster: new Map([[character.id, character]]),
-        party: {
-          ...state.party,
-          gold: 5
-        }
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
       }));
-      component.selectCharacterToRest(character.id);
 
-      await component.restInRoom(RoomType.BARRACKS);
+      component.selectCharacterToRest('char-1');
+      component.handleRoomSelect(RoomType.BARRACKS);
+      component.confirmRest();
 
-      expect(messageService.messageText()).toContain('Not enough gold');
+      expect(component.levelUpData()).not.toBeNull();
+      expect(component.levelUpData()!.newLevel).toBe(2);
     });
 
-    it('triggers level up when HP reaches max and has XP', async () => {
-      const character = createTestCharacter({
-        id: 'char-1',
+    it('displays level up data correctly', () => {
+      const char = createCharacterInParty({
         hp: 19,
         maxHp: 20,
         level: 1,
@@ -258,19 +283,171 @@ describe('InnComponent', () => {
       });
       gameState.updateState(state => ({
         ...state,
-        roster: new Map([[character.id, character]]),
-        party: {
-          ...state.party,
-          gold: 100
-        }
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
       }));
-      component.selectCharacterToRest(character.id);
 
-      await component.restInRoom(RoomType.BARRACKS);
+      component.selectCharacterToRest('char-1');
+      component.handleRoomSelect(RoomType.BARRACKS);
+      component.confirmRest();
 
-      expect(component.currentView()).toBe('level-up');
-      expect(component.levelUpData()).toBeDefined();
-      expect(component.levelUpData()!.newLevel).toBe(2);
+      expect(component.levelUpData()?.newLevel).toBe(2);
+      expect(component.levelUpData()?.hpIncrease).toBeGreaterThan(0);
+    });
+
+    it('dismisses level up display', () => {
+      component.levelUpData.set({
+        newLevel: 2,
+        hpIncrease: 5,
+        statIncreases: {},
+        newSpells: []
+      });
+      component.selectedCharacterId.set('char-1');
+
+      component.dismissLevelUp();
+
+      expect(component.levelUpData()).toBeNull();
+      expect(component.selectedCharacterId()).toBeNull();
+      expect(messageService.isSuccess()).toBe(true);
+    });
+
+    it('updates character level in game state', () => {
+      const char = createCharacterInParty({
+        hp: 19,
+        maxHp: 20,
+        level: 1,
+        experience: 3000,
+        class: CharacterClass.FIGHTER
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
+      }));
+
+      component.selectCharacterToRest('char-1');
+      component.handleRoomSelect(RoomType.BARRACKS);
+      component.confirmRest();
+
+      const state = gameState.state();
+      const updatedChar = state.roster.get('char-1')!;
+      expect(updatedChar.level).toBe(2);
+    });
+  });
+
+  describe('keyboard handling', () => {
+    it('dismisses level up display on ESC', () => {
+      component.levelUpData.set({
+        newLevel: 2,
+        hpIncrease: 5,
+        statIncreases: {},
+        newSpells: []
+      });
+
+      component.handleEscape();
+
+      expect(component.levelUpData()).toBeNull();
+    });
+
+    it('dismisses level up display on Enter', () => {
+      component.levelUpData.set({
+        newLevel: 2,
+        hpIncrease: 5,
+        statIncreases: {},
+        newSpells: []
+      });
+
+      component.handleEnter();
+
+      expect(component.levelUpData()).toBeNull();
+    });
+
+    it('does nothing on Enter when no level up display', () => {
+      component.levelUpData.set(null);
+      component.showRoomSelection.set(true);
+
+      component.handleEnter();
+
+      // Room selection should still be open
+      expect(component.showRoomSelection()).toBe(true);
+    });
+
+    it('cancels confirmation on ESC', () => {
+      component.showConfirmation.set(true);
+
+      component.handleEscape();
+
+      expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('cancels room selection on ESC', () => {
+      component.showRoomSelection.set(true);
+      component.selectedCharacterId.set('char-1');
+
+      component.handleEscape();
+
+      expect(component.showRoomSelection()).toBe(false);
+      expect(component.selectedCharacterId()).toBeNull();
+    });
+
+    it('returns to castle on ESC when no dialogs open', () => {
+      component.showRoomSelection.set(false);
+      component.showConfirmation.set(false);
+      component.levelUpData.set(null);
+
+      component.handleEscape();
+
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
+    });
+  });
+
+  describe('empty party state', () => {
+    it('shows empty state when no party members', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, members: [] }
+      }));
+      fixture.detectChanges();
+
+      expect(component.partyCharacters().length).toBe(0);
+      const emptyState = fixture.nativeElement.querySelector('.empty-state');
+      expect(emptyState).toBeTruthy();
+    });
+  });
+
+  describe('computed signals', () => {
+    it('partyCharacters returns current party members', () => {
+      expect(component.partyCharacters().length).toBe(1);
+      expect(component.partyCharacters()[0].id).toBe('char-1');
+    });
+
+    it('partyGold returns current party gold', () => {
+      expect(component.partyGold()).toBe(100);
+    });
+
+    it('selectedCharacter returns character when selected', () => {
+      component.selectedCharacterId.set('char-1');
+      expect(component.selectedCharacter()?.id).toBe('char-1');
+    });
+
+    it('selectedCharacter returns null when no selection', () => {
+      component.selectedCharacterId.set(null);
+      expect(component.selectedCharacter()).toBeNull();
+    });
+
+    it('restableCharacters excludes dead characters', () => {
+      const deadChar = createCharacterInParty({
+        id: 'dead-char',
+        status: CharacterStatus.DEAD
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('dead-char', deadChar),
+        party: { ...state.party, members: ['char-1', 'dead-char'] }
+      }));
+
+      expect(component.restableCharacters().length).toBe(1);
+      expect(component.restableCharacters()[0].id).toBe('char-1');
     });
   });
 });
