@@ -150,8 +150,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
       { id: 'open', label: 'Open Door (O)', shortcut: 'O', enabled: canOpen },
-      { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect },
-      { id: 'castle', label: 'Return to Castle (ESC)', shortcut: 'ESC', enabled: true }
+      { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect }
     ];
   });
 
@@ -387,7 +386,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.returnToCastle();
+    // ESC only closes dialogs - to exit the maze, use stairs on level 1 or cast LOKTOFEIT
   }
 
   @HostListener('window:keydown.control.e')
@@ -405,11 +404,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const status = newEncounterState ? 'ENABLED' : 'DISABLED';
     this.addMessage(`Random encounters ${status} (Ctrl+E to toggle)`);
-  }
-
-  returnToCastle(): void {
-    this.addMessage('Returning to castle...');
-    this.navigation.returnToCastle();
   }
 
   moveForward(): void {
@@ -577,9 +571,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         break;
       case 'inspect':
         this.inspectTile();
-        break;
-      case 'castle':
-        this.returnToCastle();
         break;
     }
   }
