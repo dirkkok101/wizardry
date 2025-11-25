@@ -5,6 +5,8 @@ import { SceneTitleComponent } from '../shared/components/scene-title/scene-titl
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '../shared/components/party-character-grid/party-character-grid.component';
 import { MessageLogComponent } from '../shared/components/message-log/message-log.component';
+import { SpellSelectionDialogComponent, SpellOption } from '../shared/components/spell-selection-dialog/spell-selection-dialog.component';
+import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component';
 import { GameStateService } from '../../services/GameStateService';
 import { DungeonMovementService } from '../../services/DungeonMovementService';
 import { DungeonService } from '../../services/DungeonService';
@@ -13,10 +15,15 @@ import { EncounterService } from '../../services/EncounterService';
 import { CombatService } from '../../services/CombatService';
 import { DoorService } from '../../services/DoorService';
 import { TileInspectionService } from '../../services/TileInspectionService';
+import { SpellCastingService, SpellData } from '../../services/SpellCastingService';
+import { SpellLearningService } from '../../services/SpellLearningService';
 import { SceneType } from '../../types/SceneType';
 import { MenuItem } from '../shared/components/menu/menu.component';
 import { ActiveSpell } from '../../types/active-spell.types';
 import { GameState } from '../../types/GameState';
+import { Character } from '../../types/Character';
+import { CharacterStatus } from '../../types/CharacterStatus';
+import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
 import { DungeonState, TileData } from '../../types/Dungeon';
 import { TextureAtlas } from '../../types/texture.types';
 import { ViewportConfig } from '../../types/rendering.types';
@@ -30,7 +37,9 @@ import * as TextureAtlasService from '../../services/TextureAtlasService';
     SceneTitleComponent,
     SceneFooterComponent,
     PartyCharacterGridComponent,
-    MessageLogComponent
+    MessageLogComponent,
+    SpellSelectionDialogComponent,
+    CharacterSelectionDialogComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
@@ -44,6 +53,14 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly messages = signal<string[]>([]);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingLevel = signal<boolean>(false);
+
+  // Spell casting state
+  readonly showSpellDialog = signal<boolean>(false);
+  readonly showTargetDialog = signal<boolean>(false);
+  readonly selectedCaster = signal<Character | null>(null);
+  readonly selectedSpell = signal<SpellData | null>(null);
+  readonly availableSpellOptions = signal<SpellOption[]>([]);
+  readonly targetOptions = signal<CharacterOption[]>([]);
 
   // WebGL Renderer
   private webglRenderer: WebGLRenderingService | null = null;
@@ -134,6 +151,39 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
     ];
   });
+
+  /**
+   * Get actions for a character card in the maze
+   * Spellcasters get a "Cast" button if they have dungeon-castable spells
+   */
+  getActionsForCharacter = (char: Character): CharacterAction[] => {
+    const actions: CharacterAction[] = [];
+
+    // Check if character is a spellcaster with available dungeon spells
+    if (SpellLearningService.isCaster(char) &&
+        SpellCastingService.hasSpellsInContext(char, 'dungeon') &&
+        char.status !== CharacterStatus.DEAD &&
+        char.status !== CharacterStatus.ASHES &&
+        char.status !== CharacterStatus.PARALYZED &&
+        char.status !== CharacterStatus.ASLEEP) {
+      actions.push({
+        type: 'cast-spell',
+        label: 'Cast',
+        enabled: true
+      });
+    }
+
+    return actions;
+  };
+
+  /**
+   * Handle action clicks from character cards
+   */
+  handleCharacterAction(event: CharacterActionEvent): void {
+    if (event.actionType === 'cast-spell') {
+      this.openSpellDialog(event.characterId);
+    }
+  }
 
   constructor(
     private gameState: GameStateService,
@@ -576,5 +626,390 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       const newMsgs = [...msgs, message];
       return newMsgs.slice(-10); // Keep last 10 messages
     });
+  }
+
+  // ============================================================
+  // SPELL CASTING
+  // ============================================================
+
+  /**
+   * Open the spell selection dialog for a character
+   */
+  private openSpellDialog(characterId: string): void {
+    const state = this.gameState.state();
+    const caster = state.roster.get(characterId);
+
+    if (!caster) {
+      this.addMessage('Error: Character not found.');
+      return;
+    }
+
+    // Get spells available in dungeon context
+    const spells = SpellCastingService.getSpellsByContext(caster, 'dungeon');
+
+    if (spells.length === 0) {
+      this.addMessage(`${caster.name} has no spells available.`);
+      return;
+    }
+
+    // Build spell options with spell point info
+    const spellOptions: SpellOption[] = spells.map((spell, index) => {
+      const pool = spell.casterType === 'mage' ? caster.spellPoints?.mage : caster.spellPoints?.priest;
+      const levelKey = `level${spell.level}` as keyof typeof pool;
+      const points = pool?.[levelKey] || { current: 0, max: 0 };
+
+      return {
+        spell,
+        index: index + 1,
+        enabled: points.current > 0,
+        spellPoints: points
+      };
+    });
+
+    this.selectedCaster.set(caster);
+    this.availableSpellOptions.set(spellOptions);
+    this.showSpellDialog.set(true);
+  }
+
+  /**
+   * Handle spell selection from the dialog
+   */
+  onSpellSelected(spell: SpellData): void {
+    this.showSpellDialog.set(false);
+    this.selectedSpell.set(spell);
+
+    const caster = this.selectedCaster();
+    if (!caster) return;
+
+    // Check if spell needs a target
+    if (spell.target === 'single' || spell.target === 'dead_body' || spell.target === 'ashes') {
+      // Open character selection dialog
+      this.openTargetDialog(spell);
+    } else {
+      // Party or self-targeting spell - cast immediately
+      this.castSpell(spell, null);
+    }
+  }
+
+  /**
+   * Open character selection dialog for single-target spells
+   */
+  private openTargetDialog(spell: SpellData): void {
+    const state = this.gameState.state();
+    const partyChars = this.partyCharacters();
+
+    // Build character options based on spell target type
+    const options: CharacterOption[] = partyChars.map((char, index) => {
+      let enabled = true;
+
+      // Filter based on spell target type
+      if (spell.target === 'dead_body') {
+        enabled = char.status === CharacterStatus.DEAD;
+      } else if (spell.target === 'ashes') {
+        enabled = char.status === CharacterStatus.ASHES;
+      } else if (spell.target === 'single') {
+        // For healing/buff spells, target living characters
+        // Skip dead/ashes characters
+        enabled = char.status !== CharacterStatus.DEAD &&
+                  char.status !== CharacterStatus.ASHES;
+      }
+
+      return {
+        character: char,
+        index: index + 1,
+        enabled
+      };
+    });
+
+    this.targetOptions.set(options);
+    this.showTargetDialog.set(true);
+  }
+
+  /**
+   * Handle target selection for single-target spells
+   */
+  onTargetSelected(target: Character): void {
+    this.showTargetDialog.set(false);
+
+    const spell = this.selectedSpell();
+    if (!spell) return;
+
+    this.castSpell(spell, target);
+  }
+
+  /**
+   * Cancel spell selection
+   */
+  onSpellDialogCancelled(): void {
+    this.showSpellDialog.set(false);
+    this.selectedCaster.set(null);
+    this.selectedSpell.set(null);
+    this.availableSpellOptions.set([]);
+  }
+
+  /**
+   * Cancel target selection
+   */
+  onTargetDialogCancelled(): void {
+    this.showTargetDialog.set(false);
+    this.targetOptions.set([]);
+    // Go back to spell selection
+    const caster = this.selectedCaster();
+    if (caster) {
+      this.openSpellDialog(caster.id);
+    }
+  }
+
+  /**
+   * Cast a spell and apply its effects
+   */
+  private castSpell(spell: SpellData, target: Character | null): void {
+    const caster = this.selectedCaster();
+    if (!caster) {
+      this.addMessage('Error: No caster selected.');
+      return;
+    }
+
+    // Verify spell can be cast
+    const canCast = SpellCastingService.canCastSpell(caster, spell.id);
+    if (!canCast.canCast) {
+      this.addMessage(`${caster.name} cannot cast ${spell.name}: ${canCast.reason}`);
+      return;
+    }
+
+    // Deduct spell points
+    const updatedCaster = SpellCastingService.deductSpellPoints(caster, spell.id);
+
+    // Apply spell effect
+    const result = this.applyDungeonSpellEffect(spell, updatedCaster, target);
+
+    // Update game state with new caster spell points and any other changes
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster);
+      newRoster.set(updatedCaster.id, result.updatedCaster || updatedCaster);
+
+      // Update target if applicable
+      if (result.updatedTarget && target) {
+        newRoster.set(target.id, result.updatedTarget);
+      }
+
+      // Update dungeon state if applicable
+      let newDungeon = state.dungeon;
+      if (result.dungeonUpdate && state.dungeon) {
+        newDungeon = { ...state.dungeon, ...result.dungeonUpdate };
+      }
+
+      return {
+        ...state,
+        roster: newRoster,
+        dungeon: newDungeon
+      };
+    });
+
+    // Display result message
+    this.addMessage(result.message);
+
+    // Handle special spell effects (e.g., recall to town)
+    if (result.navigateTo) {
+      queueMicrotask(() => {
+        this.router.navigate([result.navigateTo]);
+      });
+    }
+
+    // Clear selection state
+    this.selectedCaster.set(null);
+    this.selectedSpell.set(null);
+  }
+
+  /**
+   * Apply dungeon spell effects and return result
+   */
+  private applyDungeonSpellEffect(
+    spell: SpellData,
+    caster: Character,
+    target: Character | null
+  ): {
+    message: string;
+    updatedCaster?: Character;
+    updatedTarget?: Character;
+    dungeonUpdate?: Partial<DungeonState>;
+    navigateTo?: string;
+  } {
+    // Handle healing spells
+    if (spell.healing && target) {
+      if (spell.healing.type === 'full') {
+        // Full heal
+        const updatedTarget = { ...target, hp: target.maxHp };
+        return {
+          message: `${caster.name} casts ${spell.name}! ${target.name} is fully healed!`,
+          updatedTarget
+        };
+      } else if (spell.healing.dice) {
+        // Dice-based healing
+        const healAmount = this.rollDice(spell.healing.dice);
+        const newHp = Math.min(target.hp + healAmount, target.maxHp);
+        const actualHeal = newHp - target.hp;
+        const updatedTarget = { ...target, hp: newHp };
+        return {
+          message: `${caster.name} casts ${spell.name}! ${target.name} heals ${actualHeal} HP.`,
+          updatedTarget
+        };
+      }
+    }
+
+    // Handle party healing (MADI)
+    if (spell.healing && spell.target === 'party') {
+      const healAmount = spell.healing.dice ? this.rollDice(spell.healing.dice) : 0;
+      return {
+        message: `${caster.name} casts ${spell.name}! The party heals ${healAmount} HP.`,
+        // Party healing is applied via state update in caller
+      };
+    }
+
+    // Handle status cure spells
+    if (spell.statusCure && target) {
+      let cured = false;
+      let updatedTarget = { ...target };
+
+      if (spell.statusCure === 'paralysis' && target.status === CharacterStatus.PARALYZED) {
+        updatedTarget.status = CharacterStatus.OK;
+        cured = true;
+      } else if (spell.statusCure === 'poison' && target.status === CharacterStatus.POISONED) {
+        updatedTarget.status = CharacterStatus.OK;
+        cured = true;
+      } else if (spell.statusCure === 'all') {
+        // Cure any curable status
+        if ([CharacterStatus.PARALYZED, CharacterStatus.POISONED, CharacterStatus.ASLEEP].includes(target.status)) {
+          updatedTarget.status = CharacterStatus.OK;
+          cured = true;
+        }
+      }
+
+      if (cured) {
+        return {
+          message: `${caster.name} casts ${spell.name}! ${target.name}'s ailment is cured!`,
+          updatedTarget
+        };
+      } else {
+        return {
+          message: `${caster.name} casts ${spell.name}! But ${target.name} is not afflicted.`
+        };
+      }
+    }
+
+    // Handle resurrection spells
+    if (spell.resurrection && target) {
+      const successRate = spell.resurrectionSuccessRate || 0.9;
+      const success = Math.random() < successRate;
+
+      if (success) {
+        const updatedTarget = {
+          ...target,
+          status: CharacterStatus.OK,
+          hp: 1  // Resurrect with 1 HP
+        };
+        return {
+          message: `${caster.name} casts ${spell.name}! ${target.name} is resurrected!`,
+          updatedTarget
+        };
+      } else {
+        // Failed resurrection - DEAD -> ASHES, ASHES -> permanently lost
+        if (target.status === CharacterStatus.DEAD) {
+          const updatedTarget = { ...target, status: CharacterStatus.ASHES };
+          return {
+            message: `${caster.name} casts ${spell.name}... but ${target.name} crumbles to ashes!`,
+            updatedTarget
+          };
+        } else {
+          return {
+            message: `${caster.name} casts ${spell.name}... but ${target.name} is lost forever!`,
+            // Character should be removed from roster (handled in caller if needed)
+          };
+        }
+      }
+    }
+
+    // Handle utility spells
+    if (spell.utility) {
+      // DUMAPIC - Show coordinates
+      if (spell.utility === 'show_coordinates') {
+        const pos = this.position();
+        const facing = this.dungeonState()?.position?.facing || 'N';
+        return {
+          message: `${spell.name}: Level ${this.currentLevel()}, Position (${pos?.x}, ${pos?.y}), Facing ${facing}`
+        };
+      }
+
+      // MILWA/LOMILWA - Light
+      if (spell.utility === 'extended_light') {
+        const isLomilwa = spell.id === 'lomilwa' || spell.id === 'lomilwa_priest';
+        const radius = isLomilwa ? 3 : 2;
+        return {
+          message: `${caster.name} casts ${spell.name}! The area is illuminated.`,
+          dungeonUpdate: {
+            lightActive: true,
+            lightRadius: radius
+          }
+        };
+      }
+
+      // LOKTOFEIT - Recall to town
+      if (spell.utility === 'recall') {
+        const successRate = Math.min((caster.level || 1) * 2, 95) / 100;
+        const success = Math.random() < successRate;
+
+        if (success) {
+          return {
+            message: `${caster.name} casts ${spell.name}! The party is recalled to town!`,
+            navigateTo: '/castle-menu'
+          };
+        } else {
+          return {
+            message: `${caster.name} casts ${spell.name}... but the spell fizzles!`
+          };
+        }
+      }
+
+      // MALOR - Teleport (requires coordinate input - not implemented yet)
+      if (spell.utility === 'teleport') {
+        return {
+          message: `${caster.name} casts ${spell.name}... but teleportation is not yet implemented.`
+        };
+      }
+
+      // CALFO - Identify trap
+      if (spell.utility === 'identify_trap') {
+        return {
+          message: `${caster.name} casts ${spell.name}! Any traps ahead will be revealed.`
+        };
+      }
+
+      // KANDI - Locate body
+      if (spell.utility === 'locate_person') {
+        return {
+          message: `${caster.name} casts ${spell.name}! Lost souls can be sensed...`
+        };
+      }
+    }
+
+    // Default case
+    return {
+      message: `${caster.name} casts ${spell.name}!`
+    };
+  }
+
+  /**
+   * Roll dice in "XdY" format
+   */
+  private rollDice(dice: string): number {
+    const [countStr, sidesStr] = dice.split('d');
+    const count = parseInt(countStr, 10) || 1;
+    const sides = parseInt(sidesStr, 10) || 6;
+
+    let total = 0;
+    for (let i = 0; i < count; i++) {
+      total += Math.floor(Math.random() * sides) + 1;
+    }
+    return total;
   }
 }

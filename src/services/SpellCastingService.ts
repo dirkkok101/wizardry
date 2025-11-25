@@ -346,6 +346,42 @@ export class SpellCastingService {
   }
 
   /**
+   * Get spells available to cast in a specific context (combat, dungeon, town)
+   * Filters by castableIn property and valid target types for the context
+   */
+  static getSpellsByContext(
+    character: Character,
+    context: 'combat' | 'dungeon' | 'town'
+  ): SpellData[] {
+    const availableSpells = this.getAvailableSpells(character)
+
+    // Filter by context
+    const contextFiltered = availableSpells.filter(spell =>
+      spell.castableIn.includes(context)
+    )
+
+    // For dungeon/town context, also filter out combat-only target types
+    if (context === 'dungeon' || context === 'town') {
+      const validDungeonTargets = ['single', 'party', 'self', 'all_allies', 'dead_body', 'ashes']
+      return contextFiltered.filter(spell =>
+        validDungeonTargets.includes(spell.target)
+      )
+    }
+
+    return contextFiltered
+  }
+
+  /**
+   * Check if character has any spells available in a given context
+   */
+  static hasSpellsInContext(
+    character: Character,
+    context: 'combat' | 'dungeon' | 'town'
+  ): boolean {
+    return this.getSpellsByContext(character, context).length > 0
+  }
+
+  /**
    * Get all spells for a character based on class and available spell points
    */
   static getAvailableSpells(character: Character): SpellData[] {

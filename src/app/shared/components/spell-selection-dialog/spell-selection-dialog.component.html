@@ -1,0 +1,56 @@
+@if (visible) {
+  <div class="dialog-overlay" (click)="onBackdropClick()" tabindex="0" #dialogContent>
+    <div class="dialog-content" (click)="onDialogClick($event)">
+      <div class="dialog-header">
+        <h2>{{ prompt }}</h2>
+        @if (caster) {
+          <div class="caster-info">
+            <span class="caster-name">{{ caster.name }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="dialog-body">
+        @if (spells.length === 0) {
+          <div class="no-spells">No spells available</div>
+        } @else {
+          <div class="spell-list">
+            @for (option of spells; track option.spell.id) {
+              <div
+                class="spell-item"
+                [class.disabled]="!option.enabled"
+                (click)="onSpellClick(option)">
+                <span class="spell-number">{{ option.index }})</span>
+                <div class="spell-info">
+                  <div class="spell-header">
+                    <span class="spell-name">{{ option.spell.name }}</span>
+                    <span class="spell-meta">
+                      <span class="caster-type" [class.mage]="option.spell.casterType === 'mage'" [class.priest]="option.spell.casterType === 'priest'">
+                        {{ getCasterTypeBadge(option.spell) }}
+                      </span>
+                      <span class="spell-level">Lv{{ option.spell.level }}</span>
+                    </span>
+                  </div>
+                  <div class="spell-details">
+                    <span class="spell-effect">{{ getSpellEffect(option.spell) }}</span>
+                    <span class="spell-target">[{{ getTargetDescription(option.spell) }}]</span>
+                  </div>
+                  <div class="spell-points">
+                    <span class="sp-label">SP:</span>
+                    <span class="sp-value" [class.low]="option.spellPoints.current <= 1">
+                      {{ option.spellPoints.current }}/{{ option.spellPoints.max }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="dialog-footer">
+        <div class="instruction">Press 1-9 to select, ESC to cancel</div>
+      </div>
+    </div>
+  </div>
+}
