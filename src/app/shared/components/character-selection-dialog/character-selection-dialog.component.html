@@ -1,0 +1,48 @@
+@if (visible) {
+  <div class="dialog-overlay" (click)="onBackdropClick()" tabindex="0" #dialogContent>
+    <div class="dialog-content" (click)="onDialogClick($event)">
+      <div class="dialog-header">
+        <h2>{{ prompt }}</h2>
+      </div>
+
+      <div class="dialog-body">
+        <div class="character-list">
+          @for (option of characters; track option.character.id) {
+            <div
+              class="character-item"
+              [class.disabled]="!option.enabled"
+              [class.dead]="option.character.hp <= 0"
+              (click)="onCharacterClick(option)">
+              <span class="char-number">{{ option.index }})</span>
+              <div class="char-info">
+                <div class="char-header">
+                  <span class="char-name">{{ option.character.name }}</span>
+                  <span class="char-class">{{ option.character.class }} Lv{{ option.character.level }}</span>
+                </div>
+                <div class="char-stats">
+                  <span class="hp" [class.critical]="option.character.hp <= option.character.maxHp * 0.25">
+                    HP: {{ option.character.hp }}/{{ option.character.maxHp }}
+                  </span>
+                  @if (option.character.status !== 'OK' && option.character.status !== 'INJURED') {
+                    <span class="status" [class]="'status-' + option.character.status.toLowerCase()">
+                      {{ option.character.status }}
+                    </span>
+                  }
+                </div>
+                @if (option.character.hp > 0) {
+                  <div class="hp-bar">
+                    <div class="hp-fill" [style.width.%]="getHpPercent(option.character)"></div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <div class="instruction">Press 1-6 to select, ESC to cancel</div>
+      </div>
+    </div>
+  </div>
+}

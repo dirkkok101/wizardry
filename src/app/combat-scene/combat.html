@@ -73,7 +73,7 @@
     </div>
 
     <!-- Action Selection Status (shown for active character) -->
-    @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showGroupSelectionDialog()) {
+    @if (activeCharacter() && !allActionsSelected() && !showSpellMenu() && !showGroupSelectionDialog() && !showCharacterSelectionDialog()) {
       <div class="action-status">
         <p>{{ activeCharacter()!.name }} - SELECT ACTION</p>
       </div>
@@ -132,6 +132,15 @@
       (cancelled)="cancelGroupSelection()"
     />
 
+    <!-- Character Selection Dialog (for healing/buff/resurrection spells) -->
+    <app-character-selection-dialog
+      [visible]="showCharacterSelectionDialog()"
+      [characters]="characterSelectionOptions()"
+      [prompt]="characterSelectionPrompt()"
+      (characterSelected)="selectCharacter($event)"
+      (cancelled)="cancelCharacterSelection()"
+    />
+
     <!-- Combat Log -->
     <div class="combat-log">
       <h3>COMBAT LOG</h3>
@@ -146,7 +155,7 @@
     </div>
 
     <!-- Footer with action menu -->
-    @if (!showSpellMenu() && !showGroupSelectionDialog() && !showVictoryModal() && !showDefeatModal()) {
+    @if (!showSpellMenu() && !showGroupSelectionDialog() && !showCharacterSelectionDialog() && !showVictoryModal() && !showDefeatModal()) {
       @if (allActionsSelected()) {
         <!-- Show execute round menu -->
         <app-scene-footer
