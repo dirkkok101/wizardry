@@ -78,10 +78,9 @@ function updateCharacterHP(state: GameState, charId: string, newHP: number): Gam
 
 The game uses explicit state machine transitions:
 - **TOWN**: Can access services, cannot move in dungeon
-- **NAVIGATION**: Can move, search, camp; encounters trigger combat
+- **NAVIGATION**: Can move, search; encounters trigger combat
 - **COMBAT**: Cannot move map, can attack/cast/flee
 - **CHARACTER_CREATION**: Character creation flow
-- **CAMP**: Pre-dungeon staging area
 
 Invalid transitions are prevented at the architecture level.
 
@@ -202,7 +201,6 @@ src/
 │   │   ├── character-inspection/
 │   │   ├── spell-casting/
 │   │   ├── maze/
-│   │   ├── camp/
 │   │   └── combat-scene/
 │   ├── app.component.ts
 │   ├── app.config.ts
@@ -341,8 +339,7 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
 
 **Next Steps**:
 - **Phase 7**: Dungeon navigation and combat system
-  - Camp scene (pre-dungeon staging)
-  - Maze scene (3D Canvas rendering, movement)
+  - Maze scene (3D Canvas rendering, movement) - Complete with inspect and spell casting
   - Combat scene (turn-based battles)
   - Chest scene (loot and traps)
   - Encounter system (monster spawning, initiative)

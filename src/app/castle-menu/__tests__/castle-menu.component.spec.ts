@@ -135,7 +135,7 @@ describe('CastleMenuComponent', () => {
     });
 
     it('should not navigate to Maze when party is empty', async () => {
-      const navigateSpy = jest.spyOn(navigationService, 'enterCamp');
+      const navigateSpy = jest.spyOn(navigationService, 'enterMaze');
       component.handleFooterAction('maze');
       await fixture.whenStable();
       expect(navigateSpy).not.toHaveBeenCalled();

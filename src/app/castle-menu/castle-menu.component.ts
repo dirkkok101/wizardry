@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
 import { SceneNavigationService } from '../../services/SceneNavigationService';
+import { DungeonMovementService } from '../../services/DungeonMovementService';
+import { MessageService } from '../../services/MessageService';
 import { GameStateQueries } from '../../utils/GameStateQueries';
 import { MenuItem } from '../shared/components/menu/menu.component';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
@@ -38,9 +40,10 @@ export class CastleMenuComponent implements OnInit {
   private readonly gameState = inject(GameStateService);
   private readonly saveService = inject(SaveService);
   private readonly navigation = inject(SceneNavigationService);
+  private readonly messages = inject(MessageService);
 
   readonly footerMenuItems = computed((): MenuItem[] => {
-    const hasParty = GameStateQueries.hasPartyMembers(this.gameState.state());
+    const canEnterMaze = GameStateQueries.canPartyEnterMaze(this.gameState.state());
 
     return [
       { id: 'tavern', label: 'Tavern', shortcut: 'A', enabled: true },
@@ -48,7 +51,7 @@ export class CastleMenuComponent implements OnInit {
       { id: 'shop', label: 'Shop', shortcut: 'S', enabled: true },
       { id: 'inn', label: 'Inn', shortcut: 'I', enabled: true },
       { id: 'training', label: 'Training Grounds', shortcut: 'G', enabled: true },
-      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: hasParty }
+      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: canEnterMaze }
     ];
   });
 
@@ -89,13 +92,20 @@ export class CastleMenuComponent implements OnInit {
   }
 
   async navigateToMaze(): Promise<void> {
-    if (!GameStateQueries.hasPartyMembers(this.gameState.state())) {
-      console.warn('Cannot enter maze without party members');
+    if (!GameStateQueries.canPartyEnterMaze(this.gameState.state())) {
+      this.messages.showError('Some party members are dead - visit Temple first');
       return;
     }
 
+    // Initialize dungeon state before entering
+    const state = this.gameState.state();
+    const newState = DungeonMovementService.enterDungeon(state, 1);
+    this.gameState.updateState(() => newState);
+
     // Trigger auto-save before entering dungeon
     await this.saveService.saveGame(this.gameState.state(), 1);
-    this.navigation.enterCamp();
+
+    // Go directly to maze
+    this.navigation.enterMaze();
   }
 }

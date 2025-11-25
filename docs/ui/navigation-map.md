@@ -1,6 +1,6 @@
 # UI Navigation Map
 
-**Complete navigation flow for all 14 scenes.**
+**Complete navigation flow for all 13 scenes.**
 
 ---
 
@@ -33,28 +33,20 @@ stateDiagram-v2
     CastleMenu --> Temple: (T)emple of Cant
     CastleMenu --> Shop: (B)oltac's Trading Post
     CastleMenu --> Inn: (A)dventurer's Inn
-    CastleMenu --> EdgeOfTown: (E)dge of Town
+    CastleMenu --> TrainingGrounds: (T)raining Grounds
+    CastleMenu --> Maze: (M)aze
+    CastleMenu --> Utilities: (U)tilities
 
     Tavern --> CastleMenu: (L)eave
     Temple --> CastleMenu: (L)eave
     Shop --> CastleMenu: (L)eave
     Inn --> CastleMenu: (L)eave
-
-    EdgeOfTown --> CastleMenu: (C)astle
-    EdgeOfTown --> TrainingGrounds: (T)raining Grounds
-    EdgeOfTown --> Camp: (M)aze
-    EdgeOfTown --> Utilities: (U)tilities
-    EdgeOfTown --> [*]: (L)eave Game
-
-    TrainingGrounds --> EdgeOfTown: (L)eave
-    Utilities --> EdgeOfTown: (L)eave
-
-    Camp --> Maze: (L)eave Camp
-    Camp --> EdgeOfTown: (E)dge of Town
+    TrainingGrounds --> CastleMenu: (L)eave
+    Utilities --> CastleMenu: (L)eave
 
     Maze --> Combat: Random Encounter
     Maze --> Combat: Fixed Encounter
-    Maze --> Camp: (C)amp
+    Maze --> CastleMenu: (ESC) Return to Castle
 
     Combat --> Maze: Victory (no treasure)
     Combat --> Chest: Victory + Treasure
@@ -68,9 +60,9 @@ stateDiagram-v2
     }
 
     Tavern --> CharInspect: (#)Inspect
-    Camp --> CharInspect: (#)Inspect
+    Maze --> CharInspect: (#)Inspect
     CharInspect --> Tavern: (L)eave from Tavern
-    CharInspect --> Camp: (L)eave from Camp
+    CharInspect --> Maze: (L)eave from Maze
 ```
 
 ---
@@ -85,12 +77,10 @@ stateDiagram-v2
 - Boltac's Trading Post
 - Temple of Cant
 - Adventurer's Inn
-- Edge of Town
 - Utilities Menu
 
 ### Dungeon Zone (No auto-save)
-- Camp (pre-dungeon staging)
-- Maze (exploration)
+- Maze (exploration) - auto-saves on entry from Castle
 - Combat (battles)
 - Chest (treasure)
 
@@ -105,24 +95,23 @@ stateDiagram-v2
 
 ```
 Castle Menu (Central Hub)
-├─ (G) → Gilgamesh's Tavern → (L) → Castle Menu
-├─ (T) → Temple of Cant → (L) → Castle Menu
-├─ (B) → Boltac's Trading Post → (L) → Castle Menu
-├─ (A) → Adventurer's Inn → (L) → Castle Menu
-└─ (E) → Edge of Town → (C) → Castle Menu
+├─ (A) → Gilgamesh's Tavern → (ESC) → Castle Menu
+├─ (T) → Temple of Cant → (ESC) → Castle Menu
+├─ (S) → Boltac's Trading Post → (ESC) → Castle Menu
+├─ (I) → Adventurer's Inn → (ESC) → Castle Menu
+├─ (G) → Training Grounds → (ESC) → Castle Menu
+└─ (M) → Maze → (ESC) → Castle Menu
 ```
 
 ### Dungeon Entry Flow
 
 ```
 Castle Menu
-  → (E) Edge of Town
-    → (M) Camp
-      → (L) Maze
-        → Random/Fixed Encounter → Combat
-          → Victory → Chest (optional)
-            → Maze
-        → (C) Camp
+  → (M) Maze (auto-saves before entry)
+    → Random/Fixed Encounter → Combat
+      → Victory → Chest (optional)
+        → Maze
+    → (ESC) Castle Menu
 ```
 
 ### Character Inspection (Context-Aware)
@@ -131,8 +120,8 @@ Castle Menu
 From Tavern:
   Tavern → (#) → Inspection → (L) → Tavern
 
-From Camp:
-  Camp → (#) → Inspection → (L) → Camp
+From Maze:
+  Maze → (#) → Inspection → (L) → Maze
 ```
 
 ---
@@ -176,43 +165,34 @@ From Camp:
 
 | Key | Action | Context |
 |-----|--------|---------|
-| (L) | Leave | Returns to parent scene |
-| (#) | Inspect Character | Available in Tavern, Camp |
+| (ESC) | Leave | Returns to parent scene |
+| (#) | Inspect Character | Available in Tavern, Maze |
 | (?) | Help | Context-sensitive help (if implemented) |
 
 ### Castle Menu Keys
 
 | Key | Action | Destination |
 |-----|--------|-------------|
-| (G) | Gilgamesh's Tavern | Party formation |
+| (A) | Gilgamesh's Tavern | Party formation |
 | (T) | Temple of Cant | Healing/resurrection |
-| (B) | Boltac's Trading Post | Buy/sell items |
-| (A) | Adventurer's Inn | Rest/level up |
-| (E) | Edge of Town | Gateway to dungeon |
-
-### Edge of Town Keys
-
-| Key | Action | Destination |
-|-----|--------|-------------|
-| (C) | Castle | Return to Castle Menu |
-| (T) | Training Grounds | Create characters |
-| (M) | Maze | Enter dungeon (via Camp) |
-| (U) | Utilities | System functions |
-| (L) | Leave Game | Exit application |
+| (S) | Boltac's Trading Post | Buy/sell items |
+| (I) | Adventurer's Inn | Rest/level up |
+| (G) | Training Grounds | Create characters |
+| (M) | Maze | Enter dungeon directly |
 
 ### Maze Keys
 
 | Key | Action | Effect |
 |-----|--------|--------|
 | (W) | Forward | Move forward one tile |
-| (A) | Strafe Left | Move left without turning |
+| (A) | Turn Left | Rotate 90° left |
 | (S) | Backward | Move backward one tile |
-| (D) | Strafe Right | Move right without turning |
-| (Q) | Turn Left | Rotate 90° left |
-| (E) | Turn Right | Rotate 90° right |
-| (C) | Camp | Return to Camp scene |
-| (K) | Kick Door | Force open door ahead |
-| (I) | Inspect | Inspect current tile |
+| (D) | Turn Right | Rotate 90° right |
+| (Q) | Strafe Left | Move left without turning |
+| (E) | Strafe Right | Move right without turning |
+| (ESC) | Castle | Return to Castle Menu |
+| (O) | Open Door | Open door ahead |
+| (I) | Inspect Tile | Inspect current tile |
 
 ---
 
@@ -269,10 +249,9 @@ interface NavigationResult {
 **Safe transitions (always save before):**
 - Any scene → Castle Menu
 - Castle Menu → Any town service
-- Edge of Town → Leave Game
+- Castle Menu → Maze (auto-saves before entry)
 
 **Risky transitions (no save):**
-- Camp → Maze
 - Maze → Combat
 - Combat → anywhere (depends on outcome)
 

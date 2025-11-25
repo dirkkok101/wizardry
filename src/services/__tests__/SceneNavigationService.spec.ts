@@ -69,12 +69,6 @@ describe('SceneNavigationService', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/training-grounds']);
     });
 
-    it('should navigate to camp', async () => {
-      await service.navigateTo('camp');
-
-      expect(router.navigate).toHaveBeenCalledWith(['/camp']);
-    });
-
     it('should navigate to maze', async () => {
       await service.navigateTo('maze');
 
@@ -108,7 +102,7 @@ describe('SceneNavigationService', () => {
     });
 
     it('should work with all valid return destinations', async () => {
-      const destinations = ['castle-menu', 'tavern', 'temple', 'shop', 'inn', 'training-grounds', 'camp', 'maze'] as const;
+      const destinations = ['castle-menu', 'tavern', 'temple', 'shop', 'inn', 'training-grounds', 'maze'] as const;
 
       for (const dest of destinations) {
         await service.inspectCharacter('char-1', dest);
@@ -125,23 +119,23 @@ describe('SceneNavigationService', () => {
       await service.castSpell('char-123');
 
       expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
-        queryParams: { characterId: 'char-123', returnTo: 'camp' }
+        queryParams: { characterId: 'char-123', returnTo: 'maze' }
       });
     });
 
-    it('should use default returnTo of camp', async () => {
+    it('should use default returnTo of maze', async () => {
       await service.castSpell('mage-1');
 
       expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
-        queryParams: { characterId: 'mage-1', returnTo: 'camp' }
+        queryParams: { characterId: 'mage-1', returnTo: 'maze' }
       });
     });
 
     it('should accept custom returnTo destination', async () => {
-      await service.castSpell('mage-2', 'maze');
+      await service.castSpell('mage-2', 'castle-menu');
 
       expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
-        queryParams: { characterId: 'mage-2', returnTo: 'maze' }
+        queryParams: { characterId: 'mage-2', returnTo: 'castle-menu' }
       });
     });
   });
@@ -151,14 +145,6 @@ describe('SceneNavigationService', () => {
       await service.createCharacter();
 
       expect(router.navigate).toHaveBeenCalledWith(['/character-creation']);
-    });
-  });
-
-  describe('enterCamp()', () => {
-    it('should navigate to camp', async () => {
-      await service.enterCamp();
-
-      expect(router.navigate).toHaveBeenCalledWith(['/camp']);
     });
   });
 
@@ -198,7 +184,7 @@ describe('SceneNavigationService', () => {
     });
 
     it('should validate all valid destinations', async () => {
-      const validDestinations = ['castle-menu', 'tavern', 'temple', 'shop', 'inn', 'training-grounds', 'camp', 'maze'];
+      const validDestinations = ['castle-menu', 'tavern', 'temple', 'shop', 'inn', 'training-grounds', 'maze'];
 
       for (const dest of validDestinations) {
         await service.returnFromInspection(dest);

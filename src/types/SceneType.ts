@@ -17,7 +17,6 @@ export enum SceneType {
   CHARACTER_INSPECTION = 'CHARACTER_INSPECTION',
 
   // Dungeon Scenes
-  CAMP = 'CAMP',
   MAZE = 'MAZE',
   COMBAT = 'COMBAT',
 }
