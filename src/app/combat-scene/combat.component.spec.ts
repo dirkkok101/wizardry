@@ -7,6 +7,7 @@ import { createTestGameStateWithCombat, createTestCharacter } from '../../test-h
 import { Router } from '@angular/router'
 import { VictoryService } from '../../services/VictoryService'
 import { CharacterStatus } from '../../types/CharacterStatus'
+import { setCombatMessageDelay } from '../../settings/CombatSettings'
 
 describe('CombatComponent', () => {
   let component: CombatComponent
@@ -15,6 +16,11 @@ describe('CombatComponent', () => {
   let router: Router
 
   beforeEach(() => {
+    // Use fake timers to control animation timing
+    jest.useFakeTimers()
+    // Use small delay to test animation code path without slowing tests
+    setCombatMessageDelay(10)
+
     TestBed.configureTestingModule({
       imports: [CombatComponent]
     })
@@ -46,6 +52,17 @@ describe('CombatComponent', () => {
     component.ngOnInit()
     fixture.detectChanges()
   })
+
+  afterEach(() => {
+    // Reset to default delay and restore real timers
+    setCombatMessageDelay(800)
+    jest.useRealTimers()
+  })
+
+  // Helper to complete message animation by advancing all timers
+  const flushMessageAnimation = () => {
+    jest.runAllTimers()
+  }
 
   it('sets scene to COMBAT on init', () => {
     expect(gameState.currentScene()).toBe(SceneType.COMBAT)
@@ -597,6 +614,7 @@ describe('CombatComponent', () => {
       const initialRound = component.roundNumber()
 
       component.executeRound()
+      flushMessageAnimation()
 
       // Round number should increment (or combat ends)
       const newRound = component.roundNumber()
@@ -605,6 +623,7 @@ describe('CombatComponent', () => {
 
     it('clears selected actions after round executes', () => {
       component.executeRound()
+      flushMessageAnimation()
 
       expect(component.selectedActions().size).toBe(0)
     })
@@ -614,6 +633,7 @@ describe('CombatComponent', () => {
       expect(component.activeCharacterIndex()).toBeGreaterThan(0)
 
       component.executeRound()
+      flushMessageAnimation()
 
       // Should reset to first character (index 0)
       expect(component.activeCharacterIndex()).toBe(0)
@@ -623,21 +643,37 @@ describe('CombatComponent', () => {
       const initialMonsterHP = component.monsters()[0].hp
 
       component.executeRound()
+      flushMessageAnimation()
 
       // HP should change (might increase or decrease depending on who got hit)
       const newCombatState = gameState.state().combat
       expect(newCombatState).toBeDefined()
     })
 
-    it('sets isExecutingRound flag during execution', async () => {
+    it('sets isExecutingRound flag during execution', () => {
       expect(component.isExecutingRound()).toBe(false)
 
-      // Execute round doesn't wait, so we can't test the flag easily
-      // This is more of an integration test
+      // Start round execution - flag should be true during animation
       component.executeRound()
+      expect(component.isExecutingRound()).toBe(true)
 
-      // After execution completes, flag should be false
+      // After animation completes, flag should be false
+      flushMessageAnimation()
       expect(component.isExecutingRound()).toBe(false)
+    })
+
+    it('commits messages to combat log even with instant display (delay=0)', () => {
+      // Set delay to 0 for instant display
+      setCombatMessageDelay(0)
+
+      const initialLogLength = gameState.state().combat?.combatLog.length || 0
+
+      component.executeRound()
+      // No need to flush timers - delay=0 means instant
+
+      // Messages should be committed to the combat log
+      const newLogLength = gameState.state().combat?.combatLog.length || 0
+      expect(newLogLength).toBeGreaterThan(initialLogLength)
     })
   })
 

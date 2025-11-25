@@ -1,5 +1,5 @@
 // src/app/scenes/combat/combat.ts
-import { Component, computed, signal, OnInit } from '@angular/core'
+import { Component, computed, signal, OnInit, OnDestroy } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../services/GameStateService'
@@ -16,6 +16,7 @@ import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '../sha
 import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component'
 import { getGroupDisplayText } from '../../utils/MonsterNameUtils'
 import { CharacterStatus } from '../../types/CharacterStatus'
+import { getCombatMessageDelay } from '../../settings/CombatSettings'
 
 interface SelectedAction {
   characterId: string
@@ -35,7 +36,7 @@ interface SelectedAction {
   templateUrl: './combat.html',
   styleUrls: ['./combat.scss']
 })
-export class CombatComponent implements OnInit {
+export class CombatComponent implements OnInit, OnDestroy {
   // Expose Array for template use
   readonly Array = Array
 
@@ -47,6 +48,15 @@ export class CombatComponent implements OnInit {
   // Local UI state
   readonly selectedActions = signal<Map<string, CombatCommand>>(new Map())
   readonly isExecutingRound = signal<boolean>(false)
+  readonly isAnimatingMessages = signal<boolean>(false)
+  readonly animatingMessages = signal<string[]>([])  // Messages currently being animated
+  readonly displayedAnimatingMessages = signal<string[]>([])  // Messages shown so far in animation
+  private messageAnimationTimer: ReturnType<typeof setTimeout> | null = null
+  private pendingRoundResult: {
+    victory: boolean
+    defeat: boolean
+    fled: boolean
+  } | null = null
   readonly showVictoryModal = signal<boolean>(false)
   readonly victoryRewards = signal<VictoryRewards | null>(null)
   readonly itemDistribution = signal<Map<string, string[]>>(new Map()) // characterId -> itemIds[]
@@ -180,9 +190,12 @@ export class CombatComponent implements OnInit {
     return false
   })
 
+  // Combine committed combat log with currently animating messages
   readonly combatLog = computed(() => {
     const combat = this.combatState()
-    return combat?.combatLog || []
+    const committedLog = combat?.combatLog || []
+    const animating = this.displayedAnimatingMessages()
+    return [...committedLog, ...animating]
   })
 
   readonly roundNumber = computed(() => {
@@ -388,6 +401,79 @@ export class CombatComponent implements OnInit {
       ...state,
       currentScene: SceneType.COMBAT
     }))
+  }
+
+  ngOnDestroy(): void {
+    // Clean up any pending animation timer
+    if (this.messageAnimationTimer) {
+      clearTimeout(this.messageAnimationTimer)
+      this.messageAnimationTimer = null
+    }
+  }
+
+  /**
+   * Start animating combat messages one at a time with delays
+   * @param messages Array of messages to display
+   * @param onComplete Callback when all messages are displayed
+   */
+  private startMessageAnimation(messages: string[], onComplete: () => void): void {
+    const delay = getCombatMessageDelay()
+
+    // If delay is 0, show all messages immediately
+    if (delay === 0) {
+      this.animatingMessages.set(messages)  // Must set for commitAnimatedMessages()
+      this.displayedAnimatingMessages.set(messages)
+      onComplete()
+      return
+    }
+
+    this.animatingMessages.set(messages)
+    this.displayedAnimatingMessages.set([])
+    this.isAnimatingMessages.set(true)
+
+    let currentIndex = 0
+
+    const showNextMessage = () => {
+      if (currentIndex < messages.length) {
+        // Add next message to displayed
+        this.displayedAnimatingMessages.update(displayed => [...displayed, messages[currentIndex]])
+        currentIndex++
+
+        // Schedule next message
+        this.messageAnimationTimer = setTimeout(showNextMessage, delay)
+      } else {
+        // All messages shown
+        this.isAnimatingMessages.set(false)
+        this.messageAnimationTimer = null
+        onComplete()
+      }
+    }
+
+    // Show first message immediately, then start timer for rest
+    showNextMessage()
+  }
+
+  /**
+   * Commit animated messages to the combat log in game state
+   */
+  private commitAnimatedMessages(): void {
+    const messages = this.animatingMessages()
+    if (messages.length === 0) return
+
+    this.gameState.updateState(state => {
+      if (!state.combat) return state
+      return {
+        ...state,
+        combat: {
+          ...state.combat,
+          combatLog: [...state.combat.combatLog, ...messages]
+        }
+      }
+    })
+
+    // Clear animation state
+    this.animatingMessages.set([])
+    this.displayedAnimatingMessages.set([])
   }
 
   /**
@@ -690,7 +776,7 @@ export class CombatComponent implements OnInit {
       messages: result.messages.length
     })
 
-    // Update game state with result
+    // Update game state with result (but don't add messages to log yet - they'll be animated)
     this.gameState.updateState(state => {
       // Update roster with damaged characters and spell casters
       let newRoster = new Map(state.roster)
@@ -712,10 +798,10 @@ export class CombatComponent implements OnInit {
         newRoster.set(charId, curedChar)
       }
 
-      // Update combat state with log
+      // Update combat state WITHOUT adding messages (they'll be animated)
       const updatedCombat = {
-        ...result.newState,
-        combatLog: [...result.newState.combatLog, ...result.messages]
+        ...result.newState
+        // Note: combatLog not updated here - messages are animated then committed
       }
 
       return {
@@ -728,6 +814,30 @@ export class CombatComponent implements OnInit {
     // Clear selected actions and reset to first character
     this.selectedActions.set(new Map())
     this.activeCharacterIndex.set(0)
+
+    // Store the round result to handle after animation
+    this.pendingRoundResult = {
+      victory: result.victory,
+      defeat: result.defeat,
+      fled: result.fled
+    }
+
+    // Start animating messages with delays
+    this.startMessageAnimation(result.messages, () => {
+      this.onRoundAnimationComplete()
+    })
+  }
+
+  /**
+   * Called when all round messages have been displayed
+   */
+  private onRoundAnimationComplete(): void {
+    console.log('[Combat] Message animation complete')
+
+    // Commit animated messages to the combat log
+    this.commitAnimatedMessages()
+
+    // Mark round execution as complete
     this.isExecutingRound.set(false)
 
     // Log final state after round
@@ -739,23 +849,31 @@ export class CombatComponent implements OnInit {
     const deadPartyCount = updatedChars.filter(c => c.hp <= 0).length
     console.log('[Combat] Alive:', alivePartyCount, 'Dead:', deadPartyCount)
 
-    const updatedMonsters = CombatService.getAllMonsters(this.combatState()!)
-    const aliveMonsterCount = updatedMonsters.filter(m => m.hp > 0).length
-    const deadMonsterCount = updatedMonsters.filter(m => m.hp <= 0).length
-    console.log('[Combat] Monsters - Alive:', aliveMonsterCount, 'Dead:', deadMonsterCount)
+    const combat = this.combatState()
+    if (combat) {
+      const updatedMonsters = CombatService.getAllMonsters(combat)
+      const aliveMonsterCount = updatedMonsters.filter(m => m.hp > 0).length
+      const deadMonsterCount = updatedMonsters.filter(m => m.hp <= 0).length
+      console.log('[Combat] Monsters - Alive:', aliveMonsterCount, 'Dead:', deadMonsterCount)
+    }
 
-    // Check for victory, defeat, or flee
-    if (result.victory) {
-      console.log('[Combat] VICTORY! All monsters defeated')
-      this.handleVictory()
-    } else if (result.defeat) {
-      console.log('[Combat] DEFEAT! All party members fallen')
-      this.handleDefeat()
-    } else if (result.fled) {
-      console.log('[Combat] FLED! Party escaped')
-      this.handleFlee()
-    } else {
-      console.log('[Combat] Combat continues to next round')
+    // Check for victory, defeat, or flee using stored result
+    const result = this.pendingRoundResult
+    if (result) {
+      this.pendingRoundResult = null
+
+      if (result.victory) {
+        console.log('[Combat] VICTORY! All monsters defeated')
+        this.handleVictory()
+      } else if (result.defeat) {
+        console.log('[Combat] DEFEAT! All party members fallen')
+        this.handleDefeat()
+      } else if (result.fled) {
+        console.log('[Combat] FLED! Party escaped')
+        this.handleFlee()
+      } else {
+        console.log('[Combat] Combat continues to next round')
+      }
     }
   }
 
