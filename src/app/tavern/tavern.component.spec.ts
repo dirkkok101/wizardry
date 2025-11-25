@@ -448,6 +448,66 @@ describe('TavernComponent (redesigned)', () => {
       jest.useRealTimers();
     });
 
+    it('should pool character gold to party when adding character (authentic Wizardry 1)', () => {
+      // Create character with specific gold amount
+      const character = createTestCharacter({
+        id: 'char-with-gold',
+        name: 'Rich Guy',
+        status: CharacterStatus.OK,
+        alignment: Alignment.NEUTRAL,
+        gold: 150  // Character has 150 gold
+      });
+
+      // Start with party that has 100 gold
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]]),
+        party: {
+          ...state.party,
+          gold: 100
+        }
+      }));
+
+      component.onAddCharacter(character.id);
+
+      const state = gameStateService.state();
+
+      // Party gold should now be 100 + 150 = 250
+      expect(state.party.gold).toBe(250);
+
+      // Character's gold should now be 0 (pooled to party)
+      const updatedChar = state.roster.get(character.id);
+      expect(updatedChar?.gold).toBe(0);
+    });
+
+    it('should handle characters with no gold gracefully', () => {
+      // Create character with no gold (edge case)
+      const character = createTestCharacter({
+        id: 'char-no-gold',
+        name: 'Broke Guy',
+        status: CharacterStatus.OK,
+        alignment: Alignment.NEUTRAL,
+        gold: 0
+      });
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([[character.id, character]]),
+        party: {
+          ...state.party,
+          gold: 500
+        }
+      }));
+
+      component.onAddCharacter(character.id);
+
+      const state = gameStateService.state();
+
+      // Party gold should remain unchanged
+      expect(state.party.gold).toBe(500);
+      expect(state.party.members).toContain(character.id);
+    });
+
   });
 
   describe('onRemoveCharacter()', () => {
