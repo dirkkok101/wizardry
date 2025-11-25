@@ -109,8 +109,6 @@ export class TavernComponent implements OnInit {
         }
       }
     }));
-
-    this.messages.showSuccess(`${character.name} joined the party`);
   }
 
   onRemoveCharacter(characterId: string): void {
@@ -133,8 +131,6 @@ export class TavernComponent implements OnInit {
         }
       }
     }));
-
-    this.messages.showSuccess(`${character.name} left the party`);
   }
 
   onMoveUp(characterId: string): void {
