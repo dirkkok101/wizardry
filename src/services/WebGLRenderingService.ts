@@ -22,6 +22,10 @@ export class WebGLRenderingService {
   // Moving back reveals more of the current tile's floor/ceiling
   private static readonly CAMERA_OFFSET = 0.3;
 
+  // Minimum distance from tile edge to prevent wall clipping
+  // Must be >= near plane (0.1) to avoid rendering artifacts
+  private static readonly MIN_DIST_FROM_EDGE = 0.15;
+
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private uniforms: UniformLocations | null = null;
@@ -257,9 +261,12 @@ export class WebGLRenderingService {
     // Create view matrix from player state
     const playerState = PlayerStateService.fromPosition(position);
     // Position camera slightly back from tile center to reveal more of current tile
-    const camPosX = playerState.gridX + 0.5 - playerState.dirX * WebGLRenderingService.CAMERA_OFFSET;
+    // Clamp offset to ensure camera stays MIN_DIST_FROM_EDGE from tile boundaries
+    const maxOffset = 0.5 - WebGLRenderingService.MIN_DIST_FROM_EDGE;
+    const safeOffset = Math.min(WebGLRenderingService.CAMERA_OFFSET, maxOffset);
+    const camPosX = playerState.gridX + 0.5 - playerState.dirX * safeOffset;
     const camPosY = 0.5;  // Camera height (eye level)
-    const camPosZ = playerState.gridY + 0.5 - playerState.dirY * WebGLRenderingService.CAMERA_OFFSET;
+    const camPosZ = playerState.gridY + 0.5 - playerState.dirY * safeOffset;
 
     if (this.debugMode) {
       console.log('[WebGL] Player state:', {

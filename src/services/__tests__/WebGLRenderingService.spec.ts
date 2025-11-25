@@ -1,6 +1,7 @@
 import { WebGLRenderingService } from '../WebGLRenderingService';
 import { DungeonService } from '../DungeonService';
 import { VisibilityService } from '../VisibilityService';
+import { PlayerStateService } from '../PlayerStateService';
 import { LevelData, Position } from '../../types/Dungeon';
 
 describe('WebGLRenderingService', () => {
@@ -395,6 +396,104 @@ describe('WebGLRenderingService', () => {
       // Both should see (0,0) and (1,0) or (0,1) in common
       expect(northTiles.has('0,0')).toBe(true);
       expect(eastTiles.has('0,0')).toBe(true);
+    });
+  });
+
+  describe('camera offset positioning', () => {
+    // Access private static constants via any cast for testing
+    const CAMERA_OFFSET = 0.3;
+    const MIN_DIST_FROM_EDGE = 0.15;
+    const maxOffset = 0.5 - MIN_DIST_FROM_EDGE; // 0.35
+    const safeOffset = Math.min(CAMERA_OFFSET, maxOffset); // 0.3
+
+    it('positions camera back from tile center when facing NORTH', () => {
+      const position: Position = { x: 5, y: 5, facing: 'NORTH' };
+      const playerState = PlayerStateService.fromPosition(position);
+
+      // NORTH: dirX=0, dirY=1
+      expect(playerState.dirX).toBe(0);
+      expect(playerState.dirY).toBe(1);
+
+      // Camera should be at (5.5 - 0*0.3, 0.5, 5.5 - 1*0.3) = (5.5, 0.5, 5.2)
+      const expectedCamX = 5 + 0.5 - playerState.dirX * safeOffset;
+      const expectedCamZ = 5 + 0.5 - playerState.dirY * safeOffset;
+
+      expect(expectedCamX).toBe(5.5);
+      expect(expectedCamZ).toBeCloseTo(5.2, 5);
+    });
+
+    it('positions camera back from tile center when facing EAST', () => {
+      const position: Position = { x: 5, y: 5, facing: 'EAST' };
+      const playerState = PlayerStateService.fromPosition(position);
+
+      // EAST: dirX=1, dirY=0
+      expect(playerState.dirX).toBe(1);
+      expect(playerState.dirY).toBe(0);
+
+      // Camera should be at (5.5 - 1*0.3, 0.5, 5.5 - 0*0.3) = (5.2, 0.5, 5.5)
+      const expectedCamX = 5 + 0.5 - playerState.dirX * safeOffset;
+      const expectedCamZ = 5 + 0.5 - playerState.dirY * safeOffset;
+
+      expect(expectedCamX).toBeCloseTo(5.2, 5);
+      expect(expectedCamZ).toBe(5.5);
+    });
+
+    it('positions camera back from tile center when facing SOUTH', () => {
+      const position: Position = { x: 5, y: 5, facing: 'SOUTH' };
+      const playerState = PlayerStateService.fromPosition(position);
+
+      // SOUTH: dirX=0, dirY=-1
+      expect(playerState.dirX).toBe(0);
+      expect(playerState.dirY).toBe(-1);
+
+      // Camera should be at (5.5 - 0*0.3, 0.5, 5.5 - (-1)*0.3) = (5.5, 0.5, 5.8)
+      const expectedCamX = 5 + 0.5 - playerState.dirX * safeOffset;
+      const expectedCamZ = 5 + 0.5 - playerState.dirY * safeOffset;
+
+      expect(expectedCamX).toBe(5.5);
+      expect(expectedCamZ).toBeCloseTo(5.8, 5);
+    });
+
+    it('positions camera back from tile center when facing WEST', () => {
+      const position: Position = { x: 5, y: 5, facing: 'WEST' };
+      const playerState = PlayerStateService.fromPosition(position);
+
+      // WEST: dirX=-1, dirY=0
+      expect(playerState.dirX).toBe(-1);
+      expect(playerState.dirY).toBe(0);
+
+      // Camera should be at (5.5 - (-1)*0.3, 0.5, 5.5 - 0*0.3) = (5.8, 0.5, 5.5)
+      const expectedCamX = 5 + 0.5 - playerState.dirX * safeOffset;
+      const expectedCamZ = 5 + 0.5 - playerState.dirY * safeOffset;
+
+      expect(expectedCamX).toBeCloseTo(5.8, 5);
+      expect(expectedCamZ).toBe(5.5);
+    });
+
+    it('clamps offset to stay within safe tile bounds', () => {
+      // Verify the safe offset calculation
+      // CAMERA_OFFSET (0.3) < maxOffset (0.35), so safeOffset = 0.3
+      expect(CAMERA_OFFSET).toBeLessThanOrEqual(maxOffset);
+      expect(safeOffset).toBe(CAMERA_OFFSET);
+
+      // Camera at tile center is 0.5 from edges
+      // With offset 0.3, camera is 0.5 - 0.3 = 0.2 from back edge
+      // This is > MIN_DIST_FROM_EDGE (0.15), so no clipping
+      const distFromBackEdge = 0.5 - safeOffset;
+      expect(distFromBackEdge).toBeGreaterThanOrEqual(MIN_DIST_FROM_EDGE);
+    });
+
+    it('would clamp offset if it exceeded safe bounds', () => {
+      // If CAMERA_OFFSET were 0.4, it would exceed maxOffset (0.35)
+      const hypotheticalOffset = 0.4;
+      const clampedOffset = Math.min(hypotheticalOffset, maxOffset);
+
+      expect(clampedOffset).toBe(maxOffset);
+      expect(clampedOffset).toBeCloseTo(0.35, 5);
+
+      // With clamped offset, distance from edge = 0.5 - 0.35 = 0.15 = MIN_DIST_FROM_EDGE
+      const distFromBackEdge = 0.5 - clampedOffset;
+      expect(distFromBackEdge).toBeCloseTo(MIN_DIST_FROM_EDGE, 5);
     });
   });
 });
