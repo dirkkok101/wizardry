@@ -42,6 +42,10 @@ export type CharacterSource =
  * - afflicted: Party members needing healing (status != OK)
  * - all: All roster characters
  * - custom: Use the provided [characters] input
+ *
+ * Formation layout:
+ * Use [showFormation]="true" to display party characters in front/back rows
+ * with 3 cards per row (matching tavern layout).
  */
 @Component({
   selector: 'app-party-character-grid',
@@ -49,27 +53,69 @@ export type CharacterSource =
   imports: [CommonModule, CharacterCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="character-grid" [class.compact]="variant === 'compact'">
-      @if (title) {
+    <div class="character-grid" [class.compact]="variant === 'compact'" [class.formation-layout]="showFormation">
+      @if (title && !showFormation) {
         <h2 class="grid-title">{{ title }}</h2>
       }
 
-      @if (displayCharacters().length > 0) {
-        <div class="grid-content">
-          @for (char of displayCharacters(); track char.id) {
-            <app-character-card
-              [character]="char"
-              [visibleFields]="visibleFields"
-              [actions]="getActionsForCharacter(char)"
-              [variant]="variant"
-              (actionClick)="onActionClick($event)"
-            />
+      @if (showFormation) {
+        <!-- Formation layout with front/back rows -->
+        <div class="formation-section">
+          <h3 class="row-title">Front Row</h3>
+          @if (frontRowCharacters().length > 0) {
+            <div class="row-grid">
+              @for (char of frontRowCharacters(); track char.id) {
+                <app-character-card
+                  [character]="char"
+                  [visibleFields]="visibleFields"
+                  [actions]="getActionsForCharacter(char)"
+                  [variant]="variant"
+                  (actionClick)="onActionClick($event)"
+                />
+              }
+            </div>
+          } @else {
+            <div class="empty-row">Front row is empty</div>
+          }
+        </div>
+
+        <div class="formation-section">
+          <h3 class="row-title">Back Row</h3>
+          @if (backRowCharacters().length > 0) {
+            <div class="row-grid">
+              @for (char of backRowCharacters(); track char.id) {
+                <app-character-card
+                  [character]="char"
+                  [visibleFields]="visibleFields"
+                  [actions]="getActionsForCharacter(char)"
+                  [variant]="variant"
+                  (actionClick)="onActionClick($event)"
+                />
+              }
+            </div>
+          } @else {
+            <div class="empty-row">Back row is empty</div>
           }
         </div>
       } @else {
-        <div class="empty-state">
-          <p>{{ emptyMessage }}</p>
-        </div>
+        <!-- Standard list layout -->
+        @if (displayCharacters().length > 0) {
+          <div class="grid-content">
+            @for (char of displayCharacters(); track char.id) {
+              <app-character-card
+                [character]="char"
+                [visibleFields]="visibleFields"
+                [actions]="getActionsForCharacter(char)"
+                [variant]="variant"
+                (actionClick)="onActionClick($event)"
+              />
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <p>{{ emptyMessage }}</p>
+          </div>
+        }
       }
     </div>
   `,
@@ -101,6 +147,52 @@ export type CharacterSource =
 
     .compact .grid-content {
       gap: 0.25rem;
+    }
+
+    /* Formation layout styles */
+    .formation-layout {
+      gap: 1rem;
+    }
+
+    .formation-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .row-title {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--color-primary, #00ff00);
+      border-bottom: 1px solid var(--color-primary, #00ff00);
+      padding-bottom: 0.25rem;
+    }
+
+    .row-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .empty-row {
+      color: var(--color-text-muted, #666);
+      font-style: italic;
+      padding: 0.75rem;
+      text-align: center;
+      border: 1px dashed var(--color-text-muted, #666);
+    }
+
+    /* Responsive: stack cards on smaller screens */
+    @media (max-width: 900px) {
+      .row-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .row-grid {
+        grid-template-columns: 1fr;
+      }
     }
   `]
 })
@@ -150,6 +242,12 @@ export class PartyCharacterGridComponent {
   @Input() variant: 'default' | 'compact' = 'default';
 
   /**
+   * Show formation layout (front/back rows) instead of list
+   * Only applies when source='party'
+   */
+  @Input() showFormation = false;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
@@ -180,6 +278,20 @@ export class PartyCharacterGridComponent {
         return [];
     }
   });
+
+  /**
+   * Front row characters (for formation layout)
+   */
+  readonly frontRowCharacters = computed(() =>
+    GameStateQueries.frontRowCharacters(this.gameState.state())
+  );
+
+  /**
+   * Back row characters (for formation layout)
+   */
+  readonly backRowCharacters = computed(() =>
+    GameStateQueries.backRowCharacters(this.gameState.state())
+  );
 
   /**
    * Get actions for a specific character

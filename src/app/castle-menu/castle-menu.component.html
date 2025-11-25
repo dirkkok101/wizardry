@@ -4,7 +4,7 @@
   <section class="party-section">
     <app-party-character-grid
       source="party"
-      title="PARTY"
+      [showFormation]="true"
       [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
       [actions]="[{ type: 'inspect' }]"
       emptyMessage="No party members"
