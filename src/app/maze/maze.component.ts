@@ -148,8 +148,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
       { id: 'open', label: 'Open Door (O)', shortcut: 'O', enabled: canOpen },
-      { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect },
-      { id: 'camp', label: 'Return to Camp (ESC)', shortcut: 'ESC', enabled: true }
+      { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect }
     ];
   });
 
@@ -349,7 +348,19 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.router.navigate(['/camp']);
+    // Check if spell dialog is open
+    if (this.showSpellDialog()) {
+      this.onSpellDialogCancelled();
+      return;
+    }
+
+    // Check if target dialog is open
+    if (this.showTargetDialog()) {
+      this.onTargetDialogCancelled();
+      return;
+    }
+
+    // ESC does not exit the maze - player must use stairs to leave
   }
 
   @HostListener('window:keydown.control.e')
@@ -367,11 +378,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const status = newEncounterState ? 'ENABLED' : 'DISABLED';
     this.addMessage(`Random encounters ${status} (Ctrl+E to toggle)`);
-  }
-
-  returnToCamp(): void {
-    this.addMessage('Returning to camp...');
-    this.router.navigate(['/camp']);
   }
 
   moveForward(): void {
@@ -540,9 +546,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'inspect':
         this.inspectTile();
         break;
-      case 'camp':
-        this.returnToCamp();
-        break;
     }
   }
 
@@ -566,6 +569,15 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Execute movement
     const newState = serviceFn(state);
     this.gameState.updateState(() => newState);
+
+    // Check if stairs transition to castle occurred (dungeon becomes undefined)
+    if (newState.dungeon === undefined) {
+      this.addMessage('You climb the stairs and exit the dungeon...');
+      queueMicrotask(() => {
+        this.router.navigate(['/castle-menu']);
+      });
+      return;
+    }
 
     // Dynamic messages based on moveType
     const messages = {
