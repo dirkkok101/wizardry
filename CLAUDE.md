@@ -178,23 +178,50 @@ await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
 
 ```
 src/
-├── app/              # Angular components and modules
+├── app/                      # Angular application
+│   ├── core/                 # Singleton services and guards
+│   │   └── guards/           # Route guards (party-exists, party-not-in-maze)
+│   ├── shared/               # Reusable across the app
+│   │   ├── components/       # Shared UI components (15 total)
+│   │   │   ├── character-card/
+│   │   │   ├── scene-title/
+│   │   │   ├── scene-footer/
+│   │   │   ├── menu/
+│   │   │   ├── confirmation-dialog/
+│   │   │   └── ...
+│   │   └── directives/       # Custom directives (keystroke-input)
+│   ├── <scene>/              # Feature/page components (13 scenes)
+│   │   ├── title-screen/
+│   │   ├── castle-menu/
+│   │   ├── tavern/
+│   │   ├── temple/
+│   │   ├── shop/
+│   │   ├── inn/
+│   │   ├── training-grounds/
+│   │   ├── character-creation/
+│   │   ├── character-inspection/
+│   │   ├── spell-casting/
+│   │   ├── maze/
+│   │   ├── camp/
+│   │   └── combat-scene/
 │   ├── app.component.ts
-│   ├── app.component.spec.ts
-│   └── app.config.ts
-├── services/         # Pure function services (business logic)
-│   ├── __tests__/    # Service tests
-│   ├── AssetLoadingService.ts
+│   ├── app.config.ts
+│   └── app.routes.ts
+├── services/                 # Pure function services (business logic)
+│   ├── __tests__/            # Service tests
 │   ├── CharacterService.ts
-│   ├── GameInitializationService.ts
-│   ├── InputService.ts
-│   ├── SaveService.ts
-│   └── SceneNavigationService.ts
-├── types/            # TypeScript interfaces (GameState, Party, Character, etc.)
-├── assets/           # Static assets and game data (copied from data/)
-├── main.ts           # Angular bootstrap entry point
-├── index.html        # Application entry HTML
-└── styles.scss       # Global styles
+│   ├── CombatService.ts
+│   ├── PartyService.ts
+│   └── ...                   # 40+ services
+├── types/                    # TypeScript interfaces
+├── helpers/                  # Display helpers
+├── utils/                    # Utility functions
+├── validation/               # Data validation schemas
+├── test-helpers/             # Test factory functions
+├── data/                     # Runtime data (shop inventory)
+├── main.ts                   # Angular bootstrap entry point
+├── index.html                # Application entry HTML
+└── styles.scss               # Global styles
 
 angular.json          # Angular CLI configuration
 jest.config.js        # Jest test configuration

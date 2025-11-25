@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { AssetLoadingService } from '../../services/AssetLoadingService';
 import { SaveService } from '../../services/SaveService';
 import { LoggerService } from '../../services/LoggerService';
-import { KeystrokeInputDirective } from '../../directives/keystroke-input.directive';
+import { KeystrokeInputDirective } from '../shared/directives/keystroke-input.directive';
 
 /**
  * Title Screen Component

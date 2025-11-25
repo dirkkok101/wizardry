@@ -2,11 +2,11 @@ import { Component, computed, signal, HostListener, inject } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
-import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
 import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
-import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
-import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { MenuItem } from '../../components/menu/menu.component';
+import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
+import { MenuItem } from '../shared/components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 import { CharacterStatus } from '../../types/CharacterStatus';
 

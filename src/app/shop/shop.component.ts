@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { ShopService } from '../../services/ShopService';
 import { InventoryService } from '../../services/InventoryService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
+import { MenuComponent, MenuItem } from '../shared/components/menu/menu.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { Item } from '../../types/Item';

@@ -545,7 +545,7 @@ describe('MazeComponent - Encounter Detection', () => {
     const messages = component.messages();
     const hasEncounterMessage = messages.some(msg => msg.includes('encounter'));
     expect(hasEncounterMessage).toBe(true);
-    expect(navigateSpy).toHaveBeenCalledWith(['/combat-stub']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/combat']);
   });
 
   it('does not navigate when no encounter occurs', () => {
@@ -558,8 +558,8 @@ describe('MazeComponent - Encounter Detection', () => {
     component.moveForward();
 
     // Navigation should only happen to combat if encounter occurred
-    // (ngOnInit may have called navigate, but not to combat-stub)
-    expect(navigateSpy).not.toHaveBeenCalledWith(['/combat-stub']);
+    // (ngOnInit may have called navigate, but not to combat)
+    expect(navigateSpy).not.toHaveBeenCalledWith(['/combat']);
   });
 });
 

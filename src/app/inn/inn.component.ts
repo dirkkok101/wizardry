@@ -5,8 +5,8 @@ import { GameStateService } from '../../services/GameStateService';
 import { InnService, RoomType } from '../../services/InnService';
 import { LevelUpService } from '../../services/LevelUpService';
 import { SpellLearningService } from '../../services/SpellLearningService';
-import { MenuComponent, MenuItem } from '../../components/menu/menu.component';
-import { CharacterListComponent } from '../../components/character-list/character-list.component';
+import { MenuComponent, MenuItem } from '../shared/components/menu/menu.component';
+import { CharacterListComponent } from '../shared/components/character-list/character-list.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 

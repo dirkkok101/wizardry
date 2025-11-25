@@ -4,14 +4,14 @@ import { Router } from '@angular/router';
 import { GameStateService } from '../../services/GameStateService';
 import { SaveService } from '../../services/SaveService';
 import { NavigationService } from '../../services/NavigationService';
-import { SceneTitleComponent } from '../../components/scene-title/scene-title.component';
-import { SceneFooterComponent } from '../../components/scene-footer/scene-footer.component';
-import { CharacterCardComponent } from '../../components/character-card/character-card.component';
+import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
+import { CharacterCardComponent } from '../shared/components/character-card/character-card.component';
 import { SceneType } from '../../types/SceneType';
 import { Character } from '../../types/Character';
 import { CharacterStatus } from '../../types/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '../../types/CharacterCardTypes';
-import { MenuItem } from '../../components/menu/menu.component';
+import { MenuItem } from '../shared/components/menu/menu.component';
 import { moveCharacterUp, moveCharacterDown } from '../../services/PartyService';
 
 @Component({

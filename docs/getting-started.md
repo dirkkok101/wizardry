@@ -15,16 +15,25 @@ Start here to understand the system:
 
 ```
 src/
-├── commands/     # Command layer (user actions)
-├── services/     # Service layer (business logic)
-├── types/        # TypeScript type definitions
-├── data/         # JSON data files (spells, monsters, maps)
-└── ui/           # UI layer (Canvas rendering)
+├── app/                      # Angular application
+│   ├── core/                 # Guards, singleton services
+│   │   └── guards/           # Route guards
+│   ├── shared/               # Reusable components & directives
+│   │   ├── components/       # 15 shared UI components
+│   │   └── directives/       # Custom directives
+│   └── <scene>/              # 13 scene/page components
+├── services/                 # Business logic (40+ services)
+├── types/                    # TypeScript type definitions
+├── helpers/                  # Display helpers
+├── utils/                    # Utility functions
+├── validation/               # Data validation schemas
+└── test-helpers/             # Test factory functions
 
 docs/
 ├── services/     # Service documentation
 ├── commands/     # Command documentation
 ├── game-design/  # Game mechanics
+├── ui/           # Scene documentation
 └── research/     # Source validation
 ```
 
