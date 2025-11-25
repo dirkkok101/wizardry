@@ -255,8 +255,9 @@ describe('CombatService - Phase 4: Status Effects', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).toContain('silenced')
-      expect(result.message).toContain('cannot cast')
+      // Messages are now returned as an array
+      expect(result.messages.join(' ')).toContain('silenced')
+      expect(result.messages.join(' ')).toContain('cannot cast')
     })
 
     it('allows spell casting when not silenced', () => {
@@ -289,8 +290,9 @@ describe('CombatService - Phase 4: Status Effects', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      expect(result.message).not.toContain('silenced')
-      expect(result.message).toContain('HALITO')
+      // Messages are now returned as an array
+      expect(result.messages.join(' ')).not.toContain('silenced')
+      expect(result.messages.join(' ')).toContain('HALITO')
     })
   })
 

@@ -43,32 +43,16 @@
       <!-- Party Panel -->
       <div class="party-panel">
         <h3>PARTY</h3>
-        <!-- Front Row Party -->
-        <div class="formation-section">
-          <h4 class="row-title">Front Row</h4>
-          @if (frontRowCharacters().length > 0) {
-            <div class="character-row-grid">
-              @for (char of frontRowCharacters(); track char.id) {
-                <ng-container *ngTemplateOutlet="characterCard; context: { $implicit: char }"></ng-container>
-              }
-            </div>
-          } @else {
-            <div class="empty-row">No party members in front row</div>
-          }
-        </div>
-        <!-- Back Row Party -->
-        <div class="formation-section">
-          <h4 class="row-title">Back Row</h4>
-          @if (backRowCharacters().length > 0) {
-            <div class="character-row-grid">
-              @for (char of backRowCharacters(); track char.id) {
-                <ng-container *ngTemplateOutlet="characterCard; context: { $implicit: char }"></ng-container>
-              }
-            </div>
-          } @else {
-            <div class="empty-row">No party members in back row</div>
-          }
-        </div>
+        <app-party-character-grid
+          source="party"
+          [showFormation]="true"
+          [visibleFields]="combatCharacterFields"
+          [actions]="[]"
+          [highlightedCharacterId]="activeCharacterId()"
+          [statusTexts]="selectedActionTexts()"
+          variant="compact"
+          emptyMessage="No party members"
+        />
       </div>
     </div>
 
@@ -274,43 +258,3 @@
   </div>
 </ng-template>
 
-<!-- Character Combat Card Template -->
-<ng-template #characterCard let-char>
-  <div class="character-combat-card"
-       [class.dead]="char.hp <= 0"
-       [class.active]="activeCharacterId() === char.id"
-       [class.action-selected]="selectedActions().has(char.id)">
-    <div class="char-header">
-      <span class="char-name">{{ char.name }}</span>
-      @if (activeCharacterId() === char.id) {
-        <span class="active-indicator">▶</span>
-      }
-    </div>
-    <div class="char-class">{{ char.class }} Lv{{ char.level }}</div>
-    <div class="char-stats">
-      <span class="hp">HP: {{ char.hp }}/{{ char.maxHp }}</span>
-      <span class="ac">AC: {{ char.ac }}</span>
-    </div>
-    @if (char.hp > 0) {
-      <div class="hp-bar">
-        <div class="hp-fill" [style.width.%]="(char.hp / char.maxHp) * 100"></div>
-      </div>
-      <div class="action-status">
-        @if (selectedActions().has(char.id)) {
-          <span class="status-ready">✓</span>
-        } @else if (activeCharacterId() === char.id) {
-          <span class="status-active">⏳</span>
-        } @else {
-          <span class="status-waiting">⏸</span>
-        }
-      </div>
-    } @else {
-      <div class="char-dead-badge">DEAD</div>
-    }
-    @if (char.status !== 'OK' && char.status !== 'INJURED' && char.status !== 'DEAD') {
-      <div class="status-effect" [class]="'status-' + char.status.toLowerCase()">
-        {{ char.status }}
-      </div>
-    }
-  </div>
-</ng-template>
