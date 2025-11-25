@@ -13,7 +13,9 @@ import { MenuItem } from '../shared/components/menu/menu.component'
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component'
 import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '../shared/components/monster-group-selection-dialog/monster-group-selection-dialog.component'
+import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component'
 import { getGroupDisplayText } from '../../utils/MonsterNameUtils'
+import { CharacterStatus } from '../../types/CharacterStatus'
 
 interface SelectedAction {
   characterId: string
@@ -27,7 +29,8 @@ interface SelectedAction {
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    MonsterGroupSelectionDialogComponent
+    MonsterGroupSelectionDialogComponent,
+    CharacterSelectionDialogComponent
   ],
   templateUrl: './combat.html',
   styleUrls: ['./combat.scss']
@@ -55,6 +58,8 @@ export class CombatComponent implements OnInit {
   readonly showSpellMenu = signal<boolean>(false)
   readonly showGroupSelectionDialog = signal<boolean>(false)
   readonly selectedGroupId = signal<'A' | 'B' | 'C' | 'D' | null>(null)
+  readonly showCharacterSelectionDialog = signal<boolean>(false)
+  readonly selectedTargetCharacterId = signal<string | null>(null)
 
   // Computed party characters
   readonly partyCharacters = computed(() => {
@@ -127,6 +132,7 @@ export class CombatComponent implements OnInit {
   })
 
   // Determine if we're in monster (single-target) mode
+  // Only for offensive spells targeting enemies, not healing spells targeting party
   readonly isMonsterTargetMode = computed(() => {
     const action = this.selectedActionType()
     if (!action) return false
@@ -134,13 +140,41 @@ export class CombatComponent implements OnInit {
     // Single monster targeting for ATTACK
     if (action === 'ATTACK') return true
 
-    // Single monster targeting for single-target spells
+    // Single monster targeting for offensive single-target spells
     if (action === 'CAST_SPELL') {
       const spellId = this.selectedSpellId()
       if (!spellId) return false
 
       const spell = SpellCastingService.getSpell(spellId)
-      return spell?.target === 'single'
+      // Only offensive spells target monsters; healing spells target party
+      return spell?.target === 'single' && spell?.category === 'offensive'
+    }
+
+    return false
+  })
+
+  // Determine if we're in character (party member) targeting mode
+  // For healing spells, buff spells targeting single allies
+  readonly isCharacterTargetMode = computed(() => {
+    const action = this.selectedActionType()
+    if (!action) return false
+
+    if (action === 'CAST_SPELL') {
+      const spellId = this.selectedSpellId()
+      if (!spellId) return false
+
+      const spell = SpellCastingService.getSpell(spellId)
+      if (!spell) return false
+
+      // Healing and buff spells with single target go to party members
+      if (spell.target === 'single' && (spell.category === 'healing' || spell.category === 'buff')) {
+        return true
+      }
+
+      // Resurrection spells target dead party members
+      if (spell.target === 'dead_body' || spell.target === 'ashes') {
+        return true
+      }
     }
 
     return false
@@ -287,6 +321,58 @@ export class CombatComponent implements OnInit {
     return 'SELECT TARGET GROUP'
   })
 
+  // Character selection options for healing/buff spells
+  readonly characterSelectionOptions = computed((): CharacterOption[] => {
+    const spellId = this.selectedSpellId()
+    if (!spellId) return []
+
+    const spell = SpellCastingService.getSpell(spellId)
+    if (!spell) return []
+
+    const chars = this.partyCharacters()
+
+    // Filter based on spell target type
+    return chars.map((char, idx) => {
+      let enabled = true
+
+      if (spell.target === 'dead_body') {
+        // Only dead characters can be targeted
+        enabled = char.status === CharacterStatus.DEAD
+      } else if (spell.target === 'ashes') {
+        // Only ashes characters can be targeted
+        enabled = char.status === CharacterStatus.ASHES
+      } else if (spell.target === 'single') {
+        // For healing spells, target living characters (or characters that need healing)
+        if (spell.category === 'healing') {
+          // Allow targeting any living character (they might want to pre-heal)
+          enabled = char.hp > 0
+        } else {
+          // For buff spells, target living characters
+          enabled = char.hp > 0
+        }
+      }
+
+      return {
+        character: char,
+        index: idx + 1, // 1-based for keyboard shortcuts
+        enabled
+      }
+    })
+  })
+
+  // Character selection dialog prompt
+  readonly characterSelectionPrompt = computed((): string => {
+    const spellId = this.selectedSpellId()
+    if (!spellId) return 'SELECT TARGET'
+
+    const spell = SpellCastingService.getSpell(spellId)
+    if (spell) {
+      return `${spell.name.toUpperCase()} - SELECT TARGET`
+    }
+
+    return 'SELECT TARGET'
+  })
+
   constructor(
     private gameState: GameStateService,
     private router: Router
@@ -323,9 +409,17 @@ export class CombatComponent implements OnInit {
       return
     }
 
-    // Handle combat actions (attack, cast, parry, flee)
-    const actionType = itemId.toUpperCase() as CombatActionType
-    this.selectActionType(actionType)
+    // Handle combat actions - map menu IDs to CombatActionType
+    const actionTypeMap: Record<string, CombatActionType> = {
+      'attack': 'ATTACK',
+      'cast': 'CAST_SPELL',
+      'parry': 'PARRY',
+      'flee': 'RUN'
+    }
+    const actionType = actionTypeMap[itemId]
+    if (actionType) {
+      this.selectActionType(actionType)
+    }
   }
 
   selectActionType(actionType: CombatActionType): void {
@@ -356,15 +450,28 @@ export class CombatComponent implements OnInit {
       return
     }
 
-    // Determine if target selection is needed based on spell target type
-    // 'party', 'all_allies', 'self', 'all_enemies' = no target selection needed
-    if (spell.target === 'party' || spell.target === 'all_allies' || spell.target === 'self' || spell.target === 'all_enemies') {
-      // No target selection needed - confirm action immediately
+    // Determine target selection based on spell target type
+    // No target selection needed for party-wide, self, or all-enemies spells
+    if (spell.target === 'party' || spell.target === 'all_allies' ||
+        spell.target === 'self' || spell.target === 'all_enemies') {
       this.confirmAction('CAST_SPELL', undefined)
-    } else {
-      // Show group selection dialog for single and group target spells
-      this.showGroupSelectionDialog.set(true)
+      return
     }
+
+    // Single-target healing/buff spells need character selection
+    if (spell.target === 'single' && (spell.category === 'healing' || spell.category === 'buff')) {
+      this.showCharacterSelectionDialog.set(true)
+      return
+    }
+
+    // Resurrection spells need dead/ashes character selection
+    if (spell.target === 'dead_body' || spell.target === 'ashes') {
+      this.showCharacterSelectionDialog.set(true)
+      return
+    }
+
+    // Single-target offensive spells and group spells need monster group selection
+    this.showGroupSelectionDialog.set(true)
   }
 
   /**
@@ -425,11 +532,15 @@ export class CombatComponent implements OnInit {
       command.targetGroupId = groupId
     }
 
-    // If casting a spell, attach spell ID to command data
+    // If casting a spell, attach spell ID and target character ID to command data
     if (actionType === 'CAST_SPELL') {
       const spellId = this.selectedSpellId()
+      const targetCharId = this.selectedTargetCharacterId()
       if (spellId) {
-        command.data = { spellId }
+        command.data = {
+          spellId,
+          ...(targetCharId && { targetCharacterId: targetCharId })
+        }
       }
     }
 
@@ -444,8 +555,10 @@ export class CombatComponent implements OnInit {
     this.selectedActionType.set(null)
     this.selectedSpellId.set(null)
     this.selectedGroupId.set(null)
+    this.selectedTargetCharacterId.set(null)
     this.showSpellMenu.set(false)
     this.showGroupSelectionDialog.set(false)
+    this.showCharacterSelectionDialog.set(false)
 
     // Advance to next character
     this.advanceToNextCharacter()
@@ -459,6 +572,32 @@ export class CombatComponent implements OnInit {
     this.selectedActionType.set(null)
     this.selectedSpellId.set(null)
     this.selectedGroupId.set(null)
+  }
+
+  /**
+   * Select a party member from character selection dialog
+   * Used for healing spells, buff spells, and resurrection spells
+   */
+  selectCharacter(character: Character): void {
+    // Store the selected target character
+    this.selectedTargetCharacterId.set(character.id)
+    this.showCharacterSelectionDialog.set(false)
+
+    const actionType = this.selectedActionType()
+    if (!actionType) return
+
+    // Character is already a valid Combatant (Combatant = Character | MonsterInstance)
+    this.confirmAction(actionType, character)
+  }
+
+  /**
+   * Cancel character selection and return to action menu
+   */
+  cancelCharacterSelection(): void {
+    this.showCharacterSelectionDialog.set(false)
+    this.selectedActionType.set(null)
+    this.selectedSpellId.set(null)
+    this.selectedTargetCharacterId.set(null)
   }
 
   advanceToNextCharacter(): void {
@@ -483,8 +622,12 @@ export class CombatComponent implements OnInit {
 
   cancelActionSelection(): void {
     this.selectedActionType.set(null)
+    this.selectedSpellId.set(null)
+    this.selectedGroupId.set(null)
+    this.selectedTargetCharacterId.set(null)
     this.showSpellMenu.set(false)
     this.showGroupSelectionDialog.set(false)
+    this.showCharacterSelectionDialog.set(false)
   }
 
   executeRound(): void {
