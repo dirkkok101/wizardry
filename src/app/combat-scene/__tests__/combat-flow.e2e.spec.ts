@@ -18,8 +18,10 @@ describe('Combat Flow E2E', () => {
   let router: Router
 
   beforeEach(() => {
-    // Use instant message display in tests (no animation delay)
-    setCombatMessageDelay(0)
+    // Use fake timers to control animation timing
+    jest.useFakeTimers()
+    // Use small delay to test animation code path without slowing tests
+    setCombatMessageDelay(10)
 
     TestBed.configureTestingModule({
       imports: [CombatComponent]
@@ -34,9 +36,15 @@ describe('Combat Flow E2E', () => {
   })
 
   afterEach(() => {
-    // Reset to default delay after tests
+    // Reset to default delay and restore real timers
     setCombatMessageDelay(800)
+    jest.useRealTimers()
   })
+
+  // Helper to complete message animation by advancing all timers
+  const flushMessageAnimation = () => {
+    jest.runAllTimers()
+  }
 
   // Helper function to select actions for characters using new character-by-character API
   const selectActionsForParty = (actionType: 'ATTACK' | 'PARRY' | 'RUN', groupId?: 'A' | 'B' | 'C' | 'D') => {
@@ -137,6 +145,7 @@ describe('Combat Flow E2E', () => {
 
       // 5. Execute the round
       component.executeRound()
+      flushMessageAnimation()
 
       // 6. Verify round was executed (actions cleared)
       expect(component.selectedActions().size).toBe(0)
@@ -222,6 +231,7 @@ describe('Combat Flow E2E', () => {
 
       // Execute round to victory
       component.executeRound()
+      flushMessageAnimation()
 
       // Verify victory occurred (should kill both weak monsters)
       if (component.showVictoryModal()) {
@@ -450,6 +460,7 @@ describe('Combat Flow E2E', () => {
       // Just verify we can execute without immediate victory/defeat
       selectActionsForParty('ATTACK', 'A')
       component.executeRound()
+      flushMessageAnimation()
 
       // Combat state should still exist (not victory or defeat)
       const combatState = gameState.state().combat
@@ -495,6 +506,7 @@ describe('Combat Flow E2E', () => {
       // Execute round
       selectActionsForParty('ATTACK', 'A')
       component.executeRound()
+      flushMessageAnimation()
 
       // After victory, combat state is cleared so log disappears from component
       // But we can verify that combat log was updated during execution
