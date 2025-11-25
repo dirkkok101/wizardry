@@ -97,20 +97,6 @@ export class InnComponent implements OnInit {
     );
   });
 
-  // Check if selected character needs healing
-  readonly needsHealing = computed(() => {
-    const char = this.selectedCharacter();
-    if (!char) return false;
-    return char.hp < char.maxHp;
-  });
-
-  // Check if selected character can level up (fully healed + has XP)
-  readonly canLevelUp = computed(() => {
-    const char = this.selectedCharacter();
-    if (!char) return false;
-    return char.hp >= char.maxHp && LevelUpService.canLevelUp(char);
-  });
-
   // Room menu items (static)
   readonly roomMenuItems: MenuItem[] = [
     {
@@ -151,20 +137,15 @@ export class InnComponent implements OnInit {
     }
   ];
 
-  // Footer menu items (computed based on state)
-  readonly footerMenuItems = computed((): MenuItem[] => {
-    const hasParty = this.partyCharacters().length > 0;
-    const hasRestableMembers = this.restableCharacters().length > 0;
-
-    return [
-      {
-        id: 'return',
-        label: 'Return to Castle (ESC)',
-        shortcut: 'ESC',
-        enabled: true
-      }
-    ];
-  });
+  // Footer menu items
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    {
+      id: 'return',
+      label: 'Return to Castle (ESC)',
+      shortcut: 'ESC',
+      enabled: true
+    }
+  ]);
 
   ngOnInit(): void {
     this.messages.clear();
@@ -361,19 +342,11 @@ export class InnComponent implements OnInit {
     }
   }
 
-  // Helper for character actions in grid
-  getCharacterActions(character: Character): Array<{ type: string; label?: string }> {
-    const actions: Array<{ type: string; label?: string }> = [
-      { type: 'inspect' }
-    ];
-
-    // Add rest action for living characters
-    if (character.status !== CharacterStatus.DEAD &&
-        character.status !== CharacterStatus.ASHES &&
-        character.status !== CharacterStatus.LOST) {
-      actions.push({ type: 'rest', label: 'Rest' });
+  @HostListener('window:keydown.enter')
+  handleEnter(): void {
+    // Dismiss level up display on Enter
+    if (this.levelUpData()) {
+      this.dismissLevelUp();
     }
-
-    return actions;
   }
 }

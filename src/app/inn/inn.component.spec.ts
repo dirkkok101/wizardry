@@ -335,7 +335,7 @@ describe('InnComponent', () => {
     });
   });
 
-  describe('ESC key handling', () => {
+  describe('keyboard handling', () => {
     it('dismisses level up display on ESC', () => {
       component.levelUpData.set({
         newLevel: 2,
@@ -347,6 +347,29 @@ describe('InnComponent', () => {
       component.handleEscape();
 
       expect(component.levelUpData()).toBeNull();
+    });
+
+    it('dismisses level up display on Enter', () => {
+      component.levelUpData.set({
+        newLevel: 2,
+        hpIncrease: 5,
+        statIncreases: {},
+        newSpells: []
+      });
+
+      component.handleEnter();
+
+      expect(component.levelUpData()).toBeNull();
+    });
+
+    it('does nothing on Enter when no level up display', () => {
+      component.levelUpData.set(null);
+      component.showRoomSelection.set(true);
+
+      component.handleEnter();
+
+      // Room selection should still be open
+      expect(component.showRoomSelection()).toBe(true);
     });
 
     it('cancels confirmation on ESC', () => {
