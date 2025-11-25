@@ -8,5 +8,6 @@
   "description": "Extended light radius",
   "castableIn": [
     "dungeon"
-  ]
+  ],
+  "utility": "extended_light"
 }

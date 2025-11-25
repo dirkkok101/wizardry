@@ -695,7 +695,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Open character selection dialog for single-target spells
    */
   private openTargetDialog(spell: SpellData): void {
-    const state = this.gameState.state();
     const partyChars = this.partyCharacters();
 
     // Build character options based on spell target type
@@ -793,6 +792,19 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         newRoster.set(target.id, result.updatedTarget);
       }
 
+      // Apply party-wide healing if applicable (MADI)
+      if (result.partyHeal && result.partyHeal > 0) {
+        for (const memberId of state.party.members) {
+          const member = newRoster.get(memberId);
+          if (member &&
+              member.status !== CharacterStatus.DEAD &&
+              member.status !== CharacterStatus.ASHES) {
+            const newHp = Math.min(member.hp + result.partyHeal, member.maxHp);
+            newRoster.set(memberId, { ...member, hp: newHp });
+          }
+        }
+      }
+
       // Update dungeon state if applicable
       let newDungeon = state.dungeon;
       if (result.dungeonUpdate && state.dungeon) {
@@ -832,6 +844,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     message: string;
     updatedCaster?: Character;
     updatedTarget?: Character;
+    partyHeal?: number;  // Heal amount for all living party members
     dungeonUpdate?: Partial<DungeonState>;
     navigateTo?: string;
   } {
@@ -862,7 +875,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       const healAmount = spell.healing.dice ? this.rollDice(spell.healing.dice) : 0;
       return {
         message: `${caster.name} casts ${spell.name}! The party heals ${healAmount} HP.`,
-        // Party healing is applied via state update in caller
+        partyHeal: healAmount
       };
     }
 

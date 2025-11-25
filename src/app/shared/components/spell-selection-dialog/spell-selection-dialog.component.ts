@@ -28,7 +28,7 @@ export interface SpellOption {
  * - Auto-focus on open
  * - Backdrop click to cancel
  * - Shows spell name, level, SP cost, and effect description
- * - Grouped by spell level
+ * - Sorted by spell level then alphabetically
  *
  * @example
  * <app-spell-selection-dialog
