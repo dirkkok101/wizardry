@@ -8,6 +8,7 @@ import { MessageLogComponent } from '../shared/components/message-log/message-lo
 import { SpellSelectionDialogComponent, SpellOption } from '../shared/components/spell-selection-dialog/spell-selection-dialog.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '../shared/components/character-selection-dialog/character-selection-dialog.component';
 import { GameStateService } from '../../services/GameStateService';
+import { RandomService } from '../../services/RandomService';
 import { SceneNavigationService } from '../../services/SceneNavigationService';
 import { DungeonMovementService } from '../../services/DungeonMovementService';
 import { DungeonService } from '../../services/DungeonService';
@@ -984,7 +985,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Handle resurrection spells
     if (spell.resurrection && target) {
       const successRate = spell.resurrectionSuccessRate || 0.9;
-      const success = Math.random() < successRate;
+      const success = RandomService.roll(successRate);
 
       if (success) {
         const updatedTarget = {
@@ -1040,7 +1041,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // LOKTOFEIT - Recall to town
       if (spell.utility === 'recall') {
         const successRate = Math.min((caster.level || 1) * 2, 95) / 100;
-        const success = Math.random() < successRate;
+        const success = RandomService.roll(successRate);
 
         if (success) {
           return {
@@ -1086,14 +1087,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Roll dice in "XdY" format
    */
   private rollDice(dice: string): number {
-    const [countStr, sidesStr] = dice.split('d');
-    const count = parseInt(countStr, 10) || 1;
-    const sides = parseInt(sidesStr, 10) || 6;
-
-    let total = 0;
-    for (let i = 0; i < count; i++) {
-      total += Math.floor(Math.random() * sides) + 1;
-    }
-    return total;
+    return RandomService.rollDiceNotation(dice);
   }
 }
