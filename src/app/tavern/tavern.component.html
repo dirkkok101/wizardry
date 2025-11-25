@@ -35,15 +35,17 @@
       @if (frontRowCharacters().length === 0) {
         <div class="empty-state">Front row is empty</div>
       } @else {
-        @for (character of frontRowCharacters(); track character.id) {
-          <app-character-card
-            [character]="character"
-            [visibleFields]="['class', 'level', 'race', 'alignment']"
-            [actions]="getCharacterActions(character.id, true)"
-            variant="compact"
-            (actionClick)="handleActionClick($event)">
-          </app-character-card>
-        }
+        <div class="character-grid">
+          @for (character of frontRowCharacters(); track character.id) {
+            <app-character-card
+              [character]="character"
+              [visibleFields]="['class', 'level', 'race', 'alignment']"
+              [actions]="getCharacterActions(character.id, true)"
+              variant="compact"
+              (actionClick)="handleActionClick($event)">
+            </app-character-card>
+          }
+        </div>
       }
     </div>
 
@@ -53,15 +55,17 @@
       @if (backRowCharacters().length === 0) {
         <div class="empty-state">Back row is empty</div>
       } @else {
-        @for (character of backRowCharacters(); track character.id) {
-          <app-character-card
-            [character]="character"
-            [visibleFields]="['class', 'level', 'race', 'alignment']"
-            [actions]="getCharacterActions(character.id, true)"
-            variant="compact"
-            (actionClick)="handleActionClick($event)">
-          </app-character-card>
-        }
+        <div class="character-grid">
+          @for (character of backRowCharacters(); track character.id) {
+            <app-character-card
+              [character]="character"
+              [visibleFields]="['class', 'level', 'race', 'alignment']"
+              [actions]="getCharacterActions(character.id, true)"
+              variant="compact"
+              (actionClick)="handleActionClick($event)">
+            </app-character-card>
+          }
+        </div>
       }
     </div>
   </div>

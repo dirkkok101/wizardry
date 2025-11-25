@@ -28,6 +28,12 @@
   font-weight: bold;
 }
 
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+}
+
 .available-characters {
   display: flex;
   flex-direction: column;
@@ -41,9 +47,6 @@
   }
 
   .character-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: $spacing-md;
     overflow-y: auto;
     max-height: calc(100vh - 250px);
     padding-right: $spacing-sm;
