@@ -689,7 +689,11 @@ describe('MazeComponent - Tile Inspection', () => {
   let gameState: GameStateService;
 
   beforeEach(() => {
-    // Clear any mocks from previous describe blocks
+    // Restore all mocks to prevent interference from previous describe blocks.
+    // This is needed because DungeonService.loadLevel mocks from other blocks
+    // (e.g., Door Opening) can persist and return incorrect tile data.
+    // Note: This also restores WebGL mocks from beforeAll, but the component
+    // handles WebGL initialization failure gracefully.
     jest.restoreAllMocks();
 
     TestBed.configureTestingModule({
@@ -795,8 +799,8 @@ describe('MazeComponent - Tile Inspection', () => {
     component.ngOnInit();
     fixture.detectChanges();
 
-    // Clear any initialization messages
-    component['messages'].set([]);
+    // Clear any initialization messages (messages is a public signal)
+    component.messages.set([]);
 
     component.inspectTile();
 
