@@ -9,6 +9,7 @@ import {
   createTestCharacter,
   createTestMonster
 } from '../../../test-helpers/test-factories'
+import { setCombatMessageDelay } from '../../../settings/CombatSettings'
 
 describe('Combat Flow E2E', () => {
   let component: CombatComponent
@@ -17,6 +18,9 @@ describe('Combat Flow E2E', () => {
   let router: Router
 
   beforeEach(() => {
+    // Use instant message display in tests (no animation delay)
+    setCombatMessageDelay(0)
+
     TestBed.configureTestingModule({
       imports: [CombatComponent]
     })
@@ -27,6 +31,11 @@ describe('Combat Flow E2E', () => {
     router = TestBed.inject(Router)
 
     jest.spyOn(router, 'navigate')
+  })
+
+  afterEach(() => {
+    // Reset to default delay after tests
+    setCombatMessageDelay(800)
   })
 
   // Helper function to select actions for characters using new character-by-character API

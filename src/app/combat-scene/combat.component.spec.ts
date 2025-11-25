@@ -7,6 +7,7 @@ import { createTestGameStateWithCombat, createTestCharacter } from '../../test-h
 import { Router } from '@angular/router'
 import { VictoryService } from '../../services/VictoryService'
 import { CharacterStatus } from '../../types/CharacterStatus'
+import { setCombatMessageDelay } from '../../settings/CombatSettings'
 
 describe('CombatComponent', () => {
   let component: CombatComponent
@@ -15,6 +16,9 @@ describe('CombatComponent', () => {
   let router: Router
 
   beforeEach(() => {
+    // Use instant message display in tests (no animation delay)
+    setCombatMessageDelay(0)
+
     TestBed.configureTestingModule({
       imports: [CombatComponent]
     })
@@ -45,6 +49,11 @@ describe('CombatComponent', () => {
 
     component.ngOnInit()
     fixture.detectChanges()
+  })
+
+  afterEach(() => {
+    // Reset to default delay after tests
+    setCombatMessageDelay(800)
   })
 
   it('sets scene to COMBAT on init', () => {
