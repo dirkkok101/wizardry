@@ -10,6 +10,7 @@ import {
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Character } from '../../../../types/Character'
+import { CharacterStatus } from '../../../../types/CharacterStatus'
 
 export interface CharacterOption {
   character: Character
@@ -41,7 +42,7 @@ export interface CharacterOption {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './character-selection-dialog.component.html',
-  styleUrl: './character-selection-dialog.component.scss'
+  styleUrls: ['./character-selection-dialog.component.scss']
 })
 export class CharacterSelectionDialogComponent implements AfterViewChecked {
   @Input() visible: boolean = false
@@ -117,5 +118,13 @@ export class CharacterSelectionDialogComponent implements AfterViewChecked {
   getHpPercent(char: Character): number {
     if (char.maxHp <= 0) return 0
     return Math.max(0, Math.min(100, (char.hp / char.maxHp) * 100))
+  }
+
+  /**
+   * Check if the character has a status that should be displayed
+   * (i.e., not OK or INJURED which are normal states)
+   */
+  shouldShowStatus(char: Character): boolean {
+    return char.status !== CharacterStatus.OK && char.status !== CharacterStatus.INJURED
   }
 }

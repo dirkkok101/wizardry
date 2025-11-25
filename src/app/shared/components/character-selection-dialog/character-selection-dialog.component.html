@@ -23,7 +23,7 @@
                   <span class="hp" [class.critical]="option.character.hp <= option.character.maxHp * 0.25">
                     HP: {{ option.character.hp }}/{{ option.character.maxHp }}
                   </span>
-                  @if (option.character.status !== 'OK' && option.character.status !== 'INJURED') {
+                  @if (shouldShowStatus(option.character)) {
                     <span class="status" [class]="'status-' + option.character.status.toLowerCase()">
                       {{ option.character.status }}
                     </span>

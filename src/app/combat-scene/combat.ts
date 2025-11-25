@@ -414,7 +414,7 @@ export class CombatComponent implements OnInit {
       'attack': 'ATTACK',
       'cast': 'CAST_SPELL',
       'parry': 'PARRY',
-      'flee': 'FLEE'
+      'flee': 'RUN'
     }
     const actionType = actionTypeMap[itemId]
     if (actionType) {
@@ -586,9 +586,8 @@ export class CombatComponent implements OnInit {
     const actionType = this.selectedActionType()
     if (!actionType) return
 
-    // For character-targeting spells, pass the character as the target
-    // The character is a Combatant (has id, name, hp, maxHp)
-    this.confirmAction(actionType, character as unknown as Combatant)
+    // Character is already a valid Combatant (Combatant = Character | MonsterInstance)
+    this.confirmAction(actionType, character)
   }
 
   /**
