@@ -113,9 +113,8 @@ export class TavernComponent implements OnInit {
 
   onRemoveCharacter(characterId: string): void {
     const state = this.gameStateService.state();
-    const character = state.roster.get(characterId);
 
-    if (!character) {
+    if (!state.roster.has(characterId)) {
       this.messages.showError('Character not found');
       return;
     }
