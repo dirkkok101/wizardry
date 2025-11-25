@@ -2,6 +2,7 @@ import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 import { SpellDataLoader } from './src/services/SpellDataLoader';
 import { MonsterDataLoader } from './src/services/MonsterDataLoader';
 import { ClassDataLoader } from './src/services/ClassDataLoader';
+import { RandomService } from './src/services/RandomService';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -60,6 +61,14 @@ afterAll(() => {
   ClassDataLoader.clearCache();
   SpellDataLoader.clearCache();
   MonsterDataLoader.clearCache();
+});
+
+// Reset RandomService before each test to ensure deterministic behavior
+// Tests that need specific random values should use:
+//   RandomService.setSeed(number) - for deterministic sequences
+//   RandomService.queueNextValues([...]) - for specific values
+beforeEach(() => {
+  RandomService.resetSeed();
 });
 
 // Polyfill ImageData for canvas tests

@@ -1,5 +1,6 @@
 import { Race } from '../types/Race'
 import { RaceService } from './RaceService'
+import { RandomService } from './RandomService'
 
 export interface BaseStats {
   strength: number
@@ -64,11 +65,7 @@ export class CharacterCreationService {
    * Roll 3d6 (sum of three 6-sided dice).
    */
   private static roll3d6(): number {
-    return (
-      Math.floor(Math.random() * 6) + 1 +
-      Math.floor(Math.random() * 6) + 1 +
-      Math.floor(Math.random() * 6) + 1
-    )
+    return RandomService.rollDice(3, 6)
   }
 
   /**
@@ -77,14 +74,14 @@ export class CharacterCreationService {
    * Distribution: 7-10 points (90%), 17-20 points (9.25%), 27-29 points (0.75%)
    */
   private static rollBonusPoints(): number {
-    let points = Math.floor(Math.random() * 4) + 7 // 1d4 + 6 = 7-10
+    let points = RandomService.rollDie(4) + 6 // 1d4 + 6 = 7-10
 
     // 1/11 chance to add 10
-    if (Math.random() < 1/11) {
+    if (RandomService.roll(1/11)) {
       points += 10
 
       // If still <20, another 1/11 chance to add 10
-      if (points < 20 && Math.random() < 1/11) {
+      if (points < 20 && RandomService.roll(1/11)) {
         points += 10
       }
     }

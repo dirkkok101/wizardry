@@ -1,6 +1,7 @@
 import { Character } from '../types/Character'
 import { CharacterClass } from '../types/CharacterClass'
 import { SpellDataLoader } from './SpellDataLoader'
+import { RandomService } from './RandomService'
 
 interface Spell {
   id: string
@@ -192,12 +193,12 @@ export class SpellLearningService {
     }
 
     // Randomly learn 1-2 spells from this level
-    const numToLearn = Math.floor(Math.random() * 2) + 1
+    const numToLearn = RandomService.random(1, 2)
     const learnedSpells: Spell[] = []
     const knownSpellIds = new Set(character.knownSpells || [])
 
     for (let i = 0; i < numToLearn && i < availableSpells.length; i++) {
-      const spell = availableSpells[Math.floor(Math.random() * availableSpells.length)]
+      const spell = RandomService.pickRandom(availableSpells)
       if (!knownSpellIds.has(spell.id)) {
         learnedSpells.push(spell)
         knownSpellIds.add(spell.id)

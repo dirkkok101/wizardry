@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '../../services/GameStateService'
 import { CombatService } from '../../services/CombatService'
+import { RandomService } from '../../services/RandomService'
 import { SpellCastingService } from '../../services/SpellCastingService'
 import { VictoryService, VictoryRewards } from '../../services/VictoryService'
 import { SceneType } from '../../types/SceneType'
@@ -637,8 +638,7 @@ export class CombatComponent implements OnInit, OnDestroy {
       // Pick a random alive monster from the group
       const aliveMonsters = group.monsters.filter(m => m.hp > 0)
       if (aliveMonsters.length > 0) {
-        const randomIndex = Math.floor(Math.random() * aliveMonsters.length)
-        const targetMonster = aliveMonsters[randomIndex]
+        const targetMonster = RandomService.pickRandom(aliveMonsters)!
         this.confirmAction(actionType, targetMonster)
       } else {
         // No alive monsters (shouldn't happen, but handle gracefully)

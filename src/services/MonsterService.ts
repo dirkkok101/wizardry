@@ -2,6 +2,7 @@
 import { MonsterInstance } from '../types/Combat'
 import { MonsterTemplate, AttackRange } from '../validation/MonsterSchema'
 import { MonsterDataLoader } from './MonsterDataLoader'
+import { RandomService } from './RandomService'
 import { v4 as uuidv4 } from 'uuid'
 
 /**
@@ -122,7 +123,7 @@ export class MonsterService {
    * @returns Random integer in range
    */
   private static rollInRange(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min
+    return RandomService.random(min, max)
   }
 
   /**

@@ -9,6 +9,7 @@ import { CharacterSpellPoints } from '../types/SpellPoints'
 import { MaxCurrent } from '../types/MaxCurrent'
 import { ClassService } from './ClassService'
 import { RaceService } from './RaceService'
+import { RandomService } from './RandomService'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface ValidationResult {
@@ -70,9 +71,7 @@ function getAllCharacters(state: GameState): Character[] {
  * Roll a stat (3d6, range 3-18)
  */
 function rollStat(): number {
-  return Math.floor(Math.random() * 6) + 1 +
-         Math.floor(Math.random() * 6) + 1 +
-         Math.floor(Math.random() * 6) + 1
+  return RandomService.rollDice(3, 6)
 }
 
 /**
@@ -87,12 +86,7 @@ function rollHitDice(hitDice: string): number {
   const numDice = parseInt(match[1], 10)
   const diceSize = parseInt(match[2], 10)
 
-  let total = 0
-  for (let i = 0; i < numDice; i++) {
-    total += Math.floor(Math.random() * diceSize) + 1
-  }
-
-  return total
+  return RandomService.rollDice(numDice, diceSize)
 }
 
 /**
@@ -148,14 +142,14 @@ function initializeSpellPoints(characterClass: CharacterClass): CharacterSpellPo
  * Generate random age (14-16, original Wizardry range)
  */
 function generateAge(): number {
-  return 14 + Math.floor(Math.random() * 3)
+  return RandomService.random(14, 16)
 }
 
 /**
  * Generate unique character ID
  */
 function generateCharacterId(): string {
-  return `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return uuidv4()
 }
 
 /**

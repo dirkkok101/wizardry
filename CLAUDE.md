@@ -97,6 +97,7 @@ Services are **pure functions** organized by domain:
 - **AssetLoadingService**: Asset loading with caching, progress tracking, error handling
 - **SaveService**: IndexedDB persistence, hybrid snapshot + event log approach
 - **GameInitializationService**: Game state initialization and setup
+- **RandomService**: Centralized random number generation with seeding and queue support for deterministic testing
 
 Services can call other services but **no circular dependencies allowed**.
 
@@ -156,6 +157,32 @@ await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
 - Do NOT test multiple unrelated behaviors in one test
 - Do NOT use `setTimeout()` in tests (use `queueMicrotask()` or fake timers)
 - Do NOT forget to use `{ direction: 'instant' }` for scene transitions in tests
+- Do NOT use `Math.random()` directly - always use `RandomService` for testability
+
+**Deterministic Random Testing**: Use `RandomService` for all random number generation. This enables deterministic tests:
+```typescript
+// Queue specific values for precise test control (values consumed in order)
+RandomService.queueNextValues([0.1, 0.5, 0.99])  // hit roll, damage roll, crit roll
+
+// Use descriptive comments explaining what each value controls
+RandomService.queueNextValues([0.5])  // 50% < 86% success rate = success
+
+// For reproducible sequences, use seeded random
+RandomService.setSeed(12345)
+
+// RandomService auto-resets before each test via setup-jest.ts
+```
+
+**RandomService Methods**:
+- `queueNextValues([...])` - Queue specific values for tests (most common)
+- `setSeed(n)` - Set seed for reproducible sequences
+- `resetSeed()` - Return to true random (auto-called before each test)
+- `random(min, max)` - Integer in range [min, max]
+- `roll(probability)` - Test probability (0-1 float)
+- `chance(percent)` - Test percentage (0-100 integer)
+- `rollDie(sides)` / `rollDice(count, sides)` - Dice rolls
+- `pickRandom(array)` - Random element from array
+- `weightedRandom(items, weights)` - Weighted selection
 
 ## Game-Specific Mechanics
 

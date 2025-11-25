@@ -6,6 +6,7 @@ import { MonsterDataLoader } from './MonsterDataLoader'
 import { CharacterStatus } from '../types/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
 import { EncounterService } from './EncounterService'
+import { RandomService } from './RandomService'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -16,7 +17,7 @@ export class CombatService {
   static calculateInitiative(combatant: Combatant): number {
     const agi = combatant.agility || 10
     const agiMod = Math.floor((agi - 10) / 2)
-    const roll = Math.floor(Math.random() * 10)  // 0-9
+    const roll = RandomService.random(0, 9)  // 0-9
 
     return Math.max(1, roll + agiMod)
   }
@@ -106,7 +107,7 @@ export class CombatService {
     attackerPenalty: number = 0
   ): AttackResult {
     const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty)
-    const hitRoll = Math.random() * 100
+    const hitRoll = RandomService.randomFloat(0, 100)
 
     if (hitRoll >= hitChance) {
       return {
@@ -125,8 +126,7 @@ export class CombatService {
     // Critical hit: (2 × Level)% chance, max 50%
     const attackerLevel = attacker.level || 1
     const critChance = Math.min(50, attackerLevel * 2)
-    const critRoll = Math.random() * 100
-    const critical = critRoll < critChance
+    const critical = RandomService.chance(critChance)
 
     const finalDamage = critical ? damage * 2 : damage
 
@@ -141,12 +141,12 @@ export class CombatService {
   private static rollDamage(combatant: Combatant): number {
     // For characters: basic weapon damage (simplified)
     if ('class' in combatant) {
-      return Math.floor(Math.random() * 6) + 1  // 1d6
+      return RandomService.rollDie(6)  // 1d6
     }
     // For monsters: roll from damage array
     if ('damage' in combatant && combatant.damage && combatant.damage.length > 0) {
       const dice = combatant.damage[0]
-      return Math.floor(Math.random() * (dice.max - dice.min + 1)) + dice.min
+      return RandomService.random(dice.min, dice.max)
     }
     return 1
   }
@@ -266,7 +266,7 @@ export class CombatService {
 
     // Level 1-2: Random targeting
     if (level <= 2) {
-      return targets[Math.floor(Math.random() * targets.length)]
+      return RandomService.pickRandom(targets)
     }
 
     // Level 3-5: Focus fire on weakest HP%
@@ -708,9 +708,9 @@ export class CombatService {
     const dispelChance = Math.max(5, Math.min(95, rawChance))
 
     // Roll for success
-    const roll = Math.random() * 100
+    const success = RandomService.chance(dispelChance)
 
-    if (roll < dispelChance) {
+    if (success) {
       // Success! Destroy entire group
       const newMonsterGroups = state.monsterGroups.map(g =>
         g.id === groupId
@@ -1338,9 +1338,9 @@ export class CombatService {
 
     if (allFleeing) {
       const fleeChance = this.calculateFleeChance(currentState, party, fleeingCharacters)
-      const fleeRoll = Math.random() * 100
+      const fleeSuccess = RandomService.chance(fleeChance)
 
-      if (fleeRoll < fleeChance) {
+      if (fleeSuccess) {
         messages.push(`The party successfully flees from combat!`)
         return {
           newState: currentState,
@@ -1683,7 +1683,7 @@ export class CombatService {
     for (const char of party) {
       if (char.status === CharacterStatus.POISONED && char.hp > 0) {
         // Poison does 1d4 damage per round
-        const poisonDamage = Math.floor(Math.random() * 4) + 1
+        const poisonDamage = RandomService.rollDie(4)
         const damagedChar = this.applyDamageToCharacter(char, poisonDamage)
         damagedCharacters.set(char.id, damagedChar)
 
@@ -1700,7 +1700,7 @@ export class CombatService {
       if (monster.status === 'ALIVE' && monster.hp > 0) {
         const duration = this.getStatusDuration(currentState, monster.id, 'POISONED')
         if (duration > 0) {
-          const poisonDamage = Math.floor(Math.random() * 4) + 1
+          const poisonDamage = RandomService.rollDie(4)
           currentState = this.applyDamage(currentState, monster, poisonDamage)
           messages.push(`${monster.name} takes ${poisonDamage} poison damage!`)
         }

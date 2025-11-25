@@ -2,6 +2,7 @@
 import { MonsterInstance } from '../types/Combat'
 import { Character } from '../types/Character'
 import { CharacterStatus } from '../types/CharacterStatus'
+import { RandomService } from './RandomService'
 
 export interface ItemDrop {
   itemId: string
@@ -164,7 +165,7 @@ export class VictoryService {
         : this.MAX_DROPS_LOW_LEVEL
 
       for (let i = 0; i < maxDrops; i++) {
-        if (Math.random() < this.DROP_CHANCE) {
+        if (RandomService.roll(this.DROP_CHANCE)) {
           const item = this.selectItemForLevel(level)
           if (item) {
             items.push(item)
@@ -193,12 +194,12 @@ export class VictoryService {
     }
 
     // Select random item from pool
-    const itemId = pool[Math.floor(Math.random() * pool.length)]
+    const itemId = RandomService.pickRandom(pool)
     const itemName = this.ITEM_NAMES[itemId] || itemId
 
     // Items from high level monsters start unidentified
     const identified = level < this.UNIDENTIFIED_LEVEL_THRESHOLD
-      || Math.random() > this.UNIDENTIFIED_CHANCE
+      || !RandomService.roll(this.UNIDENTIFIED_CHANCE)
 
     return {
       itemId,

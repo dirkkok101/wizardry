@@ -1,4 +1,5 @@
 import { LevelUpService } from '../LevelUpService'
+import { RandomService } from '../RandomService'
 import { createTestCharacter } from '../../test-helpers/test-factories'
 import { CharacterClass } from '../../types/CharacterClass'
 
@@ -203,13 +204,11 @@ describe('LevelUpService', () => {
         strength: 14
       })
 
-      // Mock Math.random to guarantee stat increase
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.01) // Always trigger 5% chance
+      // Queue low values to guarantee stat increases (1% < 5% chance for each stat)
+      // First value is for HP roll, then 6 values for stat rolls (STR, INT, PIE, VIT, AGI, LCK)
+      RandomService.queueNextValues([0.5, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
 
       const result = LevelUpService.performLevelUp(character)
-
-      Math.random = originalRandom
 
       // At least one stat should increase
       const statsIncreased = Object.keys(result.levelUpData.statIncreases).length
