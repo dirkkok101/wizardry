@@ -2,16 +2,29 @@
   "id": "dragon_puppy",
   "name": "Dragon Puppy",
   "level": 4,
-  "numberAppearing": { "min": 1, "max": 6 },
-  "hp": { "min": 5, "max": 50 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 6
+  },
+  "hp": {
+    "min": 5,
+    "max": 50
+  },
   "ac": 4,
   "damage": [
-    { "dice": "1d8", "min": 1, "max": 8 }
+    {
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
+    }
   ],
   "xp": 2280,
+  "gold": 312,
   "type": "dragon",
   "class": null,
-  "specialAbilities": ["breath_weapon"],
+  "specialAbilities": [
+    "breath_weapon"
+  ],
   "breathWeapon": {
     "type": "cold",
     "damage": "4d6",

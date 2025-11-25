@@ -2,16 +2,31 @@
   "id": "lvl_10_mage",
   "name": "Lvl 10 Mage",
   "level": 10,
-  "numberAppearing": { "min": 1, "max": 6 },
-  "hp": { "min": 10, "max": 40 },
+  "numberAppearing": {
+    "min": 1,
+    "max": 6
+  },
+  "hp": {
+    "min": 10,
+    "max": 40
+  },
   "ac": 10,
   "damage": [],
   "xp": 1400,
+  "gold": 493,
   "type": "humanoid",
   "class": "mage",
-  "spellLevels": { "mage": 5 },
-  "spells": ["madalto", "lakanito", "zilwan"],
-  "specialAbilities": ["spellcasting"],
+  "spellLevels": {
+    "mage": 5
+  },
+  "spells": [
+    "madalto",
+    "lakanito",
+    "zilwan"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

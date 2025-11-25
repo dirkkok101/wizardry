@@ -2,18 +2,34 @@
   "id": "vorpal_bunny",
   "name": "Vorpal Bunny",
   "level": 2,
-  "numberAppearing": { "min": 4, "max": 8 },
-  "hp": { "min": 5, "max": 20 },
+  "numberAppearing": {
+    "min": 4,
+    "max": 8
+  },
+  "hp": {
+    "min": 5,
+    "max": 20
+  },
   "ac": 6,
   "damage": [
-    { "dice": "1d6", "min": 1, "max": 6 }
+    {
+      "dice": "1d6",
+      "min": 1,
+      "max": 6
+    }
   ],
   "xp": 735,
+  "gold": 129,
   "type": "normal",
   "class": null,
-  "specialAbilities": ["decapitate"],
+  "specialAbilities": [
+    "decapitate"
+  ],
   "resistances": [
-    { "type": "cold", "value": 100 }
+    {
+      "type": "cold",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
