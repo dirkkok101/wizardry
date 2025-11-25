@@ -18,6 +18,10 @@ import { DungeonService } from './DungeonService';
 export class WebGLRenderingService {
   private debugMode = true;
 
+  // Camera offset from tile center (0.0 = center, positive = back from facing direction)
+  // Moving back reveals more of the current tile's floor/ceiling
+  private static readonly CAMERA_OFFSET = 0.3;
+
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private uniforms: UniformLocations | null = null;
@@ -252,9 +256,10 @@ export class WebGLRenderingService {
 
     // Create view matrix from player state
     const playerState = PlayerStateService.fromPosition(position);
-    const camPosX = playerState.gridX + 0.5;
+    // Position camera slightly back from tile center to reveal more of current tile
+    const camPosX = playerState.gridX + 0.5 - playerState.dirX * WebGLRenderingService.CAMERA_OFFSET;
     const camPosY = 0.5;  // Camera height (eye level)
-    const camPosZ = playerState.gridY + 0.5;
+    const camPosZ = playerState.gridY + 0.5 - playerState.dirY * WebGLRenderingService.CAMERA_OFFSET;
 
     if (this.debugMode) {
       console.log('[WebGL] Player state:', {
