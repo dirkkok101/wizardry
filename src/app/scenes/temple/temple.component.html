@@ -31,12 +31,4 @@
     [menuItems]="footerMenuItems()"
     (itemSelected)="handleFooterAction($event)"
   />
-
-  @if (showConfirmation()) {
-    <app-confirmation-dialog
-      [message]="confirmationMessage()"
-      (confirmed)="confirmService()"
-      (cancelled)="cancelService()"
-    />
-  }
 </div>

@@ -265,63 +265,27 @@ describe('TempleComponent', () => {
   });
 
   describe('handleCharacterAction', () => {
-    it('shows confirmation when service action clicked', () => {
-      expect(component.showConfirmation()).toBe(false);
-
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
-
-      expect(component.showConfirmation()).toBe(true);
-      expect(component.confirmationMessage()).toContain('Gandalf');
-      expect(component.confirmationMessage()).toContain('poison');
-    });
-
-    it('shows service cost in confirmation message', () => {
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
-
-      // Character is level 5, cure poison base cost is 10
-      // Expected cost: 10 * 5 = 50 gold
-      expect(component.confirmationMessage()).toContain('50 gold');
-    });
-
-    it('navigates to character inspection for inspect action', () => {
-      jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
-
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'inspect' });
-
-      expect(navigationService.inspectCharacter).toHaveBeenCalledWith('char-1', 'temple');
-      expect(component.showConfirmation()).toBe(false);
-    });
-  });
-
-  describe('confirmation dialog', () => {
-    it('hides confirmation when cancelled', () => {
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
-      expect(component.showConfirmation()).toBe(true);
-
-      component.cancelService();
-
-      expect(component.showConfirmation()).toBe(false);
-    });
-  });
-
-  describe('confirmService', () => {
-    it('executes Cure Poison service and updates state', () => {
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
+    it('executes service immediately and updates character status', () => {
       const initialStatus = gameState.state().roster.get('char-1')?.status;
       expect(initialStatus).toBe(CharacterStatus.POISONED);
 
-      component.confirmService();
+      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
 
       const updatedStatus = gameState.state().roster.get('char-1')?.status;
       expect(updatedStatus).toBe(CharacterStatus.OK);
-      expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('shows success message with cost after service', () => {
+      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
+
+      expect(messageService.messageText()).toContain('cured of poison');
+      expect(messageService.messageText()).toContain('Cost: 50g'); // Level 5 × 10 base cost
     });
 
     it('deducts gold from party', () => {
       const initialGold = gameState.state().party.gold;
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
 
-      component.confirmService();
+      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
 
       const finalGold = gameState.state().party.gold;
       expect(finalGold).toBeLessThan(initialGold);
@@ -334,9 +298,16 @@ describe('TempleComponent', () => {
       }));
 
       component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
-      component.confirmService();
 
       expect(messageService.messageText()).toContain('Cannot afford');
+    });
+
+    it('navigates to character inspection for inspect action', () => {
+      jest.spyOn(navigationService, 'inspectCharacter').mockImplementation(() => Promise.resolve(true));
+
+      component.handleCharacterAction({ characterId: 'char-1', actionType: 'inspect' });
+
+      expect(navigationService.inspectCharacter).toHaveBeenCalledWith('char-1', 'temple');
     });
   });
 
@@ -372,16 +343,13 @@ describe('TempleComponent', () => {
       const curePoisonAction = actions.find(a => a.type === 'cure-poison');
       expect(curePoisonAction?.enabled).toBe(true);
 
-      // Click cure poison action on character card
+      // Click cure poison action - service executes immediately (no confirmation dialog)
       component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
-      expect(component.showConfirmation()).toBe(true);
 
-      // Confirm service
-      component.confirmService();
-
-      // Verify character is cured
+      // Verify character is cured and success message shown with cost
       expect(gameState.state().roster.get('char-1')?.status).toBe(CharacterStatus.OK);
-      expect(component.showConfirmation()).toBe(false);
+      expect(messageService.messageText()).toContain('cured of poison');
+      expect(messageService.messageText()).toContain('Cost: 50g');
     });
   });
 
@@ -394,21 +362,10 @@ describe('TempleComponent', () => {
   });
 
   describe('handleEscape', () => {
-    it('navigates to castle menu when no confirmation dialog is open', () => {
-      expect(component.showConfirmation()).toBe(false);
-
+    it('navigates to castle menu', () => {
       component.handleEscape();
 
       expect(navigationService.returnToCastle).toHaveBeenCalled();
-    });
-
-    it('does not navigate when confirmation dialog is open', () => {
-      component.handleCharacterAction({ characterId: 'char-1', actionType: 'cure-poison' });
-      expect(component.showConfirmation()).toBe(true);
-
-      component.handleEscape();
-
-      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
     });
   });
 });

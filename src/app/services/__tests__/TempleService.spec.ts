@@ -131,7 +131,7 @@ describe('TempleService', () => {
     })
 
     it('handles resurrection with high vitality (should succeed)', () => {
-      const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 18 }
+      const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 18, hp: 0 }
       const state = createTestGameState(2000)
       state.roster.set(mockCharacter.id, deadChar)
 
@@ -146,8 +146,24 @@ describe('TempleService', () => {
       expect(result.state!.party.gold).toBe(750) // 2000 - 1250 (250 × 5)
     })
 
+    it('sets HP to 1 on successful resurrection (barely alive)', () => {
+      const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 18, hp: 0, maxHp: 50 }
+      const state = createTestGameState(2000)
+      state.roster.set(mockCharacter.id, deadChar)
+
+      // Queue random value for success
+      RandomService.queueNextValues([0.5])
+
+      const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESURRECT)
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get(mockCharacter.id)
+      expect(updatedChar!.hp).toBe(1) // Resurrected with 1 HP
+      expect(updatedChar!.maxHp).toBe(50) // maxHp unchanged
+    })
+
     it('handles resurrection failure (DEAD → ASHES)', () => {
-      const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 3 }
+      const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 3, hp: 0 }
       const state = createTestGameState(2000)
       state.roster.set(mockCharacter.id, deadChar)
 
@@ -160,11 +176,12 @@ describe('TempleService', () => {
       expect(result.error).toBe('Resurrection failed. Gandalf has turned to ashes.')
       const updatedChar = result.state!.roster.get(mockCharacter.id)
       expect(updatedChar!.status).toBe(CharacterStatus.ASHES)
+      expect(updatedChar!.hp).toBe(0) // HP remains 0
       expect(result.state!.party.gold).toBe(750) // Still charged
     })
 
     it('handles restoration success (ASHES → OK)', () => {
-      const ashesChar = { ...mockCharacter, status: CharacterStatus.ASHES, vitality: 18 }
+      const ashesChar = { ...mockCharacter, status: CharacterStatus.ASHES, vitality: 18, hp: 0 }
       const state = createTestGameState(3000)
       state.roster.set(mockCharacter.id, ashesChar)
 
@@ -179,8 +196,24 @@ describe('TempleService', () => {
       expect(result.state!.party.gold).toBe(500) // 3000 - 2500 (500 × 5)
     })
 
+    it('restores full HP on successful restoration (per original Wizardry 1)', () => {
+      const ashesChar = { ...mockCharacter, status: CharacterStatus.ASHES, vitality: 18, hp: 0, maxHp: 50 }
+      const state = createTestGameState(3000)
+      state.roster.set(mockCharacter.id, ashesChar)
+
+      // Queue random value for success
+      RandomService.queueNextValues([0.3])
+
+      const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESTORE)
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get(mockCharacter.id)
+      expect(updatedChar!.hp).toBe(50) // Full HP restored
+      expect(updatedChar!.maxHp).toBe(50)
+    })
+
     it('handles restoration failure (ASHES → LOST)', () => {
-      const ashesChar = { ...mockCharacter, status: CharacterStatus.ASHES, vitality: 3 }
+      const ashesChar = { ...mockCharacter, status: CharacterStatus.ASHES, vitality: 3, hp: 0 }
       const state = createTestGameState(3000)
       state.roster.set(mockCharacter.id, ashesChar)
 
@@ -193,7 +226,34 @@ describe('TempleService', () => {
       expect(result.error).toBe('Restoration failed. Gandalf is lost forever.')
       const updatedChar = result.state!.roster.get(mockCharacter.id)
       expect(updatedChar!.status).toBe(CharacterStatus.LOST)
+      expect(updatedChar!.hp).toBe(0) // HP remains 0
       expect(result.state!.party.gold).toBe(500) // Still charged
+    })
+
+    it('does not change HP for cure poison service', () => {
+      const poisonedChar = { ...mockCharacter, status: CharacterStatus.POISONED, hp: 15, maxHp: 25 }
+      const state = createTestGameState(500)
+      state.roster.set(mockCharacter.id, poisonedChar)
+
+      const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_POISON)
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get(mockCharacter.id)
+      expect(updatedChar!.hp).toBe(15) // HP unchanged
+      expect(updatedChar!.status).toBe(CharacterStatus.OK)
+    })
+
+    it('does not change HP for cure paralysis service', () => {
+      const paralyzedChar = { ...mockCharacter, status: CharacterStatus.PARALYZED, hp: 10, maxHp: 25 }
+      const state = createTestGameState(500)
+      state.roster.set(mockCharacter.id, paralyzedChar)
+
+      const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_PARALYSIS)
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get(mockCharacter.id)
+      expect(updatedChar!.hp).toBe(10) // HP unchanged
+      expect(updatedChar!.status).toBe(CharacterStatus.OK)
     })
   })
 })

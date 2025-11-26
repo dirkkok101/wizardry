@@ -1,14 +1,14 @@
-import { Component, OnInit, HostListener, computed, signal, inject } from '@angular/core';
+import { Component, OnInit, HostListener, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { TempleService } from '@services/TempleService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
+import { LoggerService } from '@services/LoggerService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent, CharacterAction, CharacterField } from '@models/CharacterCardTypes';
 import { Character } from '@models/Character';
@@ -32,8 +32,7 @@ import { ServiceType } from '@models/ServiceType';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent,
-    ConfirmationDialogComponent
+    PartyCharacterGridComponent
   ],
   templateUrl: './temple.component.html',
   styleUrls: ['./temple.component.scss']
@@ -41,15 +40,8 @@ import { ServiceType } from '@models/ServiceType';
 export class TempleComponent implements OnInit {
   private readonly gameState = inject(GameStateService);
   private readonly navigation = inject(SceneNavigationService);
+  private readonly logger = inject(LoggerService);
   readonly messages = inject(MessageService);
-
-  // Confirmation dialog state
-  readonly showConfirmation = signal(false);
-  readonly confirmationMessage = signal('');
-  private pendingService = signal<{
-    type: ServiceType;
-    characterId: string;
-  } | null>(null);
 
   // Visible fields for character cards - show status prominently
   readonly visibleFields: CharacterField[] = ['class', 'level', 'hp', 'status'];
@@ -75,7 +67,7 @@ export class TempleComponent implements OnInit {
       const serviceName = this.getServiceName(serviceType);
 
       // Debug logging for temple service button state
-      console.log(`[Temple] getCharacterActions for ${character.name}:`, {
+      this.logger.debug(`[Temple] getCharacterActions for ${character.name}:`, {
         status: character.status,
         level: character.level,
         serviceType,
@@ -139,7 +131,7 @@ export class TempleComponent implements OnInit {
     const afflicted = GameStateQueries.afflictedCharacters(state);
     const partyGold = GameStateQueries.partyGold(state);
 
-    console.log('[Temple] Initializing temple scene:', {
+    this.logger.debug('[Temple] Initializing temple scene:', {
       partyGold,
       afflictedCount: afflicted.length,
       afflictedCharacters: afflicted.map(c => ({
@@ -176,49 +168,8 @@ export class TempleComponent implements OnInit {
     }
   }
 
-  cancelService(): void {
-    this.showConfirmation.set(false);
-    this.confirmationMessage.set('');
-    this.pendingService.set(null);
-  }
-
-  confirmService(): void {
-    const pending = this.pendingService();
-    if (!pending) return;
-
-    const state = this.gameState.state();
-    const character = state.roster.get(pending.characterId);
-    if (!character) {
-      this.messages.showError('Character not found');
-      this.cancelService();
-      return;
-    }
-
-    const tithe = TempleService.calculateTithe(character, pending.type);
-    const partyGold = GameStateQueries.partyGold(state);
-    if (partyGold < tithe) {
-      this.messages.showError(`Cannot afford service. Need ${tithe} gold.`);
-      this.cancelService();
-      return;
-    }
-
-    const result = TempleService.performService(state, pending.characterId, pending.type);
-
-    if (result.success && result.state) {
-      this.gameState.updateState(() => result.state!);
-      this.messages.clear();
-    } else if (result.error && result.state) {
-      this.gameState.updateState(() => result.state!);
-      this.messages.showError(result.error);
-    } else {
-      this.messages.showError(result.error || 'Service failed');
-    }
-
-    this.cancelService();
-  }
-
   handleCharacterAction(event: CharacterActionEvent): void {
-    console.log('[Temple] handleCharacterAction received:', event);
+    this.logger.debug('[Temple] handleCharacterAction received:', event);
     this.messages.clear();
 
     if (event.actionType === 'inspect') {
@@ -228,36 +179,60 @@ export class TempleComponent implements OnInit {
 
     // Handle temple service actions from character card buttons
     const serviceType = this.getServiceTypeFromId(event.actionType);
-    if (serviceType) {
-      const character = this.gameState.state().roster.get(event.characterId);
-      if (!character) {
-        console.error('[Temple] Character not found:', event.characterId);
-        this.messages.showError('Character not found');
-        return;
-      }
+    if (!serviceType) return;
 
-      const tithe = TempleService.calculateTithe(character, serviceType);
-      const partyGold = GameStateQueries.partyGold(this.gameState.state());
+    const state = this.gameState.state();
+    const character = state.roster.get(event.characterId);
+    if (!character) {
+      this.logger.error('[Temple] Character not found:', event.characterId);
+      this.messages.showError('Character not found');
+      return;
+    }
 
-      console.log(`[Temple] Service action initiated:`, {
-        character: character.name,
-        serviceType,
-        tithe,
-        partyGold,
-        canAfford: partyGold >= tithe
-      });
+    const tithe = TempleService.calculateTithe(character, serviceType);
+    const partyGold = GameStateQueries.partyGold(state);
 
-      this.pendingService.set({ type: serviceType, characterId: event.characterId });
-      this.confirmationMessage.set(`${this.getServiceActionText(serviceType)} ${character.name}? (Cost: ${tithe} gold)`);
-      this.showConfirmation.set(true);
+    this.logger.debug('[Temple] Service action:', {
+      character: character.name,
+      serviceType,
+      tithe,
+      partyGold,
+      canAfford: partyGold >= tithe
+    });
+
+    if (partyGold < tithe) {
+      this.messages.showError(`Cannot afford service. Need ${tithe} gold.`);
+      return;
+    }
+
+    // Execute service directly (no confirmation dialog)
+    const result = TempleService.performService(state, event.characterId, serviceType);
+
+    if (result.success && result.state) {
+      this.gameState.updateState(() => result.state!);
+      this.messages.showSuccess(this.getSuccessMessage(character.name, serviceType, tithe));
+    } else if (result.state) {
+      // Service failed but state changed (e.g., DEAD → ASHES)
+      this.gameState.updateState(() => result.state!);
+      this.messages.showError(result.error || 'Service failed');
+    } else {
+      this.messages.showError(result.error || 'Service failed');
+    }
+  }
+
+  private getSuccessMessage(name: string, service: ServiceType, cost: number): string {
+    switch (service) {
+      case ServiceType.CURE_POISON: return `${name} has been cured of poison. (Cost: ${cost}g)`;
+      case ServiceType.CURE_PARALYSIS: return `${name} has been cured of paralysis. (Cost: ${cost}g)`;
+      case ServiceType.RESURRECT: return `${name} has been resurrected! (Cost: ${cost}g)`;
+      case ServiceType.RESTORE: return `${name} has been restored from ashes! (Cost: ${cost}g)`;
+      default: return `${name} has been healed. (Cost: ${cost}g)`;
     }
   }
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    if (!this.showConfirmation()) {
-      this.navigation.returnToCastle();
-    }
+    this.navigation.returnToCastle();
   }
 
   private getServiceTypeFromId(id: string): ServiceType | null {
@@ -270,13 +245,4 @@ export class TempleComponent implements OnInit {
     }
   }
 
-  private getServiceActionText(service: ServiceType): string {
-    switch (service) {
-      case ServiceType.CURE_POISON: return 'Cure poison for';
-      case ServiceType.CURE_PARALYSIS: return 'Cure paralysis for';
-      case ServiceType.RESURRECT: return 'Attempt to resurrect';
-      case ServiceType.RESTORE: return 'Attempt to restore';
-      default: return 'Service for';
-    }
-  }
 }
