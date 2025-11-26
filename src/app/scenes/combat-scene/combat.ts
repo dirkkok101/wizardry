@@ -570,7 +570,10 @@ export class CombatComponent implements OnInit, OnDestroy {
   /**
    * Start event-based animation for combat rounds.
    * Processes events in sequence, displaying messages and applying state changes
-   * after each event's messages are shown.
+   * IN SYNC with the result messages (→ prefixed) for real-time visual feedback.
+   *
+   * This ensures that when "→ Fighter takes 10 damage!" is displayed, the HP bar
+   * updates immediately rather than waiting until all messages are shown.
    */
   private startEventAnimation(): void {
     const actionDelay = getCombatMessageDelay()
@@ -602,6 +605,9 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Track message index within current event and globally
     let globalMessageIndex = 0
     let eventMessageIndex = 0
+    // Track whether we've applied state for the current event
+    // (state is applied when first result message is shown)
+    let stateAppliedForCurrentEvent = false
 
     const processNextMessage = () => {
       // Check if all events processed
@@ -616,12 +622,15 @@ export class CombatComponent implements OnInit, OnDestroy {
 
       // Check if all messages in current event are shown
       if (eventMessageIndex >= currentEvent.messages.length) {
-        // Apply state changes for this event AFTER its messages are displayed
-        this.applyEventState(currentEvent)
+        // Ensure state is applied even if there were no result messages
+        if (!stateAppliedForCurrentEvent) {
+          this.applyEventState(currentEvent)
+        }
 
         // Move to next event
         this.currentEventIndex++
         eventMessageIndex = 0
+        stateAppliedForCurrentEvent = false
 
         // If more events, continue after action delay
         if (this.currentEventIndex < this.pendingEvents.length) {
@@ -637,7 +646,16 @@ export class CombatComponent implements OnInit, OnDestroy {
 
       // Show next message in current event
       const message = currentEvent.messages[eventMessageIndex]
+      const isResultMessage = CombatService.isResultMessage(message)
       const displayMessage = CombatService.stripResultMarker(message)
+
+      // Apply state changes when showing the FIRST result message
+      // This provides real-time feedback - HP bar updates when damage message appears
+      if (isResultMessage && !stateAppliedForCurrentEvent) {
+        this.applyEventState(currentEvent)
+        stateAppliedForCurrentEvent = true
+      }
+
       this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
 
       eventMessageIndex++
@@ -651,23 +669,26 @@ export class CombatComponent implements OnInit, OnDestroy {
         const delay = nextIsResult ? resultDelay : actionDelay
         this.messageAnimationTimer = setTimeout(processNextMessage, delay)
       } else {
-        // Event messages done, apply state and move to next event
-        // Small delay before state update to let the last message sink in
-        this.messageAnimationTimer = setTimeout(() => {
+        // Event messages done, move to next event
+        // Ensure state is applied even if last message wasn't a result message
+        if (!stateAppliedForCurrentEvent) {
           this.applyEventState(currentEvent)
-          this.currentEventIndex++
-          eventMessageIndex = 0
+          stateAppliedForCurrentEvent = true
+        }
 
-          if (this.currentEventIndex < this.pendingEvents.length) {
-            // More events - use action delay before next event's first message
-            this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
-          } else {
-            // All done
-            this.isAnimatingMessages.set(false)
-            this.messageAnimationTimer = null
-            this.onRoundAnimationComplete()
-          }
-        }, resultDelay) // Brief pause after last message of event before state update
+        this.currentEventIndex++
+        eventMessageIndex = 0
+        stateAppliedForCurrentEvent = false
+
+        if (this.currentEventIndex < this.pendingEvents.length) {
+          // More events - use action delay before next event's first message
+          this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
+        } else {
+          // All done
+          this.isAnimatingMessages.set(false)
+          this.messageAnimationTimer = null
+          this.onRoundAnimationComplete()
+        }
       }
     }
 
