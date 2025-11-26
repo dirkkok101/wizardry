@@ -220,7 +220,7 @@ export class ShopComponent implements OnInit {
         this.handleFooterAction('buy');
         break;
       case 's':
-        if (this.selectedCharacter()?.inventory.length) {
+        if (this.getSellableItems().length > 0) {
           this.handleFooterAction('sell');
         }
         break;

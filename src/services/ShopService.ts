@@ -1,6 +1,7 @@
 import { Item } from '../types/Item'
 import { GameState } from '../types/GameState'
 import * as PartyService from './PartyService'
+import { ItemDataLoader } from './ItemDataLoader'
 
 /**
  * ShopService - Boltac's Trading Post business logic
@@ -178,13 +179,27 @@ export class ShopService {
     }
 
     const item = character.inventory[itemIndex]
-    const itemObj = typeof item === 'object' ? item as Item : null
 
-    if (itemObj && itemObj.identified) {
+    // Resolve item to Item object (may be string ID or already an object)
+    let itemObj: Item | null = null
+    if (typeof item === 'object') {
+      itemObj = item as Item
+    } else if (typeof item === 'string') {
+      // Look up from ItemDataLoader
+      if (ItemDataLoader.isLoaded()) {
+        itemObj = ItemDataLoader.getItem(item)
+      }
+    }
+
+    if (!itemObj) {
+      return { success: false, error: 'Item data not found' }
+    }
+
+    if (itemObj.identified) {
       return { success: false, error: 'Item is already identified' }
     }
 
-    const identifyCost = ShopService.calculateIdentifyPrice(itemObj || { price: 100 } as Item)
+    const identifyCost = ShopService.calculateIdentifyPrice(itemObj)
 
     // Check party gold
     if (!PartyService.hasEnoughGold(state, identifyCost)) {
@@ -194,20 +209,18 @@ export class ShopService {
     // Deduct from party gold
     let newState = PartyService.removePartyGold(state, identifyCost)
 
-    // Update item to be identified
-    if (itemObj) {
-      const updatedInventory = [...character.inventory]
-      updatedInventory[itemIndex] = { ...itemObj, identified: true }
+    // Update item to be identified (store as object with identified: true)
+    const updatedInventory = [...character.inventory]
+    updatedInventory[itemIndex] = { ...itemObj, identified: true }
 
-      const updatedCharacter = {
-        ...character,
-        inventory: updatedInventory
-      }
+    const updatedCharacter = {
+      ...character,
+      inventory: updatedInventory
+    }
 
-      newState = {
-        ...newState,
-        roster: new Map(newState.roster).set(characterId, updatedCharacter)
-      }
+    newState = {
+      ...newState,
+      roster: new Map(newState.roster).set(characterId, updatedCharacter)
     }
 
     return { success: true, state: newState }
@@ -241,10 +254,20 @@ export class ShopService {
     }
 
     const item = character.inventory[itemIndex]
-    const itemObj = typeof item === 'object' ? item as Item : null
+
+    // Resolve item to Item object (may be string ID or already an object)
+    let itemObj: Item | null = null
+    if (typeof item === 'object') {
+      itemObj = item as Item
+    } else if (typeof item === 'string') {
+      // Look up from ItemDataLoader
+      if (ItemDataLoader.isLoaded()) {
+        itemObj = ItemDataLoader.getItem(item)
+      }
+    }
 
     if (!itemObj) {
-      return { success: false, error: 'Cannot uncurse shop item' }
+      return { success: false, error: 'Item data not found' }
     }
 
     if (!itemObj.cursed) {

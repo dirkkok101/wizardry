@@ -34,10 +34,14 @@ describe('ShopComponent', () => {
     luck: 10,
     level: 1,
     experience: 0,
+    age: 18,
     hp: 10,
     maxHp: 10,
     ac: 10,
+    vim: { current: 16, max: 16 },
+    knownSpells: [],
     inventory: [],
+    gold: 0,
     password: 'test',
     createdAt: Date.now(),
     lastModified: Date.now()
@@ -191,8 +195,8 @@ describe('ShopComponent', () => {
     });
 
     it('S key transitions to sell view when character has items', () => {
-      // Add item to character inventory
-      const charWithItem = { ...mockCharacter, inventory: ['long-sword'] };
+      // Add item to character inventory (must use actual shop inventory item ID)
+      const charWithItem = { ...mockCharacter, inventory: ['weapon-long-sword'] };
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', charWithItem)
