@@ -222,49 +222,77 @@ RandomService.setSeed(12345)
 
 ```
 src/
-├── app/                      # Angular application
-│   ├── core/                 # Singleton services and guards
-│   │   └── guards/           # Route guards (party-exists, party-not-in-maze)
-│   ├── shared/               # Reusable across the app
-│   │   ├── components/       # Shared UI components (15 total)
-│   │   │   ├── character-card/
-│   │   │   ├── scene-title/
-│   │   │   ├── scene-footer/
-│   │   │   ├── menu/
-│   │   │   ├── confirmation-dialog/
-│   │   │   └── ...
-│   │   └── directives/       # Custom directives (keystroke-input)
-│   ├── <scene>/              # Feature/page components (13 scenes)
-│   │   ├── title-screen/
-│   │   ├── castle-menu/
-│   │   ├── tavern/
-│   │   ├── temple/
-│   │   ├── shop/
-│   │   ├── inn/
-│   │   ├── training-grounds/
-│   │   ├── character-creation/
-│   │   ├── character-inspection/
-│   │   ├── spell-casting/
-│   │   ├── maze/
-│   │   └── combat-scene/
-│   ├── app.component.ts
-│   ├── app.config.ts
-│   └── app.routes.ts
-├── services/                 # Pure function services (business logic)
-│   ├── __tests__/            # Service tests
-│   ├── CharacterService.ts
-│   ├── CombatService.ts
-│   ├── PartyService.ts
-│   └── ...                   # 40+ services
-├── types/                    # TypeScript interfaces
-├── helpers/                  # Display helpers
-├── utils/                    # Utility functions
-├── validation/               # Data validation schemas
-├── test-helpers/             # Test factory functions
-├── data/                     # Runtime data (shop inventory)
-├── main.ts                   # Angular bootstrap entry point
 ├── index.html                # Application entry HTML
-└── styles.scss               # Global styles
+├── main.ts                   # Angular bootstrap entry point
+├── styles.scss               # Global styles entry
+├── styles/                   # SCSS partials
+│   ├── variables.scss
+│   └── retro-theme.scss
+│
+└── app/                      # Angular application
+    ├── app.ts, app.config.ts, app.routes.ts, app.html, app.scss
+    │
+    ├── core/                 # Singleton services and guards
+    │   └── guards/           # Route guards (party-exists, party-not-in-maze)
+    │
+    ├── shared/               # Reusable across the app
+    │   ├── components/       # Shared UI components (21 total)
+    │   │   ├── character-card/
+    │   │   ├── scene-title/
+    │   │   ├── scene-footer/
+    │   │   ├── menu/
+    │   │   ├── confirmation-dialog/
+    │   │   └── ...
+    │   └── directives/       # Custom directives (keystroke-input)
+    │
+    ├── scenes/               # Feature/page components (12 scenes)
+    │   ├── title-screen/
+    │   ├── castle-menu/
+    │   ├── tavern/
+    │   ├── temple/
+    │   ├── shop/
+    │   ├── inn/
+    │   ├── training-grounds/
+    │   ├── character-creation/
+    │   ├── character-inspection/
+    │   ├── spell-casting/
+    │   ├── maze/
+    │   └── combat-scene/
+    │
+    ├── services/             # Pure function services (business logic)
+    │   ├── __tests__/        # Service tests
+    │   ├── CharacterService.ts
+    │   ├── CombatService.ts
+    │   ├── PartyService.ts
+    │   └── ...               # 40+ services
+    │
+    ├── types/                # TypeScript interfaces
+    │   ├── __tests__/
+    │   ├── Character.ts
+    │   ├── GameState.ts
+    │   └── ...
+    │
+    ├── utils/                # Utility functions and display helpers
+    │   ├── __tests__/
+    │   ├── GameStateQueries.ts
+    │   └── CharacterDisplayHelpers.ts
+    │
+    ├── validation/           # Data validation schemas (Zod)
+    │   ├── __tests__/
+    │   ├── MonsterSchema.ts
+    │   ├── item-schema.ts
+    │   └── dungeon-schemas.ts
+    │
+    ├── config/               # Configuration and constants
+    │   ├── CombatSettings.ts
+    │   └── shop-inventory.ts
+    │
+    ├── rendering/            # WebGL rendering code
+    │   └── shaders/          # GLSL shaders
+    │
+    └── testing/              # Test utilities and factories
+        ├── __tests__/
+        └── test-factories.ts
 
 angular.json          # Angular CLI configuration
 jest.config.js        # Jest test configuration
@@ -273,11 +301,15 @@ tsconfig.json         # TypeScript base configuration
 tsconfig.app.json     # TypeScript config for application
 tsconfig.spec.json    # TypeScript config for tests
 
-data/                 # Game data (source of truth)
+data/                 # Game data (source of truth) - JSON files
 ├── maps/             # level-01.json through level-10.json
-├── spells/           # mage-spells.json, priest-spells.json
-├── monsters/         # monsters.json
-└── items/            # weapons.json, armor.json, consumables.json
+├── spells/           # Individual spell JSON files
+├── monsters/         # Individual monster JSON files
+├── items/            # Individual item JSON files
+├── races/            # Race definition JSON files
+├── classes/          # Class definition JSON files
+├── encounters/       # Level encounter definitions
+└── textures/         # Texture assets
 
 docs/
 ├── architecture.md     # Technical architecture overview
@@ -294,8 +326,37 @@ docs/
 
 - **Strict mode enabled**: All code must satisfy strict TypeScript checks
 - **No unused locals/parameters**: Compiler enforces clean code
-- **ES2020 target**: Modern JavaScript features available
+- **ES2022 target**: Modern JavaScript features available
 - **ESNext modules**: Use ES module syntax throughout
+
+### Path Aliases
+
+The project uses TypeScript path aliases for cleaner imports:
+
+```typescript
+// Instead of relative paths like:
+import { CharacterService } from '../../services/CharacterService';
+
+// Use path aliases:
+import { CharacterService } from '@services/CharacterService';
+```
+
+Available aliases (configured in `tsconfig.json` and `jest.config.js`):
+
+| Alias | Path |
+|-------|------|
+| `@app/*` | `src/app/*` |
+| `@services/*` | `src/app/services/*` |
+| `@models/*` | `src/app/types/*` |
+| `@scenes/*` | `src/app/scenes/*` |
+| `@shared/*` | `src/app/shared/*` |
+| `@utils/*` | `src/app/utils/*` |
+| `@config/*` | `src/app/config/*` |
+| `@validation/*` | `src/app/validation/*` |
+| `@testing/*` | `src/app/testing/*` |
+| `@core/*` | `src/app/core/*` |
+| `@rendering/*` | `src/app/rendering/*` |
+| `@data/*` | `data/*` (root game data) |
 
 ## Key Constraints
 

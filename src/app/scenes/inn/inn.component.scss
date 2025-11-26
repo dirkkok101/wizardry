@@ -1,0 +1,201 @@
+@use '../../../styles/variables' as *;
+
+.inn-scene {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.inn-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: $color-text-dim;
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+  }
+}
+
+// Room Selection View
+.room-selection {
+  max-width: 500px;
+  margin: 0 auto;
+
+  h2 {
+    font-size: 20px;
+    color: $color-text-bright;
+    margin: 0 0 $spacing-md 0;
+    text-align: center;
+  }
+
+  h3 {
+    font-size: 16px;
+    color: $color-text-green;
+    margin: $spacing-lg 0 $spacing-md 0;
+    text-align: center;
+  }
+
+  .character-info {
+    background-color: rgba($color-text-dim, 0.1);
+    border: 1px solid $color-text-dim;
+    padding: $spacing-md;
+    margin-bottom: $spacing-md;
+
+    .stats {
+      display: flex;
+      gap: $spacing-lg;
+      margin-top: $spacing-sm;
+
+      .class {
+        color: $color-text-dim;
+        font-size: 14px;
+      }
+
+      .hp {
+        color: $color-text-green;
+        font-size: 14px;
+
+        &.injured {
+          color: $color-amber;
+        }
+      }
+    }
+  }
+}
+
+// Level Up Display
+.level-up-display {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+
+  h2 {
+    color: $color-amber;
+    font-size: 28px;
+    margin-bottom: $spacing-lg;
+    text-shadow: 0 0 10px rgba($color-amber, 0.5);
+  }
+
+  .level-up-content {
+    .congratulations {
+      color: $color-text-bright;
+      font-size: 18px;
+      margin-bottom: $spacing-lg;
+    }
+
+    .stat-changes {
+      background-color: rgba($color-text-green, 0.1);
+      border: 1px solid $color-text-green;
+      padding: $spacing-lg;
+      margin-bottom: $spacing-xl;
+      text-align: left;
+
+      .hp-increase {
+        display: flex;
+        justify-content: space-between;
+        color: $color-text-green;
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: $spacing-md;
+        padding-bottom: $spacing-md;
+        border-bottom: 1px solid rgba($color-text-green, 0.3);
+      }
+
+      .stat-increases {
+        margin-bottom: $spacing-md;
+
+        h4 {
+          color: $color-text-bright;
+          font-size: 14px;
+          margin-bottom: $spacing-sm;
+        }
+
+        .stat-row {
+          display: flex;
+          justify-content: space-between;
+          padding: $spacing-xs 0;
+
+          .stat-name {
+            color: $color-text-dim;
+            font-size: 14px;
+          }
+
+          .stat-change {
+            color: $color-text-green;
+            font-size: 14px;
+            font-weight: bold;
+          }
+        }
+      }
+
+      .new-spells {
+        h4 {
+          color: $color-amber;
+          font-size: 14px;
+          margin-bottom: $spacing-sm;
+        }
+
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+
+          li {
+            color: $color-text-bright;
+            font-size: 14px;
+            padding: $spacing-xs 0;
+
+            &::before {
+              content: '★ ';
+              color: $color-amber;
+            }
+          }
+        }
+      }
+    }
+
+    .continue-btn {
+      background: none;
+      border: 2px solid $color-text-green;
+      color: $color-text-green;
+      font-family: $font-mono;
+      padding: $spacing-sm $spacing-xl;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: rgba($color-text-green, 0.2);
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+// Message styling
+.message {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
+
+  &.success {
+    background-color: rgba($color-text-green, 0.1);
+    color: $color-text-green;
+    border: 1px solid $color-text-green;
+  }
+
+  &.error {
+    background-color: rgba($color-red, 0.1);
+    color: $color-red;
+    border: 1px solid $color-red;
+  }
+}

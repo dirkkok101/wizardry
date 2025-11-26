@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CharacterListComponent } from './character-list.component';
-import { Character } from '../../../../types/Character';
-import { CharacterClass } from '../../../../types/CharacterClass';
+import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
 
 describe('CharacterListComponent', () => {
   let component: CharacterListComponent;

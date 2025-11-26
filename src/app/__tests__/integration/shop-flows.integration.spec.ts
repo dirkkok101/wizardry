@@ -1,16 +1,57 @@
 // src/app/__tests__/integration/shop-flows.integration.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { ShopComponent } from '../../shop/shop.component'
-import { GameStateService } from '../../../services/GameStateService'
-import { Character } from '../../../types/Character'
-import { CharacterClass } from '../../../types/CharacterClass'
-import { CharacterStatus } from '../../../types/CharacterStatus'
-import { Race } from '../../../types/Race'
-import { Alignment } from '../../../types/Alignment'
-import { SHOP_INVENTORY } from '../../../data/shop-inventory'
+import { ShopComponent } from '@scenes/shop/shop.component'
+import { GameStateService } from '@services/GameStateService'
+import { ItemDataLoader } from '@services/ItemDataLoader'
+import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { Race } from '@models/Race'
+import { Alignment } from '@models/Alignment'
+import { SHOP_INVENTORY } from '@config/shop-inventory'
+import * as fs from 'fs'
+import * as path from 'path'
 
 describe('Integration: Shop Flows', () => {
+  beforeAll(async () => {
+    // Mock fetch to load real data files
+    global.fetch = jest.fn((url: string) => {
+      const urlPath = url.toString();
+      // Match either /items/ or /assets/items/ paths
+      const match = urlPath.match(/\/(?:assets\/)?(items)\/([^/]+\.json)$/);
+      if (match) {
+        const [, directory, filename] = match;
+        const dataPath = path.join(__dirname, '../../../../data', directory, filename);
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8');
+          const jsonData = JSON.parse(fileContent);
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response);
+        } catch (error) {
+          return Promise.resolve({
+            ok: false,
+            status: 404,
+            statusText: 'Not Found'
+          } as Response);
+        }
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found'
+      } as Response);
+    });
+
+    // Load items for shop tests
+    await ItemDataLoader.loadAllItems();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
   let component: ShopComponent
   let fixture: ComponentFixture<ShopComponent>
   let gameState: GameStateService
@@ -39,7 +80,18 @@ describe('Integration: Shop Flows', () => {
     lastModified: Date.now()
   } as Character
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Reset ItemDataLoader before each test
+    ItemDataLoader['itemsCache'] = null;
+    ItemDataLoader['loadPromise'] = null;
+    ItemDataLoader['loaded'] = false;
+    ItemDataLoader['loading'] = false;
+    ItemDataLoader['loadError'] = null;
+    ItemDataLoader['failedItems'].clear();
+
+    // Reload items for this test
+    await ItemDataLoader.loadAllItems();
+
     TestBed.configureTestingModule({
       imports: [ShopComponent],
       providers: [
@@ -86,7 +138,7 @@ describe('Integration: Shop Flows', () => {
 
     // Verify item in inventory and gold deducted
     let character = gameState.state().roster.get('char-1')!
-    expect(character.inventory).toContain(longSword.id)
+    expect(character.inventory.find(i => i.id === longSword.id)).toBeDefined()
     expect(gameState.state().party.gold).toBe(initialGold - longSword.price)
 
     // Buy another item
@@ -96,8 +148,8 @@ describe('Integration: Shop Flows', () => {
 
     // Verify both items in inventory
     character = gameState.state().roster.get('char-1')!
-    expect(character.inventory).toContain(longSword.id)
-    expect(character.inventory).toContain(dagger.id)
+    expect(character.inventory.find(i => i.id === longSword.id)).toBeDefined()
+    expect(character.inventory.find(i => i.id === dagger.id)).toBeDefined()
     expect(gameState.state().party.gold).toBe(initialGold - longSword.price - dagger.price)
 
     // SELL FLOW
@@ -111,8 +163,8 @@ describe('Integration: Shop Flows', () => {
 
     // Verify item removed and gold added
     character = gameState.state().roster.get('char-1')!
-    expect(character.inventory).not.toContain(longSword.id)
-    expect(character.inventory).toContain(dagger.id) // Dagger should still be there
+    expect(character.inventory.find(i => i.id === longSword.id)).toBeUndefined()
+    expect(character.inventory.find(i => i.id === dagger.id)).toBeDefined() // Dagger should still be there
     expect(gameState.state().party.gold).toBe(
       initialGold - longSword.price - dagger.price + sellPrice
     )
@@ -150,8 +202,8 @@ describe('Integration: Shop Flows', () => {
     // Verify inventory state
     const character = gameState.state().roster.get('char-1')!
     expect(character.inventory.length).toBe(1)
-    expect(character.inventory).toContain(leatherArmor.id)
-    expect(character.inventory).not.toContain(dagger.id)
+    expect(character.inventory.find(i => i.id === leatherArmor.id)).toBeDefined()
+    expect(character.inventory.find(i => i.id === dagger.id)).toBeUndefined()
   })
 
   it('persists inventory changes across flow transitions', () => {
@@ -166,13 +218,13 @@ describe('Integration: Shop Flows', () => {
 
     // Item should still be in inventory
     const character = gameState.state().roster.get('char-1')!
-    expect(character.inventory).toContain(item1.id)
+    expect(character.inventory.find(i => i.id === item1.id)).toBeDefined()
 
     // Switch to identify view
     component.handleFooterAction('identify')
 
     // Item should still be there
     const character2 = gameState.state().roster.get('char-1')!
-    expect(character2.inventory).toContain(item1.id)
+    expect(character2.inventory.find(i => i.id === item1.id)).toBeDefined()
   })
 })

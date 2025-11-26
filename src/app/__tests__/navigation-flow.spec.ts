@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { provideRouter } from '@angular/router';
-import { routes } from '../app.routes';
+import { routes } from '@app/app.routes';
 
 describe('Navigation Flow Integration', () => {
   let router: Router;

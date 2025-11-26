@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActiveSpellsComponent } from './active-spells.component';
-import { ActiveSpell } from '../../../../../types/active-spell.types';
+import { ActiveSpell } from '@models/active-spell.types';
 
 describe('ActiveSpellsComponent', () => {
   let component: ActiveSpellsComponent;

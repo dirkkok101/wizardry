@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CharacterStatsComponent } from '../character-stats.component';
-import { createTestCharacter } from '../../../../../test-helpers/test-factories';
-import { Race } from '../../../../../types/Race';
-import { CharacterClass } from '../../../../../types/CharacterClass';
-import { Alignment } from '../../../../../types/Alignment';
+import { createTestCharacter } from '@testing/test-factories';
+import { Race } from '@models/Race';
+import { CharacterClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
 
 describe('CharacterStatsComponent', () => {
   let component: CharacterStatsComponent;

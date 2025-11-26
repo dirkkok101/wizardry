@@ -1,0 +1,67 @@
+@use '../../../styles/variables' as *;
+
+.castle-menu {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
+}
+
+.party-section {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-bottom: $border-width $border-style $color-border;
+  padding: $padding-standard;
+
+  h2 {
+    font-size: $font-size-large;
+    margin-bottom: $spacing-md;
+    color: $color-text-bright;
+    text-align: center;
+    border-bottom: $border-width $border-style $color-border;
+    padding-bottom: $spacing-sm;
+  }
+}
+
+.party-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: $spacing-sm;
+  max-width: 100%;
+
+  // Limit to 3 columns max for better card sizing
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.no-party {
+  text-align: center;
+  color: $color-text-dim;
+  font-style: italic;
+  margin-top: $spacing-lg;
+  grid-column: 1 / -1;
+}
+
+.content-area {
+  flex: 1;
+  padding: $padding-standard;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .party-members {
+    grid-template-columns: 1fr;
+  }
+
+  .party-section {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+}

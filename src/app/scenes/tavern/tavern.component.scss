@@ -1,0 +1,91 @@
+@use '../../../styles/variables' as *;
+
+.tavern-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+  height: 100%;
+  padding: $spacing-md;
+}
+
+.error-message {
+  grid-column: 1 / -1;
+  background: $color-error;
+  color: $color-bg-black;
+  padding: $spacing-md;
+  border: 2px solid $color-error;
+  text-align: center;
+  font-weight: bold;
+}
+
+.success-message {
+  grid-column: 1 / -1;
+  background: $color-text-green;
+  color: $color-bg-black;
+  padding: $spacing-md;
+  border: 2px solid $color-text-green;
+  text-align: center;
+  font-weight: bold;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+}
+
+.available-characters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  h2 {
+    color: $color-text-green;
+    border-bottom: 1px solid $color-text-green;
+    padding-bottom: $spacing-sm;
+    margin: 0;
+  }
+
+  .character-grid {
+    overflow-y: auto;
+    max-height: calc(100vh - 250px);
+    padding-right: $spacing-sm;
+  }
+}
+
+.party-column {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.party-gold-header {
+  background: $color-bg-black;
+  border: 1px solid $color-text-green;
+  padding: $spacing-md;
+  text-align: center;
+  font-size: 1.2rem;
+  color: $color-text-green;
+  font-weight: bold;
+}
+
+.formation-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  h3 {
+    color: $color-text-green;
+    border-bottom: 1px solid $color-text-green;
+    padding-bottom: $spacing-xs;
+    margin: 0;
+  }
+}
+
+.empty-state {
+  color: $color-text-dim;
+  font-style: italic;
+  padding: $spacing-md;
+  text-align: center;
+  border: 1px dashed $color-text-dim;
+}

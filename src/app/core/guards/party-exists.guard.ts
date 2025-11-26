@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { GameStateService } from '../../../services/GameStateService';
-import { LoggerService } from '../../../services/LoggerService';
+import { GameStateService } from '@services/GameStateService';
+import { LoggerService } from '@services/LoggerService';
 
 /**
  * Route guard that ensures a party exists before accessing certain routes.

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { SpellSelectionDialogComponent, SpellOption } from './spell-selection-dialog.component'
-import { createTestCharacter } from '../../../../test-helpers/test-factories'
-import { SpellData } from '../../../../services/SpellCastingService'
+import { createTestCharacter } from '@testing/test-factories'
+import { SpellData } from '@services/SpellCastingService'
 
 describe('SpellSelectionDialogComponent', () => {
   let component: SpellSelectionDialogComponent

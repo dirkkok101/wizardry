@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { partyExistsGuard } from '../party-exists.guard';
-import { GameStateService } from '../../../../services/GameStateService';
-import { SaveService } from '../../../../services/SaveService';
+import { GameStateService } from '@services/GameStateService';
+import { SaveService } from '@services/SaveService';
 
 describe('partyExistsGuard', () => {
   let gameState: GameStateService;

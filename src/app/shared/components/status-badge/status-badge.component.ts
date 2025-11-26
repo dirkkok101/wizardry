@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CharacterStatus } from '../../../../types/CharacterStatus';
-import { getStatusColorClass } from '../../../../helpers/CharacterDisplayHelpers';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { getStatusColorClass } from '@utils/CharacterDisplayHelpers';
 
 @Component({
   selector: 'app-status-badge',

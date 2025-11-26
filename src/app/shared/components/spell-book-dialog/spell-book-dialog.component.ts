@@ -9,9 +9,9 @@ import {
   AfterViewChecked
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { Character } from '../../../../types/Character'
-import { LoadedSpell } from '../../../../types/SpellDefinition'
-import { SpellDataLoader } from '../../../../services/SpellDataLoader'
+import { Character } from '@models/Character'
+import { LoadedSpell } from '@models/SpellDefinition'
+import { SpellDataLoader } from '@services/SpellDataLoader'
 
 export interface SpellBookEntry {
   spell: LoadedSpell

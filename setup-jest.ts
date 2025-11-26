@@ -1,8 +1,8 @@
 import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
-import { SpellDataLoader } from './src/services/SpellDataLoader';
-import { MonsterDataLoader } from './src/services/MonsterDataLoader';
-import { ClassDataLoader } from './src/services/ClassDataLoader';
-import { RandomService } from './src/services/RandomService';
+import { SpellDataLoader } from '@services/SpellDataLoader';
+import { MonsterDataLoader } from '@services/MonsterDataLoader';
+import { ClassDataLoader } from '@services/ClassDataLoader';
+import { RandomService } from '@services/RandomService';
 import * as fs from 'fs';
 import * as path from 'path';
 

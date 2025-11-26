@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { CharacterSpellPoints, SpellPointPool } from '../../../../types/SpellPoints'
-import { MaxCurrent } from '../../../../types/MaxCurrent'
+import { CharacterSpellPoints, SpellPointPool } from '@models/SpellPoints'
+import { MaxCurrent } from '@models/MaxCurrent'
 
 /**
  * SpellPointsDisplayComponent - Displays spell point pools for casters
