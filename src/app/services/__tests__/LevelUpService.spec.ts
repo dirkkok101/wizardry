@@ -71,14 +71,14 @@ describe('LevelUpService', () => {
     it('rolls HP increase for Fighter (d10 hit die)', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        vitality: 16 // +2 bonus
+        vitality: 16 // +3 bonus (VIT 16-17 = +3)
       })
 
       const hpIncrease = LevelUpService.rollHPIncrease(character)
 
-      // d10 + 2 VIT bonus = 3-12 HP
-      expect(hpIncrease).toBeGreaterThanOrEqual(3)
-      expect(hpIncrease).toBeLessThanOrEqual(12)
+      // d10 + 3 VIT bonus = 4-13 HP
+      expect(hpIncrease).toBeGreaterThanOrEqual(4)
+      expect(hpIncrease).toBeLessThanOrEqual(13)
     })
 
     it('rolls HP increase for Mage (d4 hit die)', () => {

@@ -1,5 +1,5 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG } from '@models/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate, CommandExecutionResult, CombatantStatus } from '@models/Combat'
 import { Character } from '@models/Character'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
@@ -311,7 +311,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     // Handle different command types
     if (command.type === 'ATTACK') {
       return this.executeAttackCommand(state, command, parryingCombatants)
@@ -362,7 +362,7 @@ export class CombatService {
    * @param state Current combat state
    * @param command The attack command to execute
    * @param parryingCombatants Set of combatant IDs that are currently parrying
-   * @returns Updated combat state and result messages (action + result split)
+   * @returns Updated combat state, result messages, and damage info for display sync
    *
    * @remarks
    * Authentic Wizardry mechanic: Helpless targets (ASLEEP or PARALYZED) take 2x damage
@@ -372,7 +372,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const target = command.target as Combatant
     if (!target) {
       return { newState: state, messages: ['No target specified'] }
@@ -413,7 +413,20 @@ export class CombatService {
     const damageMultiplier = (isAsleep || isParalyzed) ? 2 : 1
     const finalDamage = Math.floor(attackResult.damage * damageMultiplier)
 
-    // Apply damage to target
+    // Calculate new HP and status for target
+    const newHp = Math.max(0, target.hp - finalDamage)
+    // For status, handle monsters (CombatantStatus) vs characters (CharacterStatus)
+    // Monsters wake up when damaged, characters maintain their status
+    let newStatus: CombatantStatus
+    if ('monsterId' in target) {
+      // Monster: wake from ASLEEP, or keep status (unless dead)
+      newStatus = newHp === 0 ? 'DEAD' : target.status === 'ASLEEP' ? 'ALIVE' : target.status
+    } else {
+      // Character: map to ALIVE/DEAD for display purposes
+      newStatus = newHp === 0 ? 'DEAD' : 'ALIVE'
+    }
+
+    // Apply damage to target (for monsters - characters are tracked separately)
     const newState = this.applyDamage(state, target, finalDamage)
 
     // Build result message
@@ -432,7 +445,13 @@ export class CombatService {
 
     return {
       newState,
-      messages: [actionMessage, resultMessage]
+      messages: [actionMessage, resultMessage],
+      targetDamage: {
+        targetId: target.id,
+        damage: finalDamage,
+        newHp,
+        newStatus
+      }
     }
   }
 
@@ -440,7 +459,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     // Add actor to parrying set
     parryingCombatants.add(command.actor.id)
 
@@ -454,7 +473,7 @@ export class CombatService {
   private static executeRunCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const actorName = this.getCombatantName(command.actor)
     return {
       newState: state, // State doesn't change, flee is checked at end of round
@@ -470,7 +489,7 @@ export class CombatService {
   private static executeAdvanceCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const monster = command.actor as MonsterInstance
 
     // Find the group this monster belongs to
@@ -519,7 +538,7 @@ export class CombatService {
   private static executeCastSpellCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
     const spellId = command.data?.spellId
@@ -664,7 +683,7 @@ export class CombatService {
   private static executeDispelCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
 
@@ -1416,6 +1435,322 @@ export class CombatService {
       defeat: false,
       fled: false
     }
+  }
+
+  /**
+   * Execute a combat round with event-based tracking for animation synchronization.
+   * Returns events that pair messages with their state changes, allowing the UI
+   * to apply state updates in sync with message display.
+   *
+   * @param state Current combat state
+   * @param party Party characters
+   * @param frontRow Array of character IDs in front row
+   * @returns CombatRoundResult with events for animation
+   */
+  static executeRoundWithEvents(
+    state: CombatState,
+    party: Character[],
+    frontRow: string[] = []
+  ): CombatRoundResult {
+    // Sort commands by initiative (descending)
+    const sortedQueue = [...state.commandQueue].sort(
+      (a, b) => b.initiative - a.initiative
+    )
+
+    let currentState: CombatState = { ...state, commandQueue: [] }
+    const events: CombatRoundEvent[] = []
+    const accumulatedCharacterUpdates = new Map<string, Character>()
+    const spellCasters = new Map<string, { character: Character; spellId: string }>()
+    const curedCharacters = new Map<string, Character>()
+    const parryingCombatants = new Set<string>()
+    const fleeingCharacters = new Set<string>()
+
+    // Helper to create character update from damage
+    const createCharacterUpdate = (char: Character, newHp: number): CharacterUpdate => ({
+      hp: newHp,
+      status: newHp <= 0 ? CharacterStatus.DEAD : char.status
+    })
+
+    // Apply poison damage at start of round
+    const poisonResult = this.applyPoisonDamage(currentState, party)
+    currentState = poisonResult.newState
+
+    // Create poison event if any characters were damaged
+    if (poisonResult.messages.length > 0) {
+      const poisonCharacterUpdates = new Map<string, CharacterUpdate>()
+      for (const [charId, char] of poisonResult.damagedCharacters.entries()) {
+        poisonCharacterUpdates.set(charId, createCharacterUpdate(char, char.hp))
+        accumulatedCharacterUpdates.set(charId, char)
+      }
+
+      events.push({
+        type: 'poison',
+        messages: poisonResult.messages,
+        monsterGroupsSnapshot: [...currentState.monsterGroups],
+        characterUpdates: poisonCharacterUpdates
+      })
+    }
+
+    // Check for defeat from poison damage
+    if (this.areAllCharactersDead(party, accumulatedCharacterUpdates)) {
+      return {
+        events,
+        finalState: currentState,
+        finalCharacterUpdates: accumulatedCharacterUpdates,
+        spellCasters,
+        curedCharacters,
+        victory: false,
+        defeat: true,
+        fled: false
+      }
+    }
+
+    // Execute each command
+    for (const command of sortedQueue) {
+      // Skip if actor cannot act (dead, asleep, paralyzed)
+      if (!this.canCombatantAct(command.actor)) continue
+
+      // Capture state before command for comparison
+      const stateBefore = currentState
+
+      const result = this.executeCommand(currentState, command, parryingCombatants)
+      currentState = result.newState
+
+      // Track RUN commands
+      if (command.type === 'RUN' && !('monsterId' in command.actor)) {
+        fleeingCharacters.add(command.actor.id)
+      }
+
+      // Track CAST_SPELL commands for spell point deduction
+      let spellCast: { characterId: string; spellId: string } | undefined
+      if (command.type === 'CAST_SPELL' && !('monsterId' in command.actor) && command.data?.spellId) {
+        const caster = command.actor as Character
+        spellCasters.set(caster.id, { character: caster, spellId: command.data.spellId })
+        spellCast = { characterId: caster.id, spellId: command.data.spellId }
+      }
+
+      // Track character damage for this event using targetDamage from executeCommand
+      // This avoids re-rolling attack and ensures displayed damage matches messages
+      const eventCharacterUpdates = new Map<string, CharacterUpdate>()
+      if (result.targetDamage && command.target && !('monsterId' in command.target)) {
+        const target = command.target as Character
+        // Get existing character state (may have already been damaged this round)
+        const existingChar = accumulatedCharacterUpdates.get(target.id) || target
+
+        // Apply the damage that was actually calculated (from targetDamage)
+        const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
+        accumulatedCharacterUpdates.set(target.id, updated)
+        eventCharacterUpdates.set(target.id, createCharacterUpdate(updated, updated.hp))
+      }
+
+      // Check if monster groups changed (efficient comparison without JSON.stringify)
+      const monstersChanged = this.monsterGroupsChanged(stateBefore.monsterGroups, currentState.monsterGroups)
+
+      // Create event for this command
+      const event: CombatRoundEvent = {
+        type: 'action',
+        messages: result.messages,
+        ...(monstersChanged && { monsterGroupsSnapshot: [...currentState.monsterGroups] }),
+        ...(eventCharacterUpdates.size > 0 && { characterUpdates: eventCharacterUpdates }),
+        ...(spellCast && { spellCast })
+      }
+      events.push(event)
+
+      // Check victory after each action
+      if (this.areAllMonstersDead(currentState)) {
+        return {
+          events,
+          finalState: currentState,
+          finalCharacterUpdates: accumulatedCharacterUpdates,
+          spellCasters,
+          curedCharacters,
+          victory: true,
+          defeat: false,
+          fled: false
+        }
+      }
+
+      // Check defeat after each action
+      if (this.areAllCharactersDead(party, accumulatedCharacterUpdates)) {
+        return {
+          events,
+          finalState: currentState,
+          finalCharacterUpdates: accumulatedCharacterUpdates,
+          spellCasters,
+          curedCharacters,
+          victory: false,
+          defeat: true,
+          fled: false
+        }
+      }
+    }
+
+    // Final victory/defeat check
+    if (this.areAllMonstersDead(currentState)) {
+      return {
+        events,
+        finalState: currentState,
+        finalCharacterUpdates: accumulatedCharacterUpdates,
+        spellCasters,
+        curedCharacters,
+        victory: true,
+        defeat: false,
+        fled: false
+      }
+    }
+
+    if (this.areAllCharactersDead(party, accumulatedCharacterUpdates)) {
+      return {
+        events,
+        finalState: currentState,
+        finalCharacterUpdates: accumulatedCharacterUpdates,
+        spellCasters,
+        curedCharacters,
+        victory: false,
+        defeat: true,
+        fled: false
+      }
+    }
+
+    // Check if all alive characters are fleeing
+    const aliveCharacters = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    const allFleeing = aliveCharacters.length > 0 &&
+                      aliveCharacters.every(c => fleeingCharacters.has(c.id))
+
+    if (allFleeing) {
+      const fleeChance = this.calculateFleeChance(currentState, party, fleeingCharacters)
+      const fleeSuccess = RandomService.chance(fleeChance)
+
+      if (fleeSuccess) {
+        events.push({
+          type: 'flee',
+          messages: [`The party successfully flees from combat!`]
+        })
+
+        return {
+          events,
+          finalState: currentState,
+          finalCharacterUpdates: accumulatedCharacterUpdates,
+          spellCasters,
+          curedCharacters,
+          victory: false,
+          defeat: false,
+          fled: true
+        }
+      } else {
+        events.push({
+          type: 'flee',
+          messages: [`The party fails to escape!`]
+        })
+
+        // Apply flee failure penalty - monsters get free attacks
+        const penaltyResult = this.executeFleeFailurePenalty(currentState, party, frontRow)
+        currentState = penaltyResult.newState
+
+        // Create event for penalty attacks
+        if (penaltyResult.messages.length > 0) {
+          const penaltyCharacterUpdates = new Map<string, CharacterUpdate>()
+          for (const [charId, char] of penaltyResult.damagedCharacters.entries()) {
+            const existing = accumulatedCharacterUpdates.get(charId)
+            if (existing) {
+              accumulatedCharacterUpdates.set(charId, char)
+            } else {
+              accumulatedCharacterUpdates.set(charId, char)
+            }
+            penaltyCharacterUpdates.set(charId, createCharacterUpdate(char, char.hp))
+          }
+
+          events.push({
+            type: 'action',
+            messages: penaltyResult.messages,
+            characterUpdates: penaltyCharacterUpdates
+          })
+        }
+
+        // Check for defeat after penalty round
+        if (this.areAllCharactersDead(party, accumulatedCharacterUpdates)) {
+          return {
+            events,
+            finalState: currentState,
+            finalCharacterUpdates: accumulatedCharacterUpdates,
+            spellCasters,
+            curedCharacters,
+            victory: false,
+            defeat: true,
+            fled: false
+          }
+        }
+      }
+    }
+
+    // Tick down status effect durations at end of round
+    const durationResult = this.tickStatusDurations(currentState, party)
+    currentState = durationResult.newState
+
+    // Create status event if any effects wore off
+    if (durationResult.messages.length > 0) {
+      const statusCharacterUpdates = new Map<string, CharacterUpdate>()
+
+      // Track characters whose status changed (wake/unparalyze)
+      for (const msg of durationResult.messages) {
+        for (const char of party) {
+          if (msg.includes(char.name) && (msg.includes('ASLEEP') || msg.includes('PARALYZED'))) {
+            const curedChar = { ...char, status: CharacterStatus.OK }
+            curedCharacters.set(char.id, curedChar)
+            statusCharacterUpdates.set(char.id, { status: CharacterStatus.OK })
+          }
+        }
+      }
+
+      events.push({
+        type: 'status',
+        messages: durationResult.messages,
+        ...(statusCharacterUpdates.size > 0 && { characterUpdates: statusCharacterUpdates })
+      })
+    }
+
+    return {
+      events,
+      finalState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
+      finalCharacterUpdates: accumulatedCharacterUpdates,
+      spellCasters,
+      curedCharacters,
+      victory: false,
+      defeat: false,
+      fled: false
+    }
+  }
+
+  /**
+   * Efficiently compare two monster group arrays to detect changes
+   * Only checks mutable properties (hp, status) rather than full deep equality
+   * @returns true if any monster hp or status changed
+   */
+  private static monsterGroupsChanged(before: MonsterGroup[], after: MonsterGroup[]): boolean {
+    if (before.length !== after.length) return true
+
+    for (let i = 0; i < before.length; i++) {
+      const groupBefore = before[i]
+      const groupAfter = after[i]
+
+      // Check formation change
+      if (groupBefore.formation !== groupAfter.formation) return true
+
+      // Check if monsters list length changed (shouldn't happen, but defensive)
+      if (groupBefore.monsters.length !== groupAfter.monsters.length) return true
+
+      // Check individual monster changes
+      for (let j = 0; j < groupBefore.monsters.length; j++) {
+        const monsterBefore = groupBefore.monsters[j]
+        const monsterAfter = groupAfter.monsters[j]
+
+        // Only check mutable properties that can change during combat
+        if (monsterBefore.hp !== monsterAfter.hp) return true
+        if (monsterBefore.status !== monsterAfter.status) return true
+      }
+    }
+
+    return false
   }
 
   /**
