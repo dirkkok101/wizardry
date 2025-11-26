@@ -10,11 +10,9 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
-import { Character } from '@models/Character';
 import { Item } from '@models/Item';
 import { SHOP_ITEM_IDS } from '@config/shop-inventory';
 
@@ -27,13 +25,9 @@ type ShopView = 'character-select' | 'buy';
  * - SceneTitleComponent for header
  * - PartyCharacterGridComponent for character selection
  * - SceneFooterComponent for menu navigation
- * - ConfirmationDialogComponent for transaction confirmations
  *
  * Services:
- * - Buy items from shop inventory
- * - Sell items from character inventory
- * - Identify unknown items (reveal properties)
- * - Uncurse cursed items (remove curse)
+ * - Buy items from shop inventory (filtered by character class)
  */
 @Component({
   selector: 'app-shop',
@@ -42,8 +36,7 @@ type ShopView = 'character-select' | 'buy';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent,
-    ConfirmationDialogComponent
+    PartyCharacterGridComponent
   ],
   templateUrl: './shop.component.html',
   styleUrls: ['./shop.component.scss']
@@ -56,14 +49,6 @@ export class ShopComponent implements OnInit {
   // View state
   readonly currentView = signal<ShopView>('character-select');
   readonly selectedCharacterId = signal<string | null>(null);
-
-  // Confirmation dialog state
-  readonly showConfirmation = signal(false);
-  readonly confirmationMessage = signal('');
-  private pendingAction = signal<{
-    type: 'buy';
-    itemId: string;
-  } | null>(null);
 
   // Shop data - loaded from ItemDataLoader using SHOP_ITEM_IDS
   // Filtered to only show items the selected character can equip
@@ -172,11 +157,6 @@ export class ShopComponent implements OnInit {
   // Keyboard navigation
   @HostListener('window:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
-    // Don't handle keys when confirmation dialog is showing
-    if (this.showConfirmation()) {
-      return;
-    }
-
     const key = event.key.toLowerCase();
 
     // ESC key handling
@@ -219,32 +199,6 @@ export class ShopComponent implements OnInit {
 
     // Directly complete the purchase
     this.completeBuy(itemId);
-  }
-
-  // Confirm pending action (buy only - sell/identify/uncurse moved to CharacterInspection)
-  confirmAction(): void {
-    const pending = this.pendingAction();
-    if (!pending) return;
-
-    const charId = this.selectedCharacterId();
-    if (!charId) {
-      this.messages.showError('No character selected');
-      this.cancelAction();
-      return;
-    }
-
-    if (pending.type === 'buy') {
-      this.completeBuy(pending.itemId);
-    }
-
-    this.cancelAction();
-  }
-
-  // Cancel pending action
-  cancelAction(): void {
-    this.showConfirmation.set(false);
-    this.confirmationMessage.set('');
-    this.pendingAction.set(null);
   }
 
   // Generate unique instance ID for purchased items

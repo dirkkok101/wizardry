@@ -190,13 +190,6 @@ describe('ShopComponent', () => {
       component.handleKeydown({ key: 'Escape' } as KeyboardEvent);
       expect(component.currentView()).toBe('character-select');
     });
-
-    it('handles ESC key to cancel confirmation dialog - dialog handles this', () => {
-      component.selectCharacter('char-1');
-      component.showConfirmation.set(true);
-      component.cancelAction();
-      expect(component.showConfirmation()).toBe(false);
-    });
   });
 
   describe('buy flow', () => {
@@ -204,15 +197,13 @@ describe('ShopComponent', () => {
       component.selectCharacter('char-1');
     });
 
-    it('completes purchase immediately without confirmation dialog', () => {
+    it('completes purchase immediately', () => {
       const initialGold = gameState.state().party.gold || 0;
       const shopItems = component.shopInventory();
       const item = shopItems[0];
 
       component.initiateBuy(item.id);
 
-      // No confirmation dialog shown
-      expect(component.showConfirmation()).toBe(false);
       // Purchase completed immediately
       expect(gameState.state().party.gold).toBe(initialGold - item.price);
     });
@@ -252,7 +243,6 @@ describe('ShopComponent', () => {
       if (expensiveItem) {
         component.initiateBuy(expensiveItem.id);
         expect(messageService.messageText()).toContain('afford');
-        expect(component.showConfirmation()).toBe(false);
       }
     });
 
@@ -270,7 +260,6 @@ describe('ShopComponent', () => {
       component.initiateBuy(shopItems[0].id);
 
       expect(messageService.messageText()).toContain('full');
-      expect(component.showConfirmation()).toBe(false);
     });
 
     it('shows error when no character selected', () => {

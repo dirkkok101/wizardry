@@ -77,12 +77,4 @@
     [menuItems]="footerMenuItems()"
     (itemSelected)="handleFooterAction($event)"
   />
-
-  <!-- Confirmation Dialog -->
-  <app-confirmation-dialog
-    [visible]="showConfirmation()"
-    [message]="confirmationMessage()"
-    (confirmed)="confirmAction()"
-    (cancelled)="cancelAction()"
-  />
 </div>
