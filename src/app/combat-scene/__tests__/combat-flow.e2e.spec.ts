@@ -10,6 +10,7 @@ import {
   createTestMonster
 } from '../../../test-helpers/test-factories'
 import { setCombatMessageDelay } from '../../../settings/CombatSettings'
+import { RandomService } from '../../../services/RandomService'
 
 describe('Combat Flow E2E', () => {
   let component: CombatComponent
@@ -468,6 +469,12 @@ describe('Combat Flow E2E', () => {
     })
 
     it('updates combat log throughout encounter', () => {
+      // Queue random values to ensure deterministic combat outcome:
+      // - Hit roll: 0.1 (10% < hit chance, guarantees hit)
+      // - Damage roll: 6 (max d6 damage)
+      // - Critical check: 0.01 (1% < crit chance, triggers critical)
+      RandomService.queueNextValues([0.1, 6, 0.01])
+
       const char = createTestCharacter({ id: 'c1', hp: 30, maxHp: 30, strength: 18 })
       const monster = createTestMonster({ hp: 1, maxHp: 10, xp: 100 })
 
