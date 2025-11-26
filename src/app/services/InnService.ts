@@ -21,6 +21,7 @@ interface RestResult {
   isFullyHealed: boolean
   goldSpent: number
   hpRecovered: number
+  spellPointsRestored: boolean
 }
 
 const ROOM_COSTS: Record<RoomType, number> = {
@@ -98,7 +99,8 @@ export class InnService {
       updatedState,
       isFullyHealed: newHp === character.maxHp,
       goldSpent: cost,
-      hpRecovered: newHp - character.hp
+      hpRecovered: newHp - character.hp,
+      spellPointsRestored: false
     }
   }
 }
