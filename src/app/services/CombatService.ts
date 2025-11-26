@@ -11,6 +11,13 @@ import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
   /**
+   * Debug flag to toggle verbose combat logging.
+   * Set to true to enable detailed console output for debugging attack frequency issues.
+   * TODO: Remove or set to false after debugging is complete.
+   */
+  static DEBUG_COMBAT = true
+
+  /**
    * Calculate initiative for combatant
    * Formula: random(0-9) + AGI_modifier (minimum 1)
    */
@@ -171,7 +178,7 @@ export class CombatService {
 
     // Monsters always get 1 attack
     if ('monsterId' in combatant) {
-      console.log(`[Combat] getAttacksPerRound: ${combatantName} (monster) = 1 attack`)
+      if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (monster) = 1 attack`)
       return 1
     }
 
@@ -194,11 +201,11 @@ export class CombatService {
           attacks = 1
       }
 
-      console.log(`[Combat] getAttacksPerRound: ${combatantName} (${combatant.class}, level ${level}) = ${attacks} attack(s)`)
+      if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (${combatant.class}, level ${level}) = ${attacks} attack(s)`)
       return attacks
     }
 
-    console.log(`[Combat] getAttacksPerRound: ${combatantName} (unknown type) = 1 attack`)
+    if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (unknown type) = 1 attack`)
     return 1
   }
 
@@ -322,19 +329,21 @@ export class CombatService {
     command: CombatCommand,
     parryingCombatants: Set<string>
   ): CommandExecutionResult {
-    const actorName = this.getCombatantName(command.actor)
-    const targetName = command.target ? this.getCombatantName(command.target) : 'none'
-    const isMonster = 'monsterId' in command.actor
+    if (this.DEBUG_COMBAT) {
+      const actorName = this.getCombatantName(command.actor)
+      const targetName = command.target ? this.getCombatantName(command.target) : 'none'
+      const isMonster = 'monsterId' in command.actor
 
-    console.log(`[Combat] Executing command:`, {
-      type: command.type,
-      actor: actorName,
-      actorId: command.actor.id,
-      actorType: isMonster ? 'monster' : 'character',
-      target: targetName,
-      targetId: command.target?.id,
-      initiative: command.initiative
-    })
+      console.log(`[Combat] Executing command:`, {
+        type: command.type,
+        actor: actorName,
+        actorId: command.actor.id,
+        actorType: isMonster ? 'monster' : 'character',
+        target: targetName,
+        targetId: command.target?.id,
+        initiative: command.initiative
+      })
+    }
 
     // Handle different command types
     if (command.type === 'ATTACK') {
@@ -414,19 +423,19 @@ export class CombatService {
     const actorName = this.getCombatantName(command.actor)
     const targetName = this.getCombatantName(target)
 
-    console.log(`[Combat] Attack resolution:`, {
-      attacker: actorName,
-      attackerId: command.actor.id,
-      defender: targetName,
-      defenderId: target.id,
-      hit: attackResult.hit,
-      damage: attackResult.damage,
-      critical: attackResult.critical,
-      defenderAC: 'ac' in target ? target.ac : 'unknown',
-      acModifier,
-      attackerPenalty,
-      isParrying
-    })
+    if (this.DEBUG_COMBAT) {
+      console.debug(`[Combat] Attack resolution:`, {
+        attacker: actorName,
+        defender: targetName,
+        hit: attackResult.hit,
+        damage: attackResult.damage,
+        critical: attackResult.critical,
+        defenderAC: 'ac' in target ? target.ac : 'unknown',
+        acModifier,
+        attackerPenalty,
+        isParrying
+      })
+    }
 
     // Action message (always shown first)
     const actionMessage = `${actorName} attacks ${targetName}`
@@ -434,7 +443,6 @@ export class CombatService {
     if (!attackResult.hit) {
       // Result message for miss
       const resultMessage = `${this.RESULT_MARKER}${actorName} misses!`
-      console.log(`[Combat] Attack missed: ${actorName} -> ${targetName}`)
       return {
         newState: state,
         messages: [actionMessage, resultMessage]
@@ -468,18 +476,19 @@ export class CombatService {
     // Apply damage to target (for monsters - characters are tracked separately)
     const newState = this.applyDamage(state, target, finalDamage)
 
-    console.log(`[Combat] Damage applied:`, {
-      attacker: actorName,
-      defender: targetName,
-      baseDamage: attackResult.damage,
-      multiplier: damageMultiplier,
-      finalDamage,
-      previousHp: target.hp,
-      newHp,
-      previousStatus: target.status,
-      newStatus,
-      isHelpless: isAsleep || isParalyzed
-    })
+    if (this.DEBUG_COMBAT) {
+      console.debug(`[Combat] Damage applied:`, {
+        attacker: actorName,
+        defender: targetName,
+        baseDamage: attackResult.damage,
+        multiplier: damageMultiplier,
+        finalDamage,
+        previousHp: target.hp,
+        newHp,
+        newStatus,
+        isHelpless: isAsleep || isParalyzed
+      })
+    }
 
     // Build result message
     let resultText: string
@@ -875,15 +884,17 @@ export class CombatService {
     messages: string[]
     damagedCharacters: Map<string, Character>
   } {
-    console.log('[Combat] ===== FLEE FAILURE PENALTY =====')
+    if (this.DEBUG_COMBAT) console.log('[Combat] ===== FLEE FAILURE PENALTY =====')
     const messages: string[] = ['The monsters take advantage of the failed escape!']
     const damagedCharacters = new Map<string, Character>()
     let currentState = state
 
     // All alive monsters get a free attack
     const actingMonsters = this.getAllActingMonsters(state)
-    console.log(`[Combat] ${actingMonsters.length} monsters get FREE BONUS ATTACKS!`)
-    actingMonsters.forEach(m => console.log(`  - ${m.name} (${m.id})`))
+    if (this.DEBUG_COMBAT) {
+      console.log(`[Combat] ${actingMonsters.length} monsters get FREE BONUS ATTACKS!`)
+      actingMonsters.forEach(m => console.debug(`  - ${m.name} (${m.id})`))
+    }
 
     for (const monster of actingMonsters) {
       // Get alive front row members that can be targeted
@@ -918,11 +929,13 @@ export class CombatService {
       // Resolve attack (no parrying during penalty round)
       const attackResult = this.resolveAttack(monster, effectiveTarget, 0, 0)
 
-      console.log(`[Combat] BONUS ATTACK: ${monster.name} -> ${target.name}`, {
-        hit: attackResult.hit,
-        damage: attackResult.damage,
-        targetHp: effectiveTarget.hp
-      })
+      if (this.DEBUG_COMBAT) {
+        console.debug(`[Combat] BONUS ATTACK: ${monster.name} -> ${target.name}`, {
+          hit: attackResult.hit,
+          damage: attackResult.damage,
+          targetHp: effectiveTarget.hp
+        })
+      }
 
       if (attackResult.hit) {
         const damaged = this.applyDamageToCharacter(effectiveTarget, attackResult.damage)
@@ -933,7 +946,7 @@ export class CombatService {
       }
     }
 
-    console.log('[Combat] ===== END FLEE PENALTY =====')
+    if (this.DEBUG_COMBAT) console.log('[Combat] ===== END FLEE PENALTY =====')
     return {
       newState: currentState,
       messages,
