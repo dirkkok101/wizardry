@@ -1,5 +1,6 @@
 import { Character } from '@models/Character'
 import { GameState } from '@models/GameState'
+import { SpellPointPool } from '@models/SpellPoints'
 import * as PartyService from './PartyService'
 
 export enum RoomType {
@@ -101,6 +102,38 @@ export class InnService {
       goldSpent: cost,
       hpRecovered: newHp - character.hp,
       spellPointsRestored: false
+    }
+  }
+
+  /**
+   * Restore all spell points to maximum for a character.
+   * Only called when resting in Stables (per original Wizardry 1).
+   */
+  static restoreSpellPoints(character: Character): Character {
+    if (!character.spellPoints) {
+      return character
+    }
+
+    const restorePool = (pool: SpellPointPool): SpellPointPool => ({
+      level1: { ...pool.level1, current: pool.level1.max },
+      level2: { ...pool.level2, current: pool.level2.max },
+      level3: { ...pool.level3, current: pool.level3.max },
+      level4: { ...pool.level4, current: pool.level4.max },
+      level5: { ...pool.level5, current: pool.level5.max },
+      level6: { ...pool.level6, current: pool.level6.max },
+      level7: { ...pool.level7, current: pool.level7.max }
+    })
+
+    return {
+      ...character,
+      spellPoints: {
+        mage: character.spellPoints.mage
+          ? restorePool(character.spellPoints.mage)
+          : undefined,
+        priest: character.spellPoints.priest
+          ? restorePool(character.spellPoints.priest)
+          : undefined
+      }
     }
   }
 }
