@@ -10,7 +10,6 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { SelectionListComponent, SelectableOption } from '@shared/components/selection-list/selection-list.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
@@ -73,7 +72,6 @@ interface RestProgressData {
     SceneTitleComponent,
     SceneFooterComponent,
     PartyCharacterGridComponent,
-    ConfirmationDialogComponent,
     SelectionListComponent
   ],
   templateUrl: './inn.component.html',

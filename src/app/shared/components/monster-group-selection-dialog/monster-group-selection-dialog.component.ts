@@ -10,9 +10,10 @@ export interface MonsterGroupOption {
 }
 
 /**
- * Extended MonsterGroupOption with SelectableOption compatibility
+ * Extended MonsterGroupOption with SelectableOption compatibility.
+ * Uses Omit to avoid 'id' type conflict (MonsterGroupOption has union type, SelectableOption has string).
  */
-interface MonsterGroupSelectableOption extends MonsterGroupOption, SelectableOption {
+interface MonsterGroupSelectableOption extends MonsterGroupOption, Omit<SelectableOption, 'id'> {
   shortcut: string
 }
 
