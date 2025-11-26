@@ -5,6 +5,7 @@ import { ShopService } from '../../services/ShopService';
 import { InventoryService } from '../../services/InventoryService';
 import { SceneNavigationService } from '../../services/SceneNavigationService';
 import { MessageService } from '../../services/MessageService';
+import { ItemDataLoader } from '../../services/ItemDataLoader';
 import { GameStateQueries } from '../../utils/GameStateQueries';
 import { SceneTitleComponent } from '../shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '../shared/components/scene-footer/scene-footer.component';
@@ -449,13 +450,23 @@ export class ShopComponent implements OnInit {
   }
 
   // Helper: Get character inventory as Item objects
+  // Resolves items from: 1) Already Item objects, 2) ItemDataLoader (all game items), 3) Shop inventory fallback
   getCharacterInventory(): Item[] {
     const character = this.selectedCharacter();
     if (!character) return [];
 
     return character.inventory
       .map(item => {
+        // If already an Item object, return it directly
         if (typeof item === 'object') return item as Item;
+
+        // Try to look up by ID from ItemDataLoader (includes all game items like dungeon loot)
+        if (ItemDataLoader.isLoaded()) {
+          const globalItem = ItemDataLoader.getItem(item);
+          if (globalItem) return globalItem;
+        }
+
+        // Fall back to shop inventory for backwards compatibility
         return this.shopInventory().find(shopItem => shopItem.id === item);
       })
       .filter((item): item is Item => item !== undefined);
