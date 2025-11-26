@@ -11,44 +11,6 @@
   margin: 0 auto;
 }
 
-// Character header with class/level/alignment/status
-.character-header {
-  display: flex;
-  justify-content: center;
-  gap: $spacing-md;
-  padding: $spacing-md;
-  margin-bottom: $spacing-lg;
-  border-bottom: 2px solid $color-border;
-  font-size: 1rem;
-  text-transform: uppercase;
-
-  .separator {
-    color: $color-text-dim;
-  }
-
-  .class,
-  .level,
-  .alignment {
-    color: $color-text-bright;
-  }
-
-  .status {
-    font-weight: bold;
-
-    &.status-ok {
-      color: $color-text-green;
-    }
-
-    &.status-dead {
-      color: $color-error;
-    }
-
-    &.status-afflicted {
-      color: $color-amber;
-    }
-  }
-}
-
 // Message Banner
 .message {
   padding: 1rem;
@@ -58,13 +20,13 @@
   font-weight: bold;
   animation: slideDown 0.3s ease-out;
 
-  &.message-success {
+  &.success {
     background-color: rgba(0, 255, 0, 0.1);
     border-color: $color-text-green;
     color: $color-text-green;
   }
 
-  &.message-error {
+  &.error {
     background-color: rgba(255, 0, 0, 0.1);
     border-color: $color-error;
     color: $color-error;
@@ -82,149 +44,48 @@
   }
 }
 
-.section {
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid $color-border;
+// Two-column items grid
+.items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 
-  &:last-child {
-    border-bottom: none;
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
   }
+}
 
-  h2, h3, h4 {
-    color: $color-text-green;
-    margin: 0 0 1rem 0;
-    text-transform: uppercase;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    text-align: center;
-  }
-
+.equipment-section,
+.inventory-section {
   h3 {
-    font-size: 1.2rem;
-  }
-
-  h4 {
+    color: $color-text-green;
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
     font-size: 1rem;
-    margin-top: 1rem;
+    border-bottom: 1px solid $color-border;
+    padding-bottom: 0.5rem;
   }
 }
 
-// Stats Section
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.stat-item {
+.equipment-slots {
   display: flex;
-  justify-content: space-between;
-  padding: 0.5rem;
-  background-color: $color-bg-black;
-  border: 1px solid $color-border;
-
-  .stat-label {
-    font-weight: bold;
-  }
-
-  .stat-value {
-    color: $color-amber;
-  }
-}
-
-// Status Section
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.status-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem;
-  background-color: $color-bg-black;
-  border: 1px solid $color-border;
-
-  .status-label {
-    font-weight: bold;
-  }
-
-  .status-value {
-    color: $color-amber;
-
-    &.status-ok {
-      color: $color-text-green;
-    }
-
-    &.status-dead {
-      color: $color-error;
-    }
-
-    &.status-afflicted {
-      color: $color-amber;
-    }
-  }
-}
-
-// Equipment Section
-.equipment-grid {
-  display: grid;
-  grid-template-columns: 1fr;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
-.equipment-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem;
-  background-color: $color-bg-black;
-  border: 1px solid $color-border;
-
-  .equipment-label {
-    font-weight: bold;
-  }
-
-  .equipment-value {
-    color: $color-amber;
-  }
-}
-
-// Inventory Section
 .inventory-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
-.inventory-slot {
-  display: flex;
-  padding: 0.5rem;
-  background-color: $color-bg-black;
-  border: 1px solid $color-border;
-
-  .slot-number {
-    font-weight: bold;
-    margin-right: 0.5rem;
-  }
-
-  .slot-item {
-    color: $color-amber;
-  }
-}
-
-// Spells Section
-.spell-category {
-  margin-bottom: 1rem;
-
-  .spell-placeholder {
-    color: $color-text-dim;
-    font-style: italic;
-    margin: 0.5rem 0;
-  }
+.empty-inventory {
+  color: $color-text-dim;
+  font-style: italic;
+  padding: 1rem;
+  text-align: center;
+  border: 1px dashed $color-border;
 }
 
 // No character found state

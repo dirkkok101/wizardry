@@ -158,10 +158,10 @@ describe('CharacterInspectionComponent', () => {
 
     component.handleItemAction({ type: 'equip', item: mockItem as any });
 
-    const message = component.message();
-    expect(message).toBeTruthy();
-    expect(message?.type).toBe('success');
-    expect(message?.text).toContain('Equipped');
+    // Now using MessageService instead of message signal
+    expect(component.messages.hasMessage()).toBe(true);
+    expect(component.messages.isSuccess()).toBe(true);
+    expect(component.messages.messageText()).toContain('Equipped');
   });
 
   it('displays error message on failed equip', () => {
@@ -183,9 +183,9 @@ describe('CharacterInspectionComponent', () => {
 
     component.handleItemAction({ type: 'equip', item: mockItem as any });
 
-    const message = component.message();
-    expect(message).toBeTruthy();
-    expect(message?.type).toBe('error');
+    // Now using MessageService instead of message signal
+    expect(component.messages.hasMessage()).toBe(true);
+    expect(component.messages.isError()).toBe(true);
   });
 
   it('clears message after 3 seconds', (done) => {
@@ -219,11 +219,12 @@ describe('CharacterInspectionComponent', () => {
 
     component.handleItemAction({ type: 'equip', item: mockItem as any });
 
-    expect(component.message()).toBeTruthy();
+    // Now using MessageService instead of message signal
+    expect(component.messages.hasMessage()).toBe(true);
 
     jest.advanceTimersByTime(3000);
 
-    expect(component.message()).toBeNull();
+    expect(component.messages.hasMessage()).toBe(false);
 
     jest.useRealTimers();
     done();
