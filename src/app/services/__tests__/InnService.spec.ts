@@ -1,6 +1,7 @@
 import { InnService, RoomType } from '../InnService'
 import { createTestCharacter, createTestGameState } from '@testing/test-factories'
 import { GameState } from '@models/GameState'
+import { SpellPointPool } from '@models/SpellPoints'
 
 describe('InnService', () => {
   describe('getRoomCost', () => {
@@ -181,6 +182,29 @@ describe('InnService', () => {
       const result = InnService.restOneWeek(state, character, RoomType.BARRACKS)
 
       expect(result.isFullyHealed).toBe(false)
+    })
+  })
+
+  describe('restoreSpellPoints', () => {
+    it('restores all mage spell points to maximum', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 1, max: 3 },
+        level2: { current: 0, max: 2 },
+        level3: { current: 0, max: 1 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const character = createTestCharacter({
+        spellPoints: { mage: depleted }
+      })
+
+      const result = InnService.restoreSpellPoints(character)
+
+      expect(result.spellPoints?.mage?.level1.current).toBe(3)
+      expect(result.spellPoints?.mage?.level2.current).toBe(2)
+      expect(result.spellPoints?.mage?.level3.current).toBe(1)
     })
   })
 })
