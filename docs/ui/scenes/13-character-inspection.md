@@ -2,11 +2,48 @@
 
 ## Overview
 
-**Description:** Detailed character view with context-sensitive actions. The same screen appears in multiple locations (Training Grounds, Tavern, Camp) with different available actions based on context.
+**Description:** Detailed character view with context-sensitive actions. The same screen appears in multiple locations (Training Grounds, Tavern, Camp/Maze) with different available actions based on context.
 
 **Scene Type:** Context-dependent (inherits from parent scene)
 
-**Location in Game Flow:** Multi-context detail view - accessed from Training Grounds, Tavern, and Camp
+**Location in Game Flow:** Multi-context detail view - accessed from Training Grounds, Tavern, and Maze
+
+---
+
+## Action Pattern: Party vs Character
+
+This scene follows the established **party action vs character action pattern**:
+
+> **Party actions go in the footer menu. Character actions go on character/item cards.**
+
+This pattern is consistent with other scenes (Maze, Temple, Tavern) where:
+- **Footer menu**: Actions that affect the party as a whole or navigation
+- **Character card**: Actions specific to the individual being inspected
+- **Item cards**: Actions specific to individual items
+
+### Action Location Matrix
+
+| Action | Type | Location | Available Modes |
+|--------|------|----------|-----------------|
+| **Return/Leave** | Party | Footer | All |
+| **Pool All Gold** | Party | Footer | Tavern, Camp |
+| **Read Spell Book** | Character | Character Card | All (casters only) |
+| **Cast Spell** | Character | Character Card | Camp only |
+| **Change Class** | Character | Character Card | Training only |
+| **Delete Character** | Character | Character Card | Training only |
+| **Identify** | Character | Character Card | Tavern, Camp (Bishops only) |
+| **Equip/Unequip** | Item | Item Card | Tavern, Camp |
+| **Trade** | Item | Item Card | Tavern, Camp |
+| **Drop** | Item | Item Card | Tavern, Camp |
+| **Use** | Item | Item Card | Camp only |
+
+### Footer Menu by Mode
+
+```
+Training Grounds: (ESC) Return
+Tavern:           (P) Pool All Gold    (ESC) Return
+Camp:             (P) Pool All Gold    (ESC) Return
+```
 
 ---
 
@@ -61,43 +98,61 @@ enum InspectionMode {
 - **Spells:** Spell points and spell list (for casters)
 - **Actions:** Context-sensitive menu
 
-### ASCII Mockup
+### ASCII Mockup (Camp Mode - Full Access)
 
 ```
-┌─────────────────────────────────────┐
-│  GANDALF  (Human, Good, Mage)       │
-├─────────────────────────────────────┤
-│  Level: 5       XP: 12,450          │
-│  Next Level: 15,000 XP              │
-│                                     │
-│  STR: 10  IQ: 18  PIE: 12           │
-│  VIT: 11  AGI: 14  LUK: 13          │
-│                                     │
-│  HP: 15/15      AC: 4               │
-│  Status: OK     Gold: 500           │
-│                                     │
-│  EQUIPMENT:                         │
-│  1. Staff (Equipped)                │
-│  2. Robe (Equipped)                 │
-│  3. Potion of Healing               │
-│  4. Scroll of MAHALITO              │
-│  5-8. (Empty)                       │
-│                                     │
-│  SPELLS: (Mage)                     │
-│  L1: 3/3  L2: 2/2  L3: 1/1          │
-├─────────────────────────────────────┤
-│  (R)EAD  (S)PELL  (U)SE  (D)ROP     │
-│  (P)OOL  (I)D  (E)QUIP  (T)RADE     │
-│  (L)EAVE                            │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  GANDALF                                              Gold: 500 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  HUMAN MAGE Lvl 5 • GOOD                        [OK]    │    │
+│  │  ───────────────────────────────────────────────────    │    │
+│  │  STR: 10   INT: 18   PIE: 12                            │    │
+│  │  VIT: 11   AGI: 14   LUK: 13                            │    │
+│  │  ───────────────────────────────────────────────────    │    │
+│  │  HP: 15/15    AC: 4    XP: 12,450                       │    │
+│  │  Next Level: 15,000 XP (2,550 to go)                    │    │
+│  │  ───────────────────────────────────────────────────    │    │
+│  │  MAGE SPELLS                                            │    │
+│  │  L1: 3/3  L2: 2/2  L3: 1/1  L4: 0/0                     │    │
+│  │  ───────────────────────────────────────────────────    │    │
+│  │  [Spells] [Cast] [Identify]  <- Character Actions       │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  ┌─────────────────────────────┬───────────────────────────┐    │
+│  │  EQUIPMENT                  │  INVENTORY (3/8)          │    │
+│  │  ─────────────────────────  │  ─────────────────────    │    │
+│  │  ┌─────────────────────┐    │  ┌─────────────────────┐  │    │
+│  │  │ Staff       [Uneq]  │    │  │ Potion of Healing   │  │    │
+│  │  └─────────────────────┘    │  │ [Trade] [Drop] [Use]│  │    │
+│  │  ┌─────────────────────┐    │  └─────────────────────┘  │    │
+│  │  │ Robe        [Uneq]  │    │  ┌─────────────────────┐  │    │
+│  │  └─────────────────────┘    │  │ Scroll of MAHALITO  │  │    │
+│  │  ┌─────────────────────┐    │  │ [Trade] [Drop] [Use]│  │    │
+│  │  │ Shield: (empty)     │    │  └─────────────────────┘  │    │
+│  │  └─────────────────────┘    │  ┌─────────────────────┐  │    │
+│  │  ┌─────────────────────┐    │  │ Dagger              │  │    │
+│  │  │ Helmet: (empty)     │    │  │ [Equip][Trade][Drop]│  │    │
+│  │  └─────────────────────┘    │  └─────────────────────┘  │    │
+│  │  ┌─────────────────────┐    │                           │    │
+│  │  │ Gauntlets: (empty)  │    │  <- Item Actions          │    │
+│  │  └─────────────────────┘    │                           │    │
+│  └─────────────────────────────┴───────────────────────────┘    │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  (P) Pool All Gold                              (ESC) Return    │
+│  <- Party Actions (Footer Menu)                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 **Visual Notes:**
-- Complete character sheet displayed
-- Equipment slots numbered 1-8
-- Equipped items marked clearly
-- Cursed items indicated (if identified)
-- Action menu changes based on context mode
+- **Character Card** (top): Shows stats, spell points, and character-level actions
+- **Item Cards** (bottom): Equipment and inventory with item-specific actions
+- **Footer Menu** (bottom): Party-level actions only (Pool Gold, Return)
+- Actions are context-sensitive based on mode
+- Spell points shown only for caster classes
+- [Use] button only appears in Camp mode for usable items
 
 ---
 
@@ -162,40 +217,58 @@ L7: [Current]/[Max]
 
 ### Training Grounds Mode
 
-**Available Actions:**
-- (R)ead - View spell book
-- (D)elete - Permanently delete character (requires password)
-- (C)hange Class - Change to eligible class
-- (A)lter Password - Update password
-- (L)eave - Return to Training Grounds
+**Footer Menu (Party Actions):**
+- (ESC) Return - Return to Training Grounds
+
+**Character Card Actions:**
+- [Spells] - View spell book (casters only)
+- [Class] - Change to eligible class
+- [Delete] - Permanently delete character (requires password)
+
+**Item Card Actions:**
+- None (inventory management disabled in Training Grounds)
 
 **Restricted:** No inventory management, no spell casting, no item use
 
 ### Tavern Mode
 
-**Available Actions:**
-- (R)ead - View spell book
-- (D)rop - Drop item permanently
-- (P)ool Gold - Add gold to party pool
-- (I)dentify - Identify items (Bishops only)
-- (E)quip - Change equipped items
-- (T)rade - Trade items with party member
-- (L)eave - Return to Tavern
+**Footer Menu (Party Actions):**
+- (P) Pool All Gold - Transfer all party gold to pool
+- (ESC) Return - Return to Tavern
+
+**Character Card Actions:**
+- [Spells] - View spell book (casters only)
+- [ID] - Identify items (Bishops only)
+
+**Item Card Actions (Equipment):**
+- [Unequip] - Remove equipped item (if not cursed)
+
+**Item Card Actions (Inventory):**
+- [Equip] - Equip item to appropriate slot
+- [Trade] - Trade item with party member
+- [Drop] - Drop item permanently
 
 **Restricted:** No spell casting, no item use (safe zone)
 
 ### Camp Mode (Full Access)
 
-**Available Actions:**
-- (R)ead - View spell book
-- (S)pell - Cast spells (preparation spells)
-- (U)se - Use items
-- (D)rop - Drop item permanently
-- (P)ool Gold - Add gold to party pool
-- (I)dentify - Identify items (Bishops only)
-- (E)quip - Change equipped items
-- (T)rade - Trade items with party member
-- (L)eave - Return to Camp
+**Footer Menu (Party Actions):**
+- (P) Pool All Gold - Transfer all party gold to pool
+- (ESC) Return - Return to Maze
+
+**Character Card Actions:**
+- [Spells] - View spell book (casters only)
+- [Cast] - Cast dungeon spell (casters only)
+- [ID] - Identify items (Bishops only)
+
+**Item Card Actions (Equipment):**
+- [Unequip] - Remove equipped item (if not cursed)
+
+**Item Card Actions (Inventory):**
+- [Equip] - Equip item to appropriate slot
+- [Trade] - Trade item with party member
+- [Drop] - Drop item permanently
+- [Use] - Use consumable items
 
 **Full access:** All character management actions available
 
@@ -1002,16 +1075,35 @@ interface CharacterInspectionState {
 
 ## Implementation Notes
 
+### Shared Components Used
+
+This scene uses the following shared components from `src/app/shared/components/`:
+
+| Component | Purpose | Used For |
+|-----------|---------|----------|
+| `SceneTitleComponent` | Scene header with character name | Title bar |
+| `SceneFooterComponent` | Footer with party-level actions | Navigation + Pool Gold |
+| `CharacterDetailCardComponent` | Full character stats + actions | Character display |
+| `SpellPointsDisplayComponent` | Spell point pools (L1-L7) | Caster characters |
+| `ItemCardComponent` | Item display with actions | Equipment + Inventory |
+| `SpellBookDialogComponent` | Known spells viewer | [Spells] action |
+| `SpellSelectionDialogComponent` | Spell picker for casting | [Cast] action |
+| `CharacterSelectionDialogComponent` | Target picker for spells | Single-target spells |
+| `TradeItemDialogComponent` | Trade recipient picker | [Trade] action |
+| `ConfirmationDialogComponent` | Yes/No confirmation | [Drop], [Delete] |
+| `StatusBadgeComponent` | Character status display | Status in header |
+
 ### Services Used
 
-- `CharacterService.getCharacterData(id)`
-- `InventoryService.equipItem(character, item)`
-- `InventoryService.tradeItem(from, to, item)`
-- `SpellService.castSpell(character, spell, target)`
-- `ItemService.useItem(character, item, target)`
-- `CharacterService.deleteCharacter(id, password)`
-- `CharacterService.changeClass(id, newClass)`
-- `CharacterService.alterPassword(id, oldPassword, newPassword)`
+- `GameStateService` - State management and updates
+- `SceneNavigationService` - Navigation with mode parameter
+- `EquipmentService` - Equip/unequip logic
+- `InventoryService` - Trade/drop logic
+- `SpellCastingService` - Spell casting and SP management
+- `SpellLearningService` - Caster detection and spell lists
+- `LevelUpService` - XP to next level calculation
+- `ItemDataLoader` - Item resolution from IDs
+- `MessageService` - Toast notifications (success/error)
 
 ### Commands
 
