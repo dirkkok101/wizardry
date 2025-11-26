@@ -37,10 +37,23 @@ $card-min-height-compact: 80px;
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
   }
 
-  // Dead state
+  // Dead state - use selective opacity to keep action buttons clearly visible
+  // Previously used opacity: 0.5 on whole card which made buttons look disabled
   &.dead {
-    opacity: 0.5;
     background-color: rgba(100, 0, 0, 0.3);
+    border-color: rgba(150, 50, 50, 0.6);
+
+    // Fade informational content but keep it readable
+    .card-header,
+    .card-stats {
+      opacity: 0.7;
+    }
+
+    // Keep action buttons at full opacity so they're clearly clickable
+    // This prevents confusion where enabled buttons look disabled
+    .card-actions {
+      opacity: 1;
+    }
   }
 }
 

@@ -229,6 +229,38 @@ describe('TempleComponent', () => {
 
         expect(resurrectAction?.enabled).toBe(false);
       });
+
+      it('always enables inspect button for dead characters regardless of gold', () => {
+        // Scenario: level 1 dead character, 1070g party gold (user's exact scenario)
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 1070 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+        const inspectAction = actions.find(a => a.type === 'inspect');
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        // Inspect should always be enabled (no enabled property = defaults to true)
+        expect(inspectAction).toBeDefined();
+        expect(inspectAction?.enabled).toBeUndefined(); // No enabled property
+
+        // Resurrect should be enabled (1070 >= 250)
+        expect(resurrectAction?.enabled).toBe(true);
+      });
+
+      it('returns both inspect and resurrect actions for dead character', () => {
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 1070 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+
+        expect(actions.length).toBe(2);
+        expect(actions[0].type).toBe('inspect');
+        expect(actions[1].type).toBe('resurrect');
+      });
     });
   });
 
