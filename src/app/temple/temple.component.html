@@ -35,8 +35,8 @@
   @if (showConfirmation()) {
     <app-confirmation-dialog
       [message]="confirmationMessage()"
-      (confirm)="confirmService()"
-      (cancel)="cancelService()"
+      (confirmed)="confirmService()"
+      (cancelled)="cancelService()"
     />
   }
 </div>
