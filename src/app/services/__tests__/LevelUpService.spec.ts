@@ -403,5 +403,150 @@ describe('LevelUpService', () => {
       expect(result.levelUpData.hpIncrease).toBeGreaterThan(0)
       expect(result.levelUpData.statChanges).toBeDefined()
     })
+
+    it('increases spell points for Mage on level up', () => {
+      const character = createTestCharacter({
+        level: 1,
+        experience: 5000,
+        class: CharacterClass.MAGE,
+        hp: 8,
+        maxHp: 8,
+        age: 20,
+        spellPoints: {
+          mage: {
+            level1: { current: 2, max: 2 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+
+      const result = LevelUpService.performLevelUp(character)
+
+      // Level 2 mage should have more level 1 spell points
+      expect(result.updatedCharacter.spellPoints?.mage?.level1.max).toBeGreaterThan(2)
+    })
+
+    it('increases spell points for Priest on level up', () => {
+      const character = createTestCharacter({
+        level: 1,
+        experience: 5000,
+        class: CharacterClass.PRIEST,
+        hp: 10,
+        maxHp: 10,
+        age: 20,
+        spellPoints: {
+          priest: {
+            level1: { current: 2, max: 2 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+
+      const result = LevelUpService.performLevelUp(character)
+
+      // Level 2 priest should have more level 1 spell points
+      expect(result.updatedCharacter.spellPoints?.priest?.level1.max).toBeGreaterThan(2)
+    })
+
+    it('unlocks spell level 2 points at character level 3', () => {
+      const character = createTestCharacter({
+        level: 2,
+        experience: 10000,
+        class: CharacterClass.MAGE,
+        hp: 12,
+        maxHp: 12,
+        age: 20,
+        spellPoints: {
+          mage: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+
+      const result = LevelUpService.performLevelUp(character)
+
+      // Level 3 mage should unlock spell level 2 points
+      expect(result.updatedCharacter.spellPoints?.mage?.level2.max).toBeGreaterThan(0)
+    })
+
+    it('does not modify spell points for non-caster (Fighter)', () => {
+      const character = createTestCharacter({
+        level: 1,
+        experience: 5000,
+        class: CharacterClass.FIGHTER,
+        hp: 15,
+        maxHp: 15,
+        age: 20
+      })
+
+      const result = LevelUpService.performLevelUp(character)
+
+      // Fighter should have no spell points
+      expect(result.updatedCharacter.spellPoints).toBeUndefined()
+    })
+  })
+
+  describe('getXPRequirement - all classes', () => {
+    it('calculates correct XP for all basic classes at level 2', () => {
+      // Fighter (0.8 multiplier) - fastest to level
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.FIGHTER)).toBe(2262)
+      // Thief (0.9 multiplier)
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.THIEF)).toBe(2545)
+      // Priest (1.0 multiplier)
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.PRIEST)).toBe(2828)
+      // Mage (1.2 multiplier) - slower
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.MAGE)).toBe(3394)
+    })
+
+    it('calculates correct XP for elite classes at level 2', () => {
+      // Samurai (1.1 multiplier)
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.SAMURAI)).toBe(3111)
+      // Lord (1.1 multiplier)
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.LORD)).toBe(3111)
+      // Ninja (1.2 multiplier)
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.NINJA)).toBe(3394)
+      // Bishop (1.3 multiplier) - slowest
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.BISHOP)).toBe(3676)
+    })
+
+    it('all classes can level up with sufficient XP', () => {
+      const allClasses = [
+        CharacterClass.FIGHTER,
+        CharacterClass.THIEF,
+        CharacterClass.PRIEST,
+        CharacterClass.MAGE,
+        CharacterClass.SAMURAI,
+        CharacterClass.LORD,
+        CharacterClass.NINJA,
+        CharacterClass.BISHOP
+      ]
+
+      for (const charClass of allClasses) {
+        const xpNeeded = LevelUpService.getXPRequirement(2, charClass)
+        const character = createTestCharacter({
+          level: 1,
+          experience: xpNeeded,
+          class: charClass
+        })
+
+        expect(LevelUpService.canLevelUp(character)).toBe(true)
+      }
+    })
   })
 })

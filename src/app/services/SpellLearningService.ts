@@ -175,7 +175,8 @@ export class SpellLearningService {
   /**
    * Learn new spells when leveling up using INT/PIE-based chance.
    *
-   * For each unlearned spell at the newly unlocked level:
+   * Per authentic Wizardry mechanics, characters can retry failed spells on each level-up.
+   * For each unlearned spell at ALL accessible spell levels:
    *   Roll against LearnChance = (INT or PIE) / 30
    *   If successful, add spell to known spells
    *
@@ -238,10 +239,12 @@ export class SpellLearningService {
 
   /**
    * Attempt to learn spells from a specific caster type.
+   * Per authentic Wizardry mechanics, characters can retry failed spells on each level-up.
+   * This method attempts to learn unlearned spells at ALL accessible spell levels.
    */
   private static attemptLearnSpells(
     character: Character,
-    oldLevel: number,
+    _oldLevel: number,
     newLevel: number,
     requirements: Record<number, number>,
     casterType: 'mage' | 'priest',
@@ -250,46 +253,42 @@ export class SpellLearningService {
   ): Spell[] {
     const learnedSpells: Spell[] = []
 
-    // Find what spell level was unlocked
-    let unlockedSpellLevel = 0
-    for (let spellLevel = 1; spellLevel <= 7; spellLevel++) {
+    // Get max spell level for this class (Samurai/Lord cap at level 6)
+    const maxSpellLevel = (casterType === 'mage' && character.class === CharacterClass.SAMURAI) ||
+                          (casterType === 'priest' && character.class === CharacterClass.LORD)
+                          ? 6 : 7
+
+    // Attempt to learn spells at ALL accessible spell levels (not just newly unlocked)
+    // This allows retrying failed spells on each level-up per authentic Wizardry mechanics
+    for (let spellLevel = 1; spellLevel <= maxSpellLevel; spellLevel++) {
       const reqLevel = requirements[spellLevel]
-      if (oldLevel < reqLevel && newLevel >= reqLevel) {
-        unlockedSpellLevel = spellLevel
-        break
-      }
-    }
 
-    if (unlockedSpellLevel === 0) {
-      return learnedSpells
-    }
-
-    // Get available spells at this level
-    const availableSpells: Spell[] = []
-    for (const spell of allSpells.values()) {
-      if (spell.casterType === casterType && spell.level === unlockedSpellLevel) {
-        availableSpells.push({
-          id: spell.id,
-          name: spell.name,
-          level: spell.level,
-          type: casterType === 'mage' ? 'MAGE' : 'PRIEST'
-        })
-      }
-    }
-
-    // Attempt to learn each spell based on INT/PIE
-    const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST'
-    const learnChance = this.getSpellLearnChance(character, spellType)
-
-    for (const spell of availableSpells) {
-      if (knownSpellIds.has(spell.id)) {
-        continue // Already known
+      // Check if this spell level is accessible at the new character level
+      if (newLevel < reqLevel) {
+        continue // Not accessible yet
       }
 
-      // Roll for learning (authentic Wizardry formula)
-      if (RandomService.roll(learnChance)) {
-        learnedSpells.push(spell)
-        knownSpellIds.add(spell.id)
+      // Get available spells at this level
+      for (const spell of allSpells.values()) {
+        if (spell.casterType === casterType && spell.level === spellLevel) {
+          if (knownSpellIds.has(spell.id)) {
+            continue // Already known
+          }
+
+          // Roll for learning (authentic Wizardry formula)
+          const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST'
+          const learnChance = this.getSpellLearnChance(character, spellType)
+
+          if (RandomService.roll(learnChance)) {
+            learnedSpells.push({
+              id: spell.id,
+              name: spell.name,
+              level: spell.level,
+              type: spellType
+            })
+            knownSpellIds.add(spell.id)
+          }
+        }
       }
     }
 

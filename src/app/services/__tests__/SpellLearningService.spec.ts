@@ -93,7 +93,7 @@ describe('SpellLearningService', () => {
         class: CharacterClass.MAGE,
         level: 2,
         intelligence: 15, // 15/30 = 50% chance per spell
-        knownSpells: []
+        knownSpells: ['halito', 'katino', 'dumapic', 'mogref'] // Already knows all level 1 spells
       })
 
       // Queue low values to guarantee spell learning (all spells at level 2)
@@ -107,17 +107,25 @@ describe('SpellLearningService', () => {
       expect(result.newSpells[0].level).toBe(2)
     })
 
-    it('does not learn spells when not reaching new spell level', () => {
+    it('retries learning unlearned spells from previous levels on each level-up', () => {
+      // Per authentic Wizardry mechanics, characters can retry failed spells each level-up
       const character = createTestCharacter({
         class: CharacterClass.MAGE,
         level: 1,
-        knownSpells: []
+        intelligence: 15, // 15/30 = 50% chance
+        knownSpells: ['halito'] // Only knows one level 1 spell, others failed
       })
 
-      // Level 1 → 2 does not unlock new spell level (still level 1)
+      // Queue low values to guarantee spell learning
+      RandomService.queueNextValues([0.1, 0.1, 0.1, 0.1, 0.1])
+
+      // Level 1 → 2 should allow retrying level 1 spells
       const result = SpellLearningService.learnNewSpells(character, 1, 2)
 
-      expect(result.newSpells).toEqual([])
+      // Should learn other level 1 spells that weren't known
+      expect(result.newSpells.length).toBeGreaterThan(0)
+      expect(result.newSpells.every(s => s.level === 1)).toBe(true)
+      expect(result.newSpells.some(s => s.id !== 'halito')).toBe(true)
     })
 
     it('adds learned spells to character (INT-based chance)', () => {
@@ -125,7 +133,7 @@ describe('SpellLearningService', () => {
         class: CharacterClass.MAGE,
         level: 2,
         intelligence: 15, // 15/30 = 50% chance
-        knownSpells: []
+        knownSpells: ['halito', 'katino', 'dumapic', 'mogref'] // Already knows all level 1 spells
       })
 
       // Queue low values to guarantee spell learning
@@ -133,7 +141,7 @@ describe('SpellLearningService', () => {
 
       const result = SpellLearningService.learnNewSpells(character, 2, 3)
 
-      expect(result.updatedCharacter.knownSpells.length).toBeGreaterThan(0)
+      expect(result.updatedCharacter.knownSpells.length).toBeGreaterThan(4)
       expect(result.updatedCharacter.knownSpells).toEqual(
         expect.arrayContaining(result.newSpells.map(s => s.id))
       )

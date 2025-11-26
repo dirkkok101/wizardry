@@ -1,6 +1,8 @@
 import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
+import { CharacterSpellPoints, SpellPointPool } from '@models/SpellPoints'
 import { RandomService } from './RandomService'
+import { ClassService } from './ClassService'
 
 interface StatChanges {
   strength?: number
@@ -46,6 +48,17 @@ const CLASS_HIT_DICE: Record<CharacterClass, number> = {
   [CharacterClass.BISHOP]: 6,
   [CharacterClass.THIEF]: 6,
   [CharacterClass.MAGE]: 4
+}
+
+// Character level required to access each spell level (1-7)
+const SPELL_LEVEL_REQUIREMENTS: Record<number, number> = {
+  1: 1,   // Spell level 1 at character level 1
+  2: 3,   // Spell level 2 at character level 3
+  3: 5,   // Spell level 3 at character level 5
+  4: 7,   // Spell level 4 at character level 7
+  5: 9,   // Spell level 5 at character level 9
+  6: 11,  // Spell level 6 at character level 11
+  7: 13   // Spell level 7 at character level 13
 }
 
 export class LevelUpService {
@@ -157,16 +170,20 @@ export class LevelUpService {
   }
 
   /**
-   * Perform level up: increment level, roll HP, roll stats
+   * Perform level up: increment level, roll HP, roll stats, increase spell points
    * Returns updated character and level up data for display
    */
   static performLevelUp(character: Character): LevelUpResult {
     const hpIncrease = this.rollHPIncrease(character)
     const statChanges = this.rollStatChanges(character)
+    const newLevel = character.level + 1
+
+    // Calculate updated spell points for the new level
+    const updatedSpellPoints = this.calculateSpellPointsForLevel(character, newLevel)
 
     const updatedCharacter: Character = {
       ...character,
-      level: character.level + 1,
+      level: newLevel,
       maxHp: character.maxHp + hpIncrease,
       hp: character.maxHp + hpIncrease, // Fully heal on level up
       strength: character.strength + (statChanges.strength || 0),
@@ -174,11 +191,12 @@ export class LevelUpService {
       piety: character.piety + (statChanges.piety || 0),
       vitality: character.vitality + (statChanges.vitality || 0),
       agility: character.agility + (statChanges.agility || 0),
-      luck: character.luck + (statChanges.luck || 0)
+      luck: character.luck + (statChanges.luck || 0),
+      spellPoints: updatedSpellPoints
     }
 
     const levelUpData: LevelUpData = {
-      newLevel: character.level + 1,
+      newLevel,
       hpIncrease,
       statChanges
     }
@@ -187,5 +205,71 @@ export class LevelUpService {
       updatedCharacter,
       levelUpData
     }
+  }
+
+  /**
+   * Calculate spell points for a character at a given level.
+   *
+   * Formula: For each accessible spell level, max points = min(9, characterLevel - reqLevel + 2)
+   * - Spell level 1 at char level 1: min(9, 1-1+2) = 2 points
+   * - Spell level 1 at char level 2: min(9, 2-1+2) = 3 points
+   * - Spell level 2 at char level 3: min(9, 3-3+2) = 2 points
+   *
+   * Current spell points are restored to max on level up.
+   */
+  static calculateSpellPointsForLevel(
+    character: Character,
+    newLevel: number
+  ): CharacterSpellPoints | undefined {
+    const classData = ClassService.getClassData(character.class)
+
+    // Non-casters have no spell points
+    if (!classData.spellAccess) {
+      return character.spellPoints // Preserve existing (should be undefined)
+    }
+
+    const calculatePool = (maxSpellLevel: number): SpellPointPool => {
+      const pool: SpellPointPool = {
+        level1: { current: 0, max: 0 },
+        level2: { current: 0, max: 0 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+
+      for (let spellLevel = 1; spellLevel <= 7; spellLevel++) {
+        const reqLevel = SPELL_LEVEL_REQUIREMENTS[spellLevel]
+
+        // Check if this spell level is accessible (character level >= required AND within class max)
+        if (newLevel >= reqLevel && spellLevel <= maxSpellLevel) {
+          // Calculate max spell points: characterLevel - reqLevel + 2, capped at 9
+          const maxPoints = Math.min(9, newLevel - reqLevel + 2)
+          const key = `level${spellLevel}` as keyof SpellPointPool
+          pool[key] = { current: maxPoints, max: maxPoints }
+        }
+      }
+
+      return pool
+    }
+
+    const spellPoints: CharacterSpellPoints = {}
+
+    // Calculate mage spell points if class has mage access
+    if (classData.spellAccess.mage) {
+      // Samurai maxes at spell level 6, others can reach 7
+      const maxMageLevel = character.class === CharacterClass.SAMURAI ? 6 : 7
+      spellPoints.mage = calculatePool(maxMageLevel)
+    }
+
+    // Calculate priest spell points if class has priest access
+    if (classData.spellAccess.priest) {
+      // Lord maxes at spell level 6, others can reach 7
+      const maxPriestLevel = character.class === CharacterClass.LORD ? 6 : 7
+      spellPoints.priest = calculatePool(maxPriestLevel)
+    }
+
+    return spellPoints
   }
 }
