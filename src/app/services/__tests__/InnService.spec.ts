@@ -213,6 +213,65 @@ describe('InnService', () => {
       expect(result.updatedCharacter.spellPoints?.mage?.level1.current).toBe(3)
       expect(result.updatedCharacter.spellPoints?.mage?.level2.current).toBe(2)
     })
+
+    it('does NOT restore spell points when resting in BARRACKS', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 0, max: 3 },
+        level2: { current: 0, max: 2 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const character = createTestCharacter({
+        hp: 10,
+        maxHp: 20,
+        spellPoints: { mage: depleted }
+      })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 100
+        }
+      }
+
+      const result = InnService.restOneWeek(state, character, RoomType.BARRACKS)
+
+      expect(result.spellPointsRestored).toBe(false)
+      expect(result.updatedCharacter.spellPoints?.mage?.level1.current).toBe(0)
+    })
+
+    it('does NOT restore spell points when resting in ROYAL_SUITE', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 1, max: 5 },
+        level2: { current: 0, max: 3 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const character = createTestCharacter({
+        hp: 10,
+        maxHp: 20,
+        spellPoints: { mage: depleted }
+      })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000
+        }
+      }
+
+      const result = InnService.restOneWeek(state, character, RoomType.ROYAL_SUITE)
+
+      expect(result.spellPointsRestored).toBe(false)
+      expect(result.updatedCharacter.spellPoints?.mage?.level1.current).toBe(1)
+      expect(result.updatedCharacter.spellPoints?.mage?.level2.current).toBe(0)
+    })
   })
 
   describe('restoreSpellPoints', () => {
