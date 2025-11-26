@@ -1,0 +1,52 @@
+<div class="tier-selection">
+  <h3 class="selection-title">{{ title() }}</h3>
+
+  <div class="funds-display">
+    <span class="funds-label">{{ fundsLabel() }}:</span>
+    <span class="funds-value">{{ availableFunds() }}</span>
+  </div>
+
+  <div class="options-list">
+    @for (option of optionsWithAffordability(); track option.id; let i = $index) {
+      <div
+        class="option-row"
+        [class.selected]="selectedIndex() === i"
+        [class.disabled]="!option.affordable"
+        (click)="selectOption(option, i)"
+        role="button"
+        [attr.tabindex]="option.affordable ? 0 : -1"
+      >
+        <div class="option-header">
+          <span class="option-shortcut">({{ option.shortcut }})</span>
+          <span class="option-name">{{ option.name }}</span>
+          @if (!option.affordable) {
+            <span class="unaffordable-badge">CANNOT AFFORD</span>
+          }
+        </div>
+
+        <div class="option-details">
+          <span class="option-cost">
+            @if (option.cost === 0) {
+              FREE
+            } @else {
+              {{ option.cost }} {{ option.costUnit || 'gp' }}
+            }
+          </span>
+          <span class="option-benefit">{{ option.benefit }}</span>
+        </div>
+
+        @if (option.description) {
+          <div class="option-description">{{ option.description }}</div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (showBackOption()) {
+    <div class="back-option">
+      <button class="back-btn" (click)="onBackClick()">
+        BACK (ESC)
+      </button>
+    </div>
+  }
+</div>

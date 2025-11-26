@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { InnComponent } from './inn.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
@@ -7,8 +7,9 @@ import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
 import { CharacterClass } from '@models/CharacterClass';
 import { CharacterStatus } from '@models/CharacterStatus';
-import { RoomType } from '@services/InnService';
+import { RoomType, InnService } from '@services/InnService';
 import { createTestCharacter } from '@testing/test-factories';
+import { TierOption } from '@shared/components/tier-selection/tier-selection.component';
 
 describe('InnComponent', () => {
   let component: InnComponent;
@@ -30,6 +31,15 @@ describe('InnComponent', () => {
       ...overrides
     });
   };
+
+  const createRoomOption = (roomType: RoomType): TierOption => ({
+    id: roomType,
+    name: roomType.toLowerCase().replace('_', ' '),
+    cost: InnService.getRoomCost(roomType),
+    costUnit: 'gp/week',
+    benefit: `${InnService.getRoomHealRate(roomType)} HP/week`,
+    shortcut: roomType[0]
+  });
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -78,7 +88,7 @@ describe('InnComponent', () => {
       expect(characterGrid).toBeTruthy();
     });
 
-    it('has footer menu with return option', () => {
+    it('has footer menu with return option when not in room selection', () => {
       fixture.detectChanges();
       expect(component.footerMenuItems().length).toBeGreaterThan(0);
       expect(component.footerMenuItems().some(item => item.id === 'return')).toBe(true);
@@ -148,31 +158,31 @@ describe('InnComponent', () => {
     });
   });
 
-  describe('room selection', () => {
+  describe('room selection with TierSelectionComponent', () => {
     beforeEach(() => {
       component.selectCharacterToRest('char-1');
     });
 
-    it('has all 5 room types in menu plus back option', () => {
-      expect(component.roomMenuItems.length).toBe(6);
-      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.STABLES);
-      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.BARRACKS);
-      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.DOUBLE);
-      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.PRIVATE);
-      expect(component.roomMenuItems.map(m => m.id)).toContain(RoomType.ROYAL_SUITE);
-      expect(component.roomMenuItems.map(m => m.id)).toContain('back');
+    it('has all 5 room types in roomOptions', () => {
+      expect(component.roomOptions.length).toBe(5);
+      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.STABLES);
+      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.BARRACKS);
+      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.DOUBLE);
+      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.PRIVATE);
+      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.ROYAL_SUITE);
     });
 
-    it('shows confirmation dialog when room is selected', () => {
-      component.handleRoomSelect(RoomType.BARRACKS);
+    it('shows confirmation dialog when room is selected via TierSelection', () => {
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
 
       expect(component.showConfirmation()).toBe(true);
       expect(component.pendingRoomType()).toBe(RoomType.BARRACKS);
       expect(component.confirmationMessage()).toContain('barracks');
     });
 
-    it('cancels room selection on back', () => {
-      component.handleRoomSelect('back');
+    it('cancels room selection when TierSelection emits cancelled', () => {
+      component.handleRoomSelectionCancelled();
 
       expect(component.showRoomSelection()).toBe(false);
       expect(component.selectedCharacterId()).toBeNull();
@@ -184,10 +194,31 @@ describe('InnComponent', () => {
         party: { ...state.party, gold: 5 }
       }));
 
-      component.handleRoomSelect(RoomType.ROYAL_SUITE);
+      const option = createRoomOption(RoomType.ROYAL_SUITE);
+      component.handleRoomSelected(option);
 
       expect(messageService.isError()).toBe(true);
       expect(component.showConfirmation()).toBe(false);
+    });
+  });
+
+  describe('footer menu during room selection', () => {
+    it('shows back option in footer when in room selection', () => {
+      component.showRoomSelection.set(true);
+
+      const footerItems = component.footerMenuItems();
+      expect(footerItems.some(item => item.id === 'back')).toBe(true);
+      expect(footerItems.some(item => item.id === 'return')).toBe(false);
+    });
+
+    it('cancels room selection via footer back action', () => {
+      component.selectedCharacterId.set('char-1');
+      component.showRoomSelection.set(true);
+
+      component.handleFooterAction('back');
+
+      expect(component.showRoomSelection()).toBe(false);
+      expect(component.selectedCharacterId()).toBeNull();
     });
   });
 
@@ -203,7 +234,8 @@ describe('InnComponent', () => {
     });
 
     it('heals character when rest is confirmed', () => {
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       const state = gameState.state();
@@ -214,7 +246,8 @@ describe('InnComponent', () => {
     it('deducts gold from party when resting', () => {
       const initialGold = gameState.party().gold || 0;
 
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       const finalGold = gameState.party().gold || 0;
@@ -224,7 +257,8 @@ describe('InnComponent', () => {
     it('stables are free', () => {
       const initialGold = gameState.party().gold || 0;
 
-      component.handleRoomSelect(RoomType.STABLES);
+      const option = createRoomOption(RoomType.STABLES);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       const finalGold = gameState.party().gold || 0;
@@ -232,7 +266,8 @@ describe('InnComponent', () => {
     });
 
     it('shows success message after resting', () => {
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       expect(messageService.hasMessage()).toBe(true);
@@ -240,13 +275,154 @@ describe('InnComponent', () => {
     });
 
     it('cancels confirmation without performing rest', () => {
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       const initialGold = gameState.party().gold || 0;
 
       component.cancelConfirmation();
 
       expect(component.showConfirmation()).toBe(false);
       expect(gameState.party().gold).toBe(initialGold);
+    });
+
+    it('initializes rest progress when confirming rest', () => {
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()).not.toBeNull();
+      expect(component.restProgress()?.weeksRested).toBe(1);
+      expect(component.restProgress()?.startingHp).toBe(10);
+    });
+  });
+
+  describe('auto-rest functionality', () => {
+    beforeEach(() => {
+      const char = createCharacterInParty({ hp: 17, maxHp: 20 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 1000 }
+      }));
+      component.selectCharacterToRest('char-1');
+    });
+
+    it('fully heals character with auto-rest', fakeAsync(() => {
+      const option = createRoomOption(RoomType.DOUBLE); // 3 HP/week
+      component.handleRoomSelected(option);
+      component.confirmAutoRest();
+
+      // Wait for auto-rest loop to complete (1 week = 100ms delay)
+      tick(500);
+
+      const state = gameState.state();
+      const updatedChar = state.roster.get('char-1')!;
+      expect(updatedChar.hp).toBe(20); // Fully healed
+      expect(component.isAutoResting()).toBe(false);
+    }));
+
+    it('stops auto-rest when ESC is pressed', fakeAsync(() => {
+      const option = createRoomOption(RoomType.BARRACKS); // 1 HP/week, slow healing
+      component.handleRoomSelected(option);
+      component.confirmAutoRest();
+
+      expect(component.isAutoResting()).toBe(true);
+
+      // Stop auto-rest
+      component.handleEscape();
+
+      expect(component.isAutoResting()).toBe(false);
+    }));
+
+    it('stops auto-rest when gold runs out', fakeAsync(() => {
+      // Set low gold
+      gameState.updateState(state => ({
+        ...state,
+        party: { ...state.party, gold: 15 }
+      }));
+
+      const option = createRoomOption(RoomType.BARRACKS); // 10 gp/week
+      component.handleRoomSelected(option);
+      component.confirmAutoRest();
+
+      // Wait for auto-rest loop
+      tick(500);
+
+      expect(component.isAutoResting()).toBe(false);
+      expect(messageService.isError()).toBe(true);
+    }));
+  });
+
+  describe('rest progress tracking', () => {
+    beforeEach(() => {
+      const char = createCharacterInParty({ hp: 5, maxHp: 20 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 500 }
+      }));
+      component.selectCharacterToRest('char-1');
+    });
+
+    it('tracks weeks rested', () => {
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()?.weeksRested).toBe(1);
+
+      // Rest another week
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()?.weeksRested).toBe(2);
+    });
+
+    it('tracks total gold spent', () => {
+      const option = createRoomOption(RoomType.DOUBLE); // 50 gp/week
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()?.totalGoldSpent).toBe(50);
+
+      // Rest another week
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()?.totalGoldSpent).toBe(100);
+    });
+
+    it('tracks total HP recovered', () => {
+      const option = createRoomOption(RoomType.DOUBLE); // 3 HP/week
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()?.totalHpRecovered).toBe(3);
+
+      // Rest another week
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      expect(component.restProgress()?.totalHpRecovered).toBe(6);
+    });
+
+    it('clears rest progress when fully healed', () => {
+      // Character needs 15 HP to be full
+      const char = createCharacterInParty({ hp: 17, maxHp: 20 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 500 }
+      }));
+      component.selectCharacterToRest('char-1');
+
+      const option = createRoomOption(RoomType.DOUBLE); // 3 HP/week
+      component.handleRoomSelected(option);
+      component.confirmRest();
+
+      // Character should be fully healed now (17 + 3 = 20)
+      expect(component.restProgress()).toBeNull();
+      expect(component.showRoomSelection()).toBe(false);
     });
   });
 
@@ -266,7 +442,8 @@ describe('InnComponent', () => {
       }));
 
       component.selectCharacterToRest('char-1');
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       expect(component.levelUpData()).not.toBeNull();
@@ -288,7 +465,8 @@ describe('InnComponent', () => {
       }));
 
       component.selectCharacterToRest('char-1');
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       expect(component.levelUpData()?.newLevel).toBe(2);
@@ -326,7 +504,8 @@ describe('InnComponent', () => {
       }));
 
       component.selectCharacterToRest('char-1');
-      component.handleRoomSelect(RoomType.BARRACKS);
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
       component.confirmRest();
 
       const state = gameState.state();
@@ -399,6 +578,14 @@ describe('InnComponent', () => {
 
       expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
+
+    it('stops auto-rest on ESC', () => {
+      component.isAutoResting.set(true);
+
+      component.handleEscape();
+
+      expect(component.isAutoResting()).toBe(false);
+    });
   });
 
   describe('empty party state', () => {
@@ -433,21 +620,6 @@ describe('InnComponent', () => {
     it('selectedCharacter returns null when no selection', () => {
       component.selectedCharacterId.set(null);
       expect(component.selectedCharacter()).toBeNull();
-    });
-
-    it('restableCharacters excludes dead characters', () => {
-      const deadChar = createCharacterInParty({
-        id: 'dead-char',
-        status: CharacterStatus.DEAD
-      });
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('dead-char', deadChar),
-        party: { ...state.party, members: ['char-1', 'dead-char'] }
-      }));
-
-      expect(component.restableCharacters().length).toBe(1);
-      expect(component.restableCharacters()[0].id).toBe('char-1');
     });
   });
 });

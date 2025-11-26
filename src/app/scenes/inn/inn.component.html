@@ -23,7 +23,7 @@
     }
 
     <!-- Room Selection View -->
-    @if (showRoomSelection() && !showConfirmation()) {
+    @if (showRoomSelection() && !showConfirmation() && !levelUpData()) {
       <div class="room-selection">
         @if (selectedCharacter(); as character) {
           <div class="character-info">
@@ -33,17 +33,48 @@
               <span class="hp" [class.injured]="character.hp < character.maxHp">
                 HP: {{ character.hp }}/{{ character.maxHp }}
               </span>
+              @if (character.hp < character.maxHp) {
+                <span class="hp-needed">({{ character.maxHp - character.hp }} HP to full)</span>
+              }
             </div>
           </div>
 
-          <h3>SELECT ROOM TYPE</h3>
-
-          <app-menu
-            [items]="roomMenuItems"
-            (select)="handleRoomSelect($event)"
+          <app-tier-selection
+            title="SELECT ROOM TYPE"
+            [options]="roomOptions"
+            [availableFunds]="partyGold()"
+            fundsLabel="Party Gold"
+            [showBackOption]="false"
+            (optionSelected)="handleRoomSelected($event)"
+            (cancelled)="handleRoomSelectionCancelled()"
           />
         }
       </div>
+
+      <!-- Rest Progress Display -->
+      @if (restProgress(); as progress) {
+        <div class="rest-progress">
+          <div class="progress-bar-container">
+            <div
+              class="progress-bar"
+              [style.width.%]="(progress.currentHp / progress.maxHp) * 100"
+            ></div>
+          </div>
+          <div class="progress-stats">
+            <span>HP: {{ progress.currentHp }}/{{ progress.maxHp }}</span>
+            <span>Weeks: {{ progress.weeksRested }}</span>
+            <span>Gold spent: {{ progress.totalGoldSpent }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Auto-Rest Indicator -->
+      @if (isAutoResting()) {
+        <div class="auto-rest-indicator">
+          <span class="spinner"></span>
+          <span>Resting... (Press ESC to stop)</span>
+        </div>
+      }
     }
 
     <!-- Level Up Display -->
@@ -105,20 +136,32 @@
     }
   </div>
 
-  <!-- Footer menu (only show when not in room selection or level-up) -->
-  @if (!showRoomSelection() && !levelUpData()) {
+  <!-- Footer menu - always visible with contextual actions -->
+  @if (!levelUpData()) {
     <app-scene-footer
       [menuItems]="footerMenuItems()"
       (itemSelected)="handleFooterAction($event)"
     />
   }
 
-  <!-- Confirmation Dialog -->
+  <!-- Rest Confirmation Dialog (custom with 3 options) -->
   @if (showConfirmation()) {
-    <app-confirmation-dialog
-      [message]="confirmationMessage()"
-      (confirm)="confirmRest()"
-      (cancel)="cancelConfirmation()"
-    />
+    <div class="dialog-overlay" tabindex="0">
+      <div class="rest-dialog" (click)="$event.stopPropagation()">
+        <div class="dialog-message">{{ confirmationMessage() }}</div>
+
+        <div class="dialog-buttons">
+          <button class="dialog-btn primary" (click)="confirmRest()">
+            (1) Rest 1 Week
+          </button>
+          <button class="dialog-btn primary" (click)="confirmAutoRest()">
+            (A) Rest Until Full
+          </button>
+          <button class="dialog-btn secondary" (click)="cancelConfirmation()">
+            (Esc) Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>
