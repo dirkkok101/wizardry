@@ -1,6 +1,7 @@
 import { Item } from '../types/Item'
 import { GameState } from '../types/GameState'
 import * as PartyService from './PartyService'
+import { ItemDataLoader } from './ItemDataLoader'
 
 /**
  * ShopService - Boltac's Trading Post business logic
@@ -9,20 +10,20 @@ import * as PartyService from './PartyService'
  * - Purchase price validation
  * - Sell price calculation (50% of purchase price)
  * - Identify service pricing (100 gold flat fee)
+ * - Uncurse service pricing (500 gold base * power level)
  * - Cursed item handling (cannot sell)
  */
 
-interface BuyResult {
+interface ShopResult {
   success: boolean
   error?: string
   state?: GameState
 }
 
-interface SellResult {
-  success: boolean
-  error?: string
-  state?: GameState
-}
+interface BuyResult extends ShopResult {}
+interface SellResult extends ShopResult {}
+interface IdentifyResult extends ShopResult {}
+interface UncurseResult extends ShopResult {}
 
 export class ShopService {
   /**
@@ -130,6 +131,166 @@ export class ShopService {
     const updatedCharacter = {
       ...character,
       inventory: character.inventory.filter(invItem => invItem !== item.id)
+    }
+
+    newState = {
+      ...newState,
+      roster: new Map(newState.roster).set(characterId, updatedCharacter)
+    }
+
+    return { success: true, state: newState }
+  }
+
+  /**
+   * Calculate uncurse price for an item.
+   * Base cost of 500 gold, multiplied by power level if present.
+   */
+  static calculateUncursePrice(item: Item): number {
+    const baseCost = 500
+    const powerLevel = item.powerLevel || 1
+    return baseCost * powerLevel
+  }
+
+  /**
+   * Identify an item in character inventory.
+   * Reveals item properties and sets identified flag to true.
+   *
+   * @param state - Current game state
+   * @param characterId - Character owning the item
+   * @param itemId - ID of item to identify
+   * @returns IdentifyResult with updated state or error
+   */
+  static identifyItem(state: GameState, characterId: string, itemId: string): IdentifyResult {
+    const character = state.roster.get(characterId)
+    if (!character) {
+      return { success: false, error: 'Character not found' }
+    }
+
+    // Find item in inventory (handle both string IDs and Item objects)
+    const itemIndex = character.inventory.findIndex(invItem => {
+      if (typeof invItem === 'object' && 'id' in invItem) {
+        return invItem.id === itemId
+      }
+      return invItem === itemId
+    })
+
+    if (itemIndex === -1) {
+      return { success: false, error: 'Item not in inventory' }
+    }
+
+    const item = character.inventory[itemIndex]
+
+    // Resolve item to Item object (may be string ID or already an object)
+    let itemObj: Item | null = null
+    if (typeof item === 'object') {
+      itemObj = item as Item
+    } else if (typeof item === 'string') {
+      // Look up from ItemDataLoader
+      if (ItemDataLoader.isLoaded()) {
+        itemObj = ItemDataLoader.getItem(item)
+      }
+    }
+
+    if (!itemObj) {
+      return { success: false, error: 'Item data not found' }
+    }
+
+    if (itemObj.identified) {
+      return { success: false, error: 'Item is already identified' }
+    }
+
+    const identifyCost = ShopService.calculateIdentifyPrice(itemObj)
+
+    // Check party gold
+    if (!PartyService.hasEnoughGold(state, identifyCost)) {
+      return { success: false, error: 'Insufficient party gold' }
+    }
+
+    // Deduct from party gold
+    let newState = PartyService.removePartyGold(state, identifyCost)
+
+    // Update item to be identified (store as object with identified: true)
+    const updatedInventory = [...character.inventory]
+    updatedInventory[itemIndex] = { ...itemObj, identified: true }
+
+    const updatedCharacter = {
+      ...character,
+      inventory: updatedInventory
+    }
+
+    newState = {
+      ...newState,
+      roster: new Map(newState.roster).set(characterId, updatedCharacter)
+    }
+
+    return { success: true, state: newState }
+  }
+
+  /**
+   * Remove curse from an item in character inventory.
+   * Allows the item to be unequipped and sold.
+   *
+   * @param state - Current game state
+   * @param characterId - Character owning the item
+   * @param itemId - ID of item to uncurse
+   * @returns UncurseResult with updated state or error
+   */
+  static uncurseItem(state: GameState, characterId: string, itemId: string): UncurseResult {
+    const character = state.roster.get(characterId)
+    if (!character) {
+      return { success: false, error: 'Character not found' }
+    }
+
+    // Find item in inventory (handle both string IDs and Item objects)
+    const itemIndex = character.inventory.findIndex(invItem => {
+      if (typeof invItem === 'object' && 'id' in invItem) {
+        return invItem.id === itemId
+      }
+      return invItem === itemId
+    })
+
+    if (itemIndex === -1) {
+      return { success: false, error: 'Item not in inventory' }
+    }
+
+    const item = character.inventory[itemIndex]
+
+    // Resolve item to Item object (may be string ID or already an object)
+    let itemObj: Item | null = null
+    if (typeof item === 'object') {
+      itemObj = item as Item
+    } else if (typeof item === 'string') {
+      // Look up from ItemDataLoader
+      if (ItemDataLoader.isLoaded()) {
+        itemObj = ItemDataLoader.getItem(item)
+      }
+    }
+
+    if (!itemObj) {
+      return { success: false, error: 'Item data not found' }
+    }
+
+    if (!itemObj.cursed) {
+      return { success: false, error: 'Item is not cursed' }
+    }
+
+    const uncurseCost = ShopService.calculateUncursePrice(itemObj)
+
+    // Check party gold
+    if (!PartyService.hasEnoughGold(state, uncurseCost)) {
+      return { success: false, error: 'Insufficient party gold' }
+    }
+
+    // Deduct from party gold
+    let newState = PartyService.removePartyGold(state, uncurseCost)
+
+    // Update item to remove curse
+    const updatedInventory = [...character.inventory]
+    updatedInventory[itemIndex] = { ...itemObj, cursed: false }
+
+    const updatedCharacter = {
+      ...character,
+      inventory: updatedInventory
     }
 
     newState = {

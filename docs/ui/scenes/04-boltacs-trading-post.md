@@ -10,6 +10,62 @@
 
 ---
 
+## Interaction Patterns
+
+### Party vs Character Actions
+
+This scene operates in a **character-context** model:
+
+**Party-Level Actions (Footer Menu):**
+- Leave Shop - Navigation back to Castle Menu
+- Change Character - Switch which character you're shopping for
+
+**Character-Level Actions (After Selection):**
+- Buy Items - Add items to the selected character's inventory
+- Sell Items - Sell items from the selected character's inventory
+- Identify Items - Reveal properties of unidentified items in inventory
+- Uncurse Items - Remove curses from items in inventory
+
+### Component Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│  SceneTitleComponent - "BOLTAC'S TRADING POST"  │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  Character Selection (PartyCharacterGridComponent)
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐           │
+│  │ Char 1  │ │ Char 2  │ │ Char 3  │           │
+│  │ [Shop]  │ │ [Shop]  │ │ [Shop]  │           │
+│  │ [View]  │ │ [View]  │ │ [View]  │           │
+│  └─────────┘ └─────────┘ └─────────┘           │
+│                                                 │
+│  OR (after selection)                           │
+│                                                 │
+│  Transaction View (Buy/Sell/Identify/Uncurse)  │
+│  - Item list with action buttons               │
+│  - Confirmation dialogs                        │
+│                                                 │
+├─────────────────────────────────────────────────┤
+│  SceneFooterComponent - [Buy] [Sell] [Leave]   │
+└─────────────────────────────────────────────────┘
+```
+
+### State Machine
+
+```
+character-select ──(select)──> main ──(action)──> buy/sell/identify/uncurse
+       │                         │                        │
+       │                         │                        │
+       └──(leave)──> castle      └──(leave)──> castle    └──(back/ESC)──> main
+```
+
+### Auto-Selection Behavior
+
+When only one party member exists, the scene automatically selects them and skips directly to the main menu view. This reduces friction for solo adventurers.
+
+---
+
 ## Entry Conditions
 
 ### From Where

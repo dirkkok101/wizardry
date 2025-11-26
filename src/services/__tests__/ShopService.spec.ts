@@ -230,4 +230,230 @@ describe('ShopService', () => {
       expect(result.error).toBe('Cannot sell cursed equipped item')
     })
   })
+
+  describe('identifyItem', () => {
+    const unidentifiedItem: Item = {
+      id: 'unid-item',
+      name: 'Magic Sword',
+      type: ItemType.WEAPON,
+      slot: ItemSlot.WEAPON,
+      price: 500,
+      damage: 15,
+      cursed: false,
+      identified: false,
+      equipped: false
+    }
+
+    it('identifies an item stored as object in inventory', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [unidentifiedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 500,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.identifyItem(state, 'char-1', 'unid-item')
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get('char-1')
+      const identifiedItem = updatedChar!.inventory[0] as Item
+      expect(identifiedItem.identified).toBe(true)
+    })
+
+    it('deducts gold when identifying item', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [unidentifiedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 500,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.identifyItem(state, 'char-1', 'unid-item')
+
+      expect(result.success).toBe(true)
+      expect(result.state!.party.gold).toBe(400) // 500 - 100
+    })
+
+    it('returns error if item is already identified', () => {
+      const identifiedItem = { ...unidentifiedItem, identified: true }
+      const character = createTestCharacter({ id: 'char-1', inventory: [identifiedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 500,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.identifyItem(state, 'char-1', 'unid-item')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Item is already identified')
+    })
+
+    it('returns error if party has insufficient gold', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [unidentifiedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 50,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.identifyItem(state, 'char-1', 'unid-item')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Insufficient party gold')
+    })
+
+    it('returns error if item not in inventory', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 500,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.identifyItem(state, 'char-1', 'nonexistent')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Item not in inventory')
+    })
+
+    it('returns error if character not found', () => {
+      const state = createTestGameState()
+
+      const result = ShopService.identifyItem(state, 'nonexistent', 'unid-item')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Character not found')
+    })
+  })
+
+  describe('uncurseItem', () => {
+    const cursedItem: Item = {
+      id: 'cursed-item',
+      name: 'Cursed Blade',
+      type: ItemType.WEAPON,
+      slot: ItemSlot.WEAPON,
+      price: 300,
+      damage: 20,
+      cursed: true,
+      identified: true,
+      equipped: true
+    }
+
+    it('removes curse from item stored as object in inventory', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [cursedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.uncurseItem(state, 'char-1', 'cursed-item')
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get('char-1')
+      const uncursedItem = updatedChar!.inventory[0] as Item
+      expect(uncursedItem.cursed).toBe(false)
+    })
+
+    it('deducts correct gold for uncursing (500 base * power level)', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [cursedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.uncurseItem(state, 'char-1', 'cursed-item')
+
+      expect(result.success).toBe(true)
+      expect(result.state!.party.gold).toBe(500) // 1000 - 500 (base cost)
+    })
+
+    it('returns error if item is not cursed', () => {
+      const normalItem = { ...cursedItem, cursed: false }
+      const character = createTestCharacter({ id: 'char-1', inventory: [normalItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.uncurseItem(state, 'char-1', 'cursed-item')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Item is not cursed')
+    })
+
+    it('returns error if party has insufficient gold', () => {
+      const character = createTestCharacter({ id: 'char-1', inventory: [cursedItem] })
+      const state = {
+        ...createTestGameState(),
+        roster: new Map([['char-1', character]]),
+        party: {
+          ...createTestGameState().party,
+          gold: 100,
+          members: ['char-1']
+        }
+      }
+
+      const result = ShopService.uncurseItem(state, 'char-1', 'cursed-item')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Insufficient party gold')
+    })
+
+    it('returns error if character not found', () => {
+      const state = createTestGameState()
+
+      const result = ShopService.uncurseItem(state, 'nonexistent', 'cursed-item')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Character not found')
+    })
+  })
+
+  describe('calculateUncursePrice', () => {
+    it('returns 500 gold base cost for items without power level', () => {
+      const item = { ...mockItem, cursed: true }
+      expect(ShopService.calculateUncursePrice(item)).toBe(500)
+    })
+
+    it('multiplies by power level when present', () => {
+      const item = { ...mockItem, cursed: true, powerLevel: 3 }
+      expect(ShopService.calculateUncursePrice(item)).toBe(1500) // 500 * 3
+    })
+  })
 })
