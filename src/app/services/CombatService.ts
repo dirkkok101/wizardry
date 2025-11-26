@@ -1,5 +1,5 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate, CommandExecutionResult, CombatantStatus } from '@models/Combat'
 import { Character } from '@models/Character'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
@@ -311,7 +311,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     // Handle different command types
     if (command.type === 'ATTACK') {
       return this.executeAttackCommand(state, command, parryingCombatants)
@@ -362,7 +362,7 @@ export class CombatService {
    * @param state Current combat state
    * @param command The attack command to execute
    * @param parryingCombatants Set of combatant IDs that are currently parrying
-   * @returns Updated combat state and result messages (action + result split)
+   * @returns Updated combat state, result messages, and damage info for display sync
    *
    * @remarks
    * Authentic Wizardry mechanic: Helpless targets (ASLEEP or PARALYZED) take 2x damage
@@ -372,7 +372,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const target = command.target as Combatant
     if (!target) {
       return { newState: state, messages: ['No target specified'] }
@@ -413,7 +413,20 @@ export class CombatService {
     const damageMultiplier = (isAsleep || isParalyzed) ? 2 : 1
     const finalDamage = Math.floor(attackResult.damage * damageMultiplier)
 
-    // Apply damage to target
+    // Calculate new HP and status for target
+    const newHp = Math.max(0, target.hp - finalDamage)
+    // For status, handle monsters (CombatantStatus) vs characters (CharacterStatus)
+    // Monsters wake up when damaged, characters maintain their status
+    let newStatus: CombatantStatus
+    if ('monsterId' in target) {
+      // Monster: wake from ASLEEP, or keep status (unless dead)
+      newStatus = newHp === 0 ? 'DEAD' : target.status === 'ASLEEP' ? 'ALIVE' : target.status
+    } else {
+      // Character: map to ALIVE/DEAD for display purposes
+      newStatus = newHp === 0 ? 'DEAD' : 'ALIVE'
+    }
+
+    // Apply damage to target (for monsters - characters are tracked separately)
     const newState = this.applyDamage(state, target, finalDamage)
 
     // Build result message
@@ -432,7 +445,13 @@ export class CombatService {
 
     return {
       newState,
-      messages: [actionMessage, resultMessage]
+      messages: [actionMessage, resultMessage],
+      targetDamage: {
+        targetId: target.id,
+        damage: finalDamage,
+        newHp,
+        newStatus
+      }
     }
   }
 
@@ -440,7 +459,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand,
     parryingCombatants: Set<string>
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     // Add actor to parrying set
     parryingCombatants.add(command.actor.id)
 
@@ -454,7 +473,7 @@ export class CombatService {
   private static executeRunCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const actorName = this.getCombatantName(command.actor)
     return {
       newState: state, // State doesn't change, flee is checked at end of round
@@ -470,7 +489,7 @@ export class CombatService {
   private static executeAdvanceCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const monster = command.actor as MonsterInstance
 
     // Find the group this monster belongs to
@@ -519,7 +538,7 @@ export class CombatService {
   private static executeCastSpellCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
     const spellId = command.data?.spellId
@@ -664,7 +683,7 @@ export class CombatService {
   private static executeDispelCommand(
     state: CombatState,
     command: CombatCommand
-  ): { newState: CombatState; messages: string[] } {
+  ): CommandExecutionResult {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
 
@@ -1510,33 +1529,22 @@ export class CombatService {
         spellCast = { characterId: caster.id, spellId: command.data.spellId }
       }
 
-      // Track character damage for this event
+      // Track character damage for this event using targetDamage from executeCommand
+      // This avoids re-rolling attack and ensures displayed damage matches messages
       const eventCharacterUpdates = new Map<string, CharacterUpdate>()
-      if (command.target && !('monsterId' in command.target)) {
+      if (result.targetDamage && command.target && !('monsterId' in command.target)) {
         const target = command.target as Character
-        const isParrying = parryingCombatants.has(target.id)
-        const acModifier = isParrying ? -2 : 0
-
-        // Check if attacker is blind (-4 attack penalty)
-        const isBlind = this.hasStatusEffect(currentState, command.actor.id, 'BLIND')
-        const attackerPenalty = isBlind ? -4 : 0
-
-        // Get existing damage or start fresh
+        // Get existing character state (may have already been damaged this round)
         const existingChar = accumulatedCharacterUpdates.get(target.id) || target
 
-        // Only apply damage tracking for attack commands
-        if (command.type === 'ATTACK') {
-          const attackResult = this.resolveAttack(command.actor, existingChar, acModifier, attackerPenalty)
-          if (attackResult.hit) {
-            const updated = this.applyDamageToCharacter(existingChar, attackResult.damage)
-            accumulatedCharacterUpdates.set(target.id, updated)
-            eventCharacterUpdates.set(target.id, createCharacterUpdate(updated, updated.hp))
-          }
-        }
+        // Apply the damage that was actually calculated (from targetDamage)
+        const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
+        accumulatedCharacterUpdates.set(target.id, updated)
+        eventCharacterUpdates.set(target.id, createCharacterUpdate(updated, updated.hp))
       }
 
-      // Check if monster groups changed (for attack/spell damage to monsters)
-      const monstersChanged = JSON.stringify(stateBefore.monsterGroups) !== JSON.stringify(currentState.monsterGroups)
+      // Check if monster groups changed (efficient comparison without JSON.stringify)
+      const monstersChanged = this.monsterGroupsChanged(stateBefore.monsterGroups, currentState.monsterGroups)
 
       // Create event for this command
       const event: CombatRoundEvent = {
@@ -1711,6 +1719,38 @@ export class CombatService {
       defeat: false,
       fled: false
     }
+  }
+
+  /**
+   * Efficiently compare two monster group arrays to detect changes
+   * Only checks mutable properties (hp, status) rather than full deep equality
+   * @returns true if any monster hp or status changed
+   */
+  private static monsterGroupsChanged(before: MonsterGroup[], after: MonsterGroup[]): boolean {
+    if (before.length !== after.length) return true
+
+    for (let i = 0; i < before.length; i++) {
+      const groupBefore = before[i]
+      const groupAfter = after[i]
+
+      // Check formation change
+      if (groupBefore.formation !== groupAfter.formation) return true
+
+      // Check if monsters list length changed (shouldn't happen, but defensive)
+      if (groupBefore.monsters.length !== groupAfter.monsters.length) return true
+
+      // Check individual monster changes
+      for (let j = 0; j < groupBefore.monsters.length; j++) {
+        const monsterBefore = groupBefore.monsters[j]
+        const monsterAfter = groupAfter.monsters[j]
+
+        // Only check mutable properties that can change during combat
+        if (monsterBefore.hp !== monsterAfter.hp) return true
+        if (monsterBefore.status !== monsterAfter.status) return true
+      }
+    }
+
+    return false
   }
 
   /**

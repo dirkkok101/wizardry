@@ -92,6 +92,22 @@ export interface AttackResult {
   message: string
 }
 
+/**
+ * Result of executing a combat command
+ * Includes state changes and optional metadata about what happened
+ */
+export interface CommandExecutionResult {
+  newState: CombatState
+  messages: string[]
+  /** Damage dealt to target (if attack hit) - used for display synchronization */
+  targetDamage?: {
+    targetId: string
+    damage: number
+    newHp: number
+    newStatus?: CombatantStatus
+  }
+}
+
 export interface SpellEffect {
   damage?: number[]
   healing?: number[]
