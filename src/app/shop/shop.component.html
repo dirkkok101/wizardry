@@ -212,11 +212,10 @@
   />
 
   <!-- Confirmation Dialog -->
-  @if (showConfirmation()) {
-    <app-confirmation-dialog
-      [message]="confirmationMessage()"
-      (confirm)="confirmAction()"
-      (cancel)="cancelAction()"
-    />
-  }
+  <app-confirmation-dialog
+    [visible]="showConfirmation()"
+    [message]="confirmationMessage()"
+    (confirmed)="confirmAction()"
+    (cancelled)="cancelAction()"
+  />
 </div>

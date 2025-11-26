@@ -188,20 +188,60 @@ export class ShopComponent implements OnInit {
   }
 
   // Keyboard navigation
-  @HostListener('window:keydown.escape')
-  handleEscape(): void {
+  @HostListener('window:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent): void {
+    // Don't handle keys when confirmation dialog is showing
     if (this.showConfirmation()) {
-      this.cancelAction();
       return;
     }
 
-    const view = this.currentView();
-    if (view === 'character-select') {
-      this.navigation.returnToCastle();
-    } else if (view === 'main') {
-      this.navigation.returnToCastle();
-    } else {
-      this.currentView.set('main');
+    const key = event.key.toLowerCase();
+
+    // ESC key handling
+    if (key === 'escape') {
+      const view = this.currentView();
+      if (view === 'character-select') {
+        this.navigation.returnToCastle();
+      } else if (view === 'main') {
+        this.navigation.returnToCastle();
+      } else {
+        this.currentView.set('main');
+      }
+      return;
+    }
+
+    // Shortcut keys only work in main view
+    if (this.currentView() !== 'main') {
+      return;
+    }
+
+    switch (key) {
+      case 'b':
+        this.handleFooterAction('buy');
+        break;
+      case 's':
+        if (this.selectedCharacter()?.inventory.length) {
+          this.handleFooterAction('sell');
+        }
+        break;
+      case 'i':
+        if (this.getUnidentifiedItems().length > 0) {
+          this.handleFooterAction('identify');
+        }
+        break;
+      case 'u':
+        if (this.getCursedItems().length > 0) {
+          this.handleFooterAction('uncurse');
+        }
+        break;
+      case 'c':
+        if (this.partyCharacters().length > 1) {
+          this.handleFooterAction('change-character');
+        }
+        break;
+      case 'l':
+        this.handleFooterAction('leave');
+        break;
     }
   }
 
@@ -472,12 +512,9 @@ export class ShopComponent implements OnInit {
       .filter((item): item is Item => item !== undefined);
   }
 
-  // Helper: Get sellable items
+  // Helper: Get sellable items (excludes all cursed items since they can't be sold)
   getSellableItems(): Item[] {
-    return this.getCharacterInventory().filter(item => {
-      if (item.equipped && item.cursed) return false;
-      return true;
-    });
+    return this.getCharacterInventory().filter(item => !item.cursed);
   }
 
   // Helper: Get unidentified items

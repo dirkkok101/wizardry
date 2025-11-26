@@ -158,22 +158,71 @@ describe('ShopComponent', () => {
 
     it('handles ESC key to return to castle from main view', () => {
       component.selectCharacter('char-1');
-      component.handleEscape();
+      component.handleKeydown({ key: 'Escape' } as KeyboardEvent);
       expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
     it('handles ESC key to return to main from sub-views', () => {
       component.selectCharacter('char-1');
       component.currentView.set('buy');
-      component.handleEscape();
+      component.handleKeydown({ key: 'Escape' } as KeyboardEvent);
       expect(component.currentView()).toBe('main');
     });
 
-    it('handles ESC key to cancel confirmation dialog', () => {
+    it('handles ESC key to cancel confirmation dialog - dialog handles this', () => {
+      // Note: When confirmation dialog is showing, keyboard events are handled by the dialog itself
+      // The component's handleKeydown returns early when showConfirmation is true
       component.selectCharacter('char-1');
       component.showConfirmation.set(true);
-      component.handleEscape();
+      // Calling cancelAction directly as the dialog would
+      component.cancelAction();
       expect(component.showConfirmation()).toBe(false);
+    });
+  });
+
+  describe('keyboard shortcuts', () => {
+    beforeEach(() => {
+      component.selectCharacter('char-1');
+    });
+
+    it('B key transitions to buy view', () => {
+      component.handleKeydown({ key: 'b' } as KeyboardEvent);
+      expect(component.currentView()).toBe('buy');
+    });
+
+    it('S key transitions to sell view when character has items', () => {
+      // Add item to character inventory
+      const charWithItem = { ...mockCharacter, inventory: ['long-sword'] };
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-1', charWithItem)
+      }));
+      component.handleKeydown({ key: 's' } as KeyboardEvent);
+      expect(component.currentView()).toBe('sell');
+    });
+
+    it('S key does nothing when character has no items', () => {
+      component.handleKeydown({ key: 's' } as KeyboardEvent);
+      expect(component.currentView()).toBe('main');
+    });
+
+    it('L key leaves shop', () => {
+      component.handleKeydown({ key: 'l' } as KeyboardEvent);
+      expect(navigationService.returnToCastle).toHaveBeenCalled();
+    });
+
+    it('keyboard shortcuts are ignored in non-main views', () => {
+      component.currentView.set('buy');
+      component.handleKeydown({ key: 'b' } as KeyboardEvent);
+      // Should stay in buy view, not try to transition again
+      expect(component.currentView()).toBe('buy');
+    });
+
+    it('keyboard shortcuts are ignored when confirmation dialog is open', () => {
+      component.showConfirmation.set(true);
+      component.handleKeydown({ key: 'l' } as KeyboardEvent);
+      // Should not leave shop
+      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
     });
   });
 
