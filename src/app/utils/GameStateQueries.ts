@@ -168,5 +168,46 @@ export const GameStateQueries = {
   canMoveDown(state: GameState, characterId: string): boolean {
     const index = state.party.members.indexOf(characterId);
     return index >= 0 && index < state.party.members.length - 1;
+  },
+
+  /**
+   * Get characters available for the Tavern (can potentially join party)
+   * Includes:
+   * - OK characters (healthy, can adventure)
+   * - DEAD/ASHES characters whose bodies are in town (can be taken to Temple)
+   * Excludes:
+   * - Characters already in party
+   * - DEAD/ASHES characters whose bodies are still in the dungeon
+   * - LOST characters (permanently dead)
+   * - Characters with status effects (PARALYZED, STONED, POISONED, ASLEEP)
+   *
+   * Used by: Tavern
+   * @param state - Current game state
+   * @returns Array of characters that can be shown/added at the Tavern
+   */
+  tavernAvailableCharacters(state: GameState): Character[] {
+    const bodiesInDungeon = state.bodies ?? new Map();
+
+    return Array.from(state.roster.values())
+      .filter(char => {
+        // Must not be in party already
+        if (state.party.members.includes(char.id)) {
+          return false;
+        }
+
+        // OK characters can always join
+        if (char.status === CharacterStatus.OK) {
+          return true;
+        }
+
+        // DEAD/ASHES characters can join if their body is NOT in the dungeon
+        // (body is in town, can be taken to Temple for resurrection)
+        if (char.status === CharacterStatus.DEAD || char.status === CharacterStatus.ASHES) {
+          return !bodiesInDungeon.has(char.id);
+        }
+
+        // All other statuses (LOST, PARALYZED, STONED, POISONED, ASLEEP) cannot join
+        return false;
+      });
   }
 };

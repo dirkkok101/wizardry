@@ -149,47 +149,77 @@ describe('Tavern Integration Tests', () => {
   });
 
   describe('Status Filtering', () => {
-    it('only shows OK characters as available', () => {
+    it('shows OK characters and dead characters in town as available', () => {
       const okChar = createTestCharacter({
         id: 'ok-1',
         status: CharacterStatus.OK
       });
-      const deadChar = createTestCharacter({
+      const deadCharInTown = createTestCharacter({
         id: 'dead-1',
         status: CharacterStatus.DEAD
       });
-      const ashesChar = createTestCharacter({
+      const ashesCharInTown = createTestCharacter({
         id: 'ashes-1',
         status: CharacterStatus.ASHES
+      });
+      const lostChar = createTestCharacter({
+        id: 'lost-1',
+        status: CharacterStatus.LOST
       });
       gameStateService.updateState(state => ({
         ...state,
         roster: new Map([
           [okChar.id, okChar],
-          [deadChar.id, deadChar],
-          [ashesChar.id, ashesChar]
-        ])
+          [deadCharInTown.id, deadCharInTown],
+          [ashesCharInTown.id, ashesCharInTown],
+          [lostChar.id, lostChar]
+        ]),
+        bodies: new Map() // No bodies in dungeon - dead/ashes characters are in town
       }));
 
       const available = component.availableCharacters();
 
-      expect(available.length).toBe(1);
-      expect(available[0].id).toBe(okChar.id);
+      // OK, DEAD (in town), ASHES (in town) should be available
+      // LOST is permanently dead and should NOT be available
+      expect(available.length).toBe(3);
+      expect(available.find(c => c.id === okChar.id)).toBeTruthy();
+      expect(available.find(c => c.id === deadCharInTown.id)).toBeTruthy();
+      expect(available.find(c => c.id === ashesCharInTown.id)).toBeTruthy();
     });
 
-    it('prevents adding DEAD character', () => {
+    it('allows adding DEAD character when body is in town', () => {
+      const deadChar = createTestCharacter({
+        id: 'dead-1',
+        status: CharacterStatus.DEAD,
+        alignment: Alignment.NEUTRAL
+      });
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([[deadChar.id, deadChar]]),
+        bodies: new Map() // Body is in town, not dungeon
+      }));
+
+      component.onAddCharacter(deadChar.id);
+
+      // Should be added successfully
+      expect(gameStateService.party().members).toContain(deadChar.id);
+      expect(messageService.isError()).toBe(false);
+    });
+
+    it('prevents adding DEAD character whose body is in dungeon', () => {
       const deadChar = createTestCharacter({
         id: 'dead-1',
         status: CharacterStatus.DEAD
       });
       gameStateService.updateState(state => ({
         ...state,
-        roster: new Map([[deadChar.id, deadChar]])
+        roster: new Map([[deadChar.id, deadChar]]),
+        bodies: new Map([[deadChar.id, { characterId: deadChar.id, level: 3, x: 5, y: 10 }]])
       }));
 
       component.onAddCharacter(deadChar.id);
 
-      expect(messageService.messageText()).toContain('not available');
+      expect(messageService.messageText()).toContain('body must be recovered from the dungeon');
       expect(gameStateService.party().members).not.toContain(deadChar.id);
     });
   });

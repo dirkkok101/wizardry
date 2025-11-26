@@ -102,17 +102,106 @@ describe('PartyService', () => {
       expect(result.reason).toBe('Party is full (maximum 6 members)')
     })
 
-    it('prevents adding character with DEAD status', () => {
-      const party = createEmptyParty()
-      const deadChar = createTestCharacter({
-        status: CharacterStatus.DEAD
+    describe('dead character handling', () => {
+      it('allows adding DEAD character when body is in town (not in dungeon)', () => {
+        const party = createEmptyParty()
+        const deadChar = createTestCharacter({
+          name: 'Fallen Hero',
+          status: CharacterStatus.DEAD
+        })
+        const allCharacters = new Map([[deadChar.id, deadChar]])
+        const bodiesInDungeon = new Map() // empty = no bodies in dungeon
+
+        const result = PartyService.canAddCharacterToParty(party, deadChar, allCharacters, bodiesInDungeon)
+
+        expect(result.allowed).toBe(true)
       })
-      const allCharacters = new Map([[deadChar.id, deadChar]])
 
-      const result = PartyService.canAddCharacterToParty(party, deadChar, allCharacters)
+      it('allows adding DEAD character when bodiesInDungeon is undefined (defaults to empty)', () => {
+        const party = createEmptyParty()
+        const deadChar = createTestCharacter({
+          name: 'Fallen Hero',
+          status: CharacterStatus.DEAD
+        })
+        const allCharacters = new Map([[deadChar.id, deadChar]])
 
-      expect(result.allowed).toBe(false)
-      expect(result.reason).toContain('not available')
+        // bodiesInDungeon not passed = undefined
+        const result = PartyService.canAddCharacterToParty(party, deadChar, allCharacters)
+
+        expect(result.allowed).toBe(true)
+      })
+
+      it('prevents adding DEAD character when body is still in dungeon', () => {
+        const party = createEmptyParty()
+        const deadChar = createTestCharacter({
+          name: 'Fallen Hero',
+          status: CharacterStatus.DEAD
+        })
+        const allCharacters = new Map([[deadChar.id, deadChar]])
+        const bodiesInDungeon = new Map([[deadChar.id, { characterId: deadChar.id, level: 3, x: 5, y: 10 }]])
+
+        const result = PartyService.canAddCharacterToParty(party, deadChar, allCharacters, bodiesInDungeon)
+
+        expect(result.allowed).toBe(false)
+        expect(result.reason).toBe("Fallen Hero's body must be recovered from the dungeon first")
+      })
+
+      it('allows adding ASHES character when body is in town', () => {
+        const party = createEmptyParty()
+        const ashesChar = createTestCharacter({
+          name: 'Ashen One',
+          status: CharacterStatus.ASHES
+        })
+        const allCharacters = new Map([[ashesChar.id, ashesChar]])
+        const bodiesInDungeon = new Map()
+
+        const result = PartyService.canAddCharacterToParty(party, ashesChar, allCharacters, bodiesInDungeon)
+
+        expect(result.allowed).toBe(true)
+      })
+
+      it('prevents adding ASHES character when body is still in dungeon', () => {
+        const party = createEmptyParty()
+        const ashesChar = createTestCharacter({
+          name: 'Ashen One',
+          status: CharacterStatus.ASHES
+        })
+        const allCharacters = new Map([[ashesChar.id, ashesChar]])
+        const bodiesInDungeon = new Map([[ashesChar.id, { characterId: ashesChar.id, level: 5, x: 2, y: 8 }]])
+
+        const result = PartyService.canAddCharacterToParty(party, ashesChar, allCharacters, bodiesInDungeon)
+
+        expect(result.allowed).toBe(false)
+        expect(result.reason).toBe("Ashen One's body must be recovered from the dungeon first")
+      })
+
+      it('prevents adding LOST character (permanently dead)', () => {
+        const party = createEmptyParty()
+        const lostChar = createTestCharacter({
+          name: 'Forever Gone',
+          status: CharacterStatus.LOST
+        })
+        const allCharacters = new Map([[lostChar.id, lostChar]])
+
+        const result = PartyService.canAddCharacterToParty(party, lostChar, allCharacters)
+
+        expect(result.allowed).toBe(false)
+        expect(result.reason).toBe('Forever Gone is not available (status: LOST)')
+      })
+
+      it('prevents adding PARALYZED character', () => {
+        const party = createEmptyParty()
+        const paralyzedChar = createTestCharacter({
+          name: 'Frozen Still',
+          status: CharacterStatus.PARALYZED
+        })
+        const allCharacters = new Map([[paralyzedChar.id, paralyzedChar]])
+
+        const result = PartyService.canAddCharacterToParty(party, paralyzedChar, allCharacters)
+
+        expect(result.allowed).toBe(false)
+        expect(result.reason).toBe('Frozen Still is not available (status: PARALYZED)')
+      })
     })
 
     it('prevents adding character already in party', () => {
