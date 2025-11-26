@@ -97,7 +97,7 @@ export class CharacterDetailCardComponent {
    * Format large numbers with commas
    */
   formatNumber(value: number): string {
-    return value.toLocaleString()
+    return value.toLocaleString('en-US')
   }
 
   /**
