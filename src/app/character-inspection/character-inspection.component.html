@@ -1,134 +1,85 @@
 @if (character(); as char) {
   <app-scene-title
     [title]="char.name"
-    [showPartyGold]="false"
+    [showPartyGold]="showPartyGold()"
   />
 
   <div class="character-inspection">
     <!-- Message Banner -->
-    @if (message(); as msg) {
-      <div class="message" [ngClass]="'message-' + msg.type">
-        {{ msg.text }}
+    @if (messages.hasMessage()) {
+      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+        {{ messages.messageText() }}
       </div>
     }
 
-    <!-- Character Header Info -->
-    <div class="character-header">
-      <span class="class">{{ char.class }}</span>
-      <span class="separator">•</span>
-      <span class="level">Level {{ char.level }}</span>
-      <span class="separator">•</span>
-      <span class="alignment">{{ char.alignment }}</span>
-      <span class="separator">•</span>
-      <span class="status" [ngClass]="getStatusColor(char.status)">
-        {{ char.status }}
-      </span>
-    </div>
+    <!-- Character Detail Card with stats, spell points, and actions -->
+    <app-character-detail-card
+      [character]="char"
+      [mode]="mode()"
+      [actions]="characterActions()"
+      (actionClick)="handleCharacterAction($event)"
+    />
 
-      <!-- Stats -->
-      <div class="section stats">
-        <h3>Attributes</h3>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <span class="stat-label">STR:</span>
-            <span class="stat-value">{{ char.strength }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">INT:</span>
-            <span class="stat-value">{{ char.intelligence }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">PIE:</span>
-            <span class="stat-value">{{ char.piety }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">VIT:</span>
-            <span class="stat-value">{{ char.vitality }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">AGI:</span>
-            <span class="stat-value">{{ char.agility }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">LUK:</span>
-            <span class="stat-value">{{ char.luck }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Status -->
-      <div class="section status">
-        <h3>Status</h3>
-        <div class="status-grid">
-          <div class="status-item">
-            <span class="status-label">HP:</span>
-            <span class="status-value">{{ char.hp }} / {{ char.maxHp }}</span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">XP:</span>
-            <span class="status-value">{{ char.experience }}</span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">Status:</span>
-            <span class="status-value" [ngClass]="getStatusColor(char.status)">
-              {{ char.status }}
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">AC:</span>
-            <span class="status-value">{{ char.ac }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Equipment -->
-      <div class="section equipment">
+    <!-- Items Grid: Equipment + Inventory -->
+    <div class="items-grid">
+      <!-- Equipment Column -->
+      <div class="equipment-section">
         <h3>Equipment</h3>
-        <div class="equipment-grid">
+        <div class="equipment-slots">
           <app-item-card
             [item]="weaponSlot()"
             [slot]="ItemSlot.WEAPON"
             [isEquipped]="true"
+            [showActions]="showItemActions()"
             (actionClick)="handleItemAction($event)"
           />
           <app-item-card
             [item]="armorSlot()"
             [slot]="ItemSlot.ARMOR"
             [isEquipped]="true"
+            [showActions]="showItemActions()"
             (actionClick)="handleItemAction($event)"
           />
           <app-item-card
             [item]="shieldSlot()"
             [slot]="ItemSlot.SHIELD"
             [isEquipped]="true"
+            [showActions]="showItemActions()"
             (actionClick)="handleItemAction($event)"
           />
           <app-item-card
             [item]="helmetSlot()"
             [slot]="ItemSlot.HELMET"
             [isEquipped]="true"
+            [showActions]="showItemActions()"
             (actionClick)="handleItemAction($event)"
           />
           <app-item-card
             [item]="gauntletsSlot()"
             [slot]="ItemSlot.GAUNTLETS"
             [isEquipped]="true"
+            [showActions]="showItemActions()"
             (actionClick)="handleItemAction($event)"
           />
         </div>
       </div>
 
-    <!-- Inventory -->
-    <div class="section inventory">
-      <h3>Inventory ({{ inventoryItems().length }}/8)</h3>
-      <div class="inventory-grid">
-        @for (item of inventoryItems(); track item.id) {
-          <app-item-card
-            [item]="item"
-            [isEquipped]="false"
-            (actionClick)="handleItemAction($event)"
-          />
-        }
+      <!-- Inventory Column -->
+      <div class="inventory-section">
+        <h3>Inventory ({{ inventoryItems().length }}/8)</h3>
+        <div class="inventory-grid">
+          @for (item of inventoryItems(); track item.id) {
+            <app-item-card
+              [item]="item"
+              [isEquipped]="false"
+              [showActions]="showItemActions()"
+              [showUseButton]="showUseButton()"
+              (actionClick)="handleItemAction($event)"
+            />
+          } @empty {
+            <div class="empty-inventory">No items in inventory</div>
+          }
+        </div>
       </div>
     </div>
   </div>
@@ -152,6 +103,23 @@
       (cancelled)="cancelDialog()"
     />
   }
+
+  <!-- Spell Book Dialog -->
+  <app-spell-book-dialog
+    [visible]="showSpellBookDialog()"
+    [character]="char"
+    (closed)="closeSpellBookDialog()"
+  />
+
+  <!-- Spell Selection Dialog (for casting) -->
+  <app-spell-selection-dialog
+    [visible]="showSpellCastDialog()"
+    [spells]="availableSpellOptions()"
+    [caster]="char"
+    [prompt]="'SELECT SPELL'"
+    (spellSelected)="onSpellSelected($event)"
+    (cancelled)="onSpellDialogCancelled()"
+  />
 
   <app-scene-footer
     [menuItems]="footerMenuItems()"
