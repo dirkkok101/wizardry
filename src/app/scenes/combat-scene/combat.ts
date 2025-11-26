@@ -1003,35 +1003,52 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Create party commands from selected actions
     // Expand attack commands into multiple attacks for multi-attack classes
     const partyCommands: CombatCommand[] = []
+    console.log('[Combat] Building party commands from', actions.size, 'selected actions')
     for (const command of actions.values()) {
       if (command.type === 'ATTACK') {
         const attacksPerRound = CombatService.getAttacksPerRound(command.actor)
+        console.log(`[Combat] ${command.actor.name} (${command.type}) -> expanding to ${attacksPerRound} attack command(s)`)
         for (let i = 0; i < attacksPerRound; i++) {
           partyCommands.push(
             CombatService.createCommand(command.actor, 'ATTACK', command.target)
           )
         }
       } else {
+        console.log(`[Combat] ${command.actor.name} (${command.type}) -> 1 command`)
         partyCommands.push(command)
       }
     }
 
-    console.log('[Combat] Party commands:', partyCommands.length)
+    console.log('[Combat] Total party commands:', partyCommands.length)
 
     // Create monster commands using AI (only for monsters that can act)
     const actingMonsters = CombatService.getAllActingMonsters(combat)
     const frontRow = this.party().formation.frontRow
-    const monsterCommands = actingMonsters.map(m =>
-      CombatService.selectMonsterAction(m, chars, frontRow)
-    )
 
-    console.log('[Combat] Monster commands:', monsterCommands.length)
+    console.log('[Combat] Acting monsters:', actingMonsters.length, 'of', monsters.length, 'total')
+    actingMonsters.forEach(m => console.log(`  - ${m.name} (id: ${m.id}, hp: ${m.hp}, status: ${m.status})`))
+
+    const monsterCommands = actingMonsters.map(m => {
+      const cmd = CombatService.selectMonsterAction(m, chars, frontRow)
+      console.log(`[Combat] Monster ${m.name} (${m.id}) -> ${cmd.type} command, target: ${cmd.target?.name || 'none'}`)
+      return cmd
+    })
+
+    console.log('[Combat] Total monster commands:', monsterCommands.length)
 
     // Update combat state with all commands
     const stateWithCommands: CombatState = {
       ...combat,
       commandQueue: [...partyCommands, ...monsterCommands]
     }
+
+    console.log('[Combat] ===== COMMAND QUEUE SUMMARY =====')
+    console.log(`[Combat] Total commands: ${stateWithCommands.commandQueue.length} (${partyCommands.length} party + ${monsterCommands.length} monster)`)
+    stateWithCommands.commandQueue.forEach((cmd, idx) => {
+      const isMonster = 'monsterId' in cmd.actor
+      console.log(`  ${idx + 1}. ${cmd.actor.name} (${isMonster ? 'M' : 'P'}) -> ${cmd.type} -> ${cmd.target?.name || 'none'} [init: ${cmd.initiative}]`)
+    })
+    console.log('[Combat] ================================')
 
     // Execute round with event-based tracking for animation synchronization
     this.isExecutingRound.set(true)

@@ -167,8 +167,11 @@ export class CombatService {
    * - Max: 10 attacks
    */
   static getAttacksPerRound(combatant: Combatant): number {
+    const combatantName = combatant.name || 'Unknown'
+
     // Monsters always get 1 attack
     if ('monsterId' in combatant) {
+      console.log(`[Combat] getAttacksPerRound: ${combatantName} (monster) = 1 attack`)
       return 1
     }
 
@@ -176,19 +179,26 @@ export class CombatService {
     if ('class' in combatant) {
       const level = combatant.level || 1
       const levelBonus = Math.floor(level / 5)
+      let attacks: number
 
       switch (combatant.class) {
         case 'FIGHTER':
         case 'LORD':
         case 'SAMURAI':
-          return Math.min(10, 1 + levelBonus)
+          attacks = Math.min(10, 1 + levelBonus)
+          break
         case 'NINJA':
-          return Math.min(10, 2 + levelBonus)
+          attacks = Math.min(10, 2 + levelBonus)
+          break
         default:
-          return 1
+          attacks = 1
       }
+
+      console.log(`[Combat] getAttacksPerRound: ${combatantName} (${combatant.class}, level ${level}) = ${attacks} attack(s)`)
+      return attacks
     }
 
+    console.log(`[Combat] getAttacksPerRound: ${combatantName} (unknown type) = 1 attack`)
     return 1
   }
 
@@ -312,6 +322,20 @@ export class CombatService {
     command: CombatCommand,
     parryingCombatants: Set<string>
   ): CommandExecutionResult {
+    const actorName = this.getCombatantName(command.actor)
+    const targetName = command.target ? this.getCombatantName(command.target) : 'none'
+    const isMonster = 'monsterId' in command.actor
+
+    console.log(`[Combat] Executing command:`, {
+      type: command.type,
+      actor: actorName,
+      actorId: command.actor.id,
+      actorType: isMonster ? 'monster' : 'character',
+      target: targetName,
+      targetId: command.target?.id,
+      initiative: command.initiative
+    })
+
     // Handle different command types
     if (command.type === 'ATTACK') {
       return this.executeAttackCommand(state, command, parryingCombatants)
@@ -390,12 +414,27 @@ export class CombatService {
     const actorName = this.getCombatantName(command.actor)
     const targetName = this.getCombatantName(target)
 
+    console.log(`[Combat] Attack resolution:`, {
+      attacker: actorName,
+      attackerId: command.actor.id,
+      defender: targetName,
+      defenderId: target.id,
+      hit: attackResult.hit,
+      damage: attackResult.damage,
+      critical: attackResult.critical,
+      defenderAC: 'ac' in target ? target.ac : 'unknown',
+      acModifier,
+      attackerPenalty,
+      isParrying
+    })
+
     // Action message (always shown first)
     const actionMessage = `${actorName} attacks ${targetName}`
 
     if (!attackResult.hit) {
       // Result message for miss
       const resultMessage = `${this.RESULT_MARKER}${actorName} misses!`
+      console.log(`[Combat] Attack missed: ${actorName} -> ${targetName}`)
       return {
         newState: state,
         messages: [actionMessage, resultMessage]
@@ -428,6 +467,19 @@ export class CombatService {
 
     // Apply damage to target (for monsters - characters are tracked separately)
     const newState = this.applyDamage(state, target, finalDamage)
+
+    console.log(`[Combat] Damage applied:`, {
+      attacker: actorName,
+      defender: targetName,
+      baseDamage: attackResult.damage,
+      multiplier: damageMultiplier,
+      finalDamage,
+      previousHp: target.hp,
+      newHp,
+      previousStatus: target.status,
+      newStatus,
+      isHelpless: isAsleep || isParalyzed
+    })
 
     // Build result message
     let resultText: string
@@ -823,12 +875,15 @@ export class CombatService {
     messages: string[]
     damagedCharacters: Map<string, Character>
   } {
+    console.log('[Combat] ===== FLEE FAILURE PENALTY =====')
     const messages: string[] = ['The monsters take advantage of the failed escape!']
     const damagedCharacters = new Map<string, Character>()
     let currentState = state
 
     // All alive monsters get a free attack
     const actingMonsters = this.getAllActingMonsters(state)
+    console.log(`[Combat] ${actingMonsters.length} monsters get FREE BONUS ATTACKS!`)
+    actingMonsters.forEach(m => console.log(`  - ${m.name} (${m.id})`))
 
     for (const monster of actingMonsters) {
       // Get alive front row members that can be targeted
@@ -863,6 +918,12 @@ export class CombatService {
       // Resolve attack (no parrying during penalty round)
       const attackResult = this.resolveAttack(monster, effectiveTarget, 0, 0)
 
+      console.log(`[Combat] BONUS ATTACK: ${monster.name} -> ${target.name}`, {
+        hit: attackResult.hit,
+        damage: attackResult.damage,
+        targetHp: effectiveTarget.hp
+      })
+
       if (attackResult.hit) {
         const damaged = this.applyDamageToCharacter(effectiveTarget, attackResult.damage)
         damagedCharacters.set(target.id, damaged)
@@ -872,6 +933,7 @@ export class CombatService {
       }
     }
 
+    console.log('[Combat] ===== END FLEE PENALTY =====')
     return {
       newState: currentState,
       messages,
