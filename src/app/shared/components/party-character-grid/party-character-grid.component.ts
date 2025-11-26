@@ -347,6 +347,7 @@ export class PartyCharacterGridComponent {
    * Handle action click from character card
    */
   onActionClick(event: CharacterActionEvent): void {
+    console.log('[PartyCharacterGrid] Received actionClick:', event);
     this.actionClick.emit(event);
   }
 

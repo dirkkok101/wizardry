@@ -28,11 +28,20 @@ export class CharacterActionsComponent {
   }
 
   handleClick(action: CharacterAction): void {
+    console.log('[CharacterActions] Button clicked:', {
+      action: action.type,
+      enabled: this.isEnabled(action),
+      characterId: this.characterId
+    });
+
     if (this.isEnabled(action)) {
+      console.log('[CharacterActions] Emitting actionClick event');
       this.actionClick.emit({
         characterId: this.characterId,
         actionType: action.type
       });
+    } else {
+      console.log('[CharacterActions] Action disabled, not emitting');
     }
   }
 }
