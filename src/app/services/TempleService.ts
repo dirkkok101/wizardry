@@ -69,28 +69,42 @@ export class TempleService {
     // Attempt service (for resurrection/restoration, may fail)
     const success = ResurrectionService.attemptService(character, service)
 
-    // Determine new status based on service and success
+    // Determine new status and HP based on service and success
     let newStatus = character.status
+    let newHp = character.hp
     let errorMessage: string | undefined
 
     if (success) {
       // All successful services restore to OK
       newStatus = CharacterStatus.OK
+
+      // HP restoration based on service type:
+      // - RESURRECT: Character returns with 1 HP (barely alive)
+      // - RESTORE: Character returns with full HP (per original Wizardry 1)
+      // - Cure services: No HP change
+      if (service === ServiceType.RESURRECT) {
+        newHp = 1
+      } else if (service === ServiceType.RESTORE) {
+        newHp = character.maxHp
+      }
     } else {
       // Handle failures (only resurrection and restoration can fail)
       if (service === ServiceType.RESURRECT) {
         newStatus = CharacterStatus.ASHES
+        newHp = 0
         errorMessage = `Resurrection failed. ${character.name} has turned to ashes.`
       } else if (service === ServiceType.RESTORE) {
         newStatus = CharacterStatus.LOST
+        newHp = 0
         errorMessage = `Restoration failed. ${character.name} is lost forever.`
       }
     }
 
-    // Update character status
+    // Update character status and HP
     const updatedCharacter = {
       ...character,
-      status: newStatus
+      status: newStatus,
+      hp: newHp
     }
 
     newState = {
