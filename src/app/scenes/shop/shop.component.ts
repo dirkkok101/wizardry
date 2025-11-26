@@ -16,9 +16,9 @@ import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
-import { SHOP_INVENTORY } from '@config/shop-inventory';
+import { SHOP_ITEM_IDS } from '@config/shop-inventory';
 
-type ShopView = 'character-select' | 'main' | 'buy' | 'sell' | 'identify' | 'uncurse';
+type ShopView = 'character-select' | 'buy';
 
 /**
  * Shop Component (Boltac's Trading Post)
@@ -61,12 +61,17 @@ export class ShopComponent implements OnInit {
   readonly showConfirmation = signal(false);
   readonly confirmationMessage = signal('');
   private pendingAction = signal<{
-    type: 'buy' | 'sell' | 'identify' | 'uncurse';
+    type: 'buy';
     itemId: string;
   } | null>(null);
 
-  // Shop data
-  readonly shopInventory = signal<Item[]>(SHOP_INVENTORY);
+  // Shop data - loaded from ItemDataLoader using SHOP_ITEM_IDS
+  readonly shopInventory = computed(() => {
+    return SHOP_ITEM_IDS
+      .map(id => ItemDataLoader.getItem(id))
+      .filter((item): item is Item => item !== null)
+      .map(item => ({ ...item, identified: true }));  // Shop items are always identified
+  });
 
   // Selected character using GameStateQueries
   readonly selectedCharacter = computed(() => {
@@ -88,37 +93,16 @@ export class ShopComponent implements OnInit {
   // Footer menu items based on current view
   readonly footerMenuItems = computed((): MenuItem[] => {
     const view = this.currentView();
-    const character = this.selectedCharacter();
 
     if (view === 'character-select') {
       return [
-        {
-          id: 'leave',
-          label: 'Leave Shop',
-          shortcut: 'ESC',
-          enabled: true
-        }
-      ];
-    }
-
-    if (view === 'main') {
-      const hasItems = character && character.inventory.length > 0;
-      const hasUnidentified = this.getUnidentifiedItems().length > 0;
-      const hasCursed = this.getCursedItems().length > 0;
-
-      return [
-        { id: 'buy', label: 'Buy Items', shortcut: 'B', enabled: true },
-        { id: 'sell', label: 'Sell Items', shortcut: 'S', enabled: !!hasItems },
-        { id: 'identify', label: 'Identify Items', shortcut: 'I', enabled: hasUnidentified },
-        { id: 'uncurse', label: 'Uncurse Items', shortcut: 'U', enabled: hasCursed },
-        { id: 'change-character', label: 'Change Character', shortcut: 'C', enabled: this.partyCharacters().length > 1 },
         { id: 'leave', label: 'Leave Shop', shortcut: 'ESC', enabled: true }
       ];
     }
 
-    // Buy, sell, identify, uncurse views all have back option
+    // Buy view
     return [
-      { id: 'back', label: 'Back to Menu', shortcut: 'ESC', enabled: true }
+      { id: 'back', label: 'Back to Characters', shortcut: 'ESC', enabled: true }
     ];
   });
 
@@ -136,16 +120,16 @@ export class ShopComponent implements OnInit {
     }
   }
 
-  // Character selection
+  // Character selection - 'buy' action goes to buy view, 'inspect' goes to character inspection
   handleCharacterAction(event: CharacterActionEvent): void {
-    if (event.actionType === 'select') {
-      this.selectCharacter(event.characterId);
+    if (event.actionType === 'buy') {
+      this.selectCharacterForBuying(event.characterId);
     } else if (event.actionType === 'inspect') {
       this.navigation.inspectCharacter(event.characterId, 'shop');
     }
   }
 
-  selectCharacter(charId: string): void {
+  selectCharacterForBuying(charId: string): void {
     const char = this.gameState.state().roster.get(charId);
     if (!char) {
       this.messages.showError('Character not found');
@@ -153,8 +137,13 @@ export class ShopComponent implements OnInit {
     }
 
     this.selectedCharacterId.set(charId);
-    this.currentView.set('main');
+    this.currentView.set('buy');
     this.messages.clear();
+  }
+
+  // Legacy method for tests - delegates to selectCharacterForBuying
+  selectCharacter(charId: string): void {
+    this.selectCharacterForBuying(charId);
   }
 
   // Footer action handler
@@ -162,27 +151,12 @@ export class ShopComponent implements OnInit {
     this.messages.clear();
 
     switch (itemId) {
-      case 'buy':
-        this.currentView.set('buy');
-        break;
-      case 'sell':
-        this.currentView.set('sell');
-        break;
-      case 'identify':
-        this.currentView.set('identify');
-        break;
-      case 'uncurse':
-        this.currentView.set('uncurse');
-        break;
-      case 'change-character':
-        this.currentView.set('character-select');
-        this.selectedCharacterId.set(null);
-        break;
       case 'leave':
         this.navigation.returnToCastle();
         break;
       case 'back':
-        this.currentView.set('main');
+        this.currentView.set('character-select');
+        this.selectedCharacterId.set(null);
         break;
     }
   }
@@ -202,46 +176,12 @@ export class ShopComponent implements OnInit {
       const view = this.currentView();
       if (view === 'character-select') {
         this.navigation.returnToCastle();
-      } else if (view === 'main') {
-        this.navigation.returnToCastle();
       } else {
-        this.currentView.set('main');
+        // From buy view, go back to character selection
+        this.currentView.set('character-select');
+        this.selectedCharacterId.set(null);
       }
       return;
-    }
-
-    // Shortcut keys only work in main view
-    if (this.currentView() !== 'main') {
-      return;
-    }
-
-    switch (key) {
-      case 'b':
-        this.handleFooterAction('buy');
-        break;
-      case 's':
-        if (this.getSellableItems().length > 0) {
-          this.handleFooterAction('sell');
-        }
-        break;
-      case 'i':
-        if (this.getUnidentifiedItems().length > 0) {
-          this.handleFooterAction('identify');
-        }
-        break;
-      case 'u':
-        if (this.getCursedItems().length > 0) {
-          this.handleFooterAction('uncurse');
-        }
-        break;
-      case 'c':
-        if (this.partyCharacters().length > 1) {
-          this.handleFooterAction('change-character');
-        }
-        break;
-      case 'l':
-        this.handleFooterAction('leave');
-        break;
     }
   }
 
@@ -280,84 +220,7 @@ export class ShopComponent implements OnInit {
     this.showConfirmation.set(true);
   }
 
-  // Sell functionality
-  initiateSell(itemId: string): void {
-    if (!this.selectedCharacterId()) {
-      this.messages.showError('No character selected');
-      return;
-    }
-
-    const item = this.getCharacterInventory().find(i => i.id === itemId);
-    if (!item) {
-      this.messages.showError('Item not found');
-      return;
-    }
-
-    if (item.equipped && item.cursed) {
-      this.messages.showError('Cannot sell equipped cursed item. Uncurse first.');
-      return;
-    }
-
-    const sellPrice = ShopService.calculateSellPrice(item);
-    if (sellPrice === 0) {
-      this.messages.showError('Cursed items cannot be sold');
-      return;
-    }
-
-    this.confirmationMessage.set(`Sell ${item.name} for ${sellPrice} gold?`);
-    this.pendingAction.set({ type: 'sell', itemId });
-    this.showConfirmation.set(true);
-  }
-
-  // Identify functionality
-  initiateIdentify(itemId: string): void {
-    if (!this.selectedCharacterId()) {
-      this.messages.showError('No character selected');
-      return;
-    }
-
-    const item = this.getCharacterInventory().find(i => i.id === itemId);
-    if (!item) {
-      this.messages.showError('Item not found');
-      return;
-    }
-
-    const identifyCost = ShopService.calculateIdentifyPrice(item);
-    if (this.partyGold() < identifyCost) {
-      this.messages.showError(`Cannot afford identification. Need ${identifyCost} gold.`);
-      return;
-    }
-
-    this.confirmationMessage.set(`Identify this item for ${identifyCost} gold?`);
-    this.pendingAction.set({ type: 'identify', itemId });
-    this.showConfirmation.set(true);
-  }
-
-  // Uncurse functionality
-  initiateUncurse(itemId: string): void {
-    if (!this.selectedCharacterId()) {
-      this.messages.showError('No character selected');
-      return;
-    }
-
-    const item = this.getCharacterInventory().find(i => i.id === itemId);
-    if (!item) {
-      this.messages.showError('Item not found');
-      return;
-    }
-
-    const uncurseCost = ShopService.calculateUncursePrice(item);
-    if (this.partyGold() < uncurseCost) {
-      this.messages.showError(`Cannot afford uncursing. Need ${uncurseCost} gold.`);
-      return;
-    }
-
-    this.confirmationMessage.set(`Remove curse from ${item.name} for ${uncurseCost} gold?`);
-    this.pendingAction.set({ type: 'uncurse', itemId });
-    this.showConfirmation.set(true);
-  }
-
-  // Confirm pending action
+  // Confirm pending action (buy only - sell/identify/uncurse moved to CharacterInspection)
   confirmAction(): void {
     const pending = this.pendingAction();
     if (!pending) return;
@@ -369,19 +232,8 @@ export class ShopComponent implements OnInit {
       return;
     }
 
-    switch (pending.type) {
-      case 'buy':
-        this.completeBuy(pending.itemId);
-        break;
-      case 'sell':
-        this.completeSell(pending.itemId);
-        break;
-      case 'identify':
-        this.completeIdentify(pending.itemId);
-        break;
-      case 'uncurse':
-        this.completeUncurse(pending.itemId);
-        break;
+    if (pending.type === 'buy') {
+      this.completeBuy(pending.itemId);
     }
 
     this.cancelAction();
@@ -392,6 +244,13 @@ export class ShopComponent implements OnInit {
     this.showConfirmation.set(false);
     this.confirmationMessage.set('');
     this.pendingAction.set(null);
+  }
+
+  // Generate unique instance ID for purchased items
+  private generateInstanceId(baseId: string): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    return `${baseId}_${timestamp}_${random}`;
   }
 
   // Complete buy transaction
@@ -405,8 +264,12 @@ export class ShopComponent implements OnInit {
     const charId = this.selectedCharacterId()!;
     const partyGold = this.partyGold();
 
-    // Create a copy of the item for the character's inventory
-    const itemCopy: Item = { ...item, equipped: false };
+    // Create a copy of the item with unique instance ID for the character's inventory
+    const itemCopy: Item = {
+      ...item,
+      id: this.generateInstanceId(item.id),
+      equipped: false
+    };
 
     this.gameState.updateState(state => {
       const updatedChar = {
@@ -425,108 +288,5 @@ export class ShopComponent implements OnInit {
     });
 
     this.messages.showSuccess(`Purchased ${item.name} for ${item.price} gold`);
-  }
-
-  // Complete sell transaction
-  private completeSell(itemId: string): void {
-    const character = this.selectedCharacter();
-    if (!character) return;
-
-    const item = this.getCharacterInventory().find(i => i.id === itemId);
-    if (!item) return;
-
-    const sellPrice = ShopService.calculateSellPrice(item);
-    const charId = this.selectedCharacterId()!;
-    const partyGold = this.partyGold();
-
-    this.gameState.updateState(state => {
-      const updatedChar = {
-        ...character,
-        inventory: character.inventory.filter(i => i.id !== itemId)
-      };
-
-      return {
-        ...state,
-        roster: new Map(state.roster).set(charId, updatedChar),
-        party: {
-          ...state.party,
-          gold: partyGold + sellPrice
-        }
-      };
-    });
-
-    this.messages.showSuccess(`Sold ${item.name} for ${sellPrice} gold`);
-  }
-
-  // Complete identify transaction
-  private completeIdentify(itemId: string): void {
-    const charId = this.selectedCharacterId()!;
-    const result = ShopService.identifyItem(this.gameState.state(), charId, itemId);
-
-    if (result.success && result.state) {
-      this.gameState.updateState(() => result.state!);
-
-      const item = this.getCharacterInventory().find(i => i.id === itemId);
-      let message = `Identified: ${item?.name || 'item'}`;
-      if (item?.damage) message += ` (Damage: ${item.damage})`;
-      if (item?.defense) message += ` (Defense: ${item.defense})`;
-      if (item?.cursed) message += ' - WARNING: CURSED!';
-
-      this.messages.showSuccess(message);
-    } else {
-      this.messages.showError(result.error || 'Identification failed');
-    }
-  }
-
-  // Complete uncurse transaction
-  private completeUncurse(itemId: string): void {
-    const charId = this.selectedCharacterId()!;
-    const result = ShopService.uncurseItem(this.gameState.state(), charId, itemId);
-
-    if (result.success && result.state) {
-      this.gameState.updateState(() => result.state!);
-      const item = this.getCharacterInventory().find(i => i.id === itemId);
-      this.messages.showSuccess(`${item?.name || 'Item'} is no longer cursed!`);
-    } else {
-      this.messages.showError(result.error || 'Uncurse failed');
-    }
-  }
-
-  // Helper: Get character inventory as Item objects
-  // Inventory now stores full Item objects directly
-  getCharacterInventory(): Item[] {
-    const character = this.selectedCharacter();
-    if (!character) return [];
-    return character.inventory;
-  }
-
-  // Helper: Get sellable items (excludes all cursed items since they can't be sold)
-  getSellableItems(): Item[] {
-    return this.getCharacterInventory().filter(item => !item.cursed);
-  }
-
-  // Helper: Get unidentified items
-  getUnidentifiedItems(): Item[] {
-    return this.getCharacterInventory().filter(item => !item.identified);
-  }
-
-  // Helper: Get cursed items
-  getCursedItems(): Item[] {
-    return this.getCharacterInventory().filter(item => item.cursed && item.identified);
-  }
-
-  // Helper: Get sell price
-  getSellPrice(item: Item): number {
-    return ShopService.calculateSellPrice(item);
-  }
-
-  // Helper: Get identify cost
-  getIdentifyCost(item?: Item): number {
-    return ShopService.calculateIdentifyPrice(item || { price: 100 } as Item);
-  }
-
-  // Helper: Get uncurse cost
-  getUncurseCost(item: Item): number {
-    return ShopService.calculateUncursePrice(item);
   }
 }

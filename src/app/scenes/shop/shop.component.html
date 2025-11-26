@@ -10,7 +10,7 @@
         @if (partyCharacters().length > 0) {
           <app-party-character-grid
             source="party"
-            [actions]="[{type: 'select', label: 'Shop'}, {type: 'inspect', label: 'View'}]"
+            [actions]="[{type: 'buy', label: 'Buy'}, {type: 'inspect', label: 'View'}]"
             emptyMessage="No party members available"
             (actionClick)="handleCharacterAction($event)"
           />
@@ -23,31 +23,16 @@
       </div>
     }
 
-    <!-- Main Menu View -->
-    @if (currentView() === 'main') {
-      <div class="main-view">
+    <!-- Buy View -->
+    @if (currentView() === 'buy') {
+      <div class="transaction-view">
         @if (selectedCharacter(); as character) {
           <div class="character-info">
             <span class="shopping-for">Shopping for: <strong>{{ character.name }}</strong></span>
             <span class="gold-display">Party Gold: <strong>{{ partyGold() }}</strong></span>
             <span class="inventory-count">Inventory: {{ character.inventory.length }}/8 items</span>
           </div>
-
-          <div class="menu-instructions">
-            <p>Select an action from the menu below:</p>
-          </div>
         }
-      </div>
-    }
-
-    <!-- Buy View -->
-    @if (currentView() === 'buy') {
-      <div class="transaction-view">
-        <h2 class="view-subtitle">Buy Items</h2>
-
-        <div class="gold-bar">
-          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
-        </div>
 
         <div class="item-list">
           @for (item of shopInventory(); track item.id) {
@@ -77,124 +62,6 @@
             <p class="empty-message">No items available for purchase</p>
           }
         </div>
-      </div>
-    }
-
-    <!-- Sell View -->
-    @if (currentView() === 'sell') {
-      <div class="transaction-view">
-        <h2 class="view-subtitle">Sell Items</h2>
-
-        <div class="gold-bar">
-          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
-        </div>
-
-        @if (getSellableItems().length > 0) {
-          <div class="item-list">
-            @for (item of getSellableItems(); track item.id) {
-              <div class="item-row">
-                <div class="item-details">
-                  <span class="item-name">
-                    {{ item.identified ? item.name : (item.unidentifiedName || '???Unknown Item???') }}
-                  </span>
-                  @if (item.equipped) {
-                    <span class="equipped-badge">Equipped</span>
-                  }
-                  @if (item.cursed && item.identified) {
-                    <span class="cursed-badge">Cursed</span>
-                  }
-                </div>
-                <div class="item-actions">
-                  <span class="item-price sell-price">{{ getSellPrice(item) }} gold</span>
-                  <button
-                    class="action-btn sell-btn"
-                    (click)="initiateSell(item.id)"
-                    [disabled]="getSellPrice(item) === 0"
-                  >
-                    Sell
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <p class="empty-message">No items to sell</p>
-        }
-      </div>
-    }
-
-    <!-- Identify View -->
-    @if (currentView() === 'identify') {
-      <div class="transaction-view">
-        <h2 class="view-subtitle">Identify Items</h2>
-
-        <div class="gold-bar">
-          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
-          <span class="service-cost">Identification Cost: {{ getIdentifyCost() }} gold</span>
-        </div>
-
-        @if (getUnidentifiedItems().length > 0) {
-          <div class="item-list">
-            @for (item of getUnidentifiedItems(); track item.id) {
-              <div class="item-row" [class.unaffordable]="partyGold() < getIdentifyCost()">
-                <div class="item-details">
-                  <span class="item-name unknown">{{ item.unidentifiedName || '???Unknown Item???' }}</span>
-                  <span class="item-type">{{ item.type }}</span>
-                </div>
-                <div class="item-actions">
-                  <button
-                    class="action-btn identify-btn"
-                    (click)="initiateIdentify(item.id)"
-                    [disabled]="partyGold() < getIdentifyCost()"
-                  >
-                    Identify
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <p class="empty-message">No unidentified items</p>
-        }
-      </div>
-    }
-
-    <!-- Uncurse View -->
-    @if (currentView() === 'uncurse') {
-      <div class="transaction-view">
-        <h2 class="view-subtitle">Uncurse Items</h2>
-
-        <div class="gold-bar">
-          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
-        </div>
-
-        @if (getCursedItems().length > 0) {
-          <div class="item-list">
-            @for (item of getCursedItems(); track item.id) {
-              <div class="item-row" [class.unaffordable]="partyGold() < getUncurseCost(item)">
-                <div class="item-details">
-                  <span class="item-name">{{ item.name }}</span>
-                  <span class="cursed-badge">Cursed</span>
-                  @if (item.equipped) {
-                    <span class="equipped-badge">Equipped</span>
-                  }
-                </div>
-                <div class="item-actions">
-                  <span class="item-price uncurse-price">{{ getUncurseCost(item) }} gold</span>
-                  <button
-                    class="action-btn uncurse-btn"
-                    (click)="initiateUncurse(item.id)"
-                    [disabled]="partyGold() < getUncurseCost(item)"
-                  >
-                    Uncurse
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <p class="empty-message">No cursed items to remove</p>
-        }
       </div>
     }
 

@@ -2,6 +2,7 @@ import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 import { SpellDataLoader } from '@services/SpellDataLoader';
 import { MonsterDataLoader } from '@services/MonsterDataLoader';
 import { ClassDataLoader } from '@services/ClassDataLoader';
+import { ItemDataLoader } from '@services/ItemDataLoader';
 import { RandomService } from '@services/RandomService';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -47,12 +48,13 @@ global.fetch = jest.fn(async (url: string) => {
   }
 }) as jest.Mock;
 
-// Pre-load classes, spells, and monsters for all tests using real data
+// Pre-load classes, spells, monsters, and items for all tests using real data
 beforeAll(async () => {
   await Promise.all([
     ClassDataLoader.loadAllClasses(),
     SpellDataLoader.loadAllSpells(),
-    MonsterDataLoader.loadAllMonsters()
+    MonsterDataLoader.loadAllMonsters(),
+    ItemDataLoader.loadAllItems()
   ]);
 });
 
@@ -61,6 +63,7 @@ afterAll(() => {
   ClassDataLoader.clearCache();
   SpellDataLoader.clearCache();
   MonsterDataLoader.clearCache();
+  ItemDataLoader.clearCache();
 });
 
 // Reset RandomService before each test to ensure deterministic behavior
