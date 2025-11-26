@@ -71,6 +71,7 @@ export class SelectionListComponent<T extends SelectableOption> {
   readonly allowArrowNavigation = input(true)
   readonly initialSelectedIndex = input(0)
   readonly showShortcutsInList = input(true)
+  readonly columns = input(1) // Number of columns for grid layout (1 = vertical list)
 
   // Outputs
   readonly optionSelected = output<T>()
@@ -140,13 +141,35 @@ export class SelectionListComponent<T extends SelectableOption> {
 
     // Arrow navigation (if enabled)
     if (this.allowArrowNavigation()) {
+      const cols = this.columns()
+
       if (key === 'ArrowDown') {
+        event.preventDefault()
+        event.stopPropagation()
+        if (cols > 1) {
+          this.navigateByOffset(cols) // Jump by column count
+        } else {
+          this.navigateNext()
+        }
+        return
+      }
+      if (key === 'ArrowUp') {
+        event.preventDefault()
+        event.stopPropagation()
+        if (cols > 1) {
+          this.navigateByOffset(-cols) // Jump by column count
+        } else {
+          this.navigatePrevious()
+        }
+        return
+      }
+      if (key === 'ArrowRight' && cols > 1) {
         event.preventDefault()
         event.stopPropagation()
         this.navigateNext()
         return
       }
-      if (key === 'ArrowUp') {
+      if (key === 'ArrowLeft' && cols > 1) {
         event.preventDefault()
         event.stopPropagation()
         this.navigatePrevious()
@@ -196,6 +219,36 @@ export class SelectionListComponent<T extends SelectableOption> {
 
     this.selectedIndex.set(enabled[nextPos])
     this.selectionChanged.emit(enabled[nextPos])
+  }
+
+  /**
+   * Navigate by a specific offset (used for grid navigation).
+   * Positive offset moves down/forward, negative moves up/backward.
+   */
+  navigateByOffset(offset: number): void {
+    const enabled = this.enabledIndices()
+    if (enabled.length === 0) return
+
+    const current = this.selectedIndex()
+    const currentPos = enabled.indexOf(current)
+    if (currentPos === -1) {
+      this.selectedIndex.set(enabled[0])
+      this.selectionChanged.emit(enabled[0])
+      return
+    }
+
+    // Calculate target position with wrapping
+    let targetPos = currentPos + offset
+    if (targetPos < 0) {
+      targetPos = enabled.length + targetPos // Wrap to end
+      if (targetPos < 0) targetPos = 0 // Clamp to start
+    } else if (targetPos >= enabled.length) {
+      targetPos = targetPos - enabled.length // Wrap to start
+      if (targetPos >= enabled.length) targetPos = enabled.length - 1 // Clamp to end
+    }
+
+    this.selectedIndex.set(enabled[targetPos])
+    this.selectionChanged.emit(enabled[targetPos])
   }
 
   /**

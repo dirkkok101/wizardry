@@ -261,3 +261,246 @@ describe('SelectionListComponent', () => {
     })
   })
 })
+
+// Test host for multi-column grid layout
+@Component({
+  standalone: true,
+  imports: [SelectionListComponent],
+  template: `
+    <app-selection-list
+      [options]="options"
+      [columns]="columns"
+      [allowArrowNavigation]="true"
+      (optionSelected)="onSelected($event)"
+      (cancelled)="onCancelled()">
+      <ng-template #itemTemplate let-option>
+        <span>{{ option.name }}</span>
+      </ng-template>
+    </app-selection-list>
+  `
+})
+class GridTestHostComponent {
+  options: TestOption[] = [
+    { id: '1', shortcut: '1', enabled: true, name: 'Item 1', cost: 0 },
+    { id: '2', shortcut: '2', enabled: true, name: 'Item 2', cost: 0 },
+    { id: '3', shortcut: '3', enabled: true, name: 'Item 3', cost: 0 },
+    { id: '4', shortcut: '4', enabled: true, name: 'Item 4', cost: 0 },
+    { id: '5', shortcut: '5', enabled: true, name: 'Item 5', cost: 0 },
+    { id: '6', shortcut: '6', enabled: true, name: 'Item 6', cost: 0 }
+  ]
+  columns = 3
+  selectedOption: TestOption | null = null
+  cancelledCalled = false
+
+  onSelected(option: TestOption): void {
+    this.selectedOption = option
+  }
+
+  onCancelled(): void {
+    this.cancelledCalled = true
+  }
+}
+
+describe('SelectionListComponent - Grid Navigation', () => {
+  let hostComponent: GridTestHostComponent
+  let hostFixture: ComponentFixture<GridTestHostComponent>
+  let selectionList: SelectionListComponent<TestOption>
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [GridTestHostComponent]
+    }).compileComponents()
+
+    hostFixture = TestBed.createComponent(GridTestHostComponent)
+    hostComponent = hostFixture.componentInstance
+    hostFixture.detectChanges()
+
+    const listDebugEl = hostFixture.debugElement.query(
+      el => el.componentInstance instanceof SelectionListComponent
+    )
+    selectionList = listDebugEl.componentInstance as SelectionListComponent<TestOption>
+  })
+
+  describe('columns input', () => {
+    it('should default to 1 column', async () => {
+      hostComponent.columns = 1
+      hostFixture.detectChanges()
+      expect(selectionList.columns()).toBe(1)
+    })
+
+    it('should accept multiple columns', () => {
+      expect(selectionList.columns()).toBe(3)
+    })
+  })
+
+  describe('ArrowRight navigation (grid mode)', () => {
+    it('should move to next item with ArrowRight', () => {
+      selectionList.selectedIndex.set(0)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowRight' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(1)
+    })
+
+    it('should wrap to first item when at last', () => {
+      selectionList.selectedIndex.set(5) // Last item
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowRight' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(0)
+    })
+  })
+
+  describe('ArrowLeft navigation (grid mode)', () => {
+    it('should move to previous item with ArrowLeft', () => {
+      selectionList.selectedIndex.set(2)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(1)
+    })
+
+    it('should wrap to last item when at first', () => {
+      selectionList.selectedIndex.set(0)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(5)
+    })
+  })
+
+  describe('ArrowDown navigation (grid mode - row jumping)', () => {
+    // Grid layout with 3 columns:
+    // [0] [1] [2]
+    // [3] [4] [5]
+
+    it('should jump by column count with ArrowDown', () => {
+      selectionList.selectedIndex.set(0) // Top-left
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(3) // Bottom-left
+    })
+
+    it('should wrap when jumping past end', () => {
+      selectionList.selectedIndex.set(4) // Bottom-middle
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
+      selectionList.handleKeydown(event)
+
+      // Position 4 + 3 = 7, wraps to 7 - 6 = 1
+      expect(selectionList.selectedIndex()).toBe(1)
+    })
+  })
+
+  describe('ArrowUp navigation (grid mode - row jumping)', () => {
+    it('should jump by column count with ArrowUp', () => {
+      selectionList.selectedIndex.set(3) // Bottom-left
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowUp' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(0) // Top-left
+    })
+
+    it('should wrap when jumping past beginning', () => {
+      selectionList.selectedIndex.set(1) // Top-middle
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowUp' })
+      selectionList.handleKeydown(event)
+
+      // Position 1 - 3 = -2, wraps to 6 + (-2) = 4
+      expect(selectionList.selectedIndex()).toBe(4)
+    })
+  })
+
+  describe('navigateByOffset', () => {
+    it('should navigate forward by offset', () => {
+      selectionList.selectedIndex.set(0)
+      selectionList.navigateByOffset(2)
+      expect(selectionList.selectedIndex()).toBe(2)
+    })
+
+    it('should navigate backward by negative offset', () => {
+      selectionList.selectedIndex.set(4)
+      selectionList.navigateByOffset(-2)
+      expect(selectionList.selectedIndex()).toBe(2)
+    })
+
+    it('should wrap forward when exceeding length', () => {
+      selectionList.selectedIndex.set(4)
+      selectionList.navigateByOffset(3)
+      expect(selectionList.selectedIndex()).toBe(1)
+    })
+
+    it('should wrap backward when going negative', () => {
+      selectionList.selectedIndex.set(1)
+      selectionList.navigateByOffset(-3)
+      expect(selectionList.selectedIndex()).toBe(4)
+    })
+
+    it('should clamp when offset exceeds total length', () => {
+      selectionList.selectedIndex.set(0)
+      selectionList.navigateByOffset(10) // Larger than list
+      // After wrap: 10 - 6 = 4
+      expect(selectionList.selectedIndex()).toBe(4)
+    })
+
+    it('should handle empty enabled list', () => {
+      hostComponent.options = hostComponent.options.map(o => ({ ...o, enabled: false }))
+      hostFixture.detectChanges()
+
+      const initialIndex = selectionList.selectedIndex()
+      selectionList.navigateByOffset(3)
+      expect(selectionList.selectedIndex()).toBe(initialIndex)
+    })
+  })
+
+  describe('single column mode (columns=1)', () => {
+    beforeEach(() => {
+      hostComponent.columns = 1
+      hostFixture.detectChanges()
+    })
+
+    it('should ignore ArrowLeft', () => {
+      selectionList.selectedIndex.set(2)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(2) // Unchanged
+    })
+
+    it('should ignore ArrowRight', () => {
+      selectionList.selectedIndex.set(2)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowRight' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(2) // Unchanged
+    })
+
+    it('should use navigateNext for ArrowDown', () => {
+      selectionList.selectedIndex.set(2)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(3) // Next item, not row jump
+    })
+
+    it('should use navigatePrevious for ArrowUp', () => {
+      selectionList.selectedIndex.set(2)
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowUp' })
+      selectionList.handleKeydown(event)
+
+      expect(selectionList.selectedIndex()).toBe(1) // Previous item, not row jump
+    })
+  })
+})
