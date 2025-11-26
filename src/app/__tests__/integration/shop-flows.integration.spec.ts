@@ -137,10 +137,9 @@ describe('Integration: Shop Flows', () => {
       // BUY FLOW - shop now goes directly to buy view
       expect(component.currentView()).toBe('buy')
 
-      // Buy Long Sword
+      // Buy Long Sword (purchase is immediate, no confirmation needed)
       const longSword = shopItems.find(i => i.name === 'Long Sword')!
       component.initiateBuy(longSword.id)
-      component.confirmAction()
 
       // Verify item in inventory (with unique instance ID)
       let character = gameState.state().roster.get('char-1')!
@@ -150,7 +149,6 @@ describe('Integration: Shop Flows', () => {
       // Buy another item
       const dagger = shopItems.find(i => i.name === 'Dagger')!
       component.initiateBuy(dagger.id)
-      component.confirmAction()
 
       // Verify both items in inventory
       character = gameState.state().roster.get('char-1')!
@@ -163,11 +161,9 @@ describe('Integration: Shop Flows', () => {
       const shopItems = component.shopInventory()
       const dagger = shopItems.find(i => i.name === 'Dagger')!
 
-      // Buy same item twice
+      // Buy same item twice (purchase is immediate)
       component.initiateBuy(dagger.id)
-      component.confirmAction()
       component.initiateBuy(dagger.id)
-      component.confirmAction()
 
       // Verify both items have different IDs
       const character = gameState.state().roster.get('char-1')!
@@ -179,10 +175,9 @@ describe('Integration: Shop Flows', () => {
     it('persists inventory changes across navigation', () => {
       const shopItems = component.shopInventory()
 
-      // Buy an item
+      // Buy an item (purchase is immediate)
       const item1 = shopItems[0]
       component.initiateBuy(item1.id)
-      component.confirmAction()
 
       // Go back to character selection
       component.handleFooterAction('back')

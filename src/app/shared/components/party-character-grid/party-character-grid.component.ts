@@ -148,9 +148,9 @@ export type CharacterSource =
     }
 
     .grid-content {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
     }
 
     .empty-state {
@@ -161,7 +161,7 @@ export type CharacterSource =
     }
 
     .compact .grid-content {
-      gap: 0.25rem;
+      gap: 0.5rem;
     }
 
     /* Formation layout styles */
@@ -199,12 +199,14 @@ export type CharacterSource =
 
     /* Responsive: stack cards on smaller screens */
     @media (max-width: 900px) {
+      .grid-content,
       .row-grid {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
     @media (max-width: 600px) {
+      .grid-content,
       .row-grid {
         grid-template-columns: 1fr;
       }
