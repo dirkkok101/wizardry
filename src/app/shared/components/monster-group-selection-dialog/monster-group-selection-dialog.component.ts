@@ -43,7 +43,7 @@ interface MonsterGroupSelectableOption extends MonsterGroupOption, SelectableOpt
   standalone: true,
   imports: [CommonModule, SelectionDialogComponent],
   templateUrl: './monster-group-selection-dialog.component.html',
-  styleUrl: './monster-group-selection-dialog.component.scss'
+  styleUrls: ['./monster-group-selection-dialog.component.scss']
 })
 export class MonsterGroupSelectionDialogComponent {
   // Signal-based inputs
