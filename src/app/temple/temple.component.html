@@ -1,12 +1,14 @@
 <div class="temple-scene">
-  <app-scene-title title="TEMPLE OF CANT" />
+  <app-scene-title title="TEMPLE OF CANT" [showPartyGold]="true" />
 
   <div class="temple-content">
     @if (afflictedCharacters().length > 0) {
       <app-party-character-grid
         source="afflicted"
-        [actions]="[{type: 'inspect'}]"
+        [visibleFields]="visibleFields"
+        [actions]="getCharacterActions"
         (actionClick)="handleCharacterAction($event)"
+        emptyMessage="No afflicted party members"
       />
     } @else {
       <div class="empty-state">

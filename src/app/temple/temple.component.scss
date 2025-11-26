@@ -6,21 +6,14 @@
 
 .temple-content {
   flex: 1;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   overflow-y: auto;
-}
-
-.character-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary, #888);
 
   p {
     margin: 0.5rem 0;
@@ -28,12 +21,22 @@
   }
 }
 
-.error-message {
+.message {
   margin-top: 1rem;
-  padding: 1rem;
-  background-color: var(--error-bg, #fee);
-  color: var(--error-text, #c00);
+  padding: 0.75rem 1rem;
   border-radius: 4px;
   text-align: center;
   font-weight: 500;
+
+  &.error {
+    background-color: var(--color-error-bg, rgba(204, 0, 0, 0.1));
+    color: var(--color-error, #c00);
+    border: 1px solid var(--color-error, #c00);
+  }
+
+  &.success {
+    background-color: var(--color-success-bg, rgba(0, 204, 0, 0.1));
+    color: var(--color-success, #0c0);
+    border: 1px solid var(--color-success, #0c0);
+  }
 }
