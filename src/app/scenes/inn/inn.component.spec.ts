@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { InnComponent } from './inn.component';
+import { InnComponent, RoomOption } from './inn.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
@@ -9,7 +9,6 @@ import { CharacterClass } from '@models/CharacterClass';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { RoomType, InnService } from '@services/InnService';
 import { createTestCharacter } from '@testing/test-factories';
-import { TierOption } from '@shared/components/tier-selection/tier-selection.component';
 
 describe('InnComponent', () => {
   let component: InnComponent;
@@ -32,13 +31,16 @@ describe('InnComponent', () => {
     });
   };
 
-  const createRoomOption = (roomType: RoomType): TierOption => ({
+  const createRoomOption = (roomType: RoomType): RoomOption => ({
     id: roomType,
     name: roomType.toLowerCase().replace('_', ' '),
     cost: InnService.getRoomCost(roomType),
     costUnit: 'gp/week',
     benefit: `${InnService.getRoomHealRate(roomType)} HP/week`,
-    shortcut: roomType[0]
+    shortcut: roomType[0],
+    description: '',
+    roomType: roomType,
+    enabled: true
   });
 
   beforeEach(() => {
@@ -158,21 +160,31 @@ describe('InnComponent', () => {
     });
   });
 
-  describe('room selection with TierSelectionComponent', () => {
+  describe('room selection with SelectionListComponent', () => {
     beforeEach(() => {
       component.selectCharacterToRest('char-1');
     });
 
     it('has all 5 room types in roomOptions', () => {
-      expect(component.roomOptions.length).toBe(5);
-      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.STABLES);
-      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.BARRACKS);
-      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.DOUBLE);
-      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.PRIVATE);
-      expect(component.roomOptions.map(o => o.id)).toContain(RoomType.ROYAL_SUITE);
+      expect(component.roomOptions().length).toBe(5);
+      expect(component.roomOptions().map(o => o.id)).toContain(RoomType.STABLES);
+      expect(component.roomOptions().map(o => o.id)).toContain(RoomType.BARRACKS);
+      expect(component.roomOptions().map(o => o.id)).toContain(RoomType.DOUBLE);
+      expect(component.roomOptions().map(o => o.id)).toContain(RoomType.PRIVATE);
+      expect(component.roomOptions().map(o => o.id)).toContain(RoomType.ROYAL_SUITE);
     });
 
-    it('shows confirmation dialog when room is selected via TierSelection', () => {
+    it('computes affordability based on party gold', () => {
+      // With 100 gold, should afford stables (0), barracks (10), double (50) but not private (200) or royal (500)
+      const options = component.roomOptions();
+      expect(options.find(o => o.roomType === RoomType.STABLES)?.enabled).toBe(true);
+      expect(options.find(o => o.roomType === RoomType.BARRACKS)?.enabled).toBe(true);
+      expect(options.find(o => o.roomType === RoomType.DOUBLE)?.enabled).toBe(true);
+      expect(options.find(o => o.roomType === RoomType.PRIVATE)?.enabled).toBe(false);
+      expect(options.find(o => o.roomType === RoomType.ROYAL_SUITE)?.enabled).toBe(false);
+    });
+
+    it('shows confirmation dialog when room is selected', () => {
       const option = createRoomOption(RoomType.BARRACKS);
       component.handleRoomSelected(option);
 
@@ -181,7 +193,7 @@ describe('InnComponent', () => {
       expect(component.confirmationMessage()).toContain('barracks');
     });
 
-    it('cancels room selection when TierSelection emits cancelled', () => {
+    it('cancels room selection when SelectionList emits cancelled', () => {
       component.handleRoomSelectionCancelled();
 
       expect(component.showRoomSelection()).toBe(false);

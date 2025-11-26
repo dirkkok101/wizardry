@@ -11,12 +11,27 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
-import { TierSelectionComponent, TierOption } from '@shared/components/tier-selection/tier-selection.component';
+import { SelectionListComponent, SelectableOption } from '@shared/components/selection-list/selection-list.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
+
+/**
+ * Room option for selection list - extends SelectableOption for keyboard/mouse support
+ */
+export interface RoomOption extends SelectableOption {
+  id: string;
+  shortcut: string;
+  enabled: boolean;
+  name: string;
+  cost: number;
+  costUnit: string;
+  benefit: string;
+  description: string;
+  roomType: RoomType;
+}
 
 interface LevelUpDisplayData {
   newLevel: number;
@@ -59,7 +74,7 @@ interface RestProgressData {
     SceneFooterComponent,
     PartyCharacterGridComponent,
     ConfirmationDialogComponent,
-    TierSelectionComponent
+    SelectionListComponent
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']
@@ -100,54 +115,33 @@ export class InnComponent implements OnInit {
     return GameStateQueries.getCharacter(this.gameState.state(), charId) || null;
   });
 
-  // Room tier options for TierSelectionComponent
-  readonly roomOptions: TierOption[] = [
-    {
-      id: RoomType.STABLES,
-      name: 'Stables',
-      cost: InnService.getRoomCost(RoomType.STABLES),
-      costUnit: 'gp/week',
-      benefit: `${InnService.getRoomHealRate(RoomType.STABLES)} HP/week`,
-      shortcut: 'S',
-      description: 'Free but no healing - for level-up checks only'
-    },
-    {
-      id: RoomType.BARRACKS,
-      name: 'Barracks',
-      cost: InnService.getRoomCost(RoomType.BARRACKS),
-      costUnit: 'gp/week',
-      benefit: `${InnService.getRoomHealRate(RoomType.BARRACKS)} HP/week`,
-      shortcut: 'B',
-      description: 'Basic shared accommodation'
-    },
-    {
-      id: RoomType.DOUBLE,
-      name: 'Double',
-      cost: InnService.getRoomCost(RoomType.DOUBLE),
-      costUnit: 'gp/week',
-      benefit: `${InnService.getRoomHealRate(RoomType.DOUBLE)} HP/week`,
-      shortcut: 'D',
-      description: 'Shared room with moderate comfort'
-    },
-    {
-      id: RoomType.PRIVATE,
-      name: 'Private',
-      cost: InnService.getRoomCost(RoomType.PRIVATE),
-      costUnit: 'gp/week',
-      benefit: `${InnService.getRoomHealRate(RoomType.PRIVATE)} HP/week`,
-      shortcut: 'P',
-      description: 'Private room for faster recovery'
-    },
-    {
-      id: RoomType.ROYAL_SUITE,
-      name: 'Royal Suite',
-      cost: InnService.getRoomCost(RoomType.ROYAL_SUITE),
-      costUnit: 'gp/week',
-      benefit: `${InnService.getRoomHealRate(RoomType.ROYAL_SUITE)} HP/week`,
-      shortcut: 'R',
-      description: 'Luxury accommodation with maximum healing'
-    }
+  // Base room data (static)
+  private readonly roomData = [
+    { roomType: RoomType.STABLES, name: 'Stables', shortcut: 'S', description: 'Free but no healing - for level-up checks only' },
+    { roomType: RoomType.BARRACKS, name: 'Barracks', shortcut: 'B', description: 'Basic shared accommodation' },
+    { roomType: RoomType.DOUBLE, name: 'Double', shortcut: 'D', description: 'Shared room with moderate comfort' },
+    { roomType: RoomType.PRIVATE, name: 'Private', shortcut: 'P', description: 'Private room for faster recovery' },
+    { roomType: RoomType.ROYAL_SUITE, name: 'Royal Suite', shortcut: 'R', description: 'Luxury accommodation with maximum healing' }
   ];
+
+  // Room options with affordability computed from party gold
+  readonly roomOptions = computed((): RoomOption[] => {
+    const gold = this.partyGold();
+    return this.roomData.map(room => {
+      const cost = InnService.getRoomCost(room.roomType);
+      return {
+        id: room.roomType,
+        shortcut: room.shortcut,
+        enabled: cost <= gold,
+        name: room.name,
+        cost,
+        costUnit: 'gp/week',
+        benefit: `${InnService.getRoomHealRate(room.roomType)} HP/week`,
+        description: room.description,
+        roomType: room.roomType
+      };
+    });
+  });
 
   // Footer menu items - dynamic based on current state
   readonly footerMenuItems = computed((): MenuItem[] => {
@@ -219,8 +213,8 @@ export class InnComponent implements OnInit {
     this.messages.clear();
   }
 
-  handleRoomSelected(option: TierOption): void {
-    const roomType = option.id as RoomType;
+  handleRoomSelected(option: RoomOption): void {
+    const roomType = option.roomType;
     const character = this.selectedCharacter();
     if (!character) {
       this.messages.showError('No character selected');

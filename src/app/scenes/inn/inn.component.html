@@ -39,15 +39,45 @@
             </div>
           </div>
 
-          <app-tier-selection
-            title="SELECT ROOM TYPE"
-            [options]="roomOptions"
-            [availableFunds]="partyGold()"
-            fundsLabel="Party Gold"
-            [showBackOption]="false"
+          <h3 class="room-title">SELECT ROOM TYPE</h3>
+
+          <div class="funds-display">
+            <span class="funds-label">Party Gold:</span>
+            <span class="funds-value">{{ partyGold() }}</span>
+          </div>
+
+          <app-selection-list
+            [options]="roomOptions()"
+            [allowArrowNavigation]="true"
+            [showShortcutsInList]="false"
             (optionSelected)="handleRoomSelected($event)"
             (cancelled)="handleRoomSelectionCancelled()"
-          />
+          >
+            <ng-template #itemTemplate let-option let-selected="selected">
+              <div class="room-option-content" [class.selected]="selected">
+                <div class="room-header">
+                  <span class="room-shortcut">({{ option.shortcut }})</span>
+                  <span class="room-name">{{ option.name }}</span>
+                  @if (!option.enabled) {
+                    <span class="unaffordable-badge">CANNOT AFFORD</span>
+                  }
+                </div>
+                <div class="room-details">
+                  <span class="room-cost">
+                    @if (option.cost === 0) {
+                      FREE
+                    } @else {
+                      {{ option.cost }} {{ option.costUnit }}
+                    }
+                  </span>
+                  <span class="room-benefit">{{ option.benefit }}</span>
+                </div>
+                @if (option.description) {
+                  <div class="room-description">{{ option.description }}</div>
+                }
+              </div>
+            </ng-template>
+          </app-selection-list>
         }
       </div>
 
