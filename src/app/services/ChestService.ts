@@ -11,6 +11,7 @@
 import { Character } from '@models/Character'
 import { Party } from '@models/GameState'
 import { Item } from '@models/Item'
+import { ItemType, ItemSlot } from '@models/ItemType'
 import { Position } from '@models/Dungeon'
 import {
   Chest,
@@ -93,10 +94,13 @@ function createPlaceholderItem(rewardTier: RewardTier, mazeLevel: number, slot: 
   return {
     id: `item_${rewardTier}_${mazeLevel}_${slot}_${RandomService.random(1000, 9999)}`,
     name: `Treasure Item (Tier ${rewardTier})`,
-    type: 'EQUIPMENT',
-    slot: 'NONE',
-    price: rewardTier * 100 * RandomService.random(1, 5)
-  } as Item
+    type: ItemType.MISC,
+    slot: ItemSlot.NONE,
+    price: rewardTier * 100 * RandomService.random(1, 5),
+    cursed: false,
+    identified: false,
+    equipped: false
+  }
 }
 
 /**

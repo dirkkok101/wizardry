@@ -417,8 +417,10 @@ describe('TrapService', () => {
         class: CharacterClass.PRIEST,
         knownSpells: ['calfo'],
         spellPoints: {
-          mage: [0, 0, 0, 0, 0, 0, 0],
-          priest: [3, 2, 0, 0, 0, 0, 0]  // Level 2 has 2 SP
+          priest: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 2, max: 2 }  // Level 2 has 2 SP
+          }
         }
       })
 
@@ -430,8 +432,10 @@ describe('TrapService', () => {
         class: CharacterClass.PRIEST,
         knownSpells: ['dios'],  // Only knows DIOS, not CALFO
         spellPoints: {
-          mage: [0, 0, 0, 0, 0, 0, 0],
-          priest: [3, 2, 0, 0, 0, 0, 0]
+          priest: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 2, max: 2 }
+          }
         }
       })
 
@@ -443,8 +447,10 @@ describe('TrapService', () => {
         class: CharacterClass.PRIEST,
         knownSpells: ['calfo'],
         spellPoints: {
-          mage: [0, 0, 0, 0, 0, 0, 0],
-          priest: [3, 0, 0, 0, 0, 0, 0]  // Level 2 has 0 SP
+          priest: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 0, max: 2 }  // Level 2 has 0 SP
+          }
         }
       })
 
@@ -465,8 +471,13 @@ describe('TrapService', () => {
         class: CharacterClass.BISHOP,
         knownSpells: ['calfo'],
         spellPoints: {
-          mage: [2, 0, 0, 0, 0, 0, 0],
-          priest: [2, 1, 0, 0, 0, 0, 0]
+          mage: {
+            level1: { current: 2, max: 2 }
+          },
+          priest: {
+            level1: { current: 2, max: 2 },
+            level2: { current: 1, max: 1 }
+          }
         }
       })
 
@@ -478,8 +489,10 @@ describe('TrapService', () => {
         class: CharacterClass.LORD,
         knownSpells: ['calfo'],
         spellPoints: {
-          mage: [0, 0, 0, 0, 0, 0, 0],
-          priest: [2, 1, 0, 0, 0, 0, 0]
+          priest: {
+            level1: { current: 2, max: 2 },
+            level2: { current: 1, max: 1 }
+          }
         }
       })
 

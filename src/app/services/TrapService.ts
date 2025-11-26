@@ -287,7 +287,7 @@ function canCastCalfo(character: Character): boolean {
   }
 
   // Check if character has spell points at level 2
-  if (!character.spellPoints?.priest || character.spellPoints.priest[1] < 1) {
+  if (!character.spellPoints?.priest?.level2 || character.spellPoints.priest.level2.current < 1) {
     return false
   }
 
