@@ -57,6 +57,7 @@ export class CharacterCardComponent {
   }
 
   handleActionClick(event: CharacterActionEvent): void {
+    console.log('[CharacterCard] Received actionClick:', event);
     this.actionClick.emit(event);
   }
 }
