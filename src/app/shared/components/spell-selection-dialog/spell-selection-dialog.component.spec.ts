@@ -36,12 +36,13 @@ describe('SpellSelectionDialogComponent', () => {
 
     fixture = TestBed.createComponent(SpellSelectionDialogComponent)
     component = fixture.componentInstance
+    fixture.detectChanges()
   })
 
   describe('visibility', () => {
     it('shows dialog when visible=true', () => {
-      component.visible = true
-      component.spells = [createSpellOption()]
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [createSpellOption()])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
@@ -49,46 +50,30 @@ describe('SpellSelectionDialogComponent', () => {
     })
 
     it('hides dialog when visible=false', () => {
-      component.visible = false
+      fixture.componentRef.setInput('visible', false)
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
       expect(compiled.querySelector('.dialog-overlay')).toBeFalsy()
     })
 
-    it('auto-focuses dialog when visible', () => {
-      component.visible = true
-      component.spells = [createSpellOption()]
+    it('dialog overlay has tabindex for focus', () => {
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [createSpellOption()])
       fixture.detectChanges()
-
-      component.ngAfterViewChecked()
 
       const compiled = fixture.nativeElement
       const overlay = compiled.querySelector('.dialog-overlay')
       expect(overlay.getAttribute('tabindex')).toBe('0')
-      expect(component['hasFocused']).toBe(true)
-    })
-
-    it('resets hasFocused flag when dialog becomes invisible', () => {
-      component.visible = true
-      fixture.detectChanges()
-      component.ngAfterViewChecked()
-
-      expect(component['hasFocused']).toBe(true)
-
-      component.visible = false
-      component.ngAfterViewChecked()
-
-      expect(component['hasFocused']).toBe(false)
     })
   })
 
   describe('spell display', () => {
     it('displays spell name and level', () => {
-      component.visible = true
-      component.spells = [createSpellOption({
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [createSpellOption({
         spell: createTestSpell({ name: 'DIOS', level: 1 })
-      })]
+      })])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
@@ -97,10 +82,10 @@ describe('SpellSelectionDialogComponent', () => {
     })
 
     it('displays spell points', () => {
-      component.visible = true
-      component.spells = [createSpellOption({
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [createSpellOption({
         spellPoints: { current: 2, max: 5 }
-      })]
+      })])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
@@ -109,9 +94,9 @@ describe('SpellSelectionDialogComponent', () => {
 
     it('shows caster name when provided', () => {
       const caster = createTestCharacter({ name: 'Gandalf' })
-      component.visible = true
-      component.caster = caster
-      component.spells = [createSpellOption()]
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('caster', caster)
+      fixture.componentRef.setInput('spells', [createSpellOption()])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
@@ -119,9 +104,9 @@ describe('SpellSelectionDialogComponent', () => {
     })
 
     it('shows custom prompt', () => {
-      component.visible = true
-      component.prompt = 'SELECT HEALING SPELL'
-      component.spells = [createSpellOption()]
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('prompt', 'SELECT HEALING SPELL')
+      fixture.componentRef.setInput('spells', [createSpellOption()])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
@@ -129,8 +114,8 @@ describe('SpellSelectionDialogComponent', () => {
     })
 
     it('shows no spells message when empty', () => {
-      component.visible = true
-      component.spells = []
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
@@ -138,12 +123,13 @@ describe('SpellSelectionDialogComponent', () => {
     })
 
     it('marks disabled spells visually', () => {
-      component.visible = true
-      component.spells = [createSpellOption({ enabled: false })]
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [createSpellOption({ enabled: false })])
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.querySelector('.spell-item.disabled')).toBeTruthy()
+      // SelectionListComponent uses .selection-item.disabled
+      expect(compiled.querySelector('.selection-item.disabled')).toBeTruthy()
     })
   })
 
@@ -256,137 +242,164 @@ describe('SpellSelectionDialogComponent', () => {
 
   describe('keyboard interaction', () => {
     beforeEach(() => {
-      component.visible = true
-      component.spells = [
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [
         createSpellOption({ index: 1, spell: createTestSpell({ id: 'spell1' }) }),
         createSpellOption({ index: 2, spell: createTestSpell({ id: 'spell2' }) }),
         createSpellOption({ index: 3, enabled: false, spell: createTestSpell({ id: 'spell3' }) })
-      ]
+      ])
       fixture.detectChanges()
     })
 
     it('selects spell when pressing number key', () => {
-      jest.spyOn(component.spellSelected, 'emit')
+      const spy = jest.spyOn(component.spellSelected, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: '1', bubbles: true })
-      jest.spyOn(event, 'preventDefault')
-      jest.spyOn(event, 'stopPropagation')
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }))
+      fixture.detectChanges()
 
-      component.handleKeyPress(event)
-
-      expect(component.spellSelected.emit).toHaveBeenCalledWith(
+      expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'spell1' })
       )
-      expect(event.preventDefault).toHaveBeenCalled()
-      expect(event.stopPropagation).toHaveBeenCalled()
     })
 
     it('does not select disabled spell on key press', () => {
-      jest.spyOn(component.spellSelected, 'emit')
+      const spy = jest.spyOn(component.spellSelected, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: '3', bubbles: true })
-      jest.spyOn(event, 'preventDefault')
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }))
+      fixture.detectChanges()
 
-      component.handleKeyPress(event)
-
-      expect(component.spellSelected.emit).not.toHaveBeenCalled()
-      expect(event.preventDefault).toHaveBeenCalled()
+      expect(spy).not.toHaveBeenCalled()
     })
 
     it('does not select spell for invalid index', () => {
-      jest.spyOn(component.spellSelected, 'emit')
+      const spy = jest.spyOn(component.spellSelected, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: '9', bubbles: true })
-      jest.spyOn(event, 'preventDefault')
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '9' }))
+      fixture.detectChanges()
 
-      component.handleKeyPress(event)
-
-      expect(component.spellSelected.emit).not.toHaveBeenCalled()
-      expect(event.preventDefault).toHaveBeenCalled()
+      expect(spy).not.toHaveBeenCalled()
     })
 
     it('cancels on Escape key', () => {
-      jest.spyOn(component.cancelled, 'emit')
+      const spy = jest.spyOn(component.cancelled, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
-      jest.spyOn(event, 'stopPropagation')
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      fixture.detectChanges()
 
-      component.handleKeyPress(event)
-
-      expect(component.cancelled.emit).toHaveBeenCalled()
-      expect(event.stopPropagation).toHaveBeenCalled()
+      expect(spy).toHaveBeenCalled()
     })
 
     it('ignores key events when not visible', () => {
-      component.visible = false
-      jest.spyOn(component.spellSelected, 'emit')
-      jest.spyOn(component.cancelled, 'emit')
+      fixture.componentRef.setInput('visible', false)
+      fixture.detectChanges()
 
-      const event1 = new KeyboardEvent('keydown', { key: '1', bubbles: true })
-      component.handleKeyPress(event1)
+      const spellSpy = jest.spyOn(component.spellSelected, 'emit')
+      const cancelSpy = jest.spyOn(component.cancelled, 'emit')
 
-      const event2 = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
-      component.handleKeyPress(event2)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }))
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      fixture.detectChanges()
 
-      expect(component.spellSelected.emit).not.toHaveBeenCalled()
-      expect(component.cancelled.emit).not.toHaveBeenCalled()
-    })
-
-    it('prevents propagation for unhandled keys', () => {
-      const event = new KeyboardEvent('keydown', { key: 'a', bubbles: true })
-      jest.spyOn(event, 'preventDefault')
-      jest.spyOn(event, 'stopPropagation')
-
-      component.handleKeyPress(event)
-
-      expect(event.preventDefault).toHaveBeenCalled()
-      expect(event.stopPropagation).toHaveBeenCalled()
+      expect(spellSpy).not.toHaveBeenCalled()
+      expect(cancelSpy).not.toHaveBeenCalled()
     })
   })
 
   describe('click interaction', () => {
     beforeEach(() => {
-      component.visible = true
-      component.spells = [
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('spells', [
         createSpellOption({ spell: createTestSpell({ id: 'spell1' }) }),
-        createSpellOption({ enabled: false, spell: createTestSpell({ id: 'spell2' }) })
-      ]
+        createSpellOption({ index: 2, enabled: false, spell: createTestSpell({ id: 'spell2' }) })
+      ])
       fixture.detectChanges()
     })
 
     it('selects spell when clicking enabled spell', () => {
-      jest.spyOn(component.spellSelected, 'emit')
+      const spy = jest.spyOn(component.spellSelected, 'emit')
 
-      const option = component.spells[0]
-      component.onSpellClick(option)
+      // SelectionListComponent uses .selection-item
+      const items = fixture.nativeElement.querySelectorAll('.selection-item')
+      items[0].click()
+      fixture.detectChanges()
 
-      expect(component.spellSelected.emit).toHaveBeenCalledWith(option.spell)
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'spell1' }))
     })
 
     it('does not select spell when clicking disabled spell', () => {
-      jest.spyOn(component.spellSelected, 'emit')
+      const spy = jest.spyOn(component.spellSelected, 'emit')
 
-      const option = component.spells[1]
-      component.onSpellClick(option)
+      const items = fixture.nativeElement.querySelectorAll('.selection-item')
+      items[1].click()
+      fixture.detectChanges()
 
-      expect(component.spellSelected.emit).not.toHaveBeenCalled()
+      expect(spy).not.toHaveBeenCalled()
     })
 
     it('cancels when clicking backdrop', () => {
-      jest.spyOn(component.cancelled, 'emit')
+      const spy = jest.spyOn(component.cancelled, 'emit')
 
-      component.onBackdropClick()
+      const overlay = fixture.nativeElement.querySelector('.dialog-overlay')
+      overlay.click()
+      fixture.detectChanges()
 
-      expect(component.cancelled.emit).toHaveBeenCalled()
+      expect(spy).toHaveBeenCalled()
     })
 
-    it('prevents backdrop click when clicking dialog content', () => {
-      const event = new Event('click', { bubbles: true })
-      jest.spyOn(event, 'stopPropagation')
+    it('does not cancel when clicking dialog content', () => {
+      const spy = jest.spyOn(component.cancelled, 'emit')
 
-      component.onDialogClick(event)
+      const content = fixture.nativeElement.querySelector('.dialog-content')
+      content.click()
+      fixture.detectChanges()
 
-      expect(event.stopPropagation).toHaveBeenCalled()
+      expect(spy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('computed signals', () => {
+    it('should convert spells to selectable options with shortcuts', () => {
+      fixture.componentRef.setInput('spells', [
+        createSpellOption({ index: 1, spell: createTestSpell({ id: 'spell1' }) }),
+        createSpellOption({ index: 2, spell: createTestSpell({ id: 'spell2' }) })
+      ])
+      fixture.detectChanges()
+
+      const selectableSpells = component.selectableSpells()
+
+      expect(selectableSpells.length).toBe(2)
+      expect(selectableSpells[0].shortcut).toBe('1')
+      expect(selectableSpells[0].id).toBe('spell1')
+      expect(selectableSpells[1].shortcut).toBe('2')
+      expect(selectableSpells[1].id).toBe('spell2')
+    })
+  })
+
+  describe('option selection handler', () => {
+    it('should emit spell when option selected', () => {
+      const spy = jest.spyOn(component.spellSelected, 'emit')
+      const spell = createTestSpell({ id: 'test_spell' })
+
+      component.onOptionSelected({
+        spell,
+        index: 1,
+        enabled: true,
+        spellPoints: { current: 3, max: 5 },
+        id: 'test_spell',
+        shortcut: '1'
+      })
+
+      expect(spy).toHaveBeenCalledWith(spell)
+    })
+  })
+
+  describe('cancellation handler', () => {
+    it('should emit cancelled when onCancelled called', () => {
+      const spy = jest.spyOn(component.cancelled, 'emit')
+
+      component.onCancelled()
+
+      expect(spy).toHaveBeenCalled()
     })
   })
 })

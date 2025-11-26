@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
-import { TierSelectionComponent, TierOption } from '../tier-selection.component'
+import { TierSelectionComponent, TierOption, TierOptionWithAffordability } from '../tier-selection.component'
 
 describe('TierSelectionComponent', () => {
   let component: TierSelectionComponent
@@ -43,7 +43,8 @@ describe('TierSelectionComponent', () => {
     })
 
     it('should display all options', () => {
-      const options = fixture.nativeElement.querySelectorAll('.option-row')
+      // Now using SelectionListComponent's .selection-item class
+      const options = fixture.nativeElement.querySelectorAll('.selection-item')
       expect(options.length).toBe(4)
     })
   })
@@ -52,14 +53,17 @@ describe('TierSelectionComponent', () => {
     it('should mark affordable options as enabled', () => {
       const options = component.optionsWithAffordability()
       expect(options[0].affordable).toBe(true) // Free
+      expect(options[0].enabled).toBe(true) // enabled should match affordable
       expect(options[1].affordable).toBe(true) // 10 gp
       expect(options[2].affordable).toBe(true) // 50 gp
       expect(options[3].affordable).toBe(false) // 500 gp
+      expect(options[3].enabled).toBe(false) // enabled should match affordable
     })
 
     it('should apply disabled class to unaffordable options', () => {
       fixture.detectChanges()
-      const disabledOptions = fixture.nativeElement.querySelectorAll('.option-row.disabled')
+      // SelectionListComponent uses .disabled class
+      const disabledOptions = fixture.nativeElement.querySelectorAll('.selection-item.disabled')
       expect(disabledOptions.length).toBe(1)
     })
 
@@ -75,66 +79,47 @@ describe('TierSelectionComponent', () => {
       fixture.detectChanges()
       const options = component.optionsWithAffordability()
       expect(options.every(o => o.affordable)).toBe(true)
+      expect(options.every(o => o.enabled)).toBe(true)
     })
   })
 
   describe('keyboard navigation', () => {
-    it('should move selection down on ArrowDown', () => {
-      expect(component.selectedIndex()).toBe(0)
+    // Keyboard navigation is now handled by SelectionListComponent
+    // These tests verify the component integrates correctly by dispatching window events
 
-      const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
-      component.handleKeyPress(event)
-
-      expect(component.selectedIndex()).toBe(1)
-    })
-
-    it('should move selection up on ArrowUp', () => {
-      component.selectedIndex.set(2)
-
-      const event = new KeyboardEvent('keydown', { key: 'ArrowUp' })
-      component.handleKeyPress(event)
-
-      expect(component.selectedIndex()).toBe(1)
-    })
-
-    it('should skip disabled options when navigating', () => {
-      component.selectedIndex.set(2) // Medium (affordable)
-
-      // Move down should skip to wrap around since expensive is disabled
-      const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
-      component.handleKeyPress(event)
-
-      // Should wrap to first affordable option
-      expect(component.selectedIndex()).toBe(0)
-    })
-
-    it('should emit optionSelected on Enter', () => {
+    it('should emit optionSelected on Enter when option is selected', () => {
       const spy = jest.spyOn(component.optionSelected, 'emit')
-      component.selectedIndex.set(1)
 
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyPress(event)
+      // Dispatch keyboard event to window (SelectionListComponent listens on window)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+      fixture.detectChanges()
 
-      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'cheap' }))
-    })
-
-    it('should not emit on Enter if current option is disabled', () => {
-      const spy = jest.spyOn(component.optionSelected, 'emit')
-      component.selectedIndex.set(3) // Expensive (disabled)
-
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyPress(event)
-
-      expect(spy).not.toHaveBeenCalled()
+      // First option should be selected by default and emit
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'free' }))
     })
 
     it('should emit cancelled on Escape', () => {
       const spy = jest.spyOn(component.cancelled, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: 'Escape' })
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalled()
+    })
+
+    it('should navigate with arrow keys', () => {
+      const spy = jest.spyOn(component.optionSelected, 'emit')
+
+      // Navigate down
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+      fixture.detectChanges()
+
+      // Press Enter to select
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+      fixture.detectChanges()
+
+      // Should have selected the second option
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'cheap' }))
     })
   })
 
@@ -142,8 +127,8 @@ describe('TierSelectionComponent', () => {
     it('should select option by shortcut key', () => {
       const spy = jest.spyOn(component.optionSelected, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: 'C' })
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'C' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'cheap' }))
     })
@@ -151,8 +136,8 @@ describe('TierSelectionComponent', () => {
     it('should be case-insensitive for shortcuts', () => {
       const spy = jest.spyOn(component.optionSelected, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: 'm' })
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'medium' }))
     })
@@ -160,8 +145,8 @@ describe('TierSelectionComponent', () => {
     it('should not select disabled option by shortcut', () => {
       const spy = jest.spyOn(component.optionSelected, 'emit')
 
-      const event = new KeyboardEvent('keydown', { key: 'E' })
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'E' }))
+      fixture.detectChanges()
 
       expect(spy).not.toHaveBeenCalled()
     })
@@ -171,7 +156,10 @@ describe('TierSelectionComponent', () => {
     it('should emit optionSelected on click', () => {
       const spy = jest.spyOn(component.optionSelected, 'emit')
 
-      component.selectOption({ ...testOptions[1], affordable: true }, 1)
+      // Click on the second option (cheap)
+      const items = fixture.nativeElement.querySelectorAll('.selection-item')
+      items[1].click()
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'cheap' }))
     })
@@ -179,9 +167,33 @@ describe('TierSelectionComponent', () => {
     it('should not emit on click of disabled option', () => {
       const spy = jest.spyOn(component.optionSelected, 'emit')
 
-      component.selectOption({ ...testOptions[3], affordable: false }, 3)
+      // Click on the expensive (disabled) option
+      const items = fixture.nativeElement.querySelectorAll('.selection-item')
+      items[3].click()
+      fixture.detectChanges()
 
       expect(spy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('option selection handler', () => {
+    it('should emit TierOption without enabled field', () => {
+      const spy = jest.spyOn(component.optionSelected, 'emit')
+
+      const optionWithAffordability: TierOptionWithAffordability = {
+        ...testOptions[1],
+        affordable: true,
+        enabled: true
+      }
+
+      component.onOptionSelected(optionWithAffordability)
+
+      // Verify the emitted value doesn't have 'enabled' property
+      expect(spy).toHaveBeenCalled()
+      const emittedValue = spy.mock.calls[0][0]
+      expect(emittedValue.id).toBe('cheap')
+      expect(emittedValue).not.toHaveProperty('enabled')
+      expect(emittedValue).not.toHaveProperty('affordable')
     })
   })
 

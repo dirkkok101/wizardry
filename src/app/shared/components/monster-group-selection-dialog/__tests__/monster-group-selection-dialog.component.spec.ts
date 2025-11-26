@@ -23,7 +23,7 @@ describe('MonsterGroupSelectionDialogComponent', () => {
 
   describe('visibility', () => {
     it('should not render when visible is false', () => {
-      component.visible = false
+      fixture.componentRef.setInput('visible', false)
       fixture.detectChanges()
 
       const overlay = fixture.nativeElement.querySelector('.dialog-overlay')
@@ -31,7 +31,8 @@ describe('MonsterGroupSelectionDialogComponent', () => {
     })
 
     it('should render when visible is true', () => {
-      component.visible = true
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('groups', mockGroups)
       fixture.detectChanges()
 
       const overlay = fixture.nativeElement.querySelector('.dialog-overlay')
@@ -39,42 +40,42 @@ describe('MonsterGroupSelectionDialogComponent', () => {
     })
 
     it('should display custom prompt', () => {
-      component.visible = true
-      component.prompt = 'CHOOSE YOUR TARGET'
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('prompt', 'CHOOSE YOUR TARGET')
+      fixture.componentRef.setInput('groups', mockGroups)
       fixture.detectChanges()
 
-      const header = fixture.nativeElement.querySelector('.dialog-header h2')
-      expect(header?.textContent).toBe('CHOOSE YOUR TARGET')
+      // SelectionDialogComponent uses .dialog-title for the header
+      const header = fixture.nativeElement.querySelector('.dialog-title')
+      expect(header?.textContent).toContain('CHOOSE YOUR TARGET')
     })
   })
 
   describe('group display', () => {
-    it('should display all groups', () => {
-      component.visible = true
-      component.groups = mockGroups
+    beforeEach(() => {
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('groups', mockGroups)
       fixture.detectChanges()
+    })
 
-      const groupItems = fixture.nativeElement.querySelectorAll('.group-item')
+    it('should display all groups', () => {
+      // Now using SelectionListComponent's .selection-item class
+      const groupItems = fixture.nativeElement.querySelectorAll('.selection-item')
       expect(groupItems.length).toBe(3)
     })
 
     it('should display group letter and name', () => {
-      component.visible = true
-      component.groups = [{ id: 'A', displayName: '3 ORCS', enabled: true }]
+      fixture.componentRef.setInput('groups', [{ id: 'A', displayName: '3 ORCS', enabled: true }])
       fixture.detectChanges()
 
       const letter = fixture.nativeElement.querySelector('.group-letter')
       const name = fixture.nativeElement.querySelector('.group-name')
 
-      expect(letter?.textContent).toBe('A)')
-      expect(name?.textContent).toBe('3 ORCS')
+      expect(letter?.textContent).toContain('A)')
+      expect(name?.textContent).toContain('3 ORCS')
     })
 
     it('should apply correct data-group attribute', () => {
-      component.visible = true
-      component.groups = mockGroups
-      fixture.detectChanges()
-
       const groupA = fixture.nativeElement.querySelector('[data-group="A"]')
       const groupB = fixture.nativeElement.querySelector('[data-group="B"]')
       const groupC = fixture.nativeElement.querySelector('[data-group="C"]')
@@ -84,165 +85,167 @@ describe('MonsterGroupSelectionDialogComponent', () => {
       expect(groupC).not.toBeNull()
     })
 
-    it('should not show disabled groups with disabled styling', () => {
-      component.visible = true
-      component.groups = [
-        { id: 'A', displayName: '3 ORCS', enabled: false }
-      ]
+    it('should show disabled groups with disabled styling', () => {
+      fixture.componentRef.setInput('groups', [{ id: 'A', displayName: '3 ORCS', enabled: false }])
       fixture.detectChanges()
 
-      const groupItem = fixture.nativeElement.querySelector('.group-item')
+      // SelectionListComponent applies .disabled class to selection-item
+      const groupItem = fixture.nativeElement.querySelector('.selection-item')
       expect(groupItem?.classList.contains('disabled')).toBe(true)
     })
   })
 
   describe('keyboard handling', () => {
     beforeEach(() => {
-      component.visible = true
-      component.groups = mockGroups
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('groups', mockGroups)
       fixture.detectChanges()
     })
 
     it('should emit groupSelected when pressing A', () => {
       const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'a' })
 
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith('A')
     })
 
     it('should emit groupSelected when pressing B', () => {
       const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'b' })
 
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith('B')
     })
 
     it('should emit groupSelected when pressing C', () => {
       const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'c' })
 
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith('C')
     })
 
     it('should handle uppercase letters', () => {
       const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'A' })
 
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'A' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalledWith('A')
     })
 
     it('should emit cancelled when pressing ESC', () => {
       const spy = jest.spyOn(component.cancelled, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'Escape' })
 
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalled()
     })
 
     it('should not emit for disabled group', () => {
-      component.groups = [
-        { id: 'A', displayName: '3 ORCS', enabled: false }
-      ]
-      const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'a' })
+      fixture.componentRef.setInput('groups', [{ id: 'A', displayName: '3 ORCS', enabled: false }])
+      fixture.detectChanges()
 
-      component.handleKeyPress(event)
+      const spy = jest.spyOn(component.groupSelected, 'emit')
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
+      fixture.detectChanges()
 
       expect(spy).not.toHaveBeenCalled()
     })
 
     it('should not emit for non-existent group', () => {
       const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'd' })
 
-      component.handleKeyPress(event)
-
-      expect(spy).not.toHaveBeenCalled()
-    })
-
-    it('should not handle keys when not visible', () => {
-      component.visible = false
-      const spy = jest.spyOn(component.groupSelected, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'a' })
-
-      component.handleKeyPress(event)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }))
+      fixture.detectChanges()
 
       expect(spy).not.toHaveBeenCalled()
-    })
-
-    it('should ignore other keys', () => {
-      const groupSpy = jest.spyOn(component.groupSelected, 'emit')
-      const cancelSpy = jest.spyOn(component.cancelled, 'emit')
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-
-      component.handleKeyPress(event)
-
-      expect(groupSpy).not.toHaveBeenCalled()
-      expect(cancelSpy).not.toHaveBeenCalled()
     })
   })
 
-  describe('backdrop interaction', () => {
+  describe('mouse interaction', () => {
     beforeEach(() => {
-      component.visible = true
-      component.groups = mockGroups
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('groups', mockGroups)
       fixture.detectChanges()
+    })
+
+    it('should emit groupSelected when clicking on a group', () => {
+      const spy = jest.spyOn(component.groupSelected, 'emit')
+
+      const items = fixture.nativeElement.querySelectorAll('.selection-item')
+      items[1].click() // Click group B
+      fixture.detectChanges()
+
+      expect(spy).toHaveBeenCalledWith('B')
+    })
+
+    it('should not emit for disabled group click', () => {
+      fixture.componentRef.setInput('groups', [{ id: 'A', displayName: '3 ORCS', enabled: false }])
+      fixture.detectChanges()
+
+      const spy = jest.spyOn(component.groupSelected, 'emit')
+
+      const item = fixture.nativeElement.querySelector('.selection-item')
+      item.click()
+      fixture.detectChanges()
+
+      expect(spy).not.toHaveBeenCalled()
     })
 
     it('should emit cancelled when clicking backdrop', () => {
       const spy = jest.spyOn(component.cancelled, 'emit')
 
-      component.onBackdropClick()
+      const overlay = fixture.nativeElement.querySelector('.dialog-overlay')
+      overlay.click()
+      fixture.detectChanges()
 
       expect(spy).toHaveBeenCalled()
     })
+  })
 
-    it('should not emit cancelled when clicking dialog content', () => {
-      const spy = jest.spyOn(component.cancelled, 'emit')
-      const mockEvent = { stopPropagation: jest.fn() } as unknown as Event
+  describe('computed signals', () => {
+    it('should convert groups to selectable options with shortcuts', () => {
+      fixture.componentRef.setInput('groups', mockGroups)
+      fixture.detectChanges()
 
-      component.onDialogClick(mockEvent)
+      const selectableGroups = component.selectableGroups()
 
-      expect(spy).not.toHaveBeenCalled()
-      expect(mockEvent.stopPropagation).toHaveBeenCalled()
+      expect(selectableGroups.length).toBe(3)
+      expect(selectableGroups[0].shortcut).toBe('A')
+      expect(selectableGroups[1].shortcut).toBe('B')
+      expect(selectableGroups[2].shortcut).toBe('C')
     })
   })
 
-  describe('auto-focus', () => {
-    it('should focus dialog when visible', () => {
-      const focusSpy = jest.spyOn(HTMLElement.prototype, 'focus')
+  describe('option selection handler', () => {
+    it('should emit group ID when option selected', () => {
+      const spy = jest.spyOn(component.groupSelected, 'emit')
 
-      component.visible = true
-      component.groups = mockGroups
-      fixture.detectChanges()
+      component.onOptionSelected({
+        id: 'B',
+        displayName: '5 ZOMBIES',
+        enabled: true,
+        shortcut: 'B'
+      })
 
-      // Trigger ngAfterViewChecked to call focus
-      component.ngAfterViewChecked()
-
-      expect(focusSpy).toHaveBeenCalled()
-      focusSpy.mockRestore()
+      expect(spy).toHaveBeenCalledWith('B')
     })
+  })
 
-    it('should reset focus flag when hidden', () => {
-      component.visible = true
-      fixture.detectChanges()
-      component.ngAfterViewChecked()
+  describe('cancellation handler', () => {
+    it('should emit cancelled when onCancelled called', () => {
+      const spy = jest.spyOn(component.cancelled, 'emit')
 
-      component.visible = false
-      fixture.detectChanges()
-      component.ngAfterViewChecked()
+      component.onCancelled()
 
-      // hasFocused should be reset
-      expect(component['hasFocused']).toBe(false)
+      expect(spy).toHaveBeenCalled()
     })
   })
 })

@@ -1,27 +1,17 @@
-@if (visible) {
-  <div class="dialog-overlay" (click)="onBackdropClick()" tabindex="0" #dialogContent>
-    <div class="dialog-content" (click)="onDialogClick($event)">
-      <div class="dialog-header">
-        <h2>{{ prompt }}</h2>
-      </div>
-
-      <div class="dialog-body">
-        <div class="group-list">
-          @for (group of groups; track group.id) {
-            <div
-              class="group-item"
-              [class.disabled]="!group.enabled"
-              [attr.data-group]="group.id">
-              <span class="group-letter">{{ group.id }})</span>
-              <span class="group-name">{{ group.displayName }}</span>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="dialog-footer">
-        <div class="instruction">Press A-D to select, ESC to cancel</div>
-      </div>
+<app-selection-dialog
+  [visible]="visible()"
+  [options]="selectableGroups()"
+  [title]="prompt()"
+  keyboardHint="Press A-D to select, ESC to cancel"
+  [allowArrowNavigation]="false"
+  [showShortcuts]="false"
+  (optionSelected)="onOptionSelected($event)"
+  (cancelled)="onCancelled()"
+>
+  <ng-template #itemTemplate let-group>
+    <div class="group-item-content" [attr.data-group]="group.id">
+      <span class="group-letter">{{ group.id }})</span>
+      <span class="group-name">{{ group.displayName }}</span>
     </div>
-  </div>
-}
+  </ng-template>
+</app-selection-dialog>

@@ -1,13 +1,6 @@
-import {
-  Component,
-  input,
-  Output,
-  EventEmitter,
-  HostListener,
-  computed,
-  signal
-} from '@angular/core'
+import { Component, input, output, computed } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { SelectionListComponent, SelectableOption } from '../selection-list/selection-list.component'
 
 /**
  * TierOption - Represents a selectable tier/option with cost and benefit info
@@ -16,14 +9,24 @@ export interface TierOption {
   id: string
   name: string
   cost: number
-  costUnit?: string        // e.g., "gp/week", "gp", "tithe"
-  benefit: string          // e.g., "10 HP/week", "Heal to full"
-  shortcut: string         // Keyboard shortcut (single key)
-  description?: string     // Optional longer description
+  costUnit?: string // e.g., "gp/week", "gp", "tithe"
+  benefit: string // e.g., "10 HP/week", "Heal to full"
+  shortcut: string // Keyboard shortcut (single key)
+  description?: string // Optional longer description
+}
+
+/**
+ * Extended TierOption with affordability and SelectableOption compatibility
+ */
+export interface TierOptionWithAffordability extends TierOption, SelectableOption {
+  affordable: boolean
+  enabled: boolean // Alias for affordable, required by SelectableOption
 }
 
 /**
  * TierSelectionComponent - Reusable component for selecting from tiered options
+ *
+ * Now uses SelectionListComponent for consistent keyboard/mouse handling.
  *
  * Features:
  * - Shows options with cost/benefit info
@@ -50,7 +53,7 @@ export interface TierOption {
 @Component({
   selector: 'app-tier-selection',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SelectionListComponent],
   templateUrl: './tier-selection.component.html',
   styleUrls: ['./tier-selection.component.scss']
 })
@@ -62,113 +65,51 @@ export class TierSelectionComponent {
   readonly fundsLabel = input('Gold')
   readonly showBackOption = input(true)
 
-  @Output() optionSelected = new EventEmitter<TierOption>()
-  @Output() cancelled = new EventEmitter<void>()
-
-  readonly selectedIndex = signal(0)
+  // Outputs using new output() API
+  readonly optionSelected = output<TierOption>()
+  readonly cancelled = output<void>()
 
   /**
-   * Options with affordability computed
+   * Options with affordability computed, compatible with SelectableOption
    */
-  readonly optionsWithAffordability = computed(() => {
-    return this.options().map(option => ({
-      ...option,
-      affordable: option.cost <= this.availableFunds()
-    }))
+  readonly optionsWithAffordability = computed((): TierOptionWithAffordability[] => {
+    return this.options().map(option => {
+      const affordable = option.cost <= this.availableFunds()
+      return {
+        ...option,
+        affordable,
+        enabled: affordable // SelectableOption compatibility
+      }
+    })
   })
 
   /**
-   * Get the first affordable option index, or 0 if none
+   * Handle option selection from SelectionListComponent
    */
-  private getFirstAffordableIndex(): number {
-    const index = this.optionsWithAffordability().findIndex(o => o.affordable)
-    return index >= 0 ? index : 0
+  onOptionSelected(option: TierOptionWithAffordability): void {
+    // Emit the original TierOption shape (without enabled field)
+    const tierOption: TierOption = {
+      id: option.id,
+      name: option.name,
+      cost: option.cost,
+      costUnit: option.costUnit,
+      benefit: option.benefit,
+      shortcut: option.shortcut,
+      description: option.description
+    }
+    this.optionSelected.emit(tierOption)
   }
 
-  @HostListener('window:keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    const key = event.key
-
-    // Arrow navigation
-    if (key === 'ArrowUp') {
-      this.moveToPrevious()
-      event.preventDefault()
-      return
-    }
-
-    if (key === 'ArrowDown') {
-      this.moveToNext()
-      event.preventDefault()
-      return
-    }
-
-    // Enter to select
-    if (key === 'Enter') {
-      this.selectCurrent()
-      event.preventDefault()
-      return
-    }
-
-    // ESC to cancel
-    if (key === 'Escape') {
-      this.cancelled.emit()
-      event.preventDefault()
-      return
-    }
-
-    // Check for option shortcuts
-    const upperKey = key.toUpperCase()
-    const option = this.optionsWithAffordability().find(
-      o => o.shortcut.toUpperCase() === upperKey
-    )
-
-    if (option) {
-      if (option.affordable) {
-        this.optionSelected.emit(option)
-      }
-      // Even if not affordable, consume the key
-      event.preventDefault()
-    }
+  /**
+   * Handle cancellation
+   */
+  onCancelled(): void {
+    this.cancelled.emit()
   }
 
-  private moveToPrevious(): void {
-    const options = this.optionsWithAffordability()
-    let newIndex = this.selectedIndex()
-
-    do {
-      newIndex = (newIndex - 1 + options.length) % options.length
-    } while (!options[newIndex].affordable && newIndex !== this.selectedIndex())
-
-    this.selectedIndex.set(newIndex)
-  }
-
-  private moveToNext(): void {
-    const options = this.optionsWithAffordability()
-    let newIndex = this.selectedIndex()
-
-    do {
-      newIndex = (newIndex + 1) % options.length
-    } while (!options[newIndex].affordable && newIndex !== this.selectedIndex())
-
-    this.selectedIndex.set(newIndex)
-  }
-
-  private selectCurrent(): void {
-    const options = this.optionsWithAffordability()
-    const option = options[this.selectedIndex()]
-
-    if (option && option.affordable) {
-      this.optionSelected.emit(option)
-    }
-  }
-
-  selectOption(option: TierOption & { affordable: boolean }, index: number): void {
-    if (option.affordable) {
-      this.selectedIndex.set(index)
-      this.optionSelected.emit(option)
-    }
-  }
-
+  /**
+   * Handle back button click
+   */
   onBackClick(): void {
     this.cancelled.emit()
   }

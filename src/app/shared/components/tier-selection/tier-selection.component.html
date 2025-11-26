@@ -6,16 +6,15 @@
     <span class="funds-value">{{ availableFunds() }}</span>
   </div>
 
-  <div class="options-list">
-    @for (option of optionsWithAffordability(); track option.id; let i = $index) {
-      <div
-        class="option-row"
-        [class.selected]="selectedIndex() === i"
-        [class.disabled]="!option.affordable"
-        (click)="selectOption(option, i)"
-        role="button"
-        [attr.tabindex]="option.affordable ? 0 : -1"
-      >
+  <app-selection-list
+    [options]="optionsWithAffordability()"
+    [allowArrowNavigation]="true"
+    [showShortcutsInList]="false"
+    (optionSelected)="onOptionSelected($event)"
+    (cancelled)="onCancelled()"
+  >
+    <ng-template #itemTemplate let-option let-selected="selected">
+      <div class="option-content" [class.selected]="selected">
         <div class="option-header">
           <span class="option-shortcut">({{ option.shortcut }})</span>
           <span class="option-name">{{ option.name }}</span>
@@ -39,8 +38,8 @@
           <div class="option-description">{{ option.description }}</div>
         }
       </div>
-    }
-  </div>
+    </ng-template>
+  </app-selection-list>
 
   @if (showBackOption()) {
     <div class="back-option">
