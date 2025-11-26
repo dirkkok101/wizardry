@@ -1,16 +1,15 @@
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
 import { ItemSlot } from '@models/ItemType';
-import { ItemDataLoader } from './ItemDataLoader';
 import { InventoryService } from './InventoryService';
 
 /**
  * EquipmentService - Equipment management and validation
  * Pure functions following docs/services/EquipmentService.md
  *
- * Note: Equipment slots store string IDs (equippedWeapon, equippedArmor, etc.)
- * while inventory stores full Item objects. When equipping, the item is
- * removed from inventory. When unequipping, the item is restored to inventory.
+ * Note: Equipment slots now store full Item objects (equippedWeapon, equippedArmor, etc.)
+ * along with inventory. When equipping, the item is moved from inventory to slot.
+ * When unequipping, the item is moved from slot back to inventory.
  */
 export class EquipmentService {
   /**
@@ -74,34 +73,25 @@ export class EquipmentService {
     let updatedChar = { ...character };
 
     // If slot occupied, unequip existing item first (return to inventory)
-    const existingItemId = updatedChar[slotField] as string | undefined;
-    if (existingItemId) {
-      // Look up the existing item from ItemDataLoader
-      const existingItem = ItemDataLoader.getItem(existingItemId);
-      if (existingItem) {
-        const unequippedItem: Item = { ...existingItem, equipped: false };
-        updatedChar = {
-          ...updatedChar,
-          inventory: [...updatedChar.inventory, unequippedItem],
-          [slotField]: undefined
-        };
-      } else {
-        // Fallback if item not in loader (shouldn't happen normally)
-        updatedChar = {
-          ...updatedChar,
-          [slotField]: undefined
-        };
-      }
+    const existingItem = updatedChar[slotField] as Item | undefined;
+    if (existingItem) {
+      // Move existing item back to inventory
+      const unequippedItem: Item = { ...existingItem, equipped: false };
+      updatedChar = {
+        ...updatedChar,
+        inventory: [...updatedChar.inventory, unequippedItem],
+        [slotField]: undefined
+      };
     }
 
-    // Mark item as equipped and remove from inventory
+    // Mark item as equipped
     const equippedItem: Item = { ...item, equipped: true };
 
-    // Equip new item (remove from inventory, set in slot)
+    // Equip new item (remove from inventory, set in slot with full Item object)
     updatedChar = {
       ...updatedChar,
       inventory: updatedChar.inventory.filter(i => i.id !== itemId),
-      [slotField]: itemId
+      [slotField]: equippedItem
     };
 
     // Recalculate AC
@@ -131,21 +121,17 @@ export class EquipmentService {
   static calculateAC(character: Character): number {
     let ac = 10; // Base AC
 
-    // Equipment bonuses
-    const slots: Array<keyof Character> = [
-      'equippedArmor',
-      'equippedShield',
-      'equippedHelmet',
-      'equippedGauntlets'
+    // Equipment bonuses - directly access Item objects from slots
+    const equippedItems: (Item | undefined)[] = [
+      character.equippedArmor,
+      character.equippedShield,
+      character.equippedHelmet,
+      character.equippedGauntlets
     ];
 
-    for (const slotField of slots) {
-      const itemId = character[slotField] as string | undefined;
-      if (itemId) {
-        const item = ItemDataLoader.getItem(itemId);
-        if (item?.defense) {
-          ac -= item.defense; // Lower is better
-        }
+    for (const item of equippedItems) {
+      if (item?.defense) {
+        ac -= item.defense; // Lower is better
       }
     }
 
@@ -168,15 +154,9 @@ export class EquipmentService {
       throw new Error('Invalid slot');
     }
 
-    const itemId = character[slotField] as string | undefined;
-    if (!itemId) {
-      throw new Error('No item in slot');
-    }
-
-    // Get item data
-    const item = ItemDataLoader.getItem(itemId);
+    const item = character[slotField] as Item | undefined;
     if (!item) {
-      throw new Error('Item not found in database');
+      throw new Error('No item in slot');
     }
 
     // Check if cursed
@@ -214,11 +194,6 @@ export class EquipmentService {
       return null;
     }
 
-    const itemId = character[slotField] as string | undefined;
-    if (!itemId) {
-      return null;
-    }
-
-    return ItemDataLoader.getItem(itemId);
+    return (character[slotField] as Item | undefined) ?? null;
   }
 }

@@ -45,12 +45,12 @@ export interface Character {
   spellPoints?: CharacterSpellPoints  // Optional: 7 levels per spell type
   knownSpells: string[]                // Spell IDs learned by this character
 
-  // Equipment (5 slots total)
-  equippedWeapon?: string      // Weapon slot (item ID)
-  equippedArmor?: string       // Armor slot (item ID)
-  equippedShield?: string      // Shield slot (item ID)
-  equippedHelmet?: string      // Helmet slot (item ID)
-  equippedGauntlets?: string   // Gauntlet slot (item ID)
+  // Equipment (5 slots total) - stores full Item objects
+  equippedWeapon?: Item        // Weapon slot
+  equippedArmor?: Item         // Armor slot
+  equippedShield?: Item        // Shield slot
+  equippedHelmet?: Item        // Helmet slot
+  equippedGauntlets?: Item     // Gauntlet slot
 
   // Inventory
   inventory: Item[]  // Item objects (max 8 items)
