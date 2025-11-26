@@ -1,6 +1,7 @@
 import { SpellLearningService } from '../SpellLearningService'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterClass } from '@models/CharacterClass'
+import { RandomService } from '../RandomService'
 
 // Note: Real spell data is loaded from data/spells/ via setup-jest.ts
 // This follows the project philosophy: "No mocks for services - test with real data"
@@ -87,12 +88,17 @@ describe('SpellLearningService', () => {
       expect(result.updatedCharacter).toEqual(character)
     })
 
-    it('learns new spell when reaching new spell level', () => {
+    it('learns new spell when reaching new spell level (INT-based chance)', () => {
       const character = createTestCharacter({
         class: CharacterClass.MAGE,
         level: 2,
+        intelligence: 15, // 15/30 = 50% chance per spell
         knownSpells: []
       })
+
+      // Queue low values to guarantee spell learning (all spells at level 2)
+      // Value below 0.5 (50% chance) = success
+      RandomService.queueNextValues([0.1, 0.1, 0.1, 0.1, 0.1])
 
       // Level 2 → 3 unlocks spell level 2
       const result = SpellLearningService.learnNewSpells(character, 2, 3)
@@ -114,12 +120,16 @@ describe('SpellLearningService', () => {
       expect(result.newSpells).toEqual([])
     })
 
-    it('adds learned spells to character', () => {
+    it('adds learned spells to character (INT-based chance)', () => {
       const character = createTestCharacter({
         class: CharacterClass.MAGE,
         level: 2,
+        intelligence: 15, // 15/30 = 50% chance
         knownSpells: []
       })
+
+      // Queue low values to guarantee spell learning
+      RandomService.queueNextValues([0.1, 0.1, 0.1, 0.1, 0.1])
 
       const result = SpellLearningService.learnNewSpells(character, 2, 3)
 

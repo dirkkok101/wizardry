@@ -141,8 +141,45 @@ export class SpellLearningService {
   }
 
   /**
-   * Learn new spells when leveling up
-   * Returns updated character with new spells added to knownSpells
+   * Calculate spell learning chance based on INT or PIE.
+   *
+   * Formula (authentic Wizardry 1):
+   *   LearnChance = (INT or PIE) / 30
+   *
+   * Examples:
+   *   INT 11: 36.7% chance per spell
+   *   INT 15: 50% chance per spell
+   *   INT 18: 60% chance per spell
+   *
+   * Bishops use the lower of INT/PIE for learning (both types slower).
+   */
+  static getSpellLearnChance(character: Character, spellType: 'MAGE' | 'PRIEST'): number {
+    let relevantStat: number
+
+    if (character.class === CharacterClass.BISHOP) {
+      // Bishops learn slower - use the relevant stat but at 2/3 rate
+      relevantStat = spellType === 'MAGE' ? character.intelligence : character.piety
+      return (relevantStat / 30) * 0.67 // Bishop penalty
+    }
+
+    // Use INT for mage spells, PIE for priest spells
+    if (spellType === 'MAGE') {
+      relevantStat = character.intelligence
+    } else {
+      relevantStat = character.piety
+    }
+
+    return relevantStat / 30
+  }
+
+  /**
+   * Learn new spells when leveling up using INT/PIE-based chance.
+   *
+   * For each unlearned spell at the newly unlocked level:
+   *   Roll against LearnChance = (INT or PIE) / 30
+   *   If successful, add spell to known spells
+   *
+   * Returns updated character with new spells added to knownSpells.
    */
   static learnNewSpells(
     character: Character,
@@ -156,7 +193,62 @@ export class SpellLearningService {
     const isMagic = [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(character.class)
     const isPriestly = [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(character.class)
 
-    const requirements = isMagic ? MAGE_SPELL_LEVEL_REQUIREMENTS : PRIEST_SPELL_LEVEL_REQUIREMENTS
+    const learnedSpells: Spell[] = []
+    const knownSpellIds = new Set(character.knownSpells || [])
+    const allSpells = SpellDataLoader.getAllSpells()
+
+    // Learn mage spells
+    if (isMagic) {
+      const mageSpells = this.attemptLearnSpells(
+        character,
+        oldLevel,
+        newLevel,
+        MAGE_SPELL_LEVEL_REQUIREMENTS,
+        'mage',
+        allSpells,
+        knownSpellIds
+      )
+      learnedSpells.push(...mageSpells)
+    }
+
+    // Learn priest spells
+    if (isPriestly) {
+      const priestSpells = this.attemptLearnSpells(
+        character,
+        oldLevel,
+        newLevel,
+        PRIEST_SPELL_LEVEL_REQUIREMENTS,
+        'priest',
+        allSpells,
+        knownSpellIds
+      )
+      learnedSpells.push(...priestSpells)
+    }
+
+    const updatedCharacter: Character = {
+      ...character,
+      knownSpells: Array.from(knownSpellIds)
+    }
+
+    return {
+      updatedCharacter,
+      newSpells: learnedSpells
+    }
+  }
+
+  /**
+   * Attempt to learn spells from a specific caster type.
+   */
+  private static attemptLearnSpells(
+    character: Character,
+    oldLevel: number,
+    newLevel: number,
+    requirements: Record<number, number>,
+    casterType: 'mage' | 'priest',
+    allSpells: Map<string, { id: string; name: string; level: number; casterType: string }>,
+    knownSpellIds: Set<string>
+  ): Spell[] {
+    const learnedSpells: Spell[] = []
 
     // Find what spell level was unlocked
     let unlockedSpellLevel = 0
@@ -169,13 +261,10 @@ export class SpellLearningService {
     }
 
     if (unlockedSpellLevel === 0) {
-      return { updatedCharacter: character, newSpells: [] }
+      return learnedSpells
     }
 
-    // Get spells for this level from loaded data
-    const allSpells = SpellDataLoader.getAllSpells()
-    const casterType = isMagic ? 'mage' : 'priest'
-
+    // Get available spells at this level
     const availableSpells: Spell[] = []
     for (const spell of allSpells.values()) {
       if (spell.casterType === casterType && spell.level === unlockedSpellLevel) {
@@ -188,31 +277,22 @@ export class SpellLearningService {
       }
     }
 
-    if (availableSpells.length === 0) {
-      return { updatedCharacter: character, newSpells: [] }
-    }
+    // Attempt to learn each spell based on INT/PIE
+    const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST'
+    const learnChance = this.getSpellLearnChance(character, spellType)
 
-    // Randomly learn 1-2 spells from this level
-    const numToLearn = RandomService.random(1, 2)
-    const learnedSpells: Spell[] = []
-    const knownSpellIds = new Set(character.knownSpells || [])
+    for (const spell of availableSpells) {
+      if (knownSpellIds.has(spell.id)) {
+        continue // Already known
+      }
 
-    for (let i = 0; i < numToLearn && i < availableSpells.length; i++) {
-      const spell = RandomService.pickRandom(availableSpells)
-      if (!knownSpellIds.has(spell.id)) {
+      // Roll for learning (authentic Wizardry formula)
+      if (RandomService.roll(learnChance)) {
         learnedSpells.push(spell)
         knownSpellIds.add(spell.id)
       }
     }
 
-    const updatedCharacter: Character = {
-      ...character,
-      knownSpells: Array.from(knownSpellIds)
-    }
-
-    return {
-      updatedCharacter,
-      newSpells: learnedSpells
-    }
+    return learnedSpells
   }
 }

@@ -119,30 +119,163 @@ describe('LevelUpService', () => {
     })
   })
 
-  describe('rollStatIncreases', () => {
-    it('returns stat increases object', () => {
+  describe('rollStatChanges', () => {
+    it('returns stat changes object', () => {
       const character = createTestCharacter({
-        class: CharacterClass.FIGHTER
+        class: CharacterClass.FIGHTER,
+        age: 20
       })
 
-      const statIncreases = LevelUpService.rollStatIncreases(character)
+      const statChanges = LevelUpService.rollStatChanges(character)
 
-      expect(statIncreases).toBeDefined()
-      expect(typeof statIncreases).toBe('object')
-      // Stats may or may not increase (random)
+      expect(statChanges).toBeDefined()
+      expect(typeof statChanges).toBe('object')
     })
 
-    it('increases stats by at most 1 point each', () => {
+    it('changes stats by at most 1 point each (increase or decrease)', () => {
       const character = createTestCharacter({
-        class: CharacterClass.FIGHTER
+        class: CharacterClass.FIGHTER,
+        age: 50 // Middle age for balanced chances
       })
 
-      const statIncreases = LevelUpService.rollStatIncreases(character)
+      const statChanges = LevelUpService.rollStatChanges(character)
 
-      Object.values(statIncreases).forEach(increase => {
-        expect(increase).toBeLessThanOrEqual(1)
-        expect(increase).toBeGreaterThanOrEqual(0)
+      Object.values(statChanges).forEach(change => {
+        expect(change).toBeLessThanOrEqual(1)
+        expect(change).toBeGreaterThanOrEqual(-1)
       })
+    })
+
+    it('young characters (age 20) almost always gain stats', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        age: 20, // Young: 130-20=110% capped to 95%
+        strength: 10,
+        intelligence: 10,
+        piety: 10,
+        vitality: 10,
+        agility: 10,
+        luck: 10
+      })
+
+      // Queue values: all stats checked (below 75%), all rolls at 50 (below 95% threshold)
+      // Format: 6 pairs of (check roll, change roll) for each stat
+      RandomService.queueNextValues([
+        0.5, 0.50, // STR: checked (50% < 75%), roll 50 < 95% = increase
+        0.5, 0.50, // INT: checked, roll 50 < 95% = increase
+        0.5, 0.50, // PIE: checked, roll 50 < 95% = increase
+        0.5, 0.50, // VIT: checked, roll 50 < 95% = increase
+        0.5, 0.50, // AGI: checked, roll 50 < 95% = increase
+        0.5, 0.50  // LUC: checked, roll 50 < 95% = increase
+      ])
+
+      const statChanges = LevelUpService.rollStatChanges(character)
+
+      // All stats should increase for young character with favorable rolls
+      expect(statChanges.strength).toBe(1)
+      expect(statChanges.intelligence).toBe(1)
+      expect(statChanges.piety).toBe(1)
+      expect(statChanges.vitality).toBe(1)
+      expect(statChanges.agility).toBe(1)
+      expect(statChanges.luck).toBe(1)
+    })
+
+    it('old characters (age 80) often lose stats', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        age: 80, // Old: 130-80=50%
+        strength: 10,
+        intelligence: 10,
+        piety: 10,
+        vitality: 10,
+        agility: 10,
+        luck: 10
+      })
+
+      // Queue values: all stats checked (below 75%), all rolls at 60 (above 50% threshold)
+      RandomService.queueNextValues([
+        0.5, 0.60, // STR: checked, roll 60 > 50% = decrease
+        0.5, 0.60, // INT: decrease
+        0.5, 0.60, // PIE: decrease
+        0.5, 0.60, // VIT: decrease
+        0.5, 0.60, // AGI: decrease
+        0.5, 0.60  // LUC: decrease
+      ])
+
+      const statChanges = LevelUpService.rollStatChanges(character)
+
+      // All stats should decrease for old character with unfavorable rolls
+      expect(statChanges.strength).toBe(-1)
+      expect(statChanges.intelligence).toBe(-1)
+      expect(statChanges.piety).toBe(-1)
+      expect(statChanges.vitality).toBe(-1)
+      expect(statChanges.agility).toBe(-1)
+      expect(statChanges.luck).toBe(-1)
+    })
+
+    it('respects stat cap of 18 (no increase above 18)', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        age: 20,
+        strength: 18 // Already at cap
+      })
+
+      // Queue favorable rolls for increase
+      RandomService.queueNextValues([
+        0.5, 0.10 // STR: checked, roll would increase but capped
+      ])
+
+      const statChanges = LevelUpService.rollStatChanges(character)
+
+      // Strength shouldn't be in changes since it's already at max
+      expect(statChanges.strength).toBeUndefined()
+    })
+
+    it('respects stat floor of 3 (no decrease below 3)', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        age: 90, // Very old
+        strength: 3 // Already at floor
+      })
+
+      // Queue unfavorable rolls for decrease
+      RandomService.queueNextValues([
+        0.5, 0.95 // STR: checked, roll would decrease but floored
+      ])
+
+      const statChanges = LevelUpService.rollStatChanges(character)
+
+      // Strength shouldn't be in changes since it's already at min
+      expect(statChanges.strength).toBeUndefined()
+    })
+
+    it('75% chance each stat is checked for modification', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        age: 30
+      })
+
+      // Queue value above 75% threshold - stat should NOT be checked
+      RandomService.queueNextValues([0.80]) // 80% > 75%, not checked
+
+      const statChanges = LevelUpService.rollStatChanges(character)
+
+      // First stat (strength) should not be modified
+      expect(statChanges.strength).toBeUndefined()
+    })
+  })
+
+  describe('rollStatIncreases (deprecated)', () => {
+    it('delegates to rollStatChanges for backwards compatibility', () => {
+      const character = createTestCharacter({
+        class: CharacterClass.FIGHTER,
+        age: 30
+      })
+
+      const result = LevelUpService.rollStatIncreases(character)
+
+      expect(result).toBeDefined()
+      expect(typeof result).toBe('object')
     })
   })
 
@@ -194,25 +327,64 @@ describe('LevelUpService', () => {
       expect(result.updatedCharacter.hp).toBe(result.updatedCharacter.maxHp)
     })
 
-    it('applies stat increases to character', () => {
+    it('applies stat changes to character (age-based)', () => {
       const character = createTestCharacter({
         level: 1,
         experience: 3000,
         class: CharacterClass.FIGHTER,
         hp: 15,
         maxHp: 15,
-        strength: 14
+        age: 20, // Young for better stat growth
+        strength: 14,
+        intelligence: 10,
+        piety: 10,
+        vitality: 14,
+        agility: 10,
+        luck: 10
       })
 
-      // Queue low values to guarantee stat increases (1% < 5% chance for each stat)
-      // First value is for HP roll, then 6 values for stat rolls (STR, INT, PIE, VIT, AGI, LCK)
-      RandomService.queueNextValues([0.5, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+      // Queue HP roll, then pairs for stat checks (check%, roll%)
+      // Young character (age 20) has 95% threshold, so roll of 50% = increase
+      RandomService.queueNextValues([
+        0.5,       // HP roll
+        0.5, 0.50, // STR: checked, increase
+        0.5, 0.50, // INT: checked, increase
+        0.5, 0.50, // PIE: checked, increase
+        0.5, 0.50, // VIT: checked, increase
+        0.5, 0.50, // AGI: checked, increase
+        0.5, 0.50  // LUC: checked, increase
+      ])
 
       const result = LevelUpService.performLevelUp(character)
 
-      // At least one stat should increase
-      const statsIncreased = Object.keys(result.levelUpData.statIncreases).length
-      expect(statsIncreased).toBeGreaterThan(0)
+      // All stats should increase for young character
+      expect(result.updatedCharacter.strength).toBe(15)
+      expect(result.updatedCharacter.intelligence).toBe(11)
+      expect(result.levelUpData.statChanges.strength).toBe(1)
+    })
+
+    it('can decrease stats for old characters', () => {
+      const character = createTestCharacter({
+        level: 1,
+        experience: 3000,
+        class: CharacterClass.FIGHTER,
+        hp: 15,
+        maxHp: 15,
+        age: 80, // Old: 130-80=50% threshold
+        strength: 14
+      })
+
+      // Queue HP roll, then stat check with roll above 50% threshold
+      RandomService.queueNextValues([
+        0.5,       // HP roll
+        0.5, 0.60  // STR: checked, roll 60 > 50% = decrease
+      ])
+
+      const result = LevelUpService.performLevelUp(character)
+
+      // Strength should decrease
+      expect(result.updatedCharacter.strength).toBe(13)
+      expect(result.levelUpData.statChanges.strength).toBe(-1)
     })
 
     it('returns level up data for UI display', () => {
@@ -221,14 +393,15 @@ describe('LevelUpService', () => {
         experience: 3000,
         class: CharacterClass.FIGHTER,
         hp: 15,
-        maxHp: 15
+        maxHp: 15,
+        age: 30
       })
 
       const result = LevelUpService.performLevelUp(character)
 
       expect(result.levelUpData.newLevel).toBe(2)
       expect(result.levelUpData.hpIncrease).toBeGreaterThan(0)
-      expect(result.levelUpData.statIncreases).toBeDefined()
+      expect(result.levelUpData.statChanges).toBeDefined()
     })
   })
 })
