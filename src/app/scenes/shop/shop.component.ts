@@ -16,7 +16,7 @@ import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
-import { SHOP_INVENTORY } from '@config/shop-inventory';
+import { SHOP_ITEM_IDS } from '@config/shop-inventory';
 
 type ShopView = 'character-select' | 'main' | 'buy' | 'sell' | 'identify' | 'uncurse';
 
@@ -65,8 +65,13 @@ export class ShopComponent implements OnInit {
     itemId: string;
   } | null>(null);
 
-  // Shop data
-  readonly shopInventory = signal<Item[]>(SHOP_INVENTORY);
+  // Shop data - loaded from ItemDataLoader using SHOP_ITEM_IDS
+  readonly shopInventory = computed(() => {
+    return SHOP_ITEM_IDS
+      .map(id => ItemDataLoader.getItem(id))
+      .filter((item): item is Item => item !== null)
+      .map(item => ({ ...item, identified: true }));  // Shop items are always identified
+  });
 
   // Selected character using GameStateQueries
   readonly selectedCharacter = computed(() => {
