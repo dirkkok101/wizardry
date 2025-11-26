@@ -570,7 +570,10 @@ export class CombatComponent implements OnInit, OnDestroy {
   /**
    * Start event-based animation for combat rounds.
    * Processes events in sequence, displaying messages and applying state changes
-   * after each event's messages are shown.
+   * IN SYNC with the result messages (→ prefixed) for real-time visual feedback.
+   *
+   * This ensures that when "→ Fighter takes 10 damage!" is displayed, the HP bar
+   * updates immediately rather than waiting until all messages are shown.
    */
   private startEventAnimation(): void {
     const actionDelay = getCombatMessageDelay()
@@ -599,9 +602,35 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.isAnimatingMessages.set(true)
     this.currentEventIndex = 0
 
-    // Track message index within current event and globally
-    let globalMessageIndex = 0
+    // Track message index within current event
     let eventMessageIndex = 0
+    // Track whether we've applied state for the current event
+    // (state is applied when first result message is shown)
+    let stateAppliedForCurrentEvent = false
+
+    // Helper to finalize current event and move to next
+    const moveToNextEvent = () => {
+      // Ensure state is applied even if there were no result messages
+      if (!stateAppliedForCurrentEvent) {
+        const currentEvent = this.pendingEvents[this.currentEventIndex]
+        this.applyEventState(currentEvent)
+      }
+
+      // Move to next event
+      this.currentEventIndex++
+      eventMessageIndex = 0
+      stateAppliedForCurrentEvent = false
+
+      // If more events, continue after action delay
+      if (this.currentEventIndex < this.pendingEvents.length) {
+        this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
+      } else {
+        // All events done
+        this.isAnimatingMessages.set(false)
+        this.messageAnimationTimer = null
+        this.onRoundAnimationComplete()
+      }
+    }
 
     const processNextMessage = () => {
       // Check if all events processed
@@ -616,32 +645,24 @@ export class CombatComponent implements OnInit, OnDestroy {
 
       // Check if all messages in current event are shown
       if (eventMessageIndex >= currentEvent.messages.length) {
-        // Apply state changes for this event AFTER its messages are displayed
-        this.applyEventState(currentEvent)
-
-        // Move to next event
-        this.currentEventIndex++
-        eventMessageIndex = 0
-
-        // If more events, continue after action delay
-        if (this.currentEventIndex < this.pendingEvents.length) {
-          this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
-        } else {
-          // All events done
-          this.isAnimatingMessages.set(false)
-          this.messageAnimationTimer = null
-          this.onRoundAnimationComplete()
-        }
+        moveToNextEvent()
         return
       }
 
       // Show next message in current event
       const message = currentEvent.messages[eventMessageIndex]
+      const isResultMessage = CombatService.isResultMessage(message)
       const displayMessage = CombatService.stripResultMarker(message)
-      this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
 
+      // Apply state changes when showing the FIRST result message
+      // This provides real-time feedback - HP bar updates when damage message appears
+      if (isResultMessage && !stateAppliedForCurrentEvent) {
+        this.applyEventState(currentEvent)
+        stateAppliedForCurrentEvent = true
+      }
+
+      this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
       eventMessageIndex++
-      globalMessageIndex++
 
       // Determine delay for NEXT message
       if (eventMessageIndex < currentEvent.messages.length) {
@@ -651,23 +672,8 @@ export class CombatComponent implements OnInit, OnDestroy {
         const delay = nextIsResult ? resultDelay : actionDelay
         this.messageAnimationTimer = setTimeout(processNextMessage, delay)
       } else {
-        // Event messages done, apply state and move to next event
-        // Small delay before state update to let the last message sink in
-        this.messageAnimationTimer = setTimeout(() => {
-          this.applyEventState(currentEvent)
-          this.currentEventIndex++
-          eventMessageIndex = 0
-
-          if (this.currentEventIndex < this.pendingEvents.length) {
-            // More events - use action delay before next event's first message
-            this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
-          } else {
-            // All done
-            this.isAnimatingMessages.set(false)
-            this.messageAnimationTimer = null
-            this.onRoundAnimationComplete()
-          }
-        }, resultDelay) // Brief pause after last message of event before state update
+        // Event messages done, move to next event
+        moveToNextEvent()
       }
     }
 
@@ -993,39 +999,56 @@ export class CombatComponent implements OnInit, OnDestroy {
       .filter((char): char is Character => char !== undefined)
     const actions = this.selectedActions()
 
-    console.log('[Combat] Party status before round:')
-    chars.forEach(c => console.log(`  ${c.name}: ${c.hp}/${c.maxHp} HP, Status: ${c.status}`))
+    const DEBUG = CombatService.DEBUG_COMBAT
+
+    if (DEBUG) {
+      console.log('[Combat] Party status before round:')
+      chars.forEach(c => console.debug(`  ${c.name}: ${c.hp}/${c.maxHp} HP, Status: ${c.status}`))
+    }
 
     const monsters = CombatService.getAllMonsters(combat)
-    console.log('[Combat] Monster status before round:')
-    monsters.forEach(m => console.log(`  ${m.name}: ${m.hp}/${m.maxHp} HP`))
+    if (DEBUG) {
+      console.log('[Combat] Monster status before round:')
+      monsters.forEach(m => console.debug(`  ${m.name}: ${m.hp}/${m.maxHp} HP`))
+    }
 
     // Create party commands from selected actions
     // Expand attack commands into multiple attacks for multi-attack classes
     const partyCommands: CombatCommand[] = []
+    if (DEBUG) console.log('[Combat] Building party commands from', actions.size, 'selected actions')
     for (const command of actions.values()) {
       if (command.type === 'ATTACK') {
         const attacksPerRound = CombatService.getAttacksPerRound(command.actor)
+        if (DEBUG) console.debug(`[Combat] ${command.actor.name} (${command.type}) -> expanding to ${attacksPerRound} attack command(s)`)
         for (let i = 0; i < attacksPerRound; i++) {
           partyCommands.push(
             CombatService.createCommand(command.actor, 'ATTACK', command.target)
           )
         }
       } else {
+        if (DEBUG) console.debug(`[Combat] ${command.actor.name} (${command.type}) -> 1 command`)
         partyCommands.push(command)
       }
     }
 
-    console.log('[Combat] Party commands:', partyCommands.length)
+    if (DEBUG) console.log('[Combat] Total party commands:', partyCommands.length)
 
     // Create monster commands using AI (only for monsters that can act)
     const actingMonsters = CombatService.getAllActingMonsters(combat)
     const frontRow = this.party().formation.frontRow
-    const monsterCommands = actingMonsters.map(m =>
-      CombatService.selectMonsterAction(m, chars, frontRow)
-    )
 
-    console.log('[Combat] Monster commands:', monsterCommands.length)
+    if (DEBUG) {
+      console.log('[Combat] Acting monsters:', actingMonsters.length, 'of', monsters.length, 'total')
+      actingMonsters.forEach(m => console.debug(`  - ${m.name} (id: ${m.id}, hp: ${m.hp}, status: ${m.status})`))
+    }
+
+    const monsterCommands = actingMonsters.map(m => {
+      const cmd = CombatService.selectMonsterAction(m, chars, frontRow)
+      if (DEBUG) console.debug(`[Combat] Monster ${m.name} (${m.id}) -> ${cmd.type} command, target: ${cmd.target?.name || 'none'}`)
+      return cmd
+    })
+
+    if (DEBUG) console.log('[Combat] Total monster commands:', monsterCommands.length)
 
     // Update combat state with all commands
     const stateWithCommands: CombatState = {
@@ -1033,16 +1056,28 @@ export class CombatComponent implements OnInit, OnDestroy {
       commandQueue: [...partyCommands, ...monsterCommands]
     }
 
+    if (DEBUG) {
+      console.log('[Combat] ===== COMMAND QUEUE SUMMARY =====')
+      console.log(`[Combat] Total commands: ${stateWithCommands.commandQueue.length} (${partyCommands.length} party + ${monsterCommands.length} monster)`)
+      stateWithCommands.commandQueue.forEach((cmd, idx) => {
+        const isMonster = 'monsterId' in cmd.actor
+        console.debug(`  ${idx + 1}. ${cmd.actor.name} (${isMonster ? 'M' : 'P'}) -> ${cmd.type} -> ${cmd.target?.name || 'none'} [init: ${cmd.initiative}]`)
+      })
+      console.log('[Combat] ================================')
+    }
+
     // Execute round with event-based tracking for animation synchronization
     this.isExecutingRound.set(true)
     const result = CombatService.executeRoundWithEvents(stateWithCommands, chars, frontRow)
 
-    console.log('[Combat] Round result:', {
-      victory: result.victory,
-      defeat: result.defeat,
-      fled: result.fled,
-      events: result.events.length
-    })
+    if (DEBUG) {
+      console.log('[Combat] Round result:', {
+        victory: result.victory,
+        defeat: result.defeat,
+        fled: result.fled,
+        events: result.events.length
+      })
+    }
 
     // Initialize display state from current state (before animation changes anything)
     this.displayMonsterGroups.set([...combat.monsterGroups])
