@@ -24,10 +24,31 @@
 - Level 5 → 6: ~10,000 XP
 - Level 10 → 11: ~50,000 XP
 
-**Formula**: Varies by class
-- Fighter/Thief: Fast progression
-- Mage/Priest: Medium progression
-- Elite classes: Slower progression
+**Formula**: `1000 × level^1.5 × class_multiplier`
+
+**XP Requirements by Class (Level 2)**:
+
+| Class | Multiplier | XP for Level 2 | Leveling Speed |
+|-------|------------|----------------|----------------|
+| Fighter | 0.8 | 2,262 | Fastest |
+| Thief | 0.9 | 2,545 | Fast |
+| Priest | 1.0 | 2,828 | Medium |
+| Samurai | 1.1 | 3,111 | Slow |
+| Lord | 1.1 | 3,111 | Slow |
+| Mage | 1.2 | 3,394 | Slower |
+| Ninja | 1.2 | 3,394 | Slower |
+| Bishop | 1.3 | 3,676 | Slowest |
+
+**Example XP Progression (Fighter vs Mage)**:
+
+| Level | Fighter XP | Mage XP | Difference |
+|-------|------------|---------|------------|
+| 2 | 2,262 | 3,394 | +50% |
+| 3 | 4,156 | 6,235 | +50% |
+| 5 | 8,944 | 13,416 | +50% |
+| 10 | 25,298 | 37,947 | +50% |
+
+**Note**: Bishops level slowest but gain both mage AND priest spells.
 
 ## Leveling Up
 
@@ -200,16 +221,39 @@ For each stat:
 
 ### Spell Point Growth
 
-**More Spells Learned**: Larger spell point pools
+**Formula**: `min(9, characterLevel - reqLevel + 2)` per spell level
 
-**Higher Level**: More spell points per level
+**Spell Level Requirements**:
 
-**Example** (Level 10 Mage):
-- Level 1: 5 points (many spells learned)
-- Level 2: 4 points
-- Level 3: 4 points
-- Level 4: 3 points
-- Level 5: 2 points
+| Spell Level | Character Level Required |
+|-------------|--------------------------|
+| 1 | 1 |
+| 2 | 3 |
+| 3 | 5 |
+| 4 | 7 |
+| 5 | 9 |
+| 6 | 11 |
+| 7 | 13 |
+
+**Example Spell Points by Character Level (Mage)**:
+
+| Char Level | L1 | L2 | L3 | L4 | L5 | L6 | L7 |
+|------------|----|----|----|----|----|----|-----|
+| 1 | 2 | - | - | - | - | - | - |
+| 2 | 3 | - | - | - | - | - | - |
+| 3 | 4 | 2 | - | - | - | - | - |
+| 5 | 6 | 4 | 2 | - | - | - | - |
+| 7 | 8 | 6 | 4 | 2 | - | - | - |
+| 9 | 9 | 8 | 6 | 4 | 2 | - | - |
+| 11 | 9 | 9 | 8 | 6 | 4 | 2 | - |
+| 13 | 9 | 9 | 9 | 8 | 6 | 4 | 2 |
+
+**Class Restrictions**:
+- **Samurai**: Max spell level 6 (no level 7 mage spells)
+- **Lord**: Max spell level 6 (no level 7 priest spells)
+- **Bishop**: Both mage AND priest spell pools
+
+**Restoration**: Spell points restore to max on level-up and when resting at inn (Stables only)
 
 ## Combat Progression
 
