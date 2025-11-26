@@ -6,6 +6,20 @@
 
 Manages resting at inn including HP restoration, spell point restoration, status effect removal, aging, and vitality loss.
 
+## Spell Point Restoration
+
+Per original Wizardry 1 mechanics, **only the Stables restore spell points**.
+
+| Room Type | HP/Week | Spell Points |
+|-----------|---------|--------------|
+| Stables | 0 | **ALL restored** |
+| Barracks | 1 | None |
+| Double | 3 | None |
+| Private | 7 | None |
+| Royal Suite | 10 | None |
+
+**Gameplay Loop:** The optimal strategy is to use Stables (free) to restore spell points, cast healing spells, and repeat. Paid rooms provide faster HP healing but no spell point recovery.
+
 ## API Reference
 
 ### restAtInn
@@ -24,7 +38,7 @@ function restAtInn(party: Party): RestResult
 
 **Effects**:
 - Restore all HP to maximum
-- Restore all spell points to maximum
+- Restore spell points ONLY if resting in Stables (per original Wizardry 1)
 - Remove temporary status effects (poison, paralysis, sleep)
 - Age all characters slightly (~0.1 years)
 - Reduce vitality (VIM) slightly (~0.05)
@@ -109,7 +123,9 @@ const restored = InnService.restoreHP(damaged)
 
 ### restoreSpellPoints
 
-Restore all spell points to maximum.
+Restore all spell points to maximum for a character.
+
+**Per original Wizardry 1:** This function is ONLY called when resting in Stables. Paid rooms (Barracks, Double, Private, Royal Suite) do NOT restore spell points.
 
 **Signature**:
 ```typescript
@@ -119,7 +135,7 @@ function restoreSpellPoints(character: Character): Character
 **Parameters**:
 - `character`: Character to restore spell points
 
-**Returns**: Character with all spell point pools refilled
+**Returns**: Character with all spell point pools refilled (both mage and priest for Bishop)
 
 **Example**:
 ```typescript
@@ -267,7 +283,8 @@ See [InnService.test.ts](../../tests/services/InnService.test.ts)
 
 **Key test cases**:
 - Rest restores all HP to max
-- Rest restores all spell points to max
+- Stables restore all spell points to max (per original Wizardry 1)
+- Paid rooms (Barracks, Double, Private, Royal Suite) do NOT restore spell points
 - Rest removes poison, paralysis, sleep
 - Rest does not remove dead/ashes/stone
 - Rest ages characters ~0.1 years
