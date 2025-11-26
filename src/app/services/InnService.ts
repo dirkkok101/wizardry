@@ -81,6 +81,7 @@ export class InnService {
   /**
    * Rest character for one week
    * Heals HP, deducts gold from party, returns updated character and state
+   * Only STABLES restore spell points (per original Wizardry 1)
    */
   static restOneWeek(state: GameState, character: Character, roomType: RoomType): RestResult {
     const cost = this.getRoomCost(roomType)
@@ -88,9 +89,14 @@ export class InnService {
 
     const newHp = Math.min(character.hp + healRate, character.maxHp)
 
-    const updatedCharacter: Character = {
+    let updatedCharacter: Character = {
       ...character,
       hp: newHp
+    }
+
+    // Only Stables restore spell points (per original Wizardry 1)
+    if (roomType === RoomType.STABLES) {
+      updatedCharacter = this.restoreSpellPoints(updatedCharacter)
     }
 
     const updatedState = PartyService.removePartyGold(state, cost)
@@ -101,7 +107,7 @@ export class InnService {
       isFullyHealed: newHp === character.maxHp,
       goldSpent: cost,
       hpRecovered: newHp - character.hp,
-      spellPointsRestored: false
+      spellPointsRestored: roomType === RoomType.STABLES
     }
   }
 
