@@ -489,10 +489,14 @@ describe('Combat Flow E2E', () => {
 
     it('updates combat log throughout encounter', () => {
       // Queue random values to ensure deterministic combat outcome:
-      // - Hit roll: 0.1 (10% < hit chance, guarantees hit)
-      // - Damage roll: 6 (max d6 damage)
-      // - Critical check: 0.01 (1% < crit chance, triggers critical)
-      RandomService.queueNextValues([0.1, 6, 0.01])
+      // All values must be in 0-1 range as they're used by nextRandom()
+      // Sequence: char initiative, monster initiative, hit roll, damage roll, crit check
+      // - 0.9: Character initiative (gives 9)
+      // - 0.1: Monster initiative (gives 1) - character goes first
+      // - 0.05: Hit roll (5% < hit chance, guarantees hit)
+      // - 0.99: Damage roll (gives floor(0.99*6)+1 = 6, max d6 damage)
+      // - 0.01: Critical check (1% < crit chance, triggers critical)
+      RandomService.queueNextValues([0.9, 0.1, 0.05, 0.99, 0.01])
 
       const char = createTestCharacter({ id: 'c1', hp: 30, maxHp: 30, strength: 18 })
       const monster = createTestMonster({ hp: 1, maxHp: 10, xp: 100 })
