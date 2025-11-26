@@ -10,9 +10,13 @@ import { ItemDataLoader } from './ItemDataLoader'
  * - Purchase price validation
  * - Sell price calculation (50% of purchase price)
  * - Identify service pricing (100 gold flat fee)
- * - Uncurse service pricing (500 gold base * power level)
+ * - Uncurse service pricing (half item price, per original Wizardry 1)
  * - Cursed item handling (cannot sell)
  */
+
+// Uncurse pricing constants (original Wizardry 1 mechanics)
+const SPECIAL_ITEM_UNCURSE_COST = 150000  // Flat rate for priceless/special items
+const SPECIAL_ITEM_PRICE_THRESHOLD = 100000  // Items at or above this use flat rate
 
 interface ShopResult {
   success: boolean
@@ -143,12 +147,15 @@ export class ShopService {
 
   /**
    * Calculate uncurse price for an item.
-   * Base cost of 500 gold, multiplied by power level if present.
+   * Original Wizardry 1: uncurse cost is half the item's price.
+   * Special/priceless items use flat rate of 150,000 gold.
    */
   static calculateUncursePrice(item: Item): number {
-    const baseCost = 500
-    const powerLevel = item.powerLevel || 1
-    return baseCost * powerLevel
+    const itemPrice = item.price
+    if (itemPrice === 0 || itemPrice >= SPECIAL_ITEM_PRICE_THRESHOLD) {
+      return SPECIAL_ITEM_UNCURSE_COST
+    }
+    return Math.floor(itemPrice / 2)
   }
 
   /**
