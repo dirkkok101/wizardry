@@ -917,9 +917,6 @@ describe('CombatComponent', () => {
         component.selectActionType('PARRY')
       })
 
-      // Get initial HP
-      const initialHP = component.partyCharacters()[0].hp
-
       // Start round execution
       component.executeRound()
 
@@ -946,14 +943,7 @@ describe('CombatComponent', () => {
         if (overrides.size > 0) {
           foundCharacterUpdate = true
 
-          // Verify that the override was applied while messages are still being animated
-          // (not all events should be processed yet)
-          const displayedMessages = component['displayedAnimatingMessages']()
-          const allMessages = component['animatingMessages']()
-
-          // There should still be messages remaining to show (we're mid-animation)
-          // OR the state was applied at the same time as displaying a result message
-          // Either way, we verify that overrides contain hp changes
+          // Verify that overrides contain HP changes
           const overrideEntries = Array.from(overrides.entries())
           const hasHPOverride = overrideEntries.some(([_, update]) => update.hp !== undefined)
           expect(hasHPOverride).toBe(true)
@@ -988,7 +978,7 @@ describe('CombatComponent', () => {
       const displayGroups = component['displayMonsterGroups']()!
       expect(displayGroups.length).toBe(initialMonsterGroups.length)
 
-      // Advance through the animation
+      // Advance through the animation and verify monster HP updates occur
       let foundMonsterUpdate = false
       let iterations = 0
       const maxIterations = 50
@@ -1005,10 +995,6 @@ describe('CombatComponent', () => {
 
           if (JSON.stringify(beforeHP) !== JSON.stringify(afterHP)) {
             foundMonsterUpdate = true
-
-            // Verify we're still in animation (messages haven't all been committed)
-            const isAnimating = component['isAnimatingMessages']()
-            // State can update at the end too, which is fine
           }
         }
 
@@ -1027,8 +1013,6 @@ describe('CombatComponent', () => {
         component.selectActionType('PARRY')
       })
 
-      const initialCharHP = component.partyCharacters().map(c => c.hp)
-
       // Start round execution
       component.executeRound()
 
@@ -1039,7 +1023,6 @@ describe('CombatComponent', () => {
       while (iterations < 50 && !foundHPChange) {
         jest.advanceTimersByTime(10)
 
-        const currentCharHP = component.partyCharacters().map(c => c.hp)
         const overrides = component['displayCharacterOverrides']()
 
         // If we have overrides, the computed partyCharacters should reflect them
