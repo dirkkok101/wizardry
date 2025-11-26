@@ -129,13 +129,13 @@ describe('Equipment Flow E2E', () => {
       plateMail!.identified = true;
 
       // Step 2: Add items to fighter's inventory
-      fighter.inventory = ['long_sword', 'plate_mail'];
+      fighter.inventory = [longSword!, plateMail!];
       expect(fighter.inventory.length).toBe(2);
 
       // Step 3: Equip weapon
       fighter = EquipmentService.equipItem(fighter, 'long_sword');
       expect(fighter.equippedWeapon).toBe('long_sword');
-      expect(fighter.inventory).not.toContain('long_sword');
+      expect(fighter.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
       expect(fighter.ac).toBe(10 - 2); // Base 10 - AGI modifier (no weapon bonus)
 
       // Step 4: Equip armor (should recalculate AC)
@@ -148,7 +148,7 @@ describe('Equipment Flow E2E', () => {
       // Step 5: Unequip weapon
       fighter = EquipmentService.unequipItem(fighter, ItemSlot.WEAPON);
       expect(fighter.equippedWeapon).toBeUndefined();
-      expect(fighter.inventory).toContain('long_sword');
+      expect(fighter.inventory.find(i => i.id === 'long_sword')).toBeDefined();
       expect(fighter.ac).toBe(3); // Still has armor + AGI
 
       // Step 6: Trade sword to mage
@@ -156,16 +156,16 @@ describe('Equipment Flow E2E', () => {
       fighter = tradeResult.from;
       mage = tradeResult.to;
 
-      expect(fighter.inventory).not.toContain('long_sword');
-      expect(mage.inventory).toContain('long_sword');
+      expect(fighter.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
+      expect(mage.inventory.find(i => i.id === 'long_sword')).toBeDefined();
 
       // Step 7: Mage cannot equip sword (wrong class), so just verify trade succeeded
       // Mages cannot use long swords according to real JSON data
-      expect(mage.inventory).toContain('long_sword');
+      expect(mage.inventory.find(i => i.id === 'long_sword')).toBeDefined();
 
       // Step 8: Drop item from inventory (unequipped)
       mage = InventoryService.dropItem(mage, 'long_sword');
-      expect(mage.inventory).not.toContain('long_sword');
+      expect(mage.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
 
       // Final state verification
       expect(fighter.equippedArmor).toBe('plate_mail');
@@ -183,11 +183,11 @@ describe('Equipment Flow E2E', () => {
       // Mark as identified
       if (plateMail) {
         plateMail.identified = true;
-        fighter.inventory.push('plate_mail');
+        fighter.inventory.push(plateMail);
       }
       if (largeShield) {
         largeShield.identified = true;
-        fighter.inventory.push('large_shield');
+        fighter.inventory.push(largeShield);
       }
 
       // Initial AC: 10
@@ -197,7 +197,7 @@ describe('Equipment Flow E2E', () => {
       let currentAC = 10;
       const startingAGI = 2; // Fighter has AGI 14 = +2
 
-      if (fighter.inventory.includes('plate_mail')) {
+      if (fighter.inventory.find(i => i.id === 'plate_mail')) {
         fighter = EquipmentService.equipItem(fighter, 'plate_mail');
         currentAC -= 5; // Plate Mail AC 5
         currentAC -= startingAGI; // AGI modifier
@@ -205,7 +205,7 @@ describe('Equipment Flow E2E', () => {
         expect(fighter.equippedArmor).toBe('plate_mail');
       }
 
-      if (fighter.inventory.includes('large_shield')) {
+      if (fighter.inventory.find(i => i.id === 'large_shield')) {
         fighter = EquipmentService.equipItem(fighter, 'large_shield');
         const shield = ItemDataLoader.getItem('large_shield');
         if (shield?.defense) {
@@ -228,7 +228,7 @@ describe('Equipment Flow E2E', () => {
 
       plateMail!.identified = true; // Mark as identified to test class restriction, not identification
 
-      mage.inventory = ['plate_mail'];
+      mage.inventory = [plateMail!];
 
       // Mage cannot wear plate mail (Fighter, Samurai, Lord only per real data)
       expect(() => {
@@ -236,7 +236,7 @@ describe('Equipment Flow E2E', () => {
       }).toThrow();
 
       // Inventory should be unchanged
-      expect(mage.inventory).toContain('plate_mail');
+      expect(mage.inventory.find(i => i.id === 'plate_mail')).toBeDefined();
       expect(mage.equippedArmor).toBeUndefined();
     });
 
@@ -246,8 +246,10 @@ describe('Equipment Flow E2E', () => {
 
       longSword!.identified = true;
 
-      fighter.inventory = ['long_sword'];
-      mage.inventory = new Array(8).fill('potion'); // Full inventory
+      const potion = ItemDataLoader.getItem('potion') || { id: 'potion', name: 'Potion', type: ItemType.CONSUMABLE, slot: ItemSlot.NONE, price: 10, cursed: false, identified: true, equipped: false };
+
+      fighter.inventory = [longSword!];
+      mage.inventory = new Array(8).fill(potion); // Full inventory
 
       expect(() => {
         InventoryService.transferItem(fighter, mage, 'long_sword');
@@ -260,7 +262,7 @@ describe('Equipment Flow E2E', () => {
 
       longSword!.identified = true;
 
-      fighter.inventory = ['long_sword'];
+      fighter.inventory = [longSword!];
       fighter = EquipmentService.equipItem(fighter, 'long_sword');
 
       expect(fighter.equippedWeapon).toBe('long_sword');
@@ -281,7 +283,7 @@ describe('Equipment Flow E2E', () => {
       // If cursed armor exists in data, use it; otherwise skip this test
       if (cursedArmor && cursedArmor.cursed) {
         cursedArmor.identified = true;
-        fighter.inventory = ['cursed_armor'];
+        fighter.inventory = [cursedArmor];
         fighter = EquipmentService.equipItem(fighter, 'cursed_armor');
 
         expect(fighter.equippedArmor).toBe('cursed_armor');
@@ -315,7 +317,7 @@ describe('Equipment Flow E2E', () => {
 
       longSword!.identified = true;
 
-      fighter.inventory = ['long_sword'];
+      fighter.inventory = [longSword!];
 
       // Fighter → Mage
       let result = InventoryService.transferItem(fighter, mage, 'long_sword');
@@ -323,7 +325,7 @@ describe('Equipment Flow E2E', () => {
       mage = result.to;
 
       expect(fighter.inventory).toHaveLength(0);
-      expect(mage.inventory).toContain('long_sword');
+      expect(mage.inventory.find(i => i.id === 'long_sword')).toBeDefined();
 
       // Mage → Thief
       result = InventoryService.transferItem(mage, thief, 'long_sword');
@@ -331,7 +333,7 @@ describe('Equipment Flow E2E', () => {
       thief = result.to;
 
       expect(mage.inventory).toHaveLength(0);
-      expect(thief.inventory).toContain('long_sword');
+      expect(thief.inventory.find(i => i.id === 'long_sword')).toBeDefined();
 
       // Thief → Fighter (back to start)
       result = InventoryService.transferItem(thief, fighter, 'long_sword');
@@ -339,7 +341,7 @@ describe('Equipment Flow E2E', () => {
       fighter = result.to;
 
       expect(thief.inventory).toHaveLength(0);
-      expect(fighter.inventory).toContain('long_sword');
+      expect(fighter.inventory.find(i => i.id === 'long_sword')).toBeDefined();
     });
   });
 });

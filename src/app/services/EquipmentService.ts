@@ -7,6 +7,10 @@ import { InventoryService } from './InventoryService';
 /**
  * EquipmentService - Equipment management and validation
  * Pure functions following docs/services/EquipmentService.md
+ *
+ * Note: Equipment slots store string IDs (equippedWeapon, equippedArmor, etc.)
+ * while inventory stores full Item objects. When equipping, the item is
+ * removed from inventory. When unequipping, the item is restored to inventory.
  */
 export class EquipmentService {
   /**
@@ -48,15 +52,10 @@ export class EquipmentService {
     character: Character,
     itemId: string
   ): Character {
-    // Check item in inventory
-    if (!character.inventory.includes(itemId)) {
-      throw new Error('Item not in inventory');
-    }
-
-    // Get item data
-    const item = ItemDataLoader.getItem(itemId);
+    // Find item in inventory (now Item[])
+    const item = character.inventory.find(i => i.id === itemId);
     if (!item) {
-      throw new Error('Item not found in database');
+      throw new Error('Item not in inventory');
     }
 
     // Validate can equip
@@ -74,20 +73,34 @@ export class EquipmentService {
     // Start with character copy
     let updatedChar = { ...character };
 
-    // If slot occupied, unequip existing item first
-    const existingItemId = updatedChar[slotField];
+    // If slot occupied, unequip existing item first (return to inventory)
+    const existingItemId = updatedChar[slotField] as string | undefined;
     if (existingItemId) {
-      updatedChar = {
-        ...updatedChar,
-        inventory: [...updatedChar.inventory, existingItemId as string],
-        [slotField]: undefined
-      };
+      // Look up the existing item from ItemDataLoader
+      const existingItem = ItemDataLoader.getItem(existingItemId);
+      if (existingItem) {
+        const unequippedItem: Item = { ...existingItem, equipped: false };
+        updatedChar = {
+          ...updatedChar,
+          inventory: [...updatedChar.inventory, unequippedItem],
+          [slotField]: undefined
+        };
+      } else {
+        // Fallback if item not in loader (shouldn't happen normally)
+        updatedChar = {
+          ...updatedChar,
+          [slotField]: undefined
+        };
+      }
     }
 
-    // Equip new item
+    // Mark item as equipped and remove from inventory
+    const equippedItem: Item = { ...item, equipped: true };
+
+    // Equip new item (remove from inventory, set in slot)
     updatedChar = {
       ...updatedChar,
-      inventory: updatedChar.inventory.filter(id => id !== itemId),
+      inventory: updatedChar.inventory.filter(i => i.id !== itemId),
       [slotField]: itemId
     };
 
@@ -160,9 +173,14 @@ export class EquipmentService {
       throw new Error('No item in slot');
     }
 
-    // Check if cursed
+    // Get item data
     const item = ItemDataLoader.getItem(itemId);
-    if (item?.cursed) {
+    if (!item) {
+      throw new Error('Item not found in database');
+    }
+
+    // Check if cursed
+    if (item.cursed) {
       throw new Error('Cannot unequip cursed item');
     }
 
@@ -171,10 +189,13 @@ export class EquipmentService {
       throw new Error('Inventory full');
     }
 
+    // Create unequipped item for inventory
+    const unequippedItem: Item = { ...item, equipped: false };
+
     // Move to inventory
     const updatedChar = {
       ...character,
-      inventory: [...character.inventory, itemId],
+      inventory: [...character.inventory, unequippedItem],
       [slotField]: undefined
     };
 
@@ -182,5 +203,22 @@ export class EquipmentService {
     updatedChar.ac = this.calculateAC(updatedChar);
 
     return updatedChar;
+  }
+
+  /**
+   * Get equipped item from a slot
+   */
+  static getEquippedItem(character: Character, slot: ItemSlot): Item | null {
+    const slotField = this.getSlotFieldName(slot);
+    if (!slotField) {
+      return null;
+    }
+
+    const itemId = character[slotField] as string | undefined;
+    if (!itemId) {
+      return null;
+    }
+
+    return ItemDataLoader.getItem(itemId);
   }
 }

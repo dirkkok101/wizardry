@@ -2,8 +2,35 @@ import { TileInspectionService } from '../TileInspectionService';
 import { LevelData, Position } from '@models/Dungeon';
 import { GameState } from '@models/GameState';
 import { createTestCharacter, createTestGameState } from '@testing/test-factories';
+import { Item } from '@models/Item';
+import { ItemType, ItemSlot } from '@models/ItemType';
+import { ItemDataLoader } from '../ItemDataLoader';
+
+// Helper function to create test items
+const createItem = (id: string, name: string, overrides: Partial<Item> = {}): Item => ({
+  id,
+  name,
+  type: ItemType.WEAPON,
+  slot: ItemSlot.WEAPON,
+  price: 100,
+  damage: 5,
+  cursed: false,
+  identified: true,
+  equipped: false,
+  ...overrides
+})
 
 describe('TileInspectionService', () => {
+  beforeEach(() => {
+    // Mock ItemDataLoader.getItem to return test items
+    jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+      return createItem(itemId, itemId.replace(/_/g, ' '))
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
   describe('hasSearchableContent', () => {
     const level: LevelData = {
       level: 1,
@@ -121,7 +148,7 @@ describe('TileInspectionService', () => {
 
       // Check item added to inventory
       const charAfter = result.state!.roster.get('char1')!;
-      expect(charAfter.inventory).toContainEqual({ itemId: 'bronze_key', equipped: false });
+      expect(charAfter.inventory.find(i => i.id === 'bronze_key')).toBeDefined();
     });
 
     it('clears tile search content after discovery', () => {

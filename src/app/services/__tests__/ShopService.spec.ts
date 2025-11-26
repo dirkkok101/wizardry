@@ -3,6 +3,20 @@ import { Item } from '@models/Item'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { createTestGameState, createTestCharacter } from '@testing/test-factories'
 
+// Helper function to create test items
+const createItem = (id: string, name: string, overrides: Partial<Item> = {}): Item => ({
+  id,
+  name,
+  type: ItemType.WEAPON,
+  slot: ItemSlot.WEAPON,
+  price: 100,
+  damage: 5,
+  cursed: false,
+  identified: true,
+  equipped: false,
+  ...overrides
+})
+
 describe('ShopService', () => {
   const mockItem: Item = {
     id: 'item-1',
@@ -95,7 +109,7 @@ describe('ShopService', () => {
 
       expect(result.success).toBe(true)
       const updatedChar = result.state!.roster.get('char-1')
-      expect(updatedChar!.inventory).toContain('item-1')
+      expect(updatedChar!.inventory.find(i => i.id === 'item-1')).toBeDefined()
     })
 
     it('returns error if party has insufficient gold', () => {
@@ -126,7 +140,7 @@ describe('ShopService', () => {
     })
 
     it('returns error if inventory is full', () => {
-      const fullInventory = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7', 'item8']
+      const fullInventory = Array(8).fill(null).map((_, i) => createItem(`item${i}`, `Item ${i}`))
       const character = createTestCharacter({ id: 'char-1', inventory: fullInventory })
       const state = {
         ...createTestGameState(),
@@ -147,7 +161,7 @@ describe('ShopService', () => {
 
   describe('sellItem', () => {
     it('adds gold to party when selling item', () => {
-      const character = createTestCharacter({ id: 'char-1', inventory: ['item-1'] })
+      const character = createTestCharacter({ id: 'char-1', inventory: [mockItem] })
       const state = {
         ...createTestGameState(),
         roster: new Map([['char-1', character]]),
@@ -165,7 +179,8 @@ describe('ShopService', () => {
     })
 
     it('removes item from character inventory', () => {
-      const character = createTestCharacter({ id: 'char-1', inventory: ['item-1', 'item-2'] })
+      const item2 = createItem('item-2', 'Item 2')
+      const character = createTestCharacter({ id: 'char-1', inventory: [mockItem, item2] })
       const state = {
         ...createTestGameState(),
         roster: new Map([['char-1', character]]),
@@ -180,8 +195,8 @@ describe('ShopService', () => {
 
       expect(result.success).toBe(true)
       const updatedChar = result.state!.roster.get('char-1')
-      expect(updatedChar!.inventory).not.toContain('item-1')
-      expect(updatedChar!.inventory).toContain('item-2')
+      expect(updatedChar!.inventory.find(i => i.id === 'item-1')).toBeUndefined()
+      expect(updatedChar!.inventory.find(i => i.id === 'item-2')).toBeDefined()
     })
 
     it('returns error if character not found', () => {
@@ -194,7 +209,8 @@ describe('ShopService', () => {
     })
 
     it('returns error if item not in inventory', () => {
-      const character = createTestCharacter({ id: 'char-1', inventory: ['item-2'] })
+      const item2 = createItem('item-2', 'Item 2')
+      const character = createTestCharacter({ id: 'char-1', inventory: [item2] })
       const state = {
         ...createTestGameState(),
         roster: new Map([['char-1', character]]),
@@ -213,7 +229,7 @@ describe('ShopService', () => {
 
     it('returns error if trying to sell cursed equipped item', () => {
       const cursedItem = { ...mockItem, cursed: true, equipped: true }
-      const character = createTestCharacter({ id: 'char-1', inventory: ['item-1'] })
+      const character = createTestCharacter({ id: 'char-1', inventory: [cursedItem] })
       const state = {
         ...createTestGameState(),
         roster: new Map([['char-1', character]]),

@@ -1,6 +1,8 @@
 import { LevelData, Position } from '@models/Dungeon';
 import { GameState } from '@models/GameState';
+import { Item } from '@models/Item';
 import { DungeonService } from './DungeonService';
+import { ItemDataLoader } from './ItemDataLoader';
 
 export interface InspectionResult {
   found: boolean;
@@ -58,6 +60,20 @@ export class TileInspectionService {
     const itemId = tile.item;
     const message = tile.message || `You found ${itemId}!`;
 
+    // Look up the full Item from ItemDataLoader
+    const baseItem = ItemDataLoader.getItem(itemId);
+    if (!baseItem) {
+      // Item not found in database
+      return { found: false, state, message: 'Item data not found' };
+    }
+
+    // Create item instance (found items start unidentified and unequipped)
+    const itemInstance: Item = {
+      ...baseItem,
+      identified: false,
+      equipped: false
+    };
+
     // Add item to first party member's inventory
     const firstMemberId = state.party.members[0];
     const character = state.roster.get(firstMemberId)!;
@@ -65,7 +81,7 @@ export class TileInspectionService {
     const newRoster = new Map(state.roster);
     newRoster.set(firstMemberId, {
       ...character,
-      inventory: [...character.inventory, { itemId, equipped: false }],
+      inventory: [...character.inventory, itemInstance],
     });
 
     // Clear tile content (one-time search)

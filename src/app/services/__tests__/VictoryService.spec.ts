@@ -1,8 +1,35 @@
 // src/services/__tests__/VictoryService.spec.ts
 import { VictoryService } from '../VictoryService'
 import { createTestMonster, createTestCharacter } from '@testing/test-factories'
+import { Item } from '@models/Item'
+import { ItemType, ItemSlot } from '@models/ItemType'
+import { ItemDataLoader } from '../ItemDataLoader'
+
+// Helper function to create test items
+const createItem = (id: string, name: string, overrides: Partial<Item> = {}): Item => ({
+  id,
+  name,
+  type: ItemType.WEAPON,
+  slot: ItemSlot.WEAPON,
+  price: 100,
+  damage: 5,
+  cursed: false,
+  identified: true,
+  equipped: false,
+  ...overrides
+})
 
 describe('VictoryService', () => {
+  beforeEach(() => {
+    // Mock ItemDataLoader.getItem to return test items
+    jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+      return createItem(itemId, itemId.replace(/_/g, ' '))
+    })
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
   describe('calculateVictoryRewards', () => {
     it('calculates total XP from all monsters', () => {
       const monsters = [
@@ -179,9 +206,9 @@ describe('VictoryService', () => {
       const result = VictoryService.distributeItems(roster, partyMembers, items)
 
       expect(result.roster.get('c1')!.inventory.length).toBe(1)
-      expect(result.roster.get('c1')!.inventory).toContain('dagger')
+      expect(result.roster.get('c1')!.inventory.find(i => i.id === 'dagger')).toBeDefined()
       expect(result.roster.get('c2')!.inventory.length).toBe(1)
-      expect(result.roster.get('c2')!.inventory).toContain('short_sword')
+      expect(result.roster.get('c2')!.inventory.find(i => i.id === 'short_sword')).toBeDefined()
     })
 
     it('returns new Map instance (immutable)', () => {
@@ -195,7 +222,8 @@ describe('VictoryService', () => {
     })
 
     it('distributes to first character with space', () => {
-      const char1 = createTestCharacter({ id: 'c1', inventory: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] }) // Full
+      const fullInventory = Array(8).fill(null).map((_, i) => createItem(`item${i}`, `Item ${i}`))
+      const char1 = createTestCharacter({ id: 'c1', inventory: fullInventory }) // Full
       const char2 = createTestCharacter({ id: 'c2', inventory: [] }) // Empty
       const roster = new Map([
         ['c1', char1],
@@ -208,7 +236,7 @@ describe('VictoryService', () => {
 
       expect(result.roster.get('c1')!.inventory.length).toBe(8)  // Still full
       expect(result.roster.get('c2')!.inventory.length).toBe(1)  // Got item
-      expect(result.roster.get('c2')!.inventory).toContain('dagger')
+      expect(result.roster.get('c2')!.inventory.find(i => i.id === 'dagger')).toBeDefined()
     })
 
     it('tracks which items were added to which characters', () => {
@@ -243,9 +271,9 @@ describe('VictoryService', () => {
       const result = VictoryService.distributeItems(roster, partyMembers, items)
 
       expect(result.roster.get('c1')!.inventory.length).toBe(3)
-      expect(result.roster.get('c1')!.inventory).toContain('dagger')
-      expect(result.roster.get('c1')!.inventory).toContain('short_sword')
-      expect(result.roster.get('c1')!.inventory).toContain('staff')
+      expect(result.roster.get('c1')!.inventory.find(i => i.id === 'dagger')).toBeDefined()
+      expect(result.roster.get('c1')!.inventory.find(i => i.id === 'short_sword')).toBeDefined()
+      expect(result.roster.get('c1')!.inventory.find(i => i.id === 'staff')).toBeDefined()
       expect(result.itemsAdded.get('c1')).toEqual(['dagger', 'short_sword', 'staff'])
     })
 
@@ -278,7 +306,7 @@ describe('VictoryService', () => {
     })
 
     it('loses items when all inventories are full', () => {
-      const fullInventory = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+      const fullInventory = Array(8).fill(null).map((_, i) => createItem(`item${i}`, `Item ${i}`))
       const char1 = createTestCharacter({ id: 'c1', inventory: fullInventory })
       const char2 = createTestCharacter({ id: 'c2', inventory: fullInventory })
       const roster = new Map([
@@ -297,20 +325,21 @@ describe('VictoryService', () => {
     })
 
     it('respects 8-item inventory limit', () => {
-      const char1 = createTestCharacter({ id: 'c1', inventory: ['a', 'b', 'c', 'd', 'e', 'f', 'g'] }) // 7 items
+      const sevenItems = Array(7).fill(null).map((_, i) => createItem(`existing_item${i}`, `Existing Item ${i}`))
+      const char1 = createTestCharacter({ id: 'c1', inventory: sevenItems }) // 7 items
       const roster = new Map([['c1', char1]])
       const partyMembers = ['c1']
       const items = [
-        { itemId: 'item1', itemName: 'Item 1', identified: true },
-        { itemId: 'item2', itemName: 'Item 2', identified: true }
+        { itemId: 'new_item1', itemName: 'New Item 1', identified: true },
+        { itemId: 'new_item2', itemName: 'New Item 2', identified: true }
       ]
 
       const result = VictoryService.distributeItems(roster, partyMembers, items)
 
       // Can only add 1 item to reach limit of 8
       expect(result.roster.get('c1')!.inventory.length).toBe(8)
-      expect(result.roster.get('c1')!.inventory).toContain('item1')
-      expect(result.roster.get('c1')!.inventory).not.toContain('item2')  // Lost
+      expect(result.roster.get('c1')!.inventory.find(i => i.id === 'new_item1')).toBeDefined()
+      expect(result.roster.get('c1')!.inventory.find(i => i.id === 'new_item2')).toBeUndefined()  // Lost
     })
 
     it('handles all dead party members gracefully', () => {

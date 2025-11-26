@@ -149,7 +149,7 @@ describe('CharacterInspectionComponent', () => {
         ...state,
         roster: new Map(state.roster).set('char-123', {
           ...char,
-          inventory: ['test-sword']
+          inventory: [mockItem as any]
         })
       };
     });
@@ -210,7 +210,7 @@ describe('CharacterInspectionComponent', () => {
         ...state,
         roster: new Map(state.roster).set('char-123', {
           ...char,
-          inventory: ['test-sword']
+          inventory: [mockItem as any]
         })
       };
     });

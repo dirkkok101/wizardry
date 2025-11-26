@@ -110,14 +110,11 @@ export class CharacterInspectionComponent {
   readonly helmetSlot = computed(() => this.getEquipmentSlot(ItemSlot.HELMET))
   readonly gauntletsSlot = computed(() => this.getEquipmentSlot(ItemSlot.GAUNTLETS))
 
-  // Inventory items
+  // Inventory items (inventory stores full Item objects)
   readonly inventoryItems = computed(() => {
     const char = this.character()
     if (!char) return []
-
     return char.inventory
-      .map(id => typeof id === 'string' ? ItemDataLoader.getItem(id) : id)
-      .filter((item): item is Item => item !== null)
   })
 
   // Character actions based on mode
@@ -316,13 +313,10 @@ export class CharacterInspectionComponent {
     }
 
     // Mark item as identified
-    const updatedItem = { ...unidentified, identified: true }
-    const updatedInventory = char.inventory.map(id => {
-      if (typeof id === 'string' && id === unidentified.id) {
-        return updatedItem
-      }
-      return id
-    })
+    const updatedItem: Item = { ...unidentified, identified: true }
+    const updatedInventory = char.inventory.map(item =>
+      item.id === unidentified.id ? updatedItem : item
+    )
 
     const updatedChar: Character = {
       ...char,

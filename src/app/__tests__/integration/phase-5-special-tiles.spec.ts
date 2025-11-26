@@ -2,9 +2,12 @@ import { DungeonMovementService } from '@services/DungeonMovementService';
 import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
 import { DungeonService } from '@services/DungeonService';
+import { ItemDataLoader } from '@services/ItemDataLoader';
 import { createTestGameState, createTestCharacter } from '@testing/test-factories';
 import { GameState } from '@models/GameState';
 import { LevelData, Position } from '@models/Dungeon';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Phase 5: Special Tiles - E2E Integration Tests
@@ -13,6 +16,44 @@ import { LevelData, Position } from '@models/Dungeon';
  * testing full stack integration without mocks.
  */
 describe('Phase 5: Special Tiles - E2E Integration', () => {
+  beforeAll(async () => {
+    // Mock fetch to load real data files
+    global.fetch = jest.fn((url: string) => {
+      const urlPath = url.toString();
+      // Match either /items/ or /assets/items/ paths
+      const match = urlPath.match(/\/(?:assets\/)?(items)\/([^/]+\.json)$/);
+      if (match) {
+        const [, directory, filename] = match;
+        const dataPath = path.join(__dirname, '../../../../data', directory, filename);
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8');
+          const jsonData = JSON.parse(fileContent);
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response);
+        } catch (error) {
+          return Promise.resolve({
+            ok: false,
+            status: 404,
+            statusText: 'Not Found'
+          } as Response);
+        }
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found'
+      } as Response);
+    });
+
+    // Load items for tile inspection tests
+    await ItemDataLoader.loadAllItems();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
   describe('Teleporter Chain', () => {
     it('handles multiple consecutive teleports with loop prevention', () => {
       // Setup party with character
@@ -319,7 +360,7 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       expect(result.itemId).toBe('bronze_key');
 
       const charAfter = result.state!.roster.get('char1')!;
-      expect(charAfter.inventory).toContainEqual({ itemId: 'bronze_key', equipped: false });
+      expect(charAfter.inventory.find(i => i.id === 'bronze_key')).toBeDefined();
 
       // Second inspection should find nothing (one-time search)
       const result2 = TileInspectionService.inspectTileWithState(result.state!, level);

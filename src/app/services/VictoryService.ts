@@ -2,7 +2,9 @@
 import { MonsterInstance } from '@models/Combat'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { Item } from '@models/Item'
 import { RandomService } from './RandomService'
+import { ItemDataLoader } from './ItemDataLoader'
 
 export interface ItemDrop {
   itemId: string
@@ -272,8 +274,22 @@ export class VictoryService {
     let currentMemberIndex = 0
 
     // Distribute each item
-    for (const item of items) {
+    for (const itemDrop of items) {
       const startIndex = currentMemberIndex
+
+      // Look up full Item from ItemDataLoader
+      const baseItem = ItemDataLoader.getItem(itemDrop.itemId)
+      if (!baseItem) {
+        // Item not found in database, skip it
+        continue
+      }
+
+      // Create item instance with correct identified state
+      const itemInstance: Item = {
+        ...baseItem,
+        identified: itemDrop.identified,
+        equipped: false
+      }
 
       // Try to find a character with space, starting from current index
       do {
@@ -285,14 +301,14 @@ export class VictoryService {
           // Add item to inventory
           newRoster.set(memberId, {
             ...character,
-            inventory: [...character.inventory, item.itemId]
+            inventory: [...character.inventory, itemInstance]
           })
 
           // Track which items were added to which character
           if (!itemsAdded.has(memberId)) {
             itemsAdded.set(memberId, [])
           }
-          itemsAdded.get(memberId)!.push(item.itemId)
+          itemsAdded.get(memberId)!.push(itemDrop.itemId)
 
           // Move to next character for next item (round-robin)
           currentMemberIndex = (currentMemberIndex + 1) % livingMembers.length

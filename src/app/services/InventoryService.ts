@@ -6,6 +6,10 @@ const MAX_INVENTORY_SIZE = 8
 /**
  * InventoryService - Manages character inventory
  *
+ * Inventory stores full Item objects (not string IDs).
+ * Each character owns their item instances with their own state
+ * (identified, cursed, equipped flags).
+ *
  * Features:
  * - Add/remove items
  * - Check inventory capacity (8 items max)
@@ -24,38 +28,56 @@ export class InventoryService {
   /**
    * Add item to character inventory.
    * Throws error if inventory is full.
-   * Returns new Character with item ID added to inventory.
+   * Returns new Character with Item added to inventory.
    */
   static addItem(character: Character, item: Item): Character {
     if (!this.hasSpace(character)) {
       throw new Error('Inventory full')
     }
 
+    // Create a fresh copy of the item for this character's inventory
+    const itemCopy: Item = { ...item, equipped: false }
+
     return {
       ...character,
-      inventory: [...character.inventory, item.id]
+      inventory: [...character.inventory, itemCopy]
     }
   }
 
   /**
-   * Remove item from character inventory.
+   * Remove item from character inventory by item ID.
    * Cannot remove equipped cursed items.
-   * Returns new Character with item ID removed from inventory.
+   * Returns new Character with item removed from inventory.
    */
-  static removeItem(character: Character, itemId: string, item?: Item): Character {
-    if (!character.inventory.includes(itemId)) {
+  static removeItem(character: Character, itemId: string): Character {
+    const item = character.inventory.find(i => i.id === itemId)
+    if (!item) {
       throw new Error('Item not found')
     }
 
     // Check if item is equipped and cursed
-    if (item && item.equipped && item.cursed) {
+    if (item.equipped && item.cursed) {
       throw new Error('Cannot remove equipped cursed item')
     }
 
     return {
       ...character,
-      inventory: character.inventory.filter(id => id !== itemId)
+      inventory: character.inventory.filter(i => i.id !== itemId)
     }
+  }
+
+  /**
+   * Find an item in character's inventory by ID.
+   */
+  static findItem(character: Character, itemId: string): Item | undefined {
+    return character.inventory.find(i => i.id === itemId)
+  }
+
+  /**
+   * Check if character has an item in inventory.
+   */
+  static hasItem(character: Character, itemId: string): boolean {
+    return character.inventory.some(i => i.id === itemId)
   }
 
   /**
@@ -87,7 +109,8 @@ export class InventoryService {
     toCharacter: Character,
     itemId: string
   ): { from: Character; to: Character } {
-    if (!fromCharacter.inventory.includes(itemId)) {
+    const item = fromCharacter.inventory.find(i => i.id === itemId)
+    if (!item) {
       throw new Error('Item not found in donor inventory')
     }
 
@@ -95,14 +118,17 @@ export class InventoryService {
       throw new Error('Recipient inventory full')
     }
 
+    // Unequip item if it was equipped
+    const transferredItem: Item = { ...item, equipped: false }
+
     const from = {
       ...fromCharacter,
-      inventory: fromCharacter.inventory.filter(id => id !== itemId)
+      inventory: fromCharacter.inventory.filter(i => i.id !== itemId)
     }
 
     const to = {
       ...toCharacter,
-      inventory: [...toCharacter.inventory, itemId]
+      inventory: [...toCharacter.inventory, transferredItem]
     }
 
     return { from, to }
@@ -115,13 +141,33 @@ export class InventoryService {
     character: Character,
     itemId: string
   ): Character {
-    if (!character.inventory.includes(itemId)) {
+    const item = character.inventory.find(i => i.id === itemId)
+    if (!item) {
       throw new Error('Item not in inventory')
     }
 
     return {
       ...character,
-      inventory: character.inventory.filter(id => id !== itemId)
+      inventory: character.inventory.filter(i => i.id !== itemId)
+    }
+  }
+
+  /**
+   * Update an item in the character's inventory.
+   * Used for changing item state (identified, cursed, equipped).
+   */
+  static updateItem(character: Character, itemId: string, updates: Partial<Item>): Character {
+    const itemIndex = character.inventory.findIndex(i => i.id === itemId)
+    if (itemIndex === -1) {
+      throw new Error('Item not found')
+    }
+
+    const updatedInventory = [...character.inventory]
+    updatedInventory[itemIndex] = { ...updatedInventory[itemIndex], ...updates }
+
+    return {
+      ...character,
+      inventory: updatedInventory
     }
   }
 

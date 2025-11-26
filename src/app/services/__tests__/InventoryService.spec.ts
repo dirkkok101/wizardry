@@ -8,17 +8,20 @@ import { Race } from '@models/Race'
 import { Alignment } from '@models/Alignment'
 
 describe('InventoryService', () => {
-  const mockItem: Item = {
-    id: 'item-1',
-    name: 'Short Sword',
+  const createItem = (id: string, name: string, overrides: Partial<Item> = {}): Item => ({
+    id,
+    name,
     type: ItemType.WEAPON,
     slot: ItemSlot.WEAPON,
     price: 100,
     damage: 5,
     cursed: false,
     identified: true,
-    equipped: false
-  }
+    equipped: false,
+    ...overrides
+  })
+
+  const mockItem: Item = createItem('item-1', 'Short Sword')
 
   const mockCharacter: Character = {
     id: 'char-1',
@@ -39,6 +42,10 @@ describe('InventoryService', () => {
     experience: 5000,
     ac: 5,
     inventory: [],
+    knownSpells: [],
+    age: 15,
+    vim: { max: 12, current: 12 },
+    gold: 100,
     password: 'test',
     createdAt: Date.now(),
     lastModified: Date.now()
@@ -50,18 +57,18 @@ describe('InventoryService', () => {
     })
 
     it('returns true when inventory has less than 8 items', () => {
-      const char = {
-        ...mockCharacter,
-        inventory: ['item-1', 'item-2', 'item-3']
-      }
+      const items = [
+        createItem('item-1', 'Sword'),
+        createItem('item-2', 'Shield'),
+        createItem('item-3', 'Potion')
+      ]
+      const char = { ...mockCharacter, inventory: items }
       expect(InventoryService.hasSpace(char)).toBe(true)
     })
 
     it('returns false when inventory has 8 items', () => {
-      const char = {
-        ...mockCharacter,
-        inventory: Array(8).fill('item-1')
-      }
+      const items = Array(8).fill(null).map((_, i) => createItem(`item-${i}`, `Item ${i}`))
+      const char = { ...mockCharacter, inventory: items }
       expect(InventoryService.hasSpace(char)).toBe(false)
     })
   })
@@ -70,44 +77,50 @@ describe('InventoryService', () => {
     it('adds item to empty inventory', () => {
       const result = InventoryService.addItem(mockCharacter, mockItem)
       expect(result.inventory.length).toBe(1)
-      expect(result.inventory[0]).toBe('item-1')
+      expect(result.inventory[0].id).toBe('item-1')
     })
 
     it('adds item to existing inventory', () => {
-      const char = { ...mockCharacter, inventory: ['item-1'] }
-      const newItem = { ...mockItem, id: 'item-2', name: 'Long Sword' }
+      const existingItem = createItem('item-1', 'Dagger')
+      const char = { ...mockCharacter, inventory: [existingItem] }
+      const newItem = createItem('item-2', 'Long Sword')
 
       const result = InventoryService.addItem(char, newItem)
       expect(result.inventory.length).toBe(2)
-      expect(result.inventory).toContain('item-2')
+      expect(result.inventory.find(i => i.id === 'item-2')).toBeDefined()
     })
 
     it('throws error when inventory is full', () => {
-      const char = {
-        ...mockCharacter,
-        inventory: Array(8).fill('item')
-      }
+      const items = Array(8).fill(null).map((_, i) => createItem(`item-${i}`, `Item ${i}`))
+      const char = { ...mockCharacter, inventory: items }
 
       expect(() => {
         InventoryService.addItem(char, mockItem)
       }).toThrow('Inventory full')
     })
+
+    it('creates a copy of the item with equipped set to false', () => {
+      const equippedItem = createItem('item-1', 'Sword', { equipped: true })
+      const result = InventoryService.addItem(mockCharacter, equippedItem)
+      expect(result.inventory[0].equipped).toBe(false)
+    })
   })
 
   describe('removeItem', () => {
     it('removes item from inventory', () => {
-      const char = { ...mockCharacter, inventory: ['item-1'] }
+      const item = createItem('item-1', 'Sword')
+      const char = { ...mockCharacter, inventory: [item] }
 
       const result = InventoryService.removeItem(char, 'item-1')
       expect(result.inventory.length).toBe(0)
     })
 
     it('cannot remove equipped cursed item', () => {
-      const cursedItem = { ...mockItem, cursed: true, equipped: true }
-      const char = { ...mockCharacter, inventory: ['item-1'], equippedWeapon: 'item-1' }
+      const cursedItem = createItem('item-1', 'Cursed Blade', { cursed: true, equipped: true })
+      const char = { ...mockCharacter, inventory: [cursedItem], equippedWeapon: 'item-1' }
 
       expect(() => {
-        InventoryService.removeItem(char, 'item-1', cursedItem)
+        InventoryService.removeItem(char, 'item-1')
       }).toThrow('Cannot remove equipped cursed item')
     })
 
@@ -118,21 +131,48 @@ describe('InventoryService', () => {
     })
   })
 
+  describe('findItem', () => {
+    it('finds item by id', () => {
+      const item = createItem('item-1', 'Sword')
+      const char = { ...mockCharacter, inventory: [item] }
+
+      const found = InventoryService.findItem(char, 'item-1')
+      expect(found).toBeDefined()
+      expect(found?.name).toBe('Sword')
+    })
+
+    it('returns undefined if item not found', () => {
+      const found = InventoryService.findItem(mockCharacter, 'nonexistent')
+      expect(found).toBeUndefined()
+    })
+  })
+
+  describe('hasItem', () => {
+    it('returns true if item exists', () => {
+      const item = createItem('item-1', 'Sword')
+      const char = { ...mockCharacter, inventory: [item] }
+
+      expect(InventoryService.hasItem(char, 'item-1')).toBe(true)
+    })
+
+    it('returns false if item does not exist', () => {
+      expect(InventoryService.hasItem(mockCharacter, 'nonexistent')).toBe(false)
+    })
+  })
+
   describe('canEquip', () => {
     it('returns true when character meets class requirements', () => {
-      const weapon = {
-        ...mockItem,
+      const weapon = createItem('item-1', 'Sword', {
         classRestrictions: [CharacterClass.FIGHTER, CharacterClass.MAGE]
-      }
+      })
 
       expect(InventoryService.canEquip(mockCharacter, weapon)).toBe(true)
     })
 
     it('returns false when character does not meet class requirements', () => {
-      const weapon = {
-        ...mockItem,
+      const weapon = createItem('item-1', 'Sword', {
         classRestrictions: [CharacterClass.FIGHTER]
-      }
+      })
 
       expect(InventoryService.canEquip(mockCharacter, weapon)).toBe(false)
     })
@@ -147,27 +187,31 @@ describe('InventoryService', () => {
     let toChar: Character
 
     beforeEach(() => {
+      const potion = createItem('potion', 'Health Potion', { type: ItemType.CONSUMABLE, slot: ItemSlot.ACCESSORY })
+      const sword = createItem('sword', 'Iron Sword')
+
       fromChar = {
         ...mockCharacter,
         id: 'char-1',
         name: 'Fighter',
-        inventory: ['potion', 'sword']
+        inventory: [potion, sword]
       }
 
+      const staff = createItem('staff', 'Oak Staff')
       toChar = {
         ...mockCharacter,
         id: 'char-2',
         name: 'Mage',
-        inventory: ['staff']
+        inventory: [staff]
       }
     })
 
     it('transfers item between characters', () => {
       const result = InventoryService.transferItem(fromChar, toChar, 'potion')
 
-      expect(result.from.inventory).not.toContain('potion')
-      expect(result.to.inventory).toContain('potion')
-      expect(result.from.inventory).toContain('sword')
+      expect(result.from.inventory.find(i => i.id === 'potion')).toBeUndefined()
+      expect(result.to.inventory.find(i => i.id === 'potion')).toBeDefined()
+      expect(result.from.inventory.find(i => i.id === 'sword')).toBeDefined()
     })
 
     it('throws error if item not in donor inventory', () => {
@@ -176,10 +220,19 @@ describe('InventoryService', () => {
     })
 
     it('throws error if recipient inventory full', () => {
-      toChar.inventory = new Array(8).fill('item')
+      const items = Array(8).fill(null).map((_, i) => createItem(`item-${i}`, `Item ${i}`))
+      toChar.inventory = items
 
       expect(() => InventoryService.transferItem(fromChar, toChar, 'potion'))
         .toThrow('Recipient inventory full')
+    })
+
+    it('unequips transferred item', () => {
+      fromChar.inventory[0] = { ...fromChar.inventory[0], equipped: true }
+      const result = InventoryService.transferItem(fromChar, toChar, 'potion')
+
+      const transferredItem = result.to.inventory.find(i => i.id === 'potion')
+      expect(transferredItem?.equipped).toBe(false)
     })
   })
 
@@ -187,11 +240,15 @@ describe('InventoryService', () => {
     let character: Character
 
     beforeEach(() => {
+      const potion = createItem('potion', 'Health Potion', { type: ItemType.CONSUMABLE, slot: ItemSlot.ACCESSORY })
+      const sword = createItem('sword', 'Iron Sword')
+      const shield = createItem('shield', 'Wooden Shield', { type: ItemType.SHIELD, slot: ItemSlot.SHIELD })
+
       character = {
         ...mockCharacter,
         id: 'char-1',
         name: 'Fighter',
-        inventory: ['potion', 'sword', 'shield']
+        inventory: [potion, sword, shield]
       }
     })
 
@@ -199,8 +256,8 @@ describe('InventoryService', () => {
       const result = InventoryService.dropItem(character, 'potion')
 
       expect(result.inventory).toHaveLength(2)
-      expect(result.inventory).not.toContain('potion')
-      expect(result.inventory).toContain('sword')
+      expect(result.inventory.find(i => i.id === 'potion')).toBeUndefined()
+      expect(result.inventory.find(i => i.id === 'sword')).toBeDefined()
     })
 
     it('throws error if item not in inventory', () => {
@@ -209,9 +266,30 @@ describe('InventoryService', () => {
     })
   })
 
+  describe('updateItem', () => {
+    it('updates item properties', () => {
+      const item = createItem('item-1', 'Sword', { identified: false })
+      const char = { ...mockCharacter, inventory: [item] }
+
+      const result = InventoryService.updateItem(char, 'item-1', { identified: true })
+
+      expect(result.inventory[0].identified).toBe(true)
+    })
+
+    it('throws error if item not found', () => {
+      expect(() => InventoryService.updateItem(mockCharacter, 'nonexistent', { identified: true }))
+        .toThrow('Item not found')
+    })
+  })
+
   describe('getInventoryCount', () => {
     it('returns current and max inventory count', () => {
-      const char = { ...mockCharacter, inventory: ['item-1', 'item-2', 'item-3'] }
+      const items = [
+        createItem('item-1', 'Sword'),
+        createItem('item-2', 'Shield'),
+        createItem('item-3', 'Potion')
+      ]
+      const char = { ...mockCharacter, inventory: items }
       const result = InventoryService.getInventoryCount(char)
 
       expect(result.current).toBe(3)

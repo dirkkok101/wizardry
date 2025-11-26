@@ -1,10 +1,13 @@
 import { Item } from '@models/Item'
 import { GameState } from '@models/GameState'
 import * as PartyService from './PartyService'
-import { ItemDataLoader } from './ItemDataLoader'
 
 /**
  * ShopService - Boltac's Trading Post business logic
+ *
+ * Inventory stores full Item objects (not string IDs).
+ * Each character owns their item instances with their own state
+ * (identified, cursed, equipped flags).
  *
  * Features:
  * - Purchase price validation
@@ -64,7 +67,7 @@ export class ShopService {
    *
    * @param state - Current game state
    * @param characterId - Character purchasing the item
-   * @param item - Item to purchase
+   * @param item - Item to purchase (full Item object)
    * @returns BuyResult with updated state or error
    */
   static buyItem(state: GameState, characterId: string, item: Item): BuyResult {
@@ -86,10 +89,13 @@ export class ShopService {
     // Deduct from party gold
     let newState = PartyService.removePartyGold(state, item.price)
 
+    // Create a copy of the item for this character's inventory
+    const itemCopy: Item = { ...item, equipped: false }
+
     // Add item to character inventory
     const updatedCharacter = {
       ...character,
-      inventory: [...character.inventory, item.id]
+      inventory: [...character.inventory, itemCopy]
     }
 
     newState = {
@@ -116,17 +122,18 @@ export class ShopService {
     }
 
     // Check if item is in inventory
-    if (!character.inventory.includes(item.id)) {
+    const inventoryItem = character.inventory.find(i => i.id === item.id)
+    if (!inventoryItem) {
       return { success: false, error: 'Item not in inventory' }
     }
 
     // Cannot sell cursed equipped items
-    if (item.cursed && item.equipped) {
+    if (inventoryItem.cursed && inventoryItem.equipped) {
       return { success: false, error: 'Cannot sell cursed equipped item' }
     }
 
     // Calculate sell price (50% of purchase price)
-    const sellPrice = ShopService.calculateSellPrice(item)
+    const sellPrice = ShopService.calculateSellPrice(inventoryItem)
 
     // Add gold to party
     let newState = PartyService.addPartyGold(state, sellPrice)
@@ -134,7 +141,7 @@ export class ShopService {
     // Remove item from character inventory
     const updatedCharacter = {
       ...character,
-      inventory: character.inventory.filter((invItem: string | Item) => invItem !== item.id)
+      inventory: character.inventory.filter(i => i.id !== item.id)
     }
 
     newState = {
@@ -173,34 +180,13 @@ export class ShopService {
       return { success: false, error: 'Character not found' }
     }
 
-    // Find item in inventory (handle both string IDs and Item objects)
-    const itemIndex = character.inventory.findIndex((invItem: string | Item) => {
-      if (typeof invItem === 'object' && 'id' in invItem) {
-        return invItem.id === itemId
-      }
-      return invItem === itemId
-    })
-
+    // Find item in inventory
+    const itemIndex = character.inventory.findIndex(i => i.id === itemId)
     if (itemIndex === -1) {
       return { success: false, error: 'Item not in inventory' }
     }
 
-    const item = character.inventory[itemIndex]
-
-    // Resolve item to Item object (may be string ID or already an object)
-    let itemObj: Item | null = null
-    if (typeof item === 'object') {
-      itemObj = item as Item
-    } else if (typeof item === 'string') {
-      // Look up from ItemDataLoader
-      if (ItemDataLoader.isLoaded()) {
-        itemObj = ItemDataLoader.getItem(item)
-      }
-    }
-
-    if (!itemObj) {
-      return { success: false, error: 'Item data not found' }
-    }
+    const itemObj = character.inventory[itemIndex]
 
     if (itemObj.identified) {
       return { success: false, error: 'Item is already identified' }
@@ -216,7 +202,7 @@ export class ShopService {
     // Deduct from party gold
     let newState = PartyService.removePartyGold(state, identifyCost)
 
-    // Update item to be identified (store as object with identified: true)
+    // Update item to be identified
     const updatedInventory = [...character.inventory]
     updatedInventory[itemIndex] = { ...itemObj, identified: true }
 
@@ -248,34 +234,13 @@ export class ShopService {
       return { success: false, error: 'Character not found' }
     }
 
-    // Find item in inventory (handle both string IDs and Item objects)
-    const itemIndex = character.inventory.findIndex((invItem: string | Item) => {
-      if (typeof invItem === 'object' && 'id' in invItem) {
-        return invItem.id === itemId
-      }
-      return invItem === itemId
-    })
-
+    // Find item in inventory
+    const itemIndex = character.inventory.findIndex(i => i.id === itemId)
     if (itemIndex === -1) {
       return { success: false, error: 'Item not in inventory' }
     }
 
-    const item = character.inventory[itemIndex]
-
-    // Resolve item to Item object (may be string ID or already an object)
-    let itemObj: Item | null = null
-    if (typeof item === 'object') {
-      itemObj = item as Item
-    } else if (typeof item === 'string') {
-      // Look up from ItemDataLoader
-      if (ItemDataLoader.isLoaded()) {
-        itemObj = ItemDataLoader.getItem(item)
-      }
-    }
-
-    if (!itemObj) {
-      return { success: false, error: 'Item data not found' }
-    }
+    const itemObj = character.inventory[itemIndex]
 
     if (!itemObj.cursed) {
       return { success: false, error: 'Item is not cursed' }

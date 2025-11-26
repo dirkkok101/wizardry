@@ -4,6 +4,7 @@ import { Alignment } from './Alignment'
 import { CharacterStatus } from './CharacterStatus'
 import { MaxCurrent } from './MaxCurrent'
 import { CharacterSpellPoints } from './SpellPoints'
+import { Item } from './Item'
 
 /**
  * Complete character data structure matching original Wizardry 1
@@ -52,7 +53,7 @@ export interface Character {
   equippedGauntlets?: string   // Gauntlet slot (item ID)
 
   // Inventory
-  inventory: (string | any)[]  // Item IDs or Item objects (max 8 items)
+  inventory: Item[]  // Item objects (max 8 items)
 
   // Gold (individual gold before joining party, pooled when added to party)
   gold: number  // Starting gold: 90 + random(0-100), authentic Wizardry 1 (1981)

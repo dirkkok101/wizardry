@@ -196,7 +196,8 @@ describe('ShopComponent', () => {
 
     it('S key transitions to sell view when character has items', () => {
       // Add item to character inventory (must use actual shop inventory item ID)
-      const charWithItem = { ...mockCharacter, inventory: ['weapon-long-sword'] };
+      const itemFromShop = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
+      const charWithItem = { ...mockCharacter, inventory: [itemFromShop] };
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', charWithItem)
@@ -291,7 +292,7 @@ describe('ShopComponent', () => {
       component.confirmAction();
 
       const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory).toContain(item.id);
+      expect(char.inventory.find(i => i.id === item.id)).toBeDefined();
     });
 
     it('shows error when party cannot afford item', () => {
@@ -311,11 +312,12 @@ describe('ShopComponent', () => {
     });
 
     it('shows error when inventory is full', () => {
+      const dummyItem = { ...SHOP_INVENTORY[0], id: 'item', name: 'Item' };
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: Array(8).fill('item')
+          inventory: Array(8).fill(dummyItem)
         })
       }));
 
@@ -339,20 +341,20 @@ describe('ShopComponent', () => {
 
       expect(component.showConfirmation()).toBe(false);
       const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory).not.toContain(item.id);
+      expect(char.inventory.find(i => i.id === item.id)).toBeUndefined();
     });
   });
 
   describe('sell flow', () => {
     beforeEach(() => {
-      const item1Id = 'weapon-long-sword';
-      const item2Id = 'armor-leather';
+      const item1 = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
+      const item2 = SHOP_INVENTORY.find(i => i.id === 'armor-leather')!;
 
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [item1Id, item2Id]
+          inventory: [item1, item2]
         }),
         party: {
           ...state.party,
@@ -393,48 +395,48 @@ describe('ShopComponent', () => {
     });
 
     it('shows confirmation before selling item', () => {
-      const itemId = 'weapon-long-sword';
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
 
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [itemId]
+          inventory: [item]
         })
       }));
 
-      component.initiateSell(itemId);
+      component.initiateSell(item.id);
 
       expect(component.showConfirmation()).toBe(true);
       expect(component.confirmationMessage()).toContain('Long Sword');
     });
 
     it('removes item from inventory after confirming sell', () => {
-      const itemId = 'weapon-long-sword';
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
 
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [itemId]
+          inventory: [item]
         })
       }));
 
-      component.initiateSell(itemId);
+      component.initiateSell(item.id);
       component.confirmAction();
 
       const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory).not.toContain(itemId);
+      expect(char.inventory.find(i => i.id === item.id)).toBeUndefined();
     });
 
     it('adds gold to party after confirming sell', () => {
-      const itemId = 'weapon-long-sword';
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
 
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [itemId]
+          inventory: [item]
         }),
         party: {
           ...state.party,
@@ -444,7 +446,7 @@ describe('ShopComponent', () => {
 
       const initialGold = gameState.party().gold || 0;
 
-      component.initiateSell(itemId);
+      component.initiateSell(item.id);
       component.confirmAction();
 
       const finalGold = gameState.party().gold || 0;
@@ -452,17 +454,17 @@ describe('ShopComponent', () => {
     });
 
     it('shows success message after selling', () => {
-      const itemId = 'weapon-long-sword';
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
 
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [itemId]
+          inventory: [item]
         })
       }));
 
-      component.initiateSell(itemId);
+      component.initiateSell(item.id);
       component.confirmAction();
 
       expect(messageService.messageText()).toContain('Sold');
@@ -470,17 +472,17 @@ describe('ShopComponent', () => {
     });
 
     it('cancels sell on cancel action', () => {
-      const itemId = 'weapon-long-sword';
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
 
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [itemId]
+          inventory: [item]
         })
       }));
 
-      component.initiateSell(itemId);
+      component.initiateSell(item.id);
       component.cancelAction();
 
       const char = gameState.state().roster.get('char-1')!;
@@ -502,11 +504,14 @@ describe('ShopComponent', () => {
 
   describe('identify flow', () => {
     beforeEach(() => {
+      const unidentified1 = { ...UNIDENTIFIED_ITEMS[0] };
+      const unidentified2 = { ...UNIDENTIFIED_ITEMS[2] };
+
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [UNIDENTIFIED_ITEMS[0], UNIDENTIFIED_ITEMS[2]]
+          inventory: [unidentified1, unidentified2]
         }),
         party: {
           ...state.party,
@@ -583,12 +588,14 @@ describe('ShopComponent', () => {
   });
 
   describe('uncurse flow', () => {
-    const cursedItem: Item = {
-      ...UNIDENTIFIED_ITEMS[2],
-      identified: true
-    };
+    let cursedItem: Item;
 
     beforeEach(() => {
+      cursedItem = {
+        ...UNIDENTIFIED_ITEMS[2],
+        identified: true
+      };
+
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
@@ -670,11 +677,13 @@ describe('ShopComponent', () => {
         identified: true
       };
 
+      const normalItem = { ...SHOP_INVENTORY[0] };
+
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [equippedCursedItem, SHOP_INVENTORY[0]]
+          inventory: [equippedCursedItem, normalItem]
         })
       }));
 
@@ -686,8 +695,8 @@ describe('ShopComponent', () => {
     });
 
     it('getUnidentifiedItems returns only unidentified items', () => {
-      const identifiedItem = { ...SHOP_INVENTORY[0], identified: true };
-      const unidentifiedItem = { ...UNIDENTIFIED_ITEMS[0], identified: false };
+      const identifiedItem = { ...SHOP_INVENTORY[0], id: 'identified-item', identified: true };
+      const unidentifiedItem = { ...UNIDENTIFIED_ITEMS[0], id: 'unidentified-item', identified: false };
 
       gameState.updateState(state => ({
         ...state,
@@ -761,11 +770,12 @@ describe('ShopComponent', () => {
     });
 
     it('enables sell when character has items', () => {
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: ['weapon-long-sword']
+          inventory: [item]
         })
       }));
 
@@ -776,11 +786,12 @@ describe('ShopComponent', () => {
     });
 
     it('disables identify when no unidentified items', () => {
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: ['weapon-long-sword']
+          inventory: [item]
         })
       }));
 
@@ -791,11 +802,12 @@ describe('ShopComponent', () => {
     });
 
     it('enables identify when has unidentified items', () => {
+      const unidentifiedItem = { ...UNIDENTIFIED_ITEMS[0] };
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: [UNIDENTIFIED_ITEMS[0]]
+          inventory: [unidentifiedItem]
         })
       }));
 
@@ -806,11 +818,12 @@ describe('ShopComponent', () => {
     });
 
     it('disables uncurse when no identified cursed items', () => {
+      const item = SHOP_INVENTORY.find(i => i.id === 'weapon-long-sword')!;
       gameState.updateState(state => ({
         ...state,
         roster: new Map(state.roster).set('char-1', {
           ...mockCharacter,
-          inventory: ['weapon-long-sword']
+          inventory: [item]
         })
       }));
 
@@ -823,6 +836,7 @@ describe('ShopComponent', () => {
     it('enables uncurse when has identified cursed items', () => {
       const cursedIdentified: Item = {
         ...UNIDENTIFIED_ITEMS[2],
+        id: 'cursed-identified',
         identified: true
       };
 

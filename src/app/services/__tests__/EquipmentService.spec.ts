@@ -5,11 +5,39 @@ import { Item } from '@models/Item';
 import { ItemType } from '@models/ItemType';
 import { ItemSlot } from '@models/ItemType';
 
+// Helper function to create test items
+const createItem = (id: string, name: string, overrides: Partial<Item> = {}): Item => ({
+  id,
+  name,
+  type: ItemType.WEAPON,
+  slot: ItemSlot.WEAPON,
+  price: 100,
+  damage: 5,
+  cursed: false,
+  identified: true,
+  equipped: false,
+  ...overrides
+})
+
 describe('EquipmentService', () => {
   let fighter: Character;
   let longSword: Item;
 
   beforeEach(() => {
+    // Initialize longSword first
+    longSword = {
+      id: 'long_sword',
+      name: 'Long Sword',
+      type: ItemType.WEAPON,
+      slot: ItemSlot.WEAPON,
+      price: 25,
+      damage: 8,
+      classRestrictions: ['FIGHTER', 'SAMURAI', 'LORD', 'NINJA'],
+      cursed: false,
+      identified: true,
+      equipped: false
+    };
+
     // Mock ItemDataLoader.getItem
     jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
       if (itemId === 'long_sword') return longSword;
@@ -51,22 +79,9 @@ describe('EquipmentService', () => {
       status: 'OK',
       vim: { current: 100, max: 100 },
       knownSpells: [],
-      inventory: ['long_sword'],
+      inventory: [longSword],
       createdAt: Date.now(),
       lastModified: Date.now()
-    };
-
-    longSword = {
-      id: 'long_sword',
-      name: 'Long Sword',
-      type: ItemType.WEAPON,
-      slot: ItemSlot.WEAPON,
-      price: 25,
-      damage: 8,
-      classRestrictions: ['FIGHTER', 'SAMURAI', 'LORD', 'NINJA'],
-      cursed: false,
-      identified: true,
-      equipped: false
     };
   });
 
@@ -111,7 +126,7 @@ describe('EquipmentService', () => {
       const result = EquipmentService.equipItem(fighter, 'long_sword');
 
       expect(result.equippedWeapon).toBe('long_sword');
-      expect(result.inventory).not.toContain('long_sword');
+      expect(result.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
     });
 
     it('throws error if item not in inventory', () => {
@@ -129,14 +144,22 @@ describe('EquipmentService', () => {
     });
 
     it('unequips existing item when slot occupied', () => {
+      const shortSword = createItem('short_sword', 'Short Sword')
+      // Mock the short_sword for ItemDataLoader
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+        if (itemId === 'short_sword') return shortSword;
+        if (itemId === 'long_sword') return longSword;
+        return null;
+      });
+
       fighter.equippedWeapon = 'short_sword';
-      fighter.inventory = ['long_sword'];
+      fighter.inventory = [longSword];
 
       const result = EquipmentService.equipItem(fighter, 'long_sword');
 
       expect(result.equippedWeapon).toBe('long_sword');
-      expect(result.inventory).toContain('short_sword');
-      expect(result.inventory).not.toContain('long_sword');
+      expect(result.inventory.find(i => i.id === 'short_sword')).toBeDefined();
+      expect(result.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
     });
 
     it('recalculates AC after equipping armor', () => {
@@ -153,7 +176,7 @@ describe('EquipmentService', () => {
         equipped: false
       };
 
-      fighter.inventory = ['plate_mail'];
+      fighter.inventory = [plateMail];
       fighter.ac = 10;
 
       const result = EquipmentService.equipItem(fighter, 'plate_mail');
@@ -173,7 +196,7 @@ describe('EquipmentService', () => {
       const result = EquipmentService.unequipItem(fighter, ItemSlot.WEAPON);
 
       expect(result.equippedWeapon).toBeUndefined();
-      expect(result.inventory).toContain('long_sword');
+      expect(result.inventory.find(i => i.id === 'long_sword')).toBeDefined();
     });
 
     it('throws error if no item in slot', () => {
@@ -191,7 +214,7 @@ describe('EquipmentService', () => {
     });
 
     it('throws error if inventory full', () => {
-      fighter.inventory = new Array(8).fill('potion');
+      fighter.inventory = Array(8).fill(null).map((_, i) => createItem(`potion${i}`, `Potion ${i}`));
 
       expect(() => EquipmentService.unequipItem(fighter, ItemSlot.WEAPON))
         .toThrow('Inventory full');
@@ -280,8 +303,12 @@ describe('EquipmentService', () => {
       fighter.ac = 10;
       fighter.agility = 15; // +2 AGI modifier
 
-      // Equip full armor set
-      fighter.inventory = ['plate_mail', 'large_shield', 'steel_helm', 'gauntlets'];
+      // Equip full armor set - get actual Item objects from the mock
+      const plateMail = ItemDataLoader.getItem('plate_mail')!;
+      const largeShield = ItemDataLoader.getItem('large_shield')!;
+      const steelHelm = ItemDataLoader.getItem('steel_helm')!;
+      const gauntlets = ItemDataLoader.getItem('gauntlets')!;
+      fighter.inventory = [plateMail, largeShield, steelHelm, gauntlets];
 
       let char = fighter;
       char = EquipmentService.equipItem(char, 'plate_mail');
@@ -322,7 +349,23 @@ describe('EquipmentService', () => {
 
       fighter.ac = 10;
       fighter.agility = 10; // 0 AGI modifier
-      fighter.inventory = ['long_sword'];
+      const sword = {
+        id: 'long_sword',
+        name: 'Long Sword',
+        type: ItemType.WEAPON,
+        slot: ItemSlot.WEAPON,
+        price: 25,
+        damage: 8,
+        defense: 0,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        category: 'weapon',
+        weaponType: 'sword',
+        damageRoll: { dice: '1d8', min: 1, max: 8 },
+        cost: 25
+      };
+      fighter.inventory = [sword];
 
       const result = EquipmentService.equipItem(fighter, 'long_sword');
 

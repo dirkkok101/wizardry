@@ -1,11 +1,11 @@
 // src/test-helpers/shop-test-helpers.ts
 import { GameState } from '@models/GameState'
-import { Character } from '@models/Character'
 import { Item } from '@models/Item'
 import { UNIDENTIFIED_ITEMS } from '@config/shop-inventory'
 
 /**
  * Test helper: Add unidentified items to a character for testing identify flow
+ * Inventory stores full Item objects (not string IDs).
  */
 export function addUnidentifiedItemsToCharacter(
   state: GameState,
@@ -17,22 +17,24 @@ export function addUnidentifiedItemsToCharacter(
     throw new Error(`Character ${characterId} not found`)
   }
 
-  // Get item IDs, not full Item objects (inventory stores IDs)
-  const itemIds = UNIDENTIFIED_ITEMS.slice(0, itemCount).map(item => item.id)
+  // Get full Item objects for inventory (make copies to avoid mutation)
+  const items: Item[] = UNIDENTIFIED_ITEMS.slice(0, itemCount).map(item => ({
+    ...item,
+    equipped: false
+  }))
 
   return {
     ...state,
     roster: new Map(state.roster).set(characterId, {
       ...character,
-      inventory: [...character.inventory, ...itemIds]
+      inventory: [...character.inventory, ...items]
     })
   }
 }
 
 /**
  * Test helper: Give character identified version of an item
- * Note: This doesn't actually identify the item in the global items registry.
- * It only adds the item ID to inventory (identification is handled by ShopService).
+ * Adds the item as a full Item object to inventory with identified: true.
  */
 export function identifyItemForCharacter(
   state: GameState,
@@ -44,17 +46,35 @@ export function identifyItemForCharacter(
     throw new Error(`Character ${characterId} not found`)
   }
 
-  // Just ensure the item is in the inventory
-  // Actual identification logic is handled by the ShopService
-  if (!character.inventory.includes(itemId)) {
+  // Check if item already exists in inventory
+  const existingItem = character.inventory.find(item => item.id === itemId)
+  if (existingItem) {
+    // Update existing item to be identified
+    const updatedInventory = character.inventory.map(item =>
+      item.id === itemId ? { ...item, identified: true } : item
+    )
     return {
       ...state,
       roster: new Map(state.roster).set(characterId, {
         ...character,
-        inventory: [...character.inventory, itemId]
+        inventory: updatedInventory
       })
     }
   }
 
-  return state
+  // Item not in inventory - look it up from UNIDENTIFIED_ITEMS and add it
+  const sourceItem = UNIDENTIFIED_ITEMS.find(item => item.id === itemId)
+  if (!sourceItem) {
+    throw new Error(`Item ${itemId} not found in UNIDENTIFIED_ITEMS`)
+  }
+
+  const identifiedItem: Item = { ...sourceItem, identified: true, equipped: false }
+
+  return {
+    ...state,
+    roster: new Map(state.roster).set(characterId, {
+      ...character,
+      inventory: [...character.inventory, identifiedItem]
+    })
+  }
 }
