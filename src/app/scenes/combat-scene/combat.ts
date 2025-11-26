@@ -8,7 +8,7 @@ import { RandomService } from '@services/RandomService'
 import { SpellCastingService } from '@services/SpellCastingService'
 import { VictoryService, VictoryRewards } from '@services/VictoryService'
 import { SceneType } from '@models/SceneType'
-import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance } from '@models/Combat'
+import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
 import { Character } from '@models/Character'
 import { MenuItem } from '@shared/components/menu/menu.component'
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
@@ -59,11 +59,15 @@ export class CombatComponent implements OnInit, OnDestroy {
   readonly animatingMessages = signal<string[]>([])  // Messages currently being animated
   readonly displayedAnimatingMessages = signal<string[]>([])  // Messages shown so far in animation
   private messageAnimationTimer: ReturnType<typeof setTimeout> | null = null
-  private pendingRoundResult: {
-    victory: boolean
-    defeat: boolean
-    fled: boolean
-  } | null = null
+
+  // Event-based animation state
+  // These signals hold display state during animation, separate from game state
+  // This allows visual updates to sync with message display
+  readonly displayMonsterGroups = signal<MonsterGroup[] | null>(null)  // null = use game state
+  readonly displayCharacterOverrides = signal<Map<string, CharacterUpdate>>(new Map())  // character ID -> override
+  private pendingEvents: CombatRoundEvent[] = []
+  private currentEventIndex = 0
+  private pendingRoundResult: CombatRoundResult | null = null
   readonly showVictoryModal = signal<boolean>(false)
   readonly victoryRewards = signal<VictoryRewards | null>(null)
   readonly itemDistribution = signal<Map<string, string[]>>(new Map()) // characterId -> itemIds[]
@@ -78,31 +82,69 @@ export class CombatComponent implements OnInit, OnDestroy {
   readonly showCharacterSelectionDialog = signal<boolean>(false)
   readonly selectedTargetCharacterId = signal<string | null>(null)
 
-  // Computed party characters
+  // Computed party characters - applies display overrides during animation for sync with messages
   readonly partyCharacters = computed(() => {
     const members = this.party().members
     const roster = this.roster()
+    const overrides = this.displayCharacterOverrides()
+
     return members
       .map(id => roster.get(id))
       .filter((char): char is Character => char !== undefined)
+      .map(char => {
+        // Apply display overrides during animation
+        const override = overrides.get(char.id)
+        if (override) {
+          return {
+            ...char,
+            ...(override.hp !== undefined && { hp: override.hp }),
+            ...(override.status !== undefined && { status: override.status as CharacterStatus })
+          }
+        }
+        return char
+      })
   })
 
-  // Front row party characters (for formation layout)
+  // Front row party characters (for formation layout) - applies display overrides during animation
   readonly frontRowCharacters = computed(() => {
     const frontRowIds = this.party().formation.frontRow
     const roster = this.roster()
+    const overrides = this.displayCharacterOverrides()
     return frontRowIds
       .map(id => roster.get(id))
       .filter((char): char is Character => char !== undefined)
+      .map(char => {
+        const override = overrides.get(char.id)
+        if (override) {
+          return {
+            ...char,
+            ...(override.hp !== undefined && { hp: override.hp }),
+            ...(override.status !== undefined && { status: override.status as CharacterStatus })
+          }
+        }
+        return char
+      })
   })
 
-  // Back row party characters (for formation layout)
+  // Back row party characters (for formation layout) - applies display overrides during animation
   readonly backRowCharacters = computed(() => {
     const backRowIds = this.party().formation.backRow
     const roster = this.roster()
+    const overrides = this.displayCharacterOverrides()
     return backRowIds
       .map(id => roster.get(id))
       .filter((char): char is Character => char !== undefined)
+      .map(char => {
+        const override = overrides.get(char.id)
+        if (override) {
+          return {
+            ...char,
+            ...(override.hp !== undefined && { hp: override.hp }),
+            ...(override.status !== undefined && { status: override.status as CharacterStatus })
+          }
+        }
+        return char
+      })
   })
 
   // Front row monster groups
@@ -122,8 +164,14 @@ export class CombatComponent implements OnInit, OnDestroy {
     return CombatService.getAllMonsters(combat)
   })
 
-  // Get monster groups directly
+  // Get monster groups - uses display state during animation for sync with messages
   readonly monsterGroups = computed(() => {
+    // During animation, use display state if available
+    const displayGroups = this.displayMonsterGroups()
+    if (displayGroups !== null) {
+      return displayGroups
+    }
+    // Otherwise use game state
     const combat = this.combatState()
     return combat?.monsterGroups || []
   })
@@ -520,6 +568,149 @@ export class CombatComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Start event-based animation for combat rounds.
+   * Processes events in sequence, displaying messages and applying state changes
+   * after each event's messages are shown.
+   */
+  private startEventAnimation(): void {
+    const actionDelay = getCombatMessageDelay()
+    const resultDelay = getActionResultDelay()
+
+    // Collect all messages from all events for display
+    const allMessages: string[] = []
+    for (const event of this.pendingEvents) {
+      allMessages.push(...event.messages)
+    }
+
+    // If no delays, apply all state at once and show all messages
+    if (actionDelay === 0 && resultDelay === 0) {
+      // Apply final state immediately
+      this.applyAllEventStates()
+      // Display all messages
+      const displayMessages = allMessages.map(msg => CombatService.stripResultMarker(msg))
+      this.animatingMessages.set(allMessages)
+      this.displayedAnimatingMessages.set(displayMessages)
+      this.onRoundAnimationComplete()
+      return
+    }
+
+    this.animatingMessages.set(allMessages)
+    this.displayedAnimatingMessages.set([])
+    this.isAnimatingMessages.set(true)
+    this.currentEventIndex = 0
+
+    // Track message index within current event and globally
+    let globalMessageIndex = 0
+    let eventMessageIndex = 0
+
+    const processNextMessage = () => {
+      // Check if all events processed
+      if (this.currentEventIndex >= this.pendingEvents.length) {
+        this.isAnimatingMessages.set(false)
+        this.messageAnimationTimer = null
+        this.onRoundAnimationComplete()
+        return
+      }
+
+      const currentEvent = this.pendingEvents[this.currentEventIndex]
+
+      // Check if all messages in current event are shown
+      if (eventMessageIndex >= currentEvent.messages.length) {
+        // Apply state changes for this event AFTER its messages are displayed
+        this.applyEventState(currentEvent)
+
+        // Move to next event
+        this.currentEventIndex++
+        eventMessageIndex = 0
+
+        // If more events, continue after action delay
+        if (this.currentEventIndex < this.pendingEvents.length) {
+          this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
+        } else {
+          // All events done
+          this.isAnimatingMessages.set(false)
+          this.messageAnimationTimer = null
+          this.onRoundAnimationComplete()
+        }
+        return
+      }
+
+      // Show next message in current event
+      const message = currentEvent.messages[eventMessageIndex]
+      const displayMessage = CombatService.stripResultMarker(message)
+      this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
+
+      eventMessageIndex++
+      globalMessageIndex++
+
+      // Determine delay for NEXT message
+      if (eventMessageIndex < currentEvent.messages.length) {
+        // More messages in this event
+        const nextMessage = currentEvent.messages[eventMessageIndex]
+        const nextIsResult = CombatService.isResultMessage(nextMessage)
+        const delay = nextIsResult ? resultDelay : actionDelay
+        this.messageAnimationTimer = setTimeout(processNextMessage, delay)
+      } else {
+        // Event messages done, apply state and move to next event
+        // Small delay before state update to let the last message sink in
+        this.messageAnimationTimer = setTimeout(() => {
+          this.applyEventState(currentEvent)
+          this.currentEventIndex++
+          eventMessageIndex = 0
+
+          if (this.currentEventIndex < this.pendingEvents.length) {
+            // More events - use action delay before next event's first message
+            this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
+          } else {
+            // All done
+            this.isAnimatingMessages.set(false)
+            this.messageAnimationTimer = null
+            this.onRoundAnimationComplete()
+          }
+        }, resultDelay) // Brief pause after last message of event before state update
+      }
+    }
+
+    // Start processing
+    processNextMessage()
+  }
+
+  /**
+   * Apply state changes from a single event to display signals.
+   * Called after the event's messages have been displayed.
+   */
+  private applyEventState(event: CombatRoundEvent): void {
+    // Apply monster group snapshot if present
+    if (event.monsterGroupsSnapshot) {
+      this.displayMonsterGroups.set([...event.monsterGroupsSnapshot])
+    }
+
+    // Apply character updates if present
+    if (event.characterUpdates && event.characterUpdates.size > 0) {
+      this.displayCharacterOverrides.update(current => {
+        const updated = new Map(current)
+        for (const [charId, charUpdate] of event.characterUpdates!.entries()) {
+          const existing = updated.get(charId) || {}
+          updated.set(charId, {
+            ...existing,
+            ...charUpdate
+          })
+        }
+        return updated
+      })
+    }
+  }
+
+  /**
+   * Apply all event states at once (for instant mode with 0 delays)
+   */
+  private applyAllEventStates(): void {
+    for (const event of this.pendingEvents) {
+      this.applyEventState(event)
+    }
+  }
+
+  /**
    * Commit animated messages to the combat log in game state
    * Strips result markers before storing
    */
@@ -794,7 +985,12 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     console.log('[Combat] ===== EXECUTING ROUND', combat.roundNumber, '=====')
 
-    const chars = this.partyCharacters()
+    // Get characters from roster (not computed, to avoid display overrides)
+    const roster = this.roster()
+    const partyMembers = this.party().members
+    const chars = partyMembers
+      .map(id => roster.get(id))
+      .filter((char): char is Character => char !== undefined)
     const actions = this.selectedActions()
 
     console.log('[Combat] Party status before round:')
@@ -837,24 +1033,59 @@ export class CombatComponent implements OnInit, OnDestroy {
       commandQueue: [...partyCommands, ...monsterCommands]
     }
 
-    // Execute round with party for damage tracking
+    // Execute round with event-based tracking for animation synchronization
     this.isExecutingRound.set(true)
-    const result = CombatService.executeRound(stateWithCommands, chars, frontRow)
+    const result = CombatService.executeRoundWithEvents(stateWithCommands, chars, frontRow)
 
     console.log('[Combat] Round result:', {
       victory: result.victory,
       defeat: result.defeat,
       fled: result.fled,
-      messages: result.messages.length
+      events: result.events.length
     })
 
-    // Update game state with result (but don't add messages to log yet - they'll be animated)
+    // Initialize display state from current state (before animation changes anything)
+    this.displayMonsterGroups.set([...combat.monsterGroups])
+    this.displayCharacterOverrides.set(new Map())
+
+    // Clear selected actions and reset to first character
+    this.selectedActions.set(new Map())
+    this.activeCharacterIndex.set(0)
+
+    // Store the round result for state commit after animation
+    this.pendingRoundResult = result
+    this.pendingEvents = result.events
+    this.currentEventIndex = 0
+
+    // Start event-based animation
+    this.startEventAnimation()
+  }
+
+  /**
+   * Called when all round messages have been displayed.
+   * Commits final state to game state and clears display signals.
+   */
+  private onRoundAnimationComplete(): void {
+    console.log('[Combat] Message animation complete')
+
+    const result = this.pendingRoundResult
+    if (!result) {
+      console.error('[Combat] No pending round result!')
+      this.clearAnimationState()
+      return
+    }
+
+    // Commit final state to game state (this is where actual state changes happen)
+    // First, collect all messages for the combat log
+    const allMessages = this.animatingMessages()
+    const cleanMessages = allMessages.map(msg => CombatService.stripResultMarker(msg))
+
     this.gameState.updateState(state => {
-      // Update roster with damaged characters and spell casters
+      // Update roster with final character states
       let newRoster = new Map(state.roster)
 
-      // Apply damage
-      for (const [charId, damagedChar] of result.damagedCharacters.entries()) {
+      // Apply final character damage/status
+      for (const [charId, damagedChar] of result.finalCharacterUpdates.entries()) {
         newRoster.set(charId, damagedChar)
       }
 
@@ -870,10 +1101,10 @@ export class CombatComponent implements OnInit, OnDestroy {
         newRoster.set(charId, curedChar)
       }
 
-      // Update combat state WITHOUT adding messages (they'll be animated)
+      // Merge final combat state with committed messages
       const updatedCombat = {
-        ...result.newState
-        // Note: combatLog not updated here - messages are animated then committed
+        ...result.finalState,
+        combatLog: [...(state.combat?.combatLog || []), ...cleanMessages]
       }
 
       return {
@@ -883,31 +1114,8 @@ export class CombatComponent implements OnInit, OnDestroy {
       }
     })
 
-    // Clear selected actions and reset to first character
-    this.selectedActions.set(new Map())
-    this.activeCharacterIndex.set(0)
-
-    // Store the round result to handle after animation
-    this.pendingRoundResult = {
-      victory: result.victory,
-      defeat: result.defeat,
-      fled: result.fled
-    }
-
-    // Start animating messages with delays
-    this.startMessageAnimation(result.messages, () => {
-      this.onRoundAnimationComplete()
-    })
-  }
-
-  /**
-   * Called when all round messages have been displayed
-   */
-  private onRoundAnimationComplete(): void {
-    console.log('[Combat] Message animation complete')
-
-    // Commit animated messages to the combat log
-    this.commitAnimatedMessages()
+    // Clear display state signals - game state is now the source of truth
+    this.clearAnimationState()
 
     // Mark round execution as complete
     this.isExecutingRound.set(false)
@@ -929,24 +1137,35 @@ export class CombatComponent implements OnInit, OnDestroy {
       console.log('[Combat] Monsters - Alive:', aliveMonsterCount, 'Dead:', deadMonsterCount)
     }
 
-    // Check for victory, defeat, or flee using stored result
-    const result = this.pendingRoundResult
-    if (result) {
-      this.pendingRoundResult = null
+    // Clear pending result
+    this.pendingRoundResult = null
 
-      if (result.victory) {
-        console.log('[Combat] VICTORY! All monsters defeated')
-        this.handleVictory()
-      } else if (result.defeat) {
-        console.log('[Combat] DEFEAT! All party members fallen')
-        this.handleDefeat()
-      } else if (result.fled) {
-        console.log('[Combat] FLED! Party escaped')
-        this.handleFlee()
-      } else {
-        console.log('[Combat] Combat continues to next round')
-      }
+    // Check for victory, defeat, or flee
+    if (result.victory) {
+      console.log('[Combat] VICTORY! All monsters defeated')
+      this.handleVictory()
+    } else if (result.defeat) {
+      console.log('[Combat] DEFEAT! All party members fallen')
+      this.handleDefeat()
+    } else if (result.fled) {
+      console.log('[Combat] FLED! Party escaped')
+      this.handleFlee()
+    } else {
+      console.log('[Combat] Combat continues to next round')
     }
+  }
+
+  /**
+   * Clear animation state signals.
+   * Called after animation completes to return to game state as source of truth.
+   */
+  private clearAnimationState(): void {
+    this.displayMonsterGroups.set(null)
+    this.displayCharacterOverrides.set(new Map())
+    this.pendingEvents = []
+    this.currentEventIndex = 0
+    this.animatingMessages.set([])
+    this.displayedAnimatingMessages.set([])
   }
 
   private handleFlee(): void {

@@ -92,6 +92,22 @@ export interface AttackResult {
   message: string
 }
 
+/**
+ * Result of executing a combat command
+ * Includes state changes and optional metadata about what happened
+ */
+export interface CommandExecutionResult {
+  newState: CombatState
+  messages: string[]
+  /** Damage dealt to target (if attack hit) - used for display synchronization */
+  targetDamage?: {
+    targetId: string
+    damage: number
+    newHp: number
+    newStatus?: CombatantStatus
+  }
+}
+
 export interface SpellEffect {
   damage?: number[]
   healing?: number[]
@@ -189,3 +205,78 @@ export const ENCOUNTER_CONFIG = {
     return 9
   }
 } as const
+
+/**
+ * Event types for combat round animation
+ * Each event pairs messages with the state changes that occur when displayed
+ */
+export type CombatEventType = 'action' | 'poison' | 'status' | 'flee' | 'phase'
+
+/**
+ * A single event in combat round playback
+ * Each event contains its messages and the state changes to apply when displayed
+ *
+ * The component displays messages with delays, then applies state changes
+ * after the messages are shown. This synchronizes visual updates with the log.
+ */
+export interface CombatRoundEvent {
+  /** Type of event for potential animation effects */
+  type: CombatEventType
+
+  /** Messages to display (action message first, then result with RESULT_MARKER) */
+  messages: string[]
+
+  /**
+   * Updated monster groups state after this event
+   * Only present if monsters were affected (damage, status change, death)
+   */
+  monsterGroupsSnapshot?: MonsterGroup[]
+
+  /**
+   * Character state changes to apply after this event
+   * Maps character ID to partial character update (hp, status, etc.)
+   */
+  characterUpdates?: Map<string, CharacterUpdate>
+
+  /** Spell point deduction info - applied after event displays */
+  spellCast?: { characterId: string; spellId: string }
+}
+
+/**
+ * Partial character update for animation
+ * Only includes fields that can change during combat
+ */
+export interface CharacterUpdate {
+  hp?: number
+  status?: string  // CharacterStatus value
+}
+
+/**
+ * Complete result of a combat round, broken into events for animation
+ * Events are played back in sequence with delays between messages
+ */
+export interface CombatRoundResult {
+  /** Sequence of events to animate in order */
+  events: CombatRoundEvent[]
+
+  /** Final combat state after all events (monster groups, round number, etc.) */
+  finalState: CombatState
+
+  /** Final accumulated character updates (for committing to roster after animation) */
+  finalCharacterUpdates: Map<string, Character>
+
+  /** Characters who cast spells this round (for spell point deduction) */
+  spellCasters: Map<string, { character: Character; spellId: string }>
+
+  /** Characters whose status changed (sleep/paralysis wore off) */
+  curedCharacters: Map<string, Character>
+
+  /** All monsters defeated */
+  victory: boolean
+
+  /** All party members fallen */
+  defeat: boolean
+
+  /** Party successfully fled */
+  fled: boolean
+}
