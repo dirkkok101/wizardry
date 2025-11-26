@@ -13,6 +13,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { Chest } from '@models/Chest'
 import {
   TrapType,
+  TrapEffect,
   TrapInspectionResult,
   TrapDisarmResult,
   TrapTriggerResult,
@@ -20,6 +21,7 @@ import {
   trapNameMatches
 } from '@models/Trap'
 import { RandomService } from './RandomService'
+import { TrapDataLoader } from './TrapDataLoader'
 
 /**
  * Inspection chance multiplier by class
@@ -49,6 +51,22 @@ const MAX_SUCCESS_CHANCE = 95
  * Critical failure chance during inspection (1-2%)
  */
 const INSPECT_CRITICAL_FAILURE_CHANCE = 2
+
+/**
+ * Get trap effect from TrapDataLoader (preferred) or fallback to hardcoded TRAP_EFFECTS
+ * This allows for data-driven trap configuration while maintaining backwards compatibility
+ */
+function getTrapEffect(trapType: TrapType): TrapEffect {
+  // Try to get from data loader if loaded
+  if (TrapDataLoader.isLoaded()) {
+    const loadedEffect = TrapDataLoader.getTrapEffect(trapType)
+    if (loadedEffect) {
+      return loadedEffect
+    }
+  }
+  // Fallback to hardcoded effects
+  return TRAP_EFFECTS[trapType]
+}
 
 /**
  * Calculate trap inspection success chance
@@ -203,7 +221,7 @@ function applyTrapEffects(
   opener: Character,
   partyMembers: Character[]
 ): TrapTriggerResult {
-  const effect = TRAP_EFFECTS[trapType]
+  const effect = getTrapEffect(trapType)
   const damageDealt = new Map<string, number>()
   const statusApplied = new Map<string, CharacterStatus>()
   const messages: string[] = []

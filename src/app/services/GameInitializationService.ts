@@ -11,6 +11,7 @@ import { DungeonService } from './DungeonService'
 import { SpellDataLoader } from './SpellDataLoader'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { ClassDataLoader } from './ClassDataLoader'
+import { TrapDataLoader } from './TrapDataLoader'
 
 let gameState: GameState | null = null
 
@@ -134,7 +135,39 @@ async function initializeGame(): Promise<void> {
   }
 
   // Initialize remaining data services
-  await ItemDataLoader.loadAllItems()
+  console.log('Loading items and traps...')
+  await Promise.all([
+    ItemDataLoader.loadAllItems(),
+    TrapDataLoader.loadAllTraps()
+  ])
+
+  // Report item loading statistics
+  const itemCount = ItemDataLoader.getLoadedCount()
+  const failedItems = ItemDataLoader.getFailedItems()
+  const totalItems = ItemDataLoader.getTotalCount()
+
+  if (failedItems.size > 0) {
+    console.warn(`Loaded ${itemCount}/${totalItems} items (${failedItems.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed items:', Array.from(failedItems.entries()))
+    }
+  } else {
+    console.log(`Loaded ${itemCount} items successfully`)
+  }
+
+  // Report trap loading statistics
+  const trapCount = TrapDataLoader.getLoadedCount()
+  const failedTraps = TrapDataLoader.getFailedTraps()
+  const totalTraps = TrapDataLoader.getTotalCount()
+
+  if (failedTraps.size > 0) {
+    console.warn(`Loaded ${trapCount}/${totalTraps} traps (${failedTraps.size} failed)`)
+    if (isDevMode()) {
+      console.warn('Failed traps:', Array.from(failedTraps.entries()))
+    }
+  } else {
+    console.log(`Loaded ${trapCount} traps successfully`)
+  }
 
   console.log('Game data initialized successfully')
 

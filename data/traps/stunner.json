@@ -1,0 +1,8 @@
+{
+  "id": "STUNNER",
+  "name": "STUNNER",
+  "targetMode": "opener",
+  "damageFormula": "1d4",
+  "statusEffect": "PARALYZED",
+  "description": "Paralyzes the opener"
+}
