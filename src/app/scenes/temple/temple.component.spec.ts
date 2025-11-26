@@ -142,6 +142,126 @@ describe('TempleComponent', () => {
 
       expect(serviceAction?.enabled).toBe(true);
     });
+
+    describe('resurrection affordability', () => {
+      const deadCharacter: Character = {
+        ...mockCharacter,
+        id: 'dead-char',
+        name: 'DeadHero',
+        status: CharacterStatus.DEAD,
+        level: 1 // Cost: 250 × 1 = 250 gold
+      };
+
+      beforeEach(() => {
+        // Add dead character to roster and party
+        gameState.updateState(state => ({
+          ...state,
+          roster: new Map(state.roster).set('dead-char', deadCharacter),
+          party: {
+            ...state.party,
+            members: ['dead-char']
+          }
+        }));
+      });
+
+      it('enables resurrect button when gold equals cost exactly (250g for level 1)', () => {
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 250 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        expect(resurrectAction?.enabled).toBe(true);
+        expect(resurrectAction?.label).toBe('Resurrect (250g)');
+      });
+
+      it('enables resurrect button when gold exceeds cost (251g)', () => {
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 251 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        expect(resurrectAction?.enabled).toBe(true);
+      });
+
+      it('disables resurrect button when gold is 1 below cost (249g)', () => {
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 249 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        expect(resurrectAction?.enabled).toBe(false);
+      });
+
+      it('scales resurrection cost with character level (level 5 = 1250g)', () => {
+        const level5DeadChar = { ...deadCharacter, level: 5 };
+        gameState.updateState(state => ({
+          ...state,
+          roster: new Map(state.roster).set('dead-char', level5DeadChar),
+          party: { ...state.party, gold: 1250 }
+        }));
+
+        const actions = component.getCharacterActions(level5DeadChar);
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        expect(resurrectAction?.enabled).toBe(true);
+        expect(resurrectAction?.label).toBe('Resurrect (1250g)');
+      });
+
+      it('disables resurrect for level 5 character when gold is 1249', () => {
+        const level5DeadChar = { ...deadCharacter, level: 5 };
+        gameState.updateState(state => ({
+          ...state,
+          roster: new Map(state.roster).set('dead-char', level5DeadChar),
+          party: { ...state.party, gold: 1249 }
+        }));
+
+        const actions = component.getCharacterActions(level5DeadChar);
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        expect(resurrectAction?.enabled).toBe(false);
+      });
+
+      it('always enables inspect button for dead characters regardless of gold', () => {
+        // Scenario: level 1 dead character, 1070g party gold (user's exact scenario)
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 1070 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+        const inspectAction = actions.find(a => a.type === 'inspect');
+        const resurrectAction = actions.find(a => a.type === 'resurrect');
+
+        // Inspect should always be enabled (no enabled property = defaults to true)
+        expect(inspectAction).toBeDefined();
+        expect(inspectAction?.enabled).toBeUndefined(); // No enabled property
+
+        // Resurrect should be enabled (1070 >= 250)
+        expect(resurrectAction?.enabled).toBe(true);
+      });
+
+      it('returns both inspect and resurrect actions for dead character', () => {
+        gameState.updateState(state => ({
+          ...state,
+          party: { ...state.party, gold: 1070 }
+        }));
+
+        const actions = component.getCharacterActions(deadCharacter);
+
+        expect(actions.length).toBe(2);
+        expect(actions[0].type).toBe('inspect');
+        expect(actions[1].type).toBe('resurrect');
+      });
+    });
   });
 
   describe('handleCharacterAction', () => {

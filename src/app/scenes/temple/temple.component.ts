@@ -1,7 +1,8 @@
-import { Component, OnInit, HostListener, computed, signal, inject } from '@angular/core';
+import { Component, OnInit, HostListener, computed, signal, inject, isDevMode } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { TempleService } from '@services/TempleService';
+import { LoggerService } from '@services/LoggerService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
@@ -41,6 +42,7 @@ import { ServiceType } from '@models/ServiceType';
 export class TempleComponent implements OnInit {
   private readonly gameState = inject(GameStateService);
   private readonly navigation = inject(SceneNavigationService);
+  private readonly logger = inject(LoggerService);
   readonly messages = inject(MessageService);
 
   // Confirmation dialog state
@@ -73,6 +75,19 @@ export class TempleComponent implements OnInit {
       const canAfford = partyGold >= tithe;
       const actionId = this.getActionIdFromServiceType(serviceType);
       const serviceName = this.getServiceName(serviceType);
+
+      // Debug logging for temple service button state
+      if (isDevMode()) {
+        this.logger.debug(`[Temple] getCharacterActions for ${character.name}:`, {
+          status: character.status,
+          level: character.level,
+          serviceType,
+          tithe,
+          partyGold,
+          canAfford,
+          actionId
+        });
+      }
 
       actions.push({
         type: actionId,
@@ -122,6 +137,26 @@ export class TempleComponent implements OnInit {
 
   ngOnInit(): void {
     this.messages.clear();
+
+    // Debug logging for temple initialization
+    if (isDevMode()) {
+      const state = this.gameState.state();
+      const afflicted = GameStateQueries.afflictedCharacters(state);
+      const partyGold = GameStateQueries.partyGold(state);
+
+      this.logger.debug('[Temple] Initializing temple scene:', {
+        partyGold,
+        afflictedCount: afflicted.length,
+        afflictedCharacters: afflicted.map(c => ({
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          level: c.level,
+          hp: c.hp
+        }))
+      });
+    }
+
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.TEMPLE
@@ -191,6 +226,14 @@ export class TempleComponent implements OnInit {
   handleCharacterAction(event: CharacterActionEvent): void {
     this.messages.clear();
 
+    // Debug logging for action clicks
+    if (isDevMode()) {
+      this.logger.debug(`[Temple] handleCharacterAction:`, {
+        characterId: event.characterId,
+        actionType: event.actionType
+      });
+    }
+
     if (event.actionType === 'inspect') {
       this.navigation.inspectCharacter(event.characterId, 'temple');
       return;
@@ -201,11 +244,24 @@ export class TempleComponent implements OnInit {
     if (serviceType) {
       const character = this.gameState.state().roster.get(event.characterId);
       if (!character) {
+        this.logger.error('[Temple] Character not found:', event.characterId);
         this.messages.showError('Character not found');
         return;
       }
 
       const tithe = TempleService.calculateTithe(character, serviceType);
+      const partyGold = GameStateQueries.partyGold(this.gameState.state());
+
+      if (isDevMode()) {
+        this.logger.debug(`[Temple] Service action initiated:`, {
+          character: character.name,
+          serviceType,
+          tithe,
+          partyGold,
+          canAfford: partyGold >= tithe
+        });
+      }
+
       this.pendingService.set({ type: serviceType, characterId: event.characterId });
       this.confirmationMessage.set(`${this.getServiceActionText(serviceType)} ${character.name}? (Cost: ${tithe} gold)`);
       this.showConfirmation.set(true);
