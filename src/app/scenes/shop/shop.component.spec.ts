@@ -615,14 +615,15 @@ describe('ShopComponent', () => {
 
     it('calculates uncurse cost', () => {
       const cost = component.getUncurseCost(cursedItem);
-      expect(cost).toBe(500); // Base cost
+      // Uncurse cost is half the item price (500 / 2 = 250)
+      expect(cost).toBe(250);
     });
 
     it('shows confirmation dialog when initiating uncurse', () => {
       component.initiateUncurse(cursedItem.id);
 
       expect(component.showConfirmation()).toBe(true);
-      expect(component.confirmationMessage()).toContain('500');
+      expect(component.confirmationMessage()).toContain('250');
     });
 
     it('shows error when cannot afford uncurse', () => {

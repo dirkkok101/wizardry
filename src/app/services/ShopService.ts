@@ -1,5 +1,5 @@
-import { Item } from '@types/Item'
-import { GameState } from '@types/GameState'
+import { Item } from '@models/Item'
+import { GameState } from '@models/GameState'
 import * as PartyService from './PartyService'
 import { ItemDataLoader } from './ItemDataLoader'
 
@@ -134,7 +134,7 @@ export class ShopService {
     // Remove item from character inventory
     const updatedCharacter = {
       ...character,
-      inventory: character.inventory.filter(invItem => invItem !== item.id)
+      inventory: character.inventory.filter((invItem: string | Item) => invItem !== item.id)
     }
 
     newState = {
@@ -174,7 +174,7 @@ export class ShopService {
     }
 
     // Find item in inventory (handle both string IDs and Item objects)
-    const itemIndex = character.inventory.findIndex(invItem => {
+    const itemIndex = character.inventory.findIndex((invItem: string | Item) => {
       if (typeof invItem === 'object' && 'id' in invItem) {
         return invItem.id === itemId
       }
@@ -249,7 +249,7 @@ export class ShopService {
     }
 
     // Find item in inventory (handle both string IDs and Item objects)
-    const itemIndex = character.inventory.findIndex(invItem => {
+    const itemIndex = character.inventory.findIndex((invItem: string | Item) => {
       if (typeof invItem === 'object' && 'id' in invItem) {
         return invItem.id === itemId
       }

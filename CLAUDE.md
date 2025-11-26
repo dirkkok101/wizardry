@@ -347,7 +347,7 @@ Available aliases (configured in `tsconfig.json` and `jest.config.js`):
 |-------|------|
 | `@app/*` | `src/app/*` |
 | `@services/*` | `src/app/services/*` |
-| `@types/*` | `src/app/types/*` |
+| `@models/*` | `src/app/types/*` |
 | `@scenes/*` | `src/app/scenes/*` |
 | `@shared/*` | `src/app/shared/*` |
 | `@utils/*` | `src/app/utils/*` |
