@@ -204,31 +204,34 @@ describe('ShopComponent', () => {
       component.selectCharacter('char-1');
     });
 
-    it('shows confirmation dialog when initiating buy', () => {
-      const shopItems = component.shopInventory();
-      const item = shopItems[0];
-      component.initiateBuy(item.id);
-      expect(component.showConfirmation()).toBe(true);
-      expect(component.confirmationMessage()).toContain(item.name);
-    });
-
-    it('deducts gold from party after confirming purchase', () => {
+    it('completes purchase immediately without confirmation dialog', () => {
       const initialGold = gameState.state().party.gold || 0;
       const shopItems = component.shopInventory();
       const item = shopItems[0];
 
       component.initiateBuy(item.id);
-      component.confirmAction();
 
+      // No confirmation dialog shown
+      expect(component.showConfirmation()).toBe(false);
+      // Purchase completed immediately
       expect(gameState.state().party.gold).toBe(initialGold - item.price);
     });
 
-    it('adds item to character inventory after confirming purchase', () => {
+    it('deducts gold from party after purchase', () => {
+      const initialGold = gameState.state().party.gold || 0;
       const shopItems = component.shopInventory();
       const item = shopItems[0];
 
       component.initiateBuy(item.id);
-      component.confirmAction();
+
+      expect(gameState.state().party.gold).toBe(initialGold - item.price);
+    });
+
+    it('adds item to character inventory after purchase', () => {
+      const shopItems = component.shopInventory();
+      const item = shopItems[0];
+
+      component.initiateBuy(item.id);
 
       const char = gameState.state().roster.get('char-1')!;
       // Item has unique instance ID, so check by name instead
@@ -278,17 +281,40 @@ describe('ShopComponent', () => {
       expect(messageService.messageText()).toContain('No character selected');
     });
 
-    it('cancels buy when cancel action called', () => {
-      const shopItems = component.shopInventory();
-      const item = shopItems[0];
-      component.initiateBuy(item.id);
-      component.cancelAction();
+    it('filters shop inventory to only show items character can use', () => {
+      // Create a mage character who has class restrictions on weapons
+      const mageCharacter: Character = {
+        ...mockCharacter,
+        id: 'char-mage',
+        class: CharacterClass.MAGE
+      };
 
-      expect(component.showConfirmation()).toBe(false);
-      const char = gameState.state().roster.get('char-1')!;
-      // Item should not be in inventory since purchase was cancelled
-      expect(char.inventory.find(i => i.name === item.name)).toBeUndefined();
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-mage', mageCharacter),
+        party: {
+          ...state.party,
+          members: ['char-mage'],
+          gold: 5000
+        }
+      }));
+
+      // Select the mage for shopping
+      component.selectCharacter('char-mage');
+
+      // Shop inventory should be filtered to mage-usable items
+      const shopItems = component.shopInventory();
+
+      // Verify all items in the filtered list can be equipped by mage
+      for (const item of shopItems) {
+        // Items with no class restrictions are usable by all
+        // Items with class restrictions must include MAGE
+        if (item.classRestrictions && item.classRestrictions.length > 0) {
+          expect(item.classRestrictions).toContain(CharacterClass.MAGE);
+        }
+      }
     });
+
   });
 
   describe('helper methods', () => {

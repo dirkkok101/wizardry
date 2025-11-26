@@ -66,11 +66,19 @@ export class ShopComponent implements OnInit {
   } | null>(null);
 
   // Shop data - loaded from ItemDataLoader using SHOP_ITEM_IDS
+  // Filtered to only show items the selected character can equip
   readonly shopInventory = computed(() => {
-    return SHOP_ITEM_IDS
+    const character = this.selectedCharacter();
+    const allItems = SHOP_ITEM_IDS
       .map(id => ItemDataLoader.getItem(id))
       .filter((item): item is Item => item !== null)
       .map(item => ({ ...item, identified: true }));  // Shop items are always identified
+
+    // Filter by class restrictions if a character is selected
+    if (character) {
+      return allItems.filter(item => InventoryService.canEquip(character, item));
+    }
+    return allItems;
   });
 
   // Selected character using GameStateQueries
@@ -185,7 +193,7 @@ export class ShopComponent implements OnInit {
     }
   }
 
-  // Buy functionality
+  // Buy functionality - no confirmation needed, items are already filtered by class
   initiateBuy(itemId: string): void {
     const item = this.shopInventory().find(i => i.id === itemId);
     if (!item) {
@@ -209,15 +217,8 @@ export class ShopComponent implements OnInit {
       return;
     }
 
-    if (!InventoryService.canEquip(character, item)) {
-      // Just warn, still allow purchase
-      this.confirmationMessage.set(`${character.class} cannot use ${item.name}. Buy anyway for ${item.price} gold?`);
-    } else {
-      this.confirmationMessage.set(`Buy ${item.name} for ${item.price} gold?`);
-    }
-
-    this.pendingAction.set({ type: 'buy', itemId });
-    this.showConfirmation.set(true);
+    // Directly complete the purchase
+    this.completeBuy(itemId);
   }
 
   // Confirm pending action (buy only - sell/identify/uncurse moved to CharacterInspection)
