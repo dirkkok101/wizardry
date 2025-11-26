@@ -388,7 +388,7 @@ export class ShopComponent implements OnInit {
     const character = this.selectedCharacter();
     if (!character) return;
 
-    const item = this.shopInventory().find(i => i.id === itemId);
+    const item = this.getCharacterInventory().find(i => i.id === itemId);
     if (!item) return;
 
     const sellPrice = ShopService.calculateSellPrice(item);
@@ -485,8 +485,8 @@ export class ShopComponent implements OnInit {
   }
 
   // Helper: Get identify cost
-  getIdentifyCost(): number {
-    return 100;
+  getIdentifyCost(item?: Item): number {
+    return ShopService.calculateIdentifyPrice(item || { price: 100 } as Item);
   }
 
   // Helper: Get uncurse cost
