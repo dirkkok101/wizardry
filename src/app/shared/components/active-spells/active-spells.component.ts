@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActiveSpell } from '../../../../types/active-spell.types';
+import { ActiveSpell } from '@types/active-spell.types';
 
 @Component({
   selector: 'app-active-spells',

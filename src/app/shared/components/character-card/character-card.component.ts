@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Character } from '../../../../types/Character';
-import { CharacterField, CharacterAction, CharacterActionEvent } from '../../../../types/CharacterCardTypes';
+import { Character } from '@types/Character';
+import { CharacterField, CharacterAction, CharacterActionEvent } from '@types/CharacterCardTypes';
 import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 import { CharacterStatsComponent } from '../character-stats/character-stats.component';
 import { CharacterActionsComponent } from '../character-actions/character-actions.component';

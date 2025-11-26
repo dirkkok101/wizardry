@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { SpellBookDialogComponent } from '../spell-book-dialog.component'
-import { SpellDataLoader } from '../../../../../services/SpellDataLoader'
-import { createTestCharacter } from '../../../../../test-helpers/test-factories'
-import { Character } from '../../../../../types/Character'
+import { SpellDataLoader } from '@services/SpellDataLoader'
+import { createTestCharacter } from '@testing/test-factories'
+import { Character } from '@types/Character'
 
 describe('SpellBookDialogComponent', () => {
   let component: SpellBookDialogComponent

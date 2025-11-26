@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Character } from '../../../../types/Character';
+import { Character } from '@types/Character';
 
 /**
  * CharacterListComponent - Reusable character roster display and selection.

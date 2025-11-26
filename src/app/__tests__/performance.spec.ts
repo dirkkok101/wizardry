@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { GameStateService } from '../../services/GameStateService';
-import { SaveService } from '../../services/SaveService';
-import { PartyService } from '../../services/PartyService';
-import { createTestCharacter, createEmptyParty } from '../../test-helpers/test-factories';
-import { CharacterClass } from '../../types/CharacterClass';
-import { GameState } from '../../types/GameState';
+import { GameStateService } from '@services/GameStateService';
+import { SaveService } from '@services/SaveService';
+import { PartyService } from '@services/PartyService';
+import { createTestCharacter, createEmptyParty } from '@testing/test-factories';
+import { CharacterClass } from '@types/CharacterClass';
+import { GameState } from '@types/GameState';
 
 /**
  * Performance Verification Tests

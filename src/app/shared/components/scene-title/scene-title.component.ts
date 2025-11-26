@@ -1,5 +1,5 @@
 import { Component, input, computed, inject } from '@angular/core';
-import { GameStateService } from '../../../../services/GameStateService';
+import { GameStateService } from '@services/GameStateService';
 
 @Component({
   selector: 'app-scene-title',

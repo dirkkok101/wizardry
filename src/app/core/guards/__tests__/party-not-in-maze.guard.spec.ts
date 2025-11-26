@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { partyNotInMazeGuard } from '../party-not-in-maze.guard';
-import { GameStateService } from '../../../../services/GameStateService';
-import { SaveService } from '../../../../services/SaveService';
-import { SceneType } from '../../../../types/SceneType';
+import { GameStateService } from '@services/GameStateService';
+import { SaveService } from '@services/SaveService';
+import { SceneType } from '@types/SceneType';
 
 describe('partyNotInMazeGuard', () => {
   let gameState: GameStateService;

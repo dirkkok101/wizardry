@@ -1,7 +1,7 @@
 import { Component, Input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Item } from '../../../../types/Item';
-import { ItemSlot } from '../../../../types/ItemType';
+import { Item } from '@types/Item';
+import { ItemSlot } from '@types/ItemType';
 
 export interface ItemAction {
   type: 'equip' | 'unequip' | 'trade' | 'drop' | 'use';

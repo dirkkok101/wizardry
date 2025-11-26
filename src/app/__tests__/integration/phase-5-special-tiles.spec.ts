@@ -1,10 +1,10 @@
-import { DungeonMovementService } from '../../../services/DungeonMovementService';
-import { DoorService } from '../../../services/DoorService';
-import { TileInspectionService } from '../../../services/TileInspectionService';
-import { DungeonService } from '../../../services/DungeonService';
-import { createTestGameState, createTestCharacter } from '../../../test-helpers/test-factories';
-import { GameState } from '../../../types/GameState';
-import { LevelData, Position } from '../../../types/Dungeon';
+import { DungeonMovementService } from '@services/DungeonMovementService';
+import { DoorService } from '@services/DoorService';
+import { TileInspectionService } from '@services/TileInspectionService';
+import { DungeonService } from '@services/DungeonService';
+import { createTestGameState, createTestCharacter } from '@testing/test-factories';
+import { GameState } from '@types/GameState';
+import { LevelData, Position } from '@types/Dungeon';
 
 /**
  * Phase 5: Special Tiles - E2E Integration Tests

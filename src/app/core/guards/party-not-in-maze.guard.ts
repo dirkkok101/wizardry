@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { GameStateService } from '../../../services/GameStateService';
-import { LoggerService } from '../../../services/LoggerService';
+import { GameStateService } from '@services/GameStateService';
+import { LoggerService } from '@services/LoggerService';
 
 /**
  * Route guard that prevents access to town services while party is in maze.

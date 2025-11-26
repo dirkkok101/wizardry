@@ -1,14 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TavernComponent } from '../../tavern/tavern.component';
-import { GameStateService } from '../../../services/GameStateService';
-import { SaveService } from '../../../services/SaveService';
-import { PartyService } from '../../../services/PartyService';
-import { InnService, RoomType } from '../../../services/InnService';
-import { LevelUpService } from '../../../services/LevelUpService';
-import { createTestCharacter } from '../../../test-helpers/test-factories';
-import { Alignment } from '../../../types/Alignment';
-import { CharacterStatus } from '../../../types/CharacterStatus';
-import { CharacterClass } from '../../../types/CharacterClass';
+import { TavernComponent } from '@scenes/tavern/tavern.component';
+import { GameStateService } from '@services/GameStateService';
+import { SaveService } from '@services/SaveService';
+import { PartyService } from '@services/PartyService';
+import { InnService, RoomType } from '@services/InnService';
+import { LevelUpService } from '@services/LevelUpService';
+import { createTestCharacter } from '@testing/test-factories';
+import { Alignment } from '@types/Alignment';
+import { CharacterStatus } from '@types/CharacterStatus';
+import { CharacterClass } from '@types/CharacterClass';
 
 /**
  * Town Services Flow Integration Tests

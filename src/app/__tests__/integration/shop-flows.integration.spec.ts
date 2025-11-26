@@ -1,14 +1,14 @@
 // src/app/__tests__/integration/shop-flows.integration.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { ShopComponent } from '../../shop/shop.component'
-import { GameStateService } from '../../../services/GameStateService'
-import { Character } from '../../../types/Character'
-import { CharacterClass } from '../../../types/CharacterClass'
-import { CharacterStatus } from '../../../types/CharacterStatus'
-import { Race } from '../../../types/Race'
-import { Alignment } from '../../../types/Alignment'
-import { SHOP_INVENTORY } from '../../../data/shop-inventory'
+import { ShopComponent } from '@scenes/shop/shop.component'
+import { GameStateService } from '@services/GameStateService'
+import { Character } from '@types/Character'
+import { CharacterClass } from '@types/CharacterClass'
+import { CharacterStatus } from '@types/CharacterStatus'
+import { Race } from '@types/Race'
+import { Alignment } from '@types/Alignment'
+import { SHOP_INVENTORY } from '@config/shop-inventory'
 
 describe('Integration: Shop Flows', () => {
   let component: ShopComponent
