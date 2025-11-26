@@ -1,12 +1,14 @@
 <div class="temple-scene">
-  <app-scene-title title="TEMPLE OF CANT" />
+  <app-scene-title title="TEMPLE OF CANT" [showPartyGold]="true" />
 
   <div class="temple-content">
     @if (afflictedCharacters().length > 0) {
       <app-party-character-grid
         source="afflicted"
-        [actions]="[{type: 'inspect'}]"
+        [visibleFields]="visibleFields"
+        [actions]="getCharacterActions"
         (actionClick)="handleCharacterAction($event)"
+        emptyMessage="No afflicted party members"
       />
     } @else {
       <div class="empty-state">
@@ -16,7 +18,10 @@
     }
 
     @if (messages.hasMessage()) {
-      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      <div class="message"
+           [class.error]="messages.isError()"
+           [class.success]="messages.isSuccess()"
+           [class.info]="messages.message()?.type === 'info'">
         {{ messages.messageText() }}
       </div>
     }
@@ -30,8 +35,8 @@
   @if (showConfirmation()) {
     <app-confirmation-dialog
       [message]="confirmationMessage()"
-      (confirm)="confirmService()"
-      (cancel)="cancelService()"
+      (confirmed)="confirmService()"
+      (cancelled)="cancelService()"
     />
   }
 </div>

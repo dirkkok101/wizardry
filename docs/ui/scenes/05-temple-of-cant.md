@@ -53,22 +53,21 @@ interface TempleEntryState {
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  TEMPLE OF CANT                                             │
+│  TEMPLE OF CANT                              Gold: 1,500    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │ Gandalf     │  │ Corak       │  │ PriestBob   │        │
-│  │ POISONED    │  │ DEAD        │  │ ASHES       │        │
-│  │ Lvl 5       │  │ Lvl 3       │  │ Lvl 7       │        │
-│  │ HP: 15/25   │  │ HP: 0/20    │  │ HP: 0/30    │        │
-│  │             │  │             │  │             │        │
-│  │ [Inspect]   │  │ [Inspect]   │  │ [Inspect]   │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-│                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│  │ Gandalf         │  │ Corak           │  │ PriestBob       │
+│  │ Mage Lvl 5      │  │ Fighter Lvl 3   │  │ Priest Lvl 7    │
+│  │ HP: 15/25       │  │ HP: 0/20        │  │ HP: 0/30        │
+│  │ POISONED        │  │ DEAD            │  │ ASHES           │
+│  │                 │  │                 │  │                 │
+│  │ [Inspect]       │  │ [Inspect]       │  │ [Inspect]       │
+│  │ [Cure (250g)]   │  │ [Resurrect(750g)]│ │ [Restore(3500g)]│
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
-│  (P) Cure Poison  (A) Cure Paralysis  (R) Resurrect        │
-│  (S) Restore  (ESC) Return to Castle                        │
+│  (ESC) Return to Castle                                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -76,7 +75,7 @@ interface TempleEntryState {
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  TEMPLE OF CANT                                             │
+│  TEMPLE OF CANT                              Gold: 1,500    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │                                                             │
@@ -85,16 +84,24 @@ interface TempleEntryState {
 │                                                             │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
-│  (P) Cure Poison  (A) Cure Paralysis  (R) Resurrect        │
-│  (S) Restore  (ESC) Return to Castle                        │
+│  (ESC) Return to Castle                                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 **Visual Notes:**
 - Character cards automatically filter to show only afflicted characters
-- Service menu items are enabled/disabled based on character afflictions
-- Services are selected by single keypress (P/A/R/S)
+- **Character-specific actions on cards**: Each card shows service button based on status
+  - POISONED → "Cure Poison (Xg)" button
+  - PARALYZED → "Cure Paralysis (Xg)" button
+  - DEAD → "Resurrect (Xg)" button
+  - ASHES → "Restore (Xg)" button
+- Service buttons are disabled if party can't afford the tithe
+- **Party-level actions in footer**: Only navigation (ESC to return)
 - Confirmation dialog shows before executing service
+
+**Design Principle:**
+- **Footer menu** = Party-level actions (navigation only)
+- **Character cards** = Character-specific actions (services with costs)
 
 ---
 
@@ -102,19 +109,19 @@ interface TempleEntryState {
 
 ### Overall Process
 
-1. **Entry:** Temple displays afflicted characters in grid
-2. **Service Selection:** Player presses service key (P/A/R/S)
-3. **Auto-Character Selection:** If only one character needs that service, automatically selected
-4. **Confirmation Dialog:** Shows character name and service action
-5. **Service Execution:** Deducts party gold and performs service
-6. **Result Display:** Success or error message shown
-7. **Menu Update:** Service menu items re-enabled based on updated party status
+1. **Entry:** Temple displays afflicted characters in grid with service buttons
+2. **Character Selection:** Player clicks service button on specific character card
+3. **Confirmation Dialog:** Shows character name, service action, and cost
+4. **Service Execution:** Deducts party gold and performs service
+5. **Result Display:** Success or error message shown
+6. **UI Update:** Character removed from grid if cured, buttons update if gold changes
 
-**Key Simplifications:**
-- No multi-step view machine (single state)
-- Auto-selects character when only one needs service
-- Uses party gold pool only (no payer selection)
-- Service keys are enabled/disabled based on party needs
+**Key Design Principles:**
+- **Character-specific actions on cards**: Services apply to individual characters, so buttons are on cards
+- **Party-level actions in footer**: Only navigation (ESC to return to Castle)
+- Uses party gold pool (no payer selection)
+- Service buttons show cost and are disabled if unaffordable
+- Both keyboard (via card focus) and mouse (click) supported
 
 ---
 
@@ -454,11 +461,13 @@ handleFooterAction(itemId: string): void {
 
 | Action | Key | Enabled When | Effect |
 |--------|-----|--------------|--------|
-| Cure Poison | P | Any party member is POISONED | Select and confirm service |
-| Cure Paralysis | A | Any party member is PARALYZED | Select and confirm service |
-| Resurrect | R | Any party member is DEAD | Select and confirm service |
-| Restore | S | Any party member is ASHES | Select and confirm service |
 | Return to Castle | ESC | Always | Navigate to Castle Menu |
+| Confirm Service | Enter/Y | Dialog open | Execute pending service |
+| Cancel Service | Esc/N | Dialog open | Close confirmation dialog |
+
+**Note:** Temple services (Cure Poison, Cure Paralysis, Resurrect, Restore) are accessed via
+character card buttons, not footer menu shortcuts. This follows the design principle that
+character-specific actions belong on character cards, while party-level actions belong in the footer.
 
 ### Exits
 
