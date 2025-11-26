@@ -17,7 +17,6 @@ import {
   TrapInspectionResult,
   TrapDisarmResult,
   TrapTriggerResult,
-  TRAP_EFFECTS,
   trapNameMatches
 } from '@models/Trap'
 import { RandomService } from './RandomService'
@@ -53,19 +52,21 @@ const MAX_SUCCESS_CHANCE = 95
 const INSPECT_CRITICAL_FAILURE_CHANCE = 2
 
 /**
- * Get trap effect from TrapDataLoader (preferred) or fallback to hardcoded TRAP_EFFECTS
- * This allows for data-driven trap configuration while maintaining backwards compatibility
+ * Get trap effect from TrapDataLoader
+ * Trap data must be loaded via TrapDataLoader.loadAllTraps() before use
+ * @throws Error if traps are not loaded or trap type is not found
  */
 function getTrapEffect(trapType: TrapType): TrapEffect {
-  // Try to get from data loader if loaded
-  if (TrapDataLoader.isLoaded()) {
-    const loadedEffect = TrapDataLoader.getTrapEffect(trapType)
-    if (loadedEffect) {
-      return loadedEffect
-    }
+  if (!TrapDataLoader.isLoaded()) {
+    throw new Error('Trap data not loaded. Call TrapDataLoader.loadAllTraps() first.')
   }
-  // Fallback to hardcoded effects
-  return TRAP_EFFECTS[trapType]
+
+  const effect = TrapDataLoader.getTrapEffect(trapType)
+  if (!effect) {
+    throw new Error(`Unknown trap type: ${trapType}`)
+  }
+
+  return effect
 }
 
 /**
