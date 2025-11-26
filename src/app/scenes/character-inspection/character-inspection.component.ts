@@ -9,6 +9,7 @@ import { InventoryService } from '@services/InventoryService'
 import { SceneNavigationService } from '@services/SceneNavigationService'
 import { SpellLearningService } from '@services/SpellLearningService'
 import { SpellDataLoader } from '@services/SpellDataLoader'
+import { ShopService } from '@services/ShopService'
 import { LoadedSpell } from '@models/SpellDefinition'
 import { GameStateQueries } from '@utils/GameStateQueries'
 import { MessageService } from '@services/MessageService'
@@ -17,7 +18,7 @@ import { CharacterClass } from '@models/CharacterClass'
 import { Item } from '@models/Item'
 import { ItemSlot } from '@models/ItemType'
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes'
-import { ItemCardComponent, ItemAction } from '@shared/components/item-card/item-card.component'
+import { ItemCardComponent, ItemAction, ShopContext } from '@shared/components/item-card/item-card.component'
 import { TradeItemDialogComponent } from '@shared/components/trade-item-dialog/trade-item-dialog.component'
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component'
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
@@ -100,8 +101,29 @@ export class CharacterInspectionComponent {
       .filter(char => char.id !== currentId)
   })
 
-  // Show party gold in Tavern mode
-  readonly showPartyGold = computed(() => this.mode() === 'TAVERN')
+  // Show party gold in Tavern mode or Shop mode
+  readonly showPartyGold = computed(() => this.mode() === 'TAVERN' || this.isShopContext())
+
+  // Check if we're in shop context (coming from shop scene)
+  readonly isShopContext = computed(() => this.returnTo() === 'shop')
+
+  // Party gold for shop context
+  readonly partyGold = computed(() =>
+    GameStateQueries.partyGold(this.gameState.state())
+  )
+
+  // Shop context for ItemCards (when coming from shop)
+  readonly shopContext = computed((): ShopContext | null => {
+    if (!this.isShopContext()) return null
+
+    return {
+      enabled: true,
+      partyGold: this.partyGold(),
+      identifyCost: ShopService.calculateIdentifyPrice({} as Item),
+      getUncurseCost: (item: Item) => ShopService.calculateUncursePrice(item),
+      getSellPrice: (item: Item) => ShopService.calculateSellPrice(item)
+    }
+  })
 
   // Equipment slots
   readonly weaponSlot = computed(() => this.getEquipmentSlot(ItemSlot.WEAPON))
@@ -273,6 +295,15 @@ export class CharacterInspectionComponent {
       case 'use':
         this.useItem(char, action.item)
         break
+      case 'sell':
+        this.sellItem(char, action.item)
+        break
+      case 'identify':
+        this.identifyItemAtShop(char, action.item)
+        break
+      case 'uncurse':
+        this.uncurseItem(char, action.item)
+        break
     }
   }
 
@@ -300,6 +331,51 @@ export class CharacterInspectionComponent {
     // Item use would be implemented here
     this.messages.showSuccess(`Used ${item.name}`)
     // TODO: Implement actual item use logic
+  }
+
+  // Shop action: Sell item
+  private sellItem(char: Character, item: Item): void {
+    const result = ShopService.sellItem(this.gameState.state(), char.id, item)
+
+    if (result.success && result.state) {
+      this.gameState.updateState(() => result.state!)
+      const sellPrice = ShopService.calculateSellPrice(item)
+      this.messages.showSuccess(`Sold ${item.name} for ${sellPrice} gold`)
+    } else {
+      this.messages.showError(result.error || 'Failed to sell item')
+    }
+  }
+
+  // Shop action: Identify item (at shop, costs gold)
+  private identifyItemAtShop(char: Character, item: Item): void {
+    const result = ShopService.identifyItem(this.gameState.state(), char.id, item.id)
+
+    if (result.success && result.state) {
+      this.gameState.updateState(() => result.state!)
+      // Get the updated item from state to show its name
+      const updatedChar = result.state.roster.get(char.id)
+      const identifiedItem = updatedChar?.inventory.find(i => i.id === item.id)
+
+      if (identifiedItem?.cursed) {
+        this.messages.showError(`This is ${identifiedItem.name}! IT'S CURSED!`)
+      } else {
+        this.messages.showSuccess(`This is ${identifiedItem?.name || 'Unknown'}!`)
+      }
+    } else {
+      this.messages.showError(result.error || 'Failed to identify item')
+    }
+  }
+
+  // Shop action: Uncurse item
+  private uncurseItem(char: Character, item: Item): void {
+    const result = ShopService.uncurseItem(this.gameState.state(), char.id, item.id)
+
+    if (result.success && result.state) {
+      this.gameState.updateState(() => result.state!)
+      this.messages.showSuccess(`${item.name} is no longer cursed!`)
+    } else {
+      this.messages.showError(result.error || 'Failed to uncurse item')
+    }
   }
 
   private identifyNextItem(): void {

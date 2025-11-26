@@ -3,7 +3,6 @@ import { ShopComponent } from './shop.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
-import { ItemDataLoader } from '@services/ItemDataLoader';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
@@ -34,35 +33,6 @@ const TEST_LONG_SWORD: Item = createTestItem({
   slot: ItemSlot.WEAPON,
   price: 25,
   damage: 8
-});
-
-const TEST_LEATHER_ARMOR: Item = createTestItem({
-  id: 'leather_armor',
-  name: 'Leather Armor',
-  type: ItemType.ARMOR,
-  slot: ItemSlot.ARMOR,
-  price: 50,
-  defense: 2,
-  damage: undefined
-});
-
-const TEST_UNIDENTIFIED_SWORD: Item = createTestItem({
-  id: 'unknown-sword-1',
-  name: 'Sharpened Blade',
-  unidentifiedName: 'Unknown Sword',
-  price: 250,
-  damage: 12,
-  identified: false
-});
-
-const TEST_CURSED_SWORD: Item = createTestItem({
-  id: 'cursed-sword-1',
-  name: 'Blade of Despair',
-  unidentifiedName: 'Mysterious Sword',
-  price: 500,
-  damage: 15,
-  cursed: true,
-  identified: false
 });
 
 describe('ShopComponent', () => {
@@ -160,10 +130,10 @@ describe('ShopComponent', () => {
       expect(component.currentView()).toBe('character-select');
     });
 
-    it('auto-selects character when only one party member', () => {
+    it('auto-selects character and goes to buy view when only one party member', () => {
       component.ngOnInit();
       expect(component.selectedCharacterId()).toBe('char-1');
-      expect(component.currentView()).toBe('main');
+      expect(component.currentView()).toBe('buy');
     });
 
     it('shows footer menu items for character selection view', () => {
@@ -172,14 +142,10 @@ describe('ShopComponent', () => {
       expect(menuItems.some(m => m.id === 'leave')).toBe(true);
     });
 
-    it('shows footer menu items for main view', () => {
+    it('shows footer menu items for buy view', () => {
       component.selectCharacter('char-1');
       const menuItems = component.footerMenuItems();
-      expect(menuItems.some(m => m.id === 'buy')).toBe(true);
-      expect(menuItems.some(m => m.id === 'sell')).toBe(true);
-      expect(menuItems.some(m => m.id === 'identify')).toBe(true);
-      expect(menuItems.some(m => m.id === 'uncurse')).toBe(true);
-      expect(menuItems.some(m => m.id === 'leave')).toBe(true);
+      expect(menuItems.some(m => m.id === 'back')).toBe(true);
     });
   });
 
@@ -189,9 +155,9 @@ describe('ShopComponent', () => {
       expect(component.selectedCharacterId()).toBe('char-1');
     });
 
-    it('transitions to main view after selection', () => {
+    it('transitions to buy view after selection', () => {
       component.selectCharacter('char-1');
-      expect(component.currentView()).toBe('main');
+      expect(component.currentView()).toBe('buy');
     });
 
     it('shows error when character not found', () => {
@@ -206,112 +172,30 @@ describe('ShopComponent', () => {
       expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
-    it('returns to main view when back action selected', () => {
+    it('returns to character selection when back action selected from buy view', () => {
       component.selectCharacter('char-1');
-      component.currentView.set('buy');
       component.handleFooterAction('back');
-      expect(component.currentView()).toBe('main');
+      expect(component.currentView()).toBe('character-select');
+      expect(component.selectedCharacterId()).toBe(null);
     });
 
-    it('handles ESC key to return to castle from main view', () => {
-      component.selectCharacter('char-1');
+    it('handles ESC key to return to castle from character-select view', () => {
+      component.currentView.set('character-select');
       component.handleKeydown({ key: 'Escape' } as KeyboardEvent);
       expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
-    it('handles ESC key to return to main from sub-views', () => {
+    it('handles ESC key to return to character-select from buy view', () => {
       component.selectCharacter('char-1');
-      component.currentView.set('buy');
       component.handleKeydown({ key: 'Escape' } as KeyboardEvent);
-      expect(component.currentView()).toBe('main');
+      expect(component.currentView()).toBe('character-select');
     });
 
     it('handles ESC key to cancel confirmation dialog - dialog handles this', () => {
-      // Note: When confirmation dialog is showing, keyboard events are handled by the dialog itself
-      // The component's handleKeydown returns early when showConfirmation is true
       component.selectCharacter('char-1');
       component.showConfirmation.set(true);
-      // Calling cancelAction directly as the dialog would
       component.cancelAction();
       expect(component.showConfirmation()).toBe(false);
-    });
-  });
-
-  describe('keyboard shortcuts', () => {
-    beforeEach(() => {
-      component.selectCharacter('char-1');
-    });
-
-    it('B key transitions to buy view', () => {
-      component.handleKeydown({ key: 'b' } as KeyboardEvent);
-      expect(component.currentView()).toBe('buy');
-    });
-
-    it('S key transitions to sell view when character has items', () => {
-      // Add item to character inventory
-      const charWithItem = { ...mockCharacter, inventory: [TEST_LONG_SWORD] };
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', charWithItem)
-      }));
-      component.handleKeydown({ key: 's' } as KeyboardEvent);
-      expect(component.currentView()).toBe('sell');
-    });
-
-    it('S key does nothing when character has no items', () => {
-      component.handleKeydown({ key: 's' } as KeyboardEvent);
-      expect(component.currentView()).toBe('main');
-    });
-
-    it('L key leaves shop', () => {
-      component.handleKeydown({ key: 'l' } as KeyboardEvent);
-      expect(navigationService.returnToCastle).toHaveBeenCalled();
-    });
-
-    it('keyboard shortcuts are ignored in non-main views', () => {
-      component.currentView.set('buy');
-      component.handleKeydown({ key: 'b' } as KeyboardEvent);
-      // Should stay in buy view, not try to transition again
-      expect(component.currentView()).toBe('buy');
-    });
-
-    it('keyboard shortcuts are ignored when confirmation dialog is open', () => {
-      component.showConfirmation.set(true);
-      component.handleKeydown({ key: 'l' } as KeyboardEvent);
-      // Should not leave shop
-      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('view transitions', () => {
-    beforeEach(() => {
-      component.selectCharacter('char-1');
-    });
-
-    it('transitions to buy view', () => {
-      component.handleFooterAction('buy');
-      expect(component.currentView()).toBe('buy');
-    });
-
-    it('transitions to sell view', () => {
-      component.handleFooterAction('sell');
-      expect(component.currentView()).toBe('sell');
-    });
-
-    it('transitions to identify view', () => {
-      component.handleFooterAction('identify');
-      expect(component.currentView()).toBe('identify');
-    });
-
-    it('transitions to uncurse view', () => {
-      component.handleFooterAction('uncurse');
-      expect(component.currentView()).toBe('uncurse');
-    });
-
-    it('changes character when change-character selected', () => {
-      component.handleFooterAction('change-character');
-      expect(component.currentView()).toBe('character-select');
-      expect(component.selectedCharacterId()).toBe(null);
     });
   });
 
@@ -405,378 +289,9 @@ describe('ShopComponent', () => {
     });
   });
 
-  describe('sell flow', () => {
-    beforeEach(() => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD, TEST_LEATHER_ARMOR]
-        }),
-        party: {
-          ...state.party,
-          members: ['char-1'],
-          gold: 500
-        }
-      }));
-
-      component.selectCharacter('char-1');
-      component.handleFooterAction('sell');
-    });
-
-    it('displays character inventory items', () => {
-      const inventory = component.getCharacterInventory();
-
-      expect(inventory.length).toBe(2);
-      expect(inventory[0].name).toBe('Long Sword');
-      expect(inventory[1].name).toBe('Leather Armor');
-    });
-
-    it('shows empty message when character has no items', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: []
-        })
-      }));
-
-      const inventory = component.getCharacterInventory();
-      expect(inventory.length).toBe(0);
-    });
-
-    it('calculates sell price (50% of purchase price)', () => {
-      const sellPrice = component.getSellPrice(TEST_LONG_SWORD);
-      expect(sellPrice).toBe(12); // 50% of 25
-    });
-
-    it('shows confirmation before selling item', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      component.initiateSell(TEST_LONG_SWORD.id);
-
-      expect(component.showConfirmation()).toBe(true);
-      expect(component.confirmationMessage()).toContain('Long Sword');
-    });
-
-    it('removes item from inventory after confirming sell', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      component.initiateSell(TEST_LONG_SWORD.id);
-      component.confirmAction();
-
-      const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory.find(i => i.id === TEST_LONG_SWORD.id)).toBeUndefined();
-    });
-
-    it('adds gold to party after confirming sell', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        }),
-        party: {
-          ...state.party,
-          gold: 500
-        }
-      }));
-
-      const initialGold = gameState.party().gold || 0;
-
-      component.initiateSell(TEST_LONG_SWORD.id);
-      component.confirmAction();
-
-      const finalGold = gameState.party().gold || 0;
-      expect(finalGold).toBe(initialGold + 12); // 50% of 25
-    });
-
-    it('shows success message after selling', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      component.initiateSell(TEST_LONG_SWORD.id);
-      component.confirmAction();
-
-      expect(messageService.messageText()).toContain('Sold');
-      expect(messageService.messageText()).toContain('Long Sword');
-    });
-
-    it('cancels sell on cancel action', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      component.initiateSell(TEST_LONG_SWORD.id);
-      component.cancelAction();
-
-      const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory.length).toBe(1);
-      expect(component.showConfirmation()).toBe(false);
-    });
-
-    it('shows error when item not found', () => {
-      component.initiateSell('nonexistent-item');
-      expect(messageService.messageText()).toContain('not found');
-    });
-
-    it('shows error when no character selected', () => {
-      component.selectedCharacterId.set(null);
-      component.initiateSell('long_sword');
-      expect(messageService.messageText()).toContain('No character selected');
-    });
-  });
-
-  describe('identify flow', () => {
-    beforeEach(() => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_UNIDENTIFIED_SWORD, TEST_CURSED_SWORD]
-        }),
-        party: {
-          ...state.party,
-          members: ['char-1'],
-          gold: 500
-        }
-      }));
-
-      component.selectCharacter('char-1');
-      component.handleFooterAction('identify');
-    });
-
-    it('displays only unidentified items', () => {
-      const unidentified = component.getUnidentifiedItems();
-
-      expect(unidentified.length).toBe(2);
-      expect(unidentified.every(item => !item.identified)).toBe(true);
-    });
-
-    it('shows unidentifiedName for unknown items', () => {
-      const unidentified = component.getUnidentifiedItems();
-
-      expect(unidentified[0].unidentifiedName).toBe('Unknown Sword');
-      expect(unidentified[0].name).not.toBe('Unknown Sword');
-    });
-
-    it('displays identification cost (100 gold flat)', () => {
-      const cost = component.getIdentifyCost();
-      expect(cost).toBe(100);
-    });
-
-    it('shows confirmation dialog when initiating identify', () => {
-      component.initiateIdentify(TEST_UNIDENTIFIED_SWORD.id);
-
-      expect(component.showConfirmation()).toBe(true);
-      expect(component.confirmationMessage()).toContain('100');
-    });
-
-    it('deducts gold after confirming identify', () => {
-      const initialGold = gameState.party().gold || 0;
-
-      component.initiateIdentify(TEST_UNIDENTIFIED_SWORD.id);
-      component.confirmAction();
-
-      const finalGold = gameState.party().gold || 0;
-      expect(finalGold).toBe(initialGold - 100);
-    });
-
-    it('shows error when cannot afford identification', () => {
-      gameState.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          gold: 50
-        }
-      }));
-
-      component.initiateIdentify(TEST_UNIDENTIFIED_SWORD.id);
-
-      expect(messageService.messageText()).toContain('afford');
-      expect(component.showConfirmation()).toBe(false);
-    });
-
-    it('shows error when item not found', () => {
-      component.initiateIdentify('nonexistent-item');
-      expect(messageService.messageText()).toContain('not found');
-    });
-
-    it('shows error when no character selected', () => {
-      component.selectedCharacterId.set(null);
-      component.initiateIdentify(TEST_UNIDENTIFIED_SWORD.id);
-      expect(messageService.messageText()).toContain('No character selected');
-    });
-  });
-
-  describe('uncurse flow', () => {
-    let cursedItem: Item;
-
-    beforeEach(() => {
-      cursedItem = {
-        ...TEST_CURSED_SWORD,
-        identified: true
-      };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [cursedItem]
-        }),
-        party: {
-          ...state.party,
-          members: ['char-1'],
-          gold: 1000
-        }
-      }));
-
-      component.selectCharacter('char-1');
-      component.handleFooterAction('uncurse');
-    });
-
-    it('displays cursed items', () => {
-      const cursed = component.getCursedItems();
-
-      expect(cursed.length).toBe(1);
-      expect(cursed[0].cursed).toBe(true);
-    });
-
-    it('calculates uncurse cost', () => {
-      const cost = component.getUncurseCost(cursedItem);
-      // Uncurse cost is half the item price (500 / 2 = 250)
-      expect(cost).toBe(250);
-    });
-
-    it('shows confirmation dialog when initiating uncurse', () => {
-      component.initiateUncurse(cursedItem.id);
-
-      expect(component.showConfirmation()).toBe(true);
-      expect(component.confirmationMessage()).toContain('250');
-    });
-
-    it('shows error when cannot afford uncurse', () => {
-      gameState.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          gold: 100
-        }
-      }));
-
-      component.initiateUncurse(cursedItem.id);
-
-      expect(messageService.messageText()).toContain('afford');
-      expect(component.showConfirmation()).toBe(false);
-    });
-
-    it('shows error when item not found', () => {
-      component.initiateUncurse('nonexistent-item');
-      expect(messageService.messageText()).toContain('not found');
-    });
-
-    it('shows error when no character selected', () => {
-      component.selectedCharacterId.set(null);
-      component.initiateUncurse(cursedItem.id);
-      expect(messageService.messageText()).toContain('No character selected');
-    });
-  });
-
   describe('helper methods', () => {
     beforeEach(() => {
       component.selectCharacter('char-1');
-    });
-
-    it('getSellableItems excludes equipped cursed items', () => {
-      const equippedCursedItem: Item = createTestItem({
-        id: 'equipped-cursed',
-        name: 'Cursed Ring',
-        price: 100,
-        cursed: true,
-        equipped: true,
-        identified: true
-      });
-
-      const normalItem = { ...TEST_LONG_SWORD };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [equippedCursedItem, normalItem]
-        })
-      }));
-
-      // Force update the component's selected character
-      const sellable = component.getSellableItems();
-
-      // Only the non-equipped item should be sellable
-      expect(sellable.some(i => i.id === 'equipped-cursed')).toBe(false);
-    });
-
-    it('getUnidentifiedItems returns only unidentified items', () => {
-      const identifiedItem = { ...TEST_LONG_SWORD, id: 'identified-item', identified: true };
-      const unidentifiedItem = { ...TEST_UNIDENTIFIED_SWORD, id: 'unidentified-item', identified: false };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [identifiedItem, unidentifiedItem]
-        })
-      }));
-
-      const unidentified = component.getUnidentifiedItems();
-
-      expect(unidentified.length).toBe(1);
-      expect(unidentified[0].id).toBe(unidentifiedItem.id);
-    });
-
-    it('getCursedItems returns only identified cursed items', () => {
-      const cursedIdentified: Item = {
-        ...TEST_CURSED_SWORD,
-        identified: true
-      };
-      const cursedUnidentified: Item = {
-        ...TEST_CURSED_SWORD,
-        id: 'cursed-unid',
-        identified: false
-      };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [cursedIdentified, cursedUnidentified]
-        })
-      }));
-
-      const cursed = component.getCursedItems();
-
-      // Only identified cursed items
-      expect(cursed.length).toBe(1);
-      expect(cursed[0].id).toBe(cursedIdentified.id);
     });
 
     it('partyGold returns correct party gold', () => {
@@ -790,117 +305,15 @@ describe('ShopComponent', () => {
     });
   });
 
-  describe('menu item states', () => {
-    beforeEach(() => {
-      component.selectCharacter('char-1');
-    });
-
-    it('disables sell when character has no items', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: []
-        })
-      }));
-
-      const menuItems = component.footerMenuItems();
-      const sellItem = menuItems.find(m => m.id === 'sell');
-
-      expect(sellItem?.enabled).toBe(false);
-    });
-
-    it('enables sell when character has items', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      const menuItems = component.footerMenuItems();
-      const sellItem = menuItems.find(m => m.id === 'sell');
-
-      expect(sellItem?.enabled).toBe(true);
-    });
-
-    it('disables identify when no unidentified items', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      const menuItems = component.footerMenuItems();
-      const identifyItem = menuItems.find(m => m.id === 'identify');
-
-      expect(identifyItem?.enabled).toBe(false);
-    });
-
-    it('enables identify when has unidentified items', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_UNIDENTIFIED_SWORD]
-        })
-      }));
-
-      const menuItems = component.footerMenuItems();
-      const identifyItem = menuItems.find(m => m.id === 'identify');
-
-      expect(identifyItem?.enabled).toBe(true);
-    });
-
-    it('disables uncurse when no identified cursed items', () => {
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [TEST_LONG_SWORD]
-        })
-      }));
-
-      const menuItems = component.footerMenuItems();
-      const uncurseItem = menuItems.find(m => m.id === 'uncurse');
-
-      expect(uncurseItem?.enabled).toBe(false);
-    });
-
-    it('enables uncurse when has identified cursed items', () => {
-      const cursedIdentified: Item = {
-        ...TEST_CURSED_SWORD,
-        id: 'cursed-identified',
-        identified: true
-      };
-
-      gameState.updateState(state => ({
-        ...state,
-        roster: new Map(state.roster).set('char-1', {
-          ...mockCharacter,
-          inventory: [cursedIdentified]
-        })
-      }));
-
-      const menuItems = component.footerMenuItems();
-      const uncurseItem = menuItems.find(m => m.id === 'uncurse');
-
-      expect(uncurseItem?.enabled).toBe(true);
-    });
-  });
-
   describe('character action handling', () => {
-    it('selects character on select action', () => {
+    it('selects character on buy action', () => {
       component.handleCharacterAction({
         characterId: 'char-1',
-        actionType: 'select'
+        actionType: 'buy'
       });
 
       expect(component.selectedCharacterId()).toBe('char-1');
-      expect(component.currentView()).toBe('main');
+      expect(component.currentView()).toBe('buy');
     });
 
     it('navigates to inspect on inspect action', () => {

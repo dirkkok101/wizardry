@@ -123,12 +123,11 @@ describe('Integration: Shop Flows', () => {
     component.selectCharacter('char-1')
   })
 
-  it('completes buy → sell flow with state persistence', () => {
+  it('completes buy flow with state persistence', () => {
     const initialGold = gameState.state().party.gold || 0
     const shopItems = component.shopInventory()
 
-    // BUY FLOW
-    component.handleFooterAction('buy')
+    // BUY FLOW - shop now goes directly to buy view
     expect(component.currentView()).toBe('buy')
 
     // Buy Long Sword
@@ -151,29 +150,9 @@ describe('Integration: Shop Flows', () => {
     expect(character.inventory.find(i => i.id === longSword.id)).toBeDefined()
     expect(character.inventory.find(i => i.id === dagger.id)).toBeDefined()
     expect(gameState.state().party.gold).toBe(initialGold - longSword.price - dagger.price)
-
-    // SELL FLOW
-    component.handleFooterAction('sell')
-    expect(component.currentView()).toBe('sell')
-
-    // Sell the Long Sword (50% of price)
-    const sellPrice = Math.floor(longSword.price * 0.5)
-    component.initiateSell(longSword.id)
-    component.confirmAction()
-
-    // Verify item removed and gold added
-    character = gameState.state().roster.get('char-1')!
-    expect(character.inventory.find(i => i.id === longSword.id)).toBeUndefined()
-    expect(character.inventory.find(i => i.id === dagger.id)).toBeDefined() // Dagger should still be there
-    expect(gameState.state().party.gold).toBe(
-      initialGold - longSword.price - dagger.price + sellPrice
-    )
-
-    // Verify view persisted
-    expect(component.currentView()).toBe('sell')
   })
 
-  it('maintains gold balance across multiple transactions', () => {
+  it('maintains gold balance across multiple purchases', () => {
     const initialGold = gameState.state().party.gold || 0
     const shopItems = component.shopInventory()
 
@@ -182,7 +161,6 @@ describe('Integration: Shop Flows', () => {
     const leatherArmor = shopItems.find(i => i.name === 'Leather Armor')!
 
     // Buy 2 items
-    component.handleFooterAction('buy')
     component.initiateBuy(dagger.id)
     component.confirmAction()
     component.initiateBuy(leatherArmor.id)
@@ -191,40 +169,32 @@ describe('Integration: Shop Flows', () => {
     // Verify gold after purchases
     expect(gameState.state().party.gold).toBe(initialGold - dagger.price - leatherArmor.price)
 
-    // Sell 1 item
-    component.handleFooterAction('sell')
-    const daggerSellPrice = Math.floor(dagger.price * 0.5)
-    component.initiateSell(dagger.id)
-    component.confirmAction()
-
-    // Verify gold after sale
-    expect(gameState.state().party.gold).toBe(initialGold - dagger.price - leatherArmor.price + daggerSellPrice)
-
     // Verify inventory state
     const character = gameState.state().roster.get('char-1')!
-    expect(character.inventory.length).toBe(1)
+    expect(character.inventory.length).toBe(2)
+    expect(character.inventory.find(i => i.id === dagger.id)).toBeDefined()
     expect(character.inventory.find(i => i.id === leatherArmor.id)).toBeDefined()
-    expect(character.inventory.find(i => i.id === dagger.id)).toBeUndefined()
   })
 
-  it('persists inventory changes across flow transitions', () => {
+  it('persists inventory changes across navigation', () => {
     const shopItems = component.shopInventory()
 
     // Buy an item
-    component.handleFooterAction('buy')
     const item1 = shopItems[0]
     component.initiateBuy(item1.id)
     component.confirmAction()
 
-    // Switch to sell view
-    component.handleFooterAction('sell')
+    // Go back to character selection
+    component.handleFooterAction('back')
+    expect(component.currentView()).toBe('character-select')
 
     // Item should still be in inventory
     const character = gameState.state().roster.get('char-1')!
     expect(character.inventory.find(i => i.id === item1.id)).toBeDefined()
 
-    // Switch to identify view
-    component.handleFooterAction('identify')
+    // Select character again
+    component.selectCharacter('char-1')
+    expect(component.currentView()).toBe('buy')
 
     // Item should still be there
     const character2 = gameState.state().roster.get('char-1')!

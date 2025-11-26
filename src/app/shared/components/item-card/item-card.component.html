@@ -38,6 +38,31 @@
       @if (showUseAction) {
         <button class="btn-use" (click)="handleAction('use')">Use</button>
       }
+
+      <!-- Shop context actions -->
+      @if (showSellButton) {
+        <button class="btn-sell" (click)="handleAction('sell')">
+          Sell ({{ sellPrice }}g)
+        </button>
+      }
+
+      @if (showIdentifyButton) {
+        <button
+          class="btn-identify"
+          (click)="handleAction('identify')"
+          [disabled]="!canAffordIdentify">
+          Identify ({{ identifyCost }}g)
+        </button>
+      }
+
+      @if (showUncurseButton) {
+        <button
+          class="btn-uncurse"
+          (click)="handleAction('uncurse')"
+          [disabled]="!canAffordUncurse">
+          Uncurse ({{ uncurseCost }}g)
+        </button>
+      }
     </div>
   }
 </div>
