@@ -602,12 +602,35 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.isAnimatingMessages.set(true)
     this.currentEventIndex = 0
 
-    // Track message index within current event and globally
-    let globalMessageIndex = 0
+    // Track message index within current event
     let eventMessageIndex = 0
     // Track whether we've applied state for the current event
     // (state is applied when first result message is shown)
     let stateAppliedForCurrentEvent = false
+
+    // Helper to finalize current event and move to next
+    const moveToNextEvent = () => {
+      // Ensure state is applied even if there were no result messages
+      if (!stateAppliedForCurrentEvent) {
+        const currentEvent = this.pendingEvents[this.currentEventIndex]
+        this.applyEventState(currentEvent)
+      }
+
+      // Move to next event
+      this.currentEventIndex++
+      eventMessageIndex = 0
+      stateAppliedForCurrentEvent = false
+
+      // If more events, continue after action delay
+      if (this.currentEventIndex < this.pendingEvents.length) {
+        this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
+      } else {
+        // All events done
+        this.isAnimatingMessages.set(false)
+        this.messageAnimationTimer = null
+        this.onRoundAnimationComplete()
+      }
+    }
 
     const processNextMessage = () => {
       // Check if all events processed
@@ -622,25 +645,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
       // Check if all messages in current event are shown
       if (eventMessageIndex >= currentEvent.messages.length) {
-        // Ensure state is applied even if there were no result messages
-        if (!stateAppliedForCurrentEvent) {
-          this.applyEventState(currentEvent)
-        }
-
-        // Move to next event
-        this.currentEventIndex++
-        eventMessageIndex = 0
-        stateAppliedForCurrentEvent = false
-
-        // If more events, continue after action delay
-        if (this.currentEventIndex < this.pendingEvents.length) {
-          this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
-        } else {
-          // All events done
-          this.isAnimatingMessages.set(false)
-          this.messageAnimationTimer = null
-          this.onRoundAnimationComplete()
-        }
+        moveToNextEvent()
         return
       }
 
@@ -657,9 +662,7 @@ export class CombatComponent implements OnInit, OnDestroy {
       }
 
       this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
-
       eventMessageIndex++
-      globalMessageIndex++
 
       // Determine delay for NEXT message
       if (eventMessageIndex < currentEvent.messages.length) {
@@ -670,25 +673,7 @@ export class CombatComponent implements OnInit, OnDestroy {
         this.messageAnimationTimer = setTimeout(processNextMessage, delay)
       } else {
         // Event messages done, move to next event
-        // Ensure state is applied even if last message wasn't a result message
-        if (!stateAppliedForCurrentEvent) {
-          this.applyEventState(currentEvent)
-          stateAppliedForCurrentEvent = true
-        }
-
-        this.currentEventIndex++
-        eventMessageIndex = 0
-        stateAppliedForCurrentEvent = false
-
-        if (this.currentEventIndex < this.pendingEvents.length) {
-          // More events - use action delay before next event's first message
-          this.messageAnimationTimer = setTimeout(processNextMessage, actionDelay)
-        } else {
-          // All done
-          this.isAnimatingMessages.set(false)
-          this.messageAnimationTimer = null
-          this.onRoundAnimationComplete()
-        }
+        moveToNextEvent()
       }
     }
 
