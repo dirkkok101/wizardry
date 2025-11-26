@@ -2,6 +2,7 @@ import { Character } from './Character'
 import { SceneType } from './SceneType'
 import { DungeonState } from './Dungeon'
 import { CombatState } from './Combat'
+import { Chest } from './Chest'
 
 /**
  * Party represents the player's adventuring party.
@@ -59,6 +60,7 @@ export interface GameState {
   encounterTriggered?: boolean // Set to true when an encounter is triggered (e.g., by kicking a door)
   combat?: CombatState // Active combat state (undefined when not in combat)
   bodies?: Map<string, Body> // Dead character bodies left in dungeon (characterId -> body location)
+  pendingChest?: Chest // Chest awaiting player interaction (from combat victory or exploration)
 }
 
 export interface SaveData {

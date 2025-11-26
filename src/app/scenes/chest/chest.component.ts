@@ -202,14 +202,23 @@ export class ChestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialize the chest - in production this would come from combat/exploration
+   * Initialize the chest from game state (set by combat victory or exploration)
    */
   private initializeChest(): void {
-    // TODO: Get chest from game state (set by combat victory or exploration)
-    // For now, create a test chest for development
     const state = this.gameState.state();
 
-    // Default position if not in dungeon
+    // Get chest from game state (set by combat victory or exploration)
+    if (state.pendingChest) {
+      this.chest.set(state.pendingChest);
+      this.logger.debug('[Chest] Using pending chest from game state:', state.pendingChest);
+
+      // Clear pending chest from state (consumed)
+      this.gameState.updateState(s => ({ ...s, pendingChest: undefined }));
+      return;
+    }
+
+    // Fallback for development/testing - generate a test chest
+    this.logger.warn('[Chest] No pending chest in state, generating test chest for development');
     const position = state.dungeon?.position ?? { x: 0, y: 0, facing: 'NORTH' as const };
     const mazeLevel = state.dungeon?.currentLevel ?? 1;
 
@@ -221,7 +230,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     );
 
     this.chest.set(chest);
-    this.logger.debug('[Chest] Generated chest:', chest);
+    this.logger.debug('[Chest] Generated test chest:', chest);
   }
 
   /**

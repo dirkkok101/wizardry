@@ -12,6 +12,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { Race } from '@models/Race'
 import { Alignment } from '@models/Alignment'
 import { TrapType } from '@models/Trap'
+import { Chest, RewardTier } from '@models/Chest'
 import { createTestCharacter } from '@testing/test-factories'
 
 describe('ChestComponent', () => {
@@ -58,6 +59,23 @@ describe('ChestComponent', () => {
     })
   }
 
+  // Standard test chest - trapped with POISON NEEDLE
+  const testChest: Chest = {
+    id: 'test-chest-1',
+    trapped: true,
+    trapType: TrapType.POISON_NEEDLE,
+    trapIdentified: false,
+    trapDisarmed: false,
+    rewardTier: 3 as RewardTier,
+    contents: {
+      gold: 250,
+      items: []
+    },
+    sourcePosition: { x: 5, y: 5, facing: 'NORTH' },
+    mazeLevel: 1,
+    source: 'combat_victory'
+  }
+
   beforeEach(() => {
     // Reset random service before each test
     RandomService.resetSeed()
@@ -97,7 +115,9 @@ describe('ChestComponent', () => {
         defeatedEncounters: [],
         unlockedDoors: new Set(),
         openDoors: new Set()
-      }
+      },
+      // Provide a predictable test chest
+      pendingChest: { ...testChest }
     }))
   })
 
