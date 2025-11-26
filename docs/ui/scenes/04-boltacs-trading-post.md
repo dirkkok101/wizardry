@@ -349,11 +349,11 @@ function canSellItem(character: Character, itemIndex: number): { allowed: boolea
 
 **Identification Cost:**
 
+Flat 100 gold fee for any item.
+
 ```typescript
 function calculateIdentifyCost(item: Item): number {
-  const baseCost = 100
-  const levelMultiplier = item.powerLevel || 1
-  return baseCost * levelMultiplier
+  return 100  // Flat fee
 }
 ```
 
@@ -415,11 +415,19 @@ function canIdentifyItem(character: Character, item: Item): { allowed: boolean; 
 
 **Uncurse Cost:**
 
+Per original Wizardry 1 mechanics, uncurse cost is half the item's price.
+Special/priceless items (price >= 100,000 or 0) use a flat rate of 150,000 gold.
+
 ```typescript
 function calculateUncurseCost(item: Item): number {
-  const baseCost = 500  // Expensive!
-  const levelMultiplier = item.powerLevel || 1
-  return baseCost * levelMultiplier
+  // Original Wizardry 1: uncurse cost is half the item's price
+  const SPECIAL_ITEM_UNCURSE_COST = 150000
+  const SPECIAL_ITEM_PRICE_THRESHOLD = 100000
+
+  if (item.price === 0 || item.price >= SPECIAL_ITEM_PRICE_THRESHOLD) {
+    return SPECIAL_ITEM_UNCURSE_COST
+  }
+  return Math.floor(item.price / 2)
 }
 ```
 

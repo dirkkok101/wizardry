@@ -380,7 +380,7 @@ describe('ShopService', () => {
       expect(uncursedItem.cursed).toBe(false)
     })
 
-    it('deducts correct gold for uncursing (500 base * power level)', () => {
+    it('deducts correct gold for uncursing (half item price)', () => {
       const character = createTestCharacter({ id: 'char-1', inventory: [cursedItem] })
       const state = {
         ...createTestGameState(),
@@ -395,7 +395,8 @@ describe('ShopService', () => {
       const result = ShopService.uncurseItem(state, 'char-1', 'cursed-item')
 
       expect(result.success).toBe(true)
-      expect(result.state!.party.gold).toBe(500) // 1000 - 500 (base cost)
+      // cursedItem.price = 300, uncurse cost = 150 (half price)
+      expect(result.state!.party.gold).toBe(850) // 1000 - 150
     })
 
     it('returns error if item is not cursed', () => {
@@ -446,14 +447,35 @@ describe('ShopService', () => {
   })
 
   describe('calculateUncursePrice', () => {
-    it('returns 500 gold base cost for items without power level', () => {
+    it('returns half item price for normal items', () => {
+      // mockItem.price = 200
       const item = { ...mockItem, cursed: true }
-      expect(ShopService.calculateUncursePrice(item)).toBe(500)
+      expect(ShopService.calculateUncursePrice(item)).toBe(100) // 200 / 2
     })
 
-    it('multiplies by power level when present', () => {
-      const item = { ...mockItem, cursed: true, powerLevel: 3 }
-      expect(ShopService.calculateUncursePrice(item)).toBe(1500) // 500 * 3
+    it('returns 150000 for special/priceless items (price >= 100000)', () => {
+      const item = { ...mockItem, cursed: true, price: 150000 }
+      expect(ShopService.calculateUncursePrice(item)).toBe(150000)
+    })
+
+    it('returns 150000 for items with no price', () => {
+      const item = { ...mockItem, cursed: true, price: 0 }
+      expect(ShopService.calculateUncursePrice(item)).toBe(150000)
+    })
+
+    it('floors the result for odd prices', () => {
+      const item = { ...mockItem, cursed: true, price: 75 }
+      expect(ShopService.calculateUncursePrice(item)).toBe(37) // floor(75 / 2)
+    })
+
+    it('returns half price for items just below threshold (99,999)', () => {
+      const item = { ...mockItem, cursed: true, price: 99999 }
+      expect(ShopService.calculateUncursePrice(item)).toBe(49999) // floor(99999 / 2)
+    })
+
+    it('returns 150000 for items at exact threshold (100,000)', () => {
+      const item = { ...mockItem, cursed: true, price: 100000 }
+      expect(ShopService.calculateUncursePrice(item)).toBe(150000)
     })
   })
 })
