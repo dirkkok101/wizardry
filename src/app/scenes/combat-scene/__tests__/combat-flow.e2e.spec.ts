@@ -11,6 +11,22 @@ import {
 } from '@testing/test-factories'
 import { setCombatMessageDelay } from '@config/CombatSettings'
 import { RandomService } from '@services/RandomService'
+import { ItemDataLoader } from '@services/ItemDataLoader'
+import { ItemType, ItemSlot } from '@models/ItemType'
+import { Item } from '@models/Item'
+
+// Mock item for item drops during victory
+const mockDropItem: Item = {
+  id: 'dagger',
+  name: 'Dagger',
+  type: ItemType.WEAPON,
+  slot: ItemSlot.WEAPON,
+  price: 10,
+  damage: 4,
+  cursed: false,
+  identified: true,
+  equipped: false
+}
 
 describe('Combat Flow E2E', () => {
   let component: CombatComponent
@@ -23,6 +39,9 @@ describe('Combat Flow E2E', () => {
     jest.useFakeTimers()
     // Use small delay to test animation code path without slowing tests
     setCombatMessageDelay(10)
+
+    // Mock ItemDataLoader.getItem for item drops during victory
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockDropItem)
 
     TestBed.configureTestingModule({
       imports: [CombatComponent]

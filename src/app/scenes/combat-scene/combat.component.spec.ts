@@ -8,6 +8,22 @@ import { Router } from '@angular/router'
 import { VictoryService } from '@services/VictoryService'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { setCombatMessageDelay, setActionResultDelay } from '@config/CombatSettings'
+import { ItemDataLoader } from '@services/ItemDataLoader'
+import { ItemType, ItemSlot } from '@models/ItemType'
+import { Item } from '@models/Item'
+
+// Mock item for item drops during victory
+const mockDropItem: Item = {
+  id: 'dagger',
+  name: 'Dagger',
+  type: ItemType.WEAPON,
+  slot: ItemSlot.WEAPON,
+  price: 10,
+  damage: 4,
+  cursed: false,
+  identified: true,
+  equipped: false
+}
 
 describe('CombatComponent', () => {
   let component: CombatComponent
@@ -21,6 +37,9 @@ describe('CombatComponent', () => {
     // Use small delays to test animation code path without slowing tests
     setCombatMessageDelay(10)
     setActionResultDelay(10)
+
+    // Mock ItemDataLoader.getItem for item drops during victory
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockDropItem)
 
     TestBed.configureTestingModule({
       imports: [CombatComponent]

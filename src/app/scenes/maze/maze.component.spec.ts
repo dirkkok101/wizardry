@@ -8,7 +8,9 @@ import { EncounterService } from '@services/EncounterService';
 import { CombatService } from '@services/CombatService';
 import { MonsterService } from '@services/MonsterService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
+import { ItemDataLoader } from '@services/ItemDataLoader';
 import { SceneType } from '@models/SceneType';
+import { ItemType, ItemSlot } from '@models/ItemType';
 import { createTestCharacter } from '@testing/test-factories';
 
 // Mock TextureAtlasService module
@@ -689,6 +691,18 @@ describe('MazeComponent - Tile Inspection', () => {
   let fixture: ComponentFixture<MazeComponent>;
   let gameState: GameStateService;
 
+  // Mock item for tile inspection tests
+  const mockPotionItem = {
+    id: 'potion',
+    name: 'Health Potion',
+    type: ItemType.CONSUMABLE,
+    slot: ItemSlot.ACCESSORY,
+    price: 50,
+    cursed: false,
+    identified: true,
+    equipped: false
+  };
+
   beforeEach(() => {
     // Restore all mocks to prevent interference from previous describe blocks.
     // This is needed because DungeonService.loadLevel mocks from other blocks
@@ -696,6 +710,9 @@ describe('MazeComponent - Tile Inspection', () => {
     // Note: This also restores WebGL mocks from beforeAll, but the component
     // handles WebGL initialization failure gracefully.
     jest.restoreAllMocks();
+
+    // Mock ItemDataLoader.getItem to return our test item
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockPotionItem);
 
     TestBed.configureTestingModule({
       imports: [MazeComponent]

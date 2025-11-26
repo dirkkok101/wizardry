@@ -405,10 +405,13 @@ export class ShopComponent implements OnInit {
     const charId = this.selectedCharacterId()!;
     const partyGold = this.partyGold();
 
+    // Create a copy of the item for the character's inventory
+    const itemCopy: Item = { ...item, equipped: false };
+
     this.gameState.updateState(state => {
       const updatedChar = {
         ...character,
-        inventory: [...character.inventory, item.id]
+        inventory: [...character.inventory, itemCopy]
       };
 
       return {
@@ -439,7 +442,7 @@ export class ShopComponent implements OnInit {
     this.gameState.updateState(state => {
       const updatedChar = {
         ...character,
-        inventory: character.inventory.filter(id => id !== itemId)
+        inventory: character.inventory.filter(i => i.id !== itemId)
       };
 
       return {
