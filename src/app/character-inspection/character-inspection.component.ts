@@ -9,6 +9,7 @@ import { InventoryService } from '../../services/InventoryService'
 import { SceneNavigationService } from '../../services/SceneNavigationService'
 import { SpellLearningService } from '../../services/SpellLearningService'
 import { SpellDataLoader } from '../../services/SpellDataLoader'
+import { LoadedSpell } from '../../types/SpellDefinition'
 import { GameStateQueries } from '../../utils/GameStateQueries'
 import { MessageService } from '../../services/MessageService'
 import { Character } from '../../types/Character'
@@ -415,7 +416,7 @@ export class CharacterInspectionComponent {
     return options
   })
 
-  onSpellSelected(spell: any): void {
+  onSpellSelected(spell: LoadedSpell): void {
     this.showSpellCastDialog.set(false)
     // Handle spell casting - would need target selection for single-target spells
     this.messages.showSuccess(`Cast ${spell.name}!`)

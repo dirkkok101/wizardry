@@ -1,8 +1,15 @@
 @if (visible && character) {
-  <div class="dialog-overlay" (click)="onBackdropClick()" tabindex="0" #dialogContent>
+  <div
+    class="dialog-overlay"
+    (click)="onBackdropClick()"
+    tabindex="0"
+    #dialogContent
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="spell-book-title">
     <div class="dialog-content" (click)="onDialogClick($event)">
       <div class="dialog-header">
-        <h2>{{ character.name }}'s Spell Book</h2>
+        <h2 id="spell-book-title">{{ character.name }}'s Spell Book</h2>
       </div>
 
       <div class="dialog-body">
@@ -52,7 +59,7 @@
       </div>
 
       <div class="dialog-footer">
-        <span class="instruction">Press any key to close</span>
+        <span class="instruction">Press ESC, Enter, or Space to close</span>
       </div>
     </div>
   </div>

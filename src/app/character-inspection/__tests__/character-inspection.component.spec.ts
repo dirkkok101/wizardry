@@ -230,3 +230,288 @@ describe('CharacterInspectionComponent', () => {
     done();
   });
 });
+
+describe('CharacterInspectionComponent mode detection', () => {
+  let gameState: GameStateService;
+  let router: Router;
+
+  const testCharacter: Character = createTestCharacter({
+    id: 'char-123',
+    name: 'Gandalf',
+    class: CharacterClass.MAGE
+  });
+
+  const createComponentWithParams = (params: Record<string, string>) => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [CharacterInspectionComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { queryParams: of(params) }
+        }
+      ]
+    });
+
+    const fixture = TestBed.createComponent(CharacterInspectionComponent);
+    const component = fixture.componentInstance;
+    gameState = TestBed.inject(GameStateService);
+    router = TestBed.inject(Router);
+
+    jest.spyOn(router, 'navigate');
+    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(null);
+
+    gameState.updateState(state => ({
+      ...state,
+      roster: new Map(state.roster).set('char-123', testCharacter)
+    }));
+
+    return { fixture, component };
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  describe('explicit mode parameter', () => {
+    it('uses TRAINING_GROUNDS mode from query param', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TRAINING_GROUNDS'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('TRAINING_GROUNDS');
+    });
+
+    it('uses TAVERN mode from query param', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TAVERN'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('TAVERN');
+    });
+
+    it('uses CAMP mode from query param', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'CAMP'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('CAMP');
+    });
+  });
+
+  describe('mode fallback from returnTo', () => {
+    it('infers TRAINING_GROUNDS from returnTo=training-grounds', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        returnTo: 'training-grounds'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('TRAINING_GROUNDS');
+    });
+
+    it('infers TAVERN from returnTo=tavern', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        returnTo: 'tavern'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('TAVERN');
+    });
+
+    it('infers CAMP from returnTo=maze', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        returnTo: 'maze'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('CAMP');
+    });
+
+    it('defaults to TAVERN when returnTo is unknown', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        returnTo: 'castle-menu'
+      });
+      fixture.detectChanges();
+
+      expect(component.mode()).toBe('TAVERN');
+    });
+  });
+
+  describe('mode-based behavior', () => {
+    it('shows Use button only in CAMP mode', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'CAMP'
+      });
+      fixture.detectChanges();
+
+      expect(component.showUseButton()).toBe(true);
+    });
+
+    it('hides Use button in TAVERN mode', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TAVERN'
+      });
+      fixture.detectChanges();
+
+      expect(component.showUseButton()).toBe(false);
+    });
+
+    it('hides item actions in TRAINING_GROUNDS mode', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TRAINING_GROUNDS'
+      });
+      fixture.detectChanges();
+
+      expect(component.showItemActions()).toBe(false);
+    });
+
+    it('shows item actions in TAVERN mode', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TAVERN'
+      });
+      fixture.detectChanges();
+
+      expect(component.showItemActions()).toBe(true);
+    });
+
+    it('shows item actions in CAMP mode', () => {
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'CAMP'
+      });
+      fixture.detectChanges();
+
+      expect(component.showItemActions()).toBe(true);
+    });
+  });
+
+  describe('character actions by mode', () => {
+    it('includes read-spells action for caster with spells in all modes', () => {
+      const casterWithSpells = createTestCharacter({
+        id: 'char-123',
+        class: CharacterClass.MAGE,
+        knownSpells: ['halito']
+      });
+
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TAVERN'
+      });
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-123', casterWithSpells)
+      }));
+
+      fixture.detectChanges();
+
+      const actions = component.characterActions();
+      expect(actions.some(a => a.type === 'read-spells')).toBe(true);
+    });
+
+    it('excludes read-spells action for non-caster', () => {
+      const fighter = createTestCharacter({
+        id: 'char-123',
+        class: CharacterClass.FIGHTER,
+        knownSpells: []
+      });
+
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TAVERN'
+      });
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-123', fighter)
+      }));
+
+      fixture.detectChanges();
+
+      const actions = component.characterActions();
+      expect(actions.some(a => a.type === 'read-spells')).toBe(false);
+    });
+
+    it('includes cast-spell action in CAMP mode for caster with spell points', () => {
+      const casterWithPoints = createTestCharacter({
+        id: 'char-123',
+        class: CharacterClass.MAGE,
+        knownSpells: ['halito'],
+        spellPoints: {
+          mage: {
+            level1: { current: 3, max: 5 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      });
+
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'CAMP'
+      });
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-123', casterWithPoints)
+      }));
+
+      fixture.detectChanges();
+
+      const actions = component.characterActions();
+      expect(actions.some(a => a.type === 'cast-spell')).toBe(true);
+    });
+
+    it('excludes cast-spell action in TAVERN mode', () => {
+      const casterWithPoints = createTestCharacter({
+        id: 'char-123',
+        class: CharacterClass.MAGE,
+        knownSpells: ['halito'],
+        spellPoints: {
+          mage: {
+            level1: { current: 3, max: 5 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      });
+
+      const { fixture, component } = createComponentWithParams({
+        characterId: 'char-123',
+        mode: 'TAVERN'
+      });
+
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set('char-123', casterWithPoints)
+      }));
+
+      fixture.detectChanges();
+
+      const actions = component.characterActions();
+      expect(actions.some(a => a.type === 'cast-spell')).toBe(false);
+    });
+  });
+});

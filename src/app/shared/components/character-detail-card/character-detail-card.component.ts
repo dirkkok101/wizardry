@@ -7,7 +7,7 @@ import { StatusBadgeComponent } from '../status-badge/status-badge.component'
 import { SpellPointsDisplayComponent } from '../spell-points-display/spell-points-display.component'
 import { CharacterActionsComponent } from '../character-actions/character-actions.component'
 import { SpellLearningService } from '../../../../services/SpellLearningService'
-import { LevelUpService } from '../../../../services/LevelUpService'
+import { LevelUpService, MAX_LEVEL } from '../../../../services/LevelUpService'
 
 export type InspectionMode = 'TRAINING_GROUNDS' | 'TAVERN' | 'CAMP'
 
@@ -83,7 +83,7 @@ export class CharacterDetailCardComponent {
    * Check if character can still level up
    */
   get canStillLevel(): boolean {
-    return this.character.level < 13 // MAX_LEVEL
+    return this.character.level < MAX_LEVEL
   }
 
   /**

@@ -22,7 +22,7 @@ interface LevelUpResult {
   levelUpData: LevelUpData
 }
 
-const MAX_LEVEL = 13
+export const MAX_LEVEL = 13
 
 // Class XP multipliers (lower = faster leveling)
 const CLASS_XP_MULTIPLIERS: Record<CharacterClass, number> = {
