@@ -65,51 +65,35 @@ export class TempleComponent implements OnInit {
    */
   getCharacterActions = (character: Character): CharacterAction[] => {
     const actions: CharacterAction[] = [{ type: 'inspect', label: 'Inspect' }];
-    const tithe = this.getServiceCostForStatus(character);
-    const partyGold = GameStateQueries.partyGold(this.gameState.state());
-    const canAfford = partyGold >= tithe;
+    const serviceType = this.getServiceTypeForStatus(character.status);
 
-    switch (character.status) {
-      case CharacterStatus.POISONED:
-        actions.push({
-          type: 'cure-poison',
-          label: `Cure Poison (${tithe}g)`,
-          enabled: canAfford
-        });
-        break;
-      case CharacterStatus.PARALYZED:
-        actions.push({
-          type: 'cure-paralysis',
-          label: `Cure Paralysis (${tithe}g)`,
-          enabled: canAfford
-        });
-        break;
-      case CharacterStatus.DEAD:
-        actions.push({
-          type: 'resurrect',
-          label: `Resurrect (${tithe}g)`,
-          enabled: canAfford
-        });
-        break;
-      case CharacterStatus.ASHES:
-        actions.push({
-          type: 'restore',
-          label: `Restore (${tithe}g)`,
-          enabled: canAfford
-        });
-        break;
+    if (serviceType) {
+      const tithe = TempleService.calculateTithe(character, serviceType);
+      const partyGold = GameStateQueries.partyGold(this.gameState.state());
+      const canAfford = partyGold >= tithe;
+      const actionId = this.getActionIdFromServiceType(serviceType);
+      const serviceName = this.getServiceName(serviceType);
+
+      actions.push({
+        type: actionId,
+        label: `${serviceName} (${tithe}g)`,
+        enabled: canAfford
+      });
     }
 
     return actions;
   };
 
   /**
-   * Get the service cost for a character based on their status
+   * Map service type to action ID
    */
-  private getServiceCostForStatus(character: Character): number {
-    const serviceType = this.getServiceTypeForStatus(character.status);
-    if (!serviceType) return 0;
-    return TempleService.calculateTithe(character, serviceType);
+  private getActionIdFromServiceType(serviceType: ServiceType): string {
+    switch (serviceType) {
+      case ServiceType.CURE_POISON: return 'cure-poison';
+      case ServiceType.CURE_PARALYSIS: return 'cure-paralysis';
+      case ServiceType.RESURRECT: return 'resurrect';
+      case ServiceType.RESTORE: return 'restore';
+    }
   }
 
   /**
@@ -125,42 +109,16 @@ export class TempleComponent implements OnInit {
     }
   }
 
-  readonly footerMenuItems = computed((): MenuItem[] => {
-    const afflicted = this.afflictedCharacters();
-
-    return [
-      {
-        id: 'cure-poison',
-        label: 'Cure Poison',
-        shortcut: 'P',
-        enabled: afflicted.some(c => c.status === CharacterStatus.POISONED)
-      },
-      {
-        id: 'cure-paralysis',
-        label: 'Cure Paralysis',
-        shortcut: 'A',
-        enabled: afflicted.some(c => c.status === CharacterStatus.PARALYZED)
-      },
-      {
-        id: 'resurrect',
-        label: 'Resurrect',
-        shortcut: 'R',
-        enabled: afflicted.some(c => c.status === CharacterStatus.DEAD)
-      },
-      {
-        id: 'restore',
-        label: 'Restore',
-        shortcut: 'S',
-        enabled: afflicted.some(c => c.status === CharacterStatus.ASHES)
-      },
-      {
-        id: 'return',
-        label: 'Return to Castle (ESC)',
-        shortcut: 'ESC',
-        enabled: true
-      }
-    ];
-  });
+  // Footer menu only contains party-level actions (navigation)
+  // Character-specific actions (services) are on the character cards
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    {
+      id: 'return',
+      label: 'Return to Castle',
+      shortcut: 'ESC',
+      enabled: true
+    }
+  ]);
 
   ngOnInit(): void {
     this.messages.clear();
@@ -171,55 +129,21 @@ export class TempleComponent implements OnInit {
   }
 
   handleFooterAction(itemId: string): void {
-    this.messages.clear();
-
     if (itemId === 'return') {
       this.navigation.returnToCastle();
-      return;
-    }
-
-    const serviceType = this.getServiceTypeFromId(itemId);
-    if (!serviceType) return;
-
-    const afflicted = this.afflictedCharacters();
-    const matchingCharacters = afflicted.filter(c => {
-      switch (serviceType) {
-        case ServiceType.CURE_POISON: return c.status === CharacterStatus.POISONED;
-        case ServiceType.CURE_PARALYSIS: return c.status === CharacterStatus.PARALYZED;
-        case ServiceType.RESURRECT: return c.status === CharacterStatus.DEAD;
-        case ServiceType.RESTORE: return c.status === CharacterStatus.ASHES;
-        default: return false;
-      }
-    });
-
-    if (matchingCharacters.length === 0) {
-      return; // Menu item should be disabled, but safety check
-    }
-
-    if (matchingCharacters.length === 1) {
-      // Auto-select when only one character matches
-      const char = matchingCharacters[0];
-      const tithe = TempleService.calculateTithe(char, serviceType);
-      this.pendingService.set({ type: serviceType, characterId: char.id });
-      this.confirmationMessage.set(`${this.getServiceActionText(serviceType)} ${char.name}? (Cost: ${tithe} gold)`);
-      this.showConfirmation.set(true);
-    } else {
-      // Multiple characters - prompt user to select from cards
-      const serviceName = this.getServiceName(serviceType);
-      this.messages.showError(`Multiple characters need ${serviceName}. Click on a character card to select.`);
     }
   }
 
   /**
-   * Get human-readable service name
+   * Get human-readable service name for button labels
    */
   private getServiceName(service: ServiceType): string {
     switch (service) {
       case ServiceType.CURE_POISON: return 'Cure Poison';
       case ServiceType.CURE_PARALYSIS: return 'Cure Paralysis';
-      case ServiceType.RESURRECT: return 'Resurrection';
-      case ServiceType.RESTORE: return 'Restoration';
-      default: return 'service';
+      case ServiceType.RESURRECT: return 'Resurrect';
+      case ServiceType.RESTORE: return 'Restore';
+      default: return 'Service';
     }
   }
 

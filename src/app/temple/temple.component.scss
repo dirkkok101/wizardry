@@ -39,4 +39,10 @@
     color: var(--color-success, #0c0);
     border: 1px solid var(--color-success, #0c0);
   }
+
+  &.info {
+    background-color: var(--color-info-bg, rgba(0, 136, 204, 0.1));
+    color: var(--color-info, #08c);
+    border: 1px solid var(--color-info, #08c);
+  }
 }

@@ -18,7 +18,10 @@
     }
 
     @if (messages.hasMessage()) {
-      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      <div class="message"
+           [class.error]="messages.isError()"
+           [class.success]="messages.isSuccess()"
+           [class.info]="messages.message()?.type === 'info'">
         {{ messages.messageText() }}
       </div>
     }
