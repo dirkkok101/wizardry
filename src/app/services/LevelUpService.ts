@@ -1,5 +1,5 @@
-import { Character } from '@types/Character'
-import { CharacterClass } from '@types/CharacterClass'
+import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
 import { RandomService } from './RandomService'
 
 interface StatIncreases {

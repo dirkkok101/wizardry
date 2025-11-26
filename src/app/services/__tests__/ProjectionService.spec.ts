@@ -1,6 +1,6 @@
 import { ProjectionService } from '../ProjectionService'
 import { PlayerStateService } from '../PlayerStateService'
-import { Vector3 } from '@types/Dungeon'
+import { Vector3 } from '@models/Dungeon'
 
 describe('ProjectionService', () => {
   describe('worldToView', () => {

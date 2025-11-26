@@ -1,6 +1,6 @@
 import { SpellLearningService } from '../SpellLearningService'
 import { createTestCharacter } from '@testing/test-factories'
-import { CharacterClass } from '@types/CharacterClass'
+import { CharacterClass } from '@models/CharacterClass'
 
 // Note: Real spell data is loaded from data/spells/ via setup-jest.ts
 // This follows the project philosophy: "No mocks for services - test with real data"

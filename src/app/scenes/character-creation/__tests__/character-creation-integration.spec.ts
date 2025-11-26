@@ -4,9 +4,9 @@ import { CharacterCreationComponent } from '../character-creation.component';
 import { GameStateService } from '@services/GameStateService';
 import { RaceService } from '@services/RaceService';
 import { ClassService } from '@services/ClassService';
-import { Race } from '@types/Race';
-import { Alignment } from '@types/Alignment';
-import { CharacterClass } from '@types/CharacterClass';
+import { Race } from '@models/Race';
+import { Alignment } from '@models/Alignment';
+import { CharacterClass } from '@models/CharacterClass';
 
 // Access the CreationStep enum from the component
 enum CreationStep {

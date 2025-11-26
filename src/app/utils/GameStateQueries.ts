@@ -1,6 +1,6 @@
-import { GameState } from '@types/GameState';
-import { Character } from '@types/Character';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { GameState } from '@models/GameState';
+import { Character } from '@models/Character';
+import { CharacterStatus } from '@models/CharacterStatus';
 
 /**
  * GameStateQueries - Pure utility functions for querying game state

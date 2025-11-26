@@ -1,5 +1,5 @@
-import { Character } from '@types/Character'
-import { GameState } from '@types/GameState'
+import { Character } from '@models/Character'
+import { GameState } from '@models/GameState'
 import * as PartyService from './PartyService'
 
 export enum RoomType {

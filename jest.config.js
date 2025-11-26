@@ -12,7 +12,7 @@ module.exports = {
   moduleNameMapper: {
     '^@app/(.*)$': '<rootDir>/src/app/$1',
     '^@services/(.*)$': '<rootDir>/src/app/services/$1',
-    '^@types/(.*)$': '<rootDir>/src/app/types/$1',
+    '^@models/(.*)$': '<rootDir>/src/app/types/$1',
     '^@scenes/(.*)$': '<rootDir>/src/app/scenes/$1',
     '^@shared/(.*)$': '<rootDir>/src/app/shared/$1',
     '^@utils/(.*)$': '<rootDir>/src/app/utils/$1',

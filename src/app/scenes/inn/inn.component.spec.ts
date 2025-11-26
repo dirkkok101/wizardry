@@ -3,10 +3,10 @@ import { InnComponent } from './inn.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
-import { SceneType } from '@types/SceneType';
-import { Character } from '@types/Character';
-import { CharacterClass } from '@types/CharacterClass';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { SceneType } from '@models/SceneType';
+import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
+import { CharacterStatus } from '@models/CharacterStatus';
 import { RoomType } from '@services/InnService';
 import { createTestCharacter } from '@testing/test-factories';
 

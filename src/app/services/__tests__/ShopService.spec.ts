@@ -1,6 +1,6 @@
 import { ShopService } from '../ShopService'
-import { Item } from '@types/Item'
-import { ItemType, ItemSlot } from '@types/ItemType'
+import { Item } from '@models/Item'
+import { ItemType, ItemSlot } from '@models/ItemType'
 import { createTestGameState, createTestCharacter } from '@testing/test-factories'
 
 describe('ShopService', () => {

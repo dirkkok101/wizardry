@@ -3,8 +3,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { GameState, SaveData } from '@types/GameState'
-import { Character } from '@types/Character'
+import { GameState, SaveData } from '@models/GameState'
+import { Character } from '@models/Character'
 
 const SAVE_KEY = 'wizardry_save'
 const SAVE_VERSION = '1.0.0'

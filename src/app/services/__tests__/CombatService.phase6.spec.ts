@@ -2,8 +2,8 @@
 import { CombatService } from '../CombatService'
 import { SpellCastingService } from '../SpellCastingService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
-import { Character } from '@types/Character'
-import { Combatant } from '@types/Combat'
+import { Character } from '@models/Character'
+import { Combatant } from '@models/Combat'
 
 describe('CombatService - Phase 6: Healing & Support Spells', () => {
   describe('Healing Spells', () => {

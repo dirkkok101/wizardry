@@ -1,5 +1,5 @@
 import { RaceService } from '../RaceService'
-import { Race } from '@types/Race'
+import { Race } from '@models/Race'
 
 describe('RaceService Integration', () => {
   beforeAll(async () => {

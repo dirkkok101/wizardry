@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { SceneTitleComponent } from './scene-title.component';
 import { GameStateService } from '@services/GameStateService';
 import { signal } from '@angular/core';
-import { GameState } from '@types/GameState';
+import { GameState } from '@models/GameState';
 
 describe('SceneTitleComponent', () => {
   let component: SceneTitleComponent;

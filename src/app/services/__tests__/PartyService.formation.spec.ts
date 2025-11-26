@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import * as PartyService from '../PartyService';
-import { GameState } from '@types/GameState';
+import { GameState } from '@models/GameState';
 import { createTestGameState, createTestCharacter } from '@testing/test-factories';
 
 describe('PartyService - Formation Movement', () => {

@@ -1,6 +1,6 @@
 import { ClassService } from '../ClassService'
-import { CharacterClass } from '@types/CharacterClass'
-import { Alignment } from '@types/Alignment'
+import { CharacterClass } from '@models/CharacterClass'
+import { Alignment } from '@models/Alignment'
 
 describe('ClassService', () => {
   beforeAll(async () => {

@@ -1,4 +1,4 @@
-import { Vector3, Vector2, PlayerState } from '@types/Dungeon'
+import { Vector3, Vector2, PlayerState } from '@models/Dungeon'
 
 /**
  * Service for perspective projection transformations

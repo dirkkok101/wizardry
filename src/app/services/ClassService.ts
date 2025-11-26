@@ -1,5 +1,5 @@
-import { CharacterClass, ClassData, getClassId, getAttacksForLevel, parseAlignmentRestrictions } from '@types/CharacterClass'
-import { Alignment } from '@types/Alignment'
+import { CharacterClass, ClassData, getClassId, getAttacksForLevel, parseAlignmentRestrictions } from '@models/CharacterClass'
+import { Alignment } from '@models/Alignment'
 import { ClassDataLoader, LoadedClassData } from './ClassDataLoader'
 
 class ClassServiceClass {

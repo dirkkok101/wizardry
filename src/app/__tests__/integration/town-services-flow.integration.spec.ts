@@ -6,9 +6,9 @@ import { PartyService } from '@services/PartyService';
 import { InnService, RoomType } from '@services/InnService';
 import { LevelUpService } from '@services/LevelUpService';
 import { createTestCharacter } from '@testing/test-factories';
-import { Alignment } from '@types/Alignment';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { CharacterClass } from '@types/CharacterClass';
+import { Alignment } from '@models/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { CharacterClass } from '@models/CharacterClass';
 
 /**
  * Town Services Flow Integration Tests

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { SpellPointsDisplayComponent } from '../spell-points-display.component'
-import { CharacterSpellPoints } from '@types/SpellPoints'
+import { CharacterSpellPoints } from '@models/SpellPoints'
 
 describe('SpellPointsDisplayComponent', () => {
   let component: SpellPointsDisplayComponent

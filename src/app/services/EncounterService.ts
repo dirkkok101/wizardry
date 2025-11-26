@@ -1,5 +1,5 @@
-import { EncounterTable, MonsterEntry } from '@types/Dungeon'
-import { MonsterGroup, MonsterInstance, ENCOUNTER_CONFIG } from '@types/Combat'
+import { EncounterTable, MonsterEntry } from '@models/Dungeon'
+import { MonsterGroup, MonsterInstance, ENCOUNTER_CONFIG } from '@models/Combat'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { RandomService } from './RandomService'

@@ -9,7 +9,7 @@ import {
   AfterViewChecked
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { Character } from '@types/Character'
+import { Character } from '@models/Character'
 import { SpellData } from '@services/SpellCastingService'
 
 export interface SpellOption {

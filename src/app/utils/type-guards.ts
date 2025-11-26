@@ -1,4 +1,4 @@
-import { Character } from '@types/Character'
+import { Character } from '@models/Character'
 
 /**
  * Type guard to check if a value is a Character

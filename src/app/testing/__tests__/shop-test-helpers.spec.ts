@@ -1,11 +1,11 @@
 // src/test-helpers/__tests__/shop-test-helpers.spec.ts
 import { addUnidentifiedItemsToCharacter, identifyItemForCharacter } from '../shop-test-helpers'
-import { GameState } from '@types/GameState'
-import { Character } from '@types/Character'
-import { CharacterClass } from '@types/CharacterClass'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { Race } from '@types/Race'
-import { Alignment } from '@types/Alignment'
+import { GameState } from '@models/GameState'
+import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { Race } from '@models/Race'
+import { Alignment } from '@models/Alignment'
 
 describe('Shop Test Helpers', () => {
   const mockCharacter: Character = {

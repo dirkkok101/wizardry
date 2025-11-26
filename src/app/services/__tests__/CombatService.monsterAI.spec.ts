@@ -1,8 +1,8 @@
 // Test for monster AI
 import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster, createTestGameStateWithCombat } from '@testing/test-factories'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { CharacterClass } from '@types/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { CharacterClass } from '@models/CharacterClass'
 
 describe('CombatService - Monster AI', () => {
   describe('selectMonsterAction', () => {

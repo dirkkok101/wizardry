@@ -1,10 +1,10 @@
 import { ResurrectionService } from '../ResurrectionService'
-import { ServiceType } from '@types/ServiceType'
-import { Character } from '@types/Character'
-import { CharacterClass } from '@types/CharacterClass'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { Race } from '@types/Race'
-import { Alignment } from '@types/Alignment'
+import { ServiceType } from '@models/ServiceType'
+import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { Race } from '@models/Race'
+import { Alignment } from '@models/Alignment'
 
 describe('ResurrectionService', () => {
   const createChar = (vitality: number): Character => ({

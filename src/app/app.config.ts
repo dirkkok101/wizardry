@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection, APP_INITIALIZER } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { GameInitializationService } from '../services/GameInitializationService';
+import { GameInitializationService } from '@services/GameInitializationService';
 
 /**
  * Initialize game data (races, classes) at app startup.

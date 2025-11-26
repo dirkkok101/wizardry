@@ -1,7 +1,7 @@
-import { Party, GameState } from '@types/GameState'
-import { Character } from '@types/Character'
-import { Alignment } from '@types/Alignment'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { Party, GameState } from '@models/GameState'
+import { Character } from '@models/Character'
+import { Alignment } from '@models/Alignment'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { isDefined } from '@utils/type-guards'
 
 interface ValidationResult {

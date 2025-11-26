@@ -3,8 +3,8 @@ import { GameStateService } from '@services/GameStateService';
 import { SaveService } from '@services/SaveService';
 import { PartyService } from '@services/PartyService';
 import { createTestCharacter, createEmptyParty } from '@testing/test-factories';
-import { CharacterClass } from '@types/CharacterClass';
-import { GameState } from '@types/GameState';
+import { CharacterClass } from '@models/CharacterClass';
+import { GameState } from '@models/GameState';
 
 /**
  * Performance Verification Tests

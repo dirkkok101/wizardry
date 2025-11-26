@@ -1,5 +1,5 @@
 import { DungeonService } from '../DungeonService'
-import { Position, LevelData, TileData } from '@types/Dungeon'
+import { Position, LevelData, TileData } from '@models/Dungeon'
 import { LevelFileSchema, ValidatedLevelDataSchema } from '@validation/dungeon-schemas'
 
 describe('DungeonService', () => {

@@ -10,11 +10,11 @@ import { SceneFooterComponent } from '@shared/components/scene-footer/scene-foot
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
-import { CharacterActionEvent, CharacterAction, CharacterField } from '@types/CharacterCardTypes';
-import { Character } from '@types/Character';
-import { SceneType } from '@types/SceneType';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { ServiceType } from '@types/ServiceType';
+import { CharacterActionEvent, CharacterAction, CharacterField } from '@models/CharacterCardTypes';
+import { Character } from '@models/Character';
+import { SceneType } from '@models/SceneType';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { ServiceType } from '@models/ServiceType';
 
 /**
  * Temple Component (Temple of Cant)

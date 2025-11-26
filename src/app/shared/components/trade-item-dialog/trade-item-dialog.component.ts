@@ -1,8 +1,8 @@
 import { Component, Input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Character } from '@types/Character';
-import { Item } from '@types/Item';
+import { Character } from '@models/Character';
+import { Item } from '@models/Item';
 import { InventoryService } from '@services/InventoryService';
 
 @Component({

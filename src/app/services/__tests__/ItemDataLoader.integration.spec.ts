@@ -1,6 +1,6 @@
 import { ItemDataLoader } from '../ItemDataLoader';
-import { ItemType, ItemSlot } from '@types/ItemType';
-import { CharacterClass } from '@types/CharacterClass';
+import { ItemType, ItemSlot } from '@models/ItemType';
+import { CharacterClass } from '@models/CharacterClass';
 import * as fs from 'fs';
 import * as path from 'path';
 

@@ -1,7 +1,7 @@
 // src/services/__tests__/SpellCastingService.spec.ts
 import { SpellCastingService } from '../SpellCastingService'
 import { createTestCharacter, createTestMonster } from '@testing/test-factories'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 // Note: Real spell data is loaded from data/spells/ via setup-jest.ts
 // This follows the project philosophy: "No mocks for services - test with real data"

@@ -1,5 +1,5 @@
-import { GameState } from '@types/GameState'
-import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '@types/Dungeon'
+import { GameState } from '@models/GameState'
+import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '@models/Dungeon'
 import { DungeonService } from './DungeonService'
 import { RandomService } from './RandomService'
 

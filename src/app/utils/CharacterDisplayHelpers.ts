@@ -1,6 +1,6 @@
-import { CharacterStatus } from '@types/CharacterStatus';
-import { Character } from '@types/Character';
-import { CharacterField } from '@types/CharacterCardTypes';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { Character } from '@models/Character';
+import { CharacterField } from '@models/CharacterCardTypes';
 
 /**
  * Formats character hit points as "current/max" string.

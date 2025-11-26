@@ -1,6 +1,6 @@
 import { ItemDataLoader } from '../ItemDataLoader';
-import { Item } from '@types/Item';
-import { ItemType, ItemSlot } from '@types/ItemType';
+import { Item } from '@models/Item';
+import { ItemType, ItemSlot } from '@models/ItemType';
 import { AssetLoadingService } from '../AssetLoadingService';
 import * as fs from 'fs';
 import * as path from 'path';

@@ -1,5 +1,5 @@
-import { GameState } from '@types/GameState';
-import { LevelData, Position } from '@types/Dungeon';
+import { GameState } from '@models/GameState';
+import { LevelData, Position } from '@models/Dungeon';
 import { DungeonMovementService } from './DungeonMovementService';
 import { DungeonService } from './DungeonService';
 import { RandomService } from './RandomService';

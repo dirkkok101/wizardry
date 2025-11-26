@@ -2,9 +2,9 @@
 import { CombatService } from '../CombatService'
 import { RandomService } from '../RandomService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
-import { MonsterGroup } from '@types/Combat'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { CharacterClass } from '@types/CharacterClass'
+import { MonsterGroup } from '@models/Combat'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { CharacterClass } from '@models/CharacterClass'
 
 describe('CombatService - Phase 2 Features', () => {
   describe('Critical Hit Formula', () => {

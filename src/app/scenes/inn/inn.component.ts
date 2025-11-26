@@ -12,10 +12,10 @@ import { SceneFooterComponent } from '@shared/components/scene-footer/scene-foot
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { MenuComponent, MenuItem } from '@shared/components/menu/menu.component';
-import { CharacterActionEvent } from '@types/CharacterCardTypes';
-import { SceneType } from '@types/SceneType';
-import { Character } from '@types/Character';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { CharacterActionEvent } from '@models/CharacterCardTypes';
+import { SceneType } from '@models/SceneType';
+import { Character } from '@models/Character';
+import { CharacterStatus } from '@models/CharacterStatus';
 
 interface LevelUpDisplayData {
   newLevel: number;

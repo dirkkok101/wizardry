@@ -1,12 +1,12 @@
 // src/test-helpers/test-factories.ts
-import { Character } from '@types/Character'
-import { Party, GameState } from '@types/GameState'
-import { Race } from '@types/Race'
-import { CharacterClass } from '@types/CharacterClass'
-import { Alignment } from '@types/Alignment'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { SceneType } from '@types/SceneType'
-import { MonsterInstance, CombatState, CombatCommand, MonsterGroup } from '@types/Combat'
+import { Character } from '@models/Character'
+import { Party, GameState } from '@models/GameState'
+import { Race } from '@models/Race'
+import { CharacterClass } from '@models/CharacterClass'
+import { Alignment } from '@models/Alignment'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { SceneType } from '@models/SceneType'
+import { MonsterInstance, CombatState, CombatCommand, MonsterGroup } from '@models/Combat'
 import { MonsterService } from '@services/MonsterService'
 
 /**

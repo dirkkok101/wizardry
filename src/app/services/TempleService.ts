@@ -1,7 +1,7 @@
-import { Character } from '@types/Character'
-import { ServiceType } from '@types/ServiceType'
-import { GameState } from '@types/GameState'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { Character } from '@models/Character'
+import { ServiceType } from '@models/ServiceType'
+import { GameState } from '@models/GameState'
+import { CharacterStatus } from '@models/CharacterStatus'
 import * as PartyService from './PartyService'
 import { ResurrectionService } from './ResurrectionService'
 

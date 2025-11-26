@@ -1,5 +1,5 @@
 import { GameInitializationService } from '../GameInitializationService'
-import { SceneType } from '@types/SceneType'
+import { SceneType } from '@models/SceneType'
 import { RaceService } from '../RaceService'
 import { ClassService } from '../ClassService'
 import * as fs from 'fs'

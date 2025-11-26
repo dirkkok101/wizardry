@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { SceneFooterComponent } from './scene-footer.component';
-import { MenuItem } from '@types/MenuItem';
+import { MenuItem } from '@models/MenuItem';
 
 describe('SceneFooterComponent', () => {
   it('renders menu with provided items', () => {

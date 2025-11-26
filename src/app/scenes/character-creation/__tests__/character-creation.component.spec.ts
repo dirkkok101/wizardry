@@ -6,9 +6,9 @@ import { RaceService } from '@services/RaceService';
 import { ClassService } from '@services/ClassService';
 import { CharacterService } from '@services/CharacterService';
 import { CharacterCreationService } from '@services/CharacterCreationService';
-import { Race } from '@types/Race';
-import { CharacterClass } from '@types/CharacterClass';
-import { Alignment } from '@types/Alignment';
+import { Race } from '@models/Race';
+import { CharacterClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
 
 // Access CreationStep from component class
 type CreationStep = 'SELECT_RACE' | 'SELECT_ALIGNMENT' | 'ROLL_ALLOCATE_CLASS' | 'NAME_CHARACTER';

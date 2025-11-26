@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
-import { GameState } from '@types/GameState';
-import { SceneType } from '@types/SceneType';
+import { GameState } from '@models/GameState';
+import { SceneType } from '@models/SceneType';
 import { GameInitializationService } from './GameInitializationService';
 import { SaveService } from './SaveService';
 import { LoggerService } from './LoggerService';

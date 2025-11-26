@@ -1,7 +1,7 @@
 import { EncounterService } from '../EncounterService'
 import { MonsterDataLoader } from '../MonsterDataLoader'
 import { RandomService } from '../RandomService'
-import { ENCOUNTER_CONFIG } from '@types/Combat'
+import { ENCOUNTER_CONFIG } from '@models/Combat'
 
 // Load monster data before tests
 beforeAll(async () => {

@@ -1,7 +1,7 @@
 // Phase 4 Status Effects Tests
 import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 describe('CombatService - Phase 4: Status Effects', () => {
   describe('Status Effect Helpers', () => {

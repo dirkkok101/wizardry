@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TextureAtlas, TextureSet } from '@types/texture.types';
+import { TextureAtlas, TextureSet } from '@models/texture.types';
 import * as TextureAtlasService from './TextureAtlasService';
 
 /**

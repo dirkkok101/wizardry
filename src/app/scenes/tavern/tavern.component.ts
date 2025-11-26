@@ -5,12 +5,12 @@ import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { CharacterCardComponent } from '@shared/components/character-card/character-card.component';
-import { CharacterAction, CharacterActionEvent } from '@types/CharacterCardTypes';
+import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '@services/PartyService';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { CharacterStatus } from '@models/CharacterStatus';
 
 @Component({
   selector: 'app-tavern',

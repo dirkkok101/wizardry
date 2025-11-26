@@ -1,7 +1,7 @@
 // src/test-helpers/shop-test-helpers.ts
-import { GameState } from '@types/GameState'
-import { Character } from '@types/Character'
-import { Item } from '@types/Item'
+import { GameState } from '@models/GameState'
+import { Character } from '@models/Character'
+import { Item } from '@models/Item'
 import { UNIDENTIFIED_ITEMS } from '@config/shop-inventory'
 
 /**

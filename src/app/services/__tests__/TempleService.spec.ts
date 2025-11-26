@@ -1,13 +1,13 @@
 import { TempleService } from '../TempleService'
 import { RandomService } from '../RandomService'
-import { ServiceType } from '@types/ServiceType'
-import { Character } from '@types/Character'
-import { CharacterClass } from '@types/CharacterClass'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { Race } from '@types/Race'
-import { Alignment } from '@types/Alignment'
-import { GameState } from '@types/GameState'
-import { Party } from '@types/Party'
+import { ServiceType } from '@models/ServiceType'
+import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { Race } from '@models/Race'
+import { Alignment } from '@models/Alignment'
+import { GameState } from '@models/GameState'
+import { Party } from '@models/Party'
 
 describe('TempleService', () => {
   const mockCharacter: Character = {

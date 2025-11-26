@@ -5,7 +5,7 @@ import {
   Texture,
   TextureSet,
   DEFAULT_TEXTURE_CONFIG
-} from '@types/texture.types';
+} from '@models/texture.types';
 
 describe('TextureAtlasService', () => {
   // ============================================================================

@@ -10,8 +10,8 @@ import { MenuItem } from '@shared/components/menu/menu.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { CharacterActionEvent } from '@types/CharacterCardTypes';
-import { SceneType } from '@types/SceneType';
+import { CharacterActionEvent } from '@models/CharacterCardTypes';
+import { SceneType } from '@models/SceneType';
 
 /**
  * Castle Menu Component

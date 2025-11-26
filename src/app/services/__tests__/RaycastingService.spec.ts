@@ -1,5 +1,5 @@
 import { RaycastingService } from '../RaycastingService';
-import { LevelData, TileData, PlayerState } from '@types/Dungeon';
+import { LevelData, TileData, PlayerState } from '@models/Dungeon';
 
 describe('RaycastingService', () => {
   let service: RaycastingService;

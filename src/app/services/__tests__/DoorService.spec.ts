@@ -1,7 +1,7 @@
 import { DoorService } from '../DoorService';
-import { LevelData, Position } from '@types/Dungeon';
+import { LevelData, Position } from '@models/Dungeon';
 import { createTestCharacter, createTestGameState } from '@testing/test-factories';
-import { GameState } from '@types/GameState';
+import { GameState } from '@models/GameState';
 
 describe('DoorService', () => {
   describe('canKickDoor', () => {

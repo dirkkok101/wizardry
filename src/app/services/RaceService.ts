@@ -1,7 +1,7 @@
-import { Race, RaceData, getRaceId } from '@types/Race'
-import { SaveType } from '@types/SavingThrow'
+import { Race, RaceData, getRaceId } from '@models/Race'
+import { SaveType } from '@models/SavingThrow'
 import { AssetLoadingService } from './AssetLoadingService'
-import { validateAndLoadRaceData } from '@types/RaceValidation'
+import { validateAndLoadRaceData } from '@models/RaceValidation'
 
 class RaceServiceClass {
   private raceData: Map<string, RaceData> | null = null

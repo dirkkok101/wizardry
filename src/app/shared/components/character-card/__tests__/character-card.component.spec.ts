@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CharacterCardComponent } from '../character-card.component';
 import { createTestCharacter } from '@testing/test-factories';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { CharacterStatus } from '@models/CharacterStatus';
 
 describe('CharacterCardComponent', () => {
   let component: CharacterCardComponent;

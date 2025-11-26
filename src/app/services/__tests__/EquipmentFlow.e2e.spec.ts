@@ -1,12 +1,12 @@
 import { ItemDataLoader } from '../ItemDataLoader';
 import { EquipmentService } from '../EquipmentService';
 import { InventoryService } from '../InventoryService';
-import { Character } from '@types/Character';
-import { CharacterClass } from '@types/CharacterClass';
-import { Race } from '@types/Race';
-import { Alignment } from '@types/Alignment';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { ItemType, ItemSlot } from '@types/ItemType';
+import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
+import { Race } from '@models/Race';
+import { Alignment } from '@models/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { ItemType, ItemSlot } from '@models/ItemType';
 import * as fs from 'fs';
 import * as path from 'path';
 

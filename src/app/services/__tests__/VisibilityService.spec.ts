@@ -1,5 +1,5 @@
 import { VisibilityService } from '../VisibilityService'
-import { LevelData, TileData, Position } from '@types/Dungeon'
+import { LevelData, TileData, Position } from '@models/Dungeon'
 
 describe('VisibilityService', () => {
   const createTestLevel = (): LevelData => ({

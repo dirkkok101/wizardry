@@ -8,7 +8,7 @@ import { EncounterService } from '@services/EncounterService';
 import { CombatService } from '@services/CombatService';
 import { MonsterService } from '@services/MonsterService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
-import { SceneType } from '@types/SceneType';
+import { SceneType } from '@models/SceneType';
 import { createTestCharacter } from '@testing/test-factories';
 
 // Mock TextureAtlasService module

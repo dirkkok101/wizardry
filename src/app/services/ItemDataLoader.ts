@@ -1,7 +1,7 @@
-import { Item } from '@types/Item';
-import { ItemType, ItemSlot } from '@types/ItemType';
-import { CharacterClass } from '@types/CharacterClass';
-import { Alignment } from '@types/Alignment';
+import { Item } from '@models/Item';
+import { ItemType, ItemSlot } from '@models/ItemType';
+import { CharacterClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
 import { ItemSchema, ValidatedItem } from '@validation/item-schema';
 import { AssetLoadingService } from './AssetLoadingService';
 

@@ -1,4 +1,4 @@
-import { LevelData, Position, WallSegment, WallType } from '@types/Dungeon'
+import { LevelData, Position, WallSegment, WallType } from '@models/Dungeon'
 import { DungeonService } from './DungeonService'
 
 /**

@@ -1,4 +1,4 @@
-import { Race } from '@types/Race'
+import { Race } from '@models/Race'
 import { RaceService } from './RaceService'
 import { RandomService } from './RandomService'
 

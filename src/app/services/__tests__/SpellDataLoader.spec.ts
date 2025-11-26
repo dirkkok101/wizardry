@@ -1,5 +1,5 @@
 import { SpellDataLoader } from '../SpellDataLoader'
-import { SpellDefinition } from '@types/SpellDefinition'
+import { SpellDefinition } from '@models/SpellDefinition'
 
 // Note: global.fetch is mocked in setup-jest.ts to load real spell data from data/spells/
 // This follows the project philosophy: "No mocks for services - test with real data"

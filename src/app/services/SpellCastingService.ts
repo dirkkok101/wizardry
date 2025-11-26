@@ -1,9 +1,9 @@
 // src/services/SpellCastingService.ts
-import { Character } from '@types/Character'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { SpellEffect, Combatant } from '@types/Combat'
+import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { SpellEffect, Combatant } from '@models/Combat'
 import { SpellDataLoader } from './SpellDataLoader'
-import { LoadedSpell } from '@types/SpellDefinition'
+import { LoadedSpell } from '@models/SpellDefinition'
 import { RandomService } from './RandomService'
 
 // Spell targeting types

@@ -1,7 +1,7 @@
 // src/data/shop-inventory.ts
-import { Item } from '@types/Item'
-import { ItemType, ItemSlot } from '@types/ItemType'
-import { CharacterClass } from '@types/CharacterClass'
+import { Item } from '@models/Item'
+import { ItemType, ItemSlot } from '@models/ItemType'
+import { CharacterClass } from '@models/CharacterClass'
 
 /**
  * Shop inventory - items available for purchase at Boltac's Trading Post

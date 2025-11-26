@@ -3,12 +3,12 @@ import { TempleComponent } from './temple.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
-import { SceneType } from '@types/SceneType';
-import { Character } from '@types/Character';
-import { CharacterClass } from '@types/CharacterClass';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { Race } from '@types/Race';
-import { Alignment } from '@types/Alignment';
+import { SceneType } from '@models/SceneType';
+import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { Race } from '@models/Race';
+import { Alignment } from '@models/Alignment';
 
 describe('TempleComponent', () => {
   let component: TempleComponent;

@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { CharacterDetailCardComponent, InspectionMode } from '../character-detail-card.component'
 import { createTestCharacter } from '@testing/test-factories'
-import { CharacterClass } from '@types/CharacterClass'
+import { CharacterClass } from '@models/CharacterClass'
 import { SpellLearningService } from '@services/SpellLearningService'
 import { LevelUpService, MAX_LEVEL } from '@services/LevelUpService'
-import { CharacterAction } from '@types/CharacterCardTypes'
+import { CharacterAction } from '@models/CharacterCardTypes'
 
 describe('CharacterDetailCardComponent', () => {
   let component: CharacterDetailCardComponent

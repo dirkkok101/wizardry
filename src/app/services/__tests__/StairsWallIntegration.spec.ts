@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { DungeonService } from '../DungeonService';
 import { DungeonMovementService } from '../DungeonMovementService';
-import { GameState } from '@types/GameState';
-import { DungeonState, LevelData, TileData } from '@types/Dungeon';
-import { SceneType } from '@types/SceneType';
+import { GameState } from '@models/GameState';
+import { DungeonState, LevelData, TileData } from '@models/Dungeon';
+import { SceneType } from '@models/SceneType';
 import { createTestCharacter, createTestGameState } from '@testing/test-factories';
 
 /**

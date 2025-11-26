@@ -1,6 +1,6 @@
-import { Character } from '@types/Character';
-import { Item } from '@types/Item';
-import { ItemSlot } from '@types/ItemType';
+import { Character } from '@models/Character';
+import { Item } from '@models/Item';
+import { ItemSlot } from '@models/ItemType';
 import { ItemDataLoader } from './ItemDataLoader';
 import { InventoryService } from './InventoryService';
 

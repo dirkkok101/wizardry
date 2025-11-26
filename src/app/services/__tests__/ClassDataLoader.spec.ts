@@ -1,5 +1,5 @@
 import { ClassDataLoader } from '../ClassDataLoader'
-import { CharacterClass } from '@types/CharacterClass'
+import { CharacterClass } from '@models/CharacterClass'
 
 describe('ClassDataLoader', () => {
   beforeEach(() => {

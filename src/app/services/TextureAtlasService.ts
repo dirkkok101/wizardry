@@ -8,7 +8,7 @@ import {
   TextureRenderConfig,
   DEFAULT_TEXTURE_CONFIG,
   TextureError
-} from '@types/texture.types';
+} from '@models/texture.types';
 
 /**
  * TextureAtlasService - Pure function service for texture atlas operations.

@@ -3,8 +3,8 @@ import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
 import { DungeonService } from '@services/DungeonService';
 import { createTestGameState, createTestCharacter } from '@testing/test-factories';
-import { GameState } from '@types/GameState';
-import { LevelData, Position } from '@types/Dungeon';
+import { GameState } from '@models/GameState';
+import { LevelData, Position } from '@models/Dungeon';
 
 /**
  * Phase 5: Special Tiles - E2E Integration Tests

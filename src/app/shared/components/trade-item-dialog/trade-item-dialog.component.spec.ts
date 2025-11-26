@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TradeItemDialogComponent } from './trade-item-dialog.component';
-import { Character } from '@types/Character';
-import { Item } from '@types/Item';
-import { ItemType, ItemSlot } from '@types/ItemType';
+import { Character } from '@models/Character';
+import { Item } from '@models/Item';
+import { ItemType, ItemSlot } from '@models/ItemType';
 
 describe('TradeItemDialogComponent', () => {
   let component: TradeItemDialogComponent;

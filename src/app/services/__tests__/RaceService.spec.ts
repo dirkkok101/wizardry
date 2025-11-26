@@ -1,6 +1,6 @@
 import { RaceService } from '../RaceService'
-import { Race } from '@types/Race'
-import { EXPECTED_RACE_DATA } from '@types/RaceValidation'
+import { Race } from '@models/Race'
+import { EXPECTED_RACE_DATA } from '@models/RaceValidation'
 
 describe('RaceService', () => {
   beforeAll(async () => {

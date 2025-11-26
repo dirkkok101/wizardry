@@ -1,5 +1,5 @@
 import { PlayerStateService } from '../PlayerStateService'
-import { Position } from '@types/Dungeon'
+import { Position } from '@models/Dungeon'
 
 describe('PlayerStateService', () => {
   describe('fromPosition', () => {

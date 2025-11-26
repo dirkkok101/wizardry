@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CharacterAction, CharacterActionEvent } from '@types/CharacterCardTypes';
+import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { getDefaultActionLabel } from '@utils/CharacterDisplayHelpers';
 
 @Component({

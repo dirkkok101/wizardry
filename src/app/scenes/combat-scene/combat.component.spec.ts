@@ -2,11 +2,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { CombatComponent } from './combat'
 import { GameStateService } from '@services/GameStateService'
-import { SceneType } from '@types/SceneType'
+import { SceneType } from '@models/SceneType'
 import { createTestGameStateWithCombat, createTestCharacter } from '@testing/test-factories'
 import { Router } from '@angular/router'
 import { VictoryService } from '@services/VictoryService'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { setCombatMessageDelay, setActionResultDelay } from '@config/CombatSettings'
 
 describe('CombatComponent', () => {

@@ -1,5 +1,5 @@
 import { CharacterCreationService } from '../CharacterCreationService'
-import { Race } from '@types/Race'
+import { Race } from '@models/Race'
 import { RaceService } from '../RaceService'
 import * as fs from 'fs'
 import * as path from 'path'

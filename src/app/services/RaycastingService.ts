@@ -1,6 +1,6 @@
-import { LevelData, TileData, WallType } from '@types/Dungeon';
-import { PlayerState } from '@types/Dungeon';
-import { RayHit, WallDirection } from '@types/rendering.types';
+import { LevelData, TileData, WallType } from '@models/Dungeon';
+import { PlayerState } from '@models/Dungeon';
+import { RayHit, WallDirection } from '@models/rendering.types';
 
 /**
  * Raycasting service using DDA (Digital Differential Analyzer) algorithm.

@@ -9,8 +9,8 @@ import {
   AfterViewChecked
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { Character } from '@types/Character'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 export interface CharacterOption {
   character: Character

@@ -3,8 +3,8 @@ import { TavernComponent } from './tavern.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { Alignment } from '@types/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { Alignment } from '@models/Alignment';
 import { createTestCharacter } from '@testing/test-factories';
 
 describe('TavernComponent (redesigned)', () => {

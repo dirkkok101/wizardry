@@ -1,6 +1,6 @@
 import { DungeonMovementService } from '../DungeonMovementService'
-import { GameState } from '@types/GameState'
-import { Position, TileData } from '@types/Dungeon'
+import { GameState } from '@models/GameState'
+import { Position, TileData } from '@models/Dungeon'
 import { createTestCharacter, createTestGameState as createTestGameStateHelper } from '@testing/test-factories'
 
 // Test helper

@@ -1,7 +1,7 @@
 // src/services/VictoryService.ts
-import { MonsterInstance } from '@types/Combat'
-import { Character } from '@types/Character'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { MonsterInstance } from '@models/Combat'
+import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { RandomService } from './RandomService'
 
 export interface ItemDrop {

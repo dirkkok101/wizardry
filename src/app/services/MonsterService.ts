@@ -1,5 +1,5 @@
 // src/services/MonsterService.ts
-import { MonsterInstance } from '@types/Combat'
+import { MonsterInstance } from '@models/Combat'
 import { MonsterTemplate, AttackRange } from '@validation/MonsterSchema'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { RandomService } from './RandomService'

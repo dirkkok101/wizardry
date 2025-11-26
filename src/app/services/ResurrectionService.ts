@@ -1,5 +1,5 @@
-import { Character } from '@types/Character'
-import { ServiceType } from '@types/ServiceType'
+import { Character } from '@models/Character'
+import { ServiceType } from '@models/ServiceType'
 import { RandomService } from './RandomService'
 
 /**

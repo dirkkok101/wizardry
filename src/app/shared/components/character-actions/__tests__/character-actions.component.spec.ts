@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CharacterActionsComponent } from '../character-actions.component';
-import { CharacterAction } from '@types/CharacterCardTypes';
+import { CharacterAction } from '@models/CharacterCardTypes';
 
 describe('CharacterActionsComponent', () => {
   let component: CharacterActionsComponent;

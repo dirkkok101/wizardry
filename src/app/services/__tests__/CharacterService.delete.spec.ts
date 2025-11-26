@@ -1,7 +1,7 @@
 import { CharacterService } from '../CharacterService';
-import { GameState } from '@types/GameState';
+import { GameState } from '@models/GameState';
 import { createTestCharacter, createEmptyParty } from '@testing/test-factories';
-import { SceneType } from '@types/SceneType';
+import { SceneType } from '@models/SceneType';
 
 describe('CharacterService', () => {
   describe('deleteCharacter', () => {

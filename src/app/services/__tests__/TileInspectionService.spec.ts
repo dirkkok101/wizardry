@@ -1,6 +1,6 @@
 import { TileInspectionService } from '../TileInspectionService';
-import { LevelData, Position } from '@types/Dungeon';
-import { GameState } from '@types/GameState';
+import { LevelData, Position } from '@models/Dungeon';
+import { GameState } from '@models/GameState';
 import { createTestCharacter, createTestGameState } from '@testing/test-factories';
 
 describe('TileInspectionService', () => {

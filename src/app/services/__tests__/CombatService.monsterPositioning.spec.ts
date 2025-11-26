@@ -3,9 +3,9 @@ import { CombatService } from '../CombatService'
 import { MonsterService } from '../MonsterService'
 import { MonsterDataLoader } from '../MonsterDataLoader'
 import { EncounterService } from '../EncounterService'
-import { CombatState, MonsterGroup, MonsterInstance } from '@types/Combat'
-import { Character } from '@types/Character'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { CombatState, MonsterGroup, MonsterInstance } from '@models/Combat'
+import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 // Monsters are preloaded in setup-jest.ts via MonsterDataLoader.loadAllMonsters()
 // This follows the same pattern as SpellDataLoader

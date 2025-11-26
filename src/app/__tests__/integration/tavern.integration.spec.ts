@@ -4,8 +4,8 @@ import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { createTestCharacter } from '@testing/test-factories';
-import { Alignment } from '@types/Alignment';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { Alignment } from '@models/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
 
 describe('Tavern Integration Tests', () => {
   let component: TavernComponent;

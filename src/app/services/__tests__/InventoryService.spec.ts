@@ -1,11 +1,11 @@
 import { InventoryService } from '../InventoryService'
-import { Character } from '@types/Character'
-import { Item } from '@types/Item'
-import { ItemType, ItemSlot } from '@types/ItemType'
-import { CharacterClass } from '@types/CharacterClass'
-import { CharacterStatus } from '@types/CharacterStatus'
-import { Race } from '@types/Race'
-import { Alignment } from '@types/Alignment'
+import { Character } from '@models/Character'
+import { Item } from '@models/Item'
+import { ItemType, ItemSlot } from '@models/ItemType'
+import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { Race } from '@models/Race'
+import { Alignment } from '@models/Alignment'
 
 describe('InventoryService', () => {
   const mockItem: Item = {

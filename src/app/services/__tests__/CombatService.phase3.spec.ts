@@ -2,8 +2,8 @@
 import { CombatService } from '../CombatService'
 import { SpellCastingService } from '../SpellCastingService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
-import { MonsterGroup } from '@types/Combat'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { MonsterGroup } from '@models/Combat'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 describe('CombatService - Phase 3: Spell Casting', () => {
   describe('CAST_SPELL Action', () => {

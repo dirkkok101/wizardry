@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SaveService } from '../SaveService';
-import { GameState } from '@types/GameState';
-import { SceneType } from '@types/SceneType';
+import { GameState } from '@models/GameState';
+import { SceneType } from '@models/SceneType';
 import { GameInitializationService } from '../GameInitializationService';
 
 describe('SaveService - Slot Metadata', () => {

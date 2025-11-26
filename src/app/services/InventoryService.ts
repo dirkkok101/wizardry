@@ -1,5 +1,5 @@
-import { Character } from '@types/Character'
-import { Item } from '@types/Item'
+import { Character } from '@models/Character'
+import { Item } from '@models/Item'
 
 const MAX_INVENTORY_SIZE = 8
 

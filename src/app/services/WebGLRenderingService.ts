@@ -1,7 +1,7 @@
-import { LevelData, Position, WallSegment, DungeonState } from '@types/Dungeon';
-import { ViewportConfig } from '@types/rendering.types';
-import { UniformLocations, AttributeLocations, RenderableQuad } from '@types/webgl.types';
-import { TextureAtlas, TextureMetadata } from '@types/texture.types';
+import { LevelData, Position, WallSegment, DungeonState } from '@models/Dungeon';
+import { ViewportConfig } from '@models/rendering.types';
+import { UniformLocations, AttributeLocations, RenderableQuad } from '@models/webgl.types';
+import { TextureAtlas, TextureMetadata } from '@models/texture.types';
 import { VERTEX_SHADER } from '@rendering/shaders/dungeon.vert';
 import { FRAGMENT_SHADER } from '@rendering/shaders/dungeon.frag';
 import { MatrixService } from './MatrixService';

@@ -1,5 +1,5 @@
-import { SpellDefinition, LoadedSpell } from '@types/SpellDefinition'
-import { SpellFileData, SpellLevelData } from '@types/SpellFileData'
+import { SpellDefinition, LoadedSpell } from '@models/SpellDefinition'
+import { SpellFileData, SpellLevelData } from '@models/SpellFileData'
 import { SpellDefinitionSchema } from '@validation/spell-schema'
 import { getDataFileList } from './AssetLoadingService'
 

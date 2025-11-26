@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GameStateService } from './GameStateService';
 import { LoggerService } from './LoggerService';
-import { Command } from '@types/Command';
+import { Command } from '@models/Command';
 
 /**
  * CommandExecutorService handles execution of all game commands.

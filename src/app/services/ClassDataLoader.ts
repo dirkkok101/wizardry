@@ -1,5 +1,5 @@
-import { ClassData, CharacterClass, getClassId } from '@types/CharacterClass'
-import { ClassDataSchema } from '@types/CharacterClass.schema'
+import { ClassData, CharacterClass, getClassId } from '@models/CharacterClass'
+import { ClassDataSchema } from '@models/CharacterClass.schema'
 import { AssetLoadingService } from './AssetLoadingService'
 
 /**

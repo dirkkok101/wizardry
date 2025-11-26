@@ -4,11 +4,11 @@ import { of } from 'rxjs';
 import { CharacterInspectionComponent } from '../character-inspection.component';
 import { GameStateService } from '@services/GameStateService';
 import { ItemDataLoader } from '@services/ItemDataLoader';
-import { Character } from '@types/Character';
-import { CharacterClass } from '@types/CharacterClass';
-import { Alignment } from '@types/Alignment';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { Race } from '@types/Race';
+import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { Race } from '@models/Race';
 import { createTestCharacter } from '@testing/test-factories';
 
 describe('CharacterInspectionComponent', () => {

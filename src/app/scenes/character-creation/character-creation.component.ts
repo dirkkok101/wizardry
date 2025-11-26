@@ -10,9 +10,9 @@ import { CharacterCreationService, RolledStats, BaseStats } from '@services/Char
 import { SpellLearningService } from '@services/SpellLearningService';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
-import { Race, parseRace } from '@types/Race';
-import { CharacterClass, parseClass } from '@types/CharacterClass';
-import { Alignment } from '@types/Alignment';
+import { Race, parseRace } from '@models/Race';
+import { CharacterClass, parseClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
 import { MenuItem } from '@shared/components/menu/menu.component';
 
 enum CreationStep {

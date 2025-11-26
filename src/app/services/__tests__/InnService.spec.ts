@@ -1,6 +1,6 @@
 import { InnService, RoomType } from '../InnService'
 import { createTestCharacter, createTestGameState } from '@testing/test-factories'
-import { GameState } from '@types/GameState'
+import { GameState } from '@models/GameState'
 
 describe('InnService', () => {
   describe('getRoomCost', () => {

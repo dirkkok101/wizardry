@@ -3,8 +3,8 @@ import { TrainingGroundsComponent } from '../training-grounds.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { createTestCharacter, createEmptyParty } from '@testing/test-factories';
-import { SceneType } from '@types/SceneType';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { SceneType } from '@models/SceneType';
+import { CharacterStatus } from '@models/CharacterStatus';
 
 describe('TrainingGroundsComponent', () => {
   let component: TrainingGroundsComponent;

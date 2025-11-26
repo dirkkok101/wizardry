@@ -3,13 +3,13 @@ import { ShopComponent } from './shop.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
-import { SceneType } from '@types/SceneType';
-import { Character } from '@types/Character';
-import { Item } from '@types/Item';
-import { CharacterClass } from '@types/CharacterClass';
-import { Race } from '@types/Race';
-import { Alignment } from '@types/Alignment';
-import { CharacterStatus } from '@types/CharacterStatus';
+import { SceneType } from '@models/SceneType';
+import { Character } from '@models/Character';
+import { Item } from '@models/Item';
+import { CharacterClass } from '@models/CharacterClass';
+import { Race } from '@models/Race';
+import { Alignment } from '@models/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
 import { SHOP_INVENTORY, UNIDENTIFIED_ITEMS } from '@config/shop-inventory';
 
 describe('ShopComponent', () => {

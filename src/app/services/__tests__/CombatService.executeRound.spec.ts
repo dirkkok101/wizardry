@@ -1,7 +1,7 @@
 // Test for executeRound
 import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
-import { MonsterGroup } from '@types/Combat'
+import { MonsterGroup } from '@models/Combat'
 
 describe('CombatService.executeRound', () => {
   it('executes commands in initiative order', () => {

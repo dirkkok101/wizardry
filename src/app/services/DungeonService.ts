@@ -1,4 +1,4 @@
-import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls } from '@types/Dungeon'
+import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls } from '@models/Dungeon'
 import { ValidatedLevelDataSchema } from '@validation/dungeon-schemas'
 import { ZodError } from 'zod'
 

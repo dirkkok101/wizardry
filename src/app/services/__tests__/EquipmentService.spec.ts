@@ -1,9 +1,9 @@
 import { EquipmentService } from '../EquipmentService';
 import { ItemDataLoader } from '../ItemDataLoader';
-import { Character } from '@types/Character';
-import { Item } from '@types/Item';
-import { ItemType } from '@types/ItemType';
-import { ItemSlot } from '@types/ItemType';
+import { Character } from '@models/Character';
+import { Item } from '@models/Item';
+import { ItemType } from '@models/ItemType';
+import { ItemSlot } from '@models/ItemType';
 
 describe('EquipmentService', () => {
   let fighter: Character;

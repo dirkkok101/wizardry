@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { GameStateService } from '../GameStateService';
 import { SaveService } from '../SaveService';
-import { SceneType } from '@types/SceneType';
+import { SceneType } from '@models/SceneType';
 
 /**
  * Wait for a condition to become true with polling

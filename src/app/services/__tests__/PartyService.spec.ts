@@ -1,7 +1,7 @@
 import { PartyService } from '../PartyService'
 import { createTestCharacter, createEmptyParty, createPartyWithMembers } from '@testing/test-factories'
-import { Alignment } from '@types/Alignment'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { Alignment } from '@models/Alignment'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 describe('PartyService', () => {
   describe('canAddCharacterToParty', () => {

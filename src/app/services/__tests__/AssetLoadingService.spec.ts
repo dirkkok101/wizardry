@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { AssetLoadingService } from '../AssetLoadingService'
-import { RaceData } from '@types/Race'
-import { ClassData } from '@types/CharacterClass'
+import { RaceData } from '@models/Race'
+import { ClassData } from '@models/CharacterClass'
 
 // Mock HTMLImageElement
 global.Image = class MockImage {

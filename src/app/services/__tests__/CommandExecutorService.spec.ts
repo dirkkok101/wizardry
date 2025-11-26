@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CommandExecutorService } from '../CommandExecutorService';
-import { Command } from '@types/Command';
+import { Command } from '@models/Command';
 import { GameStateService } from '../GameStateService';
 import { SaveService } from '../SaveService';
 import { LoggerService } from '../LoggerService';

@@ -1,9 +1,9 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG } from '@types/Combat'
-import { Character } from '@types/Character'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG } from '@models/Combat'
+import { Character } from '@models/Character'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
-import { CharacterStatus } from '@types/CharacterStatus'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
 import { EncounterService } from './EncounterService'
 import { RandomService } from './RandomService'

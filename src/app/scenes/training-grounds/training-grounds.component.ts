@@ -6,15 +6,15 @@ import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { CharacterCardComponent } from '@shared/components/character-card/character-card.component';
-import { CharacterActionEvent } from '@types/CharacterCardTypes';
+import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
-import { Character } from '@types/Character';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { Party } from '@types/GameState';
-import { SceneType } from '@types/SceneType';
+import { Character } from '@models/Character';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { Party } from '@models/GameState';
+import { SceneType } from '@models/SceneType';
 
 interface CharacterWithStatus {
   character: Character;

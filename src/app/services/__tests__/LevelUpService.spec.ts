@@ -1,7 +1,7 @@
 import { LevelUpService } from '../LevelUpService'
 import { RandomService } from '../RandomService'
 import { createTestCharacter } from '@testing/test-factories'
-import { CharacterClass } from '@types/CharacterClass'
+import { CharacterClass } from '@models/CharacterClass'
 
 describe('LevelUpService', () => {
   describe('getXPRequirement', () => {

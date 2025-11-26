@@ -2,7 +2,7 @@ import { WebGLRenderingService } from '../WebGLRenderingService';
 import { DungeonService } from '../DungeonService';
 import { VisibilityService } from '../VisibilityService';
 import { PlayerStateService } from '../PlayerStateService';
-import { LevelData, Position } from '@types/Dungeon';
+import { LevelData, Position } from '@models/Dungeon';
 
 describe('WebGLRenderingService', () => {
   let canvas: HTMLCanvasElement;

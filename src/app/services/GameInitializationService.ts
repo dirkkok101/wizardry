@@ -3,8 +3,8 @@
  */
 
 import { isDevMode } from '@angular/core'
-import { GameState } from '@types/GameState'
-import { SceneType } from '@types/SceneType'
+import { GameState } from '@models/GameState'
+import { SceneType } from '@models/SceneType'
 import { RaceService } from './RaceService'
 import { ItemDataLoader } from './ItemDataLoader'
 import { DungeonService } from './DungeonService'

@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Character } from '@types/Character';
-import { CharacterField } from '@types/CharacterCardTypes';
+import { Character } from '@models/Character';
+import { CharacterField } from '@models/CharacterCardTypes';
 import { formatStatValue } from '@utils/CharacterDisplayHelpers';
 
 @Component({

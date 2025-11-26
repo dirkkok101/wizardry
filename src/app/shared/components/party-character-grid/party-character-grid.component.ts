@@ -2,9 +2,9 @@ import { Component, Input, Output, EventEmitter, computed, inject, ChangeDetecti
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { GameStateQueries } from '@utils/GameStateQueries';
-import { Character } from '@types/Character';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { CharacterField, CharacterAction, CharacterActionEvent } from '@types/CharacterCardTypes';
+import { Character } from '@models/Character';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { CharacterField, CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { CharacterCardComponent } from '../character-card/character-card.component';
 
 /**

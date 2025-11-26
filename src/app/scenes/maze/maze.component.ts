@@ -21,16 +21,16 @@ import { SpellCastingService, SpellData } from '@services/SpellCastingService';
 import { SpellLearningService } from '@services/SpellLearningService';
 import { moveCharacterUp, moveCharacterDown } from '@services/PartyService';
 import { GameStateQueries } from '@utils/GameStateQueries';
-import { SceneType } from '@types/SceneType';
+import { SceneType } from '@models/SceneType';
 import { MenuItem } from '@shared/components/menu/menu.component';
-import { ActiveSpell } from '@types/active-spell.types';
-import { GameState } from '@types/GameState';
-import { Character } from '@types/Character';
-import { CharacterStatus } from '@types/CharacterStatus';
-import { CharacterAction, CharacterActionEvent } from '@types/CharacterCardTypes';
-import { DungeonState } from '@types/Dungeon';
-import { TextureAtlas } from '@types/texture.types';
-import { ViewportConfig } from '@types/rendering.types';
+import { ActiveSpell } from '@models/active-spell.types';
+import { GameState } from '@models/GameState';
+import { Character } from '@models/Character';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
+import { DungeonState } from '@models/Dungeon';
+import { TextureAtlas } from '@models/texture.types';
+import { ViewportConfig } from '@models/rendering.types';
 import * as TextureAtlasService from '@services/TextureAtlasService';
 
 @Component({

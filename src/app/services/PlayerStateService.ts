@@ -1,4 +1,4 @@
-import { Position, Direction, PlayerState } from '@types/Dungeon'
+import { Position, Direction, PlayerState } from '@models/Dungeon'
 
 /**
  * Service for managing PlayerState transformations
