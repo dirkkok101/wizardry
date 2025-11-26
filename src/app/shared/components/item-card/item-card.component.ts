@@ -4,7 +4,7 @@ import { Item } from '../../../../types/Item';
 import { ItemSlot } from '../../../../types/ItemType';
 
 export interface ItemAction {
-  type: 'equip' | 'unequip' | 'trade' | 'drop';
+  type: 'equip' | 'unequip' | 'trade' | 'drop' | 'use';
   item: Item;
 }
 
@@ -20,6 +20,7 @@ export class ItemCardComponent {
   @Input() slot?: ItemSlot;
   @Input() isEquipped: boolean = false;
   @Input() showActions: boolean = true;
+  @Input() showUseButton: boolean = false;
 
   actionClick = output<ItemAction>();
 
@@ -91,5 +92,21 @@ export class ItemCardComponent {
 
   get showDropButton(): boolean {
     return this.showActions && !this.isEquipped && this.item !== null;
+  }
+
+  /**
+   * Check if item can be used (has effect and not equipped)
+   */
+  get canUse(): boolean {
+    return this.item !== null &&
+           !this.isEquipped &&
+           !!(this.item.effect || this.item.singleUse);
+  }
+
+  /**
+   * Show use button when allowed and item is usable
+   */
+  get showUseAction(): boolean {
+    return this.showActions && this.showUseButton && this.canUse;
   }
 }

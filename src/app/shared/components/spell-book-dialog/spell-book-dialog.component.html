@@ -1,0 +1,66 @@
+@if (visible && character) {
+  <div
+    class="dialog-overlay"
+    (click)="onBackdropClick()"
+    tabindex="0"
+    #dialogContent
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="spell-book-title">
+    <div class="dialog-content" (click)="onDialogClick($event)">
+      <div class="dialog-header">
+        <h2 id="spell-book-title">{{ character.name }}'s Spell Book</h2>
+      </div>
+
+      <div class="dialog-body">
+        @if (!hasAnySpells) {
+          <div class="no-spells">No spells learned yet.</div>
+        } @else {
+          <!-- Mage Spells -->
+          @if (hasMageSpells) {
+            <div class="spell-section mage">
+              <h3 class="section-title">Mage Spells</h3>
+              @for (levelGroup of mapToArray(mageSpellsByLevel); track levelGroup.level) {
+                <div class="spell-level">
+                  <span class="level-header">Level {{ levelGroup.level }}:</span>
+                  <div class="spell-list">
+                    @for (entry of levelGroup.spells; track entry.spell.id) {
+                      <div class="spell-entry">
+                        <span class="spell-name">{{ entry.spell.name }}</span>
+                        <span class="spell-desc">{{ entry.spell.description }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Priest Spells -->
+          @if (hasPriestSpells) {
+            <div class="spell-section priest">
+              <h3 class="section-title">Priest Spells</h3>
+              @for (levelGroup of mapToArray(priestSpellsByLevel); track levelGroup.level) {
+                <div class="spell-level">
+                  <span class="level-header">Level {{ levelGroup.level }}:</span>
+                  <div class="spell-list">
+                    @for (entry of levelGroup.spells; track entry.spell.id) {
+                      <div class="spell-entry">
+                        <span class="spell-name">{{ entry.spell.name }}</span>
+                        <span class="spell-desc">{{ entry.spell.description }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <div class="dialog-footer">
+        <span class="instruction">Press ESC, Enter, or Space to close</span>
+      </div>
+    </div>
+  </div>
+}

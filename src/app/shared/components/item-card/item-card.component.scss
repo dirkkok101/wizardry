@@ -94,4 +94,10 @@
     border-color: $color-error;
     color: $color-error;
   }
+
+  .btn-use {
+    border-color: $color-text-bright;
+    color: $color-text-bright;
+    background: rgba(0, 255, 0, 0.1);
+  }
 }

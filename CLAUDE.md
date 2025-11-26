@@ -84,6 +84,24 @@ The game uses explicit state machine transitions:
 
 Invalid transitions are prevented at the architecture level.
 
+### UI Action Pattern: Party vs Character
+
+All scenes follow a consistent action placement pattern:
+
+> **Party actions go in the footer menu. Character actions go on character/item cards.**
+
+| Action Type | Location | Examples |
+|-------------|----------|----------|
+| **Party Actions** | Footer menu (SceneFooterComponent) | Return/Leave, Pool Gold, Movement (maze) |
+| **Character Actions** | Character card buttons | Inspect, Cast Spell, Class Change, Delete |
+| **Item Actions** | Item card buttons | Equip, Unequip, Trade, Drop, Use |
+
+This pattern ensures:
+- **Consistency** across all scenes (Temple, Tavern, Shop, Maze, Inspection)
+- **Clear mental model** for users - footer = party, cards = individual
+- **Keyboard shortcuts** for party actions (ESC, P, W/A/S/D)
+- **Click interactions** for individual actions on cards
+
 ## Service Layer Guidelines
 
 Services are **pure functions** organized by domain:

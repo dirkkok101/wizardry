@@ -1,0 +1,108 @@
+@use '../../../../styles/variables' as *;
+
+.character-detail-card {
+  border: 2px solid $color-border;
+  padding: 1rem;
+  background: $color-bg-black;
+  color: $color-text-green;
+  font-family: $font-mono;
+}
+
+.card-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.classification {
+  color: $color-text-bright;
+  font-weight: bold;
+}
+
+.separator {
+  color: $color-text-dim;
+}
+
+.alignment {
+  color: $color-text-bright;
+}
+
+.card-divider {
+  border-top: 1px solid $color-border;
+  margin: 0.75rem 0;
+}
+
+.attributes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+}
+
+.stat {
+  font-size: 0.95rem;
+  color: $color-text-green;
+
+  em {
+    font-style: normal;
+    font-weight: bold;
+    color: $color-amber;
+  }
+}
+
+.combat-section {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.combat-stat {
+  font-size: 0.95rem;
+  color: $color-text-green;
+
+  em {
+    font-style: normal;
+    font-weight: bold;
+    color: $color-amber;
+  }
+}
+
+.xp-progress {
+  text-align: center;
+  font-size: 0.875rem;
+  color: $color-text-dim;
+  margin-top: 0.5rem;
+
+  &.max-level {
+    color: $color-amber;
+    font-weight: bold;
+  }
+}
+
+.xp-remaining {
+  color: $color-text-green;
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .stat-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .combat-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
