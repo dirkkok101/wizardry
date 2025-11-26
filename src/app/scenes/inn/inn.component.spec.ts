@@ -299,7 +299,7 @@ describe('InnComponent', () => {
       component.levelUpData.set({
         newLevel: 2,
         hpIncrease: 5,
-        statIncreases: {},
+        statChanges: {},
         newSpells: []
       });
       component.selectedCharacterId.set('char-1');
@@ -340,7 +340,7 @@ describe('InnComponent', () => {
       component.levelUpData.set({
         newLevel: 2,
         hpIncrease: 5,
-        statIncreases: {},
+        statChanges: {},
         newSpells: []
       });
 
@@ -353,7 +353,7 @@ describe('InnComponent', () => {
       component.levelUpData.set({
         newLevel: 2,
         hpIncrease: 5,
-        statIncreases: {},
+        statChanges: {},
         newSpells: []
       });
 

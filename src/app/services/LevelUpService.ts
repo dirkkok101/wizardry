@@ -2,7 +2,7 @@ import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
 import { RandomService } from './RandomService'
 
-interface StatIncreases {
+interface StatChanges {
   strength?: number
   intelligence?: number
   piety?: number
@@ -14,7 +14,7 @@ interface StatIncreases {
 interface LevelUpData {
   newLevel: number
   hpIncrease: number
-  statIncreases: StatIncreases
+  statChanges: StatChanges
 }
 
 interface LevelUpResult {
@@ -46,74 +46,6 @@ const CLASS_HIT_DICE: Record<CharacterClass, number> = {
   [CharacterClass.BISHOP]: 6,
   [CharacterClass.THIEF]: 6,
   [CharacterClass.MAGE]: 4
-}
-
-// Stat increase chances by class (% per stat per level)
-const CLASS_STAT_CHANCES: Record<CharacterClass, Record<string, number>> = {
-  [CharacterClass.FIGHTER]: {
-    strength: 5,
-    intelligence: 1,
-    piety: 1,
-    vitality: 4,
-    agility: 3,
-    luck: 2
-  },
-  [CharacterClass.MAGE]: {
-    strength: 1,
-    intelligence: 5,
-    piety: 2,
-    vitality: 2,
-    agility: 2,
-    luck: 2
-  },
-  [CharacterClass.PRIEST]: {
-    strength: 2,
-    intelligence: 2,
-    piety: 5,
-    vitality: 3,
-    agility: 2,
-    luck: 2
-  },
-  [CharacterClass.THIEF]: {
-    strength: 2,
-    intelligence: 2,
-    piety: 1,
-    vitality: 2,
-    agility: 5,
-    luck: 4
-  },
-  [CharacterClass.BISHOP]: {
-    strength: 1,
-    intelligence: 4,
-    piety: 4,
-    vitality: 2,
-    agility: 2,
-    luck: 2
-  },
-  [CharacterClass.SAMURAI]: {
-    strength: 4,
-    intelligence: 3,
-    piety: 2,
-    vitality: 3,
-    agility: 3,
-    luck: 2
-  },
-  [CharacterClass.LORD]: {
-    strength: 4,
-    intelligence: 2,
-    piety: 3,
-    vitality: 4,
-    agility: 2,
-    luck: 2
-  },
-  [CharacterClass.NINJA]: {
-    strength: 3,
-    intelligence: 3,
-    piety: 2,
-    vitality: 2,
-    agility: 5,
-    luck: 3
-  }
 }
 
 export class LevelUpService {
@@ -166,14 +98,26 @@ export class LevelUpService {
   }
 
   /**
-   * Roll for stat increases (chance-based)
-   * Each stat has % chance to increase by 1
+   * Roll for stat changes using authentic Wizardry 1 age-based formula.
+   *
+   * For each stat:
+   *   75% chance the stat is checked
+   *   If checked: roll 1-100
+   *     If roll <= (130 - age): stat +1 (increase)
+   *     Else: stat -1 (decrease)
+   *
+   * Younger characters have better growth, older characters risk stat decreases.
+   * Stats are clamped to 3-18 range.
    */
-  static rollStatIncreases(character: Character): StatIncreases {
-    const chances = CLASS_STAT_CHANCES[character.class]
-    const increases: StatIncreases = {}
+  static rollStatChanges(character: Character): StatChanges {
+    const changes: StatChanges = {}
+    const age = character.age
 
-    const stats: Array<keyof StatIncreases> = [
+    // Calculate increase threshold based on age
+    // Age 15: 115% capped to 95%, Age 30: 100%, Age 50: 80%, etc.
+    const increaseThreshold = Math.min(95, Math.max(5, 130 - age))
+
+    const stats: Array<keyof StatChanges> = [
       'strength',
       'intelligence',
       'piety',
@@ -183,13 +127,33 @@ export class LevelUpService {
     ]
 
     stats.forEach(stat => {
-      const chance = chances[stat] || 0
-      if (RandomService.chance(chance)) {
-        increases[stat] = 1
+      // 75% chance this stat is checked for modification
+      if (RandomService.chance(75)) {
+        const roll = RandomService.random(1, 100)
+        const currentValue = character[stat]
+
+        if (roll <= increaseThreshold) {
+          // Stat increase - but cap at 18
+          if (currentValue < 18) {
+            changes[stat] = 1
+          }
+        } else {
+          // Stat decrease - but floor at 3
+          if (currentValue > 3) {
+            changes[stat] = -1
+          }
+        }
       }
     })
 
-    return increases
+    return changes
+  }
+
+  /**
+   * @deprecated Use rollStatChanges instead. This method is kept for backwards compatibility.
+   */
+  static rollStatIncreases(character: Character): StatChanges {
+    return this.rollStatChanges(character)
   }
 
   /**
@@ -198,25 +162,25 @@ export class LevelUpService {
    */
   static performLevelUp(character: Character): LevelUpResult {
     const hpIncrease = this.rollHPIncrease(character)
-    const statIncreases = this.rollStatIncreases(character)
+    const statChanges = this.rollStatChanges(character)
 
     const updatedCharacter: Character = {
       ...character,
       level: character.level + 1,
       maxHp: character.maxHp + hpIncrease,
       hp: character.maxHp + hpIncrease, // Fully heal on level up
-      strength: character.strength + (statIncreases.strength || 0),
-      intelligence: character.intelligence + (statIncreases.intelligence || 0),
-      piety: character.piety + (statIncreases.piety || 0),
-      vitality: character.vitality + (statIncreases.vitality || 0),
-      agility: character.agility + (statIncreases.agility || 0),
-      luck: character.luck + (statIncreases.luck || 0)
+      strength: character.strength + (statChanges.strength || 0),
+      intelligence: character.intelligence + (statChanges.intelligence || 0),
+      piety: character.piety + (statChanges.piety || 0),
+      vitality: character.vitality + (statChanges.vitality || 0),
+      agility: character.agility + (statChanges.agility || 0),
+      luck: character.luck + (statChanges.luck || 0)
     }
 
     const levelUpData: LevelUpData = {
       newLevel: character.level + 1,
       hpIncrease,
-      statIncreases
+      statChanges
     }
 
     return {

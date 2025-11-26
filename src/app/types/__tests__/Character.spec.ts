@@ -3,6 +3,8 @@ import { Race } from '../Race'
 import { CharacterClass } from '../CharacterClass'
 import { Alignment } from '../Alignment'
 import { CharacterStatus } from '../CharacterStatus'
+import { Item } from '../Item'
+import { ItemType, ItemSlot } from '../ItemType'
 
 describe('Character Type', () => {
   it('can create a minimal fighter character', () => {
@@ -76,6 +78,17 @@ describe('Character Type', () => {
   })
 
   it('can equip all 5 equipment slots', () => {
+    // Create test equipment items
+    const createItem = (id: string, name: string, type: ItemType, slot: ItemSlot): Item => ({
+      id, name, type, slot, price: 100, cursed: false, identified: true, equipped: true
+    })
+
+    const longSword = createItem('long-sword', 'Long Sword', ItemType.WEAPON, ItemSlot.WEAPON)
+    const plateMail = createItem('plate-mail', 'Plate Mail', ItemType.ARMOR, ItemSlot.ARMOR)
+    const largeShield = createItem('large-shield', 'Large Shield', ItemType.SHIELD, ItemSlot.SHIELD)
+    const helm = createItem('helm', 'Helm', ItemType.HELMET, ItemSlot.HELMET)
+    const copperGloves = createItem('copper-gloves', 'Copper Gloves', ItemType.GAUNTLET, ItemSlot.GAUNTLETS)
+
     const character: Character = {
       id: 'test-4',
       name: 'Knight',
@@ -98,17 +111,19 @@ describe('Character Type', () => {
       vim: { current: 14, max: 14 },
       knownSpells: [],
       inventory: [],
-      equippedWeapon: 'long-sword',
-      equippedArmor: 'plate-mail',
-      equippedShield: 'large-shield',
-      equippedHelmet: 'helm',
-      equippedGauntlets: 'copper-gloves'
+      gold: 0,
+      equippedWeapon: longSword,
+      equippedArmor: plateMail,
+      equippedShield: largeShield,
+      equippedHelmet: helm,
+      equippedGauntlets: copperGloves
     }
 
-    expect(character.equippedWeapon).toBe('long-sword')
-    expect(character.equippedShield).toBe('large-shield')
-    expect(character.equippedHelmet).toBe('helm')
-    expect(character.equippedGauntlets).toBe('copper-gloves')
+    expect(character.equippedWeapon?.id).toBe('long-sword')
+    expect(character.equippedArmor?.id).toBe('plate-mail')
+    expect(character.equippedShield?.id).toBe('large-shield')
+    expect(character.equippedHelmet?.id).toBe('helm')
+    expect(character.equippedGauntlets?.id).toBe('copper-gloves')
   })
 
   it('does NOT have password field', () => {

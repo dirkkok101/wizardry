@@ -117,7 +117,7 @@ describe('InventoryService', () => {
 
     it('cannot remove equipped cursed item', () => {
       const cursedItem = createItem('item-1', 'Cursed Blade', { cursed: true, equipped: true })
-      const char = { ...mockCharacter, inventory: [cursedItem], equippedWeapon: 'item-1' }
+      const char = { ...mockCharacter, inventory: [cursedItem], equippedWeapon: cursedItem }
 
       expect(() => {
         InventoryService.removeItem(char, 'item-1')

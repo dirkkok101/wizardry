@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common'
 import { ActivatedRoute } from '@angular/router'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { GameStateService } from '@services/GameStateService'
-import { ItemDataLoader } from '@services/ItemDataLoader'
 import { EquipmentService } from '@services/EquipmentService'
 import { InventoryService } from '@services/InventoryService'
 import { SceneNavigationService } from '@services/SceneNavigationService'
@@ -237,22 +236,13 @@ export class CharacterInspectionComponent {
     const char = this.character()
     if (!char) return null
 
-    const slotField = this.getSlotField(slot)
-    if (!slotField) return null
-
-    const itemId = char[slotField] as string | undefined
-    if (!itemId) return null
-
-    return ItemDataLoader.getItem(itemId)
-  }
-
-  private getSlotField(slot: ItemSlot): keyof Character | null {
+    // Equipment slots now store full Item objects directly
     switch (slot) {
-      case ItemSlot.WEAPON: return 'equippedWeapon'
-      case ItemSlot.ARMOR: return 'equippedArmor'
-      case ItemSlot.SHIELD: return 'equippedShield'
-      case ItemSlot.HELMET: return 'equippedHelmet'
-      case ItemSlot.GAUNTLETS: return 'equippedGauntlets'
+      case ItemSlot.WEAPON: return char.equippedWeapon ?? null
+      case ItemSlot.ARMOR: return char.equippedArmor ?? null
+      case ItemSlot.SHIELD: return char.equippedShield ?? null
+      case ItemSlot.HELMET: return char.equippedHelmet ?? null
+      case ItemSlot.GAUNTLETS: return char.equippedGauntlets ?? null
       default: return null
     }
   }

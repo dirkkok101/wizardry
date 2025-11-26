@@ -90,6 +90,21 @@ function rollHitDice(hitDice: string): number {
 }
 
 /**
+ * Get VIT bonus for HP rolls (authentic Wizardry 1 mechanics)
+ * VIT 3-5 = -3, 6-7 = -2, 8-9 = -1, 10-11 = 0, 12-13 = +1, 14-15 = +2, 16-17 = +3, 18 = +4
+ */
+function getVitalityBonus(vitality: number): number {
+  if (vitality <= 5) return -3
+  if (vitality <= 7) return -2
+  if (vitality <= 9) return -1
+  if (vitality <= 11) return 0
+  if (vitality <= 13) return 1
+  if (vitality <= 15) return 2
+  if (vitality <= 17) return 3
+  return 4
+}
+
+/**
  * Initialize spell points for caster classes
  * Returns undefined for non-casters, appropriate pools for Mage/Priest/Bishop
  * Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
@@ -193,9 +208,11 @@ function createCharacter(
   const agility = baseAgility + raceModifiers.agi
   const luck = baseLuck + raceModifiers.luc
 
-  // Calculate starting HP using ClassService hit dice
+  // Calculate starting HP using ClassService hit dice + VIT bonus
   const classData = ClassService.getClassData(params.class)
-  const maxHp = rollHitDice(classData.hitDice)
+  const roll = rollHitDice(classData.hitDice)
+  const vitBonus = getVitalityBonus(vitality)
+  const maxHp = Math.max(1, roll + vitBonus)
 
   // Initialize VIM (vitality for resurrection)
   const vim: MaxCurrent = {
@@ -431,13 +448,17 @@ function validatePassword(password: string): ValidationResult {
 }
 
 /**
- * Calculate starting HP based on class hit dice.
+ * Calculate starting HP based on class hit dice + VIT modifier.
  *
  * Uses ClassService.getClassData().hitDice (e.g., "1d10", "1d8")
+ * Applies VIT bonus (authentic Wizardry 1 mechanics)
+ * Minimum HP is 1 (cannot start with 0 or negative HP)
  */
-function calculateStartingHP(characterClass: CharacterClass): { hp: number; maxHp: number } {
+function calculateStartingHP(characterClass: CharacterClass, vitality: number): { hp: number; maxHp: number } {
   const classData = ClassService.getClassData(characterClass)
-  const maxHp = rollHitDice(classData.hitDice)
+  const roll = rollHitDice(classData.hitDice)
+  const vitBonus = getVitalityBonus(vitality)
+  const maxHp = Math.max(1, roll + vitBonus)
 
   return { hp: maxHp, maxHp }
 }
@@ -458,8 +479,8 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     )
   }
 
-  // Calculate starting HP based on class hit dice
-  const { hp, maxHp } = calculateStartingHP(selectedClass)
+  // Calculate starting HP based on class hit dice + VIT bonus
+  const { hp, maxHp } = calculateStartingHP(selectedClass, stats.vitality)
 
   // Initialize VIM (vitality for resurrection)
   const vim: MaxCurrent = {
