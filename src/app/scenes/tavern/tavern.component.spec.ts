@@ -42,9 +42,9 @@ describe('TavernComponent (redesigned)', () => {
   });
 
   describe('computed: availableCharacters()', () => {
-    it('should return only OK characters not in party', () => {
+    it('should return OK characters and dead characters in town (not in party)', () => {
       const okChar = createTestCharacter({ id: 'char-1', name: 'Gandalf', status: CharacterStatus.OK });
-      const deadChar = createTestCharacter({ id: 'char-2', name: 'Dead Guy', status: CharacterStatus.DEAD });
+      const deadCharInTown = createTestCharacter({ id: 'char-2', name: 'Dead Guy', status: CharacterStatus.DEAD });
       const injuredChar = createTestCharacter({ id: 'char-3', name: 'Injured', status: CharacterStatus.INJURED });
       const partyChar = createTestCharacter({ id: 'char-4', name: 'In Party', status: CharacterStatus.OK });
 
@@ -52,7 +52,7 @@ describe('TavernComponent (redesigned)', () => {
         ...state,
         roster: new Map([
           [okChar.id, okChar],
-          [deadChar.id, deadChar],
+          [deadCharInTown.id, deadCharInTown],
           [injuredChar.id, injuredChar],
           [partyChar.id, partyChar]
         ]),
@@ -63,13 +63,30 @@ describe('TavernComponent (redesigned)', () => {
             frontRow: [partyChar.id],
             backRow: []
           }
-        }
+        },
+        bodies: new Map() // No bodies in dungeon - dead character's body is in town
       }));
 
       const available = component.availableCharacters();
-      expect(available.length).toBe(1);
-      expect(available[0].id).toBe('char-1');
-      expect(available[0].name).toBe('Gandalf');
+      // Should include OK char and dead char in town (2 total)
+      // Injured char excluded (status effect)
+      // Party char excluded (already in party)
+      expect(available.length).toBe(2);
+      expect(available.find(c => c.id === 'char-1')).toBeTruthy();
+      expect(available.find(c => c.id === 'char-2')).toBeTruthy();
+    });
+
+    it('should exclude dead characters whose bodies are in dungeon', () => {
+      const deadCharInDungeon = createTestCharacter({ id: 'char-1', name: 'Lost Soul', status: CharacterStatus.DEAD });
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([[deadCharInDungeon.id, deadCharInDungeon]]),
+        bodies: new Map([[deadCharInDungeon.id, { characterId: deadCharInDungeon.id, level: 3, x: 5, y: 10 }]])
+      }));
+
+      const available = component.availableCharacters();
+      expect(available.length).toBe(0);
     });
 
     it('should return empty array when all OK characters are in party', () => {
@@ -385,7 +402,28 @@ describe('TavernComponent (redesigned)', () => {
       expect(gameStateService.state().party.members.length).toBe(6);
     });
 
-    it('should show error when adding DEAD character', () => {
+    it('should allow adding DEAD character when body is in town (to take to Temple)', () => {
+      const deadChar = createTestCharacter({
+        id: 'char-1',
+        name: 'Dead Guy',
+        status: CharacterStatus.DEAD,
+        alignment: Alignment.NEUTRAL
+      });
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([[deadChar.id, deadChar]]),
+        bodies: new Map() // No bodies in dungeon - body is in town
+      }));
+
+      component.onAddCharacter(deadChar.id);
+
+      // Dead character should be added successfully
+      expect(gameStateService.state().party.members).toContain(deadChar.id);
+      expect(messageService.hasMessage()).toBe(false);
+    });
+
+    it('should show error when adding DEAD character whose body is in dungeon', () => {
       const deadChar = createTestCharacter({
         id: 'char-1',
         name: 'Dead Guy',
@@ -394,13 +432,13 @@ describe('TavernComponent (redesigned)', () => {
 
       gameStateService.updateState(state => ({
         ...state,
-        roster: new Map([[deadChar.id, deadChar]])
+        roster: new Map([[deadChar.id, deadChar]]),
+        bodies: new Map([[deadChar.id, { characterId: deadChar.id, level: 3, x: 5, y: 10 }]])
       }));
 
       component.onAddCharacter(deadChar.id);
 
-      expect(messageService.messageText()).toContain('not available');
-      expect(messageService.messageText()).toContain('DEAD');
+      expect(messageService.messageText()).toContain('body must be recovered from the dungeon');
       expect(gameStateService.state().party.members).not.toContain(deadChar.id);
     });
 

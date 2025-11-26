@@ -10,7 +10,6 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '@services/PartyService';
-import { CharacterStatus } from '@models/CharacterStatus';
 
 @Component({
   selector: 'app-tavern',
@@ -29,8 +28,9 @@ export class TavernComponent implements OnInit {
   }
 
   // Computed properties using GameStateQueries
+  // Shows OK characters and DEAD/ASHES characters whose bodies are in town (not dungeon)
   readonly availableCharacters = computed(() =>
-    GameStateQueries.availableCharacters(this.gameStateService.state(), CharacterStatus.OK)
+    GameStateQueries.tavernAvailableCharacters(this.gameStateService.state())
   );
 
   readonly frontRowCharacters = computed(() =>
@@ -85,7 +85,8 @@ export class TavernComponent implements OnInit {
     const validation = PartyService.canAddCharacterToParty(
       state.party,
       character,
-      state.roster
+      state.roster,
+      state.bodies
     );
 
     if (!validation.allowed) {

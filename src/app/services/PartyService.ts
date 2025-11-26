@@ -21,12 +21,13 @@ const MAX_PARTY_SIZE = 6
 export class PartyService {
   /**
    * Validate if character can be added to party
-   * Checks: party size, alignment conflicts, character status, duplicates
+   * Checks: party size, alignment conflicts, character status, duplicates, body location
    */
   static canAddCharacterToParty(
     party: Party,
     character: Character,
-    allCharacters: Map<string, Character>
+    allCharacters: Map<string, Character>,
+    bodiesInDungeon?: Map<string, unknown>
   ): ValidationResult {
     // Check if already in party
     if (party.members.includes(character.id)) {
@@ -38,8 +39,21 @@ export class PartyService {
       return { allowed: false, reason: `Party is full (maximum ${MAX_PARTY_SIZE} members)` }
     }
 
-    // Check character status (only OK characters can join)
-    if (character.status !== CharacterStatus.OK) {
+    // Check character status
+    // Dead/Ashes characters CAN join if their body is in town (not in dungeon)
+    // This allows bringing them to the Temple for resurrection
+    const isDeadOrAshes = character.status === CharacterStatus.DEAD ||
+                          character.status === CharacterStatus.ASHES
+    const bodyIsInDungeon = bodiesInDungeon?.has(character.id) ?? false
+
+    if (isDeadOrAshes && bodyIsInDungeon) {
+      return { allowed: false, reason: `${character.name}'s body must be recovered from the dungeon first` }
+    }
+
+    // Characters with other non-OK statuses (LOST, PARALYZED, STONED, POISONED, ASLEEP) cannot join
+    // LOST characters are permanently dead
+    // Status effects like paralysis/stone/poison/asleep need to be cured first
+    if (character.status !== CharacterStatus.OK && !isDeadOrAshes) {
       return { allowed: false, reason: `${character.name} is not available (status: ${character.status})` }
     }
 
