@@ -183,6 +183,36 @@ describe('InnService', () => {
 
       expect(result.isFullyHealed).toBe(false)
     })
+
+    it('restores spell points when resting in STABLES', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 0, max: 3 },
+        level2: { current: 0, max: 2 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const character = createTestCharacter({
+        hp: 10,
+        maxHp: 20,
+        spellPoints: { mage: depleted }
+      })
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 0
+        }
+      }
+
+      const result = InnService.restOneWeek(state, character, RoomType.STABLES)
+
+      expect(result.spellPointsRestored).toBe(true)
+      expect(result.updatedCharacter.spellPoints?.mage?.level1.current).toBe(3)
+      expect(result.updatedCharacter.spellPoints?.mage?.level2.current).toBe(2)
+    })
   })
 
   describe('restoreSpellPoints', () => {
