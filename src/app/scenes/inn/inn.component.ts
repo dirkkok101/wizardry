@@ -540,4 +540,20 @@ export class InnComponent implements OnInit {
       this.dismissLevelUp();
     }
   }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent): void {
+    // Handle dialog shortcuts when confirmation is showing
+    if (this.showConfirmation()) {
+      const key = event.key.toLowerCase();
+
+      if (key === '1') {
+        event.preventDefault();
+        this.confirmRest();
+      } else if (key === 'a') {
+        event.preventDefault();
+        this.confirmAutoRest();
+      }
+    }
+  }
 }

@@ -586,6 +586,74 @@ describe('InnComponent', () => {
 
       expect(component.isAutoResting()).toBe(false);
     });
+
+    it('confirms rest on "1" key when confirmation dialog is open', () => {
+      // Setup character and room selection
+      const char = createCharacterInParty({ hp: 10, maxHp: 20 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
+      }));
+      component.selectCharacterToRest('char-1');
+      const option = createRoomOption(RoomType.BARRACKS);
+      component.handleRoomSelected(option);
+
+      // Confirmation should be showing
+      expect(component.showConfirmation()).toBe(true);
+
+      // Press "1" key
+      const event = new KeyboardEvent('keydown', { key: '1' });
+      component.handleKeydown(event);
+
+      // Confirmation should close and rest should be performed
+      expect(component.showConfirmation()).toBe(false);
+      expect(component.restProgress()).not.toBeNull();
+      expect(component.restProgress()?.weeksRested).toBe(1);
+    });
+
+    it('triggers auto-rest on "A" key when confirmation dialog is open', () => {
+      // Setup character with small HP gap
+      const char = createCharacterInParty({ hp: 17, maxHp: 20 });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 500 }
+      }));
+      component.selectCharacterToRest('char-1');
+      const option = createRoomOption(RoomType.DOUBLE);
+      component.handleRoomSelected(option);
+
+      expect(component.showConfirmation()).toBe(true);
+
+      // Press "a" key (lowercase)
+      const event = new KeyboardEvent('keydown', { key: 'a' });
+      component.handleKeydown(event);
+
+      // Should start auto-resting
+      expect(component.showConfirmation()).toBe(false);
+      expect(component.isAutoResting()).toBe(true);
+    });
+
+    it('ignores "1" and "A" keys when confirmation dialog is not open', () => {
+      // Setup character but don't open confirmation
+      component.selectCharacterToRest('char-1');
+      component.showConfirmation.set(false);
+
+      const initialGold = gameState.party().gold;
+
+      // Press "1" key - should be ignored
+      const event1 = new KeyboardEvent('keydown', { key: '1' });
+      component.handleKeydown(event1);
+
+      // Press "A" key - should be ignored
+      const eventA = new KeyboardEvent('keydown', { key: 'A' });
+      component.handleKeydown(eventA);
+
+      // Nothing should change
+      expect(gameState.party().gold).toBe(initialGold);
+      expect(component.isAutoResting()).toBe(false);
+    });
   });
 
   describe('empty party state', () => {
