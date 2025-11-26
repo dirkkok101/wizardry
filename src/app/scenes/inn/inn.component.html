@@ -63,13 +63,15 @@
                 <span class="value">+{{ data.hpIncrease }}</span>
               </div>
 
-              @if (Object.keys(data.statIncreases).length > 0) {
-                <div class="stat-increases">
-                  <h4>Stat Increases:</h4>
-                  @for (stat of Object.keys(data.statIncreases); track stat) {
+              @if (Object.keys(data.statChanges).length > 0) {
+                <div class="stat-changes-list">
+                  <h4>Stat Changes:</h4>
+                  @for (stat of Object.keys(data.statChanges); track stat) {
                     <div class="stat-row">
                       <span class="stat-name">{{ stat | uppercase }}:</span>
-                      <span class="stat-change">+{{ data.statIncreases[stat] }}</span>
+                      <span class="stat-change" [class.decrease]="data.statChanges[stat] < 0">
+                        {{ data.statChanges[stat] > 0 ? '+' : '' }}{{ data.statChanges[stat] }}
+                      </span>
                     </div>
                   }
                 </div>

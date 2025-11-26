@@ -20,7 +20,7 @@ import { CharacterStatus } from '@models/CharacterStatus';
 interface LevelUpDisplayData {
   newLevel: number;
   hpIncrease: number;
-  statIncreases: Record<string, number>;
+  statChanges: Record<string, number>;
   newSpells: Array<{ id: string; name: string }>;
 }
 
@@ -314,7 +314,7 @@ export class InnComponent implements OnInit {
     this.levelUpData.set({
       newLevel: levelUpResult.levelUpData.newLevel,
       hpIncrease: levelUpResult.levelUpData.hpIncrease,
-      statIncreases: levelUpResult.levelUpData.statIncreases as Record<string, number>,
+      statChanges: levelUpResult.levelUpData.statChanges as Record<string, number>,
       newSpells: spellResult.newSpells.map(s => ({ id: s.id, name: s.name }))
     });
 

@@ -700,7 +700,8 @@ describe('CharacterService', () => {
       expect(char.experience).toBe(0)
     })
 
-    it('calculates starting HP using class hit dice (no longer vitality-based)', () => {
+    it('calculates starting HP using class hit dice + VIT bonus (authentic Wizardry)', () => {
+      // VIT 14-15 gives +2 bonus
       const fighterChar = CharacterService.createCharacterFromStats({
         name: 'Fighter',
         password: 'test',
@@ -719,15 +720,48 @@ describe('CharacterService', () => {
         selectedClass: CharacterClass.MAGE
       })
 
-      // Fighter uses 1d10, so HP should be 1-10
-      expect(fighterChar.hp).toBeGreaterThanOrEqual(1)
-      expect(fighterChar.hp).toBeLessThanOrEqual(10)
+      // Fighter uses 1d10 + VIT bonus (+2 for VIT 14), so HP should be 3-12
+      expect(fighterChar.hp).toBeGreaterThanOrEqual(3)
+      expect(fighterChar.hp).toBeLessThanOrEqual(12)
       expect(fighterChar.maxHp).toBe(fighterChar.hp)
 
-      // Mage uses 1d4, so HP should be 1-4
-      expect(mageChar.hp).toBeGreaterThanOrEqual(1)
-      expect(mageChar.hp).toBeLessThanOrEqual(4)
+      // Mage uses 1d4 + VIT bonus (+2 for VIT 14), so HP should be 3-6
+      expect(mageChar.hp).toBeGreaterThanOrEqual(3)
+      expect(mageChar.hp).toBeLessThanOrEqual(6)
       expect(mageChar.maxHp).toBe(mageChar.hp)
+    })
+
+    it('applies minimum HP of 1 even with low VIT penalty', () => {
+      // VIT 5 gives -3 penalty
+      const lowVitMage = CharacterService.createCharacterFromStats({
+        name: 'WeakMage',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: { ...validStats, vitality: 5 },
+        selectedClass: CharacterClass.MAGE
+      })
+
+      // Mage 1d4 - 3 could be negative, but minimum is 1
+      expect(lowVitMage.hp).toBeGreaterThanOrEqual(1)
+      expect(lowVitMage.maxHp).toBe(lowVitMage.hp)
+    })
+
+    it('applies high VIT bonus for starting HP', () => {
+      // VIT 16-17 gives +3 bonus
+      const highVitFighter = CharacterService.createCharacterFromStats({
+        name: 'ToughFighter',
+        password: 'test',
+        race: Race.HUMAN,
+        alignment: Alignment.GOOD,
+        stats: { ...validStats, vitality: 16 },
+        selectedClass: CharacterClass.FIGHTER
+      })
+
+      // Fighter uses 1d10 + VIT bonus (+3 for VIT 16), so HP should be 4-13
+      expect(highVitFighter.hp).toBeGreaterThanOrEqual(4)
+      expect(highVitFighter.hp).toBeLessThanOrEqual(13)
+      expect(highVitFighter.maxHp).toBe(highVitFighter.hp)
     })
 
     it('throws error when character does not meet class requirements', () => {
@@ -877,7 +911,8 @@ describe('CharacterService', () => {
       expect(char.equippedGauntlets).toBeUndefined()
     })
 
-    it('uses ClassService hit dice for HP calculation', () => {
+    it('uses ClassService hit dice + VIT bonus for HP calculation', () => {
+      // validStats has vitality: 14 which gives +2 bonus
       const fighterChar = CharacterService.createCharacterFromStats({
         name: 'Fighter',
         password: 'test',
@@ -896,12 +931,12 @@ describe('CharacterService', () => {
         selectedClass: CharacterClass.MAGE
       })
 
-      // Fighter uses 1d10, Mage uses 1d4
-      // HP should be in valid dice range
-      expect(fighterChar.hp).toBeGreaterThanOrEqual(1)
-      expect(fighterChar.hp).toBeLessThanOrEqual(10)
-      expect(mageChar.hp).toBeGreaterThanOrEqual(1)
-      expect(mageChar.hp).toBeLessThanOrEqual(4)
+      // Fighter uses 1d10 + VIT bonus (+2 for VIT 14), so HP should be 3-12
+      // Mage uses 1d4 + VIT bonus (+2 for VIT 14), so HP should be 3-6
+      expect(fighterChar.hp).toBeGreaterThanOrEqual(3)
+      expect(fighterChar.hp).toBeLessThanOrEqual(12)
+      expect(mageChar.hp).toBeGreaterThanOrEqual(3)
+      expect(mageChar.hp).toBeLessThanOrEqual(6)
     })
 
     it('initializes character with starting gold in range 90-190 (authentic Wizardry 1)', () => {
