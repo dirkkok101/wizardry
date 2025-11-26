@@ -1,0 +1,85 @@
+@use '../../../../styles/variables' as *;
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 950;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.dialog-content {
+  background-color: $color-bg;
+  border: 2px solid $color-text-green;
+  min-width: 400px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba($color-text-green, 0.3);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.dialog-header {
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid rgba($color-text-dim, 0.3);
+}
+
+.dialog-title {
+  font-size: 18px;
+  color: $color-amber;
+  margin: 0;
+  text-align: center;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dialog-body {
+  padding: $spacing-md $spacing-lg;
+  overflow-y: auto;
+
+  // Scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($color-text-dim, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($color-text-dim, 0.3);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba($color-text-dim, 0.5);
+    }
+  }
+}
+
+.dialog-footer {
+  padding: $spacing-sm $spacing-lg;
+  border-top: 1px solid rgba($color-text-dim, 0.3);
+  text-align: center;
+}
+
+.keyboard-hint {
+  font-size: 12px;
+  color: $color-text-dim;
+  font-style: italic;
+}
+
+.default-item-text {
+  color: $color-text-bright;
+}

@@ -1,0 +1,61 @@
+@use '../../../../styles/variables' as *;
+
+.selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  width: 100%;
+}
+
+.selection-item {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background-color: transparent;
+
+  &:focus {
+    outline: none;
+  }
+
+  // Hover state
+  &.hovered:not(.disabled),
+  &:hover:not(.disabled) {
+    border-color: rgba($color-text-green, 0.5);
+    background-color: rgba($color-text-green, 0.05);
+  }
+
+  // Selected state
+  &.selected:not(.disabled) {
+    border-color: $color-text-green;
+    background-color: rgba($color-text-green, 0.1);
+
+    .item-shortcut {
+      color: $color-text-green;
+    }
+  }
+
+  // Disabled state
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    .item-shortcut {
+      color: $color-text-dim;
+    }
+  }
+}
+
+.item-shortcut {
+  color: $color-amber;
+  font-weight: bold;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.item-default {
+  color: $color-text-bright;
+}
