@@ -1,0 +1,45 @@
+@if (visible()) {
+  <div
+    class="dialog-overlay"
+    (click)="onBackdropClick($event)"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      #dialogContent
+      class="dialog-content"
+      (click)="onDialogClick($event)"
+      tabindex="-1"
+    >
+      <div class="dialog-header">
+        <h2 class="dialog-title">{{ title() }}</h2>
+      </div>
+
+      <div class="dialog-body" [style.max-height]="maxHeight()">
+        <app-selection-list
+          [options]="options()"
+          [allowArrowNavigation]="allowArrowNavigation()"
+          [showShortcutsInList]="showShortcuts()"
+          (optionSelected)="onOptionSelected($event)"
+          (cancelled)="onCancelled()"
+        >
+          <ng-template #itemTemplate let-option let-index="index" let-selected="selected">
+            @if (externalItemTemplate) {
+              <ng-container
+                [ngTemplateOutlet]="externalItemTemplate"
+                [ngTemplateOutletContext]="{ $implicit: option, index: index, selected: selected }"
+              />
+            } @else {
+              <!-- Default rendering -->
+              <span class="default-item-text">{{ option.id }}</span>
+            }
+          </ng-template>
+        </app-selection-list>
+      </div>
+
+      <div class="dialog-footer">
+        <span class="keyboard-hint">{{ keyboardHint() }}</span>
+      </div>
+    </div>
+  </div>
+}

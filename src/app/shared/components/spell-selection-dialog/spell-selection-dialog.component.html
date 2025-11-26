@@ -1,25 +1,28 @@
-@if (visible) {
-  <div class="dialog-overlay" (click)="onBackdropClick()" tabindex="0" #dialogContent>
+@if (visible()) {
+  <div class="dialog-overlay" (click)="onBackdropClick($event)" tabindex="0" #dialogContent>
     <div class="dialog-content" (click)="onDialogClick($event)">
       <div class="dialog-header">
-        <h2>{{ prompt }}</h2>
-        @if (caster) {
+        <h2>{{ prompt() }}</h2>
+        @if (caster()) {
           <div class="caster-info">
-            <span class="caster-name">{{ caster.name }}</span>
+            <span class="caster-name">{{ caster()!.name }}</span>
           </div>
         }
       </div>
 
       <div class="dialog-body">
-        @if (spells.length === 0) {
+        @if (selectableSpells().length === 0) {
           <div class="no-spells">No spells available</div>
         } @else {
-          <div class="spell-list">
-            @for (option of spells; track option.spell.id) {
-              <div
-                class="spell-item"
-                [class.disabled]="!option.enabled"
-                (click)="onSpellClick(option)">
+          <app-selection-list
+            [options]="selectableSpells()"
+            [allowArrowNavigation]="false"
+            [showShortcutsInList]="false"
+            (optionSelected)="onOptionSelected($event)"
+            (cancelled)="onCancelled()"
+          >
+            <ng-template #itemTemplate let-option>
+              <div class="spell-item-content">
                 <span class="spell-number">{{ option.index }})</span>
                 <div class="spell-info">
                   <div class="spell-header">
@@ -43,8 +46,8 @@
                   </div>
                 </div>
               </div>
-            }
-          </div>
+            </ng-template>
+          </app-selection-list>
         }
       </div>
 

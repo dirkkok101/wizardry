@@ -44,40 +44,60 @@
   overflow-y: auto;
 }
 
-.character-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+// Override SelectionListComponent styles for character dialog
+:host ::ng-deep {
+  .selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
-.character-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  font-size: 1.4rem;
-  transition: all 0.2s;
-  border-left: 4px solid var(--color-primary, #00ff00);
+  .selection-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    font-size: 1.4rem;
+    transition: all 0.2s;
+    border-left: 4px solid var(--color-primary, #00ff00);
 
-  &:not(.disabled) {
-    cursor: pointer;
+    &:not(.disabled) {
+      cursor: pointer;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateX(4px);
+      &:hover,
+      &.selected {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+      }
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
   }
 
-  &.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  // Hide the default shortcut display from SelectionListComponent
+  .item-shortcut {
+    display: none;
   }
+}
+
+.character-item-content {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
 
   &.dead {
     border-left-color: var(--color-danger, #ff6b6b);
-    background: rgba(255, 0, 0, 0.1);
   }
+}
+
+// Apply dead styling to parent selection-item
+:host ::ng-deep .selection-item:has(.character-item-content.dead) {
+  border-left-color: var(--color-danger, #ff6b6b);
+  background: rgba(255, 0, 0, 0.1);
 }
 
 .char-number {

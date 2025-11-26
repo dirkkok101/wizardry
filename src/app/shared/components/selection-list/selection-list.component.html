@@ -1,0 +1,31 @@
+<div class="selection-list" role="listbox">
+  @for (option of options(); track option.id; let i = $index) {
+    <div
+      class="selection-item"
+      [class.selected]="selectedIndex() === i"
+      [class.disabled]="!option.enabled"
+      [class.hovered]="hoveredIndex() === i"
+      (click)="onOptionClick(option, i)"
+      (mouseenter)="onOptionMouseEnter(i)"
+      (mouseleave)="onOptionMouseLeave()"
+      role="option"
+      [attr.aria-selected]="selectedIndex() === i"
+      [attr.aria-disabled]="!option.enabled"
+      [attr.tabindex]="option.enabled ? 0 : -1"
+    >
+      @if (showShortcutsInList()) {
+        <span class="item-shortcut">({{ option.shortcut }})</span>
+      }
+
+      @if (itemTemplate) {
+        <ng-container
+          [ngTemplateOutlet]="itemTemplate"
+          [ngTemplateOutletContext]="getItemContext(option, i)"
+        />
+      } @else {
+        <!-- Default rendering if no template provided -->
+        <span class="item-default">{{ option.id }}</span>
+      }
+    </div>
+  }
+</div>

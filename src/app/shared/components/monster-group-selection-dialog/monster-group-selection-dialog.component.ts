@@ -1,14 +1,7 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  HostListener,
-  ViewChild,
-  ElementRef,
-  AfterViewChecked
-} from '@angular/core'
+import { Component, input, output, computed } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { SelectionDialogComponent } from '../selection-dialog/selection-dialog.component'
+import { SelectableOption } from '../selection-list/selection-list.component'
 
 export interface MonsterGroupOption {
   id: 'A' | 'B' | 'C' | 'D'
@@ -17,7 +10,17 @@ export interface MonsterGroupOption {
 }
 
 /**
+ * Extended MonsterGroupOption with SelectableOption compatibility.
+ * Uses Omit to avoid 'id' type conflict (MonsterGroupOption has union type, SelectableOption has string).
+ */
+interface MonsterGroupSelectableOption extends MonsterGroupOption, Omit<SelectableOption, 'id'> {
+  shortcut: string
+}
+
+/**
  * MonsterGroupSelectionDialogComponent - Keyboard-driven monster group picker for combat.
+ *
+ * Now uses SelectionDialogComponent for consistent keyboard/mouse handling.
  *
  * Features:
  * - A/B/C/D keyboard shortcuts for group selection
@@ -39,71 +42,41 @@ export interface MonsterGroupOption {
 @Component({
   selector: 'app-monster-group-selection-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SelectionDialogComponent],
   templateUrl: './monster-group-selection-dialog.component.html',
-  styleUrl: './monster-group-selection-dialog.component.scss'
+  styleUrls: ['./monster-group-selection-dialog.component.scss']
 })
-export class MonsterGroupSelectionDialogComponent implements AfterViewChecked {
-  @Input() visible: boolean = false
-  @Input() groups: MonsterGroupOption[] = []
-  @Input() prompt: string = 'SELECT TARGET GROUP'
+export class MonsterGroupSelectionDialogComponent {
+  // Signal-based inputs
+  readonly visible = input(false)
+  readonly groups = input<MonsterGroupOption[]>([])
+  readonly prompt = input('SELECT TARGET GROUP')
 
-  @Output() groupSelected = new EventEmitter<'A' | 'B' | 'C' | 'D'>()
-  @Output() cancelled = new EventEmitter<void>()
+  // Outputs
+  readonly groupSelected = output<'A' | 'B' | 'C' | 'D'>()
+  readonly cancelled = output<void>()
 
-  @ViewChild('dialogContent') dialogContent?: ElementRef<HTMLDivElement>
+  /**
+   * Convert MonsterGroupOption to SelectableOption for SelectionDialogComponent
+   */
+  readonly selectableGroups = computed((): MonsterGroupSelectableOption[] => {
+    return this.groups().map(group => ({
+      ...group,
+      shortcut: group.id // Use group ID as shortcut (A, B, C, D)
+    }))
+  })
 
-  private hasFocused = false
-
-  ngAfterViewChecked(): void {
-    // Auto-focus the dialog when it becomes visible
-    if (this.visible && !this.hasFocused && this.dialogContent) {
-      this.dialogContent.nativeElement.focus()
-      this.hasFocused = true
-    } else if (!this.visible && this.hasFocused) {
-      this.hasFocused = false
-    }
+  /**
+   * Handle option selection from SelectionDialogComponent
+   */
+  onOptionSelected(option: MonsterGroupSelectableOption): void {
+    this.groupSelected.emit(option.id)
   }
 
-  @HostListener('keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    if (!this.visible) return
-
-    const key = event.key.toUpperCase()
-
-    // Check for group shortcuts (A, B, C, D)
-    if (['A', 'B', 'C', 'D'].includes(key)) {
-      const group = this.groups.find(g => g.id === key && g.enabled)
-      if (group) {
-        this.groupSelected.emit(group.id as 'A' | 'B' | 'C' | 'D')
-        event.preventDefault()
-        event.stopPropagation()
-      }
-      // Even if group disabled/not found, prevent propagation
-      event.preventDefault()
-      event.stopPropagation()
-      return
-    }
-
-    // ESC to cancel
-    if (key === 'ESCAPE') {
-      this.cancelled.emit()
-      event.preventDefault()
-      event.stopPropagation()
-      return
-    }
-
-    // Stop all other key events from propagating when dialog is visible
-    event.preventDefault()
-    event.stopPropagation()
-  }
-
-  onBackdropClick(): void {
+  /**
+   * Handle cancellation
+   */
+  onCancelled(): void {
     this.cancelled.emit()
-  }
-
-  onDialogClick(event: Event): void {
-    // Prevent backdrop click when clicking inside dialog
-    event.stopPropagation()
   }
 }

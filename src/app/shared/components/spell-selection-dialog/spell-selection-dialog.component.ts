@@ -1,9 +1,10 @@
 import {
   Component,
-  Input,
-  Output,
-  EventEmitter,
-  HostListener,
+  input,
+  output,
+  computed,
+  signal,
+  effect,
   ViewChild,
   ElementRef,
   AfterViewChecked
@@ -11,12 +12,21 @@ import {
 import { CommonModule } from '@angular/common'
 import { Character } from '@models/Character'
 import { SpellData } from '@services/SpellCastingService'
+import { SelectionListComponent, SelectableOption } from '../selection-list/selection-list.component'
 
 export interface SpellOption {
   spell: SpellData
   index: number  // 1-9 for keyboard shortcuts
   enabled: boolean
   spellPoints: { current: number; max: number }
+}
+
+/**
+ * Extended SpellOption with SelectableOption fields for SelectionListComponent.
+ */
+export interface SpellSelectableOption extends SpellOption, SelectableOption {
+  id: string
+  shortcut: string
 }
 
 /**
@@ -43,80 +53,85 @@ export interface SpellOption {
 @Component({
   selector: 'app-spell-selection-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SelectionListComponent],
   templateUrl: './spell-selection-dialog.component.html',
   styleUrls: ['./spell-selection-dialog.component.scss']
 })
 export class SpellSelectionDialogComponent implements AfterViewChecked {
-  @Input() visible: boolean = false
-  @Input() spells: SpellOption[] = []
-  @Input() caster: Character | null = null
-  @Input() prompt: string = 'SELECT SPELL'
+  // Signal-based inputs
+  readonly visible = input(false)
+  readonly spells = input<SpellOption[]>([])
+  readonly caster = input<Character | null>(null)
+  readonly prompt = input('SELECT SPELL')
 
-  @Output() spellSelected = new EventEmitter<SpellData>()
-  @Output() cancelled = new EventEmitter<void>()
+  // Outputs
+  readonly spellSelected = output<SpellData>()
+  readonly cancelled = output<void>()
 
+  // View reference for focus management
   @ViewChild('dialogContent') dialogContent?: ElementRef<HTMLDivElement>
 
-  private hasFocused = false
+  // Track focus state
+  private needsFocus = signal(false)
+
+  /**
+   * Convert SpellOption[] to SpellSelectableOption[] for SelectionListComponent.
+   * Maps index to shortcut string ('1', '2', etc.).
+   */
+  readonly selectableSpells = computed((): SpellSelectableOption[] => {
+    return this.spells().map(option => ({
+      ...option,
+      id: option.spell.id,
+      shortcut: option.index.toString()
+    }))
+  })
+
+  constructor() {
+    // Watch visibility changes to trigger focus
+    effect(() => {
+      if (this.visible()) {
+        this.needsFocus.set(true)
+      }
+    })
+  }
 
   ngAfterViewChecked(): void {
-    // Auto-focus the dialog when it becomes visible
-    if (this.visible && !this.hasFocused && this.dialogContent) {
+    // Focus the dialog content when it becomes visible
+    if (this.needsFocus() && this.dialogContent?.nativeElement) {
       this.dialogContent.nativeElement.focus()
-      this.hasFocused = true
-    } else if (!this.visible && this.hasFocused) {
-      this.hasFocused = false
+      this.needsFocus.set(false)
     }
   }
 
-  @HostListener('keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    if (!this.visible) return
-
-    const key = event.key
-
-    // Check for number shortcuts (1-9)
-    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) {
-      const index = parseInt(key, 10)
-      const option = this.spells.find(s => s.index === index && s.enabled)
-      if (option) {
-        this.spellSelected.emit(option.spell)
-        event.preventDefault()
-        event.stopPropagation()
-      }
-      // Even if spell disabled/not found, prevent propagation
-      event.preventDefault()
-      event.stopPropagation()
-      return
-    }
-
-    // ESC to cancel
-    if (key === 'Escape') {
-      this.cancelled.emit()
-      event.preventDefault()
-      event.stopPropagation()
-      return
-    }
-
-    // Stop all other key events from propagating when dialog is visible
-    event.preventDefault()
-    event.stopPropagation()
+  /**
+   * Handle option selection from SelectionListComponent.
+   */
+  onOptionSelected(option: SpellSelectableOption): void {
+    this.spellSelected.emit(option.spell)
   }
 
-  onBackdropClick(): void {
+  /**
+   * Handle cancellation from SelectionListComponent.
+   */
+  onCancelled(): void {
     this.cancelled.emit()
   }
 
-  onDialogClick(event: Event): void {
-    // Prevent backdrop click when clicking inside dialog
-    event.stopPropagation()
+  /**
+   * Handle backdrop click to cancel.
+   */
+  onBackdropClick(event: MouseEvent): void {
+    // Only cancel if clicking the backdrop itself
+    if (event.target === event.currentTarget) {
+      this.cancelled.emit()
+    }
   }
 
-  onSpellClick(option: SpellOption): void {
-    if (option.enabled) {
-      this.spellSelected.emit(option.spell)
-    }
+  /**
+   * Prevent clicks inside dialog from propagating to backdrop.
+   */
+  onDialogClick(event: MouseEvent): void {
+    event.stopPropagation()
   }
 
   /**

@@ -1,18 +1,20 @@
-@if (visible) {
-  <div class="dialog-overlay" (click)="onBackdropClick()" tabindex="0" #dialogContent>
+@if (visible()) {
+  <div class="dialog-overlay" (click)="onBackdropClick($event)" tabindex="0" #dialogContent>
     <div class="dialog-content" (click)="onDialogClick($event)">
       <div class="dialog-header">
-        <h2>{{ prompt }}</h2>
+        <h2>{{ prompt() }}</h2>
       </div>
 
       <div class="dialog-body">
-        <div class="character-list">
-          @for (option of characters; track option.character.id) {
-            <div
-              class="character-item"
-              [class.disabled]="!option.enabled"
-              [class.dead]="option.character.hp <= 0"
-              (click)="onCharacterClick(option)">
+        <app-selection-list
+          [options]="selectableCharacters()"
+          [allowArrowNavigation]="false"
+          [showShortcutsInList]="false"
+          (optionSelected)="onOptionSelected($event)"
+          (cancelled)="onCancelled()"
+        >
+          <ng-template #itemTemplate let-option>
+            <div class="character-item-content" [class.dead]="option.character.hp <= 0">
               <span class="char-number">{{ option.index }})</span>
               <div class="char-info">
                 <div class="char-header">
@@ -36,8 +38,8 @@
                 }
               </div>
             </div>
-          }
-        </div>
+          </ng-template>
+        </app-selection-list>
       </div>
 
       <div class="dialog-footer">

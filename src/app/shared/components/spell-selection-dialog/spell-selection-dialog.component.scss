@@ -61,35 +61,50 @@
   font-size: 1.4rem;
 }
 
-.spell-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+// Override SelectionListComponent styles for spell dialog
+:host ::ng-deep {
+  .selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
-.spell-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  font-size: 1.4rem;
-  transition: all 0.2s;
-  border-left: 4px solid var(--color-spell, #9c27b0);
+  .selection-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    font-size: 1.4rem;
+    transition: all 0.2s;
+    border-left: 4px solid var(--color-spell, #9c27b0);
 
-  &:not(.disabled) {
-    cursor: pointer;
+    &:not(.disabled) {
+      cursor: pointer;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateX(4px);
+      &:hover,
+      &.selected {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+      }
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
   }
 
-  &.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  // Hide the default shortcut display from SelectionListComponent
+  .item-shortcut {
+    display: none;
   }
+}
+
+.spell-item-content {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .spell-number {

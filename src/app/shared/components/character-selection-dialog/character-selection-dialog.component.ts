@@ -1,9 +1,10 @@
 import {
   Component,
-  Input,
-  Output,
-  EventEmitter,
-  HostListener,
+  input,
+  output,
+  computed,
+  signal,
+  effect,
   ViewChild,
   ElementRef,
   AfterViewChecked
@@ -11,11 +12,20 @@ import {
 import { CommonModule } from '@angular/common'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { SelectionListComponent, SelectableOption } from '../selection-list/selection-list.component'
 
 export interface CharacterOption {
   character: Character
   index: number  // 1-6 for keyboard shortcuts
   enabled: boolean
+}
+
+/**
+ * Extended CharacterOption with SelectableOption fields for SelectionListComponent.
+ */
+export interface CharacterSelectableOption extends CharacterOption, SelectableOption {
+  id: string
+  shortcut: string
 }
 
 /**
@@ -40,79 +50,84 @@ export interface CharacterOption {
 @Component({
   selector: 'app-character-selection-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SelectionListComponent],
   templateUrl: './character-selection-dialog.component.html',
   styleUrls: ['./character-selection-dialog.component.scss']
 })
 export class CharacterSelectionDialogComponent implements AfterViewChecked {
-  @Input() visible: boolean = false
-  @Input() characters: CharacterOption[] = []
-  @Input() prompt: string = 'SELECT TARGET'
+  // Signal-based inputs
+  readonly visible = input(false)
+  readonly characters = input<CharacterOption[]>([])
+  readonly prompt = input('SELECT TARGET')
 
-  @Output() characterSelected = new EventEmitter<Character>()
-  @Output() cancelled = new EventEmitter<void>()
+  // Outputs
+  readonly characterSelected = output<Character>()
+  readonly cancelled = output<void>()
 
+  // View reference for focus management
   @ViewChild('dialogContent') dialogContent?: ElementRef<HTMLDivElement>
 
-  private hasFocused = false
+  // Track focus state
+  private needsFocus = signal(false)
+
+  /**
+   * Convert CharacterOption[] to CharacterSelectableOption[] for SelectionListComponent.
+   * Maps index to shortcut string ('1', '2', etc.).
+   */
+  readonly selectableCharacters = computed((): CharacterSelectableOption[] => {
+    return this.characters().map(option => ({
+      ...option,
+      id: option.character.id,
+      shortcut: option.index.toString()
+    }))
+  })
+
+  constructor() {
+    // Watch visibility changes to trigger focus
+    effect(() => {
+      if (this.visible()) {
+        this.needsFocus.set(true)
+      }
+    })
+  }
 
   ngAfterViewChecked(): void {
-    // Auto-focus the dialog when it becomes visible
-    if (this.visible && !this.hasFocused && this.dialogContent) {
+    // Focus the dialog content when it becomes visible
+    if (this.needsFocus() && this.dialogContent?.nativeElement) {
       this.dialogContent.nativeElement.focus()
-      this.hasFocused = true
-    } else if (!this.visible && this.hasFocused) {
-      this.hasFocused = false
+      this.needsFocus.set(false)
     }
   }
 
-  @HostListener('keydown', ['$event'])
-  handleKeyPress(event: KeyboardEvent): void {
-    if (!this.visible) return
-
-    const key = event.key
-
-    // Check for number shortcuts (1-6)
-    if (['1', '2', '3', '4', '5', '6'].includes(key)) {
-      const index = parseInt(key, 10)
-      const option = this.characters.find(c => c.index === index && c.enabled)
-      if (option) {
-        this.characterSelected.emit(option.character)
-        event.preventDefault()
-        event.stopPropagation()
-      }
-      // Even if character disabled/not found, prevent propagation
-      event.preventDefault()
-      event.stopPropagation()
-      return
-    }
-
-    // ESC to cancel
-    if (key === 'Escape') {
-      this.cancelled.emit()
-      event.preventDefault()
-      event.stopPropagation()
-      return
-    }
-
-    // Stop all other key events from propagating when dialog is visible
-    event.preventDefault()
-    event.stopPropagation()
+  /**
+   * Handle option selection from SelectionListComponent.
+   */
+  onOptionSelected(option: CharacterSelectableOption): void {
+    this.characterSelected.emit(option.character)
   }
 
-  onBackdropClick(): void {
+  /**
+   * Handle cancellation from SelectionListComponent.
+   */
+  onCancelled(): void {
     this.cancelled.emit()
   }
 
-  onDialogClick(event: Event): void {
-    // Prevent backdrop click when clicking inside dialog
-    event.stopPropagation()
+  /**
+   * Handle backdrop click to cancel.
+   */
+  onBackdropClick(event: MouseEvent): void {
+    // Only cancel if clicking the backdrop itself
+    if (event.target === event.currentTarget) {
+      this.cancelled.emit()
+    }
   }
 
-  onCharacterClick(option: CharacterOption): void {
-    if (option.enabled) {
-      this.characterSelected.emit(option.character)
-    }
+  /**
+   * Prevent clicks inside dialog from propagating to backdrop.
+   */
+  onDialogClick(event: MouseEvent): void {
+    event.stopPropagation()
   }
 
   getHpPercent(char: Character): number {

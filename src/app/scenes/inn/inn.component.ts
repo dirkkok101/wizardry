@@ -10,18 +10,42 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
-import { MenuComponent, MenuItem } from '@shared/components/menu/menu.component';
+import { SelectionListComponent, SelectableOption } from '@shared/components/selection-list/selection-list.component';
+import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
+
+/**
+ * Room option for selection list - extends SelectableOption for keyboard/mouse support
+ */
+export interface RoomOption extends SelectableOption {
+  id: string;
+  shortcut: string;
+  enabled: boolean;
+  name: string;
+  cost: number;
+  costUnit: string;
+  benefit: string;
+  description: string;
+  roomType: RoomType;
+}
 
 interface LevelUpDisplayData {
   newLevel: number;
   hpIncrease: number;
   statChanges: Record<string, number>;
   newSpells: Array<{ id: string; name: string }>;
+}
+
+interface RestProgressData {
+  weeksRested: number;
+  totalHpRecovered: number;
+  totalGoldSpent: number;
+  startingHp: number;
+  currentHp: number;
+  maxHp: number;
 }
 
 /**
@@ -34,7 +58,7 @@ interface LevelUpDisplayData {
  * - Level up when HP = max and XP sufficient
  *
  * Room Types:
- * - Stables: 0 gp/week, 0 HP/week
+ * - Stables: 0 gp/week, 0 HP/week (for level-up check only)
  * - Barracks: 10 gp/week, 1 HP/week
  * - Double: 50 gp/week, 3 HP/week
  * - Private: 200 gp/week, 7 HP/week
@@ -48,8 +72,7 @@ interface LevelUpDisplayData {
     SceneTitleComponent,
     SceneFooterComponent,
     PartyCharacterGridComponent,
-    ConfirmationDialogComponent,
-    MenuComponent
+    SelectionListComponent
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']
@@ -70,6 +93,8 @@ export class InnComponent implements OnInit {
   readonly confirmationMessage = signal('');
   readonly pendingRoomType = signal<RoomType | null>(null);
   readonly levelUpData = signal<LevelUpDisplayData | null>(null);
+  readonly restProgress = signal<RestProgressData | null>(null);
+  readonly isAutoResting = signal(false);
 
   // Party characters (computed from game state)
   readonly partyCharacters = computed(() =>
@@ -88,64 +113,56 @@ export class InnComponent implements OnInit {
     return GameStateQueries.getCharacter(this.gameState.state(), charId) || null;
   });
 
-  // Characters that can rest (not dead/ashes/lost)
-  readonly restableCharacters = computed(() => {
-    return this.partyCharacters().filter(c =>
-      c.status !== CharacterStatus.DEAD &&
-      c.status !== CharacterStatus.ASHES &&
-      c.status !== CharacterStatus.LOST
-    );
-  });
-
-  // Room menu items (static)
-  readonly roomMenuItems: MenuItem[] = [
-    {
-      id: RoomType.STABLES,
-      label: `STABLES (${InnService.getRoomCost(RoomType.STABLES)} gp, ${InnService.getRoomHealRate(RoomType.STABLES)} HP/week)`,
-      enabled: true,
-      shortcut: 'S'
-    },
-    {
-      id: RoomType.BARRACKS,
-      label: `BARRACKS (${InnService.getRoomCost(RoomType.BARRACKS)} gp, ${InnService.getRoomHealRate(RoomType.BARRACKS)} HP/week)`,
-      enabled: true,
-      shortcut: 'B'
-    },
-    {
-      id: RoomType.DOUBLE,
-      label: `DOUBLE (${InnService.getRoomCost(RoomType.DOUBLE)} gp, ${InnService.getRoomHealRate(RoomType.DOUBLE)} HP/week)`,
-      enabled: true,
-      shortcut: 'D'
-    },
-    {
-      id: RoomType.PRIVATE,
-      label: `PRIVATE (${InnService.getRoomCost(RoomType.PRIVATE)} gp, ${InnService.getRoomHealRate(RoomType.PRIVATE)} HP/week)`,
-      enabled: true,
-      shortcut: 'P'
-    },
-    {
-      id: RoomType.ROYAL_SUITE,
-      label: `ROYAL SUITE (${InnService.getRoomCost(RoomType.ROYAL_SUITE)} gp, ${InnService.getRoomHealRate(RoomType.ROYAL_SUITE)} HP/week)`,
-      enabled: true,
-      shortcut: 'R'
-    },
-    {
-      id: 'back',
-      label: 'BACK (ESC)',
-      enabled: true,
-      shortcut: 'ESC'
-    }
+  // Base room data (static)
+  private readonly roomData = [
+    { roomType: RoomType.STABLES, name: 'Stables', shortcut: 'S', description: 'Free but no healing - for level-up checks only' },
+    { roomType: RoomType.BARRACKS, name: 'Barracks', shortcut: 'B', description: 'Basic shared accommodation' },
+    { roomType: RoomType.DOUBLE, name: 'Double', shortcut: 'D', description: 'Shared room with moderate comfort' },
+    { roomType: RoomType.PRIVATE, name: 'Private', shortcut: 'P', description: 'Private room for faster recovery' },
+    { roomType: RoomType.ROYAL_SUITE, name: 'Royal Suite', shortcut: 'R', description: 'Luxury accommodation with maximum healing' }
   ];
 
-  // Footer menu items
-  readonly footerMenuItems = computed((): MenuItem[] => [
-    {
-      id: 'return',
-      label: 'Return to Castle (ESC)',
-      shortcut: 'ESC',
-      enabled: true
+  // Room options with affordability computed from party gold
+  readonly roomOptions = computed((): RoomOption[] => {
+    const gold = this.partyGold();
+    return this.roomData.map(room => {
+      const cost = InnService.getRoomCost(room.roomType);
+      return {
+        id: room.roomType,
+        shortcut: room.shortcut,
+        enabled: cost <= gold,
+        name: room.name,
+        cost,
+        costUnit: 'gp/week',
+        benefit: `${InnService.getRoomHealRate(room.roomType)} HP/week`,
+        description: room.description,
+        roomType: room.roomType
+      };
+    });
+  });
+
+  // Footer menu items - dynamic based on current state
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    if (this.showRoomSelection()) {
+      return [
+        {
+          id: 'back',
+          label: 'Back (ESC)',
+          shortcut: 'ESC',
+          enabled: true
+        }
+      ];
     }
-  ]);
+
+    return [
+      {
+        id: 'return',
+        label: 'Return to Castle (ESC)',
+        shortcut: 'ESC',
+        enabled: true
+      }
+    ];
+  });
 
   ngOnInit(): void {
     this.messages.clear();
@@ -160,6 +177,8 @@ export class InnComponent implements OnInit {
 
     if (itemId === 'return') {
       this.navigation.returnToCastle();
+    } else if (itemId === 'back') {
+      this.cancelRoomSelection();
     }
   }
 
@@ -188,44 +207,58 @@ export class InnComponent implements OnInit {
 
     this.selectedCharacterId.set(charId);
     this.showRoomSelection.set(true);
+    this.restProgress.set(null);
     this.messages.clear();
   }
 
-  handleRoomSelect(roomId: string): void {
-    if (roomId === 'back') {
-      this.cancelRoomSelection();
-      return;
-    }
-
-    const roomType = roomId as RoomType;
+  handleRoomSelected(option: RoomOption): void {
+    const roomType = option.roomType;
     const character = this.selectedCharacter();
     if (!character) {
       this.messages.showError('No character selected');
       return;
     }
 
-    // Validate affordability
+    // Validate affordability (double-check since component should prevent this)
     const validation = InnService.canAffordRoom(this.gameState.state(), roomType);
     if (!validation.allowed) {
       this.messages.showError(validation.reason || 'Cannot afford room');
       return;
     }
 
-    // Show confirmation
+    // Show confirmation with options
+    this.pendingRoomType.set(roomType);
     const cost = InnService.getRoomCost(roomType);
     const healRate = InnService.getRoomHealRate(roomType);
-    this.pendingRoomType.set(roomType);
-    this.confirmationMessage.set(
-      `Rest ${character.name} in ${roomType.toLowerCase().replace('_', ' ')}?\n` +
-      `Cost: ${cost} gp/week | Heal: ${healRate} HP/week`
-    );
+    const hpNeeded = character.maxHp - character.hp;
+    const weeksToHeal = healRate > 0 ? Math.ceil(hpNeeded / healRate) : 0;
+    const totalCost = cost * weeksToHeal;
+
+    let message = `Rest ${character.name} in ${option.name.toLowerCase()}?\n`;
+    message += `Cost: ${cost} gp/week | Heal: ${healRate} HP/week\n\n`;
+
+    if (hpNeeded > 0 && healRate > 0) {
+      message += `To fully heal (${hpNeeded} HP): ~${weeksToHeal} weeks, ~${totalCost} gp`;
+    } else if (hpNeeded <= 0) {
+      message += `Character is already at full HP. Rest to check for level-up.`;
+    } else {
+      message += `Stables provide no healing but allow level-up checks.`;
+    }
+
+    this.confirmationMessage.set(message);
     this.showConfirmation.set(true);
+  }
+
+  handleRoomSelectionCancelled(): void {
+    this.cancelRoomSelection();
   }
 
   cancelRoomSelection(): void {
     this.showRoomSelection.set(false);
     this.selectedCharacterId.set(null);
     this.pendingRoomType.set(null);
+    this.restProgress.set(null);
+    this.isAutoResting.set(false);
     this.messages.clear();
   }
 
@@ -245,9 +278,114 @@ export class InnComponent implements OnInit {
       return;
     }
 
+    // Initialize rest progress only if not already tracking
+    if (!this.restProgress()) {
+      this.restProgress.set({
+        weeksRested: 0,
+        totalHpRecovered: 0,
+        totalGoldSpent: 0,
+        startingHp: character.hp,
+        currentHp: character.hp,
+        maxHp: character.maxHp
+      });
+    }
+
     // Perform the rest
     this.performRest(character, roomType);
     this.cancelConfirmation();
+  }
+
+  /**
+   * Rest until fully healed (auto-rest mode)
+   */
+  confirmAutoRest(): void {
+    const roomType = this.pendingRoomType();
+    const character = this.selectedCharacter();
+
+    if (!roomType || !character) {
+      this.messages.showError('Invalid rest request');
+      this.cancelConfirmation();
+      return;
+    }
+
+    // Initialize rest progress only if not already tracking
+    if (!this.restProgress()) {
+      this.restProgress.set({
+        weeksRested: 0,
+        totalHpRecovered: 0,
+        totalGoldSpent: 0,
+        startingHp: character.hp,
+        currentHp: character.hp,
+        maxHp: character.maxHp
+      });
+    }
+
+    this.isAutoResting.set(true);
+    this.cancelConfirmation();
+    this.performAutoRest(character, roomType);
+  }
+
+  private performAutoRest(character: Character, roomType: RoomType): void {
+    // Rest loop until fully healed or can't afford
+    const restLoop = (): void => {
+      const currentChar = this.selectedCharacter();
+      if (!currentChar || !this.isAutoResting()) {
+        this.isAutoResting.set(false);
+        return;
+      }
+
+      // Check if fully healed
+      if (currentChar.hp >= currentChar.maxHp) {
+        this.isAutoResting.set(false);
+        this.checkForLevelUpAfterRest(currentChar);
+        return;
+      }
+
+      // Check affordability
+      const validation = InnService.canAffordRoom(this.gameState.state(), roomType);
+      if (!validation.allowed) {
+        this.isAutoResting.set(false);
+        this.messages.showError(`Ran out of gold! ${validation.reason}`);
+        return;
+      }
+
+      // Perform one week of rest
+      this.performSingleWeekRest(currentChar, roomType);
+
+      // Continue loop after a short delay for visual feedback
+      setTimeout(() => {
+        if (this.isAutoResting()) {
+          restLoop();
+        }
+      }, 100);
+    };
+
+    restLoop();
+  }
+
+  private performSingleWeekRest(character: Character, roomType: RoomType): void {
+    const currentState = this.gameState.state();
+
+    // Rest for one week
+    const restResult = InnService.restOneWeek(currentState, character, roomType);
+
+    // Update game state
+    this.gameState.updateState(state => ({
+      ...restResult.updatedState,
+      roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
+    }));
+
+    // Update progress
+    const progress = this.restProgress();
+    if (progress) {
+      this.restProgress.set({
+        ...progress,
+        weeksRested: progress.weeksRested + 1,
+        totalHpRecovered: progress.totalHpRecovered + restResult.hpRecovered,
+        totalGoldSpent: progress.totalGoldSpent + restResult.goldSpent,
+        currentHp: restResult.updatedCharacter.hp
+      });
+    }
   }
 
   private performRest(character: Character, roomType: RoomType): void {
@@ -269,28 +407,65 @@ export class InnComponent implements OnInit {
       roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
     }));
 
+    // Update progress
+    const progress = this.restProgress();
+    if (progress) {
+      this.restProgress.set({
+        ...progress,
+        weeksRested: progress.weeksRested + 1,
+        totalHpRecovered: progress.totalHpRecovered + restResult.hpRecovered,
+        totalGoldSpent: progress.totalGoldSpent + restResult.goldSpent,
+        currentHp: restResult.updatedCharacter.hp
+      });
+    }
+
     // Check if fully healed
     if (restResult.isFullyHealed) {
-      // Check for level up
-      const updatedChar = restResult.updatedCharacter;
-      if (LevelUpService.canLevelUp(updatedChar)) {
-        this.processLevelUp(updatedChar);
-        return;
-      }
-
-      // Fully healed, no level up
-      this.messages.showSuccess(
-        `${character.name} is fully rested! HP: ${updatedChar.hp}/${updatedChar.maxHp}`
-      );
-      this.showRoomSelection.set(false);
-      this.selectedCharacterId.set(null);
+      this.checkForLevelUpAfterRest(restResult.updatedCharacter);
     } else {
       // Show progress and allow continuing
-      this.messages.showSuccess(
-        `Rested 1 week. HP: ${character.hp} → ${restResult.updatedCharacter.hp} (+${restResult.hpRecovered}) | ` +
-        `Gold spent: ${restResult.goldSpent}`
-      );
+      this.showRestProgressMessage(restResult.updatedCharacter, restResult.hpRecovered, restResult.goldSpent);
     }
+  }
+
+  private checkForLevelUpAfterRest(character: Character): void {
+    if (LevelUpService.canLevelUp(character)) {
+      this.processLevelUp(character);
+    } else {
+      // Fully healed, no level up
+      const progress = this.restProgress();
+      if (progress && progress.weeksRested > 0) {
+        this.messages.showSuccess(
+          `${character.name} is fully rested after ${progress.weeksRested} week(s)! ` +
+          `HP: ${progress.startingHp} → ${character.hp}/${character.maxHp} | ` +
+          `Gold spent: ${progress.totalGoldSpent}`
+        );
+      } else {
+        this.messages.showSuccess(
+          `${character.name} is already fully rested! HP: ${character.hp}/${character.maxHp}`
+        );
+      }
+      this.showRoomSelection.set(false);
+      this.selectedCharacterId.set(null);
+      this.restProgress.set(null);
+    }
+  }
+
+  private showRestProgressMessage(character: Character, hpRecovered: number, goldSpent: number): void {
+    const progress = this.restProgress();
+    const hpRemaining = character.maxHp - character.hp;
+
+    let message = `Rested 1 week. HP: ${character.hp - hpRecovered} → ${character.hp} (+${hpRecovered})`;
+    if (goldSpent > 0) {
+      message += ` | Gold: -${goldSpent}`;
+    }
+    message += ` | ${hpRemaining} HP remaining to full`;
+
+    if (progress && progress.weeksRested > 1) {
+      message += ` | Total: ${progress.weeksRested} weeks, ${progress.totalGoldSpent} gp`;
+    }
+
+    this.messages.showSuccess(message);
   }
 
   private processLevelUp(character: Character): void {
@@ -320,12 +495,18 @@ export class InnComponent implements OnInit {
 
     // Close room selection
     this.showRoomSelection.set(false);
+    this.restProgress.set(null);
   }
 
   dismissLevelUp(): void {
     this.levelUpData.set(null);
     this.selectedCharacterId.set(null);
+    this.restProgress.set(null);
     this.messages.showSuccess('Level up complete!');
+  }
+
+  stopAutoRest(): void {
+    this.isAutoResting.set(false);
   }
 
   @HostListener('window:keydown.escape')
@@ -333,6 +514,8 @@ export class InnComponent implements OnInit {
     // Handle ESC based on current state
     if (this.levelUpData()) {
       this.dismissLevelUp();
+    } else if (this.isAutoResting()) {
+      this.stopAutoRest();
     } else if (this.showConfirmation()) {
       this.cancelConfirmation();
     } else if (this.showRoomSelection()) {
@@ -347,6 +530,22 @@ export class InnComponent implements OnInit {
     // Dismiss level up display on Enter
     if (this.levelUpData()) {
       this.dismissLevelUp();
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent): void {
+    // Handle dialog shortcuts when confirmation is showing
+    if (this.showConfirmation()) {
+      const key = event.key.toLowerCase();
+
+      if (key === '1') {
+        event.preventDefault();
+        this.confirmRest();
+      } else if (key === 'a') {
+        event.preventDefault();
+        this.confirmAutoRest();
+      }
     }
   }
 }
