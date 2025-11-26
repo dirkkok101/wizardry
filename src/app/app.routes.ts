@@ -11,6 +11,7 @@ import { CharacterInspectionComponent } from '@scenes/character-inspection/chara
 import { SpellCastingComponent } from '@scenes/spell-casting/spell-casting.component';
 import { MazeComponent } from '@scenes/maze/maze.component';
 import { CombatComponent } from '@scenes/combat-scene/combat';
+import { ChestComponent } from '@scenes/chest/chest.component';
 
 export const routes: Routes = [
   {
@@ -60,6 +61,10 @@ export const routes: Routes = [
   {
     path: 'combat',
     component: CombatComponent
+  },
+  {
+    path: 'chest',
+    component: ChestComponent
   },
   {
     path: '**',

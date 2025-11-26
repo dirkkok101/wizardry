@@ -1,0 +1,125 @@
+<div class="chest-scene">
+  <app-scene-title title="TREASURE CHEST" [showPartyGold]="true" />
+
+  <div class="chest-content">
+    <!-- Character Selection Mode -->
+    @if (mode() === 'CHARACTER_SELECT') {
+      <div class="character-select">
+        <p class="instruction">Who will handle the chest?</p>
+
+        <div class="character-list">
+          @for (char of availableCharacters(); track char.id; let i = $index) {
+            <button
+              class="character-option"
+              [class.recommended]="recommendedHandler()?.character?.id === char.id"
+              (click)="selectCharacter(i)"
+            >
+              <span class="number">{{ i + 1 }}.</span>
+              <span class="name">{{ char.name }}</span>
+              <span class="class">({{ char.class }})</span>
+              @if (recommendedHandler()?.character?.id === char.id) {
+                <span class="star">*</span>
+              }
+            </button>
+          }
+        </div>
+
+        @if (recommendedHandler()) {
+          <p class="hint">* Recommended for trap handling</p>
+        }
+      </div>
+    }
+
+    <!-- Action Selection Mode -->
+    @if (mode() === 'ACTION_SELECT') {
+      <div class="action-mode">
+        <div class="chest-info">
+          <p class="handler">Handler: {{ selectedOpener()?.name }}</p>
+          <p class="trap-status">{{ getTrapStatusText() }}</p>
+
+          @if (!chest()?.trapIdentified) {
+            <p class="chance-info">{{ getInspectChanceText() }}</p>
+          }
+          @if (chest()?.trapIdentified && chest()?.trapped && !chest()?.trapDisarmed) {
+            <p class="chance-info">{{ getDisarmChanceText() }}</p>
+          }
+        </div>
+
+        @if (lastActionMessage()) {
+          <div class="action-message">
+            {{ lastActionMessage() }}
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Caster Selection Mode (CALFO) -->
+    @if (mode() === 'CASTER_SELECT') {
+      <div class="caster-select">
+        <p class="instruction">Who will cast CALFO?</p>
+
+        <div class="character-list">
+          @for (caster of calfoEligibleCasters(); track caster.id; let i = $index) {
+            <button
+              class="character-option"
+              (click)="selectCaster(i)"
+            >
+              <span class="number">{{ i + 1 }}.</span>
+              <span class="name">{{ caster.name }}</span>
+              <span class="sp">(SP: {{ caster.spellPoints?.priest?.level2?.current || 0 }})</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Trap Name Input Mode -->
+    @if (mode() === 'TRAP_NAME_INPUT') {
+      <div class="trap-input">
+        <p class="instruction">Enter the trap name to disarm:</p>
+        <p class="hint">Trap identified as: {{ chest()?.trapType }}</p>
+
+        <div class="input-display">
+          <span class="input-text">{{ trapNameInput() }}</span>
+          <span class="cursor">_</span>
+        </div>
+
+        <p class="input-hint">Type the trap name exactly, then press ENTER</p>
+      </div>
+    }
+
+    <!-- Inventory Warning Mode -->
+    @if (mode() === 'INVENTORY_WARNING') {
+      <div class="inventory-warning">
+        <p class="warning-icon">!</p>
+        <p class="warning-text">{{ inventoryWarning() }}</p>
+        <p class="warning-question">Open chest anyway?</p>
+      </div>
+    }
+
+    <!-- Result Display Mode -->
+    @if (mode() === 'RESULT_DISPLAY') {
+      <div class="result-display">
+        <div class="result-message">
+          {{ lastActionMessage() }}
+        </div>
+        <p class="continue-hint">Press ENTER to continue...</p>
+      </div>
+    }
+
+    <!-- Message Display -->
+    @if (messages.hasMessage()) {
+      <div class="message"
+           [class.error]="messages.isError()"
+           [class.success]="messages.isSuccess()"
+           [class.info]="messages.message()?.type === 'info'">
+        {{ messages.messageText() }}
+      </div>
+    }
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+</div>

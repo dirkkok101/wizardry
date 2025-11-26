@@ -389,6 +389,12 @@ export function getDataFileList(directory: string): string[] {
       ]
     case 'maps':
       return Array.from({ length: 10 }, (_, i) => `level-${String(i + 1).padStart(2, '0')}.json`)
+    case 'traps':
+      return [
+        'alarm.json', 'crossbow_bolt.json', 'exploding_box.json', 'gas_bomb.json',
+        'mage_blaster.json', 'poison_needle.json', 'priest_blaster.json', 'stunner.json',
+        'teleporter.json'
+      ]
     default:
       throw new Error(`Unknown data directory: ${directory}`)
   }

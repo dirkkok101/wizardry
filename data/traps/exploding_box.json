@@ -1,0 +1,7 @@
+{
+  "id": "EXPLODING_BOX",
+  "name": "EXPLODING BOX",
+  "targetMode": "party",
+  "damageFormula": "3d6",
+  "description": "Explodes, damaging entire party"
+}

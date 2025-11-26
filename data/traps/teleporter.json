@@ -1,0 +1,7 @@
+{
+  "id": "TELEPORTER",
+  "name": "TELEPORTER",
+  "targetMode": "special",
+  "specialEffect": "teleport",
+  "description": "Teleports party to random location"
+}

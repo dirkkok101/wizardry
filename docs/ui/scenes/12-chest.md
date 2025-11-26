@@ -235,31 +235,34 @@ function canOpenChest(opener: Character): { allowed: boolean; reason?: string } 
 5. Small chance (1-2%) to accidentally trigger trap
 6. Return to action menu
 
-**Detection Chance:**
+**Detection Chance (Original Wizardry Formula):**
 
 ```typescript
-function calculateDetectionChance(opener: Character, chest: Chest): number {
-  const baseChance = opener.agility * 6  // AGI × 6%
+function calculateDetectionChance(opener: Character): number {
+  const agi = opener.agility
 
-  // Class bonuses
-  const classBonus = {
-    [Class.THIEF]: 30,
-    [Class.NINJA]: 40,
-    [Class.BISHOP]: 10,
-    default: 0
-  }[opener.class] || 0
+  // Class determines multiplier (not additive bonus)
+  let multiplier: number
+  switch (opener.class) {
+    case Class.THIEF:  multiplier = 6; break  // AGI × 6%
+    case Class.NINJA:  multiplier = 4; break  // AGI × 4%
+    default:           multiplier = 1; break  // AGI × 1%
+  }
 
-  const totalChance = baseChance + classBonus
-  const difficulty = chest.difficulty || 1
-
-  return Math.min(totalChance / difficulty, 95)  // Max 95%
+  const chance = agi * multiplier
+  return Math.min(chance, 95)  // Capped at 95%
 }
 
+// Examples:
+// Thief AGI 16: 16 × 6 = 96% → capped to 95%
+// Ninja AGI 18: 18 × 4 = 72%
+// Fighter AGI 12: 12 × 1 = 12%
+
 function attemptDetection(opener: Character, chest: Chest): { success: boolean; triggered: boolean } {
-  const chance = calculateDetectionChance(opener, chest)
+  const chance = calculateDetectionChance(opener)
   const roll = random(1, 100)
 
-  // 1-2% chance to trigger trap during inspection
+  // 1-2% chance to trigger trap during inspection (critical failure)
   const triggerRoll = random(1, 100)
   const triggered = triggerRoll <= 2
 
@@ -418,46 +421,58 @@ function validateTrapName(input: string, chest: Chest): boolean {
 }
 ```
 
-**Disarm Chance:**
+**Disarm Chance (Original Wizardry Formula):**
 
 ```typescript
-function calculateDisarmChance(opener: Character, chest: Chest): number {
-  const baseChance = 50
+function calculateDisarmChance(opener: Character, mazeLevel: number): number {
+  // Thieves/Ninjas get +50 effective level bonus
+  const levelBonus = (opener.class === Class.THIEF || opener.class === Class.NINJA) ? 50 : 0
+  const effectiveLevel = opener.level + levelBonus
 
-  // Class bonuses
-  const classBonus = {
-    [Class.THIEF]: 50,
-    [Class.NINJA]: 60,
-    [Class.BISHOP]: 20,
-    default: 0
-  }[opener.class] || 0
+  // Original formula: (EffectiveLevel - MazeLevel) / 70
+  const chance = (effectiveLevel - mazeLevel) / 70
 
-  // Level bonus
-  const levelBonus = opener.level * 2
-
-  const totalChance = baseChance + classBonus + levelBonus
-  const difficulty = chest.difficulty || 1
-
-  return Math.min(totalChance / difficulty, 95)  // Max 95%
+  return Math.max(0, Math.min(chance, 0.95))  // Clamp 0% to 95%
 }
 
-function attemptDisarm(opener: Character, chest: Chest, trapName: string): { success: boolean; triggered: boolean } {
+// Examples (Maze Level 1):
+// Level 1 Thief:   (1+50-1)/70 = 71%
+// Level 10 Thief:  (10+50-1)/70 = 84%
+// Level 1 Fighter: (1+0-1)/70 = 0%
+// Level 51 Fighter: (51+0-1)/70 = 71% (same as Level 1 Thief!)
+
+function calculateTriggerAvoidance(opener: Character): number {
+  // If disarm fails, AGI × 5% chance to NOT trigger trap
+  // Allows retry if successful
+  return opener.agility * 0.05
+}
+
+function attemptDisarm(opener: Character, chest: Chest, mazeLevel: number, trapName: string): { success: boolean; triggered: boolean } {
   const nameMatches = validateTrapName(trapName, chest)
 
   if (!nameMatches) {
-    // Wrong trap name: 80% chance to trigger
+    // Wrong trap name behavior depends on dungeon depth
+    const wrongNameTriggerChance = mazeLevel <= 4 ? 0.2 : 0.8
     return {
       success: false,
-      triggered: random(1, 100) <= 80
+      triggered: random(0, 1) < wrongNameTriggerChance
     }
   }
 
-  const chance = calculateDisarmChance(opener, chest)
-  const roll = random(1, 100)
+  const chance = calculateDisarmChance(opener, mazeLevel)
+  const roll = random(0, 1)
+
+  if (roll < chance) {
+    return { success: true, triggered: false }
+  }
+
+  // Failed disarm - check AGI save to avoid triggering
+  const avoidChance = calculateTriggerAvoidance(opener)
+  const avoided = random(0, 1) < avoidChance
 
   return {
-    success: roll <= chance,
-    triggered: roll > chance  // Failed disarm triggers trap
+    success: false,
+    triggered: !avoided  // If not avoided, trap triggers
   }
 }
 ```

@@ -1,0 +1,8 @@
+{
+  "id": "GAS_BOMB",
+  "name": "GAS BOMB",
+  "targetMode": "party",
+  "damageFormula": "2d6",
+  "statusEffect": "POISONED",
+  "description": "Poison gas affects entire party"
+}

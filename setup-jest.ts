@@ -3,6 +3,7 @@ import { SpellDataLoader } from '@services/SpellDataLoader';
 import { MonsterDataLoader } from '@services/MonsterDataLoader';
 import { ClassDataLoader } from '@services/ClassDataLoader';
 import { ItemDataLoader } from '@services/ItemDataLoader';
+import { TrapDataLoader } from '@services/TrapDataLoader';
 import { RandomService } from '@services/RandomService';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -48,13 +49,14 @@ global.fetch = jest.fn(async (url: string) => {
   }
 }) as jest.Mock;
 
-// Pre-load classes, spells, monsters, and items for all tests using real data
+// Pre-load classes, spells, monsters, items, and traps for all tests using real data
 beforeAll(async () => {
   await Promise.all([
     ClassDataLoader.loadAllClasses(),
     SpellDataLoader.loadAllSpells(),
     MonsterDataLoader.loadAllMonsters(),
-    ItemDataLoader.loadAllItems()
+    ItemDataLoader.loadAllItems(),
+    TrapDataLoader.loadAllTraps()
   ]);
 });
 
@@ -64,6 +66,7 @@ afterAll(() => {
   SpellDataLoader.clearCache();
   MonsterDataLoader.clearCache();
   ItemDataLoader.clearCache();
+  TrapDataLoader.clearCache();
 });
 
 // Reset RandomService before each test to ensure deterministic behavior

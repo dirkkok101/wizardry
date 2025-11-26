@@ -3,7 +3,7 @@
 **Comprehensive validation of trap, chest, and disarm mechanics in original Wizardry 1.**
 
 ## Research Date
-2025-10-26
+2025-10-26 (initial), 2025-11-26 (updated with precise formulas)
 
 ## Sources
 
@@ -164,32 +164,47 @@ Others:   InspectChance% = AGI × 1   (max 95%)
 
 **Who Can Disarm**: Everyone (all classes)
 
-**Disarm Success Formula**:
+**Disarm Success Formula** (validated from original source code analysis):
 ```
-DisarmChance = based on Level
-Thieves/Ninjas: Effective Level = ActualLevel + 50
-Others: Effective Level = ActualLevel
+Thieves/Ninjas: DisarmChance = (50 + CharacterLevel - MazeLevel) / 70
+Others:         DisarmChance = (CharacterLevel - MazeLevel) / 70
+
+Result capped at 0% minimum, ~95% practical maximum
 ```
 
 **Key Insight**: Level 51 Fighter = Level 1 Thief in disarm ability
 
-### Disarm by Level
+**Failed Disarm - Avoiding Trap Trigger**:
+```
+If disarm fails, chance to NOT trigger trap = AGI × 5%
+  (i.e., RANDOM(0-19) < AGI means trap doesn't activate)
+```
+This gives the character another chance to retry the disarm.
 
-**Thieves/Ninjas**:
-| Level | Effective Level | Disarm Chance |
-|-------|-----------------|---------------|
-| 1 | 51 | High |
-| 5 | 55 | Very High |
-| 10 | 60 | Excellent |
-| 20+ | 70+ | Near certain |
+**Wrong Trap Name Behavior**:
+- **Easy levels (1-4)**: Entering wrong trap name usually allows retry
+- **Deep levels (5+)**: Entering wrong trap name usually triggers the trap
 
-**Other Classes**:
-| Level | Effective Level | Disarm Chance |
-|-------|-----------------|---------------|
-| 1 | 1 | Very Low |
-| 10 | 10 | Low |
-| 25 | 25 | Moderate |
-| 51 | 51 | Same as Level 1 Thief |
+### Disarm by Level (with Maze Level factor)
+
+**Example: Maze Level 1**
+
+| Class | Level | Formula | Disarm % |
+|-------|-------|---------|----------|
+| Thief | 1 | (50+1-1)/70 | 71% |
+| Thief | 10 | (50+10-1)/70 | 84% |
+| Thief | 20 | (50+20-1)/70 | 99% (capped ~95%) |
+| Fighter | 1 | (1-1)/70 | 0% |
+| Fighter | 10 | (10-1)/70 | 13% |
+| Fighter | 51 | (51-1)/70 | 71% (= Level 1 Thief) |
+
+**Example: Maze Level 5**
+
+| Class | Level | Formula | Disarm % |
+|-------|-------|---------|----------|
+| Thief | 1 | (50+1-5)/70 | 66% |
+| Thief | 10 | (50+10-5)/70 | 79% |
+| Fighter | 10 | (10-5)/70 | 7% |
 
 ### Disarm Process
 
@@ -197,21 +212,21 @@ Others: Effective Level = ActualLevel
 
 **2. Attempt Disarm**:
 - Must enter trap name correctly (e.g., "POISON NEEDLE")
-- Roll disarm check based on level
+- Roll disarm check based on level and maze level
 
 **3. Possible Outcomes**:
 - ✅ **Success**: Trap disarmed, can open chest safely
-- ⚠️ **Failure (no trigger)**: "You could not disarm it!" - Can retry
-- ❌ **Critical Failure**: "You set it off!" - Trap triggers
+- ⚠️ **Failure (no trigger)**: "You could not disarm it!" - Can retry (AGI × 5% save)
+- ❌ **Failure (triggered)**: "You set it off!" - Trap activates
 
 **4. Multiple Attempts**:
 - Can retry as many times as you like
-- Each attempt has risk of triggering
+- Each attempt has risk of triggering (unless saved by AGI roll)
 
 **Strategy**:
-- If you fail **without** triggering → you chose the **correct** trap type
+- If you fail **without** triggering → you chose the **correct** trap type AND got lucky on AGI save
 - Keep trying the same trap type
-- If you trigger → either wrong type or critical failure
+- If you trigger → either wrong type or failed the AGI save
 
 ### Disarm Strategy
 
@@ -474,7 +489,7 @@ Based on reward tier, chests can have:
    - ❌ MISSING: `OpenChestCommand.md`
 
 5. **Game Design Documentation**:
-   - ❌ MISSING: `/docs/game-design/XX-traps-chests.md` - Player-facing guide
+   - ✅ EXISTS: `/docs/game-design/08-traps-chests.md` - Player-facing guide (comprehensive)
    - Update: `/docs/game-design/04-spells.md` - Add CALFO trap detection details
 
 6. **Spell Documentation**:
@@ -505,17 +520,19 @@ function calculateInspectChance(character: Character): number {
 
 ### Trap Disarming
 ```typescript
-function calculateDisarmChance(character: Character): number {
-  let effectiveLevel = character.level
+function calculateDisarmChance(character: Character, mazeLevel: number): number {
+  const levelBonus = (character.class === 'Thief' || character.class === 'Ninja') ? 50 : 0
+  const effectiveLevel = character.level + levelBonus
 
-  if (character.class === 'Thief' || character.class === 'Ninja') {
-    effectiveLevel += 50
-  }
+  // Validated formula from original Wizardry source
+  const chance = (effectiveLevel - mazeLevel) / 70
+  return Math.max(0, Math.min(0.95, chance))  // Clamp 0% to 95%
+}
 
-  // Formula not explicitly stated in sources
-  // But higher effectiveLevel = higher success rate
-  // Exact formula may need empirical testing
-  return calculateSuccessFromLevel(effectiveLevel)
+// If disarm fails, chance to avoid triggering trap
+function calculateTriggerAvoidance(character: Character): number {
+  // RANDOM(0-19) < AGI means trap doesn't activate
+  return character.agility * 0.05  // AGI × 5%
 }
 ```
 
@@ -545,14 +562,15 @@ function calfoSuccess(): number {
 
 ## Validation Status
 
-- ✅ **Trap Types**: 8 chest trap types identified
+- ✅ **Trap Types**: 9 chest trap types identified (including ALARM)
 - ✅ **Inspect Formula**: AGI × (6 for Thief, 4 for Ninja, 1 for Others), max 95%
-- ✅ **Disarm Mechanics**: Level-based, +50 for Thief/Ninja
+- ✅ **Disarm Formula**: (EffectiveLevel - MazeLevel) / 70, where Thief/Ninja get +50 level bonus
+- ✅ **Failed Disarm Avoidance**: AGI × 5% chance to not trigger trap on failed disarm
 - ✅ **CALFO Spell**: 95% success rate
 - ✅ **Chest Contents**: Multi-item system with inventory risk
-- ⚠️ **Exact Disarm Formula**: Not explicitly stated (level-based, exact math unknown)
-- ⚠️ **Trap Damage**: Damage values not specified in sources
+- ✅ **Wrong Trap Name**: Easy levels allow retry, deep levels trigger trap
+- ⚠️ **Trap Damage**: Damage values partially specified (varies by trap type and level)
 
-**Validation Date**: 2025-10-26
+**Validation Date**: 2025-11-26
 **Validated By**: Claude Code (research compilation)
-**Sources**: 4 authoritative sources (Wizardry Wiki, DataDrivenGamer, GOG Forums, Strategy Wiki)
+**Sources**: 4+ authoritative sources (Wizardry Wiki, DataDrivenGamer, GOG Forums, Strategy Wiki, GameFAQs)

@@ -134,17 +134,22 @@ Effective Level = Your Level + Bonus
 - Thieves/Ninjas: +50 bonus
 - Others: No bonus
 
-Success% = (Effective Level - Trap Difficulty) × 5
-Minimum: 5%, Maximum: 95%
+Success% = (Effective Level - Dungeon Level) / 70
+Capped at 0% minimum, ~95% maximum
 ```
 
 **Key Insight**: **Level 1 Thief = Level 51 Fighter** in disarm ability!
 
+**If Disarm Fails - Avoiding Trigger**:
+```
+Avoid Trigger% = AGI × 5
+(Each point of AGI gives 5% chance to avoid setting off the trap)
+```
+
 **Results**:
 - ✅ Success: Trap disarmed, chest safe to open
-- ❌ Failed (right trap): Can retry
-- ⚠️ Failed (wrong trap): Likely triggers
-- ⚠️ Critical Failure: Triggers trap (even if right type)
+- ⚠️ Failed (saved): "You could not disarm it!" - Can retry (AGI saved you)
+- ❌ Failed (triggered): "You set it off!" - Trap activates
 
 **Example**:
 ```
@@ -153,8 +158,12 @@ Minimum: 5%, Maximum: 95%
 ```
 
 **Retry Strategy**:
-- If failed **without triggering** → You chose CORRECT trap type, keep trying!
-- If triggered → Trap was wrong type or critical failure
+- If failed **without triggering** → Correct trap type + your AGI saved you, keep trying!
+- If triggered → Wrong type OR failed AGI save
+
+**Dungeon Level Effect**:
+- Easy levels (1-4): Wrong trap name usually allows retry
+- Deep levels (5+): Wrong trap name usually triggers trap
 
 ### Option 4: Just Open It
 

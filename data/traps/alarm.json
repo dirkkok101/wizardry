@@ -1,0 +1,7 @@
+{
+  "id": "ALARM",
+  "name": "ALARM",
+  "targetMode": "special",
+  "specialEffect": "combat",
+  "description": "Triggers monster encounter"
+}
