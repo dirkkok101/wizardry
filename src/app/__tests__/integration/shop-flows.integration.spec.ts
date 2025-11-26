@@ -8,7 +8,7 @@ import { CharacterClass } from '../../../types/CharacterClass'
 import { CharacterStatus } from '../../../types/CharacterStatus'
 import { Race } from '../../../types/Race'
 import { Alignment } from '../../../types/Alignment'
-import { SHOP_INVENTORY, UNIDENTIFIED_ITEMS } from '../../../data/shop-inventory'
+import { SHOP_INVENTORY } from '../../../data/shop-inventory'
 
 describe('Integration: Shop Flows', () => {
   let component: ShopComponent
@@ -76,12 +76,13 @@ describe('Integration: Shop Flows', () => {
     const initialGold = gameState.state().party.gold || 0
 
     // BUY FLOW
-    component.handleMenuSelect('buy')
+    component.handleFooterAction('buy')
     expect(component.currentView()).toBe('buy')
 
     // Buy Long Sword (200 gold)
     const longSword = SHOP_INVENTORY.find(i => i.name === 'Long Sword')!
-    component.buyItem(longSword.id)
+    component.initiateBuy(longSword.id)
+    component.confirmAction()
 
     // Verify item in inventory and gold deducted
     let character = gameState.state().roster.get('char-1')!
@@ -90,7 +91,8 @@ describe('Integration: Shop Flows', () => {
 
     // Buy another item
     const dagger = SHOP_INVENTORY.find(i => i.name === 'Dagger')!
-    component.buyItem(dagger.id)
+    component.initiateBuy(dagger.id)
+    component.confirmAction()
 
     // Verify both items in inventory
     character = gameState.state().roster.get('char-1')!
@@ -99,12 +101,13 @@ describe('Integration: Shop Flows', () => {
     expect(gameState.state().party.gold).toBe(initialGold - longSword.price - dagger.price)
 
     // SELL FLOW
-    component.handleMenuSelect('sell')
+    component.handleFooterAction('sell')
     expect(component.currentView()).toBe('sell')
 
     // Sell the Long Sword (100 gold - 50% of 200)
     const sellPrice = Math.floor(longSword.price * 0.5)
-    component.sellItem(longSword.id)
+    component.initiateSell(longSword.id)
+    component.confirmAction()
 
     // Verify item removed and gold added
     character = gameState.state().roster.get('char-1')!
@@ -126,17 +129,20 @@ describe('Integration: Shop Flows', () => {
     const leatherArmor = SHOP_INVENTORY.find(i => i.name === 'Leather Armor')! // 50 gold
 
     // Buy 2 items
-    component.handleMenuSelect('buy')
-    component.buyItem(dagger.id)
-    component.buyItem(leatherArmor.id)
+    component.handleFooterAction('buy')
+    component.initiateBuy(dagger.id)
+    component.confirmAction()
+    component.initiateBuy(leatherArmor.id)
+    component.confirmAction()
 
     // Expected gold: 1000 - 20 - 50 = 930
     expect(gameState.state().party.gold).toBe(initialGold - dagger.price - leatherArmor.price)
 
     // Sell 1 item
-    component.handleMenuSelect('sell')
+    component.handleFooterAction('sell')
     const daggerSellPrice = Math.floor(dagger.price * 0.5)
-    component.sellItem(dagger.id)
+    component.initiateSell(dagger.id)
+    component.confirmAction()
 
     // Expected gold: 930 + 10 = 940
     expect(gameState.state().party.gold).toBe(initialGold - dagger.price - leatherArmor.price + daggerSellPrice)
@@ -150,19 +156,20 @@ describe('Integration: Shop Flows', () => {
 
   it('persists inventory changes across flow transitions', () => {
     // Buy an item
-    component.handleMenuSelect('buy')
+    component.handleFooterAction('buy')
     const item1 = SHOP_INVENTORY[0]
-    component.buyItem(item1.id)
+    component.initiateBuy(item1.id)
+    component.confirmAction()
 
     // Switch to sell view
-    component.handleMenuSelect('sell')
+    component.handleFooterAction('sell')
 
     // Item should still be in inventory
     const character = gameState.state().roster.get('char-1')!
     expect(character.inventory).toContain(item1.id)
 
     // Switch to identify view
-    component.handleMenuSelect('identify')
+    component.handleFooterAction('identify')
 
     // Item should still be there
     const character2 = gameState.state().roster.get('char-1')!

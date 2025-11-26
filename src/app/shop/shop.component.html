@@ -1,155 +1,222 @@
-<div class="shop">
-  <header>
-    <h1>BOLTAC'S TRADING POST</h1>
-  </header>
+<div class="shop-scene">
+  <app-scene-title title="BOLTAC'S TRADING POST" />
 
-  <main>
+  <div class="shop-content">
+    <!-- Character Selection View -->
+    @if (currentView() === 'character-select') {
+      <div class="character-select-view">
+        <h2 class="view-subtitle">Select a character to shop for:</h2>
+
+        @if (partyCharacters().length > 0) {
+          <app-party-character-grid
+            source="party"
+            [actions]="[{type: 'select', label: 'Shop'}, {type: 'inspect', label: 'View'}]"
+            emptyMessage="No party members available"
+            (actionClick)="handleCharacterAction($event)"
+          />
+        } @else {
+          <div class="empty-state">
+            <p>You need party members to shop.</p>
+            <p>Visit the Tavern to recruit characters.</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Main Menu View -->
     @if (currentView() === 'main') {
       <div class="main-view">
-        <app-menu
-          [items]="menuItems"
-          (select)="handleMenuSelect($event)"
-        />
-      </div>
-    }
-
-    @if (currentView() === 'buy') {
-      <div class="buy-view">
-        <h2>BUY ITEMS</h2>
-
         @if (selectedCharacter(); as character) {
-          <div class="item-list">
-            @for (item of shopInventory(); track item.id) {
-              <div class="item-row">
-                <div class="item-info">
-                  <span class="item-name">{{ item.name }}</span>
-                  <span class="item-description">{{ item.description }}</span>
-                </div>
-                <div class="item-price">
-                  <span class="buy-price">{{ item.price }} gold</span>
-                  <button
-                    class="buy-btn"
-                    (click)="buyItem(item.id)"
-                  >
-                    (B) Buy
-                  </button>
-                </div>
-              </div>
-            }
+          <div class="character-info">
+            <span class="shopping-for">Shopping for: <strong>{{ character.name }}</strong></span>
+            <span class="gold-display">Party Gold: <strong>{{ partyGold() }}</strong></span>
+            <span class="inventory-count">Inventory: {{ character.inventory.length }}/8 items</span>
           </div>
 
-          <div class="party-gold">
-            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+          <div class="menu-instructions">
+            <p>Select an action from the menu below:</p>
           </div>
-        } @else {
-          <p class="error-message">No character selected</p>
         }
-
-        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
       </div>
     }
 
-    @if (currentView() === 'sell') {
-      <div class="sell-view">
-        <h2>SELL ITEMS</h2>
+    <!-- Buy View -->
+    @if (currentView() === 'buy') {
+      <div class="transaction-view">
+        <h2 class="view-subtitle">Buy Items</h2>
 
-        @if (showSellConfirmation()) {
-          <div class="confirmation-dialog">
-            @if (getPendingSellItem(); as item) {
-              <p>Sell {{ item.name }} for {{ getSellPrice(item) }} gold?</p>
-              <div class="confirmation-actions">
-                <button class="confirm-btn" (click)="confirmSell()">(Y) Yes</button>
-                <button class="cancel-btn" (click)="cancelSell()">(N) No</button>
-              </div>
-            }
-          </div>
-        } @else {
-          @if (selectedCharacter(); as character) {
-            @if (getSellableItems().length > 0) {
-              <div class="item-list">
-                @for (item of getSellableItems(); track item.id) {
-                  <div class="item-row">
-                    <div class="item-info">
-                      <span class="item-name">{{ item.name }}</span>
-                      @if (item.equipped) {
-                        <span class="equipped-badge">(Equipped)</span>
-                      }
-                    </div>
-                    <div class="item-price">
-                      <span class="sell-price">Sell: {{ getSellPrice(item) }} gold</span>
-                      <button
-                        class="sell-btn"
-                        (click)="initiateSell(item.id)"
-                        [disabled]="getSellPrice(item) === 0"
-                      >
-                        (S) Sell
-                      </button>
-                    </div>
-                  </div>
+        <div class="gold-bar">
+          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
+        </div>
+
+        <div class="item-list">
+          @for (item of shopInventory(); track item.id) {
+            <div class="item-row" [class.unaffordable]="item.price > partyGold()">
+              <div class="item-details">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-type">{{ item.type }}</span>
+                @if (item.damage) {
+                  <span class="item-stat">DMG: {{ item.damage }}</span>
+                }
+                @if (item.defense) {
+                  <span class="item-stat">DEF: {{ item.defense }}</span>
                 }
               </div>
-            } @else {
-              <p class="empty-message">No items to sell</p>
-            }
-
-            <div class="party-gold">
-              <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
+              <div class="item-actions">
+                <span class="item-price">{{ item.price }} gold</span>
+                <button
+                  class="action-btn buy-btn"
+                  (click)="initiateBuy(item.id)"
+                  [disabled]="item.price > partyGold()"
+                >
+                  Buy
+                </button>
+              </div>
             </div>
-          } @else {
-            <p class="error-message">No character selected</p>
+          } @empty {
+            <p class="empty-message">No items available for purchase</p>
           }
-
-          <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
-        }
+        </div>
       </div>
     }
 
-    @if (currentView() === 'identify') {
-      <div class="identify-view">
-        <h2>IDENTIFY ITEMS</h2>
+    <!-- Sell View -->
+    @if (currentView() === 'sell') {
+      <div class="transaction-view">
+        <h2 class="view-subtitle">Sell Items</h2>
 
-        @if (selectedCharacter(); as character) {
-          @if (getUnidentifiedItems().length > 0) {
-            <div class="identify-info">
-              <p>Identification Cost: {{ getIdentifyCost() }} gold</p>
-            </div>
+        <div class="gold-bar">
+          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
+        </div>
 
-            <div class="item-list">
-              @for (item of getUnidentifiedItems(); track item.id) {
-                <div class="item-row">
-                  <div class="item-info">
-                    <span class="item-name">{{ item.unidentifiedName || 'Unknown Item' }}</span>
-                    <span class="item-type">{{ item.type }}</span>
-                  </div>
+        @if (getSellableItems().length > 0) {
+          <div class="item-list">
+            @for (item of getSellableItems(); track item.id) {
+              <div class="item-row">
+                <div class="item-details">
+                  <span class="item-name">
+                    {{ item.identified ? item.name : (item.unidentifiedName || '???Unknown Item???') }}
+                  </span>
+                  @if (item.equipped) {
+                    <span class="equipped-badge">Equipped</span>
+                  }
+                  @if (item.cursed && item.identified) {
+                    <span class="cursed-badge">Cursed</span>
+                  }
+                </div>
+                <div class="item-actions">
+                  <span class="item-price sell-price">{{ getSellPrice(item) }} gold</span>
                   <button
-                    class="identify-btn"
-                    (click)="identifyItem(item.id)"
+                    class="action-btn sell-btn"
+                    (click)="initiateSell(item.id)"
+                    [disabled]="getSellPrice(item) === 0"
                   >
-                    (I) Identify
+                    Sell
                   </button>
                 </div>
-              }
-            </div>
-
-            @if (messages.isSuccess()) {
-              <div class="identification-result">
-                <h3>Identification Result:</h3>
-                <p class="result-text">{{ messages.messageText() }}</p>
               </div>
             }
-          } @else {
-            <p class="empty-message">No unidentified items</p>
-          }
-
-          <div class="party-gold">
-            <strong>Party Gold:</strong> {{ gameState.party().gold || 0 }}
           </div>
         } @else {
-          <p class="error-message">No character selected</p>
+          <p class="empty-message">No items to sell</p>
         }
-
-        <button class="cancel-btn" (click)="cancelView()">(ESC) Back</button>
       </div>
     }
-  </main>
+
+    <!-- Identify View -->
+    @if (currentView() === 'identify') {
+      <div class="transaction-view">
+        <h2 class="view-subtitle">Identify Items</h2>
+
+        <div class="gold-bar">
+          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
+          <span class="service-cost">Identification Cost: {{ getIdentifyCost() }} gold</span>
+        </div>
+
+        @if (getUnidentifiedItems().length > 0) {
+          <div class="item-list">
+            @for (item of getUnidentifiedItems(); track item.id) {
+              <div class="item-row" [class.unaffordable]="partyGold() < getIdentifyCost()">
+                <div class="item-details">
+                  <span class="item-name unknown">{{ item.unidentifiedName || '???Unknown Item???' }}</span>
+                  <span class="item-type">{{ item.type }}</span>
+                </div>
+                <div class="item-actions">
+                  <button
+                    class="action-btn identify-btn"
+                    (click)="initiateIdentify(item.id)"
+                    [disabled]="partyGold() < getIdentifyCost()"
+                  >
+                    Identify
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-message">No unidentified items</p>
+        }
+      </div>
+    }
+
+    <!-- Uncurse View -->
+    @if (currentView() === 'uncurse') {
+      <div class="transaction-view">
+        <h2 class="view-subtitle">Uncurse Items</h2>
+
+        <div class="gold-bar">
+          <span>Party Gold: <strong>{{ partyGold() }}</strong></span>
+        </div>
+
+        @if (getCursedItems().length > 0) {
+          <div class="item-list">
+            @for (item of getCursedItems(); track item.id) {
+              <div class="item-row" [class.unaffordable]="partyGold() < getUncurseCost(item)">
+                <div class="item-details">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="cursed-badge">Cursed</span>
+                  @if (item.equipped) {
+                    <span class="equipped-badge">Equipped</span>
+                  }
+                </div>
+                <div class="item-actions">
+                  <span class="item-price uncurse-price">{{ getUncurseCost(item) }} gold</span>
+                  <button
+                    class="action-btn uncurse-btn"
+                    (click)="initiateUncurse(item.id)"
+                    [disabled]="partyGold() < getUncurseCost(item)"
+                  >
+                    Uncurse
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-message">No cursed items to remove</p>
+        }
+      </div>
+    }
+
+    <!-- Messages -->
+    @if (messages.hasMessage()) {
+      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+        {{ messages.messageText() }}
+      </div>
+    }
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Confirmation Dialog -->
+  @if (showConfirmation()) {
+    <app-confirmation-dialog
+      [message]="confirmationMessage()"
+      (confirm)="confirmAction()"
+      (cancel)="cancelAction()"
+    />
+  }
 </div>
