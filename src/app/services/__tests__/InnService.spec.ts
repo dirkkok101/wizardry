@@ -206,5 +206,68 @@ describe('InnService', () => {
       expect(result.spellPoints?.mage?.level2.current).toBe(2)
       expect(result.spellPoints?.mage?.level3.current).toBe(1)
     })
+
+    it('restores all priest spell points to maximum', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 0, max: 4 },
+        level2: { current: 1, max: 3 },
+        level3: { current: 0, max: 2 },
+        level4: { current: 0, max: 1 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const character = createTestCharacter({
+        spellPoints: { priest: depleted }
+      })
+
+      const result = InnService.restoreSpellPoints(character)
+
+      expect(result.spellPoints?.priest?.level1.current).toBe(4)
+      expect(result.spellPoints?.priest?.level2.current).toBe(3)
+      expect(result.spellPoints?.priest?.level3.current).toBe(2)
+      expect(result.spellPoints?.priest?.level4.current).toBe(1)
+    })
+
+    it('restores both mage and priest spell points for Bishop', () => {
+      const depletedMage: SpellPointPool = {
+        level1: { current: 0, max: 2 },
+        level2: { current: 0, max: 1 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const depletedPriest: SpellPointPool = {
+        level1: { current: 0, max: 2 },
+        level2: { current: 0, max: 1 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const character = createTestCharacter({
+        spellPoints: { mage: depletedMage, priest: depletedPriest }
+      })
+
+      const result = InnService.restoreSpellPoints(character)
+
+      expect(result.spellPoints?.mage?.level1.current).toBe(2)
+      expect(result.spellPoints?.mage?.level2.current).toBe(1)
+      expect(result.spellPoints?.priest?.level1.current).toBe(2)
+      expect(result.spellPoints?.priest?.level2.current).toBe(1)
+    })
+
+    it('returns character unchanged if no spellPoints', () => {
+      const character = createTestCharacter({
+        spellPoints: undefined
+      })
+
+      const result = InnService.restoreSpellPoints(character)
+
+      expect(result).toEqual(character)
+    })
   })
 })
