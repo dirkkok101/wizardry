@@ -246,6 +246,13 @@ export class ShopComponent implements OnInit {
     this.pendingAction.set(null);
   }
 
+  // Generate unique instance ID for purchased items
+  private generateInstanceId(baseId: string): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    return `${baseId}_${timestamp}_${random}`;
+  }
+
   // Complete buy transaction
   private completeBuy(itemId: string): void {
     const character = this.selectedCharacter();
@@ -257,8 +264,12 @@ export class ShopComponent implements OnInit {
     const charId = this.selectedCharacterId()!;
     const partyGold = this.partyGold();
 
-    // Create a copy of the item for the character's inventory
-    const itemCopy: Item = { ...item, equipped: false };
+    // Create a copy of the item with unique instance ID for the character's inventory
+    const itemCopy: Item = {
+      ...item,
+      id: this.generateInstanceId(item.id),
+      equipped: false
+    };
 
     this.gameState.updateState(state => {
       const updatedChar = {

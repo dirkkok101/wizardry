@@ -231,7 +231,8 @@ describe('ShopComponent', () => {
       component.confirmAction();
 
       const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory.find(i => i.id === item.id)).toBeDefined();
+      // Item has unique instance ID, so check by name instead
+      expect(char.inventory.find(i => i.name === item.name)).toBeDefined();
     });
 
     it('shows error when party cannot afford item', () => {
@@ -285,7 +286,8 @@ describe('ShopComponent', () => {
 
       expect(component.showConfirmation()).toBe(false);
       const char = gameState.state().roster.get('char-1')!;
-      expect(char.inventory.find(i => i.id === item.id)).toBeUndefined();
+      // Item should not be in inventory since purchase was cancelled
+      expect(char.inventory.find(i => i.name === item.name)).toBeUndefined();
     });
   });
 
