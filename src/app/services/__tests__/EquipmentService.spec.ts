@@ -1,5 +1,4 @@
 import { EquipmentService } from '../EquipmentService';
-import { ItemDataLoader } from '../ItemDataLoader';
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
 import { ItemType } from '@models/ItemType';
@@ -38,26 +37,6 @@ describe('EquipmentService', () => {
       equipped: false
     };
 
-    // Mock ItemDataLoader.getItem
-    jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
-      if (itemId === 'long_sword') return longSword;
-      if (itemId === 'plate_mail') {
-        return {
-          id: 'plate_mail',
-          name: 'Plate Mail',
-          type: ItemType.ARMOR,
-          slot: ItemSlot.ARMOR,
-          price: 750,
-          defense: 5,
-          classRestrictions: ['FIGHTER', 'SAMURAI', 'LORD'],
-          cursed: false,
-          identified: true,
-          equipped: false
-        };
-      }
-      return null;
-    });
-
     fighter = {
       id: 'fighter-1',
       name: 'Test Fighter',
@@ -80,13 +59,10 @@ describe('EquipmentService', () => {
       vim: { current: 100, max: 100 },
       knownSpells: [],
       inventory: [longSword],
+      gold: 0,
       createdAt: Date.now(),
       lastModified: Date.now()
     };
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   describe('canEquipItem', () => {
@@ -125,7 +101,8 @@ describe('EquipmentService', () => {
     it('equips weapon from inventory to slot', () => {
       const result = EquipmentService.equipItem(fighter, 'long_sword');
 
-      expect(result.equippedWeapon).toBe('long_sword');
+      expect(result.equippedWeapon?.id).toBe('long_sword');
+      expect(result.equippedWeapon?.equipped).toBe(true);
       expect(result.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
     });
 
@@ -145,19 +122,13 @@ describe('EquipmentService', () => {
 
     it('unequips existing item when slot occupied', () => {
       const shortSword = createItem('short_sword', 'Short Sword')
-      // Mock the short_sword for ItemDataLoader
-      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
-        if (itemId === 'short_sword') return shortSword;
-        if (itemId === 'long_sword') return longSword;
-        return null;
-      });
 
-      fighter.equippedWeapon = 'short_sword';
+      fighter.equippedWeapon = { ...shortSword, equipped: true };
       fighter.inventory = [longSword];
 
       const result = EquipmentService.equipItem(fighter, 'long_sword');
 
-      expect(result.equippedWeapon).toBe('long_sword');
+      expect(result.equippedWeapon?.id).toBe('long_sword');
       expect(result.inventory.find(i => i.id === 'short_sword')).toBeDefined();
       expect(result.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
     });
@@ -182,13 +153,13 @@ describe('EquipmentService', () => {
       const result = EquipmentService.equipItem(fighter, 'plate_mail');
 
       expect(result.ac).toBeLessThan(10);
-      expect(result.equippedArmor).toBe('plate_mail');
+      expect(result.equippedArmor?.id).toBe('plate_mail');
     });
   });
 
   describe('unequipItem', () => {
     beforeEach(() => {
-      fighter.equippedWeapon = 'long_sword';
+      fighter.equippedWeapon = { ...longSword, equipped: true };
       fighter.inventory = [];
     });
 
@@ -207,7 +178,7 @@ describe('EquipmentService', () => {
     });
 
     it('throws error if item is cursed', () => {
-      longSword.cursed = true;
+      fighter.equippedWeapon = { ...longSword, cursed: true, equipped: true };
 
       expect(() => EquipmentService.unequipItem(fighter, ItemSlot.WEAPON))
         .toThrow('Cannot unequip cursed item');
@@ -221,7 +192,19 @@ describe('EquipmentService', () => {
     });
 
     it('recalculates AC after unequipping armor', () => {
-      fighter.equippedArmor = 'plate_mail';
+      const plateMail: Item = {
+        id: 'plate_mail',
+        name: 'Plate Mail',
+        type: ItemType.ARMOR,
+        slot: ItemSlot.ARMOR,
+        price: 750,
+        defense: 5,
+        classRestrictions: ['FIGHTER', 'SAMURAI', 'LORD'],
+        cursed: false,
+        identified: true,
+        equipped: true
+      };
+      fighter.equippedArmor = plateMail;
       fighter.ac = 5;
       fighter.inventory = [];
 
@@ -233,81 +216,56 @@ describe('EquipmentService', () => {
   });
 
   describe('AC Calculation Integration', () => {
-    it('calculates AC correctly with full equipment set from transformation layer', () => {
-      // Mock ItemDataLoader to return transformed items
-      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((id: string) => {
-        const items: Record<string, Item> = {
-          'plate_mail': {
-            id: 'plate_mail',
-            name: 'Plate Mail',
-            type: ItemType.ARMOR,
-            slot: ItemSlot.ARMOR,
-            price: 750,
-            defense: 7, // Transformed from JSON ac: 7
-            cursed: false,
-            identified: true,
-            equipped: false,
-            // JSON fields preserved
-            category: 'armor',
-            armorType: 'body',
-            ac: 7,
-            cost: 750
-          },
-          'large_shield': {
-            id: 'large_shield',
-            name: 'Large Shield',
-            type: ItemType.SHIELD,
-            slot: ItemSlot.SHIELD,
-            price: 40,
-            defense: 4, // Transformed from JSON ac: 4
-            cursed: false,
-            identified: true,
-            equipped: false,
-            category: 'shield',
-            ac: 4,
-            cost: 40
-          },
-          'steel_helm': {
-            id: 'steel_helm',
-            name: 'Steel Helm',
-            type: ItemType.HELMET,
-            slot: ItemSlot.HELMET,
-            price: 100,
-            defense: 2, // Transformed from JSON ac: 2
-            cursed: false,
-            identified: true,
-            equipped: false,
-            category: 'helmet',
-            ac: 2,
-            cost: 100
-          },
-          'gauntlets': {
-            id: 'gauntlets',
-            name: 'Gauntlets',
-            type: ItemType.GAUNTLET,
-            slot: ItemSlot.GAUNTLETS,
-            price: 50,
-            defense: 2, // Transformed from JSON ac: 2
-            cursed: false,
-            identified: true,
-            equipped: false,
-            category: 'gauntlet',
-            ac: 2,
-            cost: 50
-          }
-        };
-        return items[id] || null;
-      });
+    it('calculates AC correctly with full equipment set', () => {
+      // Create test items directly
+      const plateMail: Item = {
+        id: 'plate_mail',
+        name: 'Plate Mail',
+        type: ItemType.ARMOR,
+        slot: ItemSlot.ARMOR,
+        price: 750,
+        defense: 7,
+        cursed: false,
+        identified: true,
+        equipped: false
+      };
+      const largeShield: Item = {
+        id: 'large_shield',
+        name: 'Large Shield',
+        type: ItemType.SHIELD,
+        slot: ItemSlot.SHIELD,
+        price: 40,
+        defense: 4,
+        cursed: false,
+        identified: true,
+        equipped: false
+      };
+      const steelHelm: Item = {
+        id: 'steel_helm',
+        name: 'Steel Helm',
+        type: ItemType.HELMET,
+        slot: ItemSlot.HELMET,
+        price: 100,
+        defense: 2,
+        cursed: false,
+        identified: true,
+        equipped: false
+      };
+      const gauntlets: Item = {
+        id: 'gauntlets',
+        name: 'Gauntlets',
+        type: ItemType.GAUNTLET,
+        slot: ItemSlot.GAUNTLETS,
+        price: 50,
+        defense: 2,
+        cursed: false,
+        identified: true,
+        equipped: false
+      };
 
       // Start with base AC 10
       fighter.ac = 10;
       fighter.agility = 15; // +2 AGI modifier
-
-      // Equip full armor set - get actual Item objects from the mock
-      const plateMail = ItemDataLoader.getItem('plate_mail')!;
-      const largeShield = ItemDataLoader.getItem('large_shield')!;
-      const steelHelm = ItemDataLoader.getItem('steel_helm')!;
-      const gauntlets = ItemDataLoader.getItem('gauntlets')!;
       fighter.inventory = [plateMail, largeShield, steelHelm, gauntlets];
 
       let char = fighter;
@@ -318,38 +276,16 @@ describe('EquipmentService', () => {
 
       // Expected AC: 10 (base) - 7 (armor) - 4 (shield) - 2 (helm) - 2 (gauntlets) - 2 (AGI) = -7
       expect(char.ac).toBe(-7);
-      expect(char.equippedArmor).toBe('plate_mail');
-      expect(char.equippedShield).toBe('large_shield');
-      expect(char.equippedHelmet).toBe('steel_helm');
-      expect(char.equippedGauntlets).toBe('gauntlets');
+      expect(char.equippedArmor?.id).toBe('plate_mail');
+      expect(char.equippedShield?.id).toBe('large_shield');
+      expect(char.equippedHelmet?.id).toBe('steel_helm');
+      expect(char.equippedGauntlets?.id).toBe('gauntlets');
     });
 
     it('confirms weapons do not contribute to AC', () => {
-      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((id: string) => {
-        if (id === 'long_sword') {
-          return {
-            id: 'long_sword',
-            name: 'Long Sword',
-            type: ItemType.WEAPON,
-            slot: ItemSlot.WEAPON,
-            price: 25,
-            damage: 8, // Transformed from damageRoll.max
-            defense: 0, // Weapons have no defense
-            cursed: false,
-            identified: true,
-            equipped: false,
-            category: 'weapon',
-            weaponType: 'sword',
-            damageRoll: { dice: '1d8', min: 1, max: 8 },
-            cost: 25
-          };
-        }
-        return null;
-      });
-
       fighter.ac = 10;
       fighter.agility = 10; // 0 AGI modifier
-      const sword = {
+      const sword: Item = {
         id: 'long_sword',
         name: 'Long Sword',
         type: ItemType.WEAPON,
@@ -359,11 +295,7 @@ describe('EquipmentService', () => {
         defense: 0,
         cursed: false,
         identified: true,
-        equipped: false,
-        category: 'weapon',
-        weaponType: 'sword',
-        damageRoll: { dice: '1d8', min: 1, max: 8 },
-        cost: 25
+        equipped: false
       };
       fighter.inventory = [sword];
 
@@ -371,7 +303,7 @@ describe('EquipmentService', () => {
 
       // AC should remain 10 - weapon doesn't contribute to AC
       expect(result.ac).toBe(10);
-      expect(result.equippedWeapon).toBe('long_sword');
+      expect(result.equippedWeapon?.id).toBe('long_sword');
     });
   });
 });

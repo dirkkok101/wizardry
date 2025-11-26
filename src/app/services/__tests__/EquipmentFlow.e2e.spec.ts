@@ -84,6 +84,7 @@ describe('Equipment Flow E2E', () => {
       status: CharacterStatus.OK,
       level: 5,
       experience: 5000,
+      age: 20,
       strength: 18,
       intelligence: 10,
       piety: 10,
@@ -95,8 +96,8 @@ describe('Equipment Flow E2E', () => {
       ac: 10,
       gold: 0,
       inventory: [],
-      spellBook: { mage: [], priest: [] },
-      spellPoints: { mage: [0, 0, 0, 0, 0, 0, 0], priest: [0, 0, 0, 0, 0, 0, 0] }
+      knownSpells: [],
+      vim: { current: 100, max: 100 }
     };
 
     mage = {
@@ -134,13 +135,13 @@ describe('Equipment Flow E2E', () => {
 
       // Step 3: Equip weapon
       fighter = EquipmentService.equipItem(fighter, 'long_sword');
-      expect(fighter.equippedWeapon).toBe('long_sword');
+      expect(fighter.equippedWeapon?.id).toBe('long_sword');
       expect(fighter.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
       expect(fighter.ac).toBe(10 - 2); // Base 10 - AGI modifier (no weapon bonus)
 
       // Step 4: Equip armor (should recalculate AC)
       fighter = EquipmentService.equipItem(fighter, 'plate_mail');
-      expect(fighter.equippedArmor).toBe('plate_mail');
+      expect(fighter.equippedArmor?.id).toBe('plate_mail');
       expect(fighter.inventory).toHaveLength(0);
       expect(fighter.ac).toBe(10 - 5 - 2); // Base 10 - armor bonus - AGI modifier
       expect(fighter.ac).toBe(3);
@@ -168,7 +169,7 @@ describe('Equipment Flow E2E', () => {
       expect(mage.inventory.find(i => i.id === 'long_sword')).toBeUndefined();
 
       // Final state verification
-      expect(fighter.equippedArmor).toBe('plate_mail');
+      expect(fighter.equippedArmor?.id).toBe('plate_mail');
       expect(fighter.inventory).toHaveLength(0);
       expect(mage.inventory).toHaveLength(0);
     });
@@ -202,7 +203,7 @@ describe('Equipment Flow E2E', () => {
         currentAC -= 5; // Plate Mail AC 5
         currentAC -= startingAGI; // AGI modifier
         expect(fighter.ac).toBe(currentAC);
-        expect(fighter.equippedArmor).toBe('plate_mail');
+        expect(fighter.equippedArmor?.id).toBe('plate_mail');
       }
 
       if (fighter.inventory.find(i => i.id === 'large_shield')) {
@@ -212,7 +213,7 @@ describe('Equipment Flow E2E', () => {
           currentAC -= shield.defense;
         }
         expect(fighter.ac).toBe(currentAC);
-        expect(fighter.equippedShield).toBe('large_shield');
+        expect(fighter.equippedShield?.id).toBe('large_shield');
       }
 
       // Final AC should be significantly lower (better) than starting AC
@@ -265,7 +266,7 @@ describe('Equipment Flow E2E', () => {
       fighter.inventory = [longSword!];
       fighter = EquipmentService.equipItem(fighter, 'long_sword');
 
-      expect(fighter.equippedWeapon).toBe('long_sword');
+      expect(fighter.equippedWeapon?.id).toBe('long_sword');
 
       // Cannot drop equipped item - must unequip first
       expect(() => {
@@ -286,14 +287,14 @@ describe('Equipment Flow E2E', () => {
         fighter.inventory = [cursedArmor];
         fighter = EquipmentService.equipItem(fighter, 'cursed_armor');
 
-        expect(fighter.equippedArmor).toBe('cursed_armor');
+        expect(fighter.equippedArmor?.id).toBe('cursed_armor');
 
         // Cannot unequip cursed item
         expect(() => {
           EquipmentService.unequipItem(fighter, ItemSlot.ARMOR);
         }).toThrow('Cannot unequip cursed item');
 
-        expect(fighter.equippedArmor).toBe('cursed_armor');
+        expect(fighter.equippedArmor?.id).toBe('cursed_armor');
       } else {
         // No cursed items in data, skip test
         console.log('Skipping cursed item test - no cursed items in data files');
