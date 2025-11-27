@@ -49,11 +49,20 @@
   gap: $spacing-md;
 }
 
-// Shortcut hints inside cards (projected content)
+// Wrapper for action card with shortcut hint
+.rest-action-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}
+
+// Shortcut hint next to cards
 .shortcut-hint {
   color: $color-amber;
   font-weight: bold;
-  margin-right: $spacing-xs;
+  font-size: $font-size-large;
+  min-width: 2rem;
+  padding-top: $spacing-md;
 }
 
 // Cost summary box

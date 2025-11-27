@@ -24,12 +24,13 @@
           <h3 class="section-title">REST OPTIONS</h3>
           <div class="rest-actions">
             @for (config of restActionConfigs(); track config.type; let i = $index) {
-              <app-rest-action-card
-                [config]="config"
-                (selected)="handleRestActionSelected($event)"
-              >
+              <div class="rest-action-wrapper">
                 <span class="shortcut-hint">({{ i + 1 }})</span>
-              </app-rest-action-card>
+                <app-rest-action-card
+                  [config]="config"
+                  (selected)="handleRestActionSelected($event)"
+                />
+              </div>
             }
           </div>
 
