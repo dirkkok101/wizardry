@@ -7,7 +7,11 @@ import { CombatService } from '@services/CombatService'
 import { RandomService } from '@services/RandomService'
 import { SpellCastingService } from '@services/SpellCastingService'
 import { VictoryService, VictoryRewards } from '@services/VictoryService'
+import { ChestService } from '@services/ChestService'
+import { ItemDataLoader } from '@services/ItemDataLoader'
 import { SceneType } from '@models/SceneType'
+import { Chest, RewardTier, TRAP_PROBABILITY_BY_TIER } from '@models/Chest'
+import { Item } from '@models/Item'
 import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
 import { Character } from '@models/Character'
 import { MenuItem } from '@shared/components/menu/menu.component'
@@ -1224,8 +1228,6 @@ export class CombatComponent implements OnInit, OnDestroy {
   }
 
   private handleVictory(): void {
-    console.log('[Combat] handleVictory() called')
-
     const combat = this.combatState()
     if (!combat) return
 
@@ -1243,32 +1245,114 @@ export class CombatComponent implements OnInit, OnDestroy {
       partyMembers
     )
 
-    console.log('[Combat] Victory rewards:', {
-      totalXP: rewards.totalXP,
-      xpPerCharacter: rewards.xpPerCharacter,
-      totalGold: rewards.totalGold,
-      items: rewards.items.length
-    })
-
-    // Distribute XP to roster (only living characters get XP)
-    let newRoster = VictoryService.distributeRewards(
+    // Distribute XP to roster immediately (only living characters get XP)
+    const newRoster = VictoryService.distributeRewards(
       roster,
       partyMembers,
       rewards.xpPerCharacter
     )
 
-    // Distribute items to party inventories
-    const itemResult = VictoryService.distributeItems(
-      newRoster,
-      partyMembers,
-      rewards.items
-    )
-    newRoster = itemResult.roster
+    // Determine if monsters leave behind a treasure chest or just loose gold
+    // In original Wizardry, not all encounters had chests - some just dropped gold
+    // Higher level monsters are more likely to have treasure chests
+    const maxMonsterLevel = Math.max(...allMonsters.map(m => m.level || 1), 1)
+    const chestProbability = this.getChestProbability(maxMonsterLevel)
+    const hasChest = RandomService.roll(chestProbability)
 
-    // Store item distribution for display
-    this.itemDistribution.set(itemResult.itemsAdded)
+    if (hasChest) {
+      // Monsters left behind a treasure chest - navigate to chest scene
+      this.handleVictoryWithChest(newRoster, rewards, party, maxMonsterLevel)
+    } else {
+      // Monsters dropped loose gold - distribute directly and show victory modal
+      this.handleVictoryWithLooseGold(newRoster, rewards)
+    }
+  }
 
-    // Update game state
+  /**
+   * Calculate probability of monsters leaving a treasure chest
+   * Based on original Wizardry where some encounters (rewards #0-9) dropped loose gold
+   * and others (rewards #10-19) had treasure chests
+   */
+  private getChestProbability(maxMonsterLevel: number): number {
+    // Higher level monsters are more likely to guard treasure chests
+    if (maxMonsterLevel <= 2) return 0.30  // 30% for levels 1-2
+    if (maxMonsterLevel <= 4) return 0.50  // 50% for levels 3-4
+    if (maxMonsterLevel <= 6) return 0.70  // 70% for levels 5-6
+    return 0.90                             // 90% for level 7+
+  }
+
+  /**
+   * Handle victory when monsters leave behind a treasure chest
+   * Items are only available through chests (like original Wizardry)
+   */
+  private handleVictoryWithChest(
+    newRoster: Map<string, Character>,
+    rewards: VictoryRewards,
+    party: { position: { x: number; y: number; level: number; facing: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' }; members: string[]; gold: number },
+    maxMonsterLevel: number
+  ): void {
+    // Convert ItemDrop[] to Item[] for the chest
+    const chestItems: Item[] = rewards.items
+      .map(itemDrop => {
+        const baseItem = ItemDataLoader.getItem(itemDrop.itemId)
+        if (!baseItem) return null
+        return {
+          ...baseItem,
+          identified: itemDrop.identified,
+          equipped: false
+        }
+      })
+      .filter((item): item is Item => item !== null)
+
+    // Determine reward tier based on monster level
+    const rewardTier = Math.min(5, Math.max(1, Math.ceil(maxMonsterLevel / 3))) as RewardTier
+
+    // Create chest with gold and items from victory
+    const chest: Chest = {
+      id: `chest_combat_${Date.now()}_${RandomService.random(1000, 9999)}`,
+      trapped: RandomService.roll(TRAP_PROBABILITY_BY_TIER[rewardTier]),
+      trapType: null,
+      trapIdentified: false,
+      trapDisarmed: false,
+      rewardTier,
+      contents: {
+        gold: rewards.totalGold,
+        items: chestItems
+      },
+      sourcePosition: { x: party.position.x, y: party.position.y, facing: party.position.facing },
+      mazeLevel: party.position.level,
+      source: 'combat_victory'
+    }
+
+    // Set trap type if trapped (using ChestService for consistency)
+    if (chest.trapped) {
+      chest.trapType = ChestService.selectTrapType(rewardTier)
+    }
+
+    // Update game state: distribute XP, clear combat, set pending chest
+    this.gameState.updateState(state => ({
+      ...state,
+      roster: newRoster,
+      combat: undefined,
+      pendingChest: chest
+    }))
+
+    // Store rewards for display
+    this.victoryRewards.set(rewards)
+
+    // Navigate to chest scene
+    this.router.navigate(['/chest'])
+  }
+
+  /**
+   * Handle victory when monsters drop loose gold (no chest)
+   * This matches original Wizardry where some encounters just dropped gold directly
+   */
+  private handleVictoryWithLooseGold(
+    newRoster: Map<string, Character>,
+    rewards: VictoryRewards
+  ): void {
+    // Update game state: distribute XP, add gold directly to party, clear combat
     this.gameState.updateState(state => ({
       ...state,
       roster: newRoster,
@@ -1276,17 +1360,21 @@ export class CombatComponent implements OnInit, OnDestroy {
         ...state.party,
         gold: state.party.gold + rewards.totalGold
       },
-      combat: undefined  // Clear combat state
+      combat: undefined
     }))
 
+    // Store rewards for display (gold goes directly to party, no items without chest)
+    const looseGoldRewards: VictoryRewards = {
+      ...rewards,
+      items: []  // No items without a chest
+    }
+    this.victoryRewards.set(looseGoldRewards)
+
     // Show victory modal
-    this.victoryRewards.set(rewards)
     this.showVictoryModal.set(true)
-    console.log('[Combat] Victory modal shown')
   }
 
   private handleDefeat(): void {
-    console.log('[Combat] handleDefeat() called')
 
     const state = this.gameState.state()
     const party = state.party
