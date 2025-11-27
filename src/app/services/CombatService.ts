@@ -331,7 +331,7 @@ export class CombatService {
   ): CommandExecutionResult {
     if (this.DEBUG_COMBAT) {
       const actorName = this.getCombatantName(command.actor)
-      const targetName = command.target ? this.getCombatantName(command.target) : 'none'
+      const targetName = this.getTargetName(command.target)
       const isMonster = 'monsterId' in command.actor
 
       console.log(`[Combat] Executing command:`, {
@@ -340,7 +340,7 @@ export class CombatService {
         actorId: command.actor.id,
         actorType: isMonster ? 'monster' : 'character',
         target: targetName,
-        targetId: command.target?.id,
+        targetId: this.getTargetId(command.target),
         initiative: command.initiative
       })
     }
@@ -1264,6 +1264,22 @@ export class CombatService {
 
   private static getCombatantName(combatant: Combatant): string {
     return combatant.name || 'Unknown'
+  }
+
+  private static getTargetName(target: Combatant | Combatant[] | undefined): string {
+    if (!target) return 'none'
+    if (Array.isArray(target)) {
+      return target.map(t => t.name || 'Unknown').join(', ')
+    }
+    return target.name || 'Unknown'
+  }
+
+  private static getTargetId(target: Combatant | Combatant[] | undefined): string | undefined {
+    if (!target) return undefined
+    if (Array.isArray(target)) {
+      return target[0]?.id
+    }
+    return target.id
   }
 
   static executeRound(

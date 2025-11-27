@@ -2,160 +2,62 @@
   <app-scene-title title="ADVENTURER'S INN" [showPartyGold]="true" />
 
   <div class="inn-content">
-    <!-- Main view: Party characters with rest action -->
-    @if (!showRoomSelection() && !levelUpData()) {
-      @if (partyCharacters().length > 0) {
-        <app-party-character-grid
-          source="party"
-          [showFormation]="true"
-          [visibleFields]="['class', 'level', 'hp', 'status']"
-          [actions]="[{type: 'inspect'}, {type: 'rest', label: 'Rest'}]"
-          (actionClick)="handleCharacterAction($event)"
-          emptyMessage="No party members"
-          variant="default"
-        />
-      } @else {
-        <div class="empty-state">
-          <p>No party formed.</p>
-          <p>Visit the Tavern to form a party.</p>
+    @if (partyCharacters().length > 0) {
+      <div class="inn-layout">
+        <!-- Left: Party Overview -->
+        <div class="party-section">
+          <h3 class="section-title">PARTY STATUS</h3>
+          <app-party-character-grid
+            source="party"
+            [showFormation]="true"
+            [visibleFields]="['class', 'level', 'hp', 'status']"
+            [showHpBar]="true"
+            [actions]="[{type: 'inspect'}]"
+            (actionClick)="handleCharacterAction($event)"
+            emptyMessage="No party members"
+            variant="default"
+          />
         </div>
-      }
-    }
 
-    <!-- Room Selection View -->
-    @if (showRoomSelection() && !showConfirmation() && !levelUpData()) {
-      <div class="room-selection">
-        @if (selectedCharacter(); as character) {
-          <div class="character-info">
-            <h2>{{ character.name }}</h2>
-            <div class="stats">
-              <span class="class">{{ character.class }} Level {{ character.level }}</span>
-              <span class="hp" [class.injured]="character.hp < character.maxHp">
-                HP: {{ character.hp }}/{{ character.maxHp }}
-              </span>
-              @if (character.hp < character.maxHp) {
-                <span class="hp-needed">({{ character.maxHp - character.hp }} HP to full)</span>
+        <!-- Right: Rest Actions -->
+        <div class="actions-section">
+          <h3 class="section-title">REST OPTIONS</h3>
+          <div class="rest-actions">
+            @for (config of restActionConfigs(); track config.type; let i = $index) {
+              <div class="rest-action-wrapper">
+                <span class="shortcut-hint">({{ i + 1 }})</span>
+                <app-rest-action-card
+                  [config]="config"
+                  (selected)="handleRestActionSelected($event)"
+                />
+              </div>
+            }
+          </div>
+
+          <!-- Cost Summary -->
+          @if (healPlan().weeksNeeded > 0) {
+            <div class="cost-summary">
+              <div class="summary-row">
+                <span class="label">Healing Cost:</span>
+                <span class="value gold">{{ healPlan().totalCost }} GP</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Party Gold:</span>
+                <span class="value">{{ partyGold() }} GP</span>
+              </div>
+              @if (!healPlan().canAffordFull) {
+                <div class="warning">
+                  Cannot afford full healing
+                </div>
               }
             </div>
-          </div>
-
-          <h3 class="room-title">SELECT ROOM TYPE</h3>
-
-          <div class="funds-display">
-            <span class="funds-label">Party Gold:</span>
-            <span class="funds-value">{{ partyGold() }}</span>
-          </div>
-
-          <app-selection-list
-            [options]="roomOptions()"
-            [allowArrowNavigation]="true"
-            [showShortcutsInList]="false"
-            [columns]="3"
-            (optionSelected)="handleRoomSelected($event)"
-            (cancelled)="handleRoomSelectionCancelled()"
-          >
-            <ng-template #itemTemplate let-option let-selected="selected">
-              <div class="room-option-content" [class.selected]="selected">
-                <div class="room-header">
-                  <span class="room-shortcut">({{ option.shortcut }})</span>
-                  <span class="room-name">{{ option.name }}</span>
-                  @if (!option.enabled) {
-                    <span class="unaffordable-badge">CANNOT AFFORD</span>
-                  }
-                </div>
-                <div class="room-details">
-                  <span class="room-cost">
-                    @if (option.cost === 0) {
-                      FREE
-                    } @else {
-                      {{ option.cost }} {{ option.costUnit }}
-                    }
-                  </span>
-                  <span class="room-benefit">{{ option.benefit }}</span>
-                </div>
-                @if (option.description) {
-                  <div class="room-description">{{ option.description }}</div>
-                }
-              </div>
-            </ng-template>
-          </app-selection-list>
-        }
+          }
+        </div>
       </div>
-
-      <!-- Rest Progress Display -->
-      @if (restProgress(); as progress) {
-        <div class="rest-progress">
-          <div class="progress-bar-container">
-            <div
-              class="progress-bar"
-              [style.width.%]="(progress.currentHp / progress.maxHp) * 100"
-            ></div>
-          </div>
-          <div class="progress-stats">
-            <span>HP: {{ progress.currentHp }}/{{ progress.maxHp }}</span>
-            <span>Weeks: {{ progress.weeksRested }}</span>
-            <span>Gold spent: {{ progress.totalGoldSpent }}</span>
-          </div>
-        </div>
-      }
-
-      <!-- Auto-Rest Indicator -->
-      @if (isAutoResting()) {
-        <div class="auto-rest-indicator">
-          <span class="spinner"></span>
-          <span>Resting... (Press ESC to stop)</span>
-        </div>
-      }
-    }
-
-    <!-- Level Up Display -->
-    @if (levelUpData(); as data) {
-      <div class="level-up-display">
-        @if (selectedCharacter(); as character) {
-          <h2>LEVEL UP!</h2>
-
-          <div class="level-up-content">
-            <p class="congratulations">
-              {{ character.name }} has reached Level {{ data.newLevel }}!
-            </p>
-
-            <div class="stat-changes">
-              <div class="hp-increase">
-                <span class="label">Max HP:</span>
-                <span class="value">+{{ data.hpIncrease }}</span>
-              </div>
-
-              @if (Object.keys(data.statChanges).length > 0) {
-                <div class="stat-changes-list">
-                  <h4>Stat Changes:</h4>
-                  @for (stat of Object.keys(data.statChanges); track stat) {
-                    <div class="stat-row">
-                      <span class="stat-name">{{ stat | uppercase }}:</span>
-                      <span class="stat-change" [class.decrease]="data.statChanges[stat] < 0">
-                        {{ data.statChanges[stat] > 0 ? '+' : '' }}{{ data.statChanges[stat] }}
-                      </span>
-                    </div>
-                  }
-                </div>
-              }
-
-              @if (data.newSpells.length > 0) {
-                <div class="new-spells">
-                  <h4>New Spells Learned:</h4>
-                  <ul>
-                    @for (spell of data.newSpells; track spell.id) {
-                      <li>{{ spell.name }}</li>
-                    }
-                  </ul>
-                </div>
-              }
-            </div>
-
-            <button class="continue-btn" (click)="dismissLevelUp()">
-              CONTINUE (Enter)
-            </button>
-          </div>
-        }
+    } @else {
+      <div class="empty-state">
+        <p>No party formed.</p>
+        <p>Visit the Tavern to form a party.</p>
       </div>
     }
 
@@ -167,32 +69,18 @@
     }
   </div>
 
-  <!-- Footer menu - always visible with contextual actions -->
-  @if (!levelUpData()) {
-    <app-scene-footer
-      [menuItems]="footerMenuItems()"
-      (itemSelected)="handleFooterAction($event)"
+  <!-- Footer menu -->
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Rest Results Modal -->
+  @if (showRestResults() && restResults()) {
+    <app-rest-results-modal
+      [visible]="true"
+      [results]="restResults()!"
+      (dismissed)="dismissRestResults()"
     />
-  }
-
-  <!-- Rest Confirmation Dialog (custom with 3 options) -->
-  @if (showConfirmation()) {
-    <div class="dialog-overlay" tabindex="0">
-      <div class="rest-dialog" (click)="$event.stopPropagation()">
-        <div class="dialog-message">{{ confirmationMessage() }}</div>
-
-        <div class="dialog-buttons">
-          <button class="dialog-btn primary" (click)="confirmRest()">
-            (1) Rest 1 Week
-          </button>
-          <button class="dialog-btn primary" (click)="confirmAutoRest()">
-            (A) Rest Until Full
-          </button>
-          <button class="dialog-btn secondary" (click)="cancelConfirmation()">
-            (Esc) Cancel
-          </button>
-        </div>
-      </div>
-    </div>
   }
 </div>

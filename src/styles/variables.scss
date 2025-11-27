@@ -95,6 +95,29 @@ $spacing-xl: 32px;
   --font-size-xl: 24px;
 }
 
+// Animation Timing
+$transition-fast: 0.15s ease;
+$transition-normal: 0.25s ease;
+$transition-slow: 0.4s ease;
+
+// Interaction States
+$state-hover-lift: -2px;
+$state-selected-glow: 0 0 12px rgba(0, 255, 0, 0.4);
+$state-disabled-opacity: 0.5;
+
+// Card Sizing
+$card-padding-sm: 0.75rem;
+$card-padding-md: 1rem;
+$card-padding-lg: 1.5rem;
+$card-gap: 1rem;
+$card-border-radius: 4px;
+
+// Shadows
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+$shadow-glow-green: 0 0 8px rgba(0, 255, 0, 0.3);
+$shadow-glow-amber: 0 0 8px rgba(255, 170, 0, 0.3);
+
 // Global CRT text styling
 .crt-text {
   font-family: 'Courier New', monospace;
