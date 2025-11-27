@@ -1320,7 +1320,20 @@ export class CombatService {
     // Execute each command
     for (const command of sortedQueue) {
       // Skip if actor cannot act (dead, asleep, paralyzed)
-      if (!this.canCombatantAct(command.actor)) continue
+      // For monsters, we must check current state since they may have died during this round
+      let currentActor: Combatant = command.actor
+      if ('monsterId' in command.actor) {
+        const currentMonster = this.getCurrentMonsterState(currentState, command.actor.id)
+        if (!currentMonster) continue  // Monster no longer exists
+        currentActor = currentMonster
+      } else {
+        // For characters, check if they've been damaged to death this round
+        const existingUpdate = damagedCharacters.get(command.actor.id)
+        if (existingUpdate) {
+          currentActor = existingUpdate
+        }
+      }
+      if (!this.canCombatantAct(currentActor)) continue
 
       const result = this.executeCommand(currentState, command, parryingCombatants)
       currentState = result.newState
@@ -1583,7 +1596,20 @@ export class CombatService {
     // Execute each command
     for (const command of sortedQueue) {
       // Skip if actor cannot act (dead, asleep, paralyzed)
-      if (!this.canCombatantAct(command.actor)) continue
+      // For monsters, we must check current state since they may have died during this round
+      let currentActor: Combatant = command.actor
+      if ('monsterId' in command.actor) {
+        const currentMonster = this.getCurrentMonsterState(currentState, command.actor.id)
+        if (!currentMonster) continue  // Monster no longer exists
+        currentActor = currentMonster
+      } else {
+        // For characters, check if they've been damaged to death this round
+        const existingUpdate = accumulatedCharacterUpdates.get(command.actor.id)
+        if (existingUpdate) {
+          currentActor = existingUpdate
+        }
+      }
+      if (!this.canCombatantAct(currentActor)) continue
 
       // Capture state before command for comparison
       const stateBefore = currentState
@@ -1948,6 +1974,23 @@ export class CombatService {
       },
       message
     }
+  }
+
+  /**
+   * Get the current state of a monster from the combat state
+   * Used to check if a monster has died during the current round
+   */
+  static getCurrentMonsterState(
+    state: CombatState,
+    monsterId: string
+  ): MonsterInstance | undefined {
+    for (const group of state.monsterGroups) {
+      const monster = group.monsters.find(m => m.id === monsterId)
+      if (monster) {
+        return monster
+      }
+    }
+    return undefined
   }
 
   /**
