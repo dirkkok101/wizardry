@@ -83,17 +83,6 @@ export const VisibilityService = {
         break
     }
 
-    // Calculate column offsets: peripheralColumns=3 means [-1, 0, 1]
-    const columnOffsets: number[] = []
-    if (peripheralColumns === 1) {
-      columnOffsets.push(0)  // Center only
-    } else {
-      const halfWidth = Math.floor(peripheralColumns / 2)
-      for (let i = -halfWidth; i <= halfWidth; i++) {
-        columnOffsets.push(i)
-      }
-    }
-
     // Helper function to get perpendicular wall direction
     const getPerpendicularWall = (offset: number): 'north' | 'south' | 'east' | 'west' => {
       // offset -1 = left, +1 = right from player's perspective
@@ -152,24 +141,20 @@ export const VisibilityService = {
               continue
             }
 
-            // Skip if already visited
-            if (visited.has(tileKey)) {
-              // Even if visited, check if the connecting wall is open for further peripheral tiles
-              const prevTileX = centerX + perpX * (actualOffset - direction)
-              const prevTileY = centerY + perpY * (actualOffset - direction)
-              const prevTile = DungeonService.getTile(level, prevTileX, prevTileY)
-              const wallDir = getPerpendicularWall(direction)
-              canSeeNext = prevTile.walls[wallDir] === 'open'
-              continue
-            }
-
-            // Check if there's an opening from the previous tile (one step closer to center)
+            // Get the previous tile (one step closer to center) and check wall direction
             const prevTileX = centerX + perpX * (actualOffset - direction)
             const prevTileY = centerY + perpY * (actualOffset - direction)
             const prevTile = DungeonService.getTile(level, prevTileX, prevTileY)
             const wallDir = getPerpendicularWall(direction)
+            const wallOpen = prevTile.walls[wallDir] === 'open'
 
-            if (prevTile.walls[wallDir] === 'open') {
+            // Skip if already visited, but still update visibility for further tiles
+            if (visited.has(tileKey)) {
+              canSeeNext = wallOpen
+              continue
+            }
+
+            if (wallOpen) {
               addTileWalls(tileX, tileY)
               visited.add(tileKey)
             } else {
