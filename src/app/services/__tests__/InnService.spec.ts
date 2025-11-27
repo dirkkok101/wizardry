@@ -1,7 +1,8 @@
-import { InnService, RoomType } from '../InnService'
+import { InnService, RoomType, PartyHealPlan } from '../InnService'
 import { createTestCharacter, createTestGameState } from '@testing/test-factories'
 import { GameState } from '@models/GameState'
 import { SpellPointPool } from '@models/SpellPoints'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 describe('InnService', () => {
   describe('getRoomCost', () => {
@@ -357,6 +358,101 @@ describe('InnService', () => {
       const result = InnService.restoreSpellPoints(character)
 
       expect(result).toEqual(character)
+    })
+  })
+
+  describe('calculatePartyHealPlan', () => {
+    it('returns Royal Suite when party can afford fastest healing', () => {
+      const characters = [
+        createTestCharacter({ id: 'char1', hp: 20, maxHp: 40, status: CharacterStatus.OK }),
+        createTestCharacter({ id: 'char2', hp: 30, maxHp: 40, status: CharacterStatus.OK }),
+      ]
+      const partyGold = 2000
+
+      const plan = InnService.calculatePartyHealPlan(characters, partyGold)
+
+      expect(plan.roomTier).toBe(RoomType.ROYAL_SUITE)
+      expect(plan.weeksNeeded).toBe(2) // max(20/10, 10/10) = 2 weeks
+      expect(plan.totalCost).toBe(2000) // 2 weeks * 500gp * 2 chars
+      expect(plan.canAffordFull).toBe(true)
+    })
+
+    it('cascades to cheaper room when cannot afford Royal Suite', () => {
+      const characters = [
+        createTestCharacter({ id: 'char1', hp: 20, maxHp: 40, status: CharacterStatus.OK }),
+      ]
+      const partyGold = 500 // Can't afford 2 weeks at Royal (1000gp)
+
+      const plan = InnService.calculatePartyHealPlan(characters, partyGold)
+
+      // Royal: 500gp/week, 10 HP/week -> 2 weeks = 1000gp - can't afford
+      // Private: 200gp/week, 7 HP/week -> 3 weeks (21 HP) = 600gp - can't afford
+      // Double: 50gp/week, 3 HP/week -> 7 weeks (21 HP) = 350gp - CAN afford
+      expect(plan.roomTier).toBe(RoomType.DOUBLE)
+      expect(plan.weeksNeeded).toBe(7)
+      expect(plan.totalCost).toBe(350)
+      expect(plan.canAffordFull).toBe(true)
+    })
+
+    it('returns partial heal plan at Barracks when cannot afford full heal', () => {
+      const characters = [
+        createTestCharacter({ id: 'char1', hp: 10, maxHp: 100, status: CharacterStatus.OK }),
+      ]
+      const partyGold = 50 // Very limited
+
+      const plan = InnService.calculatePartyHealPlan(characters, partyGold)
+
+      // Barracks: 10gp/week, 1 HP/week
+      // Full heal needs 90 weeks = 900gp (can't afford)
+      // 50gp = 5 weeks = 5 HP healed (partial)
+      expect(plan.roomTier).toBe(RoomType.BARRACKS)
+      expect(plan.canAffordFull).toBe(false)
+      expect(plan.weeksNeeded).toBe(5)
+      expect(plan.totalCost).toBe(50)
+    })
+
+    it('excludes dead characters from calculation', () => {
+      const characters = [
+        createTestCharacter({ id: 'char1', hp: 20, maxHp: 40, status: CharacterStatus.OK }),
+        createTestCharacter({ id: 'char2', hp: 0, maxHp: 40, status: CharacterStatus.DEAD }),
+      ]
+      const partyGold = 1000
+
+      const plan = InnService.calculatePartyHealPlan(characters, partyGold)
+
+      // Only 1 living char, 20 HP needed, Royal Suite
+      expect(plan.weeksNeeded).toBe(2)
+      expect(plan.totalCost).toBe(1000) // 2 weeks * 500gp * 1 living char
+    })
+
+    it('returns zero plan when all characters at full HP', () => {
+      const characters = [
+        createTestCharacter({ id: 'char1', hp: 40, maxHp: 40, status: CharacterStatus.OK }),
+        createTestCharacter({ id: 'char2', hp: 40, maxHp: 40, status: CharacterStatus.OK }),
+      ]
+
+      const plan = InnService.calculatePartyHealPlan(characters, 1000)
+
+      expect(plan.weeksNeeded).toBe(0)
+      expect(plan.totalCost).toBe(0)
+      expect(plan.canAffordFull).toBe(true)
+    })
+
+    it('handles multiple characters with different HP needs', () => {
+      const characters = [
+        createTestCharacter({ id: 'char1', hp: 0, maxHp: 30, status: CharacterStatus.OK }), // needs 30 HP
+        createTestCharacter({ id: 'char2', hp: 10, maxHp: 20, status: CharacterStatus.OK }), // needs 10 HP
+        createTestCharacter({ id: 'char3', hp: 25, maxHp: 25, status: CharacterStatus.OK }), // needs 0 HP (full)
+      ]
+      const partyGold = 5000
+
+      const plan = InnService.calculatePartyHealPlan(characters, partyGold)
+
+      // Max HP needed is 30, Royal Suite heals 10/week = 3 weeks
+      // Only 2 chars need healing (char3 is at full HP), so cost = 3 * 500 * 2 = 3000gp
+      expect(plan.roomTier).toBe(RoomType.ROYAL_SUITE)
+      expect(plan.weeksNeeded).toBe(3)
+      expect(plan.totalCost).toBe(3000)
     })
   })
 })
