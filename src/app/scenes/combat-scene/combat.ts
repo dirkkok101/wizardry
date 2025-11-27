@@ -1044,7 +1044,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     const monsterCommands = actingMonsters.map(m => {
       const cmd = CombatService.selectMonsterAction(m, chars, frontRow)
-      if (DEBUG) console.debug(`[Combat] Monster ${m.name} (${m.id}) -> ${cmd.type} command, target: ${cmd.target?.name || 'none'}`)
+      if (DEBUG) console.debug(`[Combat] Monster ${m.name} (${m.id}) -> ${cmd.type} command, target: ${this.getTargetName(cmd.target)}`)
       return cmd
     })
 
@@ -1061,7 +1061,7 @@ export class CombatComponent implements OnInit, OnDestroy {
       console.log(`[Combat] Total commands: ${stateWithCommands.commandQueue.length} (${partyCommands.length} party + ${monsterCommands.length} monster)`)
       stateWithCommands.commandQueue.forEach((cmd, idx) => {
         const isMonster = 'monsterId' in cmd.actor
-        console.debug(`  ${idx + 1}. ${cmd.actor.name} (${isMonster ? 'M' : 'P'}) -> ${cmd.type} -> ${cmd.target?.name || 'none'} [init: ${cmd.initiative}]`)
+        console.debug(`  ${idx + 1}. ${cmd.actor.name} (${isMonster ? 'M' : 'P'}) -> ${cmd.type} -> ${this.getTargetName(cmd.target)} [init: ${cmd.initiative}]`)
       })
       console.log('[Combat] ================================')
     }
@@ -1419,4 +1419,12 @@ export class CombatComponent implements OnInit, OnDestroy {
   }
 
   // Keyboard handling now delegated to MenuComponent via SceneFooterComponent
+
+  private getTargetName(target: Combatant | Combatant[] | undefined): string {
+    if (!target) return 'none'
+    if (Array.isArray(target)) {
+      return target.map(t => t.name || 'Unknown').join(', ')
+    }
+    return target.name || 'Unknown'
+  }
 }
