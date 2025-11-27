@@ -1,8 +1,10 @@
-import { InnService, RoomType, PartyHealPlan } from '../InnService'
+import { InnService, RoomType, PartyHealPlan, PartyRestResult } from '../InnService'
 import { createTestCharacter, createTestGameState } from '@testing/test-factories'
 import { GameState } from '@models/GameState'
 import { SpellPointPool } from '@models/SpellPoints'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { CharacterClass } from '@models/CharacterClass'
+import { RandomService } from '../RandomService'
 
 describe('InnService', () => {
   describe('getRoomCost', () => {
@@ -453,6 +455,243 @@ describe('InnService', () => {
       expect(plan.roomTier).toBe(RoomType.ROYAL_SUITE)
       expect(plan.weeksNeeded).toBe(3)
       expect(plan.totalCost).toBe(3000)
+    })
+  })
+
+  describe('executePartyRest', () => {
+    it('heals all living characters and deducts gold', () => {
+      const char1 = createTestCharacter({ id: 'char1', hp: 20, maxHp: 40, status: CharacterStatus.OK })
+      const char2 = createTestCharacter({ id: 'char2', hp: 30, maxHp: 40, status: CharacterStatus.OK })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 2000,
+          members: ['char1', 'char2']
+        },
+        roster: new Map([
+          ['char1', char1],
+          ['char2', char2]
+        ])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.ROYAL_SUITE,
+        weeksNeeded: 2,
+        totalCost: 2000,
+        canAffordFull: true,
+        hpPerCharacter: new Map([['char1', 20], ['char2', 10]])
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      expect(result.goldSpent).toBe(2000)
+      expect(result.weeksRested).toBe(2)
+      expect(result.goldRemaining).toBe(0)
+      expect(result.perCharacter.get('char1')?.hpAfter).toBe(40)
+      expect(result.perCharacter.get('char2')?.hpAfter).toBe(40)
+    })
+
+    it('restores spell points when restoreSpells is true', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 1, max: 4 },
+        level2: { current: 0, max: 2 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const mage = createTestCharacter({
+        id: 'mage1',
+        class: CharacterClass.MAGE,
+        hp: 20,
+        maxHp: 20,
+        status: CharacterStatus.OK,
+        spellPoints: { mage: depleted }
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 0,
+          members: ['mage1']
+        },
+        roster: new Map([['mage1', mage]])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.STABLES,
+        weeksNeeded: 1,
+        totalCost: 0,
+        canAffordFull: true,
+        hpPerCharacter: new Map()
+      }
+
+      const result = InnService.executePartyRest(state, plan, true)
+
+      const updatedMage = result.updatedState.roster.get('mage1')!
+      expect(updatedMage.spellPoints?.mage?.level1.current).toBe(4)
+      expect(updatedMage.spellPoints?.mage?.level2.current).toBe(2)
+      expect(result.perCharacter.get('mage1')?.spellsRestored).toBe(true)
+    })
+
+    it('does not restore spell points when restoreSpells is false', () => {
+      const depleted: SpellPointPool = {
+        level1: { current: 1, max: 4 },
+        level2: { current: 0, max: 2 },
+        level3: { current: 0, max: 0 },
+        level4: { current: 0, max: 0 },
+        level5: { current: 0, max: 0 },
+        level6: { current: 0, max: 0 },
+        level7: { current: 0, max: 0 }
+      }
+      const mage = createTestCharacter({
+        id: 'mage1',
+        class: CharacterClass.MAGE,
+        hp: 10,
+        maxHp: 20,
+        status: CharacterStatus.OK,
+        spellPoints: { mage: depleted }
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['mage1']
+        },
+        roster: new Map([['mage1', mage]])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.ROYAL_SUITE,
+        weeksNeeded: 1,
+        totalCost: 500,
+        canAffordFull: true,
+        hpPerCharacter: new Map([['mage1', 10]])
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      const updatedMage = result.updatedState.roster.get('mage1')!
+      expect(updatedMage.spellPoints?.mage?.level1.current).toBe(1) // unchanged
+      expect(updatedMage.spellPoints?.mage?.level2.current).toBe(0) // unchanged
+      expect(result.perCharacter.get('mage1')?.spellsRestored).toBe(false)
+    })
+
+    it('triggers level-ups for characters with enough XP', () => {
+      // Queue random values for HP roll during level-up
+      RandomService.queueNextValues([0.7]) // HP roll
+
+      const fighter = createTestCharacter({
+        id: 'fighter1',
+        name: 'BOLDAR',
+        class: CharacterClass.FIGHTER,
+        hp: 20,
+        maxHp: 20,
+        level: 1,
+        status: CharacterStatus.OK,
+        experience: 3000 // Enough to level up (needs 2262 for level 2 Fighter)
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['fighter1']
+        },
+        roster: new Map([['fighter1', fighter]])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.STABLES,
+        weeksNeeded: 1,
+        totalCost: 0,
+        canAffordFull: true,
+        hpPerCharacter: new Map()
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      expect(result.levelUps.length).toBe(1)
+      expect(result.levelUps[0].characterId).toBe('fighter1')
+      expect(result.levelUps[0].characterName).toBe('BOLDAR')
+      expect(result.levelUps[0].newLevel).toBe(2)
+    })
+
+    it('does not trigger level-up when HP not at max after rest', () => {
+      const fighter = createTestCharacter({
+        id: 'fighter1',
+        class: CharacterClass.FIGHTER,
+        hp: 5,
+        maxHp: 100, // Needs lots of healing
+        level: 1,
+        status: CharacterStatus.OK,
+        experience: 2000
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 50,
+          members: ['fighter1']
+        },
+        roster: new Map([['fighter1', fighter]])
+      }
+
+      // Partial heal - only 5 weeks at barracks = 5 HP
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.BARRACKS,
+        weeksNeeded: 5,
+        totalCost: 50,
+        canAffordFull: false,
+        hpPerCharacter: new Map([['fighter1', 95]])
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      expect(result.levelUps.length).toBe(0)
+      // HP should be 10 (5 + 5)
+      expect(result.perCharacter.get('fighter1')?.hpAfter).toBe(10)
+    })
+
+    it('skips dead characters', () => {
+      const living = createTestCharacter({ id: 'char1', hp: 20, maxHp: 40, status: CharacterStatus.OK })
+      const dead = createTestCharacter({ id: 'char2', hp: 0, maxHp: 40, status: CharacterStatus.DEAD })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['char1', 'char2']
+        },
+        roster: new Map([
+          ['char1', living],
+          ['char2', dead]
+        ])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.ROYAL_SUITE,
+        weeksNeeded: 2,
+        totalCost: 1000,
+        canAffordFull: true,
+        hpPerCharacter: new Map([['char1', 20]])
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      // Living character healed
+      expect(result.perCharacter.get('char1')?.hpAfter).toBe(40)
+      // Dead character not in results
+      expect(result.perCharacter.has('char2')).toBe(false)
     })
   })
 })

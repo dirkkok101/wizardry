@@ -3,6 +3,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { GameState } from '@models/GameState'
 import { SpellPointPool } from '@models/SpellPoints'
 import * as PartyService from './PartyService'
+import { LevelUpService } from './LevelUpService'
 
 export enum RoomType {
   STABLES = 'STABLES',
@@ -32,6 +33,31 @@ export interface PartyHealPlan {
   totalCost: number
   canAffordFull: boolean
   hpPerCharacter: Map<string, number> // charId -> HP to heal
+}
+
+export interface CharacterRestResult {
+  hpBefore: number
+  hpAfter: number
+  hpGained: number
+  spellsRestored: boolean
+}
+
+export interface LevelUpDisplayData {
+  characterId: string
+  characterName: string
+  newLevel: number
+  hpIncrease: number
+  statChanges: Record<string, number>
+  newSpells: string[]
+}
+
+export interface PartyRestResult {
+  weeksRested: number
+  goldSpent: number
+  goldRemaining: number
+  perCharacter: Map<string, CharacterRestResult>
+  levelUps: LevelUpDisplayData[]
+  updatedState: GameState
 }
 
 const ROOM_COSTS: Record<RoomType, number> = {
@@ -223,6 +249,108 @@ export class InnService {
       totalCost: maxWeeks * barracksCost * livingChars.length,
       canAffordFull: false,
       hpPerCharacter,
+    }
+  }
+
+  /**
+   * Execute party rest using the provided heal plan.
+   * Heals HP, optionally restores spell points, and triggers level-ups
+   * for characters at full HP with enough XP.
+   */
+  static executePartyRest(
+    state: GameState,
+    plan: PartyHealPlan,
+    restoreSpells: boolean
+  ): PartyRestResult {
+    let updatedState = { ...state }
+    const perCharacter = new Map<string, CharacterRestResult>()
+    const levelUps: LevelUpDisplayData[] = []
+
+    const partyMembers = state.party?.members ?? []
+
+    for (const charId of partyMembers) {
+      const char = state.roster.get(charId)
+      if (!char || char.status !== CharacterStatus.OK) continue
+
+      const hpBefore = char.hp
+      let updatedChar = { ...char }
+
+      // Heal HP based on weeks and room heal rate
+      const healRate = this.getRoomHealRate(plan.roomTier)
+      const hpGained = Math.min(
+        plan.weeksNeeded * healRate,
+        char.maxHp - char.hp
+      )
+      updatedChar.hp = Math.min(char.hp + hpGained, char.maxHp)
+
+      // Restore spell points if requested
+      let spellsRestored = false
+      if (restoreSpells && updatedChar.spellPoints) {
+        updatedChar = this.restoreSpellPoints(updatedChar)
+        spellsRestored = true
+      }
+
+      // Check for level-up (requires full HP)
+      if (updatedChar.hp === updatedChar.maxHp && LevelUpService.canLevelUp(updatedChar)) {
+        const levelUpResult = LevelUpService.performLevelUp(updatedChar)
+        updatedChar = levelUpResult.updatedCharacter
+
+        // Convert stat changes to Record<string, number>
+        const statChanges: Record<string, number> = {}
+        if (levelUpResult.levelUpData.statChanges.strength)
+          statChanges['STR'] = levelUpResult.levelUpData.statChanges.strength
+        if (levelUpResult.levelUpData.statChanges.intelligence)
+          statChanges['INT'] = levelUpResult.levelUpData.statChanges.intelligence
+        if (levelUpResult.levelUpData.statChanges.piety)
+          statChanges['PIE'] = levelUpResult.levelUpData.statChanges.piety
+        if (levelUpResult.levelUpData.statChanges.vitality)
+          statChanges['VIT'] = levelUpResult.levelUpData.statChanges.vitality
+        if (levelUpResult.levelUpData.statChanges.agility)
+          statChanges['AGI'] = levelUpResult.levelUpData.statChanges.agility
+        if (levelUpResult.levelUpData.statChanges.luck)
+          statChanges['LUC'] = levelUpResult.levelUpData.statChanges.luck
+
+        levelUps.push({
+          characterId: charId,
+          characterName: char.name,
+          newLevel: levelUpResult.levelUpData.newLevel,
+          hpIncrease: levelUpResult.levelUpData.hpIncrease,
+          statChanges,
+          newSpells: [], // TODO: Extract from spell point changes
+        })
+      }
+
+      // Update roster
+      updatedState = {
+        ...updatedState,
+        roster: new Map(updatedState.roster).set(charId, updatedChar),
+      }
+
+      perCharacter.set(charId, {
+        hpBefore,
+        hpAfter: updatedChar.hp,
+        hpGained,
+        spellsRestored,
+      })
+    }
+
+    // Deduct gold
+    const goldRemaining = (state.party?.gold ?? 0) - plan.totalCost
+    updatedState = {
+      ...updatedState,
+      party: {
+        ...updatedState.party!,
+        gold: goldRemaining,
+      },
+    }
+
+    return {
+      weeksRested: plan.weeksNeeded,
+      goldSpent: plan.totalCost,
+      goldRemaining,
+      perCharacter,
+      levelUps,
+      updatedState,
     }
   }
 }
