@@ -72,6 +72,10 @@ export class SelectionListComponent<T extends SelectableOption> {
   readonly initialSelectedIndex = input(0)
   readonly showShortcutsInList = input(true)
   readonly columns = input(1) // Number of columns for grid layout (1 = vertical list)
+  readonly maxHeight = input<string | null>(null)
+  readonly showKeyboardHints = input(false)
+  readonly emptyMessage = input('No options available')
+  readonly entryAnimation = input(false)
 
   // Outputs
   readonly optionSelected = output<T>()

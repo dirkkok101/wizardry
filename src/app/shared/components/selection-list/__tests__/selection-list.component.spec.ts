@@ -260,6 +260,51 @@ describe('SelectionListComponent', () => {
       expect(selected?.id).toBe('b')
     })
   })
+
+  describe('enhanced features', () => {
+    it('should accept maxHeight input', () => {
+      // Use standalone fixture to set inputs directly
+      const fixture = TestBed.createComponent(SelectionListComponent)
+      fixture.componentRef.setInput('maxHeight', '300px')
+      fixture.componentRef.setInput('options', [
+        { id: '1', shortcut: 'A', enabled: true }
+      ])
+      fixture.detectChanges()
+      const listEl = fixture.nativeElement.querySelector('.selection-list')
+      expect(listEl.style.maxHeight).toBe('300px')
+    })
+
+    it('should show keyboard hints when showKeyboardHints is true', () => {
+      const fixture = TestBed.createComponent(SelectionListComponent)
+      fixture.componentRef.setInput('showKeyboardHints', true)
+      fixture.componentRef.setInput('options', [
+        { id: '1', shortcut: 'A', enabled: true }
+      ])
+      fixture.detectChanges()
+      const hints = fixture.nativeElement.querySelector('.keyboard-hints')
+      expect(hints).toBeTruthy()
+    })
+
+    it('should show empty message when options array is empty', () => {
+      const fixture = TestBed.createComponent(SelectionListComponent)
+      fixture.componentRef.setInput('options', [])
+      fixture.componentRef.setInput('emptyMessage', 'No items available')
+      fixture.detectChanges()
+      const emptyEl = fixture.nativeElement.querySelector('.empty-state')
+      expect(emptyEl.textContent).toContain('No items available')
+    })
+
+    it('should apply entry animation class when entryAnimation is true', () => {
+      const fixture = TestBed.createComponent(SelectionListComponent)
+      fixture.componentRef.setInput('entryAnimation', true)
+      fixture.componentRef.setInput('options', [
+        { id: '1', shortcut: 'A', enabled: true }
+      ])
+      fixture.detectChanges()
+      const item = fixture.nativeElement.querySelector('.selection-item')
+      expect(item.classList.contains('animate-entry')).toBe(true)
+    })
+  })
 })
 
 // Test host for multi-column grid layout

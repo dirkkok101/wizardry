@@ -2,8 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, sig
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
-import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
-import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { SpellSelectionDialogComponent, SpellOption } from '@shared/components/spell-selection-dialog/spell-selection-dialog.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
@@ -22,7 +21,6 @@ import { SpellLearningService } from '@services/SpellLearningService';
 import { moveCharacterUp, moveCharacterDown } from '@services/PartyService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneType } from '@models/SceneType';
-import { MenuItem } from '@shared/components/menu/menu.component';
 import { ActiveSpell } from '@models/active-spell.types';
 import { GameState } from '@models/GameState';
 import { Character } from '@models/Character';
@@ -39,8 +37,7 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
   imports: [
     CommonModule,
     SceneTitleComponent,
-    SceneFooterComponent,
-    PartyCharacterGridComponent,
+    CharacterPanelComponent,
     MessageLogComponent,
     SpellSelectionDialogComponent,
     CharacterSelectionDialogComponent
@@ -75,10 +72,48 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly party = computed(() => this.gameState.state().party);
   // Note: partyCharacters is used for combat initialization (CombatService.initiateCombat),
-  // not for template rendering (which uses PartyCharacterGridComponent)
+  // not for template rendering (which uses CharacterPanelComponent)
   readonly partyCharacters = computed(() => {
     const roster = this.gameState.state().roster;
     return this.party().members.map(id => roster.get(id)!).filter(c => c);
+  });
+
+  /**
+   * Characters for left column (positions 1, 3, 5 = indices 0, 2, 4)
+   * Visual layout only - does not affect combat mechanics
+   */
+  readonly leftColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter(c => c !== undefined);
+  });
+
+  /**
+   * Characters for right column (positions 2, 4, 6 = indices 1, 3, 5)
+   * Visual layout only - does not affect combat mechanics
+   */
+  readonly rightColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter(c => c !== undefined);
+  });
+
+  /**
+   * Check if a door can be opened at current position
+   */
+  readonly canOpenDoor = computed(() => {
+    const state = this.gameState.state();
+    if (!state.dungeon?.position) return false;
+    const level = DungeonService.loadLevel(this.currentLevel());
+    return DoorService.canOpenDoor(level, state.dungeon.position);
+  });
+
+  /**
+   * Check if current tile can be inspected
+   */
+  readonly canInspectTile = computed(() => {
+    const state = this.gameState.state();
+    if (!state.dungeon?.position) return false;
+    const level = DungeonService.loadLevel(this.currentLevel());
+    return TileInspectionService.hasSearchableContent(level, state.dungeon.position);
   });
 
   // Active spells (computed from dungeon state)
@@ -131,8 +166,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Scene title
   readonly sceneTitle = computed(() => `MAZE - LEVEL ${this.currentLevel()}`);
 
-  // Footer menu
-  readonly footerMenuItems = computed((): MenuItem[] => {
+  // Footer menu (kept for reference, now using keyboard hints)
+  readonly footerMenuItems = computed(() => {
     const state = this.gameState.state();
     let canOpen = false;
     let canInspect = false;
@@ -365,6 +400,61 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Render the dungeon with dungeon state for door rendering
     this.webglRenderer.render(level, position, config, this.dungeonState());
+  }
+
+  // ============================================================
+  // KEYBOARD SHORTCUTS
+  // ============================================================
+
+  @HostListener('window:keydown.w')
+  @HostListener('window:keydown.arrowup')
+  handleKeyW(): void {
+    if (!this.isDialogOpen()) this.moveForward();
+  }
+
+  @HostListener('window:keydown.s')
+  @HostListener('window:keydown.arrowdown')
+  handleKeyS(): void {
+    if (!this.isDialogOpen()) this.moveBackward();
+  }
+
+  @HostListener('window:keydown.a')
+  @HostListener('window:keydown.arrowleft')
+  handleKeyA(): void {
+    if (!this.isDialogOpen()) this.turnLeft();
+  }
+
+  @HostListener('window:keydown.d')
+  @HostListener('window:keydown.arrowright')
+  handleKeyD(): void {
+    if (!this.isDialogOpen()) this.turnRight();
+  }
+
+  @HostListener('window:keydown.q')
+  handleKeyQ(): void {
+    if (!this.isDialogOpen()) this.strafeLeft();
+  }
+
+  @HostListener('window:keydown.e')
+  handleKeyE(): void {
+    if (!this.isDialogOpen()) this.strafeRight();
+  }
+
+  @HostListener('window:keydown.o')
+  handleKeyO(): void {
+    if (!this.isDialogOpen()) this.openDoor();
+  }
+
+  @HostListener('window:keydown.i')
+  handleKeyI(): void {
+    if (!this.isDialogOpen()) this.inspectTile();
+  }
+
+  /**
+   * Check if any dialog is currently open
+   */
+  private isDialogOpen(): boolean {
+    return this.showElevatorDialog() || this.showSpellDialog() || this.showTargetDialog();
   }
 
   @HostListener('window:keydown.escape')
