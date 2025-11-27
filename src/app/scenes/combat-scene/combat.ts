@@ -1136,8 +1136,15 @@ export class CombatComponent implements OnInit, OnDestroy {
       }
 
       // Apply status cures (sleep/paralysis wore off)
+      // Preserve spell points from current roster state to avoid overwriting deductions
       for (const [charId, curedChar] of result.curedCharacters.entries()) {
-        newRoster.set(charId, curedChar)
+        const currentChar = newRoster.get(charId)
+        if (currentChar) {
+          // Preserve spell points and other state, only update status
+          newRoster.set(charId, { ...currentChar, status: curedChar.status })
+        } else {
+          newRoster.set(charId, curedChar)
+        }
       }
 
       // Merge final combat state with committed messages

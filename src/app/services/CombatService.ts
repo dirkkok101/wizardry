@@ -327,7 +327,8 @@ export class CombatService {
   static executeCommand(
     state: CombatState,
     command: CombatCommand,
-    parryingCombatants: Set<string>
+    parryingCombatants: Set<string>,
+    existingCharacterUpdates?: Map<string, Character>
   ): CommandExecutionResult {
     if (this.DEBUG_COMBAT) {
       const actorName = this.getCombatantName(command.actor)
@@ -359,7 +360,7 @@ export class CombatService {
     }
 
     if (command.type === 'CAST_SPELL') {
-      return this.executeCastSpellCommand(state, command)
+      return this.executeCastSpellCommand(state, command, existingCharacterUpdates)
     }
 
     if (command.type === 'DISPEL') {
@@ -598,11 +599,13 @@ export class CombatService {
 
   private static executeCastSpellCommand(
     state: CombatState,
-    command: CombatCommand
+    command: CombatCommand,
+    existingCharacterUpdates?: Map<string, Character>
   ): CommandExecutionResult {
     const caster = command.actor as Character
     const actorName = this.getCombatantName(caster)
     const spellId = command.data?.spellId
+    const characterUpdates = new Map<string, Character>()
 
     if (!spellId) {
       return { newState: state, messages: [`${actorName} casts nothing!`] }
@@ -677,12 +680,18 @@ export class CombatService {
       }
     }
 
-    // Apply healing to targets
+    // Apply healing to character targets
     if (spellEffect.healing && spellEffect.healing.length > 0) {
       for (let i = 0; i < targets.length && i < spellEffect.healing.length; i++) {
         const target = targets[i]
         const healing = spellEffect.healing[i]
-        newState = this.applyHealing(newState, target, healing)
+        // Only apply healing to characters (not monsters)
+        if ('class' in target) {
+          // Get the most recent state of this character
+          const currentChar = existingCharacterUpdates?.get(target.id) || characterUpdates.get(target.id) || target as Character
+          const healed = this.applyHealingToCharacter(currentChar, healing)
+          characterUpdates.set(target.id, healed)
+        }
       }
     }
 
@@ -693,10 +702,16 @@ export class CombatService {
       }
     }
 
-    // Apply full healing to targets (MALIKTO)
+    // Apply full healing to character targets (MALIKTO)
     if (spellEffect.fullHeal && spellEffect.fullHeal.length > 0) {
       for (const targetId of spellEffect.fullHeal) {
-        newState = this.applyFullHeal(newState, targetId)
+        // Find the character in targets
+        const target = targets.find(t => t.id === targetId)
+        if (target && 'class' in target) {
+          const currentChar = existingCharacterUpdates?.get(targetId) || characterUpdates.get(targetId) || target as Character
+          const healed = { ...currentChar, hp: currentChar.maxHp }
+          characterUpdates.set(targetId, healed)
+        }
       }
     }
 
@@ -707,10 +722,17 @@ export class CombatService {
       }
     }
 
-    // Apply resurrection to targets (KADORTO)
+    // Apply resurrection to character targets (KADORTO)
     if (spellEffect.resurrection && spellEffect.resurrection.length > 0) {
       for (const targetId of spellEffect.resurrection) {
-        newState = this.applyResurrection(newState, targetId)
+        // Find the character in targets
+        const target = targets.find(t => t.id === targetId)
+        if (target && 'class' in target) {
+          const currentChar = existingCharacterUpdates?.get(targetId) || characterUpdates.get(targetId) || target as Character
+          // Resurrect with 1 HP and OK status
+          const resurrected = { ...currentChar, hp: 1, status: CharacterStatus.OK }
+          characterUpdates.set(targetId, resurrected)
+        }
       }
     }
 
@@ -721,6 +743,15 @@ export class CombatService {
         spellEffect.statusCures.targetIds,
         spellEffect.statusCures.cureType
       )
+      // Track cured characters for component to update
+      for (const targetId of spellEffect.statusCures.targetIds) {
+        const target = targets.find(t => t.id === targetId)
+        if (target && 'class' in target) {
+          const currentChar = existingCharacterUpdates?.get(targetId) || characterUpdates.get(targetId) || target as Character
+          const cured = { ...currentChar, status: CharacterStatus.OK }
+          characterUpdates.set(targetId, cured)
+        }
+      }
     }
 
     // Build action message (casting announcement)
@@ -737,7 +768,8 @@ export class CombatService {
 
     return {
       newState,
-      messages: [actionMessage, resultMessage]
+      messages: [actionMessage, resultMessage],
+      characterUpdates: characterUpdates.size > 0 ? characterUpdates : undefined
     }
   }
 
@@ -831,7 +863,8 @@ export class CombatService {
   static calculateFleeChance(
     state: CombatState,
     party: Character[],
-    fleeingCharacterIds: Set<string>
+    fleeingCharacterIds: Set<string>,
+    characterUpdates?: Map<string, Character>
   ): number {
     // Boss fights cannot flee
     if (!state.canFlee) {
@@ -846,12 +879,20 @@ export class CombatService {
     let chance = 50 // Base 50%
 
     // Calculate party average AGI (only alive members)
-    const aliveParty = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    // Use characterUpdates to check current HP (after damage this round)
+    const aliveParty = party.filter(c => {
+      const updated = characterUpdates?.get(c.id) || c
+      return updated.status !== CharacterStatus.DEAD && updated.hp > 0
+    })
     if (aliveParty.length === 0) {
       return 0
     }
 
-    const partyAvgAgi = aliveParty.reduce((sum, c) => sum + c.agility, 0) / aliveParty.length
+    // Use updated agility values if available
+    const partyAvgAgi = aliveParty.reduce((sum, c) => {
+      const updated = characterUpdates?.get(c.id) || c
+      return sum + updated.agility
+    }, 0) / aliveParty.length
 
     // Calculate monster average AGI (only alive monsters)
     const aliveMonsters = this.getAllAliveMonsters(state)
@@ -922,8 +963,8 @@ export class CombatService {
 
       if (targetPool.length === 0) continue
 
-      // Select random target
-      const target = targetPool[Math.floor(Math.random() * targetPool.length)]
+      // Select random target using RandomService for deterministic testing
+      const target = RandomService.pickRandom(targetPool)
       const effectiveTarget = getEffectiveChar(target)
 
       // Resolve attack (no parrying during penalty round)
@@ -1338,9 +1379,16 @@ export class CombatService {
       // Skip if actor cannot act (dead, asleep, paralyzed, or died this round)
       if (!this.getCurrentActorIfCanAct(command, currentState, damagedCharacters)) continue
 
-      const result = this.executeCommand(currentState, command, parryingCombatants)
+      const result = this.executeCommand(currentState, command, parryingCombatants, damagedCharacters)
       currentState = result.newState
       messages.push(...result.messages)
+
+      // Merge character updates from spell effects (healing, resurrection, etc.)
+      if (result.characterUpdates) {
+        for (const [charId, char] of result.characterUpdates.entries()) {
+          damagedCharacters.set(charId, char)
+        }
+      }
 
       // Track RUN commands
       if (command.type === 'RUN' && !('monsterId' in command.actor)) {
@@ -1353,32 +1401,16 @@ export class CombatService {
         spellCasters.set(caster.id, { character: caster, spellId: command.data.spellId })
       }
 
-      // Track character damage for component to update roster
-      if (command.target && !('monsterId' in command.target)) {
+      // Track character damage for component to update roster using targetDamage from executeCommand
+      // This avoids re-rolling attack and ensures displayed damage matches the actual state
+      if (result.targetDamage && command.target && !('monsterId' in command.target)) {
         const target = command.target as Character
-        const isParrying = parryingCombatants.has(target.id)
-        const acModifier = isParrying ? -2 : 0
+        // Get existing character state (may have already been damaged this round)
+        const existingChar = damagedCharacters.get(target.id) || target
 
-        // Check if attacker is blind (-4 attack penalty)
-        const isBlind = this.hasStatusEffect(currentState, command.actor.id, 'BLIND')
-        const attackerPenalty = isBlind ? -4 : 0
-
-        const existingDamage = damagedCharacters.get(target.id)
-        if (existingDamage) {
-          // Accumulate damage
-          const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
-          if (attackResult.hit) {
-            const updated = this.applyDamageToCharacter(existingDamage, attackResult.damage)
-            damagedCharacters.set(target.id, updated)
-          }
-        } else {
-          // First damage to this character
-          const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
-          if (attackResult.hit) {
-            const updated = this.applyDamageToCharacter(target, attackResult.damage)
-            damagedCharacters.set(target.id, updated)
-          }
-        }
+        // Apply the damage that was actually calculated (from targetDamage)
+        const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
+        damagedCharacters.set(target.id, updated)
       }
 
       // Check victory after each action
@@ -1442,12 +1474,16 @@ export class CombatService {
     }
 
     // Check if all alive characters are fleeing
-    const aliveCharacters = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    // Use damagedCharacters to check current HP (after damage this round)
+    const aliveCharacters = party.filter(c => {
+      const updated = damagedCharacters.get(c.id) || c
+      return updated.status !== CharacterStatus.DEAD && updated.hp > 0
+    })
     const allFleeing = aliveCharacters.length > 0 &&
                       aliveCharacters.every(c => fleeingCharacters.has(c.id))
 
     if (allFleeing) {
-      const fleeChance = this.calculateFleeChance(currentState, party, fleeingCharacters)
+      const fleeChance = this.calculateFleeChance(currentState, party, fleeingCharacters, damagedCharacters)
       const fleeSuccess = RandomService.chance(fleeChance)
 
       if (fleeSuccess) {
@@ -1604,8 +1640,15 @@ export class CombatService {
       // Capture state before command for comparison
       const stateBefore = currentState
 
-      const result = this.executeCommand(currentState, command, parryingCombatants)
+      const result = this.executeCommand(currentState, command, parryingCombatants, accumulatedCharacterUpdates)
       currentState = result.newState
+
+      // Merge character updates from spell effects (healing, resurrection, etc.)
+      if (result.characterUpdates) {
+        for (const [charId, char] of result.characterUpdates.entries()) {
+          accumulatedCharacterUpdates.set(charId, char)
+        }
+      }
 
       // Track RUN commands
       if (command.type === 'RUN' && !('monsterId' in command.actor)) {
@@ -1623,6 +1666,14 @@ export class CombatService {
       // Track character damage for this event using targetDamage from executeCommand
       // This avoids re-rolling attack and ensures displayed damage matches messages
       const eventCharacterUpdates = new Map<string, CharacterUpdate>()
+
+      // Include spell healing/resurrection in event character updates
+      if (result.characterUpdates) {
+        for (const [charId, char] of result.characterUpdates.entries()) {
+          eventCharacterUpdates.set(charId, createCharacterUpdate(char, char.hp))
+        }
+      }
+
       if (result.targetDamage && command.target && !('monsterId' in command.target)) {
         const target = command.target as Character
         // Get existing character state (may have already been damaged this round)
@@ -1704,12 +1755,16 @@ export class CombatService {
     }
 
     // Check if all alive characters are fleeing
-    const aliveCharacters = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    // Use accumulatedCharacterUpdates to check current HP (after damage this round)
+    const aliveCharacters = party.filter(c => {
+      const updated = accumulatedCharacterUpdates.get(c.id) || c
+      return updated.status !== CharacterStatus.DEAD && updated.hp > 0
+    })
     const allFleeing = aliveCharacters.length > 0 &&
                       aliveCharacters.every(c => fleeingCharacters.has(c.id))
 
     if (allFleeing) {
-      const fleeChance = this.calculateFleeChance(currentState, party, fleeingCharacters)
+      const fleeChance = this.calculateFleeChance(currentState, party, fleeingCharacters, accumulatedCharacterUpdates)
       const fleeSuccess = RandomService.chance(fleeChance)
 
       if (fleeSuccess) {
