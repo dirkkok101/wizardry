@@ -694,4 +694,142 @@ describe('InnService', () => {
       expect(result.perCharacter.has('char2')).toBe(false)
     })
   })
+
+  describe('hasDepletedSpellPoints', () => {
+    it('returns true when mage has depleted spell points', () => {
+      const mage = createTestCharacter({
+        class: CharacterClass.MAGE,
+        status: CharacterStatus.OK,
+        spellPoints: {
+          mage: {
+            level1: { current: 1, max: 4 }, // depleted
+            level2: { current: 2, max: 2 }, // full
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+
+      expect(InnService.hasDepletedSpellPoints(mage)).toBe(true)
+    })
+
+    it('returns false when all spell points are full', () => {
+      const mage = createTestCharacter({
+        class: CharacterClass.MAGE,
+        status: CharacterStatus.OK,
+        spellPoints: {
+          mage: {
+            level1: { current: 4, max: 4 },
+            level2: { current: 2, max: 2 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+
+      expect(InnService.hasDepletedSpellPoints(mage)).toBe(false)
+    })
+
+    it('returns false for non-caster classes', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER })
+      expect(InnService.hasDepletedSpellPoints(fighter)).toBe(false)
+    })
+  })
+
+  describe('partyHasDepletedSpellPoints', () => {
+    it('returns true if any party member has depleted spells', () => {
+      const characters = [
+        createTestCharacter({ class: CharacterClass.FIGHTER, status: CharacterStatus.OK }),
+        createTestCharacter({
+          class: CharacterClass.MAGE,
+          status: CharacterStatus.OK,
+          spellPoints: {
+            mage: {
+              level1: { current: 0, max: 4 },
+              level2: { current: 0, max: 0 },
+              level3: { current: 0, max: 0 },
+              level4: { current: 0, max: 0 },
+              level5: { current: 0, max: 0 },
+              level6: { current: 0, max: 0 },
+              level7: { current: 0, max: 0 }
+            }
+          }
+        })
+      ]
+
+      expect(InnService.partyHasDepletedSpellPoints(characters)).toBe(true)
+    })
+
+    it('returns false if no casters in party', () => {
+      const characters = [
+        createTestCharacter({ class: CharacterClass.FIGHTER, status: CharacterStatus.OK }),
+        createTestCharacter({ class: CharacterClass.THIEF, status: CharacterStatus.OK })
+      ]
+
+      expect(InnService.partyHasDepletedSpellPoints(characters)).toBe(false)
+    })
+
+    it('returns false if all caster spells are full', () => {
+      const characters = [
+        createTestCharacter({ class: CharacterClass.FIGHTER, status: CharacterStatus.OK }),
+        createTestCharacter({
+          class: CharacterClass.MAGE,
+          status: CharacterStatus.OK,
+          spellPoints: {
+            mage: {
+              level1: { current: 4, max: 4 },
+              level2: { current: 2, max: 2 },
+              level3: { current: 0, max: 0 },
+              level4: { current: 0, max: 0 },
+              level5: { current: 0, max: 0 },
+              level6: { current: 0, max: 0 },
+              level7: { current: 0, max: 0 }
+            }
+          }
+        })
+      ]
+
+      expect(InnService.partyHasDepletedSpellPoints(characters)).toBe(false)
+    })
+  })
+
+  describe('partyHasCasters', () => {
+    it('returns true if party has a caster', () => {
+      const characters = [
+        createTestCharacter({ class: CharacterClass.FIGHTER, status: CharacterStatus.OK }),
+        createTestCharacter({
+          class: CharacterClass.MAGE,
+          status: CharacterStatus.OK,
+          spellPoints: {
+            mage: {
+              level1: { current: 4, max: 4 },
+              level2: { current: 0, max: 0 },
+              level3: { current: 0, max: 0 },
+              level4: { current: 0, max: 0 },
+              level5: { current: 0, max: 0 },
+              level6: { current: 0, max: 0 },
+              level7: { current: 0, max: 0 }
+            }
+          }
+        })
+      ]
+
+      expect(InnService.partyHasCasters(characters)).toBe(true)
+    })
+
+    it('returns false if no casters in party', () => {
+      const characters = [
+        createTestCharacter({ class: CharacterClass.FIGHTER, status: CharacterStatus.OK }),
+        createTestCharacter({ class: CharacterClass.THIEF, status: CharacterStatus.OK })
+      ]
+
+      expect(InnService.partyHasCasters(characters)).toBe(false)
+    })
+  })
 })

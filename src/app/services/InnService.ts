@@ -253,6 +253,43 @@ export class InnService {
   }
 
   /**
+   * Check if a character has any depleted spell points.
+   * Returns false for non-casters or characters with full spell points.
+   */
+  static hasDepletedSpellPoints(character: Character): boolean {
+    if (!character.spellPoints) return false
+
+    const checkPool = (pool?: SpellPointPool): boolean => {
+      if (!pool) return false
+      return (
+        (pool.level1.max > 0 && pool.level1.current < pool.level1.max) ||
+        (pool.level2.max > 0 && pool.level2.current < pool.level2.max) ||
+        (pool.level3.max > 0 && pool.level3.current < pool.level3.max) ||
+        (pool.level4.max > 0 && pool.level4.current < pool.level4.max) ||
+        (pool.level5.max > 0 && pool.level5.current < pool.level5.max) ||
+        (pool.level6.max > 0 && pool.level6.current < pool.level6.max) ||
+        (pool.level7.max > 0 && pool.level7.current < pool.level7.max)
+      )
+    }
+
+    return checkPool(character.spellPoints.mage) || checkPool(character.spellPoints.priest)
+  }
+
+  /**
+   * Check if any party member has depleted spell points.
+   */
+  static partyHasDepletedSpellPoints(characters: Character[]): boolean {
+    return characters.some(c => this.hasDepletedSpellPoints(c))
+  }
+
+  /**
+   * Check if any party member has spell points (is a caster).
+   */
+  static partyHasCasters(characters: Character[]): boolean {
+    return characters.some(c => c.spellPoints !== undefined)
+  }
+
+  /**
    * Execute party rest using the provided heal plan.
    * Heals HP, optionally restores spell points, and triggers level-ups
    * for characters at full HP with enough XP.
