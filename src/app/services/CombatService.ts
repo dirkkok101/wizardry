@@ -1442,7 +1442,11 @@ export class CombatService {
     }
 
     // Check if all alive characters are fleeing
-    const aliveCharacters = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    // Use damagedCharacters to check current HP (after damage this round)
+    const aliveCharacters = party.filter(c => {
+      const updated = damagedCharacters.get(c.id) || c
+      return updated.status !== CharacterStatus.DEAD && updated.hp > 0
+    })
     const allFleeing = aliveCharacters.length > 0 &&
                       aliveCharacters.every(c => fleeingCharacters.has(c.id))
 
@@ -1704,7 +1708,11 @@ export class CombatService {
     }
 
     // Check if all alive characters are fleeing
-    const aliveCharacters = party.filter(c => c.status !== CharacterStatus.DEAD && c.hp > 0)
+    // Use accumulatedCharacterUpdates to check current HP (after damage this round)
+    const aliveCharacters = party.filter(c => {
+      const updated = accumulatedCharacterUpdates.get(c.id) || c
+      return updated.status !== CharacterStatus.DEAD && updated.hp > 0
+    })
     const allFleeing = aliveCharacters.length > 0 &&
                       aliveCharacters.every(c => fleeingCharacters.has(c.id))
 
