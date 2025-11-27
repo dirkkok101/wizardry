@@ -83,17 +83,6 @@ export const VisibilityService = {
         break
     }
 
-    // Calculate column offsets: peripheralColumns=3 means [-1, 0, 1]
-    const columnOffsets: number[] = []
-    if (peripheralColumns === 1) {
-      columnOffsets.push(0)  // Center only
-    } else {
-      const halfWidth = Math.floor(peripheralColumns / 2)
-      for (let i = -halfWidth; i <= halfWidth; i++) {
-        columnOffsets.push(i)
-      }
-    }
-
     // Helper function to get perpendicular wall direction
     const getPerpendicularWall = (offset: number): 'north' | 'south' | 'east' | 'west' => {
       // offset -1 = left, +1 = right from player's perspective
@@ -131,33 +120,48 @@ export const VisibilityService = {
       }
 
       // Add peripheral tiles only if there's an opening connecting them to center
-      if (peripheralColumns === 3) {
-        // Check left peripheral (-1 offset)
-        const leftX = centerX + perpX * -1
-        const leftY = centerY + perpY * -1
-        const leftKey = `${leftX},${leftY}`
-        const leftWallDir = getPerpendicularWall(-1)
+      // Uses progressive visibility: offset ±1 needs center→±1 open, offset ±2 needs both center→±1 and ±1→±2 open
+      if (peripheralColumns >= 3) {
+        const halfWidth = Math.floor(peripheralColumns / 2)
 
-        if (leftX >= 0 && leftX < level.size.width &&
-            leftY >= 0 && leftY < level.size.height &&
-            !visited.has(leftKey) &&
-            centerTile.walls[leftWallDir] === 'open') {
-          addTileWalls(leftX, leftY)
-          visited.add(leftKey)
-        }
+        // Process each side (left = negative offsets, right = positive offsets)
+        for (const direction of [-1, 1]) {
+          let canSeeNext = true  // Track if we can see the next tile in this direction
 
-        // Check right peripheral (+1 offset)
-        const rightX = centerX + perpX * 1
-        const rightY = centerY + perpY * 1
-        const rightKey = `${rightX},${rightY}`
-        const rightWallDir = getPerpendicularWall(1)
+          for (let offset = 1; offset <= halfWidth && canSeeNext; offset++) {
+            const actualOffset = direction * offset
+            const tileX = centerX + perpX * actualOffset
+            const tileY = centerY + perpY * actualOffset
+            const tileKey = `${tileX},${tileY}`
 
-        if (rightX >= 0 && rightX < level.size.width &&
-            rightY >= 0 && rightY < level.size.height &&
-            !visited.has(rightKey) &&
-            centerTile.walls[rightWallDir] === 'open') {
-          addTileWalls(rightX, rightY)
-          visited.add(rightKey)
+            // Check bounds
+            if (tileX < 0 || tileX >= level.size.width ||
+                tileY < 0 || tileY >= level.size.height) {
+              canSeeNext = false
+              continue
+            }
+
+            // Get the previous tile (one step closer to center) and check wall direction
+            const prevTileX = centerX + perpX * (actualOffset - direction)
+            const prevTileY = centerY + perpY * (actualOffset - direction)
+            const prevTile = DungeonService.getTile(level, prevTileX, prevTileY)
+            const wallDir = getPerpendicularWall(direction)
+            const wallOpen = prevTile.walls[wallDir] === 'open'
+
+            // Skip if already visited, but still update visibility for further tiles
+            if (visited.has(tileKey)) {
+              canSeeNext = wallOpen
+              continue
+            }
+
+            if (wallOpen) {
+              addTileWalls(tileX, tileY)
+              visited.add(tileKey)
+            } else {
+              // Wall blocks further visibility in this direction
+              canSeeNext = false
+            }
+          }
         }
       }
 

@@ -395,7 +395,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       width: canvas.width,
       height: canvas.height,
       tileDepth: 5,
-      peripheralColumns: 3
+      peripheralColumns: 5
     };
 
     // Render the dungeon with dungeon state for door rendering
