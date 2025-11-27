@@ -9,6 +9,7 @@
           source="party"
           [showFormation]="true"
           [visibleFields]="['class', 'level', 'hp', 'status']"
+          [showHpBar]="true"
           [actions]="[{type: 'inspect'}, {type: 'rest', label: 'Rest'}]"
           (actionClick)="handleCharacterAction($event)"
           emptyMessage="No party members"
