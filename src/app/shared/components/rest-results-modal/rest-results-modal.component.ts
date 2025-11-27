@@ -28,9 +28,10 @@ export interface RestResultsData {
   imports: [CommonModule],
   template: `
     @if (visible) {
-      <div class="modal-overlay" tabindex="0" #modalOverlay>
+      <div class="modal-overlay" tabindex="0" #modalOverlay
+           role="dialog" aria-modal="true" aria-labelledby="rest-modal-title">
         <div class="modal-content">
-          <h2 class="modal-title">Rest Complete</h2>
+          <h2 class="modal-title" id="rest-modal-title">Rest Complete</h2>
 
           <div class="summary-section">
             <div class="summary-item">
