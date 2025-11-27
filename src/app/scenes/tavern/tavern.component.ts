@@ -4,17 +4,33 @@ import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
-import { CharacterCardComponent } from '@shared/components/character-card/character-card.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '@services/PartyService';
+import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
+
+/**
+ * Abbreviated class names for compact display
+ */
+const CLASS_ABBREVIATIONS: Record<CharacterClass, string> = {
+  [CharacterClass.FIGHTER]: 'FIG',
+  [CharacterClass.MAGE]: 'MAG',
+  [CharacterClass.PRIEST]: 'PRI',
+  [CharacterClass.THIEF]: 'THI',
+  [CharacterClass.BISHOP]: 'BIS',
+  [CharacterClass.SAMURAI]: 'SAM',
+  [CharacterClass.LORD]: 'LOR',
+  [CharacterClass.NINJA]: 'NIN'
+};
 
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, CharacterCardComponent, SceneTitleComponent, SceneFooterComponent],
+  imports: [CommonModule, CharacterPanelComponent, SceneTitleComponent, SceneFooterComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
@@ -48,6 +64,29 @@ export class TavernComponent implements OnInit {
   readonly footerMenuItems = computed((): MenuItem[] => [
     { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true }
   ]);
+
+  // Visible action types for party CharacterPanel
+  readonly partyActionTypes = ['remove', 'inspect', 'moveUp', 'moveDown'];
+
+  /**
+   * Get abbreviated class name for available characters list
+   */
+  getClassAbbr(charClass: CharacterClass): string {
+    return CLASS_ABBREVIATIONS[charClass] || charClass.substring(0, 3).toUpperCase();
+  }
+
+  /**
+   * Get actions for party characters (used by CharacterPanel)
+   * Returns a function that evaluates move enabled state per character
+   */
+  getPartyActions = (char: Character): CharacterAction[] => {
+    return [
+      { type: 'remove' },
+      { type: 'inspect' },
+      { type: 'moveUp', enabled: this.canCharacterMoveUp(char.id) },
+      { type: 'moveDown', enabled: this.canCharacterMoveDown(char.id) }
+    ];
+  };
 
   // Helper methods for character card inputs
   canCharacterMoveUp(characterId: string): boolean {

@@ -378,7 +378,7 @@ describe('CharacterPanelComponent', () => {
   })
 
   describe('getVisibleActions', () => {
-    it('filters to only inspect and cast-spell actions', () => {
+    it('filters to default visible types (inspect, cast-spell)', () => {
       component.actions = [
         { type: 'inspect' },
         { type: 'cast-spell' },
@@ -397,6 +397,22 @@ describe('CharacterPanelComponent', () => {
       const char = createTestCharacter()
       expect(component.getVisibleActions(char)).toHaveLength(0)
     })
+
+    it('respects custom visibleActionTypes', () => {
+      component.visibleActionTypes = ['remove', 'inspect', 'moveUp', 'moveDown']
+      component.actions = [
+        { type: 'remove' },
+        { type: 'inspect' },
+        { type: 'moveUp' },
+        { type: 'moveDown' },
+        { type: 'cast-spell' }
+      ]
+      const char = createTestCharacter()
+      const visible = component.getVisibleActions(char)
+
+      expect(visible).toHaveLength(4)
+      expect(visible.map(a => a.type)).toEqual(['remove', 'inspect', 'moveUp', 'moveDown'])
+    })
   })
 
   describe('getActionLabel', () => {
@@ -406,6 +422,22 @@ describe('CharacterPanelComponent', () => {
 
     it('returns Cast for cast-spell', () => {
       expect(component.getActionLabel('cast-spell')).toBe('Cast')
+    })
+
+    it('returns Remove for remove', () => {
+      expect(component.getActionLabel('remove')).toBe('Remove')
+    })
+
+    it('returns ↑ for moveUp', () => {
+      expect(component.getActionLabel('moveUp')).toBe('↑')
+    })
+
+    it('returns ↓ for moveDown', () => {
+      expect(component.getActionLabel('moveDown')).toBe('↓')
+    })
+
+    it('returns Add for add', () => {
+      expect(component.getActionLabel('add')).toBe('Add')
     })
 
     it('returns action type for unknown', () => {

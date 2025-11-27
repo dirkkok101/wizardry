@@ -1,77 +1,70 @@
+<div class="tavern-container">
 <app-scene-title title="GILGAMESH'S TAVERN" [showPartyGold]="true" />
 
-<div class="tavern-container">
+<div class="tavern-layout">
   @if (messages.hasMessage()) {
     <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
       {{ messages.messageText() }}
     </div>
   }
 
-  <!-- Left Column: Available Characters -->
-  <div class="available-characters">
-    <h2>Available Characters</h2>
+  <!-- Left Column: Available Characters (compact list) -->
+  <section class="available-section">
+    <h3 class="row-title">Available Characters</h3>
     @if (availableCharacters().length === 0) {
-      <div class="empty-state">No characters available to join the party</div>
+      <div class="empty-state">No characters available</div>
     } @else {
-      <div class="character-grid">
-        @for (character of availableCharacters(); track character.id) {
-          <app-character-card
-            [character]="character"
-            [visibleFields]="['class', 'level', 'race', 'alignment']"
-            [actions]="getCharacterActions(character.id, false)"
-            variant="compact"
-            (actionClick)="handleActionClick($event)">
-          </app-character-card>
+      <div class="character-list">
+        @for (char of availableCharacters(); track char.id) {
+          <div class="list-item">
+            <span class="char-name">{{ char.name }}</span>
+            <span class="char-info">{{ getClassAbbr(char.class) }} Lv{{ char.level }}</span>
+            <span class="char-race">{{ char.race }}</span>
+            <div class="list-actions">
+              <button class="action-btn" (click)="onAddCharacter(char.id)">Add</button>
+              <button class="action-btn" (click)="onInspect(char.id)">Inspect</button>
+            </div>
+          </div>
         }
       </div>
     }
-  </div>
+  </section>
 
-  <!-- Right Column: Party Members -->
-  <div class="party-column">
-    <!-- Front Row -->
-    <div class="formation-section">
-      <h3>Front Row</h3>
-      @if (frontRowCharacters().length === 0) {
-        <div class="empty-state">Front row is empty</div>
-      } @else {
-        <div class="character-grid">
-          @for (character of frontRowCharacters(); track character.id) {
-            <app-character-card
-              [character]="character"
-              [visibleFields]="['class', 'level', 'race', 'alignment']"
-              [actions]="getCharacterActions(character.id, true)"
-              variant="compact"
-              (actionClick)="handleActionClick($event)">
-            </app-character-card>
-          }
-        </div>
-      }
+  <!-- Right Column: Party (CharacterPanel for Front/Back rows) -->
+  <section class="party-section">
+    <div class="formation-layout">
+      <div class="formation-column">
+        <h3 class="row-title">Front Row</h3>
+        @if (frontRowCharacters().length === 0) {
+          <div class="empty-state">Empty</div>
+        } @else {
+          <app-character-panel
+            [characters]="frontRowCharacters()"
+            [actions]="getPartyActions"
+            [visibleActionTypes]="partyActionTypes"
+            (actionClick)="handleActionClick($event)"
+          />
+        }
+      </div>
+      <div class="formation-column">
+        <h3 class="row-title">Back Row</h3>
+        @if (backRowCharacters().length === 0) {
+          <div class="empty-state">Empty</div>
+        } @else {
+          <app-character-panel
+            [characters]="backRowCharacters()"
+            [actions]="getPartyActions"
+            [visibleActionTypes]="partyActionTypes"
+            (actionClick)="handleActionClick($event)"
+          />
+        }
+      </div>
     </div>
-
-    <!-- Back Row -->
-    <div class="formation-section">
-      <h3>Back Row</h3>
-      @if (backRowCharacters().length === 0) {
-        <div class="empty-state">Back row is empty</div>
-      } @else {
-        <div class="character-grid">
-          @for (character of backRowCharacters(); track character.id) {
-            <app-character-card
-              [character]="character"
-              [visibleFields]="['class', 'level', 'race', 'alignment']"
-              [actions]="getCharacterActions(character.id, true)"
-              variant="compact"
-              (actionClick)="handleActionClick($event)">
-            </app-character-card>
-          }
-        </div>
-      }
-    </div>
-  </div>
+  </section>
 </div>
 
 <app-scene-footer
   [menuItems]="footerMenuItems()"
   (itemSelected)="handleFooterAction($event)"
 />
+</div>

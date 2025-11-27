@@ -85,6 +85,13 @@ export class CharacterPanelComponent {
   @Input() actions: CharacterAction[] | ((char: Character) => CharacterAction[]) = [{ type: 'inspect' }];
 
   /**
+   * Which action types to show as visible buttons
+   * Defaults to maze-style (inspect, cast-spell)
+   * For tavern, use ['remove', 'inspect', 'moveUp', 'moveDown']
+   */
+  @Input() visibleActionTypes: string[] = ['inspect', 'cast-spell'];
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
@@ -138,11 +145,11 @@ export class CharacterPanelComponent {
   }
 
   /**
-   * Get visible actions (exclude moveUp/moveDown, only show inspect and cast-spell)
+   * Get visible actions based on visibleActionTypes input
    */
   getVisibleActions(char: Character): CharacterAction[] {
     return this.getActionsForCharacter(char).filter(
-      action => action.type === 'inspect' || action.type === 'cast-spell'
+      action => this.visibleActionTypes.includes(action.type)
     );
   }
 
@@ -153,6 +160,10 @@ export class CharacterPanelComponent {
     switch (actionType) {
       case 'inspect': return 'Inspect';
       case 'cast-spell': return 'Cast';
+      case 'remove': return 'Remove';
+      case 'moveUp': return '↑';
+      case 'moveDown': return '↓';
+      case 'add': return 'Add';
       default: return actionType;
     }
   }
