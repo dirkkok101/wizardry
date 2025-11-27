@@ -11,7 +11,6 @@ import { ChestService } from '@services/ChestService'
 import { ItemDataLoader } from '@services/ItemDataLoader'
 import { SceneType } from '@models/SceneType'
 import { Chest, RewardTier, TRAP_PROBABILITY_BY_TIER } from '@models/Chest'
-import { TrapType } from '@models/Trap'
 import { Item } from '@models/Item'
 import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
 import { Character } from '@models/Character'
@@ -1222,8 +1221,6 @@ export class CombatComponent implements OnInit, OnDestroy {
   }
 
   private handleVictory(): void {
-    console.log('[Combat] handleVictory() called')
-
     const combat = this.combatState()
     if (!combat) return
 
@@ -1241,13 +1238,6 @@ export class CombatComponent implements OnInit, OnDestroy {
       partyMembers
     )
 
-    console.log('[Combat] Victory rewards:', {
-      totalXP: rewards.totalXP,
-      xpPerCharacter: rewards.xpPerCharacter,
-      totalGold: rewards.totalGold,
-      items: rewards.items.length
-    })
-
     // Distribute XP to roster immediately (only living characters get XP)
     const newRoster = VictoryService.distributeRewards(
       roster,
@@ -1261,12 +1251,6 @@ export class CombatComponent implements OnInit, OnDestroy {
     const maxMonsterLevel = Math.max(...allMonsters.map(m => m.level || 1), 1)
     const chestProbability = this.getChestProbability(maxMonsterLevel)
     const hasChest = RandomService.roll(chestProbability)
-
-    console.log('[Combat] Chest check:', {
-      maxMonsterLevel,
-      chestProbability,
-      hasChest
-    })
 
     if (hasChest) {
       // Monsters left behind a treasure chest - navigate to chest scene
@@ -1333,19 +1317,10 @@ export class CombatComponent implements OnInit, OnDestroy {
       source: 'combat_victory'
     }
 
-    // Set trap type if trapped
+    // Set trap type if trapped (using ChestService for consistency)
     if (chest.trapped) {
-      const trapTypes = this.getTrapTypesForTier(rewardTier)
-      chest.trapType = RandomService.pickRandom(trapTypes)
+      chest.trapType = ChestService.selectTrapType(rewardTier)
     }
-
-    console.log('[Combat] Generated chest:', {
-      id: chest.id,
-      trapped: chest.trapped,
-      trapType: chest.trapType,
-      gold: chest.contents.gold,
-      items: chest.contents.items.length
-    })
 
     // Update game state: distribute XP, clear combat, set pending chest
     this.gameState.updateState(state => ({
@@ -1359,7 +1334,6 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.victoryRewards.set(rewards)
 
     // Navigate to chest scene
-    console.log('[Combat] Monsters left a chest! Navigating to chest scene')
     this.router.navigate(['/chest'])
   }
 
@@ -1371,8 +1345,6 @@ export class CombatComponent implements OnInit, OnDestroy {
     newRoster: Map<string, Character>,
     rewards: VictoryRewards
   ): void {
-    console.log('[Combat] Monsters dropped loose gold (no chest)')
-
     // Update game state: distribute XP, add gold directly to party, clear combat
     this.gameState.updateState(state => ({
       ...state,
@@ -1385,7 +1357,6 @@ export class CombatComponent implements OnInit, OnDestroy {
     }))
 
     // Store rewards for display (gold goes directly to party, no items without chest)
-    // Create modified rewards without items for display
     const looseGoldRewards: VictoryRewards = {
       ...rewards,
       items: []  // No items without a chest
@@ -1394,25 +1365,9 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // Show victory modal
     this.showVictoryModal.set(true)
-    console.log('[Combat] Victory modal shown (loose gold)')
-  }
-
-  /**
-   * Get trap types available for a given reward tier
-   */
-  private getTrapTypesForTier(tier: RewardTier): TrapType[] {
-    const trapTypesByTier: Record<RewardTier, TrapType[]> = {
-      1: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.ALARM],
-      2: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.CROSSBOW_BOLT, TrapType.ALARM],
-      3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.STUNNER, TrapType.TELEPORTER],
-      4: [TrapType.EXPLODING_BOX, TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER],
-      5: [TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]
-    }
-    return trapTypesByTier[tier]
   }
 
   private handleDefeat(): void {
-    console.log('[Combat] handleDefeat() called')
 
     const state = this.gameState.state()
     const party = state.party
