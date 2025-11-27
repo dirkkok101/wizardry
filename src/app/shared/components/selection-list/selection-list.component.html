@@ -1,31 +1,49 @@
-<div class="selection-list" role="listbox" [style.--columns]="columns()">
-  @for (option of options(); track option.id; let i = $index) {
-    <div
-      class="selection-item"
-      [class.selected]="selectedIndex() === i"
-      [class.disabled]="!option.enabled"
-      [class.hovered]="hoveredIndex() === i"
-      (click)="onOptionClick(option, i)"
-      (mouseenter)="onOptionMouseEnter(i)"
-      (mouseleave)="onOptionMouseLeave()"
-      role="option"
-      [attr.aria-selected]="selectedIndex() === i"
-      [attr.aria-disabled]="!option.enabled"
-      [attr.tabindex]="option.enabled ? 0 : -1"
-    >
-      @if (showShortcutsInList()) {
-        <span class="item-shortcut">({{ option.shortcut }})</span>
-      }
+<div
+  class="selection-list"
+  role="listbox"
+  [style.--columns]="columns()"
+  [style.maxHeight]="maxHeight()"
+  [class.scrollable]="maxHeight()"
+>
+  @if (options().length === 0) {
+    <div class="empty-state">{{ emptyMessage() }}</div>
+  } @else {
+    @for (option of options(); track option.id; let i = $index) {
+      <div
+        class="selection-item"
+        [class.selected]="selectedIndex() === i"
+        [class.disabled]="!option.enabled"
+        [class.hovered]="hoveredIndex() === i"
+        [class.animate-entry]="entryAnimation()"
+        (click)="onOptionClick(option, i)"
+        (mouseenter)="onOptionMouseEnter(i)"
+        (mouseleave)="onOptionMouseLeave()"
+        role="option"
+        [attr.aria-selected]="selectedIndex() === i"
+        [attr.aria-disabled]="!option.enabled"
+        [attr.tabindex]="option.enabled ? 0 : -1"
+      >
+        @if (showShortcutsInList()) {
+          <span class="item-shortcut">({{ option.shortcut }})</span>
+        }
 
-      @if (itemTemplate) {
-        <ng-container
-          [ngTemplateOutlet]="itemTemplate"
-          [ngTemplateOutletContext]="getItemContext(option, i)"
-        />
-      } @else {
-        <!-- Default rendering if no template provided -->
-        <span class="item-default">{{ option.id }}</span>
-      }
+        @if (itemTemplate) {
+          <ng-container
+            [ngTemplateOutlet]="itemTemplate"
+            [ngTemplateOutletContext]="getItemContext(option, i)"
+          />
+        } @else {
+          <span class="item-default">{{ option.id }}</span>
+        }
+      </div>
+    }
+  }
+
+  @if (showKeyboardHints() && options().length > 0) {
+    <div class="keyboard-hints">
+      <span>↑↓ Navigate</span>
+      <span>Enter Select</span>
+      <span>ESC Cancel</span>
     </div>
   }
 </div>
