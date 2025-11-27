@@ -171,8 +171,11 @@ describe('Combat Flow E2E', () => {
       expect(component.selectedActions().size).toBe(0)
       expect(component.isExecutingRound()).toBe(false)
 
-      // 7. Verify victory occurred - now navigates to chest scene
-      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
+      // 7. Verify victory occurred
+      // Note: With the new Wizardry-accurate flow, victory can either:
+      // - Navigate to chest scene (if monsters left a chest)
+      // - Show victory modal (if monsters dropped loose gold)
+      // The outcome depends on chest probability roll
 
       // 8. Verify victory rewards were calculated
       const rewards = component.victoryRewards()
@@ -181,20 +184,27 @@ describe('Combat Flow E2E', () => {
       expect(rewards?.xpPerCharacter).toBe(50) // 100 XP / 2 characters
       expect(rewards?.totalGold).toBe(50)
 
-      // 9. Verify XP was distributed (gold goes to pending chest now)
+      // 9. Verify XP was distributed to both characters
       const newXP1 = gameState.roster().get('c1')!.experience
       const newXP2 = gameState.roster().get('c2')!.experience
 
       expect(newXP1).toBe(initialXP1 + 50)
       expect(newXP2).toBe(initialXP2 + 50)
 
-      // 9b. Verify gold is in pending chest (not party)
-      const pendingChest = gameState.state().pendingChest
-      expect(pendingChest).toBeDefined()
-      expect(pendingChest?.contents.gold).toBe(50)
-
       // 10. Verify combat state was cleared
       expect(gameState.state().combat).toBeUndefined()
+
+      // 11. Verify either chest was created OR gold added to party (Wizardry-accurate)
+      const pendingChest = gameState.state().pendingChest
+      if (pendingChest) {
+        // Chest path: gold in chest, navigate to /chest
+        expect(pendingChest.contents.gold).toBe(50)
+        expect(router.navigate).toHaveBeenCalledWith(['/chest'])
+      } else {
+        // Loose gold path: gold added to party, victory modal shown
+        expect(gameState.party().gold).toBe(initialGold + 50)
+        expect(component.showVictoryModal()).toBe(true)
+      }
     })
 
     it('distributes rewards from multiple monsters', () => {
@@ -538,9 +548,15 @@ describe('Combat Flow E2E', () => {
       // After victory, combat state is cleared so log disappears from component
       // But we can verify that combat log was updated during execution
       // by checking that combat state is now undefined (indicating victory)
-      // Victory now navigates to chest scene instead of showing modal
-      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
+      // Victory can either navigate to chest or show modal (Wizardry-accurate)
       expect(gameState.state().combat).toBeUndefined()
+      // Verify victory occurred via one of the two valid paths
+      const hasChest = gameState.state().pendingChest !== undefined
+      if (hasChest) {
+        expect(router.navigate).toHaveBeenCalledWith(['/chest'])
+      } else {
+        expect(component.showVictoryModal()).toBe(true)
+      }
     })
   })
 })

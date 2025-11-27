@@ -11,6 +11,7 @@ import { setCombatMessageDelay, setActionResultDelay } from '@config/CombatSetti
 import { ItemDataLoader } from '@services/ItemDataLoader'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { Item } from '@models/Item'
+import { RandomService } from '@services/RandomService'
 
 // Mock item for item drops during victory
 const mockDropItem: Item = {
@@ -747,21 +748,63 @@ describe('CombatComponent', () => {
       expect(newXP).toBeGreaterThan(initialXP)
     })
 
-    it('creates pending chest with gold instead of adding to party', () => {
+    it('creates pending chest when monsters leave treasure (chest roll succeeds)', () => {
+      // Queue values:
+      // - 0.5 skips item drop (> 0.15 threshold)
+      // - 0.1 for chest probability (succeeds for 30% threshold)
+      // - 0.5 for trap probability
+      // - 0.5 for trap type selection
+      // - 0.5 for chest ID random
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
+
       component['handleVictory']()
 
       const pendingChest = gameState.state().pendingChest
       expect(pendingChest).toBeDefined()
       expect(pendingChest?.contents.gold).toBeGreaterThanOrEqual(0)
+      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
     })
 
-    it('navigates to chest scene on victory', () => {
+    it('adds gold directly to party when no chest (chest roll fails)', () => {
+      const initialGold = gameState.party().gold
+      // Queue values:
+      // - 0.5 skips item drop
+      // - 0.99 for chest probability (fails for 30% threshold - level 1 monsters)
+      RandomService.queueNextValues([0.5, 0.99])
+
+      component['handleVictory']()
+
+      // Gold should be added directly to party
+      expect(gameState.party().gold).toBeGreaterThanOrEqual(initialGold)
+      // No pending chest
+      expect(gameState.state().pendingChest).toBeUndefined()
+      // Victory modal shown instead of navigating to chest
+      expect(component.showVictoryModal()).toBe(true)
+    })
+
+    it('navigates to chest scene when chest roll succeeds', () => {
+      // Queue values for chest path
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
+
       component['handleVictory']()
 
       expect(router.navigate).toHaveBeenCalledWith(['/chest'])
     })
 
-    it('includes victory rewards in modal', () => {
+    it('shows victory modal when no chest (loose gold)', () => {
+      // Queue values for loose gold path
+      RandomService.queueNextValues([0.5, 0.99])
+
+      component['handleVictory']()
+
+      expect(component.showVictoryModal()).toBe(true)
+      expect(router.navigate).not.toHaveBeenCalledWith(['/chest'])
+    })
+
+    it('includes victory rewards regardless of chest outcome', () => {
+      // Queue values (doesn't matter which path for this test)
+      RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5])
+
       component['handleVictory']()
 
       const rewards = component.victoryRewards()
