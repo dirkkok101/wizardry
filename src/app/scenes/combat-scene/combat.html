@@ -46,6 +46,8 @@
         <app-party-character-grid
           source="party"
           [showFormation]="true"
+          [customFrontRow]="frontRowCharacters()"
+          [customBackRow]="backRowCharacters()"
           [visibleFields]="combatCharacterFields"
           [actions]="[]"
           [highlightedCharacterId]="activeCharacterId()"

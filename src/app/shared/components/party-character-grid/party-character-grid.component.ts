@@ -265,6 +265,18 @@ export class PartyCharacterGridComponent {
   @Input() showFormation = false;
 
   /**
+   * Custom front row characters (overrides computed signal when provided)
+   * Use this to pass characters with display overrides during combat animation
+   */
+  @Input() customFrontRow?: Character[];
+
+  /**
+   * Custom back row characters (overrides computed signal when provided)
+   * Use this to pass characters with display overrides during combat animation
+   */
+  @Input() customBackRow?: Character[];
+
+  /**
    * ID of the highlighted character (e.g., active character in combat)
    */
   @Input() highlightedCharacterId?: string | null;
@@ -314,16 +326,18 @@ export class PartyCharacterGridComponent {
 
   /**
    * Front row characters (for formation layout)
+   * Uses customFrontRow if provided, otherwise queries game state
    */
   readonly frontRowCharacters = computed(() =>
-    GameStateQueries.frontRowCharacters(this.gameState.state())
+    this.customFrontRow ?? GameStateQueries.frontRowCharacters(this.gameState.state())
   );
 
   /**
    * Back row characters (for formation layout)
+   * Uses customBackRow if provided, otherwise queries game state
    */
   readonly backRowCharacters = computed(() =>
-    GameStateQueries.backRowCharacters(this.gameState.state())
+    this.customBackRow ?? GameStateQueries.backRowCharacters(this.gameState.state())
   );
 
   /**
