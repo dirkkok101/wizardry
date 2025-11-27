@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { GameStateQueries } from '@utils/GameStateQueries';
@@ -265,6 +265,20 @@ export class PartyCharacterGridComponent {
   @Input() showFormation = false;
 
   /**
+   * Custom front row characters (overrides computed signal when provided)
+   * Use this to pass characters with display overrides during combat animation
+   * Using signal input for proper reactivity with parent computed signals
+   */
+  readonly customFrontRow = input<Character[] | undefined>(undefined);
+
+  /**
+   * Custom back row characters (overrides computed signal when provided)
+   * Use this to pass characters with display overrides during combat animation
+   * Using signal input for proper reactivity with parent computed signals
+   */
+  readonly customBackRow = input<Character[] | undefined>(undefined);
+
+  /**
    * ID of the highlighted character (e.g., active character in combat)
    */
   @Input() highlightedCharacterId?: string | null;
@@ -314,16 +328,18 @@ export class PartyCharacterGridComponent {
 
   /**
    * Front row characters (for formation layout)
+   * Uses customFrontRow if provided, otherwise queries game state
    */
   readonly frontRowCharacters = computed(() =>
-    GameStateQueries.frontRowCharacters(this.gameState.state())
+    this.customFrontRow() ?? GameStateQueries.frontRowCharacters(this.gameState.state())
   );
 
   /**
    * Back row characters (for formation layout)
+   * Uses customBackRow if provided, otherwise queries game state
    */
   readonly backRowCharacters = computed(() =>
-    GameStateQueries.backRowCharacters(this.gameState.state())
+    this.customBackRow() ?? GameStateQueries.backRowCharacters(this.gameState.state())
   );
 
   /**
