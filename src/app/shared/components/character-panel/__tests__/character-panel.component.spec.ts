@@ -88,59 +88,59 @@ describe('CharacterPanelComponent', () => {
     })
   })
 
-  describe('getStatusColor', () => {
-    it('returns green for OK', () => {
-      expect(component.getStatusColor(CharacterStatus.OK)).toBe('var(--crt-green)')
+  describe('getStatusClass', () => {
+    it('returns status-ok for OK', () => {
+      expect(component.getStatusClass(CharacterStatus.OK)).toBe('status-ok')
     })
 
-    it('returns red for DEAD', () => {
-      expect(component.getStatusColor(CharacterStatus.DEAD)).toBe('#ef4444')
+    it('returns status-dead for DEAD', () => {
+      expect(component.getStatusClass(CharacterStatus.DEAD)).toBe('status-dead')
     })
 
-    it('returns purple for POISONED', () => {
-      expect(component.getStatusColor(CharacterStatus.POISONED)).toBe('#a855f7')
+    it('returns status-poisoned for POISONED', () => {
+      expect(component.getStatusClass(CharacterStatus.POISONED)).toBe('status-poisoned')
     })
 
-    it('returns default green for unknown status', () => {
-      expect(component.getStatusColor('UNKNOWN' as CharacterStatus)).toBe('var(--crt-green)')
+    it('returns status-ok for unknown status', () => {
+      expect(component.getStatusClass('UNKNOWN' as CharacterStatus)).toBe('status-ok')
     })
   })
 
-  describe('getHPColor', () => {
-    it('returns green when HP > 50%', () => {
+  describe('getHPClass', () => {
+    it('returns hp-healthy when HP > 50%', () => {
       const char = createTestCharacter({ hp: 8, maxHp: 10 })
-      expect(component.getHPColor(char)).toBe('var(--crt-green)')
+      expect(component.getHPClass(char)).toBe('hp-healthy')
     })
 
-    it('returns green when HP exactly 51%', () => {
+    it('returns hp-healthy when HP exactly 51%', () => {
       const char = createTestCharacter({ hp: 51, maxHp: 100 })
-      expect(component.getHPColor(char)).toBe('var(--crt-green)')
+      expect(component.getHPClass(char)).toBe('hp-healthy')
     })
 
-    it('returns yellow when HP between 25% and 50%', () => {
+    it('returns hp-warning when HP between 25% and 50%', () => {
       const char = createTestCharacter({ hp: 4, maxHp: 10 })
-      expect(component.getHPColor(char)).toBe('#eab308')
+      expect(component.getHPClass(char)).toBe('hp-warning')
     })
 
-    it('returns yellow when HP exactly 50%', () => {
+    it('returns hp-warning when HP exactly 50%', () => {
       const char = createTestCharacter({ hp: 5, maxHp: 10 })
-      expect(component.getHPColor(char)).toBe('#eab308')
+      expect(component.getHPClass(char)).toBe('hp-warning')
     })
 
-    it('returns red when HP < 25%', () => {
+    it('returns hp-critical when HP < 25%', () => {
       const char = createTestCharacter({ hp: 2, maxHp: 10 })
-      expect(component.getHPColor(char)).toBe('#ef4444')
+      expect(component.getHPClass(char)).toBe('hp-critical')
     })
 
-    it('returns red when HP exactly 25%', () => {
+    it('returns hp-critical when HP exactly 25%', () => {
       const char = createTestCharacter({ hp: 25, maxHp: 100 })
-      // At exactly 25%, condition is NOT > 0.25, so returns red
-      expect(component.getHPColor(char)).toBe('#ef4444')
+      // At exactly 25%, condition is NOT > 0.25, so returns critical
+      expect(component.getHPClass(char)).toBe('hp-critical')
     })
 
-    it('returns red when HP is 0', () => {
+    it('returns hp-critical when HP is 0', () => {
       const char = createTestCharacter({ hp: 0, maxHp: 10 })
-      expect(component.getHPColor(char)).toBe('#ef4444')
+      expect(component.getHPClass(char)).toBe('hp-critical')
     })
   })
 

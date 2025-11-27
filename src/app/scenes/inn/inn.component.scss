@@ -1,16 +1,15 @@
-@use 'sass:color';
-@use '../../../styles/variables' as *;
-@use '../../../styles/card-mixins' as *;
+// Inn scene - Modern Retro-Fantasy theme
 
 .inn-scene {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-color: var(--color-bg-darkest);
 }
 
 .inn-content {
   flex: 1;
-  padding: 2rem;
+  padding: var(--space-4);
   overflow-y: auto;
 }
 
@@ -18,18 +17,20 @@
 .inn-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: $spacing-xl;
+  gap: var(--space-6);
   max-width: 1200px;
   margin: 0 auto;
 }
 
 // Section titles
 .section-title {
-  color: $color-amber;
-  font-size: $font-size-large;
-  margin: 0 0 $spacing-md;
-  padding-bottom: $spacing-xs;
-  border-bottom: 1px solid $color-text-dim;
+  font-family: var(--font-display);
+  color: var(--color-gold-primary);
+  font-size: var(--font-size-lg);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+  letter-spacing: 0.05em;
 }
 
 // Party section (left column)
@@ -46,93 +47,94 @@
 .rest-actions {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: var(--space-3);
 }
 
 // Wrapper for action card with shortcut hint
 .rest-action-wrapper {
   display: flex;
   align-items: flex-start;
-  gap: $spacing-sm;
+  gap: var(--space-2);
 }
 
 // Shortcut hint next to cards
 .shortcut-hint {
-  color: $color-amber;
+  color: var(--color-gold-primary);
   font-weight: bold;
-  font-size: $font-size-large;
+  font-size: var(--font-size-lg);
   min-width: 2rem;
-  padding-top: $spacing-md;
+  padding-top: var(--space-3);
 }
 
 // Cost summary box
 .cost-summary {
-  margin-top: $spacing-lg;
-  padding: $spacing-md;
-  background: rgba(0, 20, 0, 0.4);
-  border: 1px solid $color-text-dim;
-  border-radius: 4px;
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
 
   .summary-row {
     display: flex;
     justify-content: space-between;
-    padding: $spacing-xs 0;
+    padding: var(--space-1) 0;
 
     .label {
-      color: $color-text-dim;
+      color: var(--color-text-secondary);
     }
 
     .value {
-      color: $color-text-bright;
+      color: var(--color-text-primary);
 
       &.gold {
-        color: $color-amber;
-        font-weight: bold;
+        color: var(--color-gold-primary);
+        font-weight: 600;
       }
     }
   }
 
   .warning {
-    margin-top: $spacing-sm;
-    padding: $spacing-xs $spacing-sm;
-    background: rgba($color-error, 0.1);
-    border: 1px solid $color-error;
-    color: $color-error;
-    font-size: $font-size-small;
+    margin-top: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
     text-align: center;
+    border-radius: 2px;
   }
 }
 
 // Empty state
 .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
-  color: $color-text-dim;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted);
 
   p {
-    margin: 0.5rem 0;
-    font-size: 1.1rem;
+    margin: var(--space-1) 0;
+    font-size: var(--font-size-base);
   }
 }
 
 // Message styling
 .message {
-  margin-top: $spacing-lg;
-  padding: $spacing-md;
-  border-radius: 4px;
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--card-border-radius);
   text-align: center;
   font-weight: 500;
 
   &.success {
-    background-color: rgba($color-text-green, 0.1);
-    color: $color-text-green;
-    border: 1px solid $color-text-green;
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--color-status-ok);
+    border: 1px solid var(--color-status-ok);
   }
 
   &.error {
-    background-color: rgba($color-red, 0.1);
-    color: $color-red;
-    border: 1px solid $color-red;
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
   }
 }
 
@@ -140,7 +142,7 @@
 @media (max-width: 900px) {
   .inn-layout {
     grid-template-columns: 1fr;
-    gap: $spacing-lg;
+    gap: var(--space-4);
   }
 
   .party-section {
@@ -155,14 +157,14 @@
 // Responsive: Tighter spacing on very small screens
 @media (max-width: 600px) {
   .inn-content {
-    padding: $spacing-md;
+    padding: var(--space-3);
   }
 
   .section-title {
-    font-size: $font-size-base;
+    font-size: var(--font-size-base);
   }
 
   .rest-actions {
-    gap: $spacing-sm;
+    gap: var(--space-2);
   }
 }

@@ -35,18 +35,18 @@ const STATUS_CODES: Record<CharacterStatus, string> = {
 };
 
 /**
- * Status colors for visual distinction
+ * Status CSS classes for visual distinction
  */
-const STATUS_COLORS: Record<CharacterStatus, string> = {
-  [CharacterStatus.OK]: 'var(--crt-green)',
-  [CharacterStatus.INJURED]: '#eab308',
-  [CharacterStatus.POISONED]: '#a855f7',
-  [CharacterStatus.PARALYZED]: '#eab308',
-  [CharacterStatus.STONED]: '#6b7280',
-  [CharacterStatus.DEAD]: '#ef4444',
-  [CharacterStatus.ASHES]: '#4b5563',
-  [CharacterStatus.LOST]: '#374151',
-  [CharacterStatus.ASLEEP]: '#3b82f6'
+const STATUS_CLASSES: Record<CharacterStatus, string> = {
+  [CharacterStatus.OK]: 'status-ok',
+  [CharacterStatus.INJURED]: 'status-ok',  // Injured uses OK styling but different code
+  [CharacterStatus.POISONED]: 'status-poisoned',
+  [CharacterStatus.PARALYZED]: 'status-paralyzed',
+  [CharacterStatus.STONED]: 'status-stoned',
+  [CharacterStatus.DEAD]: 'status-dead',
+  [CharacterStatus.ASHES]: 'status-ashes',
+  [CharacterStatus.LOST]: 'status-lost',
+  [CharacterStatus.ASLEEP]: 'status-asleep'
 };
 
 /**
@@ -104,20 +104,20 @@ export class CharacterPanelComponent {
   }
 
   /**
-   * Get status color
+   * Get status CSS class
    */
-  getStatusColor(status: CharacterStatus): string {
-    return STATUS_COLORS[status] || 'var(--crt-green)';
+  getStatusClass(status: CharacterStatus): string {
+    return STATUS_CLASSES[status] || 'status-ok';
   }
 
   /**
-   * Get HP color based on percentage
+   * Get HP CSS class based on percentage
    */
-  getHPColor(char: Character): string {
+  getHPClass(char: Character): string {
     const percentage = char.hp / char.maxHp;
-    if (percentage > 0.5) return 'var(--crt-green)';
-    if (percentage > 0.25) return '#eab308';
-    return '#ef4444';
+    if (percentage > 0.5) return 'hp-healthy';
+    if (percentage > 0.25) return 'hp-warning';
+    return 'hp-critical';
   }
 
   /**

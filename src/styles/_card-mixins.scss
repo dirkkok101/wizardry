@@ -1,41 +1,170 @@
 @use 'variables' as *;
+@use 'design-tokens' as tokens;
 
-/// Base card styling for static display cards
-@mixin card-base {
-  padding: $card-padding-md;
-  background: rgba(0, 20, 0, 0.4);
-  border: 1px solid $color-text-dim;
-  border-radius: $card-border-radius;
-  transition: all $transition-normal;
+// ============================================================================
+// MODERN RETRO-FANTASY CARD MIXINS
+// ============================================================================
+
+/// Base fantasy card with gold border accents
+/// Use for static display cards that don't need interaction states
+@mixin card-fantasy {
+  background: var(--color-bg-card);
+  border: var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-normal);
 }
 
-/// Interactive card with hover/selected/disabled states
-@mixin card-interactive {
-  @include card-base;
+/// Interactive fantasy card with hover/selected/disabled states
+/// Use for clickable cards like character selection, menu items
+@mixin card-fantasy-interactive {
+  @include card-fantasy;
   cursor: pointer;
 
-  &:hover:not(.disabled) {
-    transform: translateY($state-hover-lift);
-    border-color: $color-text-green;
-    box-shadow: $shadow-glow-green;
+  &:hover:not(.disabled):not([disabled]) {
+    background: var(--color-bg-card-hover);
+    border: var(--card-border-hover);
+    box-shadow: var(--card-shadow-hover), var(--glow-gold-sm);
+    transform: translateY(-2px);
   }
 
-  &.selected:not(.disabled) {
-    border-color: $color-text-green;
-    box-shadow: $state-selected-glow;
-    background: rgba(0, 255, 0, 0.1);
+  &.selected,
+  &[aria-selected="true"] {
+    border-color: var(--color-gold-primary);
+    box-shadow: var(--glow-gold-md);
+    background: rgba(212, 165, 116, 0.1);
   }
 
-  &.disabled {
-    opacity: $state-disabled-opacity;
+  &.disabled,
+  &[disabled] {
+    opacity: 0.5;
     cursor: not-allowed;
-    border-color: rgba($color-error, 0.3);
+    filter: grayscale(50%);
   }
 }
+
+/// Compact card variant for dense layouts (maze, combat)
+/// Smaller padding, tighter spacing
+@mixin card-compact {
+  @include card-fantasy;
+  padding: var(--card-padding-compact);
+  font-size: var(--font-size-sm);
+}
+
+/// Standard card variant for regular layouts (town scenes)
+/// Normal padding, readable text
+@mixin card-standard {
+  @include card-fantasy;
+  padding: var(--card-padding-standard);
+  font-size: var(--font-size-base);
+}
+
+/// Large card variant for detail views
+/// Generous padding, larger text
+@mixin card-large {
+  @include card-fantasy;
+  padding: var(--card-padding-large);
+  font-size: var(--font-size-lg);
+}
+
+// ============================================================================
+// HP BAR MIXINS
+// ============================================================================
+
+/// HP bar container
+@mixin hp-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/// HP bar fill with gradient based on health
+@mixin hp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-normal), background-color var(--transition-normal);
+
+  &.healthy {
+    background: linear-gradient(90deg, var(--color-hp-healthy), #4ade80);
+  }
+
+  &.warning {
+    background: linear-gradient(90deg, var(--color-hp-warning), #fbbf24);
+  }
+
+  &.critical {
+    background: linear-gradient(90deg, var(--color-hp-critical), #f87171);
+    animation: pulse-critical 1s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-critical {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+// ============================================================================
+// STATUS BADGE MIXINS
+// ============================================================================
+
+/// Status badge base styling
+@mixin status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+/// Status badge colors (use with status class)
+@mixin status-badge-colors {
+  &.status-ok {
+    color: var(--color-status-ok);
+    background: rgba(34, 197, 94, 0.15);
+  }
+  &.status-poisoned {
+    color: var(--color-status-poisoned);
+    background: rgba(168, 85, 247, 0.15);
+  }
+  &.status-paralyzed {
+    color: var(--color-status-paralyzed);
+    background: rgba(59, 130, 246, 0.15);
+  }
+  &.status-asleep {
+    color: var(--color-status-asleep);
+    background: rgba(99, 102, 241, 0.15);
+  }
+  &.status-stoned {
+    color: var(--color-status-stoned);
+    background: rgba(120, 113, 108, 0.15);
+  }
+  &.status-dead {
+    color: var(--color-status-dead);
+    background: rgba(107, 114, 128, 0.15);
+  }
+  &.status-ashes {
+    color: var(--color-status-ashes);
+    background: rgba(68, 64, 60, 0.15);
+  }
+  &.status-lost {
+    color: var(--color-status-lost);
+    background: rgba(28, 25, 23, 0.15);
+  }
+}
+
+// ============================================================================
+// ANIMATION MIXINS
+// ============================================================================
 
 /// Staggered entry animation for card lists
 @mixin card-stagger-animation($delay-increment: 0.05s) {
-  @for $i from 1 through 10 {
+  @for $i from 1 through 12 {
     &:nth-child(#{$i}) {
       animation-delay: #{($i - 1) * $delay-increment};
     }
@@ -51,5 +180,111 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/// Apply fade-in animation to element
+@mixin animate-fade-in($duration: 0.3s) {
+  animation: card-fade-in $duration ease-out forwards;
+  opacity: 0;
+}
+
+/// Slide in from direction
+@mixin animate-slide-in($direction: 'left', $distance: 20px, $duration: 0.3s) {
+  @if $direction == 'left' {
+    animation: slide-in-left $duration ease-out forwards;
+  } @else if $direction == 'right' {
+    animation: slide-in-right $duration ease-out forwards;
+  } @else if $direction == 'up' {
+    animation: slide-in-up $duration ease-out forwards;
+  } @else if $direction == 'down' {
+    animation: slide-in-down $duration ease-out forwards;
+  }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// ============================================================================
+// DEAD/INCAPACITATED STATE MIXINS
+// ============================================================================
+
+/// Dead character card styling
+/// Grays out info but keeps actions visible
+@mixin card-dead-state {
+  .card-info,
+  .character-info,
+  .stats-section {
+    opacity: 0.5;
+    filter: grayscale(80%);
+  }
+
+  .card-actions,
+  .character-actions,
+  .action-buttons {
+    opacity: 1;
+    filter: none;
+  }
+
+  border-color: var(--color-status-dead);
+}
+
+/// Incapacitated character card styling (paralyzed, asleep, stoned)
+@mixin card-incapacitated-state {
+  opacity: 0.7;
+  border-color: var(--color-warning);
+}
+
+// ============================================================================
+// LEGACY MIXINS (kept for backward compatibility)
+// ============================================================================
+
+/// Base card styling for static display cards (legacy)
+@mixin card-base {
+  padding: tokens.$card-padding-standard;
+  background: rgba(0, 20, 0, 0.4);
+  border: 1px solid tokens.$color-text-secondary;
+  border-radius: tokens.$card-border-radius;
+  transition: all tokens.$transition-normal;
+}
+
+/// Interactive card with hover/selected/disabled states (legacy)
+@mixin card-interactive {
+  @include card-base;
+  cursor: pointer;
+
+  &:hover:not(.disabled) {
+    transform: translateY(-2px);
+    border-color: tokens.$color-gold-primary;
+    box-shadow: tokens.$glow-gold-sm;
+  }
+
+  &.selected:not(.disabled) {
+    border-color: tokens.$color-gold-primary;
+    box-shadow: tokens.$glow-gold-md;
+    background: rgba(212, 165, 116, 0.1);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: rgba(tokens.$color-danger, 0.3);
   }
 }

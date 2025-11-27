@@ -9,7 +9,7 @@
         <!-- Row 1: Name + Status -->
         <div class="card-row name-row">
           <span class="char-name">{{ char.name }}</span>
-          <span class="char-status" [style.color]="getStatusColor(char.status)">
+          <span class="char-status" [class]="getStatusClass(char.status)">
             {{ getStatusCode(char.status) }}
           </span>
         </div>
@@ -26,11 +26,11 @@
           <div class="hp-bar-container">
             <div
               class="hp-bar-fill"
+              [class]="getHPClass(char)"
               [style.width.%]="getHPPercentage(char)"
-              [style.backgroundColor]="getHPColor(char)"
             ></div>
           </div>
-          <span class="hp-value" [style.color]="getHPColor(char)">{{ char.hp }}/{{ char.maxHp }}</span>
+          <span class="hp-value" [class]="getHPClass(char)">{{ char.hp }}/{{ char.maxHp }}</span>
         </div>
 
         <!-- Row 4: Equipped Weapon -->
@@ -39,13 +39,13 @@
           <span class="weapon-name">{{ getEquippedWeapon(char) }}</span>
         </div>
 
-        <!-- Row 5: Spell Points (casters only) -->
-        @if (isCaster(char)) {
-          <div class="card-row sp-row">
-            <span class="sp-label">SP:</span>
-            <span class="sp-value">{{ getSpellPointsDisplay(char) }}</span>
-          </div>
-        }
+        <!-- Row 5: Spell Points (show --- for non-casters for consistent height) -->
+        <div class="card-row sp-row">
+          <span class="sp-label">SP:</span>
+          <span class="sp-value" [class.no-spells]="!isCaster(char)">
+            {{ isCaster(char) ? getSpellPointsDisplay(char) : '---' }}
+          </span>
+        </div>
 
         <!-- Row 6: Action buttons -->
         <div class="card-row actions-row">
