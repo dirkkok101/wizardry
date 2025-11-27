@@ -1,77 +1,30 @@
 import { Component, OnInit, HostListener, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
-import { InnService, RoomType } from '@services/InnService';
-import { LevelUpService } from '@services/LevelUpService';
-import { SpellLearningService } from '@services/SpellLearningService';
+import { InnService, RoomType, PartyHealPlan, PartyRestResult, LevelUpDisplayData } from '@services/InnService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { SelectionListComponent, SelectableOption } from '@shared/components/selection-list/selection-list.component';
+import { RestActionCardComponent, RestActionConfig, RestActionType } from '@shared/components/rest-action-card/rest-action-card.component';
+import { RestResultsModalComponent, RestResultsData } from '@shared/components/rest-results-modal/rest-results-modal.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
-import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
-
-/**
- * Room option for selection list - extends SelectableOption for keyboard/mouse support
- */
-export interface RoomOption extends SelectableOption {
-  id: string;
-  shortcut: string;
-  enabled: boolean;
-  name: string;
-  cost: number;
-  costUnit: string;
-  benefit: string;
-  description: string;
-  roomType: RoomType;
-}
-
-/**
- * Room option with healing preview - extends RoomOption with calculated values
- */
-export interface RoomOptionWithPreview extends RoomOption {
-  weeks: number;
-  totalCost: number;
-  affordable: boolean;
-}
-
-interface LevelUpDisplayData {
-  newLevel: number;
-  hpIncrease: number;
-  statChanges: Record<string, number>;
-  newSpells: Array<{ id: string; name: string }>;
-}
-
-interface RestProgressData {
-  weeksRested: number;
-  totalHpRecovered: number;
-  totalGoldSpent: number;
-  startingHp: number;
-  currentHp: number;
-  maxHp: number;
-}
 
 /**
  * Inn Component (Adventurer's Inn)
  *
- * Character rest and level-up:
- * - Select character from party to rest
- * - Choose room type (cost/healing rate)
- * - Rest loop: heal HP week by week, deduct gold
- * - Level up when HP = max and XP sufficient
+ * Party-based rest system with three action types:
+ * - Restore Spells (1): Free, 1 week at Stables - restores all spell points
+ * - Heal Party (2): Auto-optimized room tier - heals all HP
+ * - Full Rest (3): Both healing and spell restoration
  *
- * Room Types:
- * - Stables: 0 gp/week, 0 HP/week (for level-up check only)
- * - Barracks: 10 gp/week, 1 HP/week
- * - Double: 50 gp/week, 3 HP/week
- * - Private: 200 gp/week, 7 HP/week
- * - Royal Suite: 500 gp/week, 10 HP/week
+ * The system automatically calculates the optimal room tier based on
+ * party gold, cascading from Royal Suite down to Barracks.
  */
 @Component({
   selector: 'app-inn',
@@ -81,7 +34,8 @@ interface RestProgressData {
     SceneTitleComponent,
     SceneFooterComponent,
     PartyCharacterGridComponent,
-    SelectionListComponent
+    RestActionCardComponent,
+    RestResultsModalComponent
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']
@@ -91,20 +45,9 @@ export class InnComponent implements OnInit {
   private readonly navigation = inject(SceneNavigationService);
   readonly messages = inject(MessageService);
 
-  // Expose to template
-  readonly RoomType = RoomType;
-  readonly Object = Object;
-  readonly Infinity = Infinity;
-
   // State signals
-  readonly selectedCharacterId = signal<string | null>(null);
-  readonly showRoomSelection = signal(false);
-  readonly showConfirmation = signal(false);
-  readonly confirmationMessage = signal('');
-  readonly pendingRoomType = signal<RoomType | null>(null);
-  readonly levelUpData = signal<LevelUpDisplayData | null>(null);
-  readonly restProgress = signal<RestProgressData | null>(null);
-  readonly isAutoResting = signal(false);
+  readonly showRestResults = signal(false);
+  readonly restResults = signal<RestResultsData | null>(null);
 
   // Party characters (computed from game state)
   readonly partyCharacters = computed(() =>
@@ -116,74 +59,84 @@ export class InnComponent implements OnInit {
     GameStateQueries.partyGold(this.gameState.state())
   );
 
-  // Selected character (computed from ID)
-  readonly selectedCharacter = computed(() => {
-    const charId = this.selectedCharacterId();
-    if (!charId) return null;
-    return GameStateQueries.getCharacter(this.gameState.state(), charId) || null;
+  // Living characters only (for rest calculations)
+  readonly livingCharacters = computed(() =>
+    this.partyCharacters().filter(c => c.status === CharacterStatus.OK)
+  );
+
+  // Calculated heal plan (computed for Heal Party action)
+  readonly healPlan = computed((): PartyHealPlan =>
+    InnService.calculatePartyHealPlan(this.livingCharacters(), this.partyGold())
+  );
+
+  // Check if party needs healing
+  readonly partyNeedsHealing = computed(() =>
+    this.livingCharacters().some(c => c.hp < c.maxHp)
+  );
+
+  // Check if party has depleted spell points
+  readonly partyNeedsSpells = computed(() =>
+    InnService.partyHasDepletedSpellPoints(this.livingCharacters())
+  );
+
+  // Check if party has any casters
+  readonly partyHasCasters = computed(() =>
+    InnService.partyHasCasters(this.livingCharacters())
+  );
+
+  // Rest action configurations (computed for the 3 cards)
+  readonly restActionConfigs = computed((): RestActionConfig[] => {
+    const plan = this.healPlan();
+    const needsHealing = this.partyNeedsHealing();
+    const needsSpells = this.partyNeedsSpells();
+    const hasCasters = this.partyHasCasters();
+
+    return [
+      {
+        type: 'restore-spells' as RestActionType,
+        title: 'Restore Spells',
+        description: 'Rest at the stables to restore all spell points for casters.',
+        costText: '1 week at Stables',
+        goldCost: 0,
+        weeksNeeded: 1,
+        enabled: hasCasters && needsSpells,
+        disabledReason: !hasCasters
+          ? 'No spell casters in party'
+          : !needsSpells
+          ? 'All spell points are full'
+          : undefined
+      },
+      {
+        type: 'heal-party' as RestActionType,
+        title: 'Heal Party',
+        description: this.getHealDescription(plan),
+        costText: this.getHealCostText(plan),
+        goldCost: plan.totalCost,
+        weeksNeeded: plan.weeksNeeded,
+        enabled: needsHealing && (plan.canAffordFull || plan.weeksNeeded > 0),
+        disabledReason: !needsHealing
+          ? 'All characters at full HP'
+          : plan.weeksNeeded === 0
+          ? 'Cannot afford any healing'
+          : undefined
+      },
+      {
+        type: 'full-rest' as RestActionType,
+        title: 'Full Rest',
+        description: 'Complete recovery: heal all HP and restore all spell points.',
+        costText: this.getFullRestCostText(plan),
+        goldCost: plan.totalCost,
+        weeksNeeded: Math.max(plan.weeksNeeded, 1),
+        enabled: (needsHealing || needsSpells) && (plan.canAffordFull || plan.weeksNeeded > 0 || !needsHealing),
+        disabledReason: !needsHealing && !needsSpells
+          ? 'Party is fully rested'
+          : undefined
+      }
+    ];
   });
 
-  // Base room data (static)
-  private readonly roomData = [
-    { roomType: RoomType.STABLES, name: 'Stables', shortcut: 'S', description: 'Free but no healing - for level-up checks only' },
-    { roomType: RoomType.BARRACKS, name: 'Barracks', shortcut: 'B', description: 'Basic shared accommodation' },
-    { roomType: RoomType.DOUBLE, name: 'Double', shortcut: 'D', description: 'Shared room with moderate comfort' },
-    { roomType: RoomType.PRIVATE, name: 'Private', shortcut: 'P', description: 'Private room for faster recovery' },
-    { roomType: RoomType.ROYAL_SUITE, name: 'Royal Suite', shortcut: 'R', description: 'Luxury accommodation with maximum healing' }
-  ];
-
-  // Room options with affordability computed from party gold
-  readonly roomOptions = computed((): RoomOption[] => {
-    const gold = this.partyGold();
-    return this.roomData.map(room => {
-      const cost = InnService.getRoomCost(room.roomType);
-      return {
-        id: room.roomType,
-        shortcut: room.shortcut,
-        enabled: cost <= gold,
-        name: room.name,
-        cost,
-        costUnit: 'gp/week',
-        benefit: `${InnService.getRoomHealRate(room.roomType)} HP/week`,
-        description: room.description,
-        roomType: room.roomType
-      };
-    });
-  });
-
-  // Room options with healing preview calculated for selected character
-  readonly roomsWithPreview = computed((): RoomOptionWithPreview[] => {
-    const char = this.selectedCharacter();
-    const rooms = this.roomOptions();
-    const gold = this.partyGold();
-
-    if (!char) return rooms.map(r => ({ ...r, weeks: 0, totalCost: 0, affordable: r.enabled }));
-
-    const hpNeeded = char.maxHp - char.hp;
-
-    return rooms.map(room => {
-      const healRate = InnService.getRoomHealRate(room.roomType);
-      const weeks = healRate > 0 ? Math.ceil(hpNeeded / healRate) : (hpNeeded > 0 ? Infinity : 0);
-      const totalCost = weeks === Infinity ? 0 : weeks * room.cost;
-      const affordable = room.cost === 0 || totalCost <= gold;
-
-      return { ...room, weeks, totalCost, affordable, enabled: affordable };
-    });
-  });
-
-  // Footer menu items - dynamic based on current state
+  // Footer menu items
   readonly footerMenuItems = computed((): MenuItem[] => {
-    if (this.showRoomSelection()) {
-      return [
-        {
-          id: 'back',
-          label: 'Back (ESC)',
-          shortcut: 'ESC',
-          enabled: true
-        }
-      ];
-    }
-
     return [
       {
         id: 'return',
@@ -207,349 +160,212 @@ export class InnComponent implements OnInit {
 
     if (itemId === 'return') {
       this.navigation.returnToCastle();
-    } else if (itemId === 'back') {
-      this.cancelRoomSelection();
     }
   }
 
   handleCharacterAction(event: CharacterActionEvent): void {
     if (event.actionType === 'inspect') {
       this.navigation.inspectCharacter(event.characterId, 'inn');
-    } else if (event.actionType === 'rest') {
-      this.selectCharacterToRest(event.characterId);
     }
   }
 
-  selectCharacterToRest(charId: string): void {
-    const character = GameStateQueries.getCharacter(this.gameState.state(), charId);
-    if (!character) {
-      this.messages.showError('Character not found');
-      return;
-    }
-
-    // Check if character is alive
-    if (character.status === CharacterStatus.DEAD ||
-        character.status === CharacterStatus.ASHES ||
-        character.status === CharacterStatus.LOST) {
-      this.messages.showError(`${character.name} cannot rest in their current state`);
-      return;
-    }
-
-    this.selectedCharacterId.set(charId);
-    this.showRoomSelection.set(true);
-    this.restProgress.set(null);
+  handleRestActionSelected(actionType: RestActionType): void {
     this.messages.clear();
-  }
 
-  handleRoomSelected(option: RoomOption): void {
-    const roomType = option.roomType;
-    const character = this.selectedCharacter();
-    if (!character) {
-      this.messages.showError('No character selected');
-      return;
+    switch (actionType) {
+      case 'restore-spells':
+        this.executeRestoreSpells();
+        break;
+      case 'heal-party':
+        this.executeHealParty();
+        break;
+      case 'full-rest':
+        this.executeFullRest();
+        break;
     }
-
-    // Validate affordability (double-check since component should prevent this)
-    const validation = InnService.canAffordRoom(this.gameState.state(), roomType);
-    if (!validation.allowed) {
-      this.messages.showError(validation.reason || 'Cannot afford room');
-      return;
-    }
-
-    // Show confirmation with options
-    this.pendingRoomType.set(roomType);
-    const cost = InnService.getRoomCost(roomType);
-    const healRate = InnService.getRoomHealRate(roomType);
-    const hpNeeded = character.maxHp - character.hp;
-    const weeksToHeal = healRate > 0 ? Math.ceil(hpNeeded / healRate) : 0;
-    const totalCost = cost * weeksToHeal;
-
-    let message = `Rest ${character.name} in ${option.name.toLowerCase()}?\n`;
-    message += `Cost: ${cost} gp/week | Heal: ${healRate} HP/week\n\n`;
-
-    if (hpNeeded > 0 && healRate > 0) {
-      message += `To fully heal (${hpNeeded} HP): ~${weeksToHeal} weeks, ~${totalCost} gp`;
-    } else if (hpNeeded <= 0) {
-      message += `Character is already at full HP. Rest to check for level-up.`;
-    } else {
-      message += `Stables provide no healing but allow level-up checks.`;
-    }
-
-    this.confirmationMessage.set(message);
-    this.showConfirmation.set(true);
-  }
-
-  handleRoomSelectionCancelled(): void {
-    this.cancelRoomSelection();
-  }
-
-  cancelRoomSelection(): void {
-    this.showRoomSelection.set(false);
-    this.selectedCharacterId.set(null);
-    this.pendingRoomType.set(null);
-    this.restProgress.set(null);
-    this.isAutoResting.set(false);
-    this.messages.clear();
-  }
-
-  cancelConfirmation(): void {
-    this.showConfirmation.set(false);
-    this.confirmationMessage.set('');
-    this.pendingRoomType.set(null);
-  }
-
-  confirmRest(): void {
-    const roomType = this.pendingRoomType();
-    const character = this.selectedCharacter();
-
-    if (!roomType || !character) {
-      this.messages.showError('Invalid rest request');
-      this.cancelConfirmation();
-      return;
-    }
-
-    // Initialize rest progress only if not already tracking
-    if (!this.restProgress()) {
-      this.restProgress.set({
-        weeksRested: 0,
-        totalHpRecovered: 0,
-        totalGoldSpent: 0,
-        startingHp: character.hp,
-        currentHp: character.hp,
-        maxHp: character.maxHp
-      });
-    }
-
-    // Perform the rest
-    this.performRest(character, roomType);
-    this.cancelConfirmation();
   }
 
   /**
-   * Rest until fully healed (auto-rest mode)
+   * Execute Restore Spells action (1 week at Stables, free)
    */
-  confirmAutoRest(): void {
-    const roomType = this.pendingRoomType();
-    const character = this.selectedCharacter();
-
-    if (!roomType || !character) {
-      this.messages.showError('Invalid rest request');
-      this.cancelConfirmation();
+  private executeRestoreSpells(): void {
+    if (!this.partyNeedsSpells()) {
+      this.messages.showError('All spell points are already full');
       return;
     }
 
-    // Initialize rest progress only if not already tracking
-    if (!this.restProgress()) {
-      this.restProgress.set({
-        weeksRested: 0,
-        totalHpRecovered: 0,
-        totalGoldSpent: 0,
-        startingHp: character.hp,
-        currentHp: character.hp,
-        maxHp: character.maxHp
-      });
-    }
-
-    this.isAutoResting.set(true);
-    this.cancelConfirmation();
-    this.performAutoRest(character, roomType);
-  }
-
-  private performAutoRest(character: Character, roomType: RoomType): void {
-    // Rest loop until fully healed or can't afford
-    const restLoop = (): void => {
-      const currentChar = this.selectedCharacter();
-      if (!currentChar || !this.isAutoResting()) {
-        this.isAutoResting.set(false);
-        return;
-      }
-
-      // Check if fully healed
-      if (currentChar.hp >= currentChar.maxHp) {
-        this.isAutoResting.set(false);
-        this.checkForLevelUpAfterRest(currentChar);
-        return;
-      }
-
-      // Check affordability
-      const validation = InnService.canAffordRoom(this.gameState.state(), roomType);
-      if (!validation.allowed) {
-        this.isAutoResting.set(false);
-        this.messages.showError(`Ran out of gold! ${validation.reason}`);
-        return;
-      }
-
-      // Perform one week of rest
-      this.performSingleWeekRest(currentChar, roomType);
-
-      // Continue loop after a short delay for visual feedback
-      setTimeout(() => {
-        if (this.isAutoResting()) {
-          restLoop();
-        }
-      }, 100);
+    // Create a minimal plan for stables (1 week, free)
+    const stablesPlan: PartyHealPlan = {
+      roomTier: RoomType.STABLES,
+      weeksNeeded: 1,
+      totalCost: 0,
+      canAffordFull: true,
+      hpPerCharacter: new Map()
     };
 
-    restLoop();
+    const result = InnService.executePartyRest(
+      this.gameState.state(),
+      stablesPlan,
+      true // restore spells
+    );
+
+    this.applyRestResult(result);
   }
 
-  private performSingleWeekRest(character: Character, roomType: RoomType): void {
-    const currentState = this.gameState.state();
+  /**
+   * Execute Heal Party action (auto-optimized room tier)
+   */
+  private executeHealParty(): void {
+    const plan = this.healPlan();
 
-    // Rest for one week
-    const restResult = InnService.restOneWeek(currentState, character, roomType);
-
-    // Update game state
-    this.gameState.updateState(state => ({
-      ...restResult.updatedState,
-      roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
-    }));
-
-    // Update progress
-    const progress = this.restProgress();
-    if (progress) {
-      this.restProgress.set({
-        ...progress,
-        weeksRested: progress.weeksRested + 1,
-        totalHpRecovered: progress.totalHpRecovered + restResult.hpRecovered,
-        totalGoldSpent: progress.totalGoldSpent + restResult.goldSpent,
-        currentHp: restResult.updatedCharacter.hp
-      });
-    }
-  }
-
-  private performRest(character: Character, roomType: RoomType): void {
-    const currentState = this.gameState.state();
-
-    // Validate affordability again
-    const validation = InnService.canAffordRoom(currentState, roomType);
-    if (!validation.allowed) {
-      this.messages.showError(validation.reason || 'Cannot afford room');
+    if (plan.weeksNeeded === 0) {
+      this.messages.showError('No healing needed - all characters at full HP');
       return;
     }
 
-    // Rest for one week
-    const restResult = InnService.restOneWeek(currentState, character, roomType);
-
-    // Update game state with rest result
-    this.gameState.updateState(state => ({
-      ...restResult.updatedState,
-      roster: new Map(state.roster).set(character.id, restResult.updatedCharacter)
-    }));
-
-    // Update progress
-    const progress = this.restProgress();
-    if (progress) {
-      this.restProgress.set({
-        ...progress,
-        weeksRested: progress.weeksRested + 1,
-        totalHpRecovered: progress.totalHpRecovered + restResult.hpRecovered,
-        totalGoldSpent: progress.totalGoldSpent + restResult.goldSpent,
-        currentHp: restResult.updatedCharacter.hp
-      });
-    }
-
-    // Check if fully healed
-    if (restResult.isFullyHealed) {
-      this.checkForLevelUpAfterRest(restResult.updatedCharacter);
-    } else {
-      // Show progress and allow continuing
-      this.showRestProgressMessage(restResult.updatedCharacter, restResult.hpRecovered, restResult.goldSpent);
-    }
-  }
-
-  private checkForLevelUpAfterRest(character: Character): void {
-    if (LevelUpService.canLevelUp(character)) {
-      this.processLevelUp(character);
-    } else {
-      // Fully healed, no level up
-      const progress = this.restProgress();
-      if (progress && progress.weeksRested > 0) {
-        this.messages.showSuccess(
-          `${character.name} is fully rested after ${progress.weeksRested} week(s)! ` +
-          `HP: ${progress.startingHp} → ${character.hp}/${character.maxHp} | ` +
-          `Gold spent: ${progress.totalGoldSpent}`
-        );
-      } else {
-        this.messages.showSuccess(
-          `${character.name} is already fully rested! HP: ${character.hp}/${character.maxHp}`
-        );
-      }
-      this.showRoomSelection.set(false);
-      this.selectedCharacterId.set(null);
-      this.restProgress.set(null);
-    }
-  }
-
-  private showRestProgressMessage(character: Character, hpRecovered: number, goldSpent: number): void {
-    const progress = this.restProgress();
-    const hpRemaining = character.maxHp - character.hp;
-
-    let message = `Rested 1 week. HP: ${character.hp - hpRecovered} → ${character.hp} (+${hpRecovered})`;
-    if (goldSpent > 0) {
-      message += ` | Gold: -${goldSpent}`;
-    }
-    message += ` | ${hpRemaining} HP remaining to full`;
-
-    if (progress && progress.weeksRested > 1) {
-      message += ` | Total: ${progress.weeksRested} weeks, ${progress.totalGoldSpent} gp`;
-    }
-
-    this.messages.showSuccess(message);
-  }
-
-  private processLevelUp(character: Character): void {
-    // Perform level up
-    const levelUpResult = LevelUpService.performLevelUp(character);
-
-    // Learn new spells if applicable
-    const spellResult = SpellLearningService.learnNewSpells(
-      levelUpResult.updatedCharacter,
-      character.level,
-      levelUpResult.updatedCharacter.level
+    const result = InnService.executePartyRest(
+      this.gameState.state(),
+      plan,
+      false // don't restore spells
     );
 
-    // Update game state with leveled up character
-    this.gameState.updateState(state => ({
-      ...state,
-      roster: new Map(state.roster).set(character.id, spellResult.updatedCharacter)
-    }));
+    this.applyRestResult(result);
+  }
 
-    // Show level up display
-    this.levelUpData.set({
-      newLevel: levelUpResult.levelUpData.newLevel,
-      hpIncrease: levelUpResult.levelUpData.hpIncrease,
-      statChanges: levelUpResult.levelUpData.statChanges as Record<string, number>,
-      newSpells: spellResult.newSpells.map(s => ({ id: s.id, name: s.name }))
+  /**
+   * Execute Full Rest action (heal HP + restore spells)
+   */
+  private executeFullRest(): void {
+    const healPlan = this.healPlan();
+    const needsHealing = this.partyNeedsHealing();
+    const needsSpells = this.partyNeedsSpells();
+
+    if (!needsHealing && !needsSpells) {
+      this.messages.showError('Party is already fully rested');
+      return;
+    }
+
+    // If only spells needed, use stables plan
+    // If healing needed, use calculated heal plan
+    const plan: PartyHealPlan = needsHealing
+      ? healPlan
+      : {
+          roomTier: RoomType.STABLES,
+          weeksNeeded: 1,
+          totalCost: 0,
+          canAffordFull: true,
+          hpPerCharacter: new Map()
+        };
+
+    // Always restore spells for Full Rest
+    const result = InnService.executePartyRest(
+      this.gameState.state(),
+      plan,
+      true // restore spells
+    );
+
+    this.applyRestResult(result);
+  }
+
+  /**
+   * Apply rest result to game state and show results modal
+   */
+  private applyRestResult(result: PartyRestResult): void {
+    // Update game state
+    this.gameState.updateState(() => result.updatedState);
+
+    // Build character names map
+    const characterNames = new Map<string, string>();
+    for (const [charId] of result.perCharacter) {
+      const char = result.updatedState.roster.get(charId);
+      if (char) {
+        characterNames.set(charId, char.name);
+      }
+    }
+
+    // Set results data for modal
+    this.restResults.set({
+      weeksRested: result.weeksRested,
+      goldSpent: result.goldSpent,
+      goldRemaining: result.goldRemaining,
+      perCharacter: result.perCharacter,
+      characterNames,
+      levelUps: result.levelUps
     });
 
-    // Close room selection
-    this.showRoomSelection.set(false);
-    this.restProgress.set(null);
+    this.showRestResults.set(true);
   }
 
-  dismissLevelUp(): void {
-    this.levelUpData.set(null);
-    this.selectedCharacterId.set(null);
-    this.restProgress.set(null);
-    this.messages.showSuccess('Level up complete!');
+  /**
+   * Dismiss the rest results modal
+   */
+  dismissRestResults(): void {
+    this.showRestResults.set(false);
+    this.restResults.set(null);
   }
 
-  stopAutoRest(): void {
-    this.isAutoResting.set(false);
+  /**
+   * Get description text for Heal Party action
+   */
+  private getHealDescription(plan: PartyHealPlan): string {
+    if (plan.weeksNeeded === 0) {
+      return 'All characters are at full HP.';
+    }
+
+    const roomName = this.getRoomName(plan.roomTier);
+    if (plan.canAffordFull) {
+      return `Rest at ${roomName} to fully heal all party members.`;
+    } else {
+      return `Partial healing at ${roomName} (cannot afford full heal).`;
+    }
+  }
+
+  /**
+   * Get cost text for Heal Party action
+   */
+  private getHealCostText(plan: PartyHealPlan): string {
+    if (plan.weeksNeeded === 0) {
+      return 'No cost';
+    }
+
+    const weeks = plan.weeksNeeded;
+    const weekText = weeks === 1 ? '1 week' : `${weeks} weeks`;
+    const roomName = this.getRoomName(plan.roomTier);
+
+    return `${weekText} at ${roomName}`;
+  }
+
+  /**
+   * Get cost text for Full Rest action
+   */
+  private getFullRestCostText(plan: PartyHealPlan): string {
+    const needsHealing = this.partyNeedsHealing();
+
+    if (!needsHealing) {
+      return '1 week at Stables';
+    }
+
+    return this.getHealCostText(plan);
+  }
+
+  /**
+   * Get display name for room type
+   */
+  private getRoomName(roomType: RoomType): string {
+    const names: Record<RoomType, string> = {
+      [RoomType.STABLES]: 'Stables',
+      [RoomType.BARRACKS]: 'Barracks',
+      [RoomType.DOUBLE]: 'Double Room',
+      [RoomType.PRIVATE]: 'Private Room',
+      [RoomType.ROYAL_SUITE]: 'Royal Suite'
+    };
+    return names[roomType];
   }
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    // Handle ESC based on current state
-    if (this.levelUpData()) {
-      this.dismissLevelUp();
-    } else if (this.isAutoResting()) {
-      this.stopAutoRest();
-    } else if (this.showConfirmation()) {
-      this.cancelConfirmation();
-    } else if (this.showRoomSelection()) {
-      this.cancelRoomSelection();
+    if (this.showRestResults()) {
+      this.dismissRestResults();
     } else {
       this.navigation.returnToCastle();
     }
@@ -557,25 +373,30 @@ export class InnComponent implements OnInit {
 
   @HostListener('window:keydown.enter')
   handleEnter(): void {
-    // Dismiss level up display on Enter
-    if (this.levelUpData()) {
-      this.dismissLevelUp();
+    if (this.showRestResults()) {
+      this.dismissRestResults();
     }
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
-    // Handle dialog shortcuts when confirmation is showing
-    if (this.showConfirmation()) {
-      const key = event.key.toLowerCase();
+    // Don't handle shortcuts when results modal is showing
+    if (this.showRestResults()) {
+      return;
+    }
 
-      if (key === '1') {
-        event.preventDefault();
-        this.confirmRest();
-      } else if (key === 'a') {
-        event.preventDefault();
-        this.confirmAutoRest();
-      }
+    const key = event.key;
+    const configs = this.restActionConfigs();
+
+    if (key === '1' && configs[0].enabled) {
+      event.preventDefault();
+      this.handleRestActionSelected('restore-spells');
+    } else if (key === '2' && configs[1].enabled) {
+      event.preventDefault();
+      this.handleRestActionSelected('heal-party');
+    } else if (key === '3' && configs[2].enabled) {
+      event.preventDefault();
+      this.handleRestActionSelected('full-rest');
     }
   }
 }

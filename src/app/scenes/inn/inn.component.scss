@@ -14,6 +14,87 @@
   overflow-y: auto;
 }
 
+// Main two-column layout
+.inn-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-xl;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Section titles
+.section-title {
+  color: $color-amber;
+  font-size: $font-size-large;
+  margin: 0 0 $spacing-md;
+  padding-bottom: $spacing-xs;
+  border-bottom: 1px solid $color-text-dim;
+}
+
+// Party section (left column)
+.party-section {
+  min-width: 0; // Prevent grid blowout
+}
+
+// Actions section (right column)
+.actions-section {
+  min-width: 0;
+}
+
+// Rest action cards container
+.rest-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+// Shortcut hints inside cards (projected content)
+.shortcut-hint {
+  color: $color-amber;
+  font-weight: bold;
+  margin-right: $spacing-xs;
+}
+
+// Cost summary box
+.cost-summary {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  background: rgba(0, 20, 0, 0.4);
+  border: 1px solid $color-text-dim;
+  border-radius: 4px;
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: $spacing-xs 0;
+
+    .label {
+      color: $color-text-dim;
+    }
+
+    .value {
+      color: $color-text-bright;
+
+      &.gold {
+        color: $color-amber;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .warning {
+    margin-top: $spacing-sm;
+    padding: $spacing-xs $spacing-sm;
+    background: rgba($color-error, 0.1);
+    border: 1px solid $color-error;
+    color: $color-error;
+    font-size: $font-size-small;
+    text-align: center;
+  }
+}
+
+// Empty state
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -22,324 +103,6 @@
   p {
     margin: 0.5rem 0;
     font-size: 1.1rem;
-  }
-}
-
-// Room Selection View
-.room-selection {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-// Character Context Panel
-.character-context-panel {
-  max-width: 500px;
-  margin: 0 auto $spacing-lg;
-  @include card-base;
-  text-align: center;
-
-  .context-header {
-    margin-bottom: $spacing-md;
-  }
-
-  .character-name {
-    color: $color-text-bright;
-    font-size: $font-size-large;
-    margin: 0 0 $spacing-xs;
-  }
-
-  .character-class {
-    color: $color-text-dim;
-  }
-
-  .hp-display {
-    .hp-text {
-      margin-bottom: $spacing-xs;
-      color: $color-text-bright;
-
-      .hp-needed {
-        color: $color-amber;
-        margin-left: $spacing-xs;
-      }
-    }
-
-    .hp-bar {
-      height: 8px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 4px;
-      overflow: hidden;
-
-      .hp-fill {
-        height: 100%;
-        transition: width $transition-normal;
-
-        &.healthy { background: linear-gradient(90deg, #00aa00, #00ff00); }
-        &.low { background: linear-gradient(90deg, #ff8800, #ffaa00); }
-        &.critical { background: linear-gradient(90deg, #ff0000, #ff4444); }
-      }
-    }
-  }
-}
-
-.section-title {
-  text-align: center;
-  color: $color-amber;
-  margin: $spacing-lg 0;
-  font-size: $font-size-large;
-}
-
-// Room Card Styling
-.room-card {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  height: 100%;
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-
-    .shortcut {
-      color: $color-amber;
-      font-weight: bold;
-    }
-
-    .name {
-      color: $color-text-green;
-      font-size: 1.125rem;
-      font-weight: bold;
-    }
-  }
-
-  &__stats {
-    display: flex;
-    justify-content: space-between;
-
-    .cost { color: $color-amber; }
-    .benefit { color: $color-text-bright; }
-  }
-
-  &__description {
-    color: $color-text-dim;
-    font-size: 0.875rem;
-    flex-grow: 1;
-  }
-
-  &__preview {
-    padding-top: $spacing-sm;
-    border-top: 1px solid $color-text-dim;
-    font-style: italic;
-    color: $color-text-gray;
-    font-size: 0.875rem;
-  }
-
-  &__badge {
-    background: rgba($color-error, 0.2);
-    color: $color-error;
-    padding: 2px $spacing-xs;
-    border-radius: 2px;
-    font-size: 0.75rem;
-    text-align: center;
-  }
-}
-
-// Override SelectionListComponent styles for room selection
-.room-selection ::ng-deep {
-  .selection-list {
-    gap: $spacing-md;
-  }
-
-  // Hide the default shortcut display
-  .item-shortcut {
-    display: none;
-  }
-}
-
-// Responsive: 1 column on smaller screens
-@media (max-width: 767px) {
-  .room-selection ::ng-deep .selection-list {
-    --columns: 1;
-  }
-
-  .character-context-panel {
-    max-width: 100%;
-  }
-}
-
-// Rest Progress Display
-.rest-progress {
-  margin-top: $spacing-lg;
-  padding: $spacing-md;
-  background-color: rgba($color-text-dim, 0.1);
-  border: 1px solid $color-text-dim;
-
-  .progress-bar-container {
-    height: 20px;
-    background-color: rgba($color-text-dim, 0.2);
-    border: 1px solid $color-text-dim;
-    margin-bottom: $spacing-sm;
-    overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, $color-text-green, color.adjust($color-text-green, $lightness: 20%));
-    transition: width 0.3s ease;
-  }
-
-  .progress-stats {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: $color-text-dim;
-
-    span {
-      &:first-child {
-        color: $color-text-green;
-      }
-    }
-  }
-}
-
-// Auto-Rest Indicator
-.auto-rest-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-md;
-  margin-top: $spacing-lg;
-  padding: $spacing-md;
-  background-color: rgba($color-amber, 0.1);
-  border: 1px solid $color-amber;
-  color: $color-amber;
-
-  .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid $color-amber;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// Level Up Display
-.level-up-display {
-  max-width: 500px;
-  margin: 0 auto;
-  text-align: center;
-
-  h2 {
-    color: $color-amber;
-    font-size: 28px;
-    margin-bottom: $spacing-lg;
-    text-shadow: 0 0 10px rgba($color-amber, 0.5);
-  }
-
-  .level-up-content {
-    .congratulations {
-      color: $color-text-bright;
-      font-size: 18px;
-      margin-bottom: $spacing-lg;
-    }
-
-    .stat-changes {
-      background-color: rgba($color-text-green, 0.1);
-      border: 1px solid $color-text-green;
-      padding: $spacing-lg;
-      margin-bottom: $spacing-xl;
-      text-align: left;
-
-      .hp-increase {
-        display: flex;
-        justify-content: space-between;
-        color: $color-text-green;
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: $spacing-md;
-        padding-bottom: $spacing-md;
-        border-bottom: 1px solid rgba($color-text-green, 0.3);
-      }
-
-      .stat-changes-list {
-        margin-bottom: $spacing-md;
-
-        h4 {
-          color: $color-text-bright;
-          font-size: 14px;
-          margin-bottom: $spacing-sm;
-        }
-
-        .stat-row {
-          display: flex;
-          justify-content: space-between;
-          padding: $spacing-xs 0;
-
-          .stat-name {
-            color: $color-text-dim;
-            font-size: 14px;
-          }
-
-          .stat-change {
-            color: $color-text-green;
-            font-size: 14px;
-            font-weight: bold;
-
-            &.decrease {
-              color: $color-red;
-            }
-          }
-        }
-      }
-
-      .new-spells {
-        h4 {
-          color: $color-amber;
-          font-size: 14px;
-          margin-bottom: $spacing-sm;
-        }
-
-        ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-
-          li {
-            color: $color-text-bright;
-            font-size: 14px;
-            padding: $spacing-xs 0;
-
-            &::before {
-              content: '★ ';
-              color: $color-amber;
-            }
-          }
-        }
-      }
-    }
-
-    .continue-btn {
-      background: none;
-      border: 2px solid $color-text-green;
-      color: $color-text-green;
-      font-family: $font-mono;
-      padding: $spacing-sm $spacing-xl;
-      cursor: pointer;
-      font-size: 16px;
-      transition: all 0.2s;
-
-      &:hover {
-        background-color: rgba($color-text-green, 0.2);
-        transform: scale(1.05);
-      }
-    }
   }
 }
 
@@ -364,78 +127,33 @@
   }
 }
 
-// Custom Rest Dialog (3 buttons)
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+// Responsive: Stack on smaller screens
+@media (max-width: 900px) {
+  .inn-layout {
+    grid-template-columns: 1fr;
+    gap: $spacing-lg;
+  }
 
-  &:focus {
-    outline: none;
+  .party-section {
+    order: 2;
+  }
+
+  .actions-section {
+    order: 1;
   }
 }
 
-.rest-dialog {
-  background-color: $color-bg-black;
-  border: 2px solid $color-text-green;
-  padding: $spacing-xl;
-  max-width: 450px;
-  width: 90%;
-  box-shadow: 0 0 20px rgba($color-text-green, 0.3);
-
-  .dialog-message {
-    color: $color-text-bright;
-    font-size: 14px;
-    margin-bottom: $spacing-xl;
-    white-space: pre-line;
-    line-height: 1.6;
+// Responsive: Tighter spacing on very small screens
+@media (max-width: 600px) {
+  .inn-content {
+    padding: $spacing-md;
   }
 
-  .dialog-buttons {
-    display: flex;
-    flex-direction: column;
+  .section-title {
+    font-size: $font-size-base;
+  }
+
+  .rest-actions {
     gap: $spacing-sm;
-
-    .dialog-btn {
-      background: none;
-      border: 1px solid $color-text-dim;
-      color: $color-text-dim;
-      font-family: $font-mono;
-      font-size: 14px;
-      padding: $spacing-sm $spacing-md;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-align: left;
-
-      &:hover {
-        border-color: $color-text-green;
-        color: $color-text-green;
-        background-color: rgba($color-text-green, 0.1);
-      }
-
-      &.primary {
-        border-color: $color-text-green;
-        color: $color-text-green;
-
-        &:hover {
-          background-color: rgba($color-text-green, 0.2);
-        }
-      }
-
-      &.secondary {
-        &:hover {
-          border-color: $color-amber;
-          color: $color-amber;
-          background-color: rgba($color-amber, 0.1);
-        }
-      }
-    }
   }
 }
