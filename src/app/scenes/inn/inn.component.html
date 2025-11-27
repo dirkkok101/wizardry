@@ -26,56 +26,67 @@
     <!-- Room Selection View -->
     @if (showRoomSelection() && !showConfirmation() && !levelUpData()) {
       <div class="room-selection">
+        <!-- Character Context Panel -->
         @if (selectedCharacter(); as character) {
-          <div class="character-info">
-            <h2>{{ character.name }}</h2>
-            <div class="stats">
-              <span class="class">{{ character.class }} Level {{ character.level }}</span>
-              <span class="hp" [class.injured]="character.hp < character.maxHp">
+          <div class="character-context-panel">
+            <div class="context-header">
+              <h2 class="character-name">{{ character.name }}</h2>
+              <div class="character-class">{{ character.class }} Level {{ character.level }}</div>
+            </div>
+            <div class="hp-display">
+              <div class="hp-text">
                 HP: {{ character.hp }}/{{ character.maxHp }}
-              </span>
-              @if (character.hp < character.maxHp) {
-                <span class="hp-needed">({{ character.maxHp - character.hp }} HP to full)</span>
-              }
+                @if (character.hp < character.maxHp) {
+                  <span class="hp-needed">({{ character.maxHp - character.hp }} to heal)</span>
+                }
+              </div>
+              <div class="hp-bar">
+                <div class="hp-fill"
+                     [style.width.%]="(character.hp / character.maxHp) * 100"
+                     [class.critical]="(character.hp / character.maxHp) <= 0.25"
+                     [class.low]="(character.hp / character.maxHp) > 0.25 && (character.hp / character.maxHp) <= 0.5"
+                     [class.healthy]="(character.hp / character.maxHp) > 0.5">
+                </div>
+              </div>
             </div>
           </div>
 
-          <h3 class="room-title">SELECT ROOM TYPE</h3>
-
-          <div class="funds-display">
-            <span class="funds-label">Party Gold:</span>
-            <span class="funds-value">{{ partyGold() }}</span>
-          </div>
+          <h3 class="section-title">SELECT ROOM TYPE</h3>
 
           <app-selection-list
-            [options]="roomOptions()"
+            [options]="roomsWithPreview()"
             [allowArrowNavigation]="true"
             [showShortcutsInList]="false"
-            [columns]="3"
+            [columns]="2"
+            [showKeyboardHints]="true"
+            [entryAnimation]="true"
             (optionSelected)="handleRoomSelected($event)"
             (cancelled)="handleRoomSelectionCancelled()"
           >
             <ng-template #itemTemplate let-option let-selected="selected">
-              <div class="room-option-content" [class.selected]="selected">
-                <div class="room-header">
-                  <span class="room-shortcut">({{ option.shortcut }})</span>
-                  <span class="room-name">{{ option.name }}</span>
-                  @if (!option.enabled) {
-                    <span class="unaffordable-badge">CANNOT AFFORD</span>
+              <div class="room-card" [class.selected]="selected" [class.disabled]="!option.affordable">
+                <div class="room-card__header">
+                  <span class="shortcut">({{ option.shortcut }})</span>
+                  <span class="name">{{ option.name }}</span>
+                </div>
+                <div class="room-card__stats">
+                  <span class="cost">
+                    @if (option.cost === 0) { FREE } @else { {{ option.cost }} gp/week }
+                  </span>
+                  <span class="benefit">{{ option.benefit }}</span>
+                </div>
+                <div class="room-card__description">{{ option.description }}</div>
+                <div class="room-card__preview">
+                  @if (option.weeks === Infinity) {
+                    <span>No healing - level check only</span>
+                  } @else if (option.weeks === 0) {
+                    <span>Already at full HP</span>
+                  } @else {
+                    <span>{{ option.weeks }} week{{ option.weeks > 1 ? 's' : '' }} · {{ option.totalCost }} gp total</span>
                   }
                 </div>
-                <div class="room-details">
-                  <span class="room-cost">
-                    @if (option.cost === 0) {
-                      FREE
-                    } @else {
-                      {{ option.cost }} {{ option.costUnit }}
-                    }
-                  </span>
-                  <span class="room-benefit">{{ option.benefit }}</span>
-                </div>
-                @if (option.description) {
-                  <div class="room-description">{{ option.description }}</div>
+                @if (!option.affordable && option.cost > 0) {
+                  <div class="room-card__badge">CANNOT AFFORD</div>
                 }
               </div>
             </ng-template>
@@ -87,10 +98,7 @@
       @if (restProgress(); as progress) {
         <div class="rest-progress">
           <div class="progress-bar-container">
-            <div
-              class="progress-bar"
-              [style.width.%]="(progress.currentHp / progress.maxHp) * 100"
-            ></div>
+            <div class="progress-bar" [style.width.%]="(progress.currentHp / progress.maxHp) * 100"></div>
           </div>
           <div class="progress-stats">
             <span>HP: {{ progress.currentHp }}/{{ progress.maxHp }}</span>

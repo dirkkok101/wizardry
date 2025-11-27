@@ -94,6 +94,7 @@ export class InnComponent implements OnInit {
   // Expose to template
   readonly RoomType = RoomType;
   readonly Object = Object;
+  readonly Infinity = Infinity;
 
   // State signals
   readonly selectedCharacterId = signal<string | null>(null);
