@@ -1401,32 +1401,16 @@ export class CombatService {
         spellCasters.set(caster.id, { character: caster, spellId: command.data.spellId })
       }
 
-      // Track character damage for component to update roster (for ATTACK commands)
-      if (command.type === 'ATTACK' && command.target && !('monsterId' in command.target)) {
+      // Track character damage for component to update roster using targetDamage from executeCommand
+      // This avoids re-rolling attack and ensures displayed damage matches the actual state
+      if (result.targetDamage && command.target && !('monsterId' in command.target)) {
         const target = command.target as Character
-        const isParrying = parryingCombatants.has(target.id)
-        const acModifier = isParrying ? -2 : 0
+        // Get existing character state (may have already been damaged this round)
+        const existingChar = damagedCharacters.get(target.id) || target
 
-        // Check if attacker is blind (-4 attack penalty)
-        const isBlind = this.hasStatusEffect(currentState, command.actor.id, 'BLIND')
-        const attackerPenalty = isBlind ? -4 : 0
-
-        const existingDamage = damagedCharacters.get(target.id)
-        if (existingDamage) {
-          // Accumulate damage
-          const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
-          if (attackResult.hit) {
-            const updated = this.applyDamageToCharacter(existingDamage, attackResult.damage)
-            damagedCharacters.set(target.id, updated)
-          }
-        } else {
-          // First damage to this character
-          const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
-          if (attackResult.hit) {
-            const updated = this.applyDamageToCharacter(target, attackResult.damage)
-            damagedCharacters.set(target.id, updated)
-          }
-        }
+        // Apply the damage that was actually calculated (from targetDamage)
+        const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
+        damagedCharacters.set(target.id, updated)
       }
 
       // Check victory after each action

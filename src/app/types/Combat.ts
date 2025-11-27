@@ -107,7 +107,7 @@ export interface CommandExecutionResult {
     newStatus?: CombatantStatus
   }
   /** Character updates from this command (healing, status changes, etc.) */
-  characterUpdates?: Map<string, import('./Character').Character>
+  characterUpdates?: Map<string, Character>
 }
 
 export interface SpellEffect {
