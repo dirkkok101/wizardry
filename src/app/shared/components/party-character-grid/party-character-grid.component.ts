@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { GameStateQueries } from '@utils/GameStateQueries';
@@ -267,14 +267,16 @@ export class PartyCharacterGridComponent {
   /**
    * Custom front row characters (overrides computed signal when provided)
    * Use this to pass characters with display overrides during combat animation
+   * Using signal input for proper reactivity with parent computed signals
    */
-  @Input() customFrontRow?: Character[];
+  readonly customFrontRow = input<Character[] | undefined>(undefined);
 
   /**
    * Custom back row characters (overrides computed signal when provided)
    * Use this to pass characters with display overrides during combat animation
+   * Using signal input for proper reactivity with parent computed signals
    */
-  @Input() customBackRow?: Character[];
+  readonly customBackRow = input<Character[] | undefined>(undefined);
 
   /**
    * ID of the highlighted character (e.g., active character in combat)
@@ -329,7 +331,7 @@ export class PartyCharacterGridComponent {
    * Uses customFrontRow if provided, otherwise queries game state
    */
   readonly frontRowCharacters = computed(() =>
-    this.customFrontRow ?? GameStateQueries.frontRowCharacters(this.gameState.state())
+    this.customFrontRow() ?? GameStateQueries.frontRowCharacters(this.gameState.state())
   );
 
   /**
@@ -337,7 +339,7 @@ export class PartyCharacterGridComponent {
    * Uses customBackRow if provided, otherwise queries game state
    */
   readonly backRowCharacters = computed(() =>
-    this.customBackRow ?? GameStateQueries.backRowCharacters(this.gameState.state())
+    this.customBackRow() ?? GameStateQueries.backRowCharacters(this.gameState.state())
   );
 
   /**

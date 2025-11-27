@@ -82,6 +82,10 @@ describe('CombatService.executeRound', () => {
   })
 
   describe('dead combatant command skipping', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
     it('skips monster commands when monster dies during the round', () => {
       // Setup: Fighter with high initiative kills monster, monster has lower initiative
       const fighter = createTestCharacter({ id: 'fighter', name: 'Fighter', hp: 100, agility: 20 })
@@ -126,8 +130,6 @@ describe('CombatService.executeRound', () => {
       const deadMonster = result.newState.monsterGroups[0].monsters.find(m => m.id === 'monster1')
       expect(deadMonster?.status).toBe('DEAD')
       expect(deadMonster?.hp).toBeLessThanOrEqual(0)
-
-      jest.restoreAllMocks()
     })
 
     it('skips character commands when character dies during the round', () => {
@@ -171,8 +173,6 @@ describe('CombatService.executeRound', () => {
 
       // Verify fighter is dead (tracked in damagedCharacters)
       expect(result.damagedCharacters.get('fighter')?.hp).toBeLessThanOrEqual(0)
-
-      jest.restoreAllMocks()
     })
 
     it('allows surviving monsters to still attack after another monster dies', () => {
@@ -226,8 +226,6 @@ describe('CombatService.executeRound', () => {
       // Verify monster1 is dead
       const deadMonster = result.newState.monsterGroups[0].monsters.find(m => m.id === 'monster1')
       expect(deadMonster?.status).toBe('DEAD')
-
-      jest.restoreAllMocks()
     })
   })
 })

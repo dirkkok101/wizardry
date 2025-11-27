@@ -43,8 +43,8 @@
       <!-- Party Panel -->
       <div class="party-panel">
         <h3>PARTY</h3>
+        <!-- Using customFrontRow/customBackRow for real-time HP updates during combat animation -->
         <app-party-character-grid
-          source="party"
           [showFormation]="true"
           [customFrontRow]="frontRowCharacters()"
           [customBackRow]="backRowCharacters()"

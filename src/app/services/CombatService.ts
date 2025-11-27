@@ -1319,21 +1319,8 @@ export class CombatService {
 
     // Execute each command
     for (const command of sortedQueue) {
-      // Skip if actor cannot act (dead, asleep, paralyzed)
-      // For monsters, we must check current state since they may have died during this round
-      let currentActor: Combatant = command.actor
-      if ('monsterId' in command.actor) {
-        const currentMonster = this.getCurrentMonsterState(currentState, command.actor.id)
-        if (!currentMonster) continue  // Monster no longer exists
-        currentActor = currentMonster
-      } else {
-        // For characters, check if they've been damaged to death this round
-        const existingUpdate = damagedCharacters.get(command.actor.id)
-        if (existingUpdate) {
-          currentActor = existingUpdate
-        }
-      }
-      if (!this.canCombatantAct(currentActor)) continue
+      // Skip if actor cannot act (dead, asleep, paralyzed, or died this round)
+      if (!this.getCurrentActorIfCanAct(command, currentState, damagedCharacters)) continue
 
       const result = this.executeCommand(currentState, command, parryingCombatants)
       currentState = result.newState
@@ -1595,21 +1582,8 @@ export class CombatService {
 
     // Execute each command
     for (const command of sortedQueue) {
-      // Skip if actor cannot act (dead, asleep, paralyzed)
-      // For monsters, we must check current state since they may have died during this round
-      let currentActor: Combatant = command.actor
-      if ('monsterId' in command.actor) {
-        const currentMonster = this.getCurrentMonsterState(currentState, command.actor.id)
-        if (!currentMonster) continue  // Monster no longer exists
-        currentActor = currentMonster
-      } else {
-        // For characters, check if they've been damaged to death this round
-        const existingUpdate = accumulatedCharacterUpdates.get(command.actor.id)
-        if (existingUpdate) {
-          currentActor = existingUpdate
-        }
-      }
-      if (!this.canCombatantAct(currentActor)) continue
+      // Skip if actor cannot act (dead, asleep, paralyzed, or died this round)
+      if (!this.getCurrentActorIfCanAct(command, currentState, accumulatedCharacterUpdates)) continue
 
       // Capture state before command for comparison
       const stateBefore = currentState
@@ -1984,13 +1958,39 @@ export class CombatService {
     state: CombatState,
     monsterId: string
   ): MonsterInstance | undefined {
-    for (const group of state.monsterGroups) {
-      const monster = group.monsters.find(m => m.id === monsterId)
-      if (monster) {
-        return monster
+    return state.monsterGroups.flatMap(g => g.monsters).find(m => m.id === monsterId)
+  }
+
+  /**
+   * Get the current state of a command's actor, checking for mid-round deaths.
+   * Returns null if the actor cannot act (dead, doesn't exist, etc.)
+   *
+   * @param command - The combat command to check
+   * @param currentState - Current combat state (for monster lookups)
+   * @param characterUpdates - Map of character updates (for character damage tracking)
+   * @returns The current actor state, or null if actor cannot act
+   */
+  private static getCurrentActorIfCanAct(
+    command: CombatCommand,
+    currentState: CombatState,
+    characterUpdates: Map<string, Character>
+  ): Combatant | null {
+    let currentActor: Combatant = command.actor
+
+    if ('monsterId' in command.actor) {
+      // For monsters, look up current state since they may have died during this round
+      const currentMonster = this.getCurrentMonsterState(currentState, command.actor.id)
+      if (!currentMonster) return null  // Monster no longer exists
+      currentActor = currentMonster
+    } else {
+      // For characters, check if they've been damaged to death this round
+      const existingUpdate = characterUpdates.get(command.actor.id)
+      if (existingUpdate) {
+        currentActor = existingUpdate
       }
     }
-    return undefined
+
+    return this.canCombatantAct(currentActor) ? currentActor : null
   }
 
   /**
