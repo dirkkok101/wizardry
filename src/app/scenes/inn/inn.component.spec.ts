@@ -702,4 +702,88 @@ describe('InnComponent', () => {
       expect(component.selectedCharacter()).toBeNull();
     });
   });
+
+  describe('roomsWithPreview', () => {
+    it('should calculate weeks and total cost for each room', () => {
+      // Setup: character needs 6 HP, party has 1000 gold
+      const char = createCharacterInParty({
+        hp: 14,
+        maxHp: 20,  // 6 HP needed
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 1000 }
+      }));
+      component.selectedCharacterId.set('char-1');
+
+      const preview = component.roomsWithPreview();
+
+      // Barracks: 1 HP/week = 6 weeks @ 10gp = 60gp total
+      const barracks = preview.find(r => r.roomType === RoomType.BARRACKS);
+      expect(barracks?.weeks).toBe(6);
+      expect(barracks?.totalCost).toBe(60);
+      expect(barracks?.affordable).toBe(true);
+    });
+
+    it('should mark room as not affordable when totalCost > partyGold', () => {
+      // Setup: character needs 10 HP, party has only 20 gold
+      const char = createCharacterInParty({
+        hp: 10,
+        maxHp: 20,  // 10 HP needed
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 20 }
+      }));
+      component.selectedCharacterId.set('char-1');
+
+      const preview = component.roomsWithPreview();
+
+      // Royal Suite costs 500/week, way too expensive for 10 HP @ 10 HP/week = 1 week = 500gp
+      const royal = preview.find(r => r.roomType === RoomType.ROYAL_SUITE);
+      expect(royal?.affordable).toBe(false);
+
+      // Stables should remain free and affordable
+      const stables = preview.find(r => r.roomType === RoomType.STABLES);
+      expect(stables?.affordable).toBe(true);
+    });
+
+    it('should return 0 weeks when character is at full HP', () => {
+      const char = createCharacterInParty({
+        hp: 20,
+        maxHp: 20,  // Already full
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
+      }));
+      component.selectedCharacterId.set('char-1');
+
+      const preview = component.roomsWithPreview();
+      const barracks = preview.find(r => r.roomType === RoomType.BARRACKS);
+      expect(barracks?.weeks).toBe(0);
+      expect(barracks?.totalCost).toBe(0);
+    });
+
+    it('should return Infinity weeks for stables (0 HP heal rate)', () => {
+      const char = createCharacterInParty({
+        hp: 10,
+        maxHp: 20,
+      });
+      gameState.updateState(state => ({
+        ...state,
+        roster: new Map([[char.id, char]]),
+        party: { ...state.party, members: [char.id], gold: 100 }
+      }));
+      component.selectedCharacterId.set('char-1');
+
+      const preview = component.roomsWithPreview();
+      const stables = preview.find(r => r.roomType === RoomType.STABLES);
+      expect(stables?.weeks).toBe(Infinity);
+      expect(stables?.totalCost).toBe(0);  // Free room
+    });
+  });
 });

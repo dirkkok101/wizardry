@@ -32,6 +32,15 @@ export interface RoomOption extends SelectableOption {
   roomType: RoomType;
 }
 
+/**
+ * Room option with healing preview - extends RoomOption with calculated values
+ */
+export interface RoomOptionWithPreview extends RoomOption {
+  weeks: number;
+  totalCost: number;
+  affordable: boolean;
+}
+
 interface LevelUpDisplayData {
   newLevel: number;
   hpIncrease: number;
@@ -138,6 +147,26 @@ export class InnComponent implements OnInit {
         description: room.description,
         roomType: room.roomType
       };
+    });
+  });
+
+  // Room options with healing preview calculated for selected character
+  readonly roomsWithPreview = computed((): RoomOptionWithPreview[] => {
+    const char = this.selectedCharacter();
+    const rooms = this.roomOptions();
+    const gold = this.partyGold();
+
+    if (!char) return rooms.map(r => ({ ...r, weeks: 0, totalCost: 0, affordable: r.enabled }));
+
+    const hpNeeded = char.maxHp - char.hp;
+
+    return rooms.map(room => {
+      const healRate = InnService.getRoomHealRate(room.roomType);
+      const weeks = healRate > 0 ? Math.ceil(hpNeeded / healRate) : (hpNeeded > 0 ? Infinity : 0);
+      const totalCost = weeks === Infinity ? 0 : weeks * room.cost;
+      const affordable = room.cost === 0 || totalCost <= gold;
+
+      return { ...room, weeks, totalCost, affordable, enabled: affordable };
     });
   });
 
