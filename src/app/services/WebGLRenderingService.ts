@@ -16,7 +16,7 @@ import { DungeonService } from './DungeonService';
  * GPU-accelerated quad rendering.
  */
 export class WebGLRenderingService {
-  private debugMode = true;
+  private debugMode = false;
 
   // Camera offset from tile center (0.0 = center, positive = back from facing direction)
   // Moving back reveals more of the current tile's floor/ceiling
