@@ -29,6 +29,8 @@ export class CharacterCardComponent {
   @Input() showHpBar = false;
   /** Status text to display (e.g., selected action in combat) */
   @Input() statusText?: string | null;
+  /** Show "X HP to heal" context text when HP < max */
+  @Input() showHpContext = false;
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
 
   get displayFields(): CharacterField[] {
@@ -54,6 +56,10 @@ export class CharacterCardComponent {
 
   get isDead(): boolean {
     return this.character.hp <= 0;
+  }
+
+  get hpNeeded(): number {
+    return Math.max(0, this.character.maxHp - this.character.hp);
   }
 
   handleActionClick(event: CharacterActionEvent): void {

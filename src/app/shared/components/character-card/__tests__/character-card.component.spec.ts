@@ -181,4 +181,46 @@ describe('CharacterCardComponent', () => {
       expect(dividers.length).toBeGreaterThan(0);
     });
   });
+
+  describe('HP context display', () => {
+    it('should show HP needed text when showHpContext is true and HP < max', () => {
+      component.character = createTestCharacter({
+        hp: 5,
+        maxHp: 10
+      });
+      component.showHpBar = true;
+      component.showHpContext = true;
+      fixture.detectChanges();
+
+      const context = fixture.nativeElement.querySelector('.hp-context');
+      expect(context).toBeTruthy();
+      expect(context.textContent).toContain('5 HP to heal');
+    });
+
+    it('should not show HP context when at full HP', () => {
+      component.character = createTestCharacter({
+        hp: 10,
+        maxHp: 10
+      });
+      component.showHpBar = true;
+      component.showHpContext = true;
+      fixture.detectChanges();
+
+      const context = fixture.nativeElement.querySelector('.hp-context');
+      expect(context).toBeFalsy();
+    });
+
+    it('should not show HP context when showHpContext is false', () => {
+      component.character = createTestCharacter({
+        hp: 5,
+        maxHp: 10
+      });
+      component.showHpBar = true;
+      component.showHpContext = false;
+      fixture.detectChanges();
+
+      const context = fixture.nativeElement.querySelector('.hp-context');
+      expect(context).toBeFalsy();
+    });
+  });
 });
