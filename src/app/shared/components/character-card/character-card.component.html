@@ -28,8 +28,14 @@
   <!-- HP Bar (optional) -->
   <div class="hp-bar-container" *ngIf="showHpBar && !isDead">
     <div class="hp-bar">
-      <div class="hp-fill" [style.width.%]="hpPercent"></div>
+      <div class="hp-fill"
+           [style.width.%]="hpPercent"
+           [class.critical]="hpPercent <= 25"
+           [class.low]="hpPercent > 25 && hpPercent <= 50"
+           [class.healthy]="hpPercent > 50">
+      </div>
     </div>
+    <div class="hp-context" *ngIf="showHpContext && hpNeeded > 0">{{ hpNeeded }} HP to heal</div>
   </div>
 
   <!-- Dead Badge -->

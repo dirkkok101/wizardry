@@ -1,0 +1,194 @@
+.character-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;            // Fill parent container vertically
+  width: 100%;        // Fill parent container horizontally
+  min-height: 0;      // Allow shrinking
+}
+
+.panel-title {
+  text-align: center;
+  padding: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--crt-green-dim);
+  border-bottom: 1px solid var(--crt-green-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.character-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  flex: 1;
+}
+
+.character-card {
+  background: var(--crt-bg-dark);
+  border: 1px solid var(--crt-green-dim);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  &.incapacitated {
+    opacity: 0.5;
+    border-color: #ef4444;
+  }
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.name-row {
+  .char-name {
+    font-weight: bold;
+    color: var(--crt-green);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80px;
+  }
+
+  .char-status {
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+}
+
+.stats-row {
+  font-size: 0.75rem;
+  color: var(--crt-green-dim);
+
+  .char-class {
+    // Class + Level
+  }
+
+  .char-ac {
+    font-weight: bold;
+    color: var(--crt-green);
+  }
+}
+
+// HP Bar row
+.hp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+
+  .hp-label {
+    color: var(--crt-green-dim);
+    min-width: 18px;
+  }
+
+  .hp-bar-container {
+    flex: 1;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--crt-green-dim);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .hp-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 0 4px currentColor;
+  }
+
+  .hp-value {
+    font-weight: bold;
+    min-width: 45px;
+    text-align: right;
+    font-size: 0.65rem;
+  }
+}
+
+// Weapon row
+.weapon-row {
+  font-size: 0.7rem;
+
+  .weapon-label {
+    color: var(--crt-green-dim);
+  }
+
+  .weapon-name {
+    color: var(--crt-green);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Spell Points row
+.sp-row {
+  font-size: 0.7rem;
+
+  .sp-label {
+    color: #22d3ee; // Cyan for magic
+  }
+
+  .sp-value {
+    color: #22d3ee;
+    font-weight: bold;
+  }
+}
+
+.actions-row {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--crt-green-dim);
+  color: var(--crt-green);
+  padding: 0.15rem 0.3rem;
+  font-size: 0.7rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--crt-green);
+    color: var(--crt-bg-dark);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.danger {
+    border-color: #ef4444;
+    color: #ef4444;
+
+    &:hover {
+      background: #ef4444;
+      color: var(--crt-bg-dark);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.empty-slot {
+  text-align: center;
+  padding: 1rem;
+  color: var(--crt-green-dim);
+  font-style: italic;
+  font-size: 0.8rem;
+}
