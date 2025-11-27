@@ -6,6 +6,7 @@
       <app-party-character-grid
         source="afflicted"
         [visibleFields]="visibleFields"
+        [showHpBar]="true"
         [actions]="getCharacterActions"
         (actionClick)="handleCharacterAction($event)"
         emptyMessage="No afflicted party members"
