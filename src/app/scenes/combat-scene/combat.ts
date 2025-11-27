@@ -7,7 +7,12 @@ import { CombatService } from '@services/CombatService'
 import { RandomService } from '@services/RandomService'
 import { SpellCastingService } from '@services/SpellCastingService'
 import { VictoryService, VictoryRewards } from '@services/VictoryService'
+import { ChestService } from '@services/ChestService'
+import { ItemDataLoader } from '@services/ItemDataLoader'
 import { SceneType } from '@models/SceneType'
+import { Chest, RewardTier, TRAP_PROBABILITY_BY_TIER } from '@models/Chest'
+import { TrapType } from '@models/Trap'
+import { Item } from '@models/Item'
 import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
 import { Character } from '@models/Character'
 import { MenuItem } from '@shared/components/menu/menu.component'
@@ -1243,39 +1248,89 @@ export class CombatComponent implements OnInit, OnDestroy {
       items: rewards.items.length
     })
 
-    // Distribute XP to roster (only living characters get XP)
-    let newRoster = VictoryService.distributeRewards(
+    // Distribute XP to roster immediately (only living characters get XP)
+    const newRoster = VictoryService.distributeRewards(
       roster,
       partyMembers,
       rewards.xpPerCharacter
     )
 
-    // Distribute items to party inventories
-    const itemResult = VictoryService.distributeItems(
-      newRoster,
-      partyMembers,
-      rewards.items
-    )
-    newRoster = itemResult.roster
+    // Convert ItemDrop[] to Item[] for the chest
+    const chestItems: Item[] = rewards.items
+      .map(itemDrop => {
+        const baseItem = ItemDataLoader.getItem(itemDrop.itemId)
+        if (!baseItem) return null
+        return {
+          ...baseItem,
+          identified: itemDrop.identified,
+          equipped: false
+        }
+      })
+      .filter((item): item is Item => item !== null)
 
-    // Store item distribution for display
-    this.itemDistribution.set(itemResult.itemsAdded)
+    // Determine reward tier based on highest monster level
+    const maxMonsterLevel = Math.max(...allMonsters.map(m => m.level || 1), 1)
+    const rewardTier = Math.min(5, Math.max(1, Math.ceil(maxMonsterLevel / 3))) as RewardTier
 
-    // Update game state
+    // Create chest with gold and items from victory
+    const chest: Chest = {
+      id: `chest_combat_${Date.now()}_${RandomService.random(1000, 9999)}`,
+      trapped: RandomService.roll(TRAP_PROBABILITY_BY_TIER[rewardTier]),
+      trapType: null, // Will be set below if trapped
+      trapIdentified: false,
+      trapDisarmed: false,
+      rewardTier,
+      contents: {
+        gold: rewards.totalGold,
+        items: chestItems
+      },
+      sourcePosition: { x: party.position.x, y: party.position.y, facing: party.position.facing },
+      mazeLevel: party.position.level,
+      source: 'combat_victory'
+    }
+
+    // Set trap type if trapped
+    if (chest.trapped) {
+      const trapTypes = this.getTrapTypesForTier(rewardTier)
+      chest.trapType = RandomService.pickRandom(trapTypes)
+    }
+
+    console.log('[Combat] Generated chest:', {
+      id: chest.id,
+      trapped: chest.trapped,
+      trapType: chest.trapType,
+      gold: chest.contents.gold,
+      items: chest.contents.items.length
+    })
+
+    // Update game state: distribute XP, clear combat, set pending chest
     this.gameState.updateState(state => ({
       ...state,
       roster: newRoster,
-      party: {
-        ...state.party,
-        gold: state.party.gold + rewards.totalGold
-      },
-      combat: undefined  // Clear combat state
+      combat: undefined,
+      pendingChest: chest
     }))
 
-    // Show victory modal
+    // Store rewards for display (XP only now)
     this.victoryRewards.set(rewards)
-    this.showVictoryModal.set(true)
-    console.log('[Combat] Victory modal shown')
+
+    // Navigate directly to chest scene
+    console.log('[Combat] Navigating to chest scene')
+    this.router.navigate(['/chest'])
+  }
+
+  /**
+   * Get trap types available for a given reward tier
+   */
+  private getTrapTypesForTier(tier: RewardTier): TrapType[] {
+    const trapTypesByTier: Record<RewardTier, TrapType[]> = {
+      1: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.ALARM],
+      2: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.CROSSBOW_BOLT, TrapType.ALARM],
+      3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.STUNNER, TrapType.TELEPORTER],
+      4: [TrapType.EXPLODING_BOX, TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER],
+      5: [TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]
+    }
+    return trapTypesByTier[tier]
   }
 
   private handleDefeat(): void {

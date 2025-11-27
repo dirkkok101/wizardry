@@ -171,8 +171,8 @@ describe('Combat Flow E2E', () => {
       expect(component.selectedActions().size).toBe(0)
       expect(component.isExecutingRound()).toBe(false)
 
-      // 7. Verify victory occurred
-      expect(component.showVictoryModal()).toBe(true)
+      // 7. Verify victory occurred - now navigates to chest scene
+      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
 
       // 8. Verify victory rewards were calculated
       const rewards = component.victoryRewards()
@@ -181,23 +181,20 @@ describe('Combat Flow E2E', () => {
       expect(rewards?.xpPerCharacter).toBe(50) // 100 XP / 2 characters
       expect(rewards?.totalGold).toBe(50)
 
-      // 9. Verify XP and gold were distributed
-      const newGold = gameState.party().gold
+      // 9. Verify XP was distributed (gold goes to pending chest now)
       const newXP1 = gameState.roster().get('c1')!.experience
       const newXP2 = gameState.roster().get('c2')!.experience
 
-      expect(newGold).toBe(initialGold + 50)
       expect(newXP1).toBe(initialXP1 + 50)
       expect(newXP2).toBe(initialXP2 + 50)
 
+      // 9b. Verify gold is in pending chest (not party)
+      const pendingChest = gameState.state().pendingChest
+      expect(pendingChest).toBeDefined()
+      expect(pendingChest?.contents.gold).toBe(50)
+
       // 10. Verify combat state was cleared
       expect(gameState.state().combat).toBeUndefined()
-
-      // 11. Navigate back to maze
-      component.returnToMaze()
-
-      expect(router.navigate).toHaveBeenCalledWith(['/maze'])
-      expect(component.showVictoryModal()).toBe(false)
     })
 
     it('distributes rewards from multiple monsters', () => {
@@ -541,7 +538,8 @@ describe('Combat Flow E2E', () => {
       // After victory, combat state is cleared so log disappears from component
       // But we can verify that combat log was updated during execution
       // by checking that combat state is now undefined (indicating victory)
-      expect(component.showVictoryModal()).toBe(true)
+      // Victory now navigates to chest scene instead of showing modal
+      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
       expect(gameState.state().combat).toBeUndefined()
     })
   })

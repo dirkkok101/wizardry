@@ -747,19 +747,18 @@ describe('CombatComponent', () => {
       expect(newXP).toBeGreaterThan(initialXP)
     })
 
-    it('adds gold to party', () => {
-      const initialGold = gameState.party().gold
-
+    it('creates pending chest with gold instead of adding to party', () => {
       component['handleVictory']()
 
-      const newGold = gameState.party().gold
-      expect(newGold).toBeGreaterThanOrEqual(initialGold)
+      const pendingChest = gameState.state().pendingChest
+      expect(pendingChest).toBeDefined()
+      expect(pendingChest?.contents.gold).toBeGreaterThanOrEqual(0)
     })
 
-    it('shows victory modal', () => {
+    it('navigates to chest scene on victory', () => {
       component['handleVictory']()
 
-      expect(component.showVictoryModal()).toBe(true)
+      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
     })
 
     it('includes victory rewards in modal', () => {
