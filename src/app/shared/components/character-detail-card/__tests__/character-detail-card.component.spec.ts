@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
-import { CharacterDetailCardComponent, InspectionMode } from '../character-detail-card.component'
+import {
+  CharacterDetailCardComponent,
+  InspectionMode
+} from '../character-detail-card.component'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterClass } from '@models/CharacterClass'
-import { SpellLearningService } from '@services/SpellLearningService'
 import { LevelUpService, MAX_LEVEL } from '@services/LevelUpService'
 import { CharacterAction } from '@models/CharacterCardTypes'
 
@@ -103,7 +105,7 @@ describe('CharacterDetailCardComponent', () => {
 
       const compiled = fixture.nativeElement
       expect(compiled.querySelector('.xp-bar')).toBeTruthy()
-      expect(compiled.textContent).toContain('to level')
+      expect(compiled.textContent).toContain('to lvl')
     })
 
     it('hides XP progress when showXpProgress is false', () => {
@@ -121,7 +123,7 @@ describe('CharacterDetailCardComponent', () => {
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.textContent).toContain('Maximum Level')
+      expect(compiled.textContent).toContain('Max Level')
     })
   })
 
@@ -269,22 +271,22 @@ describe('CharacterDetailCardComponent', () => {
     })
   })
 
-  describe('mode input', () => {
+  describe('inspectionMode input', () => {
     it('defaults to TAVERN mode', () => {
       component.character = createTestCharacter()
-      expect(component.mode).toBe('TAVERN')
+      expect(component.inspectionMode).toBe('TAVERN')
     })
 
     it('accepts TRAINING_GROUNDS mode', () => {
       component.character = createTestCharacter()
-      component.mode = 'TRAINING_GROUNDS'
-      expect(component.mode).toBe('TRAINING_GROUNDS')
+      component.inspectionMode = 'TRAINING_GROUNDS'
+      expect(component.inspectionMode).toBe('TRAINING_GROUNDS')
     })
 
     it('accepts CAMP mode', () => {
       component.character = createTestCharacter()
-      component.mode = 'CAMP'
-      expect(component.mode).toBe('CAMP')
+      component.inspectionMode = 'CAMP'
+      expect(component.inspectionMode).toBe('CAMP')
     })
   })
 

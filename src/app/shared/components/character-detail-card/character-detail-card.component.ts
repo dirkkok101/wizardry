@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes'
 import { StatusBadgeComponent } from '../status-badge/status-badge.component'
 import { SpellPointsDisplayComponent } from '../spell-points-display/spell-points-display.component'
@@ -26,7 +27,7 @@ export type InspectionMode = 'TRAINING_GROUNDS' | 'TAVERN' | 'CAMP'
  * @example
  * <app-character-detail-card
  *   [character]="character"
- *   [mode]="'TAVERN'"
+ *   [inspectionMode]="'TAVERN'"
  *   [actions]="characterActions"
  *   (actionClick)="onAction($event)">
  * </app-character-detail-card>
@@ -44,11 +45,16 @@ export type InspectionMode = 'TRAINING_GROUNDS' | 'TAVERN' | 'CAMP'
   styleUrls: ['./character-detail-card.component.scss']
 })
 export class CharacterDetailCardComponent {
+  // Expose enum to template
+  readonly CharacterStatus = CharacterStatus
+
+  // Inputs
   @Input() character!: Character
-  @Input() mode: InspectionMode = 'TAVERN'
+  @Input() inspectionMode: InspectionMode = 'TAVERN'
   @Input() actions: CharacterAction[] = []
   @Input() showXpProgress: boolean = true
 
+  // Outputs
   @Output() actionClick = new EventEmitter<CharacterActionEvent>()
 
   /**
@@ -177,7 +183,7 @@ export class CharacterDetailCardComponent {
 
   get intModifierDisplay(): string {
     const mod = this.intModifier
-    return mod >= 0 ? `+${mod}` : `${mod}`
+    return mod >= 0 ? `+${mod} learn` : `${mod} learn`
   }
 
   /**
@@ -189,7 +195,7 @@ export class CharacterDetailCardComponent {
 
   get pieModifierDisplay(): string {
     const mod = this.pieModifier
-    return mod >= 0 ? `+${mod}` : `${mod}`
+    return mod >= 0 ? `+${mod} learn` : `${mod} learn`
   }
 
   /**

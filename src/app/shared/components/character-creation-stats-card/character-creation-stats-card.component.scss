@@ -1,0 +1,212 @@
+// Character Creation Stats Card - Compact layout for character creation flow
+// Uses design system CSS variables throughout
+
+.creation-stats-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+}
+
+// Info Section: Race, Alignment, Class on separate rows
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+
+  .info-label {
+    color: var(--color-text-muted);
+    min-width: 5.5rem;
+  }
+
+  .info-value {
+    color: var(--color-text-gold);
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+}
+
+// Divider between info and stats
+.divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+// Instructions text
+.instructions {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-bottom: var(--space-2);
+  font-style: italic;
+}
+
+// Allocation header showing remaining points
+.allocation-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+
+  .points-value {
+    font-weight: bold;
+    color: var(--color-text-gold);
+    font-size: var(--font-size-base);
+
+    &.zero {
+      color: var(--color-text-muted);
+    }
+  }
+}
+
+// Stats grid
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+// Individual stat row: [−] LABEL VALUE [+] MODIFIER
+.stat-row {
+  display: grid;
+  grid-template-columns: 2rem 3rem 2.5rem 2rem 1fr;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+}
+
+.stat-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.stat-value {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  text-align: center;
+}
+
+.stat-modifier {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: left;
+  padding-left: var(--space-1);
+}
+
+// +/- buttons
+.btn-adjust {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-gold-primary);
+    color: var(--color-text-gold);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.btn-increment {
+  color: var(--color-status-ok);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-status-ok);
+    color: var(--color-status-ok);
+  }
+}
+
+.btn-decrement {
+  color: #ef4444;
+
+  &:hover:not(:disabled) {
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+}
+
+// Compact mode for smaller screens
+@media (max-height: 900px) {
+  .creation-stats-card {
+    padding: var(--space-2);
+  }
+
+  .info-row {
+    font-size: var(--font-size-xs);
+
+    .info-label {
+      min-width: 4.5rem;
+    }
+  }
+
+  .divider {
+    margin: var(--space-1) 0;
+  }
+
+  .instructions {
+    font-size: 0.65rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .allocation-header {
+    margin-bottom: var(--space-1);
+    font-size: var(--font-size-xs);
+
+    .points-value {
+      font-size: var(--font-size-sm);
+    }
+  }
+
+  .stat-row {
+    grid-template-columns: 1.75rem 2.5rem 2rem 1.75rem 1fr;
+    padding: 0.15rem 0;
+  }
+
+  .stat-label,
+  .stat-value {
+    font-size: var(--font-size-xs);
+  }
+
+  .stat-modifier {
+    font-size: 0.65rem;
+  }
+
+  .btn-adjust {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: var(--font-size-xs);
+  }
+}

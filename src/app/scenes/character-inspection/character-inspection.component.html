@@ -19,7 +19,7 @@
           <h3 class="row-title">Character</h3>
           <app-character-detail-card
             [character]="char"
-            [mode]="mode()"
+            [inspectionMode]="mode()"
             [actions]="characterActions()"
             (actionClick)="handleCharacterAction($event)"
           />

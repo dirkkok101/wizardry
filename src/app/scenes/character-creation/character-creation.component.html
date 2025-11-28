@@ -126,6 +126,7 @@
               <form (submit)="onNameSubmit($event)">
                 <label for="character-name">Character Name</label>
                 <input
+                  #nameInput
                   id="character-name"
                   type="text"
                   [ngModel]="characterName()"
@@ -133,9 +134,13 @@
                   name="characterName"
                   maxlength="15"
                   placeholder="Enter name..."
-                  autofocus
+                  autocomplete="off"
+                  spellcheck="false"
                 />
                 <div class="char-count">{{ characterName().length }} / 15</div>
+                @if (isNameDuplicate()) {
+                  <div class="duplicate-warning">A character with this name already exists</div>
+                }
                 <button type="submit" style="display: none;">Submit</button>
               </form>
             </div>
@@ -154,222 +159,17 @@
 
     <!-- RIGHT: Character Display Column (50%) -->
     <div class="character-display-column">
-      <div class="character-sheet">
-        <h3>YOUR CHARACTER</h3>
-
-        <!-- Race -->
-        @if (selectedRace()) {
-          <div class="sheet-section race">
-            <label>Race:</label>
-            <span class="value">{{ getRaceName(selectedRace()!) }}</span>
-          </div>
-        }
-
-        <!-- Alignment -->
-        @if (selectedAlignment()) {
-          <div class="sheet-section alignment">
-            <label>Alignment:</label>
-            <span class="value">{{ getAlignmentName(selectedAlignment()!) }}</span>
-          </div>
-        }
-
-        <!-- Stats -->
-        @if (rolledStats() && finalStats()) {
-          <div class="sheet-section stats">
-            <label>Attributes:</label>
-            <div class="stat-list">
-              @if (currentStep() === CreationStep.ROLL_ALLOCATE_CLASS) {
-                <!-- ROLL_ALLOCATE_CLASS View: Interactive Allocation -->
-                <!-- Points Remaining Header -->
-                <div class="allocation-header">
-                  <div class="points-remaining">
-                    <span class="label">Points Remaining:</span>
-                    <span class="value" [class.zero]="allPointsAllocated()">
-                      {{ rolledStats()!.bonusPoints }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="stat-breakdown-label">BASE + ALLOCATED = TOTAL</div>
-
-                <!-- Allocation Grid with +/- buttons -->
-                <div class="allocation-row">
-                  <span class="stat-label">STR:</span>
-                  <span class="base-value">{{ raceData()!.baseStats.str }}</span>
-                  <span class="plus">+</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.strength <= 0"
-                    (click)="deallocatePoint('strength')"
-                  >−</button>
-                  <span class="allocated-amount">[{{ rolledStats()!.strength }}]</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('strength') + rolledStats()!.strength >= 18)"
-                    (click)="allocatePoint('strength')"
-                  >+</button>
-                  <span class="equals">=</span>
-                  <span class="final-value">{{ finalStats()!.strength }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">INT:</span>
-                  <span class="base-value">{{ raceData()!.baseStats.int }}</span>
-                  <span class="plus">+</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.intelligence <= 0"
-                    (click)="deallocatePoint('intelligence')"
-                  >−</button>
-                  <span class="allocated-amount">[{{ rolledStats()!.intelligence }}]</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('intelligence') + rolledStats()!.intelligence >= 18)"
-                    (click)="allocatePoint('intelligence')"
-                  >+</button>
-                  <span class="equals">=</span>
-                  <span class="final-value">{{ finalStats()!.intelligence }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">PIE:</span>
-                  <span class="base-value">{{ raceData()!.baseStats.pie }}</span>
-                  <span class="plus">+</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.piety <= 0"
-                    (click)="deallocatePoint('piety')"
-                  >−</button>
-                  <span class="allocated-amount">[{{ rolledStats()!.piety }}]</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('piety') + rolledStats()!.piety >= 18)"
-                    (click)="allocatePoint('piety')"
-                  >+</button>
-                  <span class="equals">=</span>
-                  <span class="final-value">{{ finalStats()!.piety }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">VIT:</span>
-                  <span class="base-value">{{ raceData()!.baseStats.vit }}</span>
-                  <span class="plus">+</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.vitality <= 0"
-                    (click)="deallocatePoint('vitality')"
-                  >−</button>
-                  <span class="allocated-amount">[{{ rolledStats()!.vitality }}]</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('vitality') + rolledStats()!.vitality >= 18)"
-                    (click)="allocatePoint('vitality')"
-                  >+</button>
-                  <span class="equals">=</span>
-                  <span class="final-value">{{ finalStats()!.vitality }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">AGI:</span>
-                  <span class="base-value">{{ raceData()!.baseStats.agi }}</span>
-                  <span class="plus">+</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.agility <= 0"
-                    (click)="deallocatePoint('agility')"
-                  >−</button>
-                  <span class="allocated-amount">[{{ rolledStats()!.agility }}]</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('agility') + rolledStats()!.agility >= 18)"
-                    (click)="allocatePoint('agility')"
-                  >+</button>
-                  <span class="equals">=</span>
-                  <span class="final-value">{{ finalStats()!.agility }}</span>
-                </div>
-
-                <div class="allocation-row">
-                  <span class="stat-label">LUC:</span>
-                  <span class="base-value">{{ raceData()!.baseStats.luc }}</span>
-                  <span class="plus">+</span>
-                  <button
-                    class="btn-decrement"
-                    [disabled]="rolledStats()!.luck <= 0"
-                    (click)="deallocatePoint('luck')"
-                  >−</button>
-                  <span class="allocated-amount">[{{ rolledStats()!.luck }}]</span>
-                  <button
-                    class="btn-increment"
-                    [disabled]="rolledStats()!.bonusPoints <= 0 || (getRaceBaseStat('luck') + rolledStats()!.luck >= 18)"
-                    (click)="allocatePoint('luck')"
-                  >+</button>
-                  <span class="equals">=</span>
-                  <span class="final-value">{{ finalStats()!.luck }}</span>
-                </div>
-              } @else {
-                <!-- Default view for NAME_CHARACTER step (after allocation complete) -->
-                <div class="stat-breakdown-label">BASE + ALLOCATED = TOTAL</div>
-                <div class="stat-row">
-                  <span class="stat-name">STR:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.str }}</span> +
-                    <span class="allocated">{{ rolledStats()!.strength }}</span> =
-                    <span class="total">{{ finalStats()!.strength }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">INT:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.int }}</span> +
-                    <span class="allocated">{{ rolledStats()!.intelligence }}</span> =
-                    <span class="total">{{ finalStats()!.intelligence }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">PIE:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.pie }}</span> +
-                    <span class="allocated">{{ rolledStats()!.piety }}</span> =
-                    <span class="total">{{ finalStats()!.piety }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">VIT:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.vit }}</span> +
-                    <span class="allocated">{{ rolledStats()!.vitality }}</span> =
-                    <span class="total">{{ finalStats()!.vitality }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">AGI:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.agi }}</span> +
-                    <span class="allocated">{{ rolledStats()!.agility }}</span> =
-                    <span class="total">{{ finalStats()!.agility }}</span>
-                  </span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-name">LUC:</span>
-                  <span class="stat-breakdown">
-                    <span class="base">{{ raceData()!.baseStats.luc }}</span> +
-                    <span class="allocated">{{ rolledStats()!.luck }}</span> =
-                    <span class="total">{{ finalStats()!.luck }}</span>
-                  </span>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Class -->
-        @if (selectedClass()) {
-          <div class="sheet-section class">
-            <label>Class:</label>
-            <span class="value">{{ getClassName(selectedClass()!) }}</span>
-          </div>
-        }
-      </div>
+      @if (partialCharacter()) {
+        <app-character-creation-stats-card
+          [partialCharacter]="partialCharacter()!"
+          [allocationConfig]="allocationConfig()"
+          (allocate)="handleAllocation($event)"
+        />
+      } @else {
+        <div class="empty-character-sheet">
+          <p>Select a race to begin...</p>
+        </div>
+      }
     </div>
   </div>
 
