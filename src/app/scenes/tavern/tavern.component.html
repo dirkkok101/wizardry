@@ -16,15 +16,12 @@
     } @else {
       <div class="character-list">
         @for (char of availableCharacters(); track char.id) {
-          <div class="list-item">
-            <span class="char-name">{{ char.name }}</span>
-            <span class="char-info">{{ getClassAbbr(char.class) }} Lv{{ char.level }}</span>
-            <span class="char-race">{{ char.race }}</span>
-            <div class="list-actions">
+          <app-character-list-item [character]="char" [showAlignment]="true">
+            <ng-template #actions>
               <button class="action-btn" (click)="onAddCharacter(char.id)">Add</button>
               <button class="action-btn" (click)="onInspect(char.id)">Inspect</button>
-            </div>
-          </div>
+            </ng-template>
+          </app-character-list-item>
         }
       </div>
     }

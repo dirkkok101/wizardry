@@ -1,105 +1,119 @@
+// Training Grounds Scene - Roster Management Hub
+// Uses compact list layout matching Tavern scene style
+
 .training-grounds {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #000;
-  color: #0f0;
-  font-family: 'Courier New', monospace;
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+}
 
-  .scene-header {
-    padding: 1rem;
-    border-bottom: 2px solid #0f0;
-    text-align: center;
+.roster-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+}
 
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: #0f0;
-    }
+// Scrollable character list with 2 columns (vertical-first fill)
+// Character items use shared CharacterListItemComponent
+.character-list {
+  column-count: 2;
+  column-gap: var(--space-3);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
   }
 
-  .character-grid {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-    align-content: start;
-
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 3rem 1rem;
-      border: 2px dashed #0f0;
-      margin: 2rem;
-
-      p {
-        margin: 0.5rem 0;
-        font-size: 1.1rem;
-
-        &:first-child {
-          font-weight: bold;
-          font-size: 1.3rem;
-        }
-      }
-    }
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
   }
 
-  .error-message {
-    padding: 1rem;
-    margin: 0 1rem;
-    text-align: center;
-    border: 2px solid #f00;
-    background: rgba(255, 0, 0, 0.1);
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
 
-    p {
-      margin: 0;
-      color: #f00;
-      font-weight: bold;
-    }
+// 1 column on narrow screens
+@media (max-width: 900px) {
+  .character-list {
+    column-count: 1;
+  }
+}
+
+// Empty state when no characters exist
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--space-4);
+  text-align: center;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--card-border-radius);
+  background: rgba(0, 0, 0, 0.2);
+  margin: var(--space-4) auto;
+  max-width: 400px;
+  width: 100%;
+
+  .empty-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-gold);
   }
 
-  .scene-footer {
-    padding: 1rem;
-    border-top: 2px solid #0f0;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
+  .empty-subtitle {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+}
 
-    .nav-button {
-      background: #000;
-      border: 2px solid #0f0;
-      color: #0f0;
-      padding: 0.75rem 1.5rem;
-      font-family: 'Courier New', monospace;
-      font-size: 1rem;
-      cursor: pointer;
-      min-width: 200px;
+// Message display
+.message {
+  padding: var(--space-2) var(--space-3);
+  margin: 0 var(--space-3) var(--space-2);
+  border-radius: var(--card-border-radius);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
 
-      &:hover {
-        background: #0f0;
-        color: #000;
-      }
-
-      &:active {
-        transform: translateY(2px);
-      }
-    }
+  p {
+    margin: 0;
   }
 
-  // Responsive
-  @media (max-width: 768px) {
-    .character-grid {
-      grid-template-columns: 1fr;
-    }
+  &.error {
+    background: rgba(239, 68, 68, 0.15);
+    border-left: 3px solid #ef4444;
+    color: #ef4444;
+  }
 
-    .scene-footer {
-      flex-direction: column;
+  &.success {
+    background: rgba(34, 197, 94, 0.15);
+    border-left: 3px solid var(--color-status-ok);
+    color: var(--color-status-ok);
+  }
+}
 
-      .nav-button {
-        width: 100%;
-      }
-    }
+// Responsive: tighter spacing on smaller screens
+@media (max-width: 900px) {
+  .roster-content {
+    padding: var(--space-2);
+  }
+}
+
+// MacBook Air 13" and similar - tighter spacing
+@media (max-height: 900px) {
+  .roster-content {
+    padding: var(--space-2);
   }
 }

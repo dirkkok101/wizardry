@@ -50,6 +50,7 @@
   overflow: hidden;
 }
 
+// Character list container - items use CharacterListItemComponent
 .character-list {
   display: flex;
   flex-direction: column;
@@ -69,74 +70,6 @@
   &::-webkit-scrollbar-thumb {
     background: var(--color-border);
     border-radius: 2px;
-  }
-}
-
-.list-item {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--card-border-radius);
-  transition: all var(--transition-fast);
-
-  &:hover {
-    border-color: var(--color-gold-dim);
-    background: var(--color-bg-card-hover);
-  }
-
-  .char-name {
-    font-family: var(--font-display);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-gold);
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .char-info {
-    font-family: var(--font-body);
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-  }
-
-  .char-race {
-    font-family: var(--font-body);
-    font-size: var(--font-size-xs);
-    color: var(--color-text-muted);
-    white-space: nowrap;
-  }
-}
-
-.list-actions {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.action-btn {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-gold);
-  padding: 2px 8px;
-  font-size: var(--font-size-xs);
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  border-radius: 2px;
-
-  &:hover {
-    background: var(--color-gold-primary);
-    color: var(--color-bg-darkest);
-    border-color: var(--color-gold-primary);
-  }
-
-  &:active {
-    transform: scale(0.95);
   }
 }
 
@@ -225,10 +158,6 @@
 
   .formation-layout {
     gap: var(--space-2);
-  }
-
-  .list-item {
-    padding: var(--space-1) var(--space-2);
   }
 
   .row-title {
