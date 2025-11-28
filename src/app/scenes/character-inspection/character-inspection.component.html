@@ -6,13 +6,6 @@
     />
 
     <div class="inspection-content">
-      <!-- Message Banner (spans full width when in grid) -->
-      @if (messages.hasMessage()) {
-        <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
-          {{ messages.messageText() }}
-        </div>
-      }
-
       <div class="inspection-layout">
         <!-- Column 1: Character Stats -->
         <section class="stats-section">

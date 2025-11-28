@@ -317,9 +317,7 @@ export class CharacterInspectionComponent {
     }
   }
 
-  private useItem(_char: Character, item: Item): void {
-    // Item use would be implemented here
-    this.messages.showSuccess(`Used ${item.name}`)
+  private useItem(_char: Character, _item: Item): void {
     // TODO: Implement actual item use logic
   }
 
@@ -329,8 +327,7 @@ export class CharacterInspectionComponent {
 
     if (result.success && result.state) {
       this.gameState.updateState(() => result.state!)
-      const sellPrice = ShopService.calculateSellPrice(item)
-      this.messages.showSuccess(`Sold ${item.name} for ${sellPrice} gold`)
+      // Gold update in header provides visual feedback
     } else {
       this.messages.showError(result.error || 'Failed to sell item')
     }
@@ -342,15 +339,7 @@ export class CharacterInspectionComponent {
 
     if (result.success && result.state) {
       this.gameState.updateState(() => result.state!)
-      // Get the updated item from state to show its name
-      const updatedChar = result.state.roster.get(char.id)
-      const identifiedItem = updatedChar?.inventory.find(i => i.id === item.id)
-
-      if (identifiedItem?.cursed) {
-        this.messages.showError(`This is ${identifiedItem.name}! IT'S CURSED!`)
-      } else {
-        this.messages.showSuccess(`This is ${identifiedItem?.name || 'Unknown'}!`)
-      }
+      // Item name update in inventory provides visual feedback
     } else {
       this.messages.showError(result.error || 'Failed to identify item')
     }
@@ -362,7 +351,7 @@ export class CharacterInspectionComponent {
 
     if (result.success && result.state) {
       this.gameState.updateState(() => result.state!)
-      this.messages.showSuccess(`${item.name} is no longer cursed!`)
+      // Item visual update in inventory provides feedback
     } else {
       this.messages.showError(result.error || 'Failed to uncurse item')
     }
@@ -390,10 +379,10 @@ export class CharacterInspectionComponent {
     }
     this.updateCharacter(updatedChar)
 
+    // Item name update in inventory provides visual feedback
+    // Show warning only for cursed items (important safety info)
     if (unidentified.cursed) {
       this.messages.showError(`This is ${unidentified.name}! IT'S CURSED!`)
-    } else {
-      this.messages.showSuccess(`This is ${unidentified.name}!`)
     }
   }
 
@@ -476,9 +465,9 @@ export class CharacterInspectionComponent {
 
   onSpellSelected(spell: LoadedSpell): void {
     this.showSpellCastDialog.set(false)
-    // Handle spell casting - would need target selection for single-target spells
-    this.messages.showSuccess(`Cast ${spell.name}!`)
     // TODO: Implement full spell casting with deduction and effects
+    // Spell point deduction and visual effects will provide feedback
+    console.log(`Cast ${spell.name}`) // Temporary logging until spell effects implemented
   }
 
   onSpellDialogCancelled(): void {

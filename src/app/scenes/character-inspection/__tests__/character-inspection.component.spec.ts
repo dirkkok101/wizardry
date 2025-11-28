@@ -186,48 +186,8 @@ describe('CharacterInspectionComponent', () => {
     expect(component.messages.isError()).toBe(true);
   });
 
-  it('clears message after 3 seconds', (done) => {
-    jest.useFakeTimers();
-
-    const mockItem = {
-      id: 'test-potion',
-      name: 'Test Potion',
-      type: 'ITEM' as any,
-      slot: 'NONE' as any,
-      price: 100,
-      cursed: false,
-      identified: true,
-      equipped: false
-    };
-
-    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockItem as any);
-
-    gameState.updateState(state => {
-      const char = state.roster.get('char-123')!;
-      return {
-        ...state,
-        roster: new Map(state.roster).set('char-123', {
-          ...char,
-          inventory: [mockItem as any]
-        })
-      };
-    });
-
-    fixture.detectChanges();
-
-    // Use 'use' action which still shows success message
-    component.handleItemAction({ type: 'use', item: mockItem as any });
-
-    // Now using MessageService instead of message signal
-    expect(component.messages.hasMessage()).toBe(true);
-
-    jest.advanceTimersByTime(3000);
-
-    expect(component.messages.hasMessage()).toBe(false);
-
-    jest.useRealTimers();
-    done();
-  });
+  // Note: Success message auto-clear test removed as part of notification cleanup
+  // Error messages are still shown and auto-cleared by MessageService
 });
 
 describe('CharacterInspectionComponent mode detection', () => {
