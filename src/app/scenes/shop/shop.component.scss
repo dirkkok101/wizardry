@@ -86,24 +86,28 @@
   text-align: center;
 }
 
-.character-info {
+// Shopping bar - compact horizontal layout (replaces character-info)
+.shopping-bar {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-gold-dim);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
   background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--card-border-radius);
+  margin-bottom: var(--space-3);
 
-  .shopping-for,
-  .gold-display,
-  .inventory-count {
-    font-size: var(--font-size-base);
+  .shopping-for {
     color: var(--color-text-secondary);
 
     strong {
       color: var(--color-gold-primary);
     }
+  }
+
+  .inventory-status {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
   }
 }
 
@@ -136,64 +140,72 @@
   }
 }
 
+// Item list with 2-column layout (matching Training Grounds)
 .item-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  column-count: 2;
+  column-gap: var(--space-3);
+  overflow-y: auto;
+
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
 }
 
+// Compact item row (matching CharacterListItemComponent pattern)
 .item-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
   align-items: center;
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-bottom: var(--space-1);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--card-border-radius);
   transition: all var(--transition-fast);
+  break-inside: avoid;  // Prevent splitting across columns
 
-  &:hover {
-    background: var(--color-bg-card-hover);
+  &:hover:not(.unaffordable) {
     border-color: var(--color-gold-dim);
+    background: var(--color-bg-card-hover);
   }
 
   &.unaffordable {
     opacity: 0.5;
-
-    &:hover {
-      background: var(--color-bg-card);
-      border-color: var(--color-border);
-    }
   }
-}
-
-.item-details {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex: 1;
 }
 
 .item-name {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-gold);
   font-weight: 500;
-  color: var(--color-text-primary);
-  min-width: 150px;
-
-  &.unknown {
-    font-style: italic;
-    color: var(--color-text-muted);
-  }
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .item-type {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  text-transform: capitalize;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .item-stat {
+  font-size: var(--font-size-xs);
   color: var(--color-gold-primary);
-  font-size: var(--font-size-sm);
+  white-space: nowrap;
 }
 
 .equipped-badge {
@@ -216,16 +228,11 @@
   border-radius: 2px;
 }
 
-.item-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
 .item-price {
+  font-size: var(--font-size-sm);
   color: var(--color-gold-primary);
-  min-width: 80px;
-  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
 
   &.sell-price {
     color: var(--color-status-ok);
@@ -313,25 +320,14 @@
 }
 
 // Responsive adjustments
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .formation-layout {
     grid-template-columns: 1fr;
     gap: var(--space-2);
   }
 
-  .item-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-
-  .item-details {
-    flex-wrap: wrap;
-  }
-
-  .item-actions {
-    width: 100%;
-    justify-content: space-between;
+  .item-list {
+    column-count: 1;
   }
 }
 

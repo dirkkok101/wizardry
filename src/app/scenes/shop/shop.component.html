@@ -1,5 +1,5 @@
 <div class="shop-scene">
-  <app-scene-title title="BOLTAC'S TRADING POST" />
+  <app-scene-title title="BOLTAC'S TRADING POST" [showPartyGold]="true" />
 
   <div class="shop-content">
     <!-- Character Selection View -->
@@ -41,36 +41,31 @@
     @if (currentView() === 'buy') {
       <div class="transaction-view">
         @if (selectedCharacter(); as character) {
-          <div class="character-info">
+          <div class="shopping-bar">
             <span class="shopping-for">Shopping for: <strong>{{ character.name }}</strong></span>
-            <span class="gold-display">Party Gold: <strong>{{ partyGold() }}</strong></span>
-            <span class="inventory-count">Inventory: {{ character.inventory.length }}/8 items</span>
+            <span class="inventory-status">{{ character.inventory.length }}/8 slots</span>
           </div>
         }
 
         <div class="item-list">
           @for (item of shopInventory(); track item.id) {
             <div class="item-row" [class.unaffordable]="item.price > partyGold()">
-              <div class="item-details">
-                <span class="item-name">{{ item.name }}</span>
-                <span class="item-type">{{ item.type }}</span>
-                @if (item.damage) {
-                  <span class="item-stat">DMG: {{ item.damage }}</span>
-                }
-                @if (item.defense) {
-                  <span class="item-stat">DEF: {{ item.defense }}</span>
-                }
-              </div>
-              <div class="item-actions">
-                <span class="item-price">{{ item.price }} gold</span>
-                <button
-                  class="action-btn buy-btn"
-                  (click)="initiateBuy(item.id)"
-                  [disabled]="item.price > partyGold()"
-                >
-                  Buy
-                </button>
-              </div>
+              <span class="item-name">{{ item.name }}</span>
+              <span class="item-type">{{ item.type }}</span>
+              @if (item.damage) {
+                <span class="item-stat">DMG: {{ item.damage }}</span>
+              }
+              @if (item.defense) {
+                <span class="item-stat">DEF: {{ item.defense }}</span>
+              }
+              <span class="item-price">{{ item.price }} GP</span>
+              <button
+                class="action-btn buy-btn"
+                (click)="initiateBuy(item.id)"
+                [disabled]="item.price > partyGold()"
+              >
+                Buy
+              </button>
             </div>
           } @empty {
             <app-empty-state title="No items available for purchase" variant="inline" />
