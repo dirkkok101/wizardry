@@ -48,7 +48,9 @@ Every scene follows this flex container structure:
 | Component | Use Case | Example |
 |-----------|----------|---------|
 | **CharacterPanelComponent** | Party display (Castle Menu, Tavern, Maze) | Formation columns with HP bars |
-| **CharacterCardComponent** | Detail views, character creation | Full stats with configurable fields |
+| **CharacterCardComponent** | Roster lists (Training Grounds, Tavern) | Basic info with action buttons |
+| **CharacterDetailCardComponent** | Full inspection (Character Inspection) | All stats, combat info, actions |
+| **CharacterCreationStatsCardComponent** | Character creation wizard | Progressive reveal with stat allocation |
 | **Compact list** | Available characters, selection lists | Single-row items with actions |
 
 ### CharacterPanelComponent
@@ -233,12 +235,34 @@ When creating/updating a scene:
 6. ✅ Add `@media (max-height: 900px)` for tighter spacing
 7. ✅ Test footer visibility on smaller screens
 
+### CharacterCreationStatsCardComponent
+
+For character creation wizard with progressive reveal:
+
+```html
+<app-character-creation-stats-card
+  [partialCharacter]="partialCharacter()"
+  [allocationConfig]="allocationConfig()"
+  (allocate)="handleAllocation($event)"
+/>
+```
+
+**Features:**
+- Progressive reveal (Race → Alignment → Class → Stats)
+- Stat allocation with +/- buttons
+- Bonus points display
+- Stat modifiers: `+X dmg`, `+X HP/lvl`, `+X learn`, `+X AC`, `+X% flee`
+
+See `docs/components/character-card.md` for full API documentation.
+
 ## Completed Scenes
 
 | Scene | Status | Pattern Used |
 |-------|--------|--------------|
 | Castle Menu | ✅ | CharacterPanel (2 columns) |
 | Tavern | ✅ | Compact list + CharacterPanel |
+| Character Creation | ✅ | Wizard + CharacterCreationStatsCard |
+| Character Inspection | ✅ | CharacterDetailCard |
 | Temple | Needs update | - |
 | Shop | Needs update | - |
 | Inn | Needs update | - |
