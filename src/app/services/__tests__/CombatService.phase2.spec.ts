@@ -396,5 +396,78 @@ describe('CombatService - Phase 2 Features', () => {
 
       Math.random = originalRandom
     })
+
+    it('successfully flees when character dies mid-round before RUN command executes', () => {
+      // Bug test: When all characters select RUN but one dies before their turn,
+      // the surviving characters should still successfully flee
+
+      // Character 1: low HP, low agility (low initiative, will die before RUN)
+      const char1 = createTestCharacter({
+        id: 'c1',
+        name: 'Victim',
+        hp: 1,
+        maxHp: 10,
+        agility: 1, // Low agility = low initiative
+        luck: 10
+      })
+
+      // Character 2: high HP, high agility (high initiative, RUN executes first)
+      const char2 = createTestCharacter({
+        id: 'c2',
+        name: 'Survivor',
+        hp: 100,
+        maxHp: 100,
+        agility: 20, // High agility = high initiative
+        luck: 10
+      })
+
+      // Monster with medium agility that will attack before char1's RUN
+      const monster = createTestMonster({
+        hp: 100,
+        agility: 10, // Initiative between char1 and char2
+        attack: 100, // High attack to guarantee hit
+        damage: [{ dice: '10d6', min: 10, max: 60 }] // High damage to guarantee kill
+      })
+
+      const monsterGroups: MonsterGroup[] = [{
+        id: 'A',
+        monsters: [monster],
+        formation: 'front'
+      }]
+      const state = createTestCombatState({ monsterGroups, canFlee: true })
+
+      // Use seed for deterministic random - easier than counting exact queue positions
+      // Seed 42 produces a sequence that gives us the behavior we need
+      RandomService.setSeed(42)
+
+      // Create RUN commands for both characters
+      const runCmd1 = CombatService.createCommand(char1, 'RUN')
+      const runCmd2 = CombatService.createCommand(char2, 'RUN')
+
+      // Create monster attack command targeting char1
+      const monsterCmd = CombatService.createCommand(monster, 'ATTACK', char1)
+
+      // Set explicit initiatives to ensure correct order
+      // char2 RUN (high init) -> monster attack (med init) -> char1 RUN (low init, will be dead)
+      runCmd2.initiative = 20
+      monsterCmd.initiative = 10
+      runCmd1.initiative = 1
+
+      state.commandQueue = [runCmd1, runCmd2, monsterCmd]
+
+      const party = [char1, char2]
+      const frontRow = [char1.id, char2.id]
+
+      const result = CombatService.executeRound(state, party, frontRow)
+
+      // char1 should be dead from monster attack
+      const char1Update = result.damagedCharacters.get(char1.id)
+      expect(char1Update).toBeDefined()
+      expect(char1Update!.hp).toBeLessThanOrEqual(0)
+
+      // The key assertion: flee should succeed because char2 (the only survivor) selected RUN
+      expect(result.fled).toBe(true)
+      expect(result.messages.some(m => m.includes('successfully flees'))).toBe(true)
+    })
   })
 })
