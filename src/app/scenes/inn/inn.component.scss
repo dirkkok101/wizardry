@@ -1,4 +1,5 @@
-// Inn scene - Modern Retro-Fantasy theme
+// Inn scene - 3-column layout (Front Row | Back Row | Rest Options)
+// Modern Retro-Fantasy theme matching character-inspection pattern
 
 .inn-scene {
   display: flex;
@@ -9,151 +10,161 @@
 
 .inn-content {
   flex: 1;
-  padding: var(--space-4);
-  overflow-y: auto;
+  min-height: 0;  // Critical for flex shrinking
+  overflow: hidden;
+  padding: var(--space-2);
 }
 
-// Main two-column layout
+// 3-column grid layout
 .inn-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-6);
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-3);
+  height: 100%;
 }
 
-// Section titles
-.section-title {
+// Formation columns (Front/Back Row)
+.formation-column {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  // CharacterPanel fills available space
+  ::ng-deep .character-panel {
+    flex: 1;
+    overflow-y: auto;
+
+    // Subtle scrollbar styling
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-bg-dark);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 2px;
+    }
+  }
+
+  ::ng-deep .character-stack {
+    padding: 0;
+    gap: var(--space-1);
+  }
+}
+
+// Compact row titles (matching Tavern/Shop/Inspection)
+.row-title {
   font-family: var(--font-display);
+  font-size: var(--font-size-sm);
   color: var(--color-gold-primary);
-  font-size: var(--font-size-lg);
-  margin: 0 0 var(--space-3);
-  padding-bottom: var(--space-1);
   border-bottom: 1px solid var(--color-border);
-  letter-spacing: 0.05em;
+  padding-bottom: var(--space-1);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-// Party section (left column)
-.party-section {
-  min-width: 0; // Prevent grid blowout
-}
-
-// Actions section (right column)
+// Actions section (Rest Options)
 .actions-section {
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-// Rest action cards container
 .rest-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-}
-
-// Wrapper for action card with shortcut hint
-.rest-action-wrapper {
-  display: flex;
-  align-items: flex-start;
   gap: var(--space-2);
 }
 
-// Shortcut hint next to cards
-.shortcut-hint {
-  color: var(--color-gold-primary);
-  font-weight: bold;
-  font-size: var(--font-size-lg);
-  min-width: 2rem;
-  padding-top: var(--space-3);
-}
-
-// Cost summary box
-.cost-summary {
-  margin-top: var(--space-4);
-  padding: var(--space-3);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--card-border-radius);
-
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--space-1) 0;
-
-    .label {
-      color: var(--color-text-secondary);
-    }
-
-    .value {
-      color: var(--color-text-primary);
-
-      &.gold {
-        color: var(--color-gold-primary);
-        font-weight: 600;
-      }
-    }
-  }
-
-  .warning {
-    margin-top: var(--space-2);
-    padding: var(--space-1) var(--space-2);
-    background: rgba(220, 38, 38, 0.1);
-    border: 1px solid var(--color-danger);
-    color: var(--color-danger);
-    font-size: var(--font-size-sm);
-    text-align: center;
-    border-radius: 2px;
-  }
-}
-
-
-// Message styling
+// Message styling (toast notification)
 .message {
-  margin-top: var(--space-4);
-  padding: var(--space-3);
-  border-radius: var(--card-border-radius);
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
   text-align: center;
-  font-weight: 500;
-
-  &.success {
-    background-color: rgba(34, 197, 94, 0.1);
-    color: var(--color-status-ok);
-    border: 1px solid var(--color-status-ok);
-  }
+  border-radius: var(--card-border-radius);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  z-index: 100;
+  animation: slideUp 0.3s ease-out;
 
   &.error {
-    background-color: rgba(220, 38, 38, 0.1);
-    color: var(--color-danger);
+    background: var(--color-bg-darkest);
     border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+  }
+
+  &.success {
+    background: var(--color-bg-darkest);
+    border: 1px solid var(--color-gold-primary);
+    color: var(--color-gold-primary);
+    box-shadow: 0 0 10px rgba(212, 165, 116, 0.3);
   }
 }
 
-// Responsive: Stack on smaller screens
-@media (max-width: 900px) {
-  .inn-layout {
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
   }
-
-  .party-section {
-    order: 2;
-  }
-
-  .actions-section {
-    order: 1;
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
 
-// Responsive: Tighter spacing on very small screens
-@media (max-width: 600px) {
+// MacBook Air 13" (1440x900) responsive
+@media (max-height: 900px) {
   .inn-content {
-    padding: var(--space-3);
+    padding: var(--space-2);
   }
 
-  .section-title {
-    font-size: var(--font-size-base);
+  .inn-layout {
+    gap: var(--space-2);
+  }
+
+  .row-title {
+    font-size: var(--font-size-xs);
+    padding-bottom: 2px;
+    margin-bottom: var(--space-1);
   }
 
   .rest-actions {
-    gap: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  ::ng-deep .character-stack {
+    gap: 2px;
+  }
+}
+
+// Responsive: narrower screens - 2 columns
+@media (max-width: 1024px) {
+  .inn-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions-section {
+    grid-column: 1 / -1;
+  }
+}
+
+// Responsive: mobile - stack all columns
+@media (max-width: 768px) {
+  .inn-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .formation-column,
+  .actions-section {
+    overflow: visible;
   }
 }

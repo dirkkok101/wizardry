@@ -4,55 +4,39 @@
   <div class="inn-content">
     @if (partyCharacters().length > 0) {
       <div class="inn-layout">
-        <!-- Left: Party Overview -->
-        <div class="party-section">
-          <h3 class="section-title">PARTY STATUS</h3>
-          <app-party-character-grid
-            source="party"
-            [showFormation]="true"
-            [visibleFields]="['class', 'level', 'hp', 'status']"
-            [showHpBar]="true"
+        <!-- Column 1: Front Row -->
+        <section class="formation-column">
+          <h3 class="row-title">Front Row</h3>
+          <app-character-panel
+            [characters]="frontRowCharacters()"
             [actions]="[{type: 'inspect'}]"
             (actionClick)="handleCharacterAction($event)"
-            emptyMessage="No party members"
-            variant="default"
           />
-        </div>
+        </section>
 
-        <!-- Right: Rest Actions -->
-        <div class="actions-section">
-          <h3 class="section-title">REST OPTIONS</h3>
+        <!-- Column 2: Back Row -->
+        <section class="formation-column">
+          <h3 class="row-title">Back Row</h3>
+          <app-character-panel
+            [characters]="backRowCharacters()"
+            [actions]="[{type: 'inspect'}]"
+            (actionClick)="handleCharacterAction($event)"
+          />
+        </section>
+
+        <!-- Column 3: Rest Options -->
+        <section class="actions-section">
+          <h3 class="row-title">REST OPTIONS</h3>
           <div class="rest-actions">
             @for (config of restActionConfigs(); track config.type; let i = $index) {
-              <div class="rest-action-wrapper">
-                <span class="shortcut-hint">({{ i + 1 }})</span>
-                <app-rest-action-card
-                  [config]="config"
-                  (selected)="handleRestActionSelected($event)"
-                />
-              </div>
+              <app-rest-action-card
+                [config]="config"
+                [shortcutKey]="i + 1"
+                (selected)="handleRestActionSelected($event)"
+              />
             }
           </div>
-
-          <!-- Cost Summary -->
-          @if (healPlan().weeksNeeded > 0) {
-            <div class="cost-summary">
-              <div class="summary-row">
-                <span class="label">Healing Cost:</span>
-                <span class="value gold">{{ healPlan().totalCost }} GP</span>
-              </div>
-              <div class="summary-row">
-                <span class="label">Party Gold:</span>
-                <span class="value">{{ partyGold() }} GP</span>
-              </div>
-              @if (!healPlan().canAffordFull) {
-                <div class="warning">
-                  Cannot afford full healing
-                </div>
-              }
-            </div>
-          }
-        </div>
+        </section>
       </div>
     } @else {
       <app-empty-state
