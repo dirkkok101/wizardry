@@ -1,8 +1,7 @@
 import {
   Component,
-  Input,
-  Output,
-  EventEmitter,
+  input,
+  output,
   signal,
   computed,
   effect,
@@ -26,6 +25,7 @@ type SpellLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7
  * - Context filtering for castable spells (combat, dungeon, camp)
  * - 1-2 column layout based on spell count
  * - Modern Retro-Fantasy styling with gold accents
+ * - Auto-selects first available spell type/level when opened
  *
  * @example
  * <!-- Casting mode in dungeon -->
@@ -56,14 +56,16 @@ type SpellLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7
   styleUrls: ['./spell-panel.component.scss']
 })
 export class SpellPanelComponent {
-  @Input({ required: true }) visible!: boolean
-  @Input({ required: true }) character!: Character
-  @Input() mode: 'casting' | 'viewing' = 'viewing'
-  @Input() context: 'dungeon' | 'combat' | 'camp' = 'dungeon'
-  @Input() title: string = 'SPELL BOOK'
+  // Signal-based inputs
+  readonly visible = input(false)
+  readonly character = input.required<Character>()
+  readonly mode = input<'casting' | 'viewing'>('viewing')
+  readonly context = input<'dungeon' | 'combat' | 'camp'>('dungeon')
+  readonly title = input('SPELL BOOK')
 
-  @Output() spellSelected = new EventEmitter<SpellData>()
-  @Output() closed = new EventEmitter<void>()
+  // Outputs
+  readonly spellSelected = output<SpellData>()
+  readonly closed = output<void>()
 
   // State
   readonly activeCasterType = signal<CasterType>('mage')
@@ -75,7 +77,9 @@ export class SpellPanelComponent {
   constructor() {
     // Auto-select first available caster type and level when panel opens
     effect(() => {
-      if (this.visible && this.character) {
+      const isVisible = this.visible()
+      const char = this.character()
+      if (isVisible && char) {
         this.selectFirstAvailableTab()
       }
     })
@@ -121,12 +125,13 @@ export class SpellPanelComponent {
    * Get all known spells for a caster type
    */
   private getKnownSpellsForCasterType(casterType: CasterType): SpellData[] {
-    if (!this.character?.knownSpells) return []
+    const char = this.character()
+    if (!char?.knownSpells) return []
 
     const allSpells = SpellDataLoader.getAllSpells()
     const knownSpells: SpellData[] = []
 
-    for (const spellId of this.character.knownSpells) {
+    for (const spellId of char.knownSpells) {
       const spell = allSpells.get(spellId.toLowerCase())
       if (spell && spell.casterType === casterType) {
         knownSpells.push(spell)
@@ -157,7 +162,7 @@ export class SpellPanelComponent {
     const allSpells = this.getSpellsAtLevel(this.activeLevel())
 
     // In casting mode, filter to only castable spells
-    if (this.mode === 'casting') {
+    if (this.mode() === 'casting') {
       return allSpells.filter(spell => this.canCast(spell))
     }
 
@@ -190,13 +195,14 @@ export class SpellPanelComponent {
    * Get SP for a specific caster type and level
    */
   private getSPForLevel(casterType: CasterType, level: SpellLevel): { current: number; max: number } {
-    if (!this.character?.spellPoints) {
+    const char = this.character()
+    if (!char?.spellPoints) {
       return { current: 0, max: 0 }
     }
 
     const pool = casterType === 'mage'
-      ? this.character.spellPoints.mage
-      : this.character.spellPoints.priest
+      ? char.spellPoints.mage
+      : char.spellPoints.priest
 
     if (!pool) {
       return { current: 0, max: 0 }
@@ -215,14 +221,15 @@ export class SpellPanelComponent {
    * Check if a spell can be cast (has sufficient SP and is castable in context)
    */
   canCast(spell: SpellData): boolean {
-    if (this.mode !== 'casting') return false
+    if (this.mode() !== 'casting') return false
 
     // Check SP
     const sp = this.getSPForLevel(spell.casterType as CasterType, spell.level as SpellLevel)
     if (sp.current < 1) return false
 
     // Check context
-    if (!spell.castableIn.includes(this.context === 'camp' ? 'town' : this.context)) {
+    const ctx = this.context()
+    if (!spell.castableIn.includes(ctx === 'camp' ? 'town' : ctx)) {
       return false
     }
 
@@ -257,7 +264,7 @@ export class SpellPanelComponent {
    * Handle spell card click
    */
   onSpellClick(spell: SpellData): void {
-    if (this.mode === 'casting' && this.canCast(spell)) {
+    if (this.mode() === 'casting' && this.canCast(spell)) {
       this.spellSelected.emit(spell)
     }
   }
@@ -327,7 +334,7 @@ export class SpellPanelComponent {
    */
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
-    if (!this.visible) return
+    if (!this.visible()) return
 
     if (event.key === 'Escape') {
       event.preventDefault()
@@ -335,7 +342,7 @@ export class SpellPanelComponent {
     }
 
     // In viewing mode, Enter and Space also close
-    if (this.mode === 'viewing' && (event.key === 'Enter' || event.key === ' ')) {
+    if (this.mode() === 'viewing' && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault()
       this.closed.emit()
     }

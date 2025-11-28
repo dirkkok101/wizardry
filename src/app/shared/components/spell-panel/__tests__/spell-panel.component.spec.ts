@@ -87,6 +87,33 @@ describe('SpellPanelComponent', () => {
     })
   }
 
+  /**
+   * Helper to set signal inputs on the component
+   */
+  function setInputs(inputs: {
+    visible?: boolean
+    character?: Character
+    mode?: 'casting' | 'viewing'
+    context?: 'dungeon' | 'combat' | 'camp'
+    title?: string
+  }): void {
+    if (inputs.character !== undefined) {
+      fixture.componentRef.setInput('character', inputs.character)
+    }
+    if (inputs.visible !== undefined) {
+      fixture.componentRef.setInput('visible', inputs.visible)
+    }
+    if (inputs.mode !== undefined) {
+      fixture.componentRef.setInput('mode', inputs.mode)
+    }
+    if (inputs.context !== undefined) {
+      fixture.componentRef.setInput('context', inputs.context)
+    }
+    if (inputs.title !== undefined) {
+      fixture.componentRef.setInput('title', inputs.title)
+    }
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SpellPanelComponent]
@@ -97,16 +124,14 @@ describe('SpellPanelComponent', () => {
   })
 
   it('should create', () => {
-    component.visible = false
-    component.character = createMageWithSpells()
+    setInputs({ visible: false, character: createMageWithSpells() })
     fixture.detectChanges()
     expect(component).toBeTruthy()
   })
 
   describe('visibility', () => {
     it('does not render when visible is false', () => {
-      component.visible = false
-      component.character = createMageWithSpells()
+      setInputs({ visible: false, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const overlay = fixture.nativeElement.querySelector('.spell-panel-overlay')
@@ -114,8 +139,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('renders when visible is true', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const overlay = fixture.nativeElement.querySelector('.spell-panel-overlay')
@@ -125,9 +149,7 @@ describe('SpellPanelComponent', () => {
 
   describe('header', () => {
     it('displays the title', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.title = 'SELECT SPELL'
+      setInputs({ visible: true, character: createMageWithSpells(), title: 'SELECT SPELL' })
       fixture.detectChanges()
 
       const title = fixture.nativeElement.querySelector('.panel-title')
@@ -135,8 +157,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('displays character name', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const casterInfo = fixture.nativeElement.querySelector('.caster-info')
@@ -146,8 +167,7 @@ describe('SpellPanelComponent', () => {
 
   describe('caster type tabs', () => {
     it('shows only Mage tab for mage characters', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const tabs = fixture.nativeElement.querySelectorAll('.caster-tab')
@@ -156,8 +176,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('shows only Priest tab for priest characters', () => {
-      component.visible = true
-      component.character = createPriestWithSpells()
+      setInputs({ visible: true, character: createPriestWithSpells() })
       fixture.detectChanges()
 
       const tabs = fixture.nativeElement.querySelectorAll('.caster-tab')
@@ -166,8 +185,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('shows both tabs for bishop characters', () => {
-      component.visible = true
-      component.character = createBishopWithSpells()
+      setInputs({ visible: true, character: createBishopWithSpells() })
       fixture.detectChanges()
 
       const tabs = fixture.nativeElement.querySelectorAll('.caster-tab')
@@ -177,8 +195,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('switches caster type when tab clicked', () => {
-      component.visible = true
-      component.character = createBishopWithSpells()
+      setInputs({ visible: true, character: createBishopWithSpells() })
       fixture.detectChanges()
 
       // Initially mage (first available)
@@ -194,8 +211,7 @@ describe('SpellPanelComponent', () => {
 
   describe('spell level tabs', () => {
     it('displays 7 level tabs', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const levelTabs = fixture.nativeElement.querySelectorAll('.level-tab')
@@ -203,8 +219,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('marks tabs with no spells as empty', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const emptyTabs = fixture.nativeElement.querySelectorAll('.level-tab.empty')
@@ -213,8 +228,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('switches level when tab clicked', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       // Click L2 tab (index 1)
@@ -226,8 +240,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('displays SP for active caster type and level', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const spDisplay = fixture.nativeElement.querySelector('.sp-display')
@@ -236,8 +249,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('updates SP display when level changes', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       // Switch to L2
@@ -251,8 +263,7 @@ describe('SpellPanelComponent', () => {
 
   describe('spell list', () => {
     it('displays spells at active level', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const spellCards = fixture.nativeElement.querySelectorAll('.spell-card')
@@ -260,8 +271,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('displays spell name', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const spellNames = fixture.nativeElement.querySelectorAll('.spell-name')
@@ -271,8 +281,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('displays spell effect', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const spellEffects = fixture.nativeElement.querySelectorAll('.spell-effect')
@@ -280,8 +289,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('disables level tabs that have no spells', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       // L7 tab should be disabled (no L7 spells known)
@@ -291,8 +299,7 @@ describe('SpellPanelComponent', () => {
     })
 
     it('does not switch to level with no spells', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const initialLevel = component.activeLevel()
@@ -305,10 +312,7 @@ describe('SpellPanelComponent', () => {
 
   describe('casting mode', () => {
     it('shows cast buttons in casting mode', () => {
-      component.visible = true
-      component.character = createPriestWithSpells()
-      component.mode = 'casting'
-      component.context = 'dungeon'
+      setInputs({ visible: true, character: createPriestWithSpells(), mode: 'casting', context: 'dungeon' })
       fixture.detectChanges()
 
       const castButtons = fixture.nativeElement.querySelectorAll('.cast-button')
@@ -318,10 +322,7 @@ describe('SpellPanelComponent', () => {
     it('filters out spells when insufficient SP in casting mode', () => {
       const char = createMageWithSpells()
       char.spellPoints!.mage!.level1 = { current: 0, max: 3 }  // Empty SP at L1
-      component.visible = true
-      component.character = char
-      component.mode = 'casting'
-      component.context = 'combat'
+      setInputs({ visible: true, character: char, mode: 'casting', context: 'combat' })
       fixture.detectChanges()
 
       // With 0 SP at L1, no L1 spells should be shown
@@ -332,9 +333,7 @@ describe('SpellPanelComponent', () => {
     it('shows all spells at level in viewing mode regardless of SP', () => {
       const char = createMageWithSpells()
       char.spellPoints!.mage!.level1 = { current: 0, max: 3 }  // Empty SP
-      component.visible = true
-      component.character = char
-      component.mode = 'viewing'
+      setInputs({ visible: true, character: char, mode: 'viewing' })
       fixture.detectChanges()
 
       // In viewing mode, should still show L1 spells
@@ -361,10 +360,7 @@ describe('SpellPanelComponent', () => {
           }
         }
       })
-      component.visible = true
-      component.character = char
-      component.mode = 'casting'
-      component.context = 'dungeon'  // BADIOS not castable in dungeon
+      setInputs({ visible: true, character: char, mode: 'casting', context: 'dungeon' })
       fixture.detectChanges()
 
       // BADIOS should be filtered out in dungeon context
@@ -373,11 +369,9 @@ describe('SpellPanelComponent', () => {
     })
 
     it('emits spellSelected when spell clicked', () => {
-      const spy = jest.spyOn(component.spellSelected, 'emit')
-      component.visible = true
-      component.character = createPriestWithSpells()
-      component.mode = 'casting'
-      component.context = 'dungeon'
+      const spy = jest.fn()
+      component.spellSelected.subscribe(spy)
+      setInputs({ visible: true, character: createPriestWithSpells(), mode: 'casting', context: 'dungeon' })
       fixture.detectChanges()
 
       // Find a castable spell (DIOS is castable in dungeon)
@@ -391,9 +385,7 @@ describe('SpellPanelComponent', () => {
 
   describe('viewing mode', () => {
     it('hides cast buttons in viewing mode', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'viewing'
+      setInputs({ visible: true, character: createMageWithSpells(), mode: 'viewing' })
       fixture.detectChanges()
 
       const castButtons = fixture.nativeElement.querySelectorAll('.cast-button')
@@ -401,10 +393,9 @@ describe('SpellPanelComponent', () => {
     })
 
     it('spells are not clickable in viewing mode', () => {
-      const spy = jest.spyOn(component.spellSelected, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'viewing'
+      const spy = jest.fn()
+      component.spellSelected.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells(), mode: 'viewing' })
       fixture.detectChanges()
 
       const spellCard = fixture.nativeElement.querySelector('.spell-card')
@@ -416,10 +407,9 @@ describe('SpellPanelComponent', () => {
 
   describe('keyboard handling', () => {
     it('closes on ESC in casting mode', () => {
-      const spy = jest.spyOn(component.closed, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'casting'
+      const spy = jest.fn()
+      component.closed.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells(), mode: 'casting' })
       fixture.detectChanges()
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' })
@@ -429,10 +419,9 @@ describe('SpellPanelComponent', () => {
     })
 
     it('closes on ESC in viewing mode', () => {
-      const spy = jest.spyOn(component.closed, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'viewing'
+      const spy = jest.fn()
+      component.closed.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells(), mode: 'viewing' })
       fixture.detectChanges()
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' })
@@ -442,10 +431,9 @@ describe('SpellPanelComponent', () => {
     })
 
     it('closes on Enter in viewing mode', () => {
-      const spy = jest.spyOn(component.closed, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'viewing'
+      const spy = jest.fn()
+      component.closed.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells(), mode: 'viewing' })
       fixture.detectChanges()
 
       const event = new KeyboardEvent('keydown', { key: 'Enter' })
@@ -455,10 +443,9 @@ describe('SpellPanelComponent', () => {
     })
 
     it('does not close on Enter in casting mode', () => {
-      const spy = jest.spyOn(component.closed, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'casting'
+      const spy = jest.fn()
+      component.closed.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells(), mode: 'casting' })
       fixture.detectChanges()
 
       const event = new KeyboardEvent('keydown', { key: 'Enter' })
@@ -470,9 +457,9 @@ describe('SpellPanelComponent', () => {
 
   describe('backdrop click', () => {
     it('closes on backdrop click', () => {
-      const spy = jest.spyOn(component.closed, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
+      const spy = jest.fn()
+      component.closed.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const overlay = fixture.nativeElement.querySelector('.spell-panel-overlay')
@@ -482,9 +469,9 @@ describe('SpellPanelComponent', () => {
     })
 
     it('does not close on panel click', () => {
-      const spy = jest.spyOn(component.closed, 'emit')
-      component.visible = true
-      component.character = createMageWithSpells()
+      const spy = jest.fn()
+      component.closed.subscribe(spy)
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const panel = fixture.nativeElement.querySelector('.spell-panel')
@@ -496,8 +483,7 @@ describe('SpellPanelComponent', () => {
 
   describe('getSpellEffect', () => {
     beforeEach(() => {
-      component.visible = true
-      component.character = createMageWithSpells()
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
     })
 
@@ -515,24 +501,62 @@ describe('SpellPanelComponent', () => {
   })
 
   describe('footer', () => {
-    it('shows ESC instruction in casting mode', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'casting'
+    it('shows ESC instruction', () => {
+      setInputs({ visible: true, character: createMageWithSpells() })
       fixture.detectChanges()
 
       const instruction = fixture.nativeElement.querySelector('.instruction')
-      expect(instruction?.textContent).toContain('Press ESC to cancel')
+      expect(instruction?.textContent).toContain('Press ESC to close')
+    })
+  })
+
+  describe('auto-selection', () => {
+    it('auto-selects first available caster type when opened', () => {
+      // Start with visible=false
+      setInputs({ visible: false, character: createPriestWithSpells() })
+      fixture.detectChanges()
+
+      // Now open the panel
+      setInputs({ visible: true })
+      fixture.detectChanges()
+
+      // Should auto-select priest (only available type)
+      expect(component.activeCasterType()).toBe('priest')
     })
 
-    it('shows multiple close options in viewing mode', () => {
-      component.visible = true
-      component.character = createMageWithSpells()
-      component.mode = 'viewing'
+    it('auto-selects first available spell level when opened', () => {
+      // Create a character with spells only at L2
+      const char = createTestCharacter({
+        id: 'l2-only',
+        name: 'L2 Only',
+        class: CharacterClass.MAGE,
+        knownSpells: ['dilto'],  // L2 mage spell
+        spellPoints: {
+          mage: {
+            level1: { current: 0, max: 0 },
+            level2: { current: 2, max: 2 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+
+      setInputs({ visible: true, character: char })
       fixture.detectChanges()
 
-      const instruction = fixture.nativeElement.querySelector('.instruction')
-      expect(instruction?.textContent).toContain('Press ESC, Enter, or Space to close')
+      // Should auto-select L2 (first level with spells)
+      expect(component.activeLevel()).toBe(2)
+    })
+
+    it('auto-selects mage for bishop with both spell types', () => {
+      setInputs({ visible: true, character: createBishopWithSpells() })
+      fixture.detectChanges()
+
+      // Should auto-select mage (first in order)
+      expect(component.activeCasterType()).toBe('mage')
     })
   })
 })

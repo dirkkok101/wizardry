@@ -1,11 +1,11 @@
-@if (visible) {
+@if (visible()) {
   <div class="spell-panel-overlay" (click)="onBackdropClick($event)">
     <div class="spell-panel" (click)="$event.stopPropagation()">
 
       <!-- Header -->
       <header class="panel-header">
-        <h2 class="panel-title">{{ title }}</h2>
-        <div class="caster-info">{{ character.name }}</div>
+        <h2 class="panel-title">{{ title() }}</h2>
+        <div class="caster-info">{{ character().name }}</div>
       </header>
 
       <!-- Caster Type Tabs (Mage/Priest) + SP Display -->
@@ -57,12 +57,12 @@
         @for (spell of spellsAtActiveLevel(); track spell.id) {
           <div
             class="spell-card"
-            [class.clickable]="mode === 'casting'"
+            [class.clickable]="mode() === 'casting'"
             (click)="onSpellClick(spell)"
           >
             <div class="spell-header">
               <span class="spell-name">{{ spell.name }}</span>
-              @if (mode === 'casting') {
+              @if (mode() === 'casting') {
                 <button
                   class="cast-button"
                   (click)="onSpellClick(spell); $event.stopPropagation()"
@@ -80,13 +80,7 @@
 
       <!-- Footer -->
       <footer class="panel-footer">
-        <span class="instruction">
-          @if (mode === 'casting') {
-            Press ESC to cancel
-          } @else {
-            Press ESC, Enter, or Space to close
-          }
-        </span>
+        <span class="instruction">Press ESC to close</span>
       </footer>
     </div>
   </div>
