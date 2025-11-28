@@ -651,12 +651,25 @@ export class CombatService {
     // Resolve spell effect
     const spellEffect = SpellCastingService.resolveSpellEffect(spellId, caster, targets)
 
+    if (this.DEBUG_COMBAT) {
+      console.log(`[Combat] Spell ${spellId} resolved:`, {
+        targets: targets.length,
+        damage: spellEffect.damage,
+        statusEffects: spellEffect.statusEffects?.length || 0,
+        instantDeath: spellEffect.instantDeath?.length || 0,
+        message: spellEffect.message
+      })
+    }
+
     // Apply damage to targets (if spell has damage)
     let newState = state
     if (spellEffect.damage && spellEffect.damage.length > 0) {
       for (let i = 0; i < targets.length && i < spellEffect.damage.length; i++) {
         const target = targets[i]
         const damage = spellEffect.damage[i]
+        if (this.DEBUG_COMBAT && 'monsterId' in target) {
+          console.log(`[Combat] Spell damage: ${target.name} takes ${damage} damage (HP: ${target.hp} -> ${Math.max(0, target.hp - damage)})`)
+        }
         newState = this.applyDamage(newState, target, damage)
       }
     }
@@ -1700,6 +1713,21 @@ export class CombatService {
 
       // Check victory after each action
       if (this.areAllMonstersDead(currentState)) {
+        if (this.DEBUG_COMBAT) {
+          const aliveMonsters = this.getAllAliveMonsters(currentState)
+          console.log(`[Combat] Victory check after command #${events.length}:`, {
+            allMonstersDead: true,
+            aliveMonsters: aliveMonsters.length,
+            totalEventsCreated: events.length,
+            remainingCommands: sortedQueue.length - events.length
+          })
+          // Log each monster's status
+          for (const group of currentState.monsterGroups) {
+            for (const m of group.monsters) {
+              console.log(`[Combat]   Monster ${m.name}: HP=${m.hp}, status=${m.status}`)
+            }
+          }
+        }
         return {
           events,
           finalState: currentState,
