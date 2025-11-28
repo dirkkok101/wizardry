@@ -164,6 +164,7 @@ export class CharacterPanelComponent {
       case 'moveUp': return '↑';
       case 'moveDown': return '↓';
       case 'add': return 'Add';
+      case 'buy': return 'Buy';
       default: return actionType;
     }
   }

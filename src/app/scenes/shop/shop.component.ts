@@ -9,10 +9,11 @@ import { ItemDataLoader } from '@services/ItemDataLoader';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
-import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
-import { CharacterActionEvent } from '@models/CharacterCardTypes';
+import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
+import { Character } from '@models/Character';
 import { SceneType } from '@models/SceneType';
 import { Item } from '@models/Item';
 import { SHOP_ITEM_IDS } from '@config/shop-inventory';
@@ -37,7 +38,7 @@ type ShopView = 'character-select' | 'buy';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent,
+    CharacterPanelComponent,
     EmptyStateComponent
   ],
   templateUrl: './shop.component.html',
@@ -84,6 +85,24 @@ export class ShopComponent implements OnInit {
   readonly partyCharacters = computed(() =>
     GameStateQueries.partyCharacters(this.gameState.state())
   );
+
+  // Front row characters (positions 1, 2, 3)
+  readonly frontRowCharacters = computed(() =>
+    GameStateQueries.frontRowCharacters(this.gameState.state())
+  );
+
+  // Back row characters (positions 4, 5, 6)
+  readonly backRowCharacters = computed(() =>
+    GameStateQueries.backRowCharacters(this.gameState.state())
+  );
+
+  // Actions available for each character in the shop
+  getActionsForCharacter = (_char: Character): CharacterAction[] => {
+    return [
+      { type: 'buy', label: 'Buy' },
+      { type: 'inspect', label: 'View' }
+    ];
+  };
 
   // Footer menu items based on current view
   readonly footerMenuItems = computed((): MenuItem[] => {

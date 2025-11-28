@@ -28,6 +28,55 @@
   letter-spacing: 0.05em;
 }
 
+// Two-column layout for front/back rows (matching Castle style)
+.formation-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  width: 100%;  // Expand to fill parent before max-width constrains
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.formation-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.row-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-1);
+  margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+// Style the character panel within the formation
+.formation-column {
+  ::ng-deep {
+    .character-panel {
+      flex: 1;
+    }
+
+    .panel-title {
+      display: none; // We use our own row-title
+    }
+
+    .character-stack {
+      padding: 0;
+      gap: var(--space-1);
+    }
+
+    .character-card {
+      padding: var(--space-2);
+    }
+  }
+}
+
 // Main menu view
 .main-view {
   display: flex;
@@ -265,6 +314,11 @@
 
 // Responsive adjustments
 @media (max-width: 768px) {
+  .formation-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
   .item-row {
     flex-direction: column;
     align-items: flex-start;
@@ -278,5 +332,13 @@
   .item-actions {
     width: 100%;
     justify-content: space-between;
+  }
+}
+
+// MacBook Air 13" (1440x900) - smaller row title
+@media (max-height: 900px) {
+  .row-title {
+    font-size: var(--font-size-xs);
+    padding-bottom: 2px;
   }
 }

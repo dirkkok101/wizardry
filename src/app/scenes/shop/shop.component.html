@@ -8,12 +8,26 @@
         <h2 class="view-subtitle">Select a character to shop for:</h2>
 
         @if (partyCharacters().length > 0) {
-          <app-party-character-grid
-            source="party"
-            [actions]="[{type: 'buy', label: 'Buy'}, {type: 'inspect', label: 'View'}]"
-            emptyMessage="No party members available"
-            (actionClick)="handleCharacterAction($event)"
-          />
+          <div class="formation-layout">
+            <div class="formation-column">
+              <h3 class="row-title">Front Row</h3>
+              <app-character-panel
+                [characters]="frontRowCharacters()"
+                [actions]="getActionsForCharacter"
+                [visibleActionTypes]="['buy', 'inspect']"
+                (actionClick)="handleCharacterAction($event)"
+              />
+            </div>
+            <div class="formation-column">
+              <h3 class="row-title">Back Row</h3>
+              <app-character-panel
+                [characters]="backRowCharacters()"
+                [actions]="getActionsForCharacter"
+                [visibleActionTypes]="['buy', 'inspect']"
+                (actionClick)="handleCharacterAction($event)"
+              />
+            </div>
+          </div>
         } @else {
           <app-empty-state
             title="You need party members to shop"
