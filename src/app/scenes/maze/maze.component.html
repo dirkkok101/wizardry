@@ -105,15 +105,18 @@
     </div>
   }
 
-  <!-- Spell Selection Dialog -->
-  <app-spell-selection-dialog
-    [visible]="showSpellDialog()"
-    [spells]="availableSpellOptions()"
-    [caster]="selectedCaster()"
-    [prompt]="'SELECT SPELL'"
-    (spellSelected)="onSpellSelected($event)"
-    (cancelled)="onSpellDialogCancelled()"
-  />
+  <!-- Spell Selection Panel -->
+  @if (selectedCaster()) {
+    <app-spell-panel
+      [visible]="showSpellDialog()"
+      [character]="selectedCaster()!"
+      [mode]="'casting'"
+      [context]="'dungeon'"
+      [title]="'SELECT SPELL'"
+      (spellSelected)="onSpellSelected($event)"
+      (closed)="onSpellDialogCancelled()"
+    />
+  }
 
   <!-- Character Target Selection Dialog -->
   <app-character-selection-dialog

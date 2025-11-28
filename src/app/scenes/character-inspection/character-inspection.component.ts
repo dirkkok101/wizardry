@@ -7,9 +7,7 @@ import { EquipmentService } from '@services/EquipmentService'
 import { InventoryService } from '@services/InventoryService'
 import { SceneNavigationService } from '@services/SceneNavigationService'
 import { SpellLearningService } from '@services/SpellLearningService'
-import { SpellDataLoader } from '@services/SpellDataLoader'
 import { ShopService } from '@services/ShopService'
-import { LoadedSpell } from '@models/SpellDefinition'
 import { GameStateQueries } from '@utils/GameStateQueries'
 import { MessageService } from '@services/MessageService'
 import { Character } from '@models/Character'
@@ -23,8 +21,8 @@ import { ConfirmationDialogComponent } from '@shared/components/confirmation-dia
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
 import { CharacterDetailCardComponent, InspectionMode } from '@shared/components/character-detail-card/character-detail-card.component'
-import { SpellBookDialogComponent } from '@shared/components/spell-book-dialog/spell-book-dialog.component'
-import { SpellSelectionDialogComponent, SpellOption } from '@shared/components/spell-selection-dialog/spell-selection-dialog.component'
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component'
+import { SpellData } from '@services/SpellCastingService'
 import { MenuItem } from '@shared/components/menu/menu.component'
 
 /**
@@ -49,8 +47,7 @@ import { MenuItem } from '@shared/components/menu/menu.component'
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterDetailCardComponent,
-    SpellBookDialogComponent,
-    SpellSelectionDialogComponent
+    SpellPanelComponent
   ],
   templateUrl: './character-inspection.component.html',
   styleUrls: ['./character-inspection.component.scss']
@@ -430,40 +427,10 @@ export class CharacterInspectionComponent {
     this.showSpellBookDialog.set(false)
   }
 
-  // Spell casting (available spell options)
-  readonly availableSpellOptions = computed((): SpellOption[] => {
-    const char = this.character()
-    if (!char || !char.knownSpells) return []
-
-    const options: SpellOption[] = []
-    let index = 1
-
-    for (const spellId of char.knownSpells) {
-      const spell = SpellDataLoader.getSpell(spellId)
-      if (!spell) continue
-
-      // Only dungeon-castable spells
-      if (!spell.castableIn.includes('dungeon')) continue
-
-      // Get spell points for this level
-      const pool = spell.casterType === 'mage' ? char.spellPoints?.mage : char.spellPoints?.priest
-      const levelKey = `level${spell.level}` as keyof typeof pool
-      const spellPoints = pool?.[levelKey] ?? { current: 0, max: 0 }
-
-      options.push({
-        spell,
-        index: index++,
-        enabled: spellPoints.current > 0,
-        spellPoints
-      })
-
-      if (index > 9) break // Max 9 options
-    }
-
-    return options
-  })
-
-  onSpellSelected(spell: LoadedSpell): void {
+  /**
+   * Handle spell selection from SpellPanelComponent
+   */
+  onSpellSelected(spell: SpellData): void {
     this.showSpellCastDialog.set(false)
     // TODO: Implement full spell casting with deduction and effects
     // Spell point deduction and visual effects will provide feedback

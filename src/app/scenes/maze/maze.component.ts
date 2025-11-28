@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
-import { SpellSelectionDialogComponent, SpellOption } from '@shared/components/spell-selection-dialog/spell-selection-dialog.component';
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
@@ -39,7 +39,7 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
     SceneTitleComponent,
     CharacterPanelComponent,
     MessageLogComponent,
-    SpellSelectionDialogComponent,
+    SpellPanelComponent,
     CharacterSelectionDialogComponent
   ],
   templateUrl: './maze.component.html',
@@ -60,7 +60,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly showTargetDialog = signal<boolean>(false);
   readonly selectedCaster = signal<Character | null>(null);
   readonly selectedSpell = signal<SpellData | null>(null);
-  readonly availableSpellOptions = signal<SpellOption[]>([]);
   readonly targetOptions = signal<CharacterOption[]>([]);
 
   // WebGL Renderer
@@ -777,6 +776,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Open the spell selection dialog for a character
+   * SpellPanelComponent handles spell organization and filtering internally
    */
   private openSpellDialog(characterId: string): void {
     const state = this.gameState.state();
@@ -787,30 +787,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Get spells available in dungeon context
-    const spells = SpellCastingService.getSpellsByContext(caster, 'dungeon');
-
-    if (spells.length === 0) {
+    // Check if character has any dungeon-castable spells
+    if (!SpellCastingService.hasSpellsInContext(caster, 'dungeon')) {
       this.addMessage(`${caster.name} has no spells available.`);
       return;
     }
 
-    // Build spell options with spell point info
-    const spellOptions: SpellOption[] = spells.map((spell, index) => {
-      const pool = spell.casterType === 'mage' ? caster.spellPoints?.mage : caster.spellPoints?.priest;
-      const levelKey = `level${spell.level}` as keyof typeof pool;
-      const points = pool?.[levelKey] || { current: 0, max: 0 };
-
-      return {
-        spell,
-        index: index + 1,
-        enabled: points.current > 0,
-        spellPoints: points
-      };
-    });
-
     this.selectedCaster.set(caster);
-    this.availableSpellOptions.set(spellOptions);
     this.showSpellDialog.set(true);
   }
 
@@ -905,7 +888,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showSpellDialog.set(false);
     this.selectedCaster.set(null);
     this.selectedSpell.set(null);
-    this.availableSpellOptions.set([]);
   }
 
   /**

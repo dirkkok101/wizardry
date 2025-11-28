@@ -106,21 +106,24 @@
       />
     }
 
-    <!-- Spell Book Dialog -->
-    <app-spell-book-dialog
+    <!-- Spell Book Panel (viewing mode) -->
+    <app-spell-panel
       [visible]="showSpellBookDialog()"
       [character]="char"
+      [mode]="'viewing'"
+      [title]="char.name + ' - Spell Book'"
       (closed)="closeSpellBookDialog()"
     />
 
-    <!-- Spell Selection Dialog (for casting) -->
-    <app-spell-selection-dialog
+    <!-- Spell Casting Panel (casting mode) -->
+    <app-spell-panel
       [visible]="showSpellCastDialog()"
-      [spells]="availableSpellOptions()"
-      [caster]="char"
-      [prompt]="'SELECT SPELL'"
+      [character]="char"
+      [mode]="'casting'"
+      [context]="'camp'"
+      [title]="'SELECT SPELL'"
       (spellSelected)="onSpellSelected($event)"
-      (cancelled)="onSpellDialogCancelled()"
+      (closed)="onSpellDialogCancelled()"
     />
 
     <app-scene-footer
