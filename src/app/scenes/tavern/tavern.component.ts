@@ -6,6 +6,7 @@ import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { CharacterListItemComponent } from '@shared/components/character-list-item/character-list-item.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
@@ -16,7 +17,7 @@ import { Character } from '@models/Character';
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, CharacterPanelComponent, CharacterListItemComponent, SceneTitleComponent, SceneFooterComponent],
+  imports: [CommonModule, CharacterPanelComponent, CharacterListItemComponent, EmptyStateComponent, SceneTitleComponent, SceneFooterComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })

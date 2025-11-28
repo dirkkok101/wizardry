@@ -5,10 +5,10 @@
   <!-- Character Roster -->
   <main class="roster-content">
     @if (availableCharacters().length === 0) {
-      <div class="empty-state">
-        <p class="empty-title">No characters available</p>
-        <p class="empty-subtitle">Create your first adventurer to begin!</p>
-      </div>
+      <app-empty-state
+        title="No characters available"
+        subtitle="Create your first adventurer to begin!"
+      />
     } @else {
       <div class="character-list">
         @for (char of availableCharacters(); track char.character.id) {

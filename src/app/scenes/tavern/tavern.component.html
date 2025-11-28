@@ -12,7 +12,7 @@
   <section class="available-section">
     <h3 class="row-title">Available Characters</h3>
     @if (availableCharacters().length === 0) {
-      <div class="empty-state">No characters available</div>
+      <app-empty-state title="No characters available" variant="inline" />
     } @else {
       <div class="character-list">
         @for (char of availableCharacters(); track char.id) {
@@ -33,7 +33,7 @@
       <div class="formation-column">
         <h3 class="row-title">Front Row</h3>
         @if (frontRowCharacters().length === 0) {
-          <div class="empty-state">Empty</div>
+          <app-empty-state title="Empty" variant="inline" />
         } @else {
           <app-character-panel
             [characters]="frontRowCharacters()"
@@ -46,7 +46,7 @@
       <div class="formation-column">
         <h3 class="row-title">Back Row</h3>
         @if (backRowCharacters().length === 0) {
-          <div class="empty-state">Empty</div>
+          <app-empty-state title="Empty" variant="inline" />
         } @else {
           <app-character-panel
             [characters]="backRowCharacters()"

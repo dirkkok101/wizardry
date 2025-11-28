@@ -122,15 +122,6 @@
   text-transform: uppercase;
 }
 
-.empty-state {
-  color: var(--color-text-muted);
-  font-style: italic;
-  padding: var(--space-3);
-  text-align: center;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--card-border-radius);
-  font-size: var(--font-size-sm);
-}
 
 // Responsive: stack columns on narrow screens
 @media (max-width: 900px) {

@@ -15,10 +15,10 @@
             (actionClick)="handleCharacterAction($event)"
           />
         } @else {
-          <div class="empty-state">
-            <p>You need party members to shop.</p>
-            <p>Visit the Tavern to recruit characters.</p>
-          </div>
+          <app-empty-state
+            title="You need party members to shop"
+            subtitle="Visit the Tavern to recruit characters"
+          />
         }
       </div>
     }
@@ -59,7 +59,7 @@
               </div>
             </div>
           } @empty {
-            <p class="empty-message">No items available for purchase</p>
+            <app-empty-state title="No items available for purchase" variant="inline" />
           }
         </div>
       </div>

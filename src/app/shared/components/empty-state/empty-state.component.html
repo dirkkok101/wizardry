@@ -1,0 +1,12 @@
+<div class="empty-state" [class.inline]="variant === 'inline'">
+  @if (variant === 'default') {
+    <div class="corner top-left"></div>
+    <div class="corner top-right"></div>
+    <div class="corner bottom-left"></div>
+    <div class="corner bottom-right"></div>
+  }
+  <p class="empty-title">{{ title }}</p>
+  @if (subtitle) {
+    <p class="empty-subtitle">{{ subtitle }}</p>
+  }
+</div>

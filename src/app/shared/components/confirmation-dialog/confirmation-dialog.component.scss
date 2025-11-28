@@ -1,4 +1,5 @@
-@use '../../../../styles/variables' as *;
+// Confirmation Dialog - Modal overlay with yes/no buttons
+// Uses Modern Retro-Fantasy design system with gold accents
 
 .dialog-overlay {
   position: fixed;
@@ -14,48 +15,77 @@
 }
 
 .dialog-content {
-  background: $color-bg-black;
-  border: 2px solid $color-text-bright;
-  padding: $spacing-xl;
+  background: var(--color-bg-darkest);
+  border: 2px solid var(--color-gold-primary);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-4);
   min-width: 300px;
   max-width: 500px;
   text-align: center;
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.2);
 }
 
 .dialog-message {
-  font-size: 18px;
-  color: $color-text-bright;
-  margin-bottom: $spacing-lg;
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
   line-height: 1.5;
 }
 
 .dialog-actions {
   display: flex;
-  gap: $spacing-md;
+  gap: var(--space-3);
   justify-content: center;
 
   button {
-    background: none;
-    border: 1px solid $color-text-green;
-    color: $color-text-green;
-    font-family: $font-mono;
-    font-size: 14px;
-    padding: $spacing-sm $spacing-lg;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-4);
     cursor: pointer;
-    transition: all 0.1s;
+    border-radius: 2px;
+    transition: all 0.15s ease;
+    min-width: 100px;
 
     &:hover {
-      background: $color-text-green;
-      color: $color-bg-black;
+      background: var(--color-text-secondary);
+      color: var(--color-bg-darkest);
     }
 
+    &:active {
+      transform: scale(0.95);
+    }
+
+    // Confirm/Yes button - gold accent
     &.btn-yes {
-      border-color: $color-text-bright;
-      color: $color-text-bright;
+      border-color: var(--color-gold-primary);
+      color: var(--color-gold-primary);
 
       &:hover {
-        background: $color-text-bright;
+        background: var(--color-gold-primary);
+        color: var(--color-bg-darkest);
       }
+    }
+  }
+}
+
+// Responsive: stack buttons on very small screens
+@media (max-width: 400px) {
+  .dialog-content {
+    min-width: auto;
+    margin: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .dialog-actions {
+    flex-direction: column;
+    gap: var(--space-2);
+
+    button {
+      width: 100%;
     }
   }
 }

@@ -7,6 +7,7 @@ import { MessageService } from '@services/MessageService'
 import { GameStateQueries } from '@utils/GameStateQueries'
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component'
 import { CharacterListItemComponent } from '@shared/components/character-list-item/character-list-item.component'
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component'
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
 import { MenuItem } from '@shared/components/menu/menu.component'
@@ -37,6 +38,7 @@ interface CharacterWithStatus {
     CommonModule,
     ConfirmationDialogComponent,
     CharacterListItemComponent,
+    EmptyStateComponent,
     SceneTitleComponent,
     SceneFooterComponent
   ],

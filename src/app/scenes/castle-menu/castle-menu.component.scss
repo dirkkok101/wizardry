@@ -11,8 +11,6 @@
 }
 
 .party-section {
-  background-color: var(--color-bg-card);
-  border-bottom: 1px solid var(--color-border);
   padding: var(--space-2);
 }
 
@@ -64,20 +62,11 @@
   }
 }
 
-.empty-state {
-  text-align: center;
-  padding: var(--space-6) var(--space-4);
-  color: var(--color-text-muted);
 
-  p {
-    margin: var(--space-1) 0;
-    font-size: var(--font-size-base);
-  }
-}
-
-// Content area hidden - currently unused in Castle Menu
+// Content area acts as flex spacer to push footer to bottom
 .content-area {
-  display: none;
+  flex: 1;
+  min-height: 0;
 }
 
 // MacBook Air 13" (1440x900) - smaller row title

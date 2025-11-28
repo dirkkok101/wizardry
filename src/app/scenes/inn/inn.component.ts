@@ -10,6 +10,7 @@ import { SceneFooterComponent } from '@shared/components/scene-footer/scene-foot
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
 import { RestActionCardComponent, RestActionConfig, RestActionType } from '@shared/components/rest-action-card/rest-action-card.component';
 import { RestResultsModalComponent, RestResultsData } from '@shared/components/rest-results-modal/rest-results-modal.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
@@ -35,7 +36,8 @@ import { CharacterStatus } from '@models/CharacterStatus';
     SceneFooterComponent,
     PartyCharacterGridComponent,
     RestActionCardComponent,
-    RestResultsModalComponent
+    RestResultsModalComponent,
+    EmptyStateComponent
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']

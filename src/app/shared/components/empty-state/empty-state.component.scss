@@ -1,0 +1,123 @@
+// Shared Empty State Component
+// Retro-Fantasy aesthetic with decorative corner flourishes
+
+:host {
+  display: block;
+}
+
+.empty-state {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  margin: var(--space-4) auto;
+  max-width: 400px;
+  width: 100%;
+
+  // Atmospheric background
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+
+  // Subtle entrance animation
+  animation: emptyStateReveal 0.4s ease-out;
+}
+
+@keyframes emptyStateReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Decorative corner flourishes
+.corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--color-gold-dim);
+  border-style: solid;
+  border-width: 0;
+
+  &.top-left {
+    top: 6px;
+    left: 6px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+  }
+
+  &.top-right {
+    top: 6px;
+    right: 6px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+  }
+
+  &.bottom-left {
+    bottom: 6px;
+    left: 6px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+  }
+
+  &.bottom-right {
+    bottom: 6px;
+    right: 6px;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+  }
+}
+
+// Title - gold display font
+.empty-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  color: var(--color-text-gold);
+  letter-spacing: 0.05em;
+}
+
+// Subtitle - muted body text
+.empty-subtitle {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+// Inline variant - compact for lists/rows
+.empty-state.inline {
+  padding: var(--space-3);
+  margin: 0;
+  max-width: none;
+  background: transparent;
+  border-style: dashed;
+  animation: none;
+
+  .empty-title {
+    font-size: var(--font-size-sm);
+    font-family: var(--font-body);
+    color: var(--color-text-muted);
+    font-style: italic;
+    letter-spacing: normal;
+  }
+}
+
+// Responsive - tighter spacing on smaller screens
+@media (max-height: 900px) {
+  .empty-state:not(.inline) {
+    padding: var(--space-4) var(--space-3);
+    margin: var(--space-2) auto;
+  }
+}

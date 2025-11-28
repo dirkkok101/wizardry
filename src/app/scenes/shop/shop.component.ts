@@ -10,6 +10,7 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
@@ -36,7 +37,8 @@ type ShopView = 'character-select' | 'buy';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent
+    PartyCharacterGridComponent,
+    EmptyStateComponent
   ],
   templateUrl: './shop.component.html',
   styleUrls: ['./shop.component.scss']
