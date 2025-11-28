@@ -109,7 +109,7 @@ describe('TradeItemDialogComponent', () => {
     expect(component.canReceive(partyMembers[0])).toBe(true); // Gandalf has space
     expect(component.canReceive(partyMembers[1])).toBe(false); // Conan is full
 
-    const labels = fixture.nativeElement.querySelectorAll('.member-option');
+    const labels = fixture.nativeElement.querySelectorAll('.member-row');
     expect(labels.length).toBe(2);
     expect(labels[1].classList.contains('disabled')).toBe(true);
   });
