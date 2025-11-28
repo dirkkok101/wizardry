@@ -1,68 +1,88 @@
-<div class="item-card" [class.equipped]="isEquipped" [class.empty]="!item">
-  <div class="item-header">
-    <span class="item-name">{{ displayName }}</span>
-    @if (item?.cursed && isEquipped) {
-      <span class="cursed-badge">CURSED</span>
-    }
-  </div>
-
-  <div class="item-type">{{ displayType }}</div>
-
-  @if (displayStats) {
-    <div class="item-stats">{{ displayStats }}</div>
+<div class="item-card" [class.equipped]="isEquipped" [class.empty]="!item" [class.unidentified]="item && !item.identified">
+  <!-- Slot indicator for equipment slots -->
+  @if (slot) {
+    <div class="slot-indicator">{{ slotDisplayLabel }}</div>
   }
 
-  @if (showActions && item) {
-    <div class="item-actions">
-      @if (showEquipButton) {
-        <button class="btn-equip" (click)="handleAction('equip')">Equip</button>
+  <div class="item-content">
+    <div class="item-header">
+      <span class="item-name">{{ displayName }}</span>
+      @if (item?.cursed && isEquipped) {
+        <span class="cursed-badge">CURSED</span>
       }
-
-      @if (showUnequipButton) {
-        <button
-          class="btn-unequip"
-          (click)="handleAction('unequip')"
-          [disabled]="item.cursed">
-          {{ item.cursed ? 'Cannot Unequip' : 'Unequip' }}
-        </button>
-      }
-
-      @if (showTradeButton) {
-        <button class="btn-trade" (click)="handleAction('trade')">Trade</button>
-      }
-
-      @if (showDropButton) {
-        <button class="btn-drop" (click)="handleAction('drop')">Drop</button>
-      }
-
-      @if (showUseAction) {
-        <button class="btn-use" (click)="handleAction('use')">Use</button>
-      }
-
-      <!-- Shop context actions -->
-      @if (showSellButton) {
-        <button class="btn-sell" (click)="handleAction('sell')">
-          Sell ({{ sellPrice }}g)
-        </button>
-      }
-
-      @if (showIdentifyButton) {
-        <button
-          class="btn-identify"
-          (click)="handleAction('identify')"
-          [disabled]="!canAffordIdentify">
-          Identify ({{ identifyCost }}g)
-        </button>
-      }
-
-      @if (showUncurseButton) {
-        <button
-          class="btn-uncurse"
-          (click)="handleAction('uncurse')"
-          [disabled]="!canAffordUncurse">
-          Uncurse ({{ uncurseCost }}g)
-        </button>
+      @if (item && !item.identified) {
+        <span class="unidentified-badge">?</span>
       }
     </div>
-  }
+
+    <!-- Always render item-details to maintain consistent height -->
+    <div class="item-details">
+      @if (item) {
+        <span class="item-type">{{ displayType }}</span>
+        @if (displayStats) {
+          <span class="item-stats">{{ displayStats }}</span>
+        }
+      } @else {
+        <span class="item-type">&nbsp;</span>
+      }
+    </div>
+
+    <!-- Always render item-actions to maintain consistent height -->
+    <div class="item-actions">
+      @if (showActions && item) {
+        @if (showEquipButton) {
+          <button class="btn-equip" (click)="handleAction('equip')">Equip</button>
+        }
+
+        @if (showUnequipButton) {
+          <button
+            class="btn-unequip"
+            (click)="handleAction('unequip')"
+            [disabled]="item.cursed">
+            {{ item.cursed ? 'Cursed' : 'Unequip' }}
+          </button>
+        }
+
+        @if (showTradeButton) {
+          <button class="btn-trade" (click)="handleAction('trade')">Trade</button>
+        }
+
+        @if (showDropButton) {
+          <button class="btn-drop" (click)="handleAction('drop')">Drop</button>
+        }
+
+        @if (showUseAction) {
+          <button class="btn-use" (click)="handleAction('use')">Use</button>
+        }
+
+        <!-- Shop context actions -->
+        @if (showSellButton) {
+          <button class="btn-sell" (click)="handleAction('sell')">
+            Sell ({{ sellPrice }}g)
+          </button>
+        }
+
+        @if (showIdentifyButton) {
+          <button
+            class="btn-identify"
+            (click)="handleAction('identify')"
+            [disabled]="!canAffordIdentify">
+            Identify ({{ identifyCost }}g)
+          </button>
+        }
+
+        @if (showUncurseButton) {
+          <button
+            class="btn-uncurse"
+            (click)="handleAction('uncurse')"
+            [disabled]="!canAffordUncurse">
+            Uncurse ({{ uncurseCost }}g)
+          </button>
+        }
+      } @else {
+        <!-- Placeholder to maintain height when no actions -->
+        <span class="actions-placeholder">&nbsp;</span>
+      }
+    </div>
+  </div>
 </div>

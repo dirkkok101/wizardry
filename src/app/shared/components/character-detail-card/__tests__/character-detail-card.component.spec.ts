@@ -37,7 +37,7 @@ describe('CharacterDetailCardComponent', () => {
       const compiled = fixture.nativeElement
       expect(compiled.textContent).toContain('HUMAN')
       expect(compiled.textContent).toContain('MAGE')
-      expect(compiled.textContent).toContain('Lvl 5')
+      expect(compiled.textContent).toContain('LVL 5')
     })
 
     it('displays alignment', () => {
@@ -60,17 +60,18 @@ describe('CharacterDetailCardComponent', () => {
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.textContent).toContain('STR:')
+      // Stats are displayed in separate label/value elements
+      expect(compiled.textContent).toContain('STR')
       expect(compiled.textContent).toContain('15')
-      expect(compiled.textContent).toContain('INT:')
+      expect(compiled.textContent).toContain('INT')
       expect(compiled.textContent).toContain('18')
-      expect(compiled.textContent).toContain('PIE:')
+      expect(compiled.textContent).toContain('PIE')
       expect(compiled.textContent).toContain('12')
-      expect(compiled.textContent).toContain('VIT:')
+      expect(compiled.textContent).toContain('VIT')
       expect(compiled.textContent).toContain('14')
-      expect(compiled.textContent).toContain('AGI:')
+      expect(compiled.textContent).toContain('AGI')
       expect(compiled.textContent).toContain('16')
-      expect(compiled.textContent).toContain('LUK:')
+      expect(compiled.textContent).toContain('LUK')
       expect(compiled.textContent).toContain('10')
     })
 
@@ -84,11 +85,12 @@ describe('CharacterDetailCardComponent', () => {
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.textContent).toContain('HP:')
+      // Combat stats displayed in separate label/value elements
+      expect(compiled.textContent).toContain('HP')
       expect(compiled.textContent).toContain('25/30')
-      expect(compiled.textContent).toContain('AC:')
+      expect(compiled.textContent).toContain('AC')
       expect(compiled.textContent).toContain('5')
-      expect(compiled.textContent).toContain('XP:')
+      expect(compiled.textContent).toContain('XP')
       expect(compiled.textContent).toContain('12,500')
     })
   })
@@ -100,8 +102,8 @@ describe('CharacterDetailCardComponent', () => {
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.querySelector('.xp-progress')).toBeTruthy()
-      expect(compiled.textContent).toContain('Next Level')
+      expect(compiled.querySelector('.xp-bar')).toBeTruthy()
+      expect(compiled.textContent).toContain('to level')
     })
 
     it('hides XP progress when showXpProgress is false', () => {
@@ -110,7 +112,7 @@ describe('CharacterDetailCardComponent', () => {
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.querySelector('.xp-progress')).toBeFalsy()
+      expect(compiled.querySelector('.xp-bar')).toBeFalsy()
     })
 
     it('shows max level message at MAX_LEVEL', () => {
@@ -119,7 +121,7 @@ describe('CharacterDetailCardComponent', () => {
       fixture.detectChanges()
 
       const compiled = fixture.nativeElement
-      expect(compiled.textContent).toContain('Maximum Level Reached')
+      expect(compiled.textContent).toContain('Maximum Level')
     })
   })
 

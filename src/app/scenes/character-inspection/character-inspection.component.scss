@@ -1,42 +1,55 @@
-@use '../../../styles/variables' as *;
+// Character Inspection Scene - Modern Retro-Fantasy theme
+// 3-column layout: Character Stats | Equipment | Inventory
 
-.character-inspection {
-  flex: 1;
-  overflow-y: auto;
-  padding: $spacing-md;
-  background-color: $color-bg-black;
-  color: $color-text-green;
-  font-family: $font-mono;
-  max-width: 900px;
-  margin: 0 auto;
+.inspection-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-darkest);
 }
 
-// Message Banner
+.inspection-content {
+  flex: 1;
+  min-height: 0;  // Critical: allows shrinking in flex container
+  overflow: hidden;
+  padding: var(--space-2);
+}
+
+.inspection-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;  // Equal width columns
+  gap: var(--space-3);
+  height: 100%;
+}
+
+// Message Banner (spans full width)
 .message {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 2px solid;
+  grid-column: 1 / -1;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
   text-align: center;
-  font-weight: bold;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  border-radius: var(--card-border-radius);
   animation: slideDown 0.3s ease-out;
 
-  &.success {
-    background-color: rgba(0, 255, 0, 0.1);
-    border-color: $color-text-green;
-    color: $color-text-green;
+  &.error {
+    background: rgba(220, 38, 38, 0.15);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
   }
 
-  &.error {
-    background-color: rgba(255, 0, 0, 0.1);
-    border-color: $color-error;
-    color: $color-error;
+  &.success {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--color-status-ok);
+    border: 1px solid var(--color-status-ok);
   }
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-1rem);
+    transform: translateY(-0.5rem);
   }
   to {
     opacity: 1;
@@ -44,62 +57,172 @@
   }
 }
 
-// Two-column items grid
-.items-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+// Section headers - consistent .row-title pattern
+.row-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-1);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+// Column 1: Character Stats
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;  // Allow scrolling for casters with spell points
+
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+
+  // Hide the character-detail-card's internal title since we use .row-title
+  ::ng-deep .card-header {
+    padding: var(--space-2);
   }
 }
 
-.equipment-section,
-.inventory-section {
-  h3 {
-    color: $color-text-green;
-    margin: 0 0 0.75rem 0;
-    text-transform: uppercase;
-    font-size: 1rem;
-    border-bottom: 1px solid $color-border;
-    padding-bottom: 0.5rem;
-  }
+// Column 2: Equipment
+.equipment-section {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .equipment-slots {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
 }
 
-.inventory-grid {
+// Column 3: Inventory
+.inventory-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
 }
 
 .empty-inventory {
-  color: $color-text-dim;
+  color: var(--color-text-muted);
   font-style: italic;
-  padding: 1rem;
+  padding: var(--space-3);
   text-align: center;
-  border: 1px dashed $color-border;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--card-border-radius);
+  font-size: var(--font-size-sm);
 }
 
 // No character found state
 .no-character {
   text-align: center;
-  padding: $spacing-xl;
-  color: $color-text-dim;
+  padding: var(--space-4);
+  color: var(--color-text-muted);
   font-style: italic;
-  border: 2px dashed $color-border;
-  margin: $spacing-lg;
+  border: 2px dashed var(--color-border);
+  margin: var(--space-3);
+  border-radius: var(--card-border-radius);
 
   p {
-    color: $color-error;
-    font-size: 1.2rem;
+    color: var(--color-danger);
+    font-size: var(--font-size-lg);
     margin: 0;
+  }
+}
+
+// Responsive: MacBook Air 13" (1440x900) - tighter spacing
+@media (max-height: 900px) {
+  .inspection-content {
+    padding: var(--space-2);
+  }
+
+  .inspection-layout {
+    gap: var(--space-2);
+  }
+
+  .row-title {
+    font-size: var(--font-size-xs);
+    padding-bottom: 2px;
+    margin-bottom: var(--space-1);
+  }
+
+  .equipment-slots,
+  .inventory-list {
+    gap: var(--space-1);
+  }
+}
+
+// Responsive: narrower screens - 2 columns
+@media (max-width: 1024px) {
+  .inspection-layout {
+    grid-template-columns: 280px 1fr;
+  }
+
+  .inventory-section {
+    grid-column: 2;
+  }
+}
+
+// Responsive: mobile - stack all columns
+@media (max-width: 768px) {
+  .inspection-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .stats-section,
+  .equipment-section,
+  .inventory-section {
+    overflow: visible;
   }
 }

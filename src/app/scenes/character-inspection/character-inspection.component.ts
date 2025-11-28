@@ -139,17 +139,13 @@ export class CharacterInspectionComponent {
   })
 
   // Character actions based on mode
+  // Note: Spell Book viewing moved to footer menu
   readonly characterActions = computed((): CharacterAction[] => {
     const char = this.character()
     if (!char) return []
 
     const actions: CharacterAction[] = []
     const mode = this.mode()
-
-    // Spell book viewing available in all modes for casters
-    if (SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
-      actions.push({ type: 'read-spells', label: 'Spells' })
-    }
 
     switch (mode) {
       case 'TRAINING_GROUNDS':
@@ -181,6 +177,12 @@ export class CharacterInspectionComponent {
   // Footer menu items (party-level actions)
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = []
+    const char = this.character()
+
+    // Spell Book option for casters with known spells
+    if (char && SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
+      items.push({ id: 'spells', label: 'Spell Book', shortcut: 'S', enabled: true })
+    }
 
     // Return always available
     items.push({ id: 'back', label: 'Return', shortcut: 'ESC', enabled: true })
@@ -301,7 +303,6 @@ export class CharacterInspectionComponent {
     try {
       const updated = EquipmentService.equipItem(char, item.id)
       this.updateCharacter(updated)
-      this.messages.showSuccess(`Equipped ${item.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to equip item')
     }
@@ -311,7 +312,6 @@ export class CharacterInspectionComponent {
     try {
       const updated = EquipmentService.unequipItem(char, item.slot)
       this.updateCharacter(updated)
-      this.messages.showSuccess(`Unequipped ${item.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to unequip item')
     }
@@ -411,7 +411,6 @@ export class CharacterInspectionComponent {
       this.updateCharacter(result.to)
       this.showTradeDialog.set(false)
       this.pendingAction.set(null)
-      this.messages.showSuccess(`Traded ${pending.item.name} to ${recipient.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to trade item')
     }
@@ -427,7 +426,6 @@ export class CharacterInspectionComponent {
       this.updateCharacter(updated)
       this.showDropDialog.set(false)
       this.pendingAction.set(null)
-      this.messages.showSuccess(`Dropped ${pending.item.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to drop item')
     }
@@ -499,8 +497,13 @@ export class CharacterInspectionComponent {
   }
 
   handleFooterAction(itemId: string): void {
-    if (itemId === 'back') {
-      this.returnToPrevious()
+    switch (itemId) {
+      case 'back':
+        this.returnToPrevious()
+        break
+      case 'spells':
+        this.showSpellBookDialog.set(true)
+        break
     }
   }
 
@@ -512,5 +515,19 @@ export class CharacterInspectionComponent {
       return
     }
     this.returnToPrevious()
+  }
+
+  @HostListener('window:keydown.s')
+  handleSpellsShortcut(): void {
+    // Don't handle if a dialog is open
+    if (this.showTradeDialog() || this.showDropDialog() ||
+        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+      return
+    }
+    // Only open if character is a caster with spells
+    const char = this.character()
+    if (char && SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
+      this.showSpellBookDialog.set(true)
+    }
   }
 }

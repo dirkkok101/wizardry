@@ -11,257 +11,235 @@ The design system balances **retro dungeon crawler aesthetics** with **modern UI
 - **Effects**: Soft gold glows instead of harsh green CRT effects
 - **Cards**: Dark backgrounds with subtle gold borders
 
-This creates an atmosphere that honors the 1981 original while providing a polished modern experience.
+## Quick Reference
 
-## Color Palette
+### Scene Layout Pattern
 
-### Background Colors
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--color-bg-darkest` | `#0a0a0a` | Primary scene backgrounds |
-| `--color-bg-dark` | `#121212` | Secondary backgrounds |
-| `--color-bg-card` | `#1a1a1a` | Card backgrounds |
-| `--color-bg-card-hover` | `#252525` | Card hover state |
-
-### Gold/Amber Accents
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--color-gold-primary` | `#d4a574` | Primary gold accent (borders, text) |
-| `--color-gold-bright` | `#f4c430` | Bright gold (highlights, hover) |
-| `--color-gold-dim` | `rgba(212, 165, 116, 0.6)` | Dimmed gold (secondary elements) |
-| `--color-text-gold` | `#d4a574` | Gold text for emphasis |
-
-### Text Colors
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--color-text-primary` | `#e0e0e0` | Primary text |
-| `--color-text-secondary` | `#a0a0a0` | Secondary/label text |
-| `--color-text-muted` | `#666` | Disabled/muted text |
-
-### Status Colors
-
-| Status | Variable | Value |
-|--------|----------|-------|
-| OK | `--color-status-ok` | `#22c55e` |
-| Poisoned | `--color-status-poisoned` | `#a855f7` |
-| Paralyzed | `--color-status-paralyzed` | `#3b82f6` |
-| Asleep | `--color-status-asleep` | `#6366f1` |
-| Stoned | `--color-status-stoned` | `#78716c` |
-| Dead | `--color-status-dead` | `#6b7280` |
-| Ashes | `--color-status-ashes` | `#44403c` |
-| Lost | `--color-status-lost` | `#1c1917` |
-
-### HP Colors
-
-| Threshold | Variable | Value |
-|-----------|----------|-------|
-| >50% | `--color-hp-healthy` | `#22c55e` |
-| 25-50% | `--color-hp-warning` | `#f59e0b` |
-| <25% | `--color-hp-critical` | `#ef4444` |
-
-### Semantic Colors
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--color-danger` | `#dc2626` | Error states, dangerous actions |
-| `--color-warning` | `#f59e0b` | Warnings |
-| `--color-magic` | `#818cf8` | Spell points, magic effects |
-
-## Typography
-
-### Font Families
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--font-display` | `'Cinzel', Georgia, serif` | Scene titles, headers |
-| `--font-body` | `'JetBrains Mono', monospace` | Stats, buttons, body text |
-
-### Font Sizes
-
-| Variable | Value | Pixels |
-|----------|-------|--------|
-| `--font-size-xs` | `0.75rem` | 12px |
-| `--font-size-sm` | `0.875rem` | 14px |
-| `--font-size-base` | `1rem` | 16px |
-| `--font-size-lg` | `1.125rem` | 18px |
-| `--font-size-xl` | `1.5rem` | 24px |
-
-## Spacing System
-
-Uses a 4px base unit:
-
-| Variable | Value |
-|----------|-------|
-| `--space-1` | `0.25rem` (4px) |
-| `--space-2` | `0.5rem` (8px) |
-| `--space-3` | `0.75rem` (12px) |
-| `--space-4` | `1rem` (16px) |
-| `--space-6` | `1.5rem` (24px) |
-| `--space-8` | `2rem` (32px) |
-
-## Card System
-
-### Card Properties
-
-| Variable | Value |
-|----------|-------|
-| `--card-border-radius` | `4px` |
-| `--card-border` | `1px solid var(--color-border)` |
-| `--card-shadow` | `0 2px 8px rgba(0, 0, 0, 0.4)` |
-| `--card-shadow-hover` | `0 4px 12px rgba(0, 0, 0, 0.5)` |
-
-### Card Variants
-
-#### CharacterCardComponent
-
-Full-featured character display with two variants:
-
-**Default variant** (`variant="default"`):
-- Full height with dividers
-- Larger padding and spacing
-- Best for: dedicated character views, character creation
-
-**Compact variant** (`variant="compact"`):
-- Minimal height, no dividers
-- Tight padding
-- Best for: grids, dense layouts
+Every scene follows this flex container structure:
 
 ```html
-<!-- Default for detail views -->
-<app-character-card [character]="char" />
-
-<!-- Compact for dense layouts -->
-<app-character-card [character]="char" variant="compact" />
+<div class="scene-container">
+  <app-scene-title title="SCENE NAME" [showPartyGold]="true" />
+  <div class="scene-content">
+    <!-- Main content with flex: 1 -->
+  </div>
+  <app-scene-footer [menuItems]="items" (itemSelected)="handle($event)" />
+</div>
 ```
 
-#### CharacterPanelComponent
+```scss
+.scene-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-darkest);
+}
 
-Ultra-compact vertical stack for space-constrained layouts:
-- Single-line name + status code
-- Class/Level + AC on one line
-- Inline HP bar with percentage
-- Weapon and spell points rows
-- Best for: maze sidebars, formation columns
+.scene-content {
+  flex: 1;
+  min-height: 0;  // Critical: allows shrinking
+  overflow: hidden;
+  padding: var(--space-2);
+}
+```
+
+### Character Display Options
+
+| Component | Use Case | Example |
+|-----------|----------|---------|
+| **CharacterPanelComponent** | Party display (Castle Menu, Tavern, Maze) | Formation columns with HP bars |
+| **CharacterCardComponent** | Detail views, character creation | Full stats with configurable fields |
+| **Compact list** | Available characters, selection lists | Single-row items with actions |
+
+### CharacterPanelComponent
 
 ```html
 <app-character-panel
-  [characters]="frontRowCharacters()"
-  [actions]="getActionsForCharacter"
+  [characters]="characters()"
+  [actions]="getActions"
+  [visibleActionTypes]="['inspect', 'cast-spell']"
   (actionClick)="handleAction($event)"
 />
 ```
 
-## Shared Components
+**visibleActionTypes presets:**
+- Maze: `['inspect', 'cast-spell']` (default)
+- Tavern party: `['remove', 'inspect', 'moveUp', 'moveDown']`
+- Castle Menu: `['inspect']`
 
-### SceneTitleComponent
+### Compact List Pattern
 
-Scene header with gold accent styling:
-
-```html
-<app-scene-title title="CASTLE" [showPartyGold]="true" />
-```
-
-Features:
-- Cinzel display font
-- Gold accent border-bottom
-- Optional party gold display
-
-### SceneFooterComponent
-
-Footer menu with gold-themed buttons:
+For available characters or selection lists:
 
 ```html
-<app-scene-footer
-  [menuItems]="footerMenuItems()"
-  (itemSelected)="handleFooterAction($event)"
-/>
+<div class="character-list">
+  @for (char of characters(); track char.id) {
+    <div class="list-item">
+      <span class="char-name">{{ char.name }}</span>
+      <span class="char-info">{{ getClassAbbr(char.class) }} Lv{{ char.level }}</span>
+      <div class="list-actions">
+        <button class="action-btn" (click)="onAction(char.id)">Action</button>
+      </div>
+    </div>
+  }
+</div>
 ```
-
-Features:
-- Charcoal background
-- Gold text for menu items
-- Hover: gold highlight effect
-- Keyboard shortcut support
-
-### PartyCharacterGridComponent
-
-Wraps CharacterCardComponent in a responsive grid:
-
-```html
-<app-party-character-grid
-  source="party"
-  variant="compact"
-  [showFormation]="true"
-  [visibleFields]="['class', 'level', 'hp']"
-  [actions]="[{ type: 'inspect' }]"
-  (actionClick)="handleAction($event)"
-/>
-```
-
-## Responsive Design
-
-### Target Screen: MacBook Air 13"
-
-Primary design target is 1440x900 viewport.
-
-### Breakpoints
-
-| Breakpoint | Width | Usage |
-|------------|-------|-------|
-| Desktop | >900px | Full layout |
-| Tablet | 768-900px | Responsive grid adjustments |
-| Mobile | <768px | Single column layout |
-
-### Height-based Adjustments
 
 ```scss
-@media (max-height: 900px) {
-  // Tighter spacing for MacBook Air
-  .party-section {
-    padding: var(--space-2);
+.character-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+}
+
+.list-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+
+  &:hover {
+    border-color: var(--color-gold-dim);
+    background: var(--color-bg-card-hover);
+  }
+
+  .char-name {
+    font-family: var(--font-display);
+    color: var(--color-text-gold);
+  }
+
+  .char-info {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+}
+
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-gold);
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-body);
+  cursor: pointer;
+  border-radius: 2px;
+
+  &:hover {
+    background: var(--color-gold-primary);
+    color: var(--color-bg-darkest);
   }
 }
 ```
 
-## Animation Guidelines
+### Section Headers
 
-### Transitions
+Use consistent `.row-title` class for all section headers:
+
+```html
+<h3 class="row-title">Section Name</h3>
+```
+
+```scss
+.row-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-1);
+  margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+```
+
+## Color Palette
+
+### Core Colors
 
 | Variable | Value | Usage |
 |----------|-------|-------|
-| `--transition-fast` | `150ms ease` | Hovers, small interactions |
-| `--transition-normal` | `250ms ease` | State changes |
+| `--color-bg-darkest` | `#0a0a0a` | Scene backgrounds |
+| `--color-bg-card` | `#1a1a1a` | Card backgrounds |
+| `--color-bg-card-hover` | `#252525` | Card hover |
+| `--color-gold-primary` | `#d4a574` | Primary accent |
+| `--color-text-gold` | `#d4a574` | Gold text |
+| `--color-text-primary` | `#e0e0e0` | Primary text |
+| `--color-text-secondary` | `#a0a0a0` | Secondary text |
+| `--color-text-muted` | `#666` | Muted text |
+| `--color-border` | `#333` | Borders |
 
-### HP Bar Animation
+### Status Colors
 
-Critical HP bars have a pulsing animation:
+| Status | Variable |
+|--------|----------|
+| OK | `--color-status-ok` (#22c55e) |
+| Poisoned | `--color-status-poisoned` (#a855f7) |
+| Dead | `--color-status-dead` (#6b7280) |
+
+### HP Colors
+
+| Threshold | Variable |
+|-----------|----------|
+| >50% | `--color-hp-healthy` (#22c55e) |
+| 25-50% | `--color-hp-warning` (#f59e0b) |
+| <25% | `--color-hp-critical` (#ef4444) |
+
+## Typography
+
+| Variable | Value | Usage |
+|----------|-------|-------|
+| `--font-display` | `'Cinzel', serif` | Titles, headers |
+| `--font-body` | `'JetBrains Mono', monospace` | Stats, buttons |
+| `--font-size-xs` | `0.75rem` (12px) | Labels |
+| `--font-size-sm` | `0.875rem` (14px) | Body |
+| `--font-size-lg` | `1.125rem` (18px) | Section headers |
+| `--font-size-xl` | `1.5rem` (24px) | Scene titles |
+
+## Spacing
+
+| Variable | Value |
+|----------|-------|
+| `--space-1` | 4px |
+| `--space-2` | 8px |
+| `--space-3` | 12px |
+| `--space-4` | 16px |
+
+## Responsive
+
+### MacBook Air 13" (1440x900)
 
 ```scss
-@keyframes pulse-critical {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+@media (max-height: 900px) {
+  // Reduce padding and gaps
+  .scene-content { padding: var(--space-2); }
+  .formation-layout { gap: var(--space-2); }
 }
 ```
 
 ## Implementation Checklist
 
-When creating a new scene:
+When creating/updating a scene:
 
-1. Use `--color-bg-darkest` as the primary background
-2. Import shared components (SceneTitle, SceneFooter)
-3. Use CSS custom properties for all colors and spacing
-4. Follow the card variant guidelines for character display
-5. Add responsive breakpoints for smaller screens
-6. Use `--font-display` for titles, `--font-body` for content
+1. ✅ Use flex container pattern (container → content → footer)
+2. ✅ Set `min-height: 0` on content area for proper shrinking
+3. ✅ Use CSS custom properties (no legacy SCSS variables)
+4. ✅ Use `--font-display` for titles, `--font-body` for content
+5. ✅ Apply `.row-title` class for section headers
+6. ✅ Add `@media (max-height: 900px)` for tighter spacing
+7. ✅ Test footer visibility on smaller screens
 
-## File Reference
+## Completed Scenes
 
-| File | Purpose |
-|------|---------|
-| `src/styles/variables.scss` | CSS custom properties |
-| `src/styles/_design-tokens.scss` | SCSS variables |
-| `src/styles/_card-mixins.scss` | Reusable card mixins |
-| `src/index.html` | Google Fonts imports |
+| Scene | Status | Pattern Used |
+|-------|--------|--------------|
+| Castle Menu | ✅ | CharacterPanel (2 columns) |
+| Tavern | ✅ | Compact list + CharacterPanel |
+| Temple | Needs update | - |
+| Shop | Needs update | - |
+| Inn | Needs update | - |
+| Training Grounds | Needs update | - |

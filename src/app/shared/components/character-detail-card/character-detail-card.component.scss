@@ -1,108 +1,268 @@
-@use '../../../../styles/variables' as *;
+// Character Detail Card - Modern Retro-Fantasy theme
+// Used in Character Inspection scene for full character stats display
 
 .character-detail-card {
-  border: 2px solid $color-border;
-  padding: 1rem;
-  background: $color-bg-black;
-  color: $color-text-green;
-  font-family: $font-mono;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-2);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
 }
 
+// Header: Single line centered layout
 .card-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  font-size: 1rem;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
 }
 
 .classification {
-  color: $color-text-bright;
-  font-weight: bold;
+  color: var(--color-text-gold);
+  font-family: var(--font-display);
+  font-weight: 500;
 }
 
 .separator {
-  color: $color-text-dim;
+  color: var(--color-text-muted);
 }
 
 .alignment {
-  color: $color-text-bright;
+  color: var(--color-text-gold);
 }
 
 .card-divider {
-  border-top: 1px solid $color-border;
-  margin: 0.75rem 0;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-2) 0;
 }
 
+// Attributes section - vertical stack with modifiers
 .attributes-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-around;
-  gap: 1rem;
+  gap: var(--space-1);
 }
 
 .stat {
-  font-size: 0.95rem;
-  color: $color-text-green;
+  display: grid;
+  grid-template-columns: 32px 28px 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  padding: 2px var(--space-1);
+  border-radius: 2px;
 
-  em {
-    font-style: normal;
+  &:hover {
+    background: var(--color-bg-card-hover);
+  }
+
+  .stat-label {
+    color: var(--color-text-secondary);
+  }
+
+  .stat-value {
     font-weight: bold;
-    color: $color-amber;
+    color: var(--color-text-gold);
+    text-align: right;
+  }
+
+  .stat-modifier {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
   }
 }
 
+// Combat stats section
 .combat-section {
   display: flex;
-  justify-content: space-around;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .combat-stat {
-  font-size: 0.95rem;
-  color: $color-text-green;
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  padding: 2px var(--space-1);
 
   em {
     font-style: normal;
     font-weight: bold;
-    color: $color-amber;
+    color: var(--color-text-gold);
+  }
+
+  // Stats with progress bars get vertical layout
+  &.hp-stat {
+    flex-direction: column;
+    gap: var(--space-1);
   }
 }
 
-.xp-progress {
-  text-align: center;
-  font-size: 0.875rem;
-  color: $color-text-dim;
-  margin-top: 0.5rem;
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  em {
+    font-style: normal;
+    font-weight: bold;
+    color: var(--color-text-gold);
+  }
+}
+
+// XP + History combined section (two-column layout)
+.xp-history-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.xp-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-right: var(--space-2);
+
+  .combat-stat {
+    padding: 2px 0;
+  }
+}
+
+.history-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.history-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  padding: 2px 0;
+
+  em {
+    font-style: normal;
+    font-weight: bold;
+    color: var(--color-text-gold);
+  }
+}
+
+// Progress bar base styles
+.progress-bar {
+  height: 6px;
+  background: var(--color-bg-darkest);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+// HP bar colors
+.hp-healthy {
+  background: linear-gradient(to right, #22c55e, #4ade80);
+}
+
+.hp-wounded {
+  background: linear-gradient(to right, #eab308, #facc15);
+}
+
+.hp-critical {
+  background: linear-gradient(to right, #dc2626, #ef4444);
+}
+
+// XP bar
+.xp-bar .progress-fill {
+  background: linear-gradient(to right, var(--color-gold-dim), var(--color-gold-primary));
+}
+
+.xp-info {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 
   &.max-level {
-    color: $color-amber;
+    color: var(--color-gold-primary);
     font-weight: bold;
   }
 }
 
 .xp-remaining {
-  color: $color-text-green;
+  color: var(--color-status-ok);
 }
 
-// Responsive adjustments
-@media (max-width: 600px) {
-  .stat-row {
-    flex-wrap: wrap;
-    justify-content: center;
+// Responsive adjustments for very narrow widths
+@media (max-width: 320px) {
+  .card-header {
+    flex-direction: column;
+    gap: var(--space-1);
   }
 
-  .combat-section {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+  .separator {
+    display: none;
+  }
+
+  // Fall back to single column on very narrow screens
+  .xp-history-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+// MacBook Air 13" - tighter spacing
+@media (max-height: 900px) {
+  .character-detail-card {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .card-divider {
+    margin: var(--space-1) 0;
+  }
+
+  .card-header {
+    font-size: var(--font-size-xs);
+  }
+
+  .stat {
+    font-size: var(--font-size-xs);
+    padding: 1px var(--space-1);
+    grid-template-columns: 28px 24px 1fr;
+    gap: var(--space-1);
+  }
+
+  .stat .stat-modifier {
+    font-size: 0.65rem;
+  }
+
+  .combat-stat,
+  .history-stat {
+    font-size: var(--font-size-xs);
+    padding: 1px 0;
+  }
+
+  .combat-section,
+  .xp-column,
+  .history-column {
+    gap: var(--space-1);
+  }
+
+  .xp-history-section {
+    gap: var(--space-1);
+  }
+
+  .progress-bar {
+    height: 4px;
+  }
+
+  .xp-info {
+    font-size: 0.65rem;
   }
 }

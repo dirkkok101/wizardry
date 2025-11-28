@@ -26,8 +26,8 @@ This pattern is consistent with other scenes (Maze, Temple, Tavern) where:
 | Action | Type | Location | Available Modes |
 |--------|------|----------|-----------------|
 | **Return/Leave** | Party | Footer | All |
+| **Spell Book** | Party | Footer | All (casters only) |
 | **Pool All Gold** | Party | Footer | Tavern, Camp |
-| **Read Spell Book** | Character | Character Card | All (casters only) |
 | **Cast Spell** | Character | Character Card | Camp only |
 | **Change Class** | Character | Character Card | Training only |
 | **Delete Character** | Character | Character Card | Training only |
@@ -40,9 +40,11 @@ This pattern is consistent with other scenes (Maze, Temple, Tavern) where:
 ### Footer Menu by Mode
 
 ```
-Training Grounds: (ESC) Return
-Tavern:           (P) Pool All Gold    (ESC) Return
-Camp:             (P) Pool All Gold    (ESC) Return
+Training Grounds: (S) Spell Book*              (ESC) Return
+Tavern:           (S) Spell Book*   (P) Pool   (ESC) Return
+Camp:             (S) Spell Book*   (P) Pool   (ESC) Return
+
+* Spell Book only shown for casters with known spells
 ```
 
 ---
@@ -106,18 +108,22 @@ enum InspectionMode {
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │  HUMAN MAGE Lvl 5 • GOOD                        [OK]    │    │
+│  │  HUMAN MAGE LVL 5 • GOOD                         [OK]   │    │
 │  │  ───────────────────────────────────────────────────    │    │
-│  │  STR: 10   INT: 18   PIE: 12                            │    │
-│  │  VIT: 11   AGI: 14   LUK: 13                            │    │
+│  │  STR  10  +0 dmg       AGI  14  +2 AC                   │    │
+│  │  VIT  11  +0 HP/lvl    PIE  12  +1                      │    │
+│  │  INT  18  +4           LUK  13  +6% flee                │    │
 │  │  ───────────────────────────────────────────────────    │    │
-│  │  HP: 15/15    AC: 4    XP: 12,450                       │    │
-│  │  Next Level: 15,000 XP (2,550 to go)                    │    │
+│  │  HP   15/15  [████████████]       AC  4                 │    │
+│  │  Attacks 1/round    Damage 1d4+0                        │    │
 │  │  ───────────────────────────────────────────────────    │    │
-│  │  MAGE SPELLS                                            │    │
-│  │  L1: 3/3  L2: 2/2  L3: 1/1  L4: 0/0                     │    │
+│  │  XP  12,450           │  Age    28 yrs                  │    │
+│  │  [████████░░]         │  Deaths    0                    │    │
+│  │  2,550 to lvl 6       │  Kills    47                    │    │
 │  │  ───────────────────────────────────────────────────    │    │
-│  │  [Spells] [Cast] [Identify]  <- Character Actions       │    │
+│  │  MAGE: L1: 3/3  L2: 2/2  L3: 1/1  L4: 0/0               │    │
+│  │  ───────────────────────────────────────────────────    │    │
+│  │  [Cast] [Identify]  <- Character Actions                │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
 │  ┌─────────────────────────────┬───────────────────────────┐    │
@@ -141,15 +147,17 @@ enum InspectionMode {
 │  └─────────────────────────────┴───────────────────────────┘    │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  (P) Pool All Gold                              (ESC) Return    │
+│  (S) Spell Book   (P) Pool All Gold             (ESC) Return    │
 │  <- Party Actions (Footer Menu)                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Visual Notes:**
-- **Character Card** (top): Shows stats, spell points, and character-level actions
+- **Character Card** (top): Shows stats with modifiers, XP+History side-by-side, spell points
+- **Stat Modifiers**: STR (+dmg), VIT (+HP/lvl), AGI (+AC), LUK (+% flee)
+- **XP/History columns**: Two-column layout saves vertical space for casters
 - **Item Cards** (bottom): Equipment and inventory with item-specific actions
-- **Footer Menu** (bottom): Party-level actions only (Pool Gold, Return)
+- **Footer Menu** (bottom): Spell Book (casters), Pool Gold, Return
 - Actions are context-sensitive based on mode
 - Spell points shown only for caster classes
 - [Use] button only appears in Camp mode for usable items
@@ -218,10 +226,10 @@ L7: [Current]/[Max]
 ### Training Grounds Mode
 
 **Footer Menu (Party Actions):**
+- (S) Spell Book - View spell book (casters only)
 - (ESC) Return - Return to Training Grounds
 
 **Character Card Actions:**
-- [Spells] - View spell book (casters only)
 - [Class] - Change to eligible class
 - [Delete] - Permanently delete character (requires password)
 
@@ -233,11 +241,11 @@ L7: [Current]/[Max]
 ### Tavern Mode
 
 **Footer Menu (Party Actions):**
+- (S) Spell Book - View spell book (casters only)
 - (P) Pool All Gold - Transfer all party gold to pool
 - (ESC) Return - Return to Tavern
 
 **Character Card Actions:**
-- [Spells] - View spell book (casters only)
 - [ID] - Identify items (Bishops only)
 
 **Item Card Actions (Equipment):**
@@ -253,11 +261,11 @@ L7: [Current]/[Max]
 ### Camp Mode (Full Access)
 
 **Footer Menu (Party Actions):**
+- (S) Spell Book - View spell book (casters only)
 - (P) Pool All Gold - Transfer all party gold to pool
 - (ESC) Return - Return to Maze
 
 **Character Card Actions:**
-- [Spells] - View spell book (casters only)
 - [Cast] - Cast dungeon spell (casters only)
 - [ID] - Identify items (Bishops only)
 
@@ -276,20 +284,22 @@ L7: [Current]/[Max]
 
 ## Common Actions (All Modes)
 
-### (R) Read Spell Book
+### (S) Spell Book
 
-**Description:** View character's known spells
+**Description:** View character's known spells (footer menu action)
 
-**Key Binding:** R (case-insensitive)
+**Key Binding:** S (case-insensitive)
 
 **Requirements:**
 - Character is spellcaster (Mage, Priest, Bishop, Lord, Samurai)
+- Character has at least one known spell
 
 **Flow:**
-1. User presses 'R'
-2. Display spell list by level
-3. Show known spells for each level
-4. Press any key to return
+1. User presses 'S'
+2. Spell book dialog opens
+3. Display spell list organized by level
+4. Show known spells for each level with descriptions
+5. Press ESC or click outside to close
 
 **Spell Book Display:**
 
@@ -1001,14 +1011,14 @@ function canAlterPassword(character: Character, oldPassword: string): { allowed:
 
 | Action | Key | Destination | Condition | Mode |
 |--------|-----|-------------|-----------|------|
-| Read | (R) | Spell Book | Is caster | All |
-| Leave | (L) | Parent Scene | Always | All |
+| Spell Book | (S) | Dialog | Is caster | All (footer) |
+| Leave | (ESC) | Parent Scene | Always | All (footer) |
 | Drop | (D) | Inspection | Has items | Tavern, Camp |
 | Pool | (P) | Inspection | Has gold | Tavern, Camp |
 | Identify | (I) | Inspection | Is Bishop | Tavern, Camp |
 | Equip | (E) | Inspection | Has items | Tavern, Camp |
 | Trade | (T) | Inspection | In party | Tavern, Camp |
-| Spell | (S) | Inspection | Is caster | Camp |
+| Cast | - | Inspection | Is caster | Camp (card) |
 | Use | (U) | Inspection | Has items | Camp |
 | Delete | (D) | Training Grounds | Not in party | Training |
 | Change Class | (C) | Inspection | Meets reqs | Training |
@@ -1022,8 +1032,8 @@ function canAlterPassword(character: Character, oldPassword: string): { allowed:
 
 ### Child Scenes
 
-- Character Inspection → (R) → Spell Book Display → Inspection
-- Character Inspection → (L) → Parent Scene
+- Character Inspection → (S) → Spell Book Dialog → Inspection
+- Character Inspection → (ESC) → Parent Scene
 - Character Inspection → (Actions) → Inspection (updated)
 
 ---

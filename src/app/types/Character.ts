@@ -64,6 +64,10 @@ export interface Character {
   // Metadata
   createdAt?: number  // Timestamp of character creation
   lastModified?: number  // Timestamp of last modification
+
+  // Character History/Statistics
+  deathCount: number      // Number of times character has died
+  monsterKills: number    // Total monsters killed by this character
 }
 
 /**
