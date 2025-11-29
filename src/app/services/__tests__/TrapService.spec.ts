@@ -207,18 +207,35 @@ describe('TrapService', () => {
       expect(result.triggered).toBe(false)
     })
 
-    it('should fail when roll is over inspect chance', () => {
-      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 10 })
-      const chest = createTestChest()
+    it('should return random trap name on failed inspection (deception mechanic)', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 18 })
+      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
 
-      // Queue values: first for critical failure check (> 2 = no crit), second for inspect (> 10% = fail)
-      RandomService.queueNextValues([0.5, 0.5])
+      // Queue values: crit check pass, inspection fail, AGI trigger check pass (roll < AGI), random trap pick
+      RandomService.queueNextValues([0.5, 0.99, 0.1, 0.3])
 
       const result = TrapService.attemptInspection(fighter, chest)
 
       expect(result.success).toBe(false)
-      expect(result.trapIdentified).toBeNull()
       expect(result.triggered).toBe(false)
+      // Should return SOME trap name (deception - could be correct by chance)
+      expect(result.trapIdentified).not.toBeNull()
+    })
+
+    it('should trigger trap if AGI check fails on failed inspection', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 5 })
+      const chest = createTestChest()
+
+      // Queue values: crit check pass, inspection fail, AGI trigger check fail (roll >= 5)
+      // AGI check: RandomService.random(0, 19) - if result >= AGI, trap triggers
+      RandomService.queueNextValues([0.5, 0.99])  // crit pass, inspect fail
+      RandomService.queueNextValues([0.5])  // 0.5 * 20 = 10 >= 5 = fail AGI check
+
+      const result = TrapService.attemptInspection(fighter, chest)
+
+      expect(result.success).toBe(false)
+      expect(result.triggered).toBe(true)
+      expect(result.trapIdentified).toBeNull()
     })
 
     it('should trigger trap on critical failure (1-2%)', () => {
@@ -244,6 +261,21 @@ describe('TrapService', () => {
       const result = TrapService.attemptInspection(thief, chest)
 
       expect(result.triggered).toBe(false)
+    })
+
+    it('should return random trap on failed inspection of untrapped chest', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 10 })
+      const chest = createTestChest({ trapped: false, trapType: null })
+
+      // Queue: crit pass, inspect fail, random trap selection
+      RandomService.queueNextValues([0.5, 0.99, 0.3])
+
+      const result = TrapService.attemptInspection(fighter, chest)
+
+      expect(result.success).toBe(false)
+      expect(result.triggered).toBe(false)
+      // Deception: even untrapped chest returns random trap name on failed inspect!
+      expect(result.trapIdentified).not.toBeNull()
     })
   })
 

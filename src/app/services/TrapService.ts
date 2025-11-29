@@ -86,6 +86,14 @@ function calculateInspectChance(character: Character): number {
 /**
  * Attempt to inspect a chest for traps
  *
+ * Original Wizardry 1 behavior (two-stage resolution):
+ * - Success: Return real trap information
+ * - Failure on trapped chest: AGI check to avoid triggering, then return RANDOM trap name
+ * - Failure on untrapped chest: Return RANDOM trap name (deception mechanic!)
+ *
+ * The random trap name on failure is a core deception mechanic - the player
+ * cannot tell if the inspection result is real or not.
+ *
  * @returns InspectionResult with success status, identified trap, and trigger status
  */
 function attemptInspection(character: Character, chest: Chest): TrapInspectionResult {
@@ -102,19 +110,38 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   const chance = calculateInspectChance(character)
   const success = RandomService.chance(chance)
 
-  if (success && chest.trapped) {
+  // SUCCESS - return real information
+  if (success) {
     return {
       success: true,
-      trapIdentified: chest.trapType,
+      trapIdentified: chest.trapped ? chest.trapType : null,
       triggered: false
     }
   }
 
-  // Failed inspection - may return false positive or nothing
-  // Original game behavior: failed roll returns no information
+  // FAILED INSPECTION - Two-stage resolution per original source code
+
+  // Stage 1: AGI-based trigger check (only if trapped)
+  // Original formula: If (RANDOM MOD 20) >= AGI, trap triggers
+  if (chest.trapped) {
+    const triggerRoll = RandomService.random(0, 19)
+    if (triggerRoll >= character.agility) {
+      return {
+        success: false,
+        trapIdentified: null,
+        triggered: true
+      }
+    }
+  }
+
+  // Stage 2: Return RANDOM trap name (misleading!)
+  // This is a core deception mechanic - player cannot tell if result is real
+  const allTraps = Object.values(TrapType)
+  const randomTrap = RandomService.pickRandom(allTraps)
+
   return {
     success: false,
-    trapIdentified: null,
+    trapIdentified: randomTrap,
     triggered: false
   }
 }
