@@ -348,6 +348,20 @@ describe('ChestService', () => {
       const tier5Trap = ChestService.selectTrapType(5)
       expect([TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]).toContain(tier5Trap)
     })
+
+    it('should include SPLINTERS and BLADES in tier 3 traps', () => {
+      RandomService.setSeed(12345)
+      const tier3Traps: TrapType[] = []
+
+      // Generate 100 tier 3 traps to ensure we see the variety
+      for (let i = 0; i < 100; i++) {
+        tier3Traps.push(ChestService.selectTrapType(3))
+      }
+
+      // Both should appear at least once
+      expect(tier3Traps).toContain(TrapType.SPLINTERS)
+      expect(tier3Traps).toContain(TrapType.BLADES)
+    })
   })
 
   describe('generateGold', () => {

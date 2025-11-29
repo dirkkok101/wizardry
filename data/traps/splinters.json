@@ -1,0 +1,8 @@
+{
+  "id": "SPLINTERS",
+  "name": "SPLINTERS",
+  "targetMode": "party",
+  "hitChance": 0.70,
+  "damageFormula": "1d6",
+  "description": "Wooden splinters spray out, hitting party members"
+}

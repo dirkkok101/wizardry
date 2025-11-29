@@ -35,7 +35,7 @@ import { RandomService } from './RandomService'
 const TRAP_TYPES_BY_TIER: Record<RewardTier, TrapType[]> = {
   1: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.ALARM],
   2: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.CROSSBOW_BOLT, TrapType.ALARM],
-  3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.STUNNER, TrapType.TELEPORTER],
+  3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.SPLINTERS, TrapType.BLADES, TrapType.STUNNER, TrapType.TELEPORTER],
   4: [TrapType.EXPLODING_BOX, TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER],
   5: [TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]
 }
