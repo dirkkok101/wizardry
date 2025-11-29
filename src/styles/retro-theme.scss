@@ -9,23 +9,6 @@ body {
   font-family: $font-mono;
   font-size: $font-size-base;
   line-height: 1.5;
-
-  // CRT scanline effect
-  &::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      rgba(18, 16, 16, 0) 50%,
-      rgba(0, 0, 0, 0.25) 50%
-    );
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: 9999;
-  }
 }
 
 // Game container (4:3 aspect ratio, centered)
