@@ -689,6 +689,143 @@ describe('InnService', () => {
       expect(updatedPriest.knownSpells.length).toBeGreaterThan(priest.knownSpells.length)
     })
 
+    it('learns mage spells when mage levels up', () => {
+      // Queue random values for HP roll during level-up
+      RandomService.queueNextValues([0.5]) // HP roll
+
+      // Create a level 2 mage with enough XP to hit level 3
+      // Level 3 mages gain access to level 2 mage spells
+      const mage = createTestCharacter({
+        id: 'mage1',
+        name: 'MERLIN',
+        class: CharacterClass.MAGE,
+        hp: 8,
+        maxHp: 8,
+        level: 2,
+        status: CharacterStatus.OK,
+        experience: 8000, // Needs 4017 for level 3 Mage
+        spellPoints: {
+          mage: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 0, max: 0 }, // No L2 spells yet
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        },
+        knownSpells: ['HALITO', 'MOGREF', 'KATINO', 'DUMAPIC'] // L1 mage spells
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['mage1']
+        },
+        roster: new Map([['mage1', mage]])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.STABLES,
+        weeksNeeded: 1,
+        totalCost: 0,
+        canAffordFull: true,
+        hpPerCharacter: new Map()
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      // Verify level-up occurred
+      expect(result.levelUps.length).toBe(1)
+      expect(result.levelUps[0].characterId).toBe('mage1')
+      expect(result.levelUps[0].newLevel).toBe(3)
+
+      // Verify new spells were learned (L2 mage spells)
+      const newSpells = result.levelUps[0].newSpells
+      expect(newSpells.length).toBeGreaterThan(0)
+      expect(typeof newSpells[0]).toBe('string')
+
+      // Verify the updated character has the new spells in knownSpells
+      const updatedMage = result.updatedState.roster.get('mage1')!
+      expect(updatedMage.knownSpells.length).toBeGreaterThan(mage.knownSpells.length)
+    })
+
+    it('learns both mage and priest spells when bishop levels up', () => {
+      // Queue random values for HP roll during level-up
+      RandomService.queueNextValues([0.5]) // HP roll
+
+      // Create a level 3 bishop with enough XP to hit level 4
+      // Bishops learn both mage and priest spells (with delay)
+      const bishop = createTestCharacter({
+        id: 'bishop1',
+        name: 'PONTIFF',
+        class: CharacterClass.BISHOP,
+        hp: 12,
+        maxHp: 12,
+        level: 3,
+        status: CharacterStatus.OK,
+        experience: 15000, // Needs ~9045 for level 4 Bishop
+        spellPoints: {
+          mage: {
+            level1: { current: 2, max: 2 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          },
+          priest: {
+            level1: { current: 2, max: 2 },
+            level2: { current: 0, max: 0 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        },
+        knownSpells: ['HALITO', 'DIOS'] // Some L1 spells from both schools
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['bishop1']
+        },
+        roster: new Map([['bishop1', bishop]])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.STABLES,
+        weeksNeeded: 1,
+        totalCost: 0,
+        canAffordFull: true,
+        hpPerCharacter: new Map()
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      // Verify level-up occurred
+      expect(result.levelUps.length).toBe(1)
+      expect(result.levelUps[0].characterId).toBe('bishop1')
+      expect(result.levelUps[0].newLevel).toBe(4)
+
+      // Verify new spells were learned
+      const newSpells = result.levelUps[0].newSpells
+      expect(newSpells.length).toBeGreaterThan(0)
+      expect(typeof newSpells[0]).toBe('string')
+
+      // Verify the updated character has the new spells in knownSpells
+      const updatedBishop = result.updatedState.roster.get('bishop1')!
+      expect(updatedBishop.knownSpells.length).toBeGreaterThan(bishop.knownSpells.length)
+    })
+
     it('does not trigger level-up when HP not at max after rest', () => {
       const fighter = createTestCharacter({
         id: 'fighter1',
