@@ -359,7 +359,7 @@ export class InnService {
           newLevel: levelUpResult.levelUpData.newLevel,
           hpIncrease: levelUpResult.levelUpData.hpIncrease,
           statChanges,
-          newSpells: spellResult.newSpells,
+          newSpells: spellResult.newSpells.map(s => s.name),
         })
       }
 

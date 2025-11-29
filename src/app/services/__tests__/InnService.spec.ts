@@ -679,7 +679,10 @@ describe('InnService', () => {
       expect(result.levelUps[0].newLevel).toBe(3)
 
       // Verify new spells were learned (L2 priest spells)
-      expect(result.levelUps[0].newSpells.length).toBeGreaterThan(0)
+      const newSpells = result.levelUps[0].newSpells
+      expect(newSpells.length).toBeGreaterThan(0)
+      // Verify newSpells contains spell names (strings), not Spell objects
+      expect(typeof newSpells[0]).toBe('string')
 
       // Verify the updated character has the new spells in knownSpells
       const updatedPriest = result.updatedState.roster.get('priest1')!
