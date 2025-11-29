@@ -503,6 +503,13 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Store trap info for victory summary (will be merged with treasure results)
+    this.pendingTrapInfo.set({
+      trapTriggered: true,
+      trapType: chest.trapType,
+      trapMessage: result.message
+    })
+
     // Treasure can still be collected after most traps
     console.log('[Chest] No special effect - distributing treasure after trap');
     this.distributeTreasure(chest, opener);

@@ -597,6 +597,35 @@ describe('ChestComponent', () => {
     })
   })
 
+  describe('triggerTrap', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('stores trap results when trap triggers', () => {
+      const opener = component.availableCharacters()[0]
+      component.selectedOpener.set(opener)
+      component.chest.set({
+        id: 'test-chest',
+        trapped: true,
+        trapType: TrapType.POISON_NEEDLE,
+        trapIdentified: false,
+        trapDisarmed: false,
+        rewardTier: 1 as any,
+        contents: { gold: 50, items: [] },
+        sourcePosition: { x: 0, y: 0, facing: 'NORTH' },
+        mazeLevel: 1,
+        source: 'combat_victory'
+      })
+
+      component['triggerTrap'](component.chest()!, opener)
+
+      expect(component.chestResults()?.trapTriggered).toBe(true)
+      expect(component.chestResults()?.trapType).toBe(TrapType.POISON_NEEDLE)
+      expect(component.chestResults()?.trapMessage).toBeDefined()
+    })
+  })
+
   describe('distributeTreasure', () => {
     beforeEach(() => {
       component.ngOnInit()
