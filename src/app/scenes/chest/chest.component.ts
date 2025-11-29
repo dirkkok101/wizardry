@@ -17,6 +17,7 @@ import { CharacterStatus } from '@models/CharacterStatus';
 import { SceneType } from '@models/SceneType';
 import { Chest, TreasureDistributionResult } from '@models/Chest';
 import { TrapType, TrapInspectionResult, TrapDisarmResult, TrapTriggerResult } from '@models/Trap';
+import { Item } from '@models/Item';
 
 /**
  * Scene modes for the chest interaction state machine
@@ -27,7 +28,8 @@ type ChestMode =
   | 'CASTER_SELECT'     // Choosing CALFO caster
   | 'TRAP_NAME_INPUT'   // Entering trap name for disarm
   | 'INVENTORY_WARNING' // Confirmation when inventory could overflow
-  | 'RESULT_DISPLAY';   // Showing trap/treasure outcome
+  | 'RESULT_DISPLAY'    // Showing trap/treasure outcome
+  | 'VICTORY_SUMMARY';  // Showing combined combat + chest rewards
 
 /**
  * Chest Component
@@ -80,6 +82,27 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   // Inventory warning data
   readonly inventoryWarning = signal<string | null>(null);
+
+  // Chest interaction results for victory summary
+  readonly chestResults = signal<{
+    goldObtained: number
+    itemsObtained: Item[]
+    trapTriggered: boolean
+    trapType: TrapType | null
+    trapMessage: string | null
+  } | null>(null)
+
+  // Computed signal for pending combat rewards from game state
+  readonly pendingCombatRewards = computed(() => {
+    return this.gameState.state().pendingCombatRewards
+  })
+
+  // Pending trap info to merge with chest results in distributeTreasure
+  private readonly pendingTrapInfo = signal<{
+    trapTriggered: boolean
+    trapType: TrapType | null
+    trapMessage: string | null
+  } | null>(null)
 
   // Party members (resolved Character objects)
   readonly partyMembers = computed(() => {
@@ -149,6 +172,13 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (mode === 'RESULT_DISPLAY') {
       return [
         { id: 'continue', label: 'Continue', shortcut: 'ENTER', enabled: true }
+      ];
+    }
+
+    // In victory summary mode
+    if (mode === 'VICTORY_SUMMARY') {
+      return [
+        { id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
       ];
     }
 
@@ -258,8 +288,8 @@ export class ChestComponent implements OnInit, OnDestroy {
     }
 
     // Handle Enter for continue
-    if (key === 'ENTER' && mode === 'RESULT_DISPLAY') {
-      console.log('[Chest] ENTER pressed in RESULT_DISPLAY - calling handleContinue');
+    if (key === 'ENTER' && (mode === 'RESULT_DISPLAY' || mode === 'VICTORY_SUMMARY')) {
+      console.log('[Chest] ENTER pressed in', mode, '- calling handleContinue');
       this.handleContinue();
       return;
     }
@@ -480,6 +510,13 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Store trap info for victory summary (will be merged with treasure results)
+    this.pendingTrapInfo.set({
+      trapTriggered: true,
+      trapType: chest.trapType,
+      trapMessage: result.message
+    })
+
     // Treasure can still be collected after most traps
     console.log('[Chest] No special effect - distributing treasure after trap');
     this.distributeTreasure(chest, opener);
@@ -523,6 +560,16 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleTeleport(): void {
     // TODO: Implement random teleport
     this.lastActionMessage.update(m => m + ' You are teleported away!');
+
+    // Set chest results for victory summary (no treasure, trap triggered)
+    this.chestResults.set({
+      goldObtained: 0,
+      itemsObtained: [],
+      trapTriggered: true,
+      trapType: this.chest()?.trapType || null,
+      trapMessage: this.lastActionMessage()
+    });
+
     this.mode.set('RESULT_DISPLAY');
   }
 
@@ -532,6 +579,16 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleAlarm(): void {
     // TODO: Trigger combat encounter
     this.lastActionMessage.update(m => m + ' Monsters approach!');
+
+    // Set chest results for victory summary (no treasure, trap triggered)
+    this.chestResults.set({
+      goldObtained: 0,
+      itemsObtained: [],
+      trapTriggered: true,
+      trapType: this.chest()?.trapType || null,
+      trapMessage: this.lastActionMessage()
+    });
+
     this.mode.set('RESULT_DISPLAY');
   }
 
@@ -579,6 +636,22 @@ export class ChestComponent implements OnInit, OnDestroy {
         }
       };
     });
+
+    // Store results for victory summary (merge with any pending trap info)
+    const trapInfo = this.pendingTrapInfo() ?? {
+      trapTriggered: false,
+      trapType: null,
+      trapMessage: null
+    }
+
+    this.chestResults.set({
+      goldObtained: result.goldAdded,
+      itemsObtained: result.itemsReceived,
+      ...trapInfo
+    })
+
+    // Clear pending trap info
+    this.pendingTrapInfo.set(null)
 
     const message = ChestService.getDistributionMessage(result);
     console.log('[Chest] Distribution message:', message);
@@ -754,8 +827,25 @@ export class ChestComponent implements OnInit, OnDestroy {
    * Handle Leave action
    */
   private handleLeave(): void {
-    console.log('[Chest] handleLeave called - navigating to maze');
-    console.trace('[Chest] handleLeave stack trace');
+    const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
+
+    console.log('[Chest] handleLeave called:', { hasCombatRewards });
+
+    if (hasCombatRewards) {
+      // From combat - show victory summary even if chest abandoned
+      console.log('[Chest] Showing victory summary (chest abandoned)');
+      this.chestResults.set({
+        goldObtained: 0,
+        itemsObtained: [],
+        trapTriggered: false,
+        trapType: null,
+        trapMessage: null
+      });
+      this.mode.set('VICTORY_SUMMARY');
+      return;
+    }
+
+    console.log('[Chest] handleLeave - navigating to maze');
     this.logger.debug('[Chest] Leaving chest');
     this.navigation.navigateTo('maze');
   }
@@ -792,20 +882,44 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleContinue(): void {
     const chest = this.chest();
     const currentMode = this.mode();
+    const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
 
     console.log('[Chest] handleContinue called:', {
       hasChest: !!chest,
       currentMode,
+      hasCombatRewards,
       lastActionMessage: this.lastActionMessage()
     });
 
-    // If chest still has treasure and wasn't a teleport/alarm
+    if (currentMode === 'RESULT_DISPLAY' && hasCombatRewards) {
+      // From combat - show victory summary before maze
+      console.log('[Chest] Transitioning to VICTORY_SUMMARY');
+      this.mode.set('VICTORY_SUMMARY');
+      return;
+    }
+
+    if (currentMode === 'VICTORY_SUMMARY') {
+      // After victory summary - clear rewards and go to maze
+      console.log('[Chest] Navigating to maze from VICTORY_SUMMARY');
+      this.clearCombatRewardsAndNavigate();
+      return;
+    }
+
+    // Non-combat chest or exploration - go directly to maze
     if (chest && currentMode === 'RESULT_DISPLAY') {
-      console.log('[Chest] Navigating to maze from RESULT_DISPLAY');
+      console.log('[Chest] Navigating to maze from RESULT_DISPLAY (no combat rewards)');
       this.navigation.navigateTo('maze');
     } else {
       console.log('[Chest] handleContinue - conditions not met for navigation');
     }
+  }
+
+  private clearCombatRewardsAndNavigate(): void {
+    this.gameState.updateState(state => ({
+      ...state,
+      pendingCombatRewards: undefined
+    }));
+    this.navigation.navigateTo('maze');
   }
 
   /**

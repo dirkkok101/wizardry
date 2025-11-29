@@ -596,4 +596,232 @@ describe('ChestComponent', () => {
       expect(casters.length).toBe(0)
     })
   })
+
+  describe('triggerTrap', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('stores trap results when trap triggers', () => {
+      const opener = component.availableCharacters()[0]
+      component.selectedOpener.set(opener)
+      component.chest.set({
+        id: 'test-chest',
+        trapped: true,
+        trapType: TrapType.POISON_NEEDLE,
+        trapIdentified: false,
+        trapDisarmed: false,
+        rewardTier: 1 as any,
+        contents: { gold: 50, items: [] },
+        sourcePosition: { x: 0, y: 0, facing: 'NORTH' },
+        mazeLevel: 1,
+        source: 'combat_victory'
+      })
+
+      component['triggerTrap'](component.chest()!, opener)
+
+      expect(component.chestResults()?.trapTriggered).toBe(true)
+      expect(component.chestResults()?.trapType).toBe(TrapType.POISON_NEEDLE)
+      expect(component.chestResults()?.trapMessage).toBeDefined()
+    })
+  })
+
+  describe('distributeTreasure', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('stores chest results after distribution', () => {
+      // Setup opener and chest
+      const opener = component.availableCharacters()[0]
+      component.selectedOpener.set(opener)
+      component.chest.set({
+        id: 'test-chest',
+        trapped: false,
+        trapType: null,
+        trapIdentified: true,
+        trapDisarmed: false,
+        rewardTier: 1 as any,
+        contents: { gold: 100, items: [] },
+        sourcePosition: { x: 0, y: 0, facing: 'NORTH' },
+        mazeLevel: 1,
+        source: 'combat_victory'
+      })
+
+      component['distributeTreasure'](component.chest()!, opener)
+
+      expect(component.chestResults()).toBeDefined()
+      expect(component.chestResults()?.goldObtained).toBe(100)
+      expect(component.chestResults()?.trapTriggered).toBe(false)
+    })
+  })
+
+  describe('handleLeave', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('shows victory summary when leaving chest from combat', () => {
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+      component.mode.set('ACTION_SELECT')
+
+      component['handleLeave']()
+
+      expect(component.mode()).toBe('VICTORY_SUMMARY')
+      expect(component.chestResults()?.goldObtained).toBe(0)
+      expect(navigationService.navigateTo).not.toHaveBeenCalled()
+    })
+
+    it('navigates directly to maze when leaving non-combat chest', () => {
+      // No pendingCombatRewards
+      component.mode.set('ACTION_SELECT')
+
+      component['handleLeave']()
+
+      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+    })
+  })
+
+  describe('handleContinue', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('transitions to VICTORY_SUMMARY when coming from combat', () => {
+      // Setup: pending combat rewards indicates this came from combat
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+
+      component.mode.set('RESULT_DISPLAY')
+      component.chest.set({
+        id: 'test',
+        trapped: false,
+        trapType: null,
+        trapIdentified: true,
+        trapDisarmed: false,
+        rewardTier: 1 as any,
+        contents: { gold: 50, items: [] },
+        sourcePosition: { x: 0, y: 0, facing: 'NORTH' },
+        mazeLevel: 1,
+        source: 'combat_victory'
+      })
+
+      component['handleContinue']()
+
+      expect(component.mode()).toBe('VICTORY_SUMMARY')
+      expect(navigationService.navigateTo).not.toHaveBeenCalled()
+    })
+
+    it('navigates to maze from VICTORY_SUMMARY', () => {
+      component.mode.set('VICTORY_SUMMARY')
+
+      component['handleContinue']()
+
+      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+    })
+
+    it('clears pendingCombatRewards when navigating to maze from VICTORY_SUMMARY', () => {
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+      component.mode.set('VICTORY_SUMMARY')
+
+      component['handleContinue']()
+
+      expect(gameState.state().pendingCombatRewards).toBeUndefined()
+    })
+  })
+
+  describe('footerMenuItems', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('shows continue button in VICTORY_SUMMARY mode', () => {
+      component.mode.set('VICTORY_SUMMARY')
+
+      const items = component.footerMenuItems()
+
+      expect(items).toHaveLength(1)
+      expect(items[0].id).toBe('continue')
+      expect(items[0].label).toBe('Return to Maze')
+      expect(items[0].shortcut).toBe('ENTER')
+    })
+  })
+
+  describe('keyboard handling', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('handles ENTER in VICTORY_SUMMARY mode', () => {
+      component.mode.set('VICTORY_SUMMARY')
+      const spy = jest.spyOn(component as any, 'handleContinue')
+
+      component.handleKeyboard(new KeyboardEvent('keydown', { key: 'Enter' }))
+
+      expect(spy).toHaveBeenCalled()
+    })
+  })
+
+  describe('VICTORY_SUMMARY mode', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('has VICTORY_SUMMARY as valid ChestMode', () => {
+      component.mode.set('VICTORY_SUMMARY')
+      expect(component.mode()).toBe('VICTORY_SUMMARY')
+    })
+
+    it('exposes pendingCombatRewards computed signal', () => {
+      // Setup pending rewards in game state
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+
+      expect(component.pendingCombatRewards()).toBeDefined()
+      expect(component.pendingCombatRewards()?.totalXP).toBe(100)
+    })
+
+    it('exposes chestResults signal', () => {
+      component.chestResults.set({
+        goldObtained: 50,
+        itemsObtained: [],
+        trapTriggered: true,
+        trapType: TrapType.GAS_BOMB,
+        trapMessage: 'Everyone is poisoned!'
+      })
+
+      expect(component.chestResults()?.goldObtained).toBe(50)
+      expect(component.chestResults()?.trapTriggered).toBe(true)
+    })
+  })
 })

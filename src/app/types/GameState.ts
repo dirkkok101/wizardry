@@ -51,6 +51,17 @@ export interface Body {
   y: number // Y coordinate (0-19)
 }
 
+/**
+ * Combat rewards pending display after chest interaction.
+ * Stored in GameState to persist across scene transitions.
+ */
+export interface PendingCombatRewards {
+  totalXP: number
+  xpPerCharacter: number
+  livingCharacterCount: number
+  monstersDefeated: number
+}
+
 export interface GameState {
   currentScene: SceneType
   roster: Map<string, Character> // All created characters
@@ -61,6 +72,7 @@ export interface GameState {
   combat?: CombatState // Active combat state (undefined when not in combat)
   bodies?: Map<string, Body> // Dead character bodies left in dungeon (characterId -> body location)
   pendingChest?: Chest // Chest awaiting player interaction (from combat victory or exploration)
+  pendingCombatRewards?: PendingCombatRewards // Combat rewards awaiting victory summary display
 }
 
 export interface SaveData {
