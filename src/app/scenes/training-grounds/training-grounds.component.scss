@@ -63,8 +63,8 @@
 
   &.error {
     background: rgba(239, 68, 68, 0.15);
-    border-left: 3px solid #ef4444;
-    color: #ef4444;
+    border-left: 3px solid var(--color-danger-light);
+    color: var(--color-danger-light);
   }
 
   &.success {

@@ -88,8 +88,8 @@
   margin-top: var(--space-2);
   padding: var(--space-2);
   background: rgba(239, 68, 68, 0.15);
-  border-left: 3px solid #ef4444;
-  color: #ef4444;
+  border-left: 3px solid var(--color-danger-light);
+  color: var(--color-danger-light);
   border-radius: 2px;
 }
 
@@ -150,7 +150,7 @@
       cursor: not-allowed;
 
       .ineligible-marker {
-        color: #ef4444;
+        color: var(--color-danger-light);
         margin-left: var(--space-1);
       }
     }
@@ -184,7 +184,7 @@
   flex-direction: column;
   gap: 0.15rem;
   font-size: var(--font-size-xs);
-  color: #f59e0b;
+  color: var(--color-warning);
   margin-top: 0.25rem;
 }
 
@@ -289,8 +289,8 @@
       margin-top: var(--space-1);
       padding: var(--space-1) var(--space-2);
       background: rgba(239, 68, 68, 0.15);
-      border-left: 3px solid #ef4444;
-      color: #ef4444;
+      border-left: 3px solid var(--color-danger-light);
+      color: var(--color-danger-light);
       font-size: var(--font-size-sm);
       border-radius: 2px;
     }
