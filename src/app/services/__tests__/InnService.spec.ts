@@ -624,6 +624,68 @@ describe('InnService', () => {
       expect(result.levelUps[0].newLevel).toBe(2)
     })
 
+    it('learns new spells when caster levels up', () => {
+      // Queue random values for HP roll during level-up
+      RandomService.queueNextValues([0.5]) // HP roll
+
+      // Create a level 2 priest with enough XP to hit level 3
+      // Level 3 priests gain access to level 2 priest spells
+      const priest = createTestCharacter({
+        id: 'priest1',
+        name: 'ACOLYTE',
+        class: CharacterClass.PRIEST,
+        hp: 15,
+        maxHp: 15,
+        level: 2,
+        status: CharacterStatus.OK,
+        experience: 8000, // Needs 4536 for level 3 Priest
+        spellPoints: {
+          priest: {
+            level1: { current: 3, max: 3 },
+            level2: { current: 0, max: 0 }, // No L2 spells yet
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        },
+        knownSpells: ['DIOS', 'BADIOS', 'KALKI', 'MILWA'] // L1 priest spells
+      })
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          ...createTestGameState().party,
+          gold: 1000,
+          members: ['priest1']
+        },
+        roster: new Map([['priest1', priest]])
+      }
+
+      const plan: PartyHealPlan = {
+        roomTier: RoomType.STABLES,
+        weeksNeeded: 1,
+        totalCost: 0,
+        canAffordFull: true,
+        hpPerCharacter: new Map()
+      }
+
+      const result = InnService.executePartyRest(state, plan, false)
+
+      // Verify level-up occurred
+      expect(result.levelUps.length).toBe(1)
+      expect(result.levelUps[0].characterId).toBe('priest1')
+      expect(result.levelUps[0].newLevel).toBe(3)
+
+      // Verify new spells were learned (L2 priest spells)
+      expect(result.levelUps[0].newSpells.length).toBeGreaterThan(0)
+
+      // Verify the updated character has the new spells in knownSpells
+      const updatedPriest = result.updatedState.roster.get('priest1')!
+      expect(updatedPriest.knownSpells.length).toBeGreaterThan(priest.knownSpells.length)
+    })
+
     it('does not trigger level-up when HP not at max after rest', () => {
       const fighter = createTestCharacter({
         id: 'fighter1',

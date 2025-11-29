@@ -4,6 +4,7 @@ import { GameState } from '@models/GameState'
 import { SpellPointPool } from '@models/SpellPoints'
 import * as PartyService from './PartyService'
 import { LevelUpService } from './LevelUpService'
+import { SpellLearningService } from './SpellLearningService'
 
 export enum RoomType {
   STABLES = 'STABLES',
@@ -329,8 +330,13 @@ export class InnService {
 
       // Check for level-up (requires full HP)
       if (updatedChar.hp === updatedChar.maxHp && LevelUpService.canLevelUp(updatedChar)) {
+        const oldLevel = updatedChar.level
         const levelUpResult = LevelUpService.performLevelUp(updatedChar)
         updatedChar = levelUpResult.updatedCharacter
+
+        // Learn new spells for casters
+        const spellResult = SpellLearningService.learnNewSpells(updatedChar, oldLevel, updatedChar.level)
+        updatedChar = spellResult.updatedCharacter
 
         // Convert stat changes to Record<string, number>
         const statChanges: Record<string, number> = {}
@@ -353,7 +359,7 @@ export class InnService {
           newLevel: levelUpResult.levelUpData.newLevel,
           hpIncrease: levelUpResult.levelUpData.hpIncrease,
           statChanges,
-          newSpells: [], // TODO: Extract from spell point changes
+          newSpells: spellResult.newSpells,
         })
       }
 
