@@ -3,30 +3,36 @@
 **Comprehensive validation of trap, chest, and disarm mechanics in original Wizardry 1.**
 
 ## Research Date
-2025-10-26 (initial), 2025-11-26 (updated with precise formulas)
+2025-10-26 (initial), 2025-11-26 (precise formulas), 2025-11-29 (complete source code verification)
 
 ## Sources
 
 ### Primary Sources
-1. **Wizardry Wiki - Traps**
-   - URL: https://wizardry.fandom.com/wiki/Traps
-   - Status: ✅ Reviewed
-   - Contains: Trap types, basic disarm mechanics
+1. **Thomas William Ewers' Reverse-Engineered Pascal Source Code** (2014)
+   - Apple Asimov Archive: `ftp://ftp.apple.asimov.net/pub/apple_II/images/games/rpg/wizardry/wizardry_I/`
+   - GitHub: [snafaru/Wizardry.Code](https://github.com/snafaru/Wizardry.Code)
+   - Status: ✅ DEFINITIVE SOURCE
+   - Contains: Complete game logic in compilable Pascal
 
-2. **DataDrivenGamer - Treasury of Wizardry**
-   - URL: https://datadrivengamer.blogspot.com/2019/08/the-treasury-of-wizardry.html
+2. **Sir-Tech Official Manual** (Ultimate Wizardry Archives)
    - Status: ✅ Reviewed
-   - Contains: Chest probability tables, trap distribution, treasure mechanics
+   - Contains: Original game documentation, trap descriptions
 
-3. **GOG Forums - What is the deal with thiefs in Wizardry 1?**
+3. **DataDrivenGamer Blog**
+   - [The not-so-basic mechanics of Wizardry](https://datadrivengamer.blogspot.com/2019/08/the-not-so-basic-mechanics-of-wizardry.html)
+   - [The treasury of Wizardry](https://datadrivengamer.blogspot.com/2019/08/the-treasury-of-wizardry.html)
+   - Status: ✅ Reviewed
+   - Contains: Source code analysis, formula verification
+
+4. **Zimlab Wizardry Fan Page**
+   - [Wizardry 1-2-3 Game Calculations](https://www.zimlab.com/wizardry/walk/w123calc.htm)
+   - Status: ✅ Reviewed
+   - Contains: Comprehensive formula reference
+
+5. **GOG Forums - What is the deal with thiefs in Wizardry 1?**
    - URL: https://www.gog.com/forum/wizardry_series/what_is_the_deal_with_thiefs_in_wizardry_1
    - Status: ✅ Reviewed
-   - Contains: Inspect formulas (AGI × 6 for thieves), disarm mechanics (level + 50 bonus)
-
-4. **Strategy Wiki - Walkthrough**
-   - URL: https://strategywiki.org/wiki/Wizardry:_Proving_Grounds_of_the_Mad_Overlord/Walkthrough
-   - Status: ✅ Reviewed
-   - Contains: CALFO mechanics (95% accuracy), chest interaction options
+   - Contains: Player experience and formula verification
 
 ## Summary of Findings
 
@@ -56,58 +62,94 @@ The chest trap selection works as follows:
   - Blades
   - Stunner
 
-### Chest Traps - Apple II Original (8 Base Types)
+### Complete Trap Type Reference (FROM SOURCE CODE)
 
-**1. Poison Needle**
-- **Effect**: Poison damage to character opening chest
-- **Cure**: LATUMOFIS spell or temple
+Wizardry 1 contains **11 trap types** plus untrapped chests. All trap indices and effects are verified from the reverse-engineered source code:
 
-**2. Gas Bomb (Gas Cloud)**
-- **Effect**: Poison gas affects party
-- **Cure**: LATUMOFIS spell or temple
+| Index | Trap Name | Target | Damage/Effect |
+|-------|-----------|--------|---------------|
+| 0 | *(No Trap)* | — | Chest opens safely |
+| 1 | **POISON NEEDLE** | Opener only | Sets poison status to 1 (stacks with repeated needles) |
+| 2 | **GAS BOMB** | Entire party | Each member rolls Save vs. Breath; failure = poisoned |
+| 3 | **CROSSBOW BOLT** | Opener only | `(MazeLevel)d8` damage |
+| 4 | **EXPLODING BOX** | Party (50% each) | Each character has 50% chance of `(MazeLevel)d8` damage |
+| 5 | **SPLINTERS** | Party (70% each) | Each character has 70% chance of `(MazeLevel)d6` damage |
+| 6 | **BLADES** | Party (30% each) | Each character has 30% chance of `(MazeLevel)d12` damage |
+| 7 | **STUNNER** | Opener only | **Immediate paralysis (NO save)** |
+| 8 | **TELEPORTER** | Entire party | Random X,Y coordinates on same maze level, random facing |
+| 9 | **ANTI-MAGE** | Class-specific | Affects Mages, Samurai, Bishops (see below) |
+| 10 | **ANTI-PRIEST** | Class-specific | Affects Priests, Bishops only (**Lords are IMMUNE!**) |
+| 11 | **ALARM** | Indirect | Triggers immediate random encounter |
 
-**3. Crossbow Bolt**
-- **Effect**: Physical damage to character opening chest
-- **Type**: Piercing damage
+### Detailed Trap Effects
 
-**4. Exploding Box**
-- **Effect**: Fire/explosive damage to party
-- **Type**: Area effect
+**1. POISON NEEDLE** (Index 1)
+- **Target**: Opener only
+- **Effect**: Sets poison status to 1 (each needle stacks, increasing poison severity)
+- **Cure**: LATUMOFIS spell or Temple
 
-**5. Splinters** (Apple II Original)
-- **Effect**: Physical damage (exact mechanics unclear from sources)
-- **Note**: One of the "Type3" subtypes in original code
+**2. GAS BOMB** (Index 2)
+- **Target**: Entire party
+- **Effect**: Each party member rolls **Save vs. Breath**
+- **On Failed Save**: Character becomes poisoned
+- **On Successful Save**: No effect
+- **Cure**: LATUMOFIS spell or Temple
 
-**6. Blades** (Apple II Original)
-- **Effect**: Physical damage to party members
-- **Note**: One of the "Type3" subtypes in original code
+**3. CROSSBOW BOLT** (Index 3)
+- **Target**: Opener only
+- **Damage**: `(MazeLevel)d8` (e.g., Level 5 = 5d8 = 5-40 damage)
+- **Type**: Physical piercing damage
 
-**7. Stunner**
-- **Effect**: Stuns/paralyzes character opening chest
-- **Cure**: DIALKO spell or wait for duration
+**4. EXPLODING BOX** (Index 4)
+- **Target**: Each party member individually
+- **Hit Chance**: 50% per character
+- **Damage**: `(MazeLevel)d8` to each affected character
+- **Type**: Fire/explosive damage
 
-**8. Alarm / Siren** (may be later addition)
-- **Effect**: Summons additional monster encounter
-- **Result**: Immediate combat after chest opened
+**5. SPLINTERS** (Index 5)
+- **Target**: Each party member individually
+- **Hit Chance**: 70% per character
+- **Damage**: `(MazeLevel)d6` to each affected character
+- **Type**: Physical damage
 
-### Additional Traps - NES/Later Versions
+**6. BLADES** (Index 6)
+- **Target**: Each party member individually
+- **Hit Chance**: 30% per character
+- **Damage**: `(MazeLevel)d12` to each affected character
+- **Type**: Physical slashing damage
 
-These traps appear in NES and later ports but may not be in the original Apple II version:
+**7. STUNNER** (Index 7)
+- **Target**: Opener only
+- **Effect**: **Immediate paralysis with NO saving throw**
+- **Cure**: DIALKO spell or Temple
 
-**9. Teleporter**
-- **Effect**: Teleports party to random dungeon location
-- **Risk**: Can teleport into walls (instant death) or dangerous areas
-- **Version**: Confirmed in NES version
+**8. TELEPORTER** (Index 8)
+- **Target**: Entire party
+- **Effect**: Teleports to random X,Y coordinates on same maze level
+- **Facing**: Random direction after teleport
+- **Risk**: Can teleport into walls (not in original, but noted in some versions)
 
-**10. Anti-Mage (Mage Blaster)**
-- **Effect**: Targets and damages/paralyzes spellcasters (Mage, Bishop)
-- **Type**: Magic damage
-- **Version**: Confirmed in NES version
+**9. ANTI-MAGE** (Index 9)
+- **Affected Classes**: Mages, Samurai, Bishops
+- **Resolution**: Each affected character rolls **Save vs. Spell**
+- **Mages who FAIL**: Paralyzed; if already paralyzed → **TURNED TO STONE**
+- **Mages who SUCCEED**: Still paralyzed (reduced effect)
+- **Samurai/Bishops who FAIL**: Paralyzed only
+- **Samurai/Bishops who SUCCEED**: **NO effect whatsoever**
 
-**11. Anti-Priest (Priest Blaster)**
-- **Effect**: Targets and damages/paralyzes divine casters (Priest, Bishop, Lord)
-- **Type**: Divine damage
-- **Version**: Confirmed in NES version
+**10. ANTI-PRIEST** (Index 10)
+- **Affected Classes**: Priests, Bishops only
+- **IMPORTANT: Lords are IMMUNE** (despite having priest abilities)
+- **Resolution**: Each affected character rolls **Save vs. Spell**
+- **Priests who FAIL**: Paralyzed; if already paralyzed → **TURNED TO STONE**
+- **Priests who SUCCEED**: Still paralyzed (reduced effect)
+- **Bishops who FAIL**: Paralyzed only
+- **Bishops who SUCCEED**: **NO effect whatsoever**
+
+**11. ALARM** (Index 11)
+- **Target**: Indirect
+- **Effect**: Triggers immediate random encounter based on current maze level
+- **Note**: Party must fight immediately after opening chest
 
 ### Dungeon Traps
 
@@ -165,7 +207,20 @@ Others:   InspectChance% = AGI × 1   (max 95%)
 
 **Other classes are terrible at inspection** - use CALFO spell instead.
 
-### Inspection Risks
+### Inspection Risks (TWO-STAGE RESOLUTION)
+
+**Failed inspection follows a two-stage resolution** (from source code):
+
+**Stage 1 - Trap Trigger Check**:
+```
+If (RANDOM MOD 20) > Agility: Trap immediately activates!
+Otherwise: Proceed to Stage 2
+```
+
+**Stage 2 - False Identification**:
+- If Stage 1 passed, the game displays a **RANDOM trap type** instead of the actual trap
+- This actively misleads subsequent disarm attempts
+- The player cannot distinguish a real identification from a false one
 
 **CRITICAL MECHANIC - Failed Inspection/CALFO**:
 - A **failed** inspect or CALFO does NOT say "failed" or "unknown"
@@ -174,21 +229,37 @@ Others:   InspectChance% = AGI × 1   (max 95%)
 - Players cannot know if the revealed trap name is correct or a random false positive
 - This is why double-checking with both Thief Inspect AND Priest CALFO is recommended
 
-**Critical Failure**: Trap triggered during inspection
-- Small chance to set off trap while inspecting
-- Risk applies to all classes
+**Multiple Inspection Attempts**:
+- Inspection can be attempted **multiple times** by the same or different characters
+- Each attempt carries the risk of triggering the trap (Stage 1 check)
+- The original manual describes this: *"Snatch examines the chest and says that he thinks it is a poison needle trap... Derf pushes him aside and inspects the lock. He thinks it's a crossbow bolt trap."*
 
 ### CALFO Spell (Alternative)
 
 **Spell**: CALFO (Priest Level 2 spell)
-**Effect**: Identify trap type
-**Success Rate**: 95%
-**Advantage**: No risk of triggering trap
-**Disadvantage**: Costs 1 spell point (Level 2)
+**Effect**: Magically identify trap type
+**Success Rate**: 95% (flat rate, no modifiers)
+**Cost**: 1 spell point from Level 2 priest spell allocation
+
+**Classes that can cast CALFO**:
+- **Priests** — Learn priest spells from level 1
+- **Bishops** — Gain priest spells at level 4
+- **Lords** — Gain priest spells at level 4
+
+**Advantages**:
+- No risk of triggering trap (unlike inspection)
+- High success rate (95%)
+- Available early (Level 2 spell)
+
+**Disadvantages**:
+- Costs spell point
+- 5% failure still reveals random trap name (just like failed inspection)
+
+**Original Manual Quote**: CALFO permits the caster *"to determine the nature of a trap on a chest with excellent reliability."*
 
 **Strategy**: Use CALFO + Thief Inspect together for confirmation
 - If both identify same trap type → very high confidence
-- If they differ → one is wrong, be cautious
+- If they differ → favor CALFO for survivable traps, or leave dangerous chests unopened
 
 ---
 
@@ -324,11 +395,79 @@ This gives the character another chance to retry the disarm.
 
 ---
 
+## Saving Throws Relevant to Trap Effects
+
+### Save vs. Breath (resists GAS BOMB poison)
+
+**Formula** (from source code):
+```
+SaveChance = (CharLevel/5 + Luck/6 + ClassBonus + RaceBonus) × 5%
+```
+
+**Race Bonuses**:
+| Race | Bonus | Effect |
+|------|-------|--------|
+| Dwarves | -4 | Adds 20% resistance |
+| Others | 0 | No bonus |
+
+**Class Bonuses**:
+| Class | Bonus | Effect |
+|-------|-------|--------|
+| Thieves | -3 | Adds 15% resistance |
+| Ninjas | -3 | Adds 15% resistance |
+| Others | 0 | No bonus |
+
+### Save vs. Spell (resists ANTI-MAGE/ANTI-PRIEST)
+
+**Formula**: Same base as Save vs. Breath
+
+**Class Bonuses for Save vs. Spell**:
+| Class | Bonus | Effect |
+|-------|-------|--------|
+| Mages | -3 | Adds 15% resistance |
+| Bishops | -2 | Adds 10% resistance |
+| Samurai | -2 | Adds 10% resistance |
+| Ninjas | -2 | Adds 10% resistance |
+
+**Race Bonuses for Save vs. Spell**:
+| Race | Bonus | Effect |
+|------|-------|--------|
+| Hobbits | -3 | Adds 15% resistance |
+| Others | 0 | No bonus |
+
+### Luck Stat Importance
+
+The **Luck stat** contributes to ALL saving throws at approximately **5% per 6 points of Luck**.
+
+Example: A character with 18 Luck gains +15% to all saving throws (18/6 × 5% = 15%).
+
+---
+
 ## Chest Treasure Mechanics
+
+### Treasure Chests Appear After Every Combat
+
+Per the original Sir-Tech manual: *"Regrettably, some groups of monsters are security-conscious and like to hide their money and other valuables in... Treasure Chests."*
+
+Treasure chests materialize immediately after combat resolution:
+1. Experience points announced for surviving party members
+2. Gold piece rewards displayed
+3. Chest interaction screen presented
+
+### Treasure Distribution (FROM SOURCE CODE)
+
+**Gold Distribution**:
+- Gold pieces are divided **evenly among surviving party members**
+- Amount varies by dungeon level and monster difficulty
+
+**Item Distribution**:
+- Items are assigned to a **single randomly-selected party member**
+- NOT the character who opened the chest!
+- Chests may contain multiple items in addition to gold
 
 ### Treasure Contents
 
-**Every chest contains up to 3 items**:
+**Every chest can contain**:
 
 **1. Gold** (100% chance)
 - Always present
@@ -534,7 +673,13 @@ Based on reward tier, chests can have:
 
 ---
 
-## Formulas Summary
+## Formulas Summary (FROM SOURCE CODE)
+
+### RNG Implementation Note
+The original game uses a linear congruential generator. Key RNG calls:
+- `RANDOM MOD 100` for percentage checks
+- `RANDOM MOD 70` for disarm calculations
+- `RANDOM MOD 20` for trigger avoidance checks
 
 ### Trap Inspection
 ```typescript
@@ -553,6 +698,25 @@ function calculateInspectChance(character: Character): number {
   const chance = agi * multiplier
   return Math.min(95, chance)
 }
+
+// Original formula: (RANDOM MOD 100) < (AGI × multiplier)
+function attemptInspect(character: Character): InspectResult {
+  const chance = calculateInspectChance(character)
+  const roll = randomMod(100)
+
+  if (roll < chance) {
+    return { success: true, trapName: actualTrapName }
+  }
+
+  // Failed inspection - two-stage resolution
+  // Stage 1: Check for trap trigger
+  if (randomMod(20) > character.agility) {
+    return { success: false, triggered: true }
+  }
+
+  // Stage 2: Return random (false) trap name
+  return { success: false, trapName: randomTrapName(), triggered: false }
+}
 ```
 
 ### Trap Disarming
@@ -561,24 +725,93 @@ function calculateDisarmChance(character: Character, mazeLevel: number): number 
   const levelBonus = (character.class === 'Thief' || character.class === 'Ninja') ? 50 : 0
   const effectiveLevel = character.level + levelBonus
 
-  // Validated formula from original Wizardry source
+  // Original formula: (RANDOM MOD 70) < (effectiveLevel - mazeLevel)
   const chance = (effectiveLevel - mazeLevel) / 70
   return Math.max(0, Math.min(0.95, chance))  // Clamp 0% to 95%
 }
 
 // If disarm fails, chance to avoid triggering trap
-function calculateTriggerAvoidance(character: Character): number {
-  // RANDOM(0-19) < AGI means trap doesn't activate
-  return character.agility * 0.05  // AGI × 5%
+function calculateTriggerAvoidance(character: Character): boolean {
+  // Original: (RANDOM MOD 20) < AGI means trap doesn't activate
+  return randomMod(20) < character.agility
+}
+
+// Wrong trap name penalty
+function wrongTrapNameSurvival(character: Character): boolean {
+  // Original: Chance to NOT trigger = Level × 0.1%
+  // This is effectively guaranteed to trigger at any reasonable level
+  return randomMod(1000) < character.level  // Level × 0.1%
 }
 ```
 
 ### CALFO Spell
 ```typescript
-function calfoSuccess(): number {
-  return 95 // 95% success rate (fixed)
+function calfoSuccess(): boolean {
+  // Flat 95% success rate
+  return randomMod(100) < 95
+}
+
+// On failure, returns random trap name just like failed inspection
+```
+
+### Saving Throw Calculation
+```typescript
+function calculateSaveVsBreath(character: Character): number {
+  const classBonus = getBreathClassBonus(character.class)  // Thief/Ninja: -3
+  const raceBonus = getBreathRaceBonus(character.race)    // Dwarf: -4
+
+  return (character.level / 5 + character.luck / 6 + classBonus + raceBonus) * 5
+}
+
+function calculateSaveVsSpell(character: Character): number {
+  const classBonus = getSpellClassBonus(character.class)  // Mage: -3, Bishop/Samurai/Ninja: -2
+  const raceBonus = getSpellRaceBonus(character.race)    // Hobbit: -3
+
+  return (character.level / 5 + character.luck / 6 + classBonus + raceBonus) * 5
 }
 ```
+
+### Trap Damage Calculations
+```typescript
+function calculateTrapDamage(trapType: TrapType, mazeLevel: number): TrapDamageResult {
+  switch (trapType) {
+    case TrapType.CROSSBOW_BOLT:
+      // Opener only: (MazeLevel)d8
+      return { targets: 'opener', damage: rollDice(mazeLevel, 8) }
+
+    case TrapType.EXPLODING_BOX:
+      // 50% chance per character: (MazeLevel)d8
+      return { targets: 'party', hitChance: 0.5, damage: rollDice(mazeLevel, 8) }
+
+    case TrapType.SPLINTERS:
+      // 70% chance per character: (MazeLevel)d6
+      return { targets: 'party', hitChance: 0.7, damage: rollDice(mazeLevel, 6) }
+
+    case TrapType.BLADES:
+      // 30% chance per character: (MazeLevel)d12
+      return { targets: 'party', hitChance: 0.3, damage: rollDice(mazeLevel, 12) }
+  }
+}
+```
+
+---
+
+## Implementation Text Strings
+
+**Text strings to implement** (from original game):
+
+| Event | Text String |
+|-------|-------------|
+| Successful disarm | `"DISARMED!"` |
+| Failed disarm (no trigger) | `"You could not disarm it!"` |
+| Trap triggered | `"You set it off!"` |
+| Wrong trap name triggered | `"Oopps... a [TrapName]!"` |
+
+**Implementation Notes**:
+- When disarm fails but AGI save succeeds: Show "You could not disarm it!" and allow retry
+- When disarm fails and AGI save fails: Show "You set it off!" and apply trap damage
+- When wrong trap name entered: Show "Oopps... a [actual trap]!" and apply damage
+- Spelling of "Oopps" with double 'o' and double 'p' is intentional (original game)
 
 ---
 
@@ -599,16 +832,21 @@ function calfoSuccess(): number {
 
 ## Validation Status
 
-- ✅ **Trap Types**: 8 base types (Apple II) + 3 NES additions = 11 total trap types
-- ✅ **Inspect Formula**: AGI × (6 for Thief, 4 for Ninja, 1 for Others), max 95%
-- ✅ **Disarm Formula**: (EffectiveLevel - MazeLevel) / 70, where Thief/Ninja get +50 level bonus
-- ✅ **Failed Disarm Avoidance**: RANDOM(0-19) < AGI = chance to avoid triggering (effectively AGI/20)
-- ✅ **CALFO Spell**: 95% success rate
-- ✅ **Chest Contents**: Multi-item system with inventory risk
-- ✅ **Wrong Trap Name**: Level × 0.1% chance to NOT trigger (99%+ trigger rate at any level)
-- ✅ **Failed Inspection/CALFO**: Reveals RANDOM trap name (misleads player - key mechanic!)
-- ⚠️ **Trap Damage**: Damage values partially specified (varies by trap type and level)
-- ⚠️ **Splinters/Blades Effects**: Exact mechanics unclear from available sources
+- ✅ **Trap Types**: 11 trap types fully documented with indices and effects
+- ✅ **Inspect Formula**: `(RANDOM MOD 100) < (AGI × multiplier)` where multiplier is 6/4/1
+- ✅ **Disarm Formula**: `(RANDOM MOD 70) < (EffectiveLevel - MazeLevel)` with +50 Thief/Ninja bonus
+- ✅ **Failed Disarm Avoidance**: `(RANDOM MOD 20) < AGI` = retry allowed
+- ✅ **CALFO Spell**: 95% flat success rate, Priests/Bishops/Lords only
+- ✅ **Chest Contents**: Gold divided evenly, items to random party member
+- ✅ **Wrong Trap Name**: `Level × 0.1%` chance to NOT trigger (99%+ trigger rate)
+- ✅ **Failed Inspection/CALFO**: Two-stage resolution with trap trigger check then random name
+- ✅ **Trap Damage Formulas**: Complete with `(MazeLevel)dX` and hit chances
+- ✅ **Splinters**: 70% hit chance, `(MazeLevel)d6` damage
+- ✅ **Blades**: 30% hit chance, `(MazeLevel)d12` damage
+- ✅ **Anti-Mage/Anti-Priest**: Save vs. Spell with paralysis/petrification mechanics
+- ✅ **Lords Immunity**: Lords are IMMUNE to Anti-Priest trap
+- ✅ **Saving Throw Formulas**: Complete with class/race bonuses
+- ✅ **Implementation Text Strings**: "DISARMED!", "You could not disarm it!", "You set it off!", "Oopps..."
 
 **Validation Date**: 2025-11-29
 **Validated By**: Claude Code (research compilation with source code verification)

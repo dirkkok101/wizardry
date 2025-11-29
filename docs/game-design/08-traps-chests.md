@@ -32,51 +32,69 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 > **Note**: The trap list below includes both original Apple II traps and NES additions.
 > Our implementation uses the combined set for maximum variety.
 
-### Damage Traps
+### Damage Traps (FROM SOURCE CODE)
 
 **POISON NEEDLE** - Low threat
-- Damage: 1d6 to opener
-- Status: Poison (continues after combat)
+- Target: Opener only
+- Effect: Sets poison status (stacks with repeated needles)
 - Cure: LATUMOFIS spell or Temple
 
-**CROSSBOW BOLT** - Medium threat
-- Damage: 2d8 to opener
-- Status: None
-- Risk: Moderate damage
+**CROSSBOW BOLT** - Medium-High threat (scales with level!)
+- Target: Opener only
+- Damage: `(MazeLevel)d8` (e.g., Level 5 = 5d8 = 5-40 damage)
+- Risk: Deadly on deeper floors
 
 **GAS BOMB** - Medium threat
-- Damage: 2d6 to entire party
-- Status: Poison to all party members
-- Risk: Party-wide damage + poison
+- Target: Entire party (Save vs. Breath to resist)
+- Effect: Poison to party members who fail save
+- Dwarves/Thieves/Ninjas: Bonus to resist
+- Cure: LATUMOFIS spell or Temple
 
-**EXPLODING BOX** - High threat
-- Damage: 3d6 to entire party
-- Status: None
-- Risk: Heavy party-wide damage
+**EXPLODING BOX** - High threat (scales with level!)
+- Target: Each party member (50% chance each)
+- Damage: `(MazeLevel)d8` to each affected character
+- Risk: Heavy party-wide damage on deep floors
+
+**SPLINTERS** - Medium threat
+- Target: Each party member (70% chance each)
+- Damage: `(MazeLevel)d6` to each affected character
+
+**BLADES** - High threat
+- Target: Each party member (30% chance each)
+- Damage: `(MazeLevel)d12` to each affected character
+- Lower hit chance but highest damage per hit
 
 **STUNNER** - Medium threat
-- Damage: 1d4 to opener
-- Status: Paralysis
-- Risk: Disables character (can't act in combat)
+- Target: Opener only
+- Effect: **Immediate paralysis (NO saving throw!)**
+- Cure: DIALKO spell or Temple
 
 ### Class-Specific Traps
 
-**MAGE BLASTER (Anti-Mage)** - High threat
-- Damage: 4d6 to Mages and Bishops
-- Other classes: Immune
-- Risk: Can one-shot low-level mages
+**ANTI-MAGE (Mage Blaster)** - CRITICAL THREAT ⚠️
+- Affected: Mages, Samurai, Bishops
+- Resolution: Save vs. Spell
+- **Mages who FAIL**: Paralyzed → if already paralyzed, **TURNED TO STONE!**
+- **Mages who SUCCEED**: Still paralyzed (reduced effect)
+- **Samurai/Bishops who FAIL**: Paralyzed only
+- **Samurai/Bishops who SUCCEED**: **NO effect**
 
-**PRIEST BLASTER (Anti-Priest)** - High threat
-- Damage: 4d6 to Priests, Bishops, Lords
-- Other classes: Immune
-- Risk: Can one-shot low-level priests
+**ANTI-PRIEST (Priest Blaster)** - CRITICAL THREAT ⚠️
+- Affected: Priests, Bishops only
+- **IMPORTANT: Lords are IMMUNE!** (despite having priest spells)
+- Resolution: Save vs. Spell
+- **Priests who FAIL**: Paralyzed → if already paralyzed, **TURNED TO STONE!**
+- **Priests who SUCCEED**: Still paralyzed (reduced effect)
+- **Bishops who FAIL**: Paralyzed only
+- **Bishops who SUCCEED**: **NO effect**
 
 ### Special Traps
 
 **TELEPORTER** - CRITICAL THREAT ⚠️
-- Effect: Teleports entire party to random location
-- Risk: Can teleport INTO WALLS = instant party death
-- Risk: Can teleport to very dangerous dungeon level
+- Target: Entire party
+- Effect: Teleports to random X,Y on same maze level
+- Facing: Random direction after teleport
+- Risk: Disorienting, may strand party in dangerous area
 - **NEVER trigger this trap** - always disarm first
 
 **ALARM** - Medium threat
