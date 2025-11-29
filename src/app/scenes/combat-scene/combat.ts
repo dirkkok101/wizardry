@@ -351,12 +351,14 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     const combat = this.combatState()
     const hasSpells = this.availableSpells().length > 0
+    // Disable all actions while round is executing
+    const isExecuting = this.isExecutingRound()
 
     return [
-      { id: 'attack', label: 'Attack', shortcut: 'A', enabled: true },
-      { id: 'cast', label: 'Cast Spell', shortcut: 'C', enabled: hasSpells },
-      { id: 'parry', label: 'Parry', shortcut: 'P', enabled: true },
-      { id: 'flee', label: 'Flee', shortcut: 'F', enabled: combat?.canFlee ?? false }
+      { id: 'attack', label: 'Attack', shortcut: 'A', enabled: !isExecuting },
+      { id: 'cast', label: 'Cast Spell', shortcut: 'C', enabled: hasSpells && !isExecuting },
+      { id: 'parry', label: 'Parry', shortcut: 'P', enabled: !isExecuting },
+      { id: 'flee', label: 'Flee', shortcut: 'F', enabled: (combat?.canFlee ?? false) && !isExecuting }
     ]
   })
 
