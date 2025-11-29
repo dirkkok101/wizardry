@@ -597,6 +597,36 @@ describe('ChestComponent', () => {
     })
   })
 
+  describe('distributeTreasure', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('stores chest results after distribution', () => {
+      // Setup opener and chest
+      const opener = component.availableCharacters()[0]
+      component.selectedOpener.set(opener)
+      component.chest.set({
+        id: 'test-chest',
+        trapped: false,
+        trapType: null,
+        trapIdentified: true,
+        trapDisarmed: false,
+        rewardTier: 1 as any,
+        contents: { gold: 100, items: [] },
+        sourcePosition: { x: 0, y: 0, facing: 'NORTH' },
+        mazeLevel: 1,
+        source: 'combat_victory'
+      })
+
+      component['distributeTreasure'](component.chest()!, opener)
+
+      expect(component.chestResults()).toBeDefined()
+      expect(component.chestResults()?.goldObtained).toBe(100)
+      expect(component.chestResults()?.trapTriggered).toBe(false)
+    })
+  })
+
   describe('VICTORY_SUMMARY mode', () => {
     beforeEach(() => {
       component.ngOnInit()

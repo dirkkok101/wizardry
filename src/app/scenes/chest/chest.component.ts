@@ -97,6 +97,13 @@ export class ChestComponent implements OnInit, OnDestroy {
     return this.gameState.state().pendingCombatRewards
   })
 
+  // Pending trap info to merge with chest results in distributeTreasure
+  private readonly pendingTrapInfo = signal<{
+    trapTriggered: boolean
+    trapType: TrapType | null
+    trapMessage: string | null
+  } | null>(null)
+
   // Party members (resolved Character objects)
   readonly partyMembers = computed(() => {
     const state = this.gameState.state();
@@ -595,6 +602,22 @@ export class ChestComponent implements OnInit, OnDestroy {
         }
       };
     });
+
+    // Store results for victory summary (merge with any pending trap info)
+    const trapInfo = this.pendingTrapInfo() ?? {
+      trapTriggered: false,
+      trapType: null,
+      trapMessage: null
+    }
+
+    this.chestResults.set({
+      goldObtained: result.goldAdded,
+      itemsObtained: result.itemsReceived,
+      ...trapInfo
+    })
+
+    // Clear pending trap info
+    this.pendingTrapInfo.set(null)
 
     const message = ChestService.getDistributionMessage(result);
     console.log('[Chest] Distribution message:', message);
