@@ -9,7 +9,6 @@
  */
 
 import { Character } from '@models/Character'
-import { Party } from '@models/GameState'
 import { Item } from '@models/Item'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { Position } from '@models/Dungeon'
@@ -27,6 +26,7 @@ import {
 } from '@models/Chest'
 import { TrapType } from '@models/Trap'
 import { RandomService } from './RandomService'
+import { isAlive } from '@utils/CharacterStatusHelpers'
 
 /**
  * Trap types available at each reward tier
@@ -202,23 +202,42 @@ function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning 
 /**
  * Distribute treasure from an opened chest
  *
- * Gold goes to party pool, items go to opener's inventory.
- * Items that don't fit are LOST (original Wizardry behavior).
+ * Original Wizardry 1 behavior:
+ * - Gold goes to party pool
+ * - Items go to a RANDOM LIVING party member (not the opener!)
+ * - Items that don't fit are LOST forever
  *
  * @param chest The opened chest
- * @param opener Character who opened the chest
- * @param party The party (for gold pool)
- * @returns Distribution result with received and lost items
+ * @param partyMembers Array of Character objects in the party
+ * @returns Distribution result with received items, lost items, and recipient info
  */
 function distributeTreasure(
   chest: Chest,
-  opener: Character,
-  party: Party
+  partyMembers: Character[]
 ): TreasureDistributionResult {
+  // Find living party members who can receive items
+  const livingMembers = partyMembers.filter(isAlive)
+
+  // If no living members, all items are lost
+  if (livingMembers.length === 0) {
+    return {
+      goldAdded: chest.contents.gold,
+      itemsReceived: [],
+      itemsLost: [...chest.contents.items],
+      recipientId: '',
+      recipientName: 'No one'
+    }
+  }
+
+  // Select random living member as recipient (original Wizardry behavior)
+  const recipient = RandomService.pickRandom(livingMembers)
+
   const result: TreasureDistributionResult = {
     goldAdded: chest.contents.gold,
     itemsReceived: [],
-    itemsLost: []
+    itemsLost: [],
+    recipientId: recipient.id,
+    recipientName: recipient.name
   }
 
   // Gold always goes to party pool
@@ -226,9 +245,9 @@ function distributeTreasure(
   // This service just calculates the distribution
 
   // Track current inventory count (including items we're adding)
-  let currentInventoryCount = opener.inventory.length
+  let currentInventoryCount = recipient.inventory.length
 
-  // Distribute items to opener
+  // Distribute items to random recipient
   for (const item of chest.contents.items) {
     if (currentInventoryCount < MAX_INVENTORY_SIZE) {
       result.itemsReceived.push(item)

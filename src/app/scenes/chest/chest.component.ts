@@ -594,20 +594,29 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Distribute treasure from chest
+   * Note: opener parameter kept for API compatibility but items go to random living member
    */
-  private distributeTreasure(chest: Chest, opener: Character): void {
+  private distributeTreasure(chest: Chest, _opener: Character): void {
+    const state = this.gameState.state();
+
+    // Resolve party members to Character objects
+    const partyMembers = state.party.members
+      .map(id => state.roster.get(id))
+      .filter((c): c is Character => c !== undefined);
+
     console.log('[Chest] distributeTreasure called:', {
       chestId: chest.id,
       chestContents: chest.contents,
-      openerName: opener.name,
-      openerId: opener.id
+      partyMemberCount: partyMembers.length
     });
 
-    const state = this.gameState.state();
-    const result = ChestService.distributeTreasure(chest, opener, state.party);
+    // Call service with party members - it picks random living member
+    const result = ChestService.distributeTreasure(chest, partyMembers);
 
     console.log('[Chest] distributeTreasure result:', {
       goldAdded: result.goldAdded,
+      recipientName: result.recipientName,
+      recipientId: result.recipientId,
       itemsReceivedCount: result.itemsReceived.length,
       itemsReceived: result.itemsReceived.map(i => i.name),
       itemsLostCount: result.itemsLost.length,
@@ -617,14 +626,16 @@ export class ChestComponent implements OnInit, OnDestroy {
     // Update game state with gold and items
     this.gameState.updateState(state => {
       const newRoster = new Map(state.roster);
-      const char = newRoster.get(opener.id);
 
-      if (char) {
-        // Add received items to opener's inventory
-        newRoster.set(opener.id, {
-          ...char,
-          inventory: [...char.inventory, ...result.itemsReceived]
-        });
+      // Add received items to the randomly selected recipient
+      if (result.recipientId && result.itemsReceived.length > 0) {
+        const recipient = newRoster.get(result.recipientId);
+        if (recipient) {
+          newRoster.set(result.recipientId, {
+            ...recipient,
+            inventory: [...recipient.inventory, ...result.itemsReceived]
+          });
+        }
       }
 
       return {
