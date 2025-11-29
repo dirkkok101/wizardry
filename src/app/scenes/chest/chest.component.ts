@@ -10,6 +10,7 @@ import { RandomService } from '@services/RandomService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import { CharacterListItemComponent } from '@shared/components/character-list-item/character-list-item.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
@@ -47,7 +48,8 @@ type ChestMode =
   imports: [
     CommonModule,
     SceneTitleComponent,
-    SceneFooterComponent
+    SceneFooterComponent,
+    CharacterListItemComponent
   ],
   templateUrl: './chest.component.html',
   styleUrls: ['./chest.component.scss']
