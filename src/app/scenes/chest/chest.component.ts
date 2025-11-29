@@ -288,8 +288,8 @@ export class ChestComponent implements OnInit, OnDestroy {
     }
 
     // Handle Enter for continue
-    if (key === 'ENTER' && mode === 'RESULT_DISPLAY') {
-      console.log('[Chest] ENTER pressed in RESULT_DISPLAY - calling handleContinue');
+    if (key === 'ENTER' && (mode === 'RESULT_DISPLAY' || mode === 'VICTORY_SUMMARY')) {
+      console.log('[Chest] ENTER pressed in', mode, '- calling handleContinue');
       this.handleContinue();
       return;
     }

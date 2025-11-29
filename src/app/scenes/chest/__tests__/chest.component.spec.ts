@@ -770,6 +770,21 @@ describe('ChestComponent', () => {
     })
   })
 
+  describe('keyboard handling', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('handles ENTER in VICTORY_SUMMARY mode', () => {
+      component.mode.set('VICTORY_SUMMARY')
+      const spy = jest.spyOn(component as any, 'handleContinue')
+
+      component.handleKeyboard(new KeyboardEvent('keydown', { key: 'Enter' }))
+
+      expect(spy).toHaveBeenCalled()
+    })
+  })
+
   describe('VICTORY_SUMMARY mode', () => {
     beforeEach(() => {
       component.ngOnInit()
