@@ -1,61 +1,107 @@
 <!-- src/app/scenes/combat/combat.html -->
-<div class="combat-scene">
+<div class="combat-container">
   @if (combatState(); as combat) {
     <!-- Header -->
     <app-scene-title [title]="'COMBAT - ROUND ' + roundNumber()">
       @if (!combat.canFlee) {
-        <div class="fixed-encounter-badge">FIXED ENCOUNTER - CANNOT FLEE</div>
+        <div class="fixed-encounter-badge">FIXED ENCOUNTER</div>
       }
     </app-scene-title>
 
-    <div class="combat-grid">
-      <!-- Monsters Panel -->
-      <div class="monsters-panel">
-        <h3>MONSTERS</h3>
-        <!-- Front Row Monsters -->
-        <div class="formation-section">
-          <h4 class="row-title">Front Row</h4>
-          @if (frontRowMonsterGroups().length > 0) {
-            <div class="group-row-grid">
-              @for (group of frontRowMonsterGroups(); track group.id) {
-                <ng-container *ngTemplateOutlet="monsterGroupCard; context: { $implicit: group }"></ng-container>
-              }
-            </div>
-          } @else {
-            <div class="empty-row">No monsters in front row</div>
-          }
-        </div>
-        <!-- Back Row Monsters -->
-        <div class="formation-section">
-          <h4 class="row-title">Back Row</h4>
-          @if (backRowMonsterGroups().length > 0) {
-            <div class="group-row-grid">
-              @for (group of backRowMonsterGroups(); track group.id) {
-                <ng-container *ngTemplateOutlet="monsterGroupCard; context: { $implicit: group }"></ng-container>
-              }
-            </div>
-          } @else {
-            <div class="empty-row">No monsters in back row</div>
-          }
-        </div>
-      </div>
+    <div class="combat-layout">
+      <!-- Left Column: Monsters + Combat Log (stacked) -->
+      <section class="left-column">
+        <!-- Monster Groups -->
+        <div class="monsters-section">
+          <h3 class="section-title">Monsters</h3>
 
-      <!-- Party Panel -->
-      <div class="party-panel">
-        <h3>PARTY</h3>
-        <!-- Using customFrontRow/customBackRow for real-time HP updates during combat animation -->
-        <app-party-character-grid
-          [showFormation]="true"
-          [customFrontRow]="frontRowCharacters()"
-          [customBackRow]="backRowCharacters()"
-          [visibleFields]="combatCharacterFields"
-          [actions]="[]"
-          [highlightedCharacterId]="activeCharacterId()"
-          [statusTexts]="selectedActionTexts()"
-          variant="compact"
-          emptyMessage="No party members"
-        />
-      </div>
+          <!-- Front Row Monsters -->
+          <div class="formation-row">
+            <h4 class="row-title">Front Row</h4>
+            @if (frontRowMonsterGroups().length > 0) {
+              <div class="monster-list">
+                @for (group of frontRowMonsterGroups(); track group.id) {
+                  <app-monster-group-list-item
+                    [group]="group"
+                    [selected]="selectedGroupId() === group.id"
+                    [selectable]="showGroupSelectionDialog()"
+                    (groupClick)="selectGroup($event)"
+                  />
+                }
+              </div>
+            } @else {
+              <div class="empty-row">No monsters</div>
+            }
+          </div>
+
+          <!-- Back Row Monsters -->
+          <div class="formation-row">
+            <h4 class="row-title">Back Row</h4>
+            @if (backRowMonsterGroups().length > 0) {
+              <div class="monster-list">
+                @for (group of backRowMonsterGroups(); track group.id) {
+                  <app-monster-group-list-item
+                    [group]="group"
+                    [selected]="selectedGroupId() === group.id"
+                    [selectable]="showGroupSelectionDialog()"
+                    (groupClick)="selectGroup($event)"
+                  />
+                }
+              </div>
+            } @else {
+              <div class="empty-row">No monsters</div>
+            }
+          </div>
+        </div>
+
+        <!-- Combat Log (takes remaining space) -->
+        <div class="combat-log-section">
+          <h3 class="section-title">Combat Log</h3>
+          <div class="combat-log" #logMessages>
+            @for (msg of combatLog(); track $index) {
+              <div class="log-message">{{ msg }}</div>
+            }
+            @if (combatLog().length === 0) {
+              <div class="log-message">Combat begins!</div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Party (Formation layout like Tavern) -->
+      <section class="party-section">
+        <h3 class="section-title">Party</h3>
+        <div class="formation-layout">
+          <div class="formation-column">
+            <h4 class="row-title">Front Row</h4>
+            @if (frontRowCharacters().length > 0) {
+              <app-character-panel
+                [characters]="frontRowCharacters()"
+                [actions]="[]"
+                [visibleActionTypes]="[]"
+                [statusTexts]="selectedActionTexts()"
+                [highlightedCharacterId]="activeCharacterId()"
+              />
+            } @else {
+              <div class="empty-row">Empty</div>
+            }
+          </div>
+          <div class="formation-column">
+            <h4 class="row-title">Back Row</h4>
+            @if (backRowCharacters().length > 0) {
+              <app-character-panel
+                [characters]="backRowCharacters()"
+                [actions]="[]"
+                [visibleActionTypes]="[]"
+                [statusTexts]="selectedActionTexts()"
+                [highlightedCharacterId]="activeCharacterId()"
+              />
+            } @else {
+              <div class="empty-row">Empty</div>
+            }
+          </div>
+        </div>
+      </section>
     </div>
 
     <!-- Spell Selection Menu -->
@@ -120,19 +166,6 @@
       (cancelled)="cancelCharacterSelection()"
     />
 
-    <!-- Combat Log -->
-    <div class="combat-log">
-      <h3>COMBAT LOG</h3>
-      <div class="log-messages" #logMessages>
-        @for (msg of combatLog(); track $index) {
-          <div class="log-message">{{ msg }}</div>
-        }
-        @if (combatLog().length === 0) {
-          <div class="log-message">Combat begins!</div>
-        }
-      </div>
-    </div>
-
     <!-- Footer with action menu -->
     @if (!showSpellMenu() && !showGroupSelectionDialog() && !showCharacterSelectionDialog() && !showVictoryModal() && !showDefeatModal()) {
       @if (allActionsSelected()) {
@@ -160,7 +193,7 @@
   @if (showVictoryModal()) {
     <div class="victory-modal-overlay">
       <div class="victory-modal">
-        <h2>⚔️ VICTORY! ⚔️</h2>
+        <h2>VICTORY!</h2>
         @if (victoryRewards(); as rewards) {
           <div class="victory-rewards">
             <div class="reward-line">
@@ -236,20 +269,3 @@
     </div>
   }
 </div>
-
-<!-- Reusable Templates -->
-
-<!-- Monster Group Card Template -->
-<ng-template #monsterGroupCard let-group>
-  <div class="monster-group-card"
-       [attr.data-group]="group.id"
-       [class.selected]="selectedGroupId() === group.id"
-       [class.defeated]="!hasAliveMonsters(group)">
-    <div class="group-header">
-      <span class="group-label">{{ group.id }}</span>
-      <span class="group-count">{{ getAliveCount(group) }}/{{ group.monsters.length }}</span>
-    </div>
-    <div class="group-name">{{ getGroupDisplayName(group) }}</div>
-  </div>
-</ng-template>
-

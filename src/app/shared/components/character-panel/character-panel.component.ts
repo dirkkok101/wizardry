@@ -92,9 +92,34 @@ export class CharacterPanelComponent {
   @Input() visibleActionTypes: string[] = ['inspect', 'cast-spell'];
 
   /**
+   * Status text to display on each character card (e.g., selected combat action)
+   * Map from character ID to status text
+   */
+  @Input() statusTexts: Map<string, string> = new Map();
+
+  /**
+   * ID of the currently highlighted/active character
+   */
+  @Input() highlightedCharacterId: string | null = null;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
+
+  /**
+   * Get status text for a character
+   */
+  getStatusText(char: Character): string | undefined {
+    return this.statusTexts.get(char.id);
+  }
+
+  /**
+   * Check if character is highlighted/active
+   */
+  isHighlighted(char: Character): boolean {
+    return this.highlightedCharacterId === char.id;
+  }
 
   /**
    * Get abbreviated class name
@@ -217,13 +242,13 @@ export class CharacterPanelComponent {
     const extractPoints = (pool: typeof magePool): number[] => {
       if (!pool) return [];
       return [
-        pool.level1.current,
-        pool.level2.current,
-        pool.level3.current,
-        pool.level4.current,
-        pool.level5.current,
-        pool.level6.current,
-        pool.level7.current
+        pool.level1?.current ?? 0,
+        pool.level2?.current ?? 0,
+        pool.level3?.current ?? 0,
+        pool.level4?.current ?? 0,
+        pool.level5?.current ?? 0,
+        pool.level6?.current ?? 0,
+        pool.level7?.current ?? 0
       ];
     };
 

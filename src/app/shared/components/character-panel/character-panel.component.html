@@ -5,7 +5,7 @@
 
   <div class="character-stack">
     @for (char of characters; track char.id) {
-      <div class="character-card" [class.incapacitated]="isIncapacitated(char)">
+      <div class="character-card" [class.incapacitated]="isIncapacitated(char)" [class.highlighted]="isHighlighted(char)">
         <!-- Row 1: Name + Status -->
         <div class="card-row name-row">
           <span class="char-name">{{ char.name }}</span>
@@ -47,17 +47,21 @@
           </span>
         </div>
 
-        <!-- Row 6: Action buttons -->
+        <!-- Row 6: Action buttons OR Status text -->
         <div class="card-row actions-row">
-          @for (action of getVisibleActions(char); track action.type) {
-            @if (action.enabled !== false) {
-              <button
-                class="action-btn"
-                [class.danger]="action.variant === 'danger'"
-                (click)="onActionClick(char, action.type)"
-              >
-                [{{ getActionLabel(action.type) }}]
-              </button>
+          @if (getStatusText(char); as statusText) {
+            <span class="status-text">{{ statusText }}</span>
+          } @else {
+            @for (action of getVisibleActions(char); track action.type) {
+              @if (action.enabled !== false) {
+                <button
+                  class="action-btn"
+                  [class.danger]="action.variant === 'danger'"
+                  (click)="onActionClick(char, action.type)"
+                >
+                  [{{ getActionLabel(action.type) }}]
+                </button>
+              }
             }
           }
         </div>

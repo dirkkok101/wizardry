@@ -1,0 +1,10 @@
+<div
+  class="list-item"
+  [class.selected]="selected"
+  [class.selectable]="selectable"
+  [class.defeated]="isDefeated"
+  (click)="onClick()">
+  <span class="group-id" [style.color]="getGroupColor()">{{ group.id }}</span>
+  <span class="group-count">{{ aliveCount }}/{{ totalCount }}</span>
+  <span class="monster-name">{{ displayName }}</span>
+</div>

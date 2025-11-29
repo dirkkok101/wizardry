@@ -1,12 +1,10 @@
-@use '../../../../styles/variables' as *;
+// Selection Dialog - Modern Retro-Fantasy theme
+// Uses CSS custom properties for consistent styling across the app
 
 .dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.85);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,12 +16,13 @@
 }
 
 .dialog-content {
-  background-color: $color-bg-black;
-  border: 2px solid $color-text-green;
+  background: var(--color-bg-darkest);
+  border: 2px solid var(--color-border);
+  border-radius: var(--card-border-radius);
   min-width: 400px;
   max-width: 600px;
   width: 90%;
-  box-shadow: 0 0 20px rgba($color-text-green, 0.3);
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.2);
 
   &:focus {
     outline: none;
@@ -31,55 +30,58 @@
 }
 
 .dialog-header {
-  padding: $spacing-md $spacing-lg;
-  border-bottom: 1px solid rgba($color-text-dim, 0.3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .dialog-title {
-  font-size: 18px;
-  color: $color-amber;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  color: var(--color-gold-primary);
   margin: 0;
   text-align: center;
-  font-weight: bold;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.1em;
 }
 
 .dialog-body {
-  padding: $spacing-md $spacing-lg;
+  padding: var(--space-3) var(--space-4);
   overflow-y: auto;
 
   // Scrollbar styling
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   &::-webkit-scrollbar-track {
-    background: rgba($color-text-dim, 0.1);
+    background: var(--color-bg-darkest);
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba($color-text-dim, 0.3);
-    border-radius: 4px;
+    background: var(--color-border);
+    border-radius: 3px;
 
     &:hover {
-      background: rgba($color-text-dim, 0.5);
+      background: var(--color-gold-dim);
     }
   }
 }
 
 .dialog-footer {
-  padding: $spacing-sm $spacing-lg;
-  border-top: 1px solid rgba($color-text-dim, 0.3);
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--color-border);
   text-align: center;
 }
 
 .keyboard-hint {
-  font-size: 12px;
-  color: $color-text-dim;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
 .default-item-text {
-  color: $color-text-bright;
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
 }

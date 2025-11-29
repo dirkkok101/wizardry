@@ -44,6 +44,12 @@
     opacity: 0.6;
     border-color: var(--color-warning);
   }
+
+  &.highlighted {
+    border-color: var(--color-gold-primary);
+    background: rgba(212, 165, 116, 0.1);
+    box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+  }
 }
 
 .card-row {
@@ -200,6 +206,20 @@
   margin-top: var(--space-1);
   padding-top: var(--space-1);
   border-top: 1px solid var(--color-border);
+}
+
+// Status text (e.g., selected combat action)
+.status-text {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-body);
+  color: var(--color-gold-primary);
+  background: rgba(212, 165, 116, 0.15);
+  border: 1px solid var(--color-gold-dim);
+  border-radius: 2px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .action-btn {
