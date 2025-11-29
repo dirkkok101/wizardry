@@ -102,5 +102,19 @@ export function parseTrapType(input: string): TrapType | null {
 export function trapNameMatches(input: string, actual: TrapType): boolean {
   const normalizedInput = input.trim().toUpperCase().replace(/[\s\-_]+/g, '')
   const normalizedActual = actual.replace(/[\s\-_]+/g, '')
-  return normalizedInput === normalizedActual
+  const matches = normalizedInput === normalizedActual
+
+  // Diagnostic logging for trap name matching
+  console.log('[Trap] trapNameMatches diagnostic:', {
+    rawInput: input,
+    rawInputLength: input.length,
+    rawInputChars: Array.from(input).map(c => c.charCodeAt(0)),
+    actualTrap: actual,
+    actualTrapLength: actual.length,
+    normalizedInput,
+    normalizedActual,
+    matches
+  })
+
+  return matches
 }
