@@ -317,7 +317,7 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: var(--space-4);
-    text-shadow: 0 0 10px rgba(212, 165, 116, 0.5);
+    text-shadow: 0 0 10px var(--color-gold-dim);
   }
 
   .section-header {
@@ -409,7 +409,7 @@
 
   .trap-section {
     border-color: var(--color-danger);
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--color-danger-dim);
 
     .trap-type {
       font-weight: 600;

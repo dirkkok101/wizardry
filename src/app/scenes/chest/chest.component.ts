@@ -560,6 +560,16 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleTeleport(): void {
     // TODO: Implement random teleport
     this.lastActionMessage.update(m => m + ' You are teleported away!');
+
+    // Set chest results for victory summary (no treasure, trap triggered)
+    this.chestResults.set({
+      goldObtained: 0,
+      itemsObtained: [],
+      trapTriggered: true,
+      trapType: this.chest()?.trapType || null,
+      trapMessage: this.lastActionMessage()
+    });
+
     this.mode.set('RESULT_DISPLAY');
   }
 
@@ -569,6 +579,16 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleAlarm(): void {
     // TODO: Trigger combat encounter
     this.lastActionMessage.update(m => m + ' Monsters approach!');
+
+    // Set chest results for victory summary (no treasure, trap triggered)
+    this.chestResults.set({
+      goldObtained: 0,
+      itemsObtained: [],
+      trapTriggered: true,
+      trapType: this.chest()?.trapType || null,
+      trapMessage: this.lastActionMessage()
+    });
+
     this.mode.set('RESULT_DISPLAY');
   }
 
