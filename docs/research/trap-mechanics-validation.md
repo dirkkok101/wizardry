@@ -43,7 +43,20 @@ Comprehensive trap system with 8 chest trap types, inspection mechanics, and dis
 
 ## Trap Types
 
-### Chest Traps (8 Types)
+### Trap Distribution (Original Apple II - FROM SOURCE CODE)
+
+The chest trap selection works as follows:
+- **25% chance**: No trap (trapless)
+- **25% chance**: Poison Needle
+- **25% chance**: Gas Bomb
+- **25% chance**: "Type3" trap → then 20% each for:
+  - Crossbow Bolt
+  - Exploding Box
+  - Splinters
+  - Blades
+  - Stunner
+
+### Chest Traps - Apple II Original (8 Base Types)
 
 **1. Poison Needle**
 - **Effect**: Poison damage to character opening chest
@@ -61,25 +74,40 @@ Comprehensive trap system with 8 chest trap types, inspection mechanics, and dis
 - **Effect**: Fire/explosive damage to party
 - **Type**: Area effect
 
-**5. Stunner**
+**5. Splinters** (Apple II Original)
+- **Effect**: Physical damage (exact mechanics unclear from sources)
+- **Note**: One of the "Type3" subtypes in original code
+
+**6. Blades** (Apple II Original)
+- **Effect**: Physical damage to party members
+- **Note**: One of the "Type3" subtypes in original code
+
+**7. Stunner**
 - **Effect**: Stuns/paralyzes character opening chest
-- **Cure**: LATUMOFIS spell or wait for duration
+- **Cure**: DIALKO spell or wait for duration
 
-**6. Teleporter**
-- **Effect**: Teleports party to random dungeon location
-- **Risk**: Can teleport into walls or dangerous areas
-
-**7. Anti-Mage (Mage Blaster)**
-- **Effect**: Targets and damages spellcasters (Mage, Bishop)
-- **Type**: Magic damage
-
-**8. Anti-Priest (Priest Blaster)**
-- **Effect**: Targets and damages divine casters (Priest, Bishop, Lord)
-- **Type**: Divine damage
-
-**9. Alarm / Siren**
+**8. Alarm / Siren** (may be later addition)
 - **Effect**: Summons additional monster encounter
 - **Result**: Immediate combat after chest opened
+
+### Additional Traps - NES/Later Versions
+
+These traps appear in NES and later ports but may not be in the original Apple II version:
+
+**9. Teleporter**
+- **Effect**: Teleports party to random dungeon location
+- **Risk**: Can teleport into walls (instant death) or dangerous areas
+- **Version**: Confirmed in NES version
+
+**10. Anti-Mage (Mage Blaster)**
+- **Effect**: Targets and damages/paralyzes spellcasters (Mage, Bishop)
+- **Type**: Magic damage
+- **Version**: Confirmed in NES version
+
+**11. Anti-Priest (Priest Blaster)**
+- **Effect**: Targets and damages/paralyzes divine casters (Priest, Bishop, Lord)
+- **Type**: Divine damage
+- **Version**: Confirmed in NES version
 
 ### Dungeon Traps
 
@@ -139,7 +167,13 @@ Others:   InspectChance% = AGI × 1   (max 95%)
 
 ### Inspection Risks
 
-**Failure**: Wrong trap type identified (false positive)
+**CRITICAL MECHANIC - Failed Inspection/CALFO**:
+- A **failed** inspect or CALFO does NOT say "failed" or "unknown"
+- Instead, it **reveals a RANDOM trap name** - actively misleading the player!
+- This is a core gameplay mechanic from the original source code
+- Players cannot know if the revealed trap name is correct or a random false positive
+- This is why double-checking with both Thief Inspect AND Priest CALFO is recommended
+
 **Critical Failure**: Trap triggered during inspection
 - Small chance to set off trap while inspecting
 - Risk applies to all classes
@@ -181,9 +215,12 @@ If disarm fails, chance to NOT trigger trap = AGI × 5%
 ```
 This gives the character another chance to retry the disarm.
 
-**Wrong Trap Name Behavior**:
-- **Easy levels (1-4)**: Entering wrong trap name usually allows retry
-- **Deep levels (5+)**: Entering wrong trap name usually triggers the trap
+**Wrong Trap Name Behavior** (FROM SOURCE CODE):
+- **Critical**: If you enter the WRONG trap name, the odds of NOT triggering = Level × 0.1%
+- This means at any reasonable level, entering wrong trap name = **99%+ trigger rate**
+- Example: Level 10 character = 1% chance to avoid trigger (99% trigger!)
+- Example: Level 50 character = 5% chance to avoid trigger (95% trigger!)
+- **Bottom line**: Entering wrong trap name almost always triggers the trap
 
 ### Disarm by Level (with Maze Level factor)
 
@@ -562,15 +599,41 @@ function calfoSuccess(): number {
 
 ## Validation Status
 
-- ✅ **Trap Types**: 9 chest trap types identified (including ALARM)
+- ✅ **Trap Types**: 8 base types (Apple II) + 3 NES additions = 11 total trap types
 - ✅ **Inspect Formula**: AGI × (6 for Thief, 4 for Ninja, 1 for Others), max 95%
 - ✅ **Disarm Formula**: (EffectiveLevel - MazeLevel) / 70, where Thief/Ninja get +50 level bonus
-- ✅ **Failed Disarm Avoidance**: AGI × 5% chance to not trigger trap on failed disarm
+- ✅ **Failed Disarm Avoidance**: RANDOM(0-19) < AGI = chance to avoid triggering (effectively AGI/20)
 - ✅ **CALFO Spell**: 95% success rate
 - ✅ **Chest Contents**: Multi-item system with inventory risk
-- ✅ **Wrong Trap Name**: Easy levels allow retry, deep levels trigger trap
+- ✅ **Wrong Trap Name**: Level × 0.1% chance to NOT trigger (99%+ trigger rate at any level)
+- ✅ **Failed Inspection/CALFO**: Reveals RANDOM trap name (misleads player - key mechanic!)
 - ⚠️ **Trap Damage**: Damage values partially specified (varies by trap type and level)
+- ⚠️ **Splinters/Blades Effects**: Exact mechanics unclear from available sources
 
-**Validation Date**: 2025-11-26
-**Validated By**: Claude Code (research compilation)
-**Sources**: 4+ authoritative sources (Wizardry Wiki, DataDrivenGamer, GOG Forums, Strategy Wiki, GameFAQs)
+**Validation Date**: 2025-11-29
+**Validated By**: Claude Code (research compilation with source code verification)
+
+### Primary Sources Used
+
+1. **Reverse-Engineered Pascal Source Code** (Most Authoritative)
+   - Thomas William Ewers' reverse-engineered Wizardry code (2012-2014)
+   - GitHub: [snafaru/Wizardry.Code](https://github.com/snafaru/Wizardry.Code)
+   - Provides definitive formulas from actual game code
+
+2. **DataDrivenGamer Blog** (Source Code Analysis)
+   - [The not-so-basic mechanics of Wizardry](https://datadrivengamer.blogspot.com/2019/08/the-not-so-basic-mechanics-of-wizardry.html)
+   - [The treasury of Wizardry](https://datadrivengamer.blogspot.com/2019/08/the-treasury-of-wizardry.html)
+   - Detailed analysis based on reverse-engineered code
+
+3. **Wizardry Wiki** (Community Reference)
+   - [Traps - Fandom Wiki](https://wizardry.fandom.com/wiki/Traps)
+   - [Traps - wiki.gg](https://wizardry.wiki.gg/wiki/Traps)
+   - Community-compiled information
+
+4. **GOG Forums Discussion**
+   - [What is the deal with thiefs in Wizardry 1?](https://www.gog.com/forum/wizardry_series/what_is_the_deal_with_thiefs_in_wizardry_1)
+   - Player experience and formula verification
+
+5. **Zimlab Wizardry Fan Page**
+   - [Wizardry 1-2-3 Game Calculations](https://www.zimlab.com/wizardry/walk/w123calc.htm)
+   - Comprehensive formula reference

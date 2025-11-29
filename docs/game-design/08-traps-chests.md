@@ -29,6 +29,9 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 
 ## Trap Types
 
+> **Note**: The trap list below includes both original Apple II traps and NES additions.
+> Our implementation uses the combined set for maximum variety.
+
 ### Damage Traps
 
 **POISON NEEDLE** - Low threat
@@ -97,9 +100,12 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 - Ninjas: AGI 24 for 95% success
 
 **Results**:
-- ✅ Success: Identifies trap type
-- ❌ Failure: No information (can retry)
-- ⚠️ Critical Failure: Triggers trap (1-2% chance)
+- ✅ Success: Identifies correct trap type
+- ❌ Failure: **Reveals RANDOM trap name** (misleads you - key mechanic!)
+- ⚠️ Critical Failure: Triggers trap (small chance)
+
+**CRITICAL**: Failed inspection does NOT say "failed" - it shows a random wrong trap name!
+You cannot tell if the revealed trap is real or a false positive.
 
 **Example**:
 ```
@@ -114,8 +120,9 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 **Cost**: 1 spell point (Level 2)
 **Risk**: None (cannot trigger trap)
 
-**Advantage**: No trigger risk, high success
+**Advantage**: No trigger risk, high success rate
 **Disadvantage**: Costs spell point
+**CRITICAL**: If CALFO fails (5% chance), it reveals a RANDOM trap name (just like failed inspection!)
 
 **Example**:
 ```
@@ -158,12 +165,14 @@ Avoid Trigger% = AGI × 5
 ```
 
 **Retry Strategy**:
-- If failed **without triggering** → Correct trap type + your AGI saved you, keep trying!
-- If triggered → Wrong type OR failed AGI save
+- If failed **without triggering** → You chose the CORRECT trap type + your AGI saved you, keep trying!
+- If triggered → Either wrong trap type OR you had the right type but failed the AGI save
 
-**Dungeon Level Effect**:
-- Easy levels (1-4): Wrong trap name usually allows retry
-- Deep levels (5+): Wrong trap name usually triggers trap
+**WRONG TRAP NAME** (FROM SOURCE CODE):
+- If you enter the WRONG trap name, odds of NOT triggering = Level × 0.1%
+- Level 10 character = 1% avoid (99% trigger!)
+- Level 50 character = 5% avoid (95% trigger!)
+- **Bottom line**: Wrong trap name = almost certainly triggers the trap
 
 ### Option 4: Just Open It
 
@@ -184,14 +193,16 @@ Avoid Trigger% = AGI × 5
 
 ### Recommended Sequence
 
-**1. Inspect or CALFO**
+**1. Inspect AND CALFO (Both!)**
 - Thief inspects: 95% success if AGI 16+
-- OR Priest casts CALFO: 95% success
+- Priest casts CALFO: 95% success
+- **CRITICAL**: Failed checks reveal RANDOM trap names - you can't tell if it's correct!
 
-**2. Double-Check (Optional but Recommended)**
+**2. Double-Check is ESSENTIAL (Not Optional!)**
 - Thief inspects → "POISON NEEDLE"
 - Priest casts CALFO → "POISON NEEDLE"
-- Both agree? Very high confidence!
+- Both agree? Very high confidence the trap name is correct!
+- **If they disagree**: One is a false positive - use caution or leave chest
 
 **3. Disarm Trap**
 - Thief disarms with correct trap type

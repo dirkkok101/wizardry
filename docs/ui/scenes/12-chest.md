@@ -292,8 +292,12 @@ function canInspect(chest: Chest): { allowed: boolean; reason?: string } {
 
 **UI Feedback:**
 - Success: "You detect a [Trap Type] trap!"
-- Failure: "You find no traps." (may still be trapped!)
+- Failure: "You detect a [RANDOM Trap Type] trap!" (MISLEADS PLAYER - key mechanic!)
 - Triggered: "[Trap Name] triggered! [Effects]"
+
+**CRITICAL MECHANIC**: Failed inspection does NOT say "failed" or "no traps found".
+Instead, it reveals a RANDOM trap name, actively misleading the player.
+The player cannot tell if the revealed trap name is correct or a false positive.
 
 **Transitions:**
 - Remains in Chest scene (can now disarm or open)
@@ -379,13 +383,17 @@ function canCastCALFO(party: Party, chest: Chest): { allowed: boolean; reason?: 
 
 **UI Feedback:**
 - Success: "CALFO reveals a [Trap Type] trap!"
-- Failure: "CALFO fails to reveal the trap."
+- Failure: "CALFO reveals a [RANDOM Trap Type] trap!" (MISLEADS PLAYER!)
 - No caster: "No one can cast CALFO."
+
+**CRITICAL**: Like inspection, failed CALFO (5% chance) reveals a RANDOM trap name,
+not "failed" or "unknown". Player cannot tell if result is correct.
 
 **Transitions:**
 - Remains in Chest scene (can now disarm or open)
 
 **Advantage:** CALFO is safer than (I)nspect - no trigger risk, high success rate.
+**Strategy:** Use BOTH Inspect AND CALFO. If results match, very high confidence.
 
 ---
 
@@ -451,11 +459,13 @@ function attemptDisarm(opener: Character, chest: Chest, mazeLevel: number, trapN
   const nameMatches = validateTrapName(trapName, chest)
 
   if (!nameMatches) {
-    // Wrong trap name behavior depends on dungeon depth
-    const wrongNameTriggerChance = mazeLevel <= 4 ? 0.2 : 0.8
+    // WRONG TRAP NAME: From source code analysis
+    // Odds of NOT triggering = Level × 0.1% (abysmal at any level)
+    // Level 10 = 1% avoid, Level 50 = 5% avoid
+    const avoidTriggerChance = opener.level * 0.001  // Level × 0.1%
     return {
       success: false,
-      triggered: random(0, 1) < wrongNameTriggerChance
+      triggered: random(0, 1) >= avoidTriggerChance  // Almost always triggers
     }
   }
 
@@ -741,8 +751,9 @@ interface ChestState {
    - May prevent further interaction
 
 3. **Wrong trap name:**
-   - 80% chance to trigger trap
-   - Punishes guessing
+   - Level × 0.1% chance to NOT trigger (99%+ trigger rate at any level!)
+   - Example: Level 10 = 1% avoid, Level 50 = 5% avoid
+   - Punishes guessing severely - almost always triggers
    - Requires exact spelling
 
 4. **ALARM trap:**
@@ -755,12 +766,19 @@ interface ChestState {
    - Treasure lost (chest left behind)
    - Very disruptive
 
-6. **No trap:**
-   - Inspection shows "No trap detected"
-   - May still be trapped (failed roll)
-   - Or genuinely untrapped
+6. **No trap (trapless chest):**
+   - Genuinely untrapped chests exist (25% chance in original)
+   - Inspection of trapless chest will show "No trap detected" (correct result)
+   - However, if chest IS trapped and inspection fails, it shows a random trap name
+   - There is no "failed to detect" message - system always gives a trap name or "no trap"
 
-7. **Multiple party members with CALFO:**
+7. **Failed inspection shows random trap:**
+   - CRITICAL implementation detail from original game
+   - Failed inspection/CALFO reveals a RANDOM trap name, not "failed"
+   - Player cannot distinguish real trap from false positive
+   - This is why double-checking with both Inspect AND CALFO is essential
+
+8. **Multiple party members with CALFO:**
    - Allow selection of who casts
    - Different spell point costs per caster
 
