@@ -381,24 +381,34 @@ function canCastCalfo(character: Character): boolean {
 /**
  * Cast CALFO spell to identify trap
  *
+ * Original Wizardry 1 behavior:
+ * - 95% success rate
+ * - Success: Returns real trap information (or null if untrapped)
+ * - Failure (5%): Returns RANDOM trap name (deception mechanic!)
+ * - CALFO never triggers traps
+ *
  * @returns InspectionResult (95% success rate, never triggers trap)
  */
 function castCalfo(caster: Character, chest: Chest): TrapInspectionResult {
   // CALFO has 95% success rate
   const success = RandomService.chance(95)
 
-  if (success && chest.trapped) {
+  if (success) {
     return {
       success: true,
-      trapIdentified: chest.trapType,
+      trapIdentified: chest.trapped ? chest.trapType : null,
       triggered: false
     }
   }
 
-  // Failed CALFO - no information revealed
+  // Failed CALFO (5%) - return RANDOM trap name (deception mechanic)
+  // Same as failed inspection - player cannot tell if result is real
+  const allTraps = Object.values(TrapType)
+  const randomTrap = RandomService.pickRandom(allTraps)
+
   return {
     success: false,
-    trapIdentified: null,
+    trapIdentified: randomTrap,
     triggered: false  // CALFO never triggers traps
   }
 }

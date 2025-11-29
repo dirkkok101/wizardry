@@ -557,17 +557,19 @@ describe('TrapService', () => {
       expect(result.triggered).toBe(false)
     })
 
-    it('should fail on 5% roll', () => {
+    it('should return random trap name on 5% failure (deception mechanic)', () => {
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const chest = createTestChest()
+      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
 
-      // Queue failure roll (> 95% = fail)
-      RandomService.queueNextValues([0.99])
+      // Queue failure roll (> 95% = fail), then random trap selection
+      RandomService.queueNextValues([0.99, 0.3])
 
       const result = TrapService.castCalfo(priest, chest)
 
       expect(result.success).toBe(false)
-      expect(result.trapIdentified).toBeNull()
+      // Should return random trap, not null (deception mechanic)
+      expect(result.trapIdentified).not.toBeNull()
+      expect(result.triggered).toBe(false)
     })
 
     it('should never trigger trap', () => {
@@ -575,11 +577,24 @@ describe('TrapService', () => {
       const chest = createTestChest()
 
       // Even on failure, CALFO should never trigger
-      RandomService.queueNextValues([0.99])
+      RandomService.queueNextValues([0.99, 0.5])  // fail + random trap
 
       const result = TrapService.castCalfo(priest, chest)
 
       expect(result.triggered).toBe(false)
+    })
+
+    it('should return null trap on success for untrapped chest', () => {
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const chest = createTestChest({ trapped: false, trapType: null })
+
+      // Queue success roll
+      RandomService.queueNextValues([0.5])
+
+      const result = TrapService.castCalfo(priest, chest)
+
+      expect(result.success).toBe(true)
+      expect(result.trapIdentified).toBeNull()  // Correctly identifies no trap
     })
   })
 
