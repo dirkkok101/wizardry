@@ -152,13 +152,19 @@ function calculateTriggerAvoidance(character: Character): number {
 }
 
 /**
- * Determine trigger chance when entering wrong trap name
- * Based on maze level - deeper levels are less forgiving
+ * Calculate trigger chance when entering wrong trap name
+ *
+ * Original formula from Wizardry 1 source code:
+ * - Character level × 0.1% chance to NOT trigger
+ * - This means ~99%+ trigger rate at any reasonable level
+ *
+ * @param characterLevel The level of the character attempting disarm
+ * @returns Percentage chance to trigger trap (0-100)
  */
-function calculateWrongNameTriggerChance(mazeLevel: number): number {
-  // Easy levels (1-4): ~20% trigger chance
-  // Deep levels (5+): ~80% trigger chance
-  return mazeLevel <= 4 ? 20 : 80
+function calculateWrongNameTriggerChance(characterLevel: number): number {
+  // Chance to NOT trigger = level × 0.1%
+  // Chance to TRIGGER = 100 - (level × 0.1)
+  return Math.max(0, 100 - (characterLevel * 0.1))
 }
 
 /**
@@ -187,11 +193,13 @@ function attemptDisarm(
   // Check if trap name matches
   if (!chest.trapType || !trapNameMatches(enteredTrapName, chest.trapType)) {
     // Wrong trap name - check if it triggers
-    const triggerChance = calculateWrongNameTriggerChance(chest.mazeLevel)
+    // Original formula uses character level (higher level = tiny chance to avoid trigger)
+    const triggerChance = calculateWrongNameTriggerChance(character.level)
     const triggered = RandomService.chance(triggerChance)
     console.log('[TrapService] Wrong trap name detected:', {
       chestTrapType: chest.trapType,
       enteredTrapName,
+      characterLevel: character.level,
       triggerChance,
       triggered
     })

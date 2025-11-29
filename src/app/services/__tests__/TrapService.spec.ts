@@ -170,17 +170,25 @@ describe('TrapService', () => {
   })
 
   describe('calculateWrongNameTriggerChance', () => {
-    it('should return 20% for easy levels (1-4)', () => {
-      expect(TrapService.calculateWrongNameTriggerChance(1)).toBe(20)
-      expect(TrapService.calculateWrongNameTriggerChance(2)).toBe(20)
-      expect(TrapService.calculateWrongNameTriggerChance(3)).toBe(20)
-      expect(TrapService.calculateWrongNameTriggerChance(4)).toBe(20)
+    it('should return ~99% trigger for level 10 character', () => {
+      // Original formula: Level × 0.1% chance to NOT trigger
+      // So trigger chance = 100 - (10 × 0.1) = 99%
+      expect(TrapService.calculateWrongNameTriggerChance(10)).toBeCloseTo(99, 0)
     })
 
-    it('should return 80% for deep levels (5+)', () => {
-      expect(TrapService.calculateWrongNameTriggerChance(5)).toBe(80)
-      expect(TrapService.calculateWrongNameTriggerChance(6)).toBe(80)
-      expect(TrapService.calculateWrongNameTriggerChance(10)).toBe(80)
+    it('should return ~95% trigger for level 50 character', () => {
+      // 100 - (50 × 0.1) = 95%
+      expect(TrapService.calculateWrongNameTriggerChance(50)).toBeCloseTo(95, 0)
+    })
+
+    it('should return ~99.9% trigger for level 1 character', () => {
+      // 100 - (1 × 0.1) = 99.9%
+      expect(TrapService.calculateWrongNameTriggerChance(1)).toBeCloseTo(99.9, 1)
+    })
+
+    it('should not go below 0%', () => {
+      // Even at absurdly high level (1000+), cap at 0%
+      expect(TrapService.calculateWrongNameTriggerChance(1000)).toBe(0)
     })
   })
 
@@ -254,32 +262,34 @@ describe('TrapService', () => {
       expect(result.wrongName).toBe(false)
     })
 
-    it('should handle wrong trap name on easy level (20% trigger)', () => {
+    it('should almost always trigger with wrong trap name (99%+ chance)', () => {
       const thief = createTestCharacter({ class: CharacterClass.THIEF, level: 10 })
       const chest = createTestChest({ mazeLevel: 1 })
 
-      // Queue value for wrong name trigger check (> 20% = no trigger)
-      RandomService.queueNextValues([0.5])
+      // Level 10 = 99% trigger chance
+      // Queue value > 1% avoid chance = trigger
+      RandomService.queueNextValues([0.5])  // 50% > 1% = trigger
 
       const result = TrapService.attemptDisarm(thief, chest, 'WRONG TRAP')
 
       expect(result.success).toBe(false)
       expect(result.wrongName).toBe(true)
-      expect(result.triggered).toBe(false)  // 50% > 20%, so no trigger
+      expect(result.triggered).toBe(true)  // 50% < 99% trigger = trigger
     })
 
-    it('should handle wrong trap name on deep level (80% trigger)', () => {
-      const thief = createTestCharacter({ class: CharacterClass.THIEF, level: 10 })
-      const chest = createTestChest({ mazeLevel: 5 })
+    it('should very rarely avoid trigger with wrong name (based on character level)', () => {
+      // A level 1000 character would have 0% trigger chance (100 - 1000*0.1 = 0%)
+      const godlike = createTestCharacter({ class: CharacterClass.THIEF, level: 1000 })
+      const chest = createTestChest({ mazeLevel: 10 })
 
-      // Queue value for wrong name trigger check (< 80% = trigger)
+      // At level 1000, trigger chance is 0%, so any roll avoids
       RandomService.queueNextValues([0.5])
 
-      const result = TrapService.attemptDisarm(thief, chest, 'WRONG TRAP')
+      const result = TrapService.attemptDisarm(godlike, chest, 'WRONG TRAP')
 
       expect(result.success).toBe(false)
       expect(result.wrongName).toBe(true)
-      expect(result.triggered).toBe(true)  // 50% < 80%, so trigger
+      expect(result.triggered).toBe(false)  // 0% trigger = never triggers
     })
 
     it('should check AGI save on failed disarm', () => {
