@@ -195,21 +195,21 @@
 
 .victory-modal {
   background: var(--color-bg-darkest);
-  border: 2px solid var(--color-status-ok);
+  border: 2px solid var(--color-gold-primary);
   border-radius: var(--card-border-radius);
   padding: var(--space-4);
   max-width: 500px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 20px var(--color-gold-glow);
 
   h2 {
     font-family: var(--font-display);
     font-size: var(--font-size-2xl);
-    color: var(--color-status-ok);
+    color: var(--color-gold-bright);
     margin: 0 0 var(--space-3) 0;
     letter-spacing: 0.15em;
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+    text-shadow: 0 0 10px var(--color-gold-glow);
   }
 
   .victory-rewards {
@@ -230,7 +230,7 @@
 
       .value {
         font-weight: bold;
-        color: var(--color-status-ok);
+        color: var(--color-gold-bright);
       }
     }
 
@@ -265,7 +265,7 @@
           .item-name {
             font-family: var(--font-body);
             font-weight: 600;
-            color: var(--color-status-ok);
+            color: var(--color-gold-primary);
 
             &.unidentified-text {
               color: var(--color-warning);
