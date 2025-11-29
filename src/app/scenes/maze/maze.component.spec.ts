@@ -308,13 +308,13 @@ describe('MazeComponent - Rotation', () => {
 
   it('handles left action for turning left', () => {
     const turnLeftSpy = jest.spyOn(component, 'turnLeft');
-    component.handleFooterAction('left');
+    component.handleMenuAction('left');
     expect(turnLeftSpy).toHaveBeenCalled();
   });
 
   it('handles right action for turning right', () => {
     const turnRightSpy = jest.spyOn(component, 'turnRight');
-    component.handleFooterAction('right');
+    component.handleMenuAction('right');
     expect(turnRightSpy).toHaveBeenCalled();
   });
 
@@ -412,13 +412,13 @@ describe('MazeComponent - Strafe Movement', () => {
 
   it('handles strafe_left action for strafing left', () => {
     const strafeLeftSpy = jest.spyOn(component, 'strafeLeft');
-    component.handleFooterAction('strafe_left');
+    component.handleMenuAction('strafe_left');
     expect(strafeLeftSpy).toHaveBeenCalled();
   });
 
   it('handles strafe_right action for strafing right', () => {
     const strafeRightSpy = jest.spyOn(component, 'strafeRight');
-    component.handleFooterAction('strafe_right');
+    component.handleMenuAction('strafe_right');
     expect(strafeRightSpy).toHaveBeenCalled();
   });
 
@@ -653,7 +653,7 @@ describe('MazeComponent - Door Opening', () => {
     const openSpy = jest.spyOn(component, 'openDoor');
 
     // Trigger open action
-    component.handleFooterAction('open');
+    component.handleMenuAction('open');
 
     expect(openSpy).toHaveBeenCalled();
   });
@@ -679,7 +679,7 @@ describe('MazeComponent - Door Opening', () => {
 
     const openSpy = jest.spyOn(component, 'openDoor');
 
-    component.handleFooterAction('open');
+    component.handleMenuAction('open');
 
     // Should call openDoor, which will show "No door here" message
     expect(openSpy).toHaveBeenCalled();
@@ -785,7 +785,7 @@ describe('MazeComponent - Tile Inspection', () => {
 
     const inspectSpy = jest.spyOn(component, 'inspectTile');
 
-    component.handleFooterAction('inspect');
+    component.handleMenuAction('inspect');
 
     expect(inspectSpy).toHaveBeenCalled();
   });

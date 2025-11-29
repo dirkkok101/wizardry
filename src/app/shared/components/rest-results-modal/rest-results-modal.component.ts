@@ -30,63 +30,71 @@ export interface RestResultsData {
     @if (visible) {
       <div class="modal-overlay" tabindex="0" #modalOverlay
            role="dialog" aria-modal="true" aria-labelledby="rest-modal-title">
-        <div class="modal-content">
+        <div class="modal-content" [class.has-level-ups]="results.levelUps.length > 0">
           <h2 class="modal-title" id="rest-modal-title">Rest Complete</h2>
 
-          <div class="summary-section">
-            <div class="summary-item">
-              <span class="label">Time Passed:</span>
-              <span class="value">{{ results.weeksRested }} week(s)</span>
+          <div class="modal-body" [class.has-level-ups]="results.levelUps.length > 0">
+            <!-- Left column: Summary + Party Status -->
+            <div class="results-column">
+              <div class="summary-section">
+                <div class="summary-item">
+                  <span class="label">Time Passed:</span>
+                  <span class="value">{{ results.weeksRested }} week(s)</span>
+                </div>
+                @if (results.goldSpent > 0) {
+                  <div class="summary-item">
+                    <span class="label">Gold Spent:</span>
+                    <span class="value gold">{{ results.goldSpent }} GP</span>
+                  </div>
+                }
+              </div>
+
+              @if (characterResults.length > 0) {
+                <div class="character-results">
+                  <h3>Party Status</h3>
+                  @for (char of characterResults; track char.id) {
+                    <div class="character-row">
+                      <span class="char-name">{{ char.name }}</span>
+                      <span class="char-stats">
+                        @if (char.hpGained > 0) {
+                          <span class="hp-gained">+{{ char.hpGained }} HP</span>
+                        }
+                        @if (char.spellsRestored) {
+                          <span class="spells-restored">Spells Restored</span>
+                        }
+                        @if (char.hpGained === 0 && !char.spellsRestored) {
+                          <span class="no-change">No change</span>
+                        }
+                      </span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
-            @if (results.goldSpent > 0) {
-              <div class="summary-item">
-                <span class="label">Gold Spent:</span>
-                <span class="value gold">{{ results.goldSpent }} GP</span>
+
+            <!-- Right column: Level Ups (only when present) -->
+            @if (results.levelUps.length > 0) {
+              <div class="level-ups-column">
+                <div class="level-ups">
+                  <h3>Level Up!</h3>
+                  @for (levelUp of results.levelUps; track levelUp.characterId) {
+                    <div class="level-up-entry">
+                      <div class="level-up-header">
+                        <span class="char-name">{{ levelUp.characterName }}</span>
+                        <span class="new-level">Level {{ levelUp.newLevel }}</span>
+                      </div>
+                      <div class="stat-grid">
+                        <span class="stat-item">+{{ levelUp.hpIncrease }} HP</span>
+                        @for (stat of getStatChanges(levelUp); track stat.name) {
+                          <span class="stat-item">+{{ stat.value }} {{ stat.name }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
-
-          @if (characterResults.length > 0) {
-            <div class="character-results">
-              <h3>Party Status</h3>
-              @for (char of characterResults; track char.id) {
-                <div class="character-row">
-                  <span class="char-name">{{ char.name }}</span>
-                  <span class="char-stats">
-                    @if (char.hpGained > 0) {
-                      <span class="hp-gained">+{{ char.hpGained }} HP</span>
-                    }
-                    @if (char.spellsRestored) {
-                      <span class="spells-restored">Spells Restored</span>
-                    }
-                    @if (char.hpGained === 0 && !char.spellsRestored) {
-                      <span class="no-change">No change</span>
-                    }
-                  </span>
-                </div>
-              }
-            </div>
-          }
-
-          @if (results.levelUps.length > 0) {
-            <div class="level-ups">
-              <h3>Level Up!</h3>
-              @for (levelUp of results.levelUps; track levelUp.characterId) {
-                <div class="level-up-entry">
-                  <div class="level-up-header">
-                    <span class="char-name">{{ levelUp.characterName }}</span>
-                    <span class="new-level">Level {{ levelUp.newLevel }}</span>
-                  </div>
-                  <div class="level-up-details">
-                    <span class="hp-increase">+{{ levelUp.hpIncrease }} HP</span>
-                    @for (stat of getStatChanges(levelUp); track stat.name) {
-                      <span class="stat-change">+{{ stat.value }} {{ stat.name }}</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
 
           <div class="modal-actions">
             <button class="primary-button" (click)="dismiss()">
@@ -121,6 +129,38 @@ export interface RestResultsData {
       box-shadow: 0 0 20px rgba(212, 165, 116, 0.2);
     }
 
+    .modal-content.has-level-ups {
+      max-width: 800px;
+    }
+
+    .modal-body {
+      display: block;
+    }
+
+    .modal-body.has-level-ups {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    .results-column {
+      min-width: 0;
+    }
+
+    .level-ups-column {
+      min-width: 0;
+    }
+
+    @media (max-width: 600px) {
+      .modal-content.has-level-ups {
+        max-width: 500px;
+      }
+
+      .modal-body.has-level-ups {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .modal-title {
       margin: 0 0 var(--space-3) 0;
       font-family: var(--font-display);
@@ -148,7 +188,7 @@ export interface RestResultsData {
     }
 
     .label {
-      color: var(--color-text-muted);
+      color: var(--color-text-primary);
     }
 
     .value {
@@ -219,31 +259,47 @@ export interface RestResultsData {
     }
 
     .level-up-entry {
+      padding-bottom: var(--space-2);
       margin-bottom: var(--space-2);
+      border-bottom: 1px solid var(--color-border);
       font-family: var(--font-body);
+    }
+
+    .level-up-entry:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
 
     .level-up-header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: var(--space-1);
       font-size: var(--font-size-sm);
     }
 
     .new-level {
-      color: var(--color-gold-bright);
+      background: var(--color-gold-primary);
+      color: var(--color-bg-darkest);
+      padding: 2px var(--space-2);
+      border-radius: 12px;
       font-weight: 700;
-    }
-
-    .level-up-details {
-      display: flex;
-      gap: var(--space-3);
       font-size: var(--font-size-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .hp-increase, .stat-change {
+    .stat-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1) var(--space-3);
+    }
+
+    .stat-item {
       color: var(--color-status-ok);
-      font-weight: 500;
+      font-weight: 600;
+      font-size: var(--font-size-xs);
     }
 
     .modal-actions {
@@ -256,9 +312,9 @@ export interface RestResultsData {
 
     .primary-button {
       padding: var(--space-2) var(--space-4);
-      background: var(--color-gold-primary);
-      color: var(--color-bg-darkest);
-      border: none;
+      background: transparent;
+      color: var(--color-gold-primary);
+      border: 1px solid var(--color-gold-primary);
       border-radius: var(--card-border-radius);
       cursor: pointer;
       font-family: var(--font-body);
@@ -267,11 +323,17 @@ export interface RestResultsData {
       text-transform: uppercase;
       letter-spacing: 0.05em;
       transition: all var(--transition-fast);
+      min-width: 120px;
     }
 
     .primary-button:hover {
-      background: var(--color-gold-bright);
+      background: var(--color-gold-primary);
+      color: var(--color-bg-darkest);
       box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
+    }
+
+    .primary-button:active {
+      transform: scale(0.95);
     }
   `]
 })

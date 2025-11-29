@@ -1,26 +1,26 @@
+// Chest Scene - Modern Retro-Fantasy Design System
+// Dark dungeon atmosphere with gold/amber accents
+@use '../../../styles/card-mixins' as *;
+
 .chest-scene {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--crt-black);
-  color: var(--crt-green);
-  font-family: 'Courier New', monospace;
-  padding: 1rem;
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: var(--space-2);
 
+  // SceneTitleComponent handles its own styling
   app-scene-title {
-    border-bottom: var(--crt-border);
-    box-shadow: 0 2px 10px rgba(0, 255, 0, 0.3);
-
-    ::ng-deep h1 {
-      text-shadow: var(--crt-glow-md);
-      letter-spacing: 2px;
-    }
+    display: block;
+    flex-shrink: 0;
   }
 }
 
 .chest-content {
   flex: 1;
-  padding: 1.5rem 2rem;
+  padding: var(--space-4) var(--space-6);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -28,166 +28,175 @@
   justify-content: flex-start;
 }
 
-// Character Selection Mode
+// ============================================
+// CHARACTER SELECTION MODE
+// ============================================
 .character-select,
 .caster-select {
   width: 100%;
   max-width: 500px;
 
   .instruction {
-    color: var(--crt-green);
-    font-size: 1.2rem;
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-gold-primary);
     text-align: center;
-    margin-bottom: 1.5rem;
-    text-shadow: var(--crt-glow-sm);
+    margin-bottom: var(--space-4);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
   .character-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
 
   .character-option {
+    @include card-fantasy-interactive;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    background: var(--crt-bg-dark);
-    border: 2px solid var(--crt-green-dim);
-    color: var(--crt-green);
-    padding: 0.75rem 1rem;
-    font-family: 'Courier New', monospace;
-    font-size: 1rem;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
     cursor: pointer;
     text-align: left;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba(0, 255, 0, 0.1);
-      border-color: var(--crt-green);
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-    }
+    width: 100%;
 
     &.recommended {
-      border-color: var(--crt-green);
-      box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+      border-color: var(--color-gold-primary);
+      box-shadow: var(--glow-gold-sm);
     }
 
     .number {
-      color: var(--crt-green-dim);
-      min-width: 1.5rem;
+      color: var(--color-gold-primary);
+      font-weight: 700;
+      min-width: 24px;
     }
 
     .name {
       flex: 1;
-      font-weight: bold;
+      color: var(--color-text-primary);
+      font-weight: 500;
     }
 
     .class,
     .sp {
-      color: var(--crt-green-dim);
-      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
     }
 
     .star {
-      color: var(--crt-green);
+      color: var(--color-gold-bright);
       font-weight: bold;
-      margin-left: 0.5rem;
     }
   }
 
   .hint {
-    color: var(--crt-green-dim);
-    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
     text-align: center;
-    margin-top: 1rem;
+    margin-top: var(--space-3);
     font-style: italic;
   }
 }
 
-// Action Selection Mode
+// ============================================
+// ACTION SELECTION MODE
+// ============================================
 .action-mode {
   width: 100%;
   max-width: 500px;
 
   .chest-info {
-    background: var(--crt-bg-dark);
-    border: var(--crt-border);
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-3);
 
     p {
-      margin: 0.5rem 0;
+      margin: var(--space-2) 0;
     }
 
     .handler {
-      font-weight: bold;
-      color: var(--crt-green);
+      font-weight: 600;
+      color: var(--color-gold-primary);
     }
 
     .trap-status {
-      font-size: 1.1rem;
-      margin: 1rem 0;
+      font-size: var(--font-size-lg);
+      color: var(--color-text-primary);
+      margin: var(--space-3) 0;
     }
 
     .chance-info {
-      color: var(--crt-green-dim);
-      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
     }
   }
 
   .action-message {
-    background: var(--crt-bg-medium);
-    border: 1px solid var(--crt-green-dim);
-    padding: 1rem;
+    background: var(--color-bg-dark);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-3);
     text-align: center;
-    font-size: 1.1rem;
-    margin-top: 1rem;
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    margin-top: var(--space-3);
   }
 }
 
-// Trap Name Input Mode
+// ============================================
+// TRAP NAME INPUT MODE
+// ============================================
 .trap-input {
   width: 100%;
   max-width: 500px;
   text-align: center;
 
   .instruction {
-    color: var(--crt-green);
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
+    font-family: var(--font-display);
+    color: var(--color-gold-primary);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-2);
+    letter-spacing: 0.05em;
   }
 
   .hint {
-    color: var(--crt-green-dim);
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-4);
   }
 
   .input-display {
-    background: var(--crt-bg-dark);
-    border: var(--crt-border);
-    padding: 1rem 1.5rem;
-    font-size: 1.3rem;
-    font-family: 'Courier New', monospace;
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-gold-primary);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-xl);
+    font-family: var(--font-body);
     text-transform: uppercase;
-    letter-spacing: 2px;
-    min-height: 2.5rem;
+    letter-spacing: 3px;
+    box-shadow: var(--glow-gold-sm);
+    min-height: 3rem;
 
     .input-text {
-      color: var(--crt-green);
+      color: var(--color-gold-bright);
     }
 
     .cursor {
-      color: var(--crt-green);
+      color: var(--color-gold-primary);
       animation: blink 1s step-end infinite;
     }
   }
 
   .input-hint {
-    color: var(--crt-green-dim);
-    font-size: 0.85rem;
-    margin-top: 1rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-3);
   }
 }
 
@@ -197,34 +206,38 @@
   }
 }
 
-// Inventory Warning Mode
+// ============================================
+// INVENTORY WARNING MODE
+// ============================================
 .inventory-warning {
   width: 100%;
   max-width: 500px;
   text-align: center;
-  padding: 2rem;
-  background: var(--crt-bg-dark);
-  border: 2px solid #ff6600;
-  box-shadow: 0 0 15px rgba(255, 102, 0, 0.3);
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-warning);
+  border-radius: var(--card-border-radius);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
 
   .warning-icon {
     font-size: 3rem;
-    color: #ff6600;
-    margin-bottom: 1rem;
+    color: var(--color-warning);
+    margin-bottom: var(--space-3);
     animation: pulse 1.5s ease-in-out infinite;
   }
 
   .warning-text {
-    color: #ff9933;
-    font-size: 1.1rem;
+    color: var(--color-warning);
+    font-size: var(--font-size-base);
     line-height: 1.5;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-3);
   }
 
   .warning-question {
-    color: var(--crt-green);
-    font-size: 1.2rem;
-    font-weight: bold;
+    font-family: var(--font-display);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
   }
 }
 
@@ -237,65 +250,74 @@
   }
 }
 
-// Result Display Mode
+// ============================================
+// RESULT DISPLAY MODE
+// ============================================
 .result-display {
   width: 100%;
   max-width: 500px;
   text-align: center;
 
   .result-message {
-    background: var(--crt-bg-dark);
-    border: var(--crt-border);
-    padding: 1.5rem 2rem;
-    font-size: 1.2rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-gold-primary);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-4);
+    font-size: var(--font-size-lg);
     line-height: 1.6;
-    margin-bottom: 1.5rem;
+    color: var(--color-text-primary);
+    box-shadow: var(--glow-gold-sm);
+    margin-bottom: var(--space-4);
   }
 
   .continue-hint {
-    color: var(--crt-green-dim);
-    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
     animation: blink 2s ease-in-out infinite;
   }
 }
 
-// Message Display
+// ============================================
+// MESSAGE DISPLAY (TOAST)
+// ============================================
 .message {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--card-border-radius);
   text-align: center;
   font-weight: 500;
   max-width: 500px;
   width: 100%;
 
   &.error {
-    background-color: rgba(204, 0, 0, 0.2);
-    color: #ff6666;
-    border: 1px solid #cc0000;
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
   }
 
   &.success {
-    background-color: rgba(0, 204, 0, 0.2);
-    color: #00ff00;
-    border: 1px solid #00cc00;
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--color-status-ok);
+    border: 1px solid var(--color-status-ok);
   }
 
   &.info {
-    background-color: rgba(0, 136, 204, 0.2);
-    color: #66ccff;
-    border: 1px solid #0088cc;
+    background: rgba(212, 165, 116, 0.15);
+    color: var(--color-gold-primary);
+    border: 1px solid var(--color-gold-primary);
   }
 }
 
-// Responsive adjustments
+// ============================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================
 @media (max-width: 767px) {
   .chest-scene {
-    padding: 0.5rem;
+    padding: var(--space-1);
   }
 
   .chest-content {
-    padding: 1rem;
+    padding: var(--space-3);
   }
 
   .character-select,
@@ -305,5 +327,33 @@
   .inventory-warning,
   .result-display {
     max-width: 100%;
+  }
+
+  .instruction {
+    font-size: var(--font-size-base);
+  }
+}
+
+// Compact height (< 768px viewport height)
+@media (max-height: 767px) {
+  .chest-content {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .character-option {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .inventory-warning {
+    padding: var(--space-3);
+
+    .warning-icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-2);
+    }
+  }
+
+  .result-display .result-message {
+    padding: var(--space-3);
   }
 }

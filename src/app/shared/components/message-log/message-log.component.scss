@@ -1,8 +1,8 @@
 .message-log {
   height: 100%;
   overflow-y: auto;
-  font-family: 'Courier New', monospace;
-  color: var(--crt-green);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
   font-size: 0.85rem;
 
   .message-log-content {
@@ -14,7 +14,6 @@
   .message {
     padding: 0.05rem 0;
     line-height: 1.15;
-    text-shadow: var(--crt-glow-sm);
 
     // Fade older messages (after first 3)
     &:nth-child(n+4) {
@@ -32,7 +31,7 @@
     text-align: center;
   }
 
-  // Custom scrollbar for CRT aesthetic
+  // Custom scrollbar with gold theme
   &::-webkit-scrollbar {
     width: 6px;
   }
@@ -42,10 +41,10 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(0, 255, 0, 0.4);
+    background: rgba(212, 165, 116, 0.4);
 
     &:hover {
-      background: rgba(0, 255, 0, 0.6);
+      background: rgba(212, 165, 116, 0.6);
     }
   }
 }

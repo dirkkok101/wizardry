@@ -96,6 +96,9 @@ describe('RestResultsModalComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Level Up!');
     expect(compiled.textContent).toContain('Level 2');
+    // Stat items show inline format: "+8 HP"
+    const statItems = compiled.querySelectorAll('.stat-item');
+    expect(statItems.length).toBeGreaterThanOrEqual(2); // HP + STR
     expect(compiled.textContent).toContain('+8 HP');
     expect(compiled.textContent).toContain('+1 STR');
   });
