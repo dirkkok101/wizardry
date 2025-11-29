@@ -596,4 +596,44 @@ describe('ChestComponent', () => {
       expect(casters.length).toBe(0)
     })
   })
+
+  describe('VICTORY_SUMMARY mode', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('has VICTORY_SUMMARY as valid ChestMode', () => {
+      component.mode.set('VICTORY_SUMMARY')
+      expect(component.mode()).toBe('VICTORY_SUMMARY')
+    })
+
+    it('exposes pendingCombatRewards computed signal', () => {
+      // Setup pending rewards in game state
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+
+      expect(component.pendingCombatRewards()).toBeDefined()
+      expect(component.pendingCombatRewards()?.totalXP).toBe(100)
+    })
+
+    it('exposes chestResults signal', () => {
+      component.chestResults.set({
+        goldObtained: 50,
+        itemsObtained: [],
+        trapTriggered: true,
+        trapType: TrapType.GAS_BOMB,
+        trapMessage: 'Everyone is poisoned!'
+      })
+
+      expect(component.chestResults()?.goldObtained).toBe(50)
+      expect(component.chestResults()?.trapTriggered).toBe(true)
+    })
+  })
 })

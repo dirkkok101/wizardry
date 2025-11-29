@@ -17,6 +17,7 @@ import { CharacterStatus } from '@models/CharacterStatus';
 import { SceneType } from '@models/SceneType';
 import { Chest, TreasureDistributionResult } from '@models/Chest';
 import { TrapType, TrapInspectionResult, TrapDisarmResult, TrapTriggerResult } from '@models/Trap';
+import { Item } from '@models/Item';
 
 /**
  * Scene modes for the chest interaction state machine
@@ -27,7 +28,8 @@ type ChestMode =
   | 'CASTER_SELECT'     // Choosing CALFO caster
   | 'TRAP_NAME_INPUT'   // Entering trap name for disarm
   | 'INVENTORY_WARNING' // Confirmation when inventory could overflow
-  | 'RESULT_DISPLAY';   // Showing trap/treasure outcome
+  | 'RESULT_DISPLAY'    // Showing trap/treasure outcome
+  | 'VICTORY_SUMMARY';  // Showing combined combat + chest rewards
 
 /**
  * Chest Component
@@ -80,6 +82,20 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   // Inventory warning data
   readonly inventoryWarning = signal<string | null>(null);
+
+  // Chest interaction results for victory summary
+  readonly chestResults = signal<{
+    goldObtained: number
+    itemsObtained: Item[]
+    trapTriggered: boolean
+    trapType: TrapType | null
+    trapMessage: string | null
+  } | null>(null)
+
+  // Computed signal for pending combat rewards from game state
+  readonly pendingCombatRewards = computed(() => {
+    return this.gameState.state().pendingCombatRewards
+  })
 
   // Party members (resolved Character objects)
   readonly partyMembers = computed(() => {
