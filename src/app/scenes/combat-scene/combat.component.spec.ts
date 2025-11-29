@@ -689,6 +689,35 @@ describe('CombatComponent', () => {
       expect(component.isExecutingRound()).toBe(false)
     })
 
+    it('disables action menu items during round execution', () => {
+      // Clear selected actions so action menu is active
+      component['selectedActions'].set(new Map())
+      component['activeCharacterIndex'].set(0)
+      fixture.detectChanges()
+
+      // Action menu items should be enabled when not executing
+      expect(component.isExecutingRound()).toBe(false)
+      const beforeItems = component.actionMenuItems()
+      expect(beforeItems.find(i => i.id === 'attack')?.enabled).toBe(true)
+      expect(beforeItems.find(i => i.id === 'parry')?.enabled).toBe(true)
+
+      // Simulate round execution starting
+      component['isExecutingRound'].set(true)
+
+      // During execution, action menu items should be disabled
+      const duringItems = component.actionMenuItems()
+      expect(duringItems.find(i => i.id === 'attack')?.enabled).toBe(false)
+      expect(duringItems.find(i => i.id === 'parry')?.enabled).toBe(false)
+      expect(duringItems.find(i => i.id === 'flee')?.enabled).toBe(false)
+      expect(duringItems.find(i => i.id === 'cast')?.enabled).toBe(false)
+
+      // After execution completes, action menu items should be enabled again
+      component['isExecutingRound'].set(false)
+      const afterItems = component.actionMenuItems()
+      expect(afterItems.find(i => i.id === 'attack')?.enabled).toBe(true)
+      expect(afterItems.find(i => i.id === 'parry')?.enabled).toBe(true)
+    })
+
     it('commits messages to combat log even with instant display (delay=0)', () => {
       // Set both delays to 0 for instant display
       setCombatMessageDelay(0)

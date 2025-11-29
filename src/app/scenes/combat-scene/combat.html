@@ -133,8 +133,8 @@
       (cancelled)="cancelCharacterSelection()"
     />
 
-    <!-- Footer with action menu -->
-    @if (!showSpellMenu() && !showGroupSelectionDialog() && !showCharacterSelectionDialog() && !showVictoryModal() && !showDefeatModal()) {
+    <!-- Footer with action menu (hidden during round execution) -->
+    @if (!showSpellMenu() && !showGroupSelectionDialog() && !showCharacterSelectionDialog() && !showVictoryModal() && !showDefeatModal() && !isExecutingRound()) {
       @if (allActionsSelected()) {
         <!-- Show execute round menu -->
         <app-scene-footer
