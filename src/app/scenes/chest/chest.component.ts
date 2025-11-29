@@ -800,8 +800,25 @@ export class ChestComponent implements OnInit, OnDestroy {
    * Handle Leave action
    */
   private handleLeave(): void {
-    console.log('[Chest] handleLeave called - navigating to maze');
-    console.trace('[Chest] handleLeave stack trace');
+    const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
+
+    console.log('[Chest] handleLeave called:', { hasCombatRewards });
+
+    if (hasCombatRewards) {
+      // From combat - show victory summary even if chest abandoned
+      console.log('[Chest] Showing victory summary (chest abandoned)');
+      this.chestResults.set({
+        goldObtained: 0,
+        itemsObtained: [],
+        trapTriggered: false,
+        trapType: null,
+        trapMessage: null
+      });
+      this.mode.set('VICTORY_SUMMARY');
+      return;
+    }
+
+    console.log('[Chest] handleLeave - navigating to maze');
     this.logger.debug('[Chest] Leaving chest');
     this.navigation.navigateTo('maze');
   }

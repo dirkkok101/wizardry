@@ -656,6 +656,40 @@ describe('ChestComponent', () => {
     })
   })
 
+  describe('handleLeave', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('shows victory summary when leaving chest from combat', () => {
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+      component.mode.set('ACTION_SELECT')
+
+      component['handleLeave']()
+
+      expect(component.mode()).toBe('VICTORY_SUMMARY')
+      expect(component.chestResults()?.goldObtained).toBe(0)
+      expect(navigationService.navigateTo).not.toHaveBeenCalled()
+    })
+
+    it('navigates directly to maze when leaving non-combat chest', () => {
+      // No pendingCombatRewards
+      component.mode.set('ACTION_SELECT')
+
+      component['handleLeave']()
+
+      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+    })
+  })
+
   describe('handleContinue', () => {
     beforeEach(() => {
       component.ngOnInit()
