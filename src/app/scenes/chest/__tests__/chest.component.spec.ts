@@ -656,6 +656,69 @@ describe('ChestComponent', () => {
     })
   })
 
+  describe('handleContinue', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('transitions to VICTORY_SUMMARY when coming from combat', () => {
+      // Setup: pending combat rewards indicates this came from combat
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+
+      component.mode.set('RESULT_DISPLAY')
+      component.chest.set({
+        id: 'test',
+        trapped: false,
+        trapType: null,
+        trapIdentified: true,
+        trapDisarmed: false,
+        rewardTier: 1 as any,
+        contents: { gold: 50, items: [] },
+        sourcePosition: { x: 0, y: 0, facing: 'NORTH' },
+        mazeLevel: 1,
+        source: 'combat_victory'
+      })
+
+      component['handleContinue']()
+
+      expect(component.mode()).toBe('VICTORY_SUMMARY')
+      expect(navigationService.navigateTo).not.toHaveBeenCalled()
+    })
+
+    it('navigates to maze from VICTORY_SUMMARY', () => {
+      component.mode.set('VICTORY_SUMMARY')
+
+      component['handleContinue']()
+
+      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+    })
+
+    it('clears pendingCombatRewards when navigating to maze from VICTORY_SUMMARY', () => {
+      gameState.updateState(s => ({
+        ...s,
+        pendingCombatRewards: {
+          totalXP: 100,
+          xpPerCharacter: 50,
+          livingCharacterCount: 2,
+          monstersDefeated: 3
+        }
+      }))
+      component.mode.set('VICTORY_SUMMARY')
+
+      component['handleContinue']()
+
+      expect(gameState.state().pendingCombatRewards).toBeUndefined()
+    })
+  })
+
   describe('VICTORY_SUMMARY mode', () => {
     beforeEach(() => {
       component.ngOnInit()

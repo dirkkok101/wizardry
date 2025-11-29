@@ -838,20 +838,44 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleContinue(): void {
     const chest = this.chest();
     const currentMode = this.mode();
+    const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
 
     console.log('[Chest] handleContinue called:', {
       hasChest: !!chest,
       currentMode,
+      hasCombatRewards,
       lastActionMessage: this.lastActionMessage()
     });
 
-    // If chest still has treasure and wasn't a teleport/alarm
+    if (currentMode === 'RESULT_DISPLAY' && hasCombatRewards) {
+      // From combat - show victory summary before maze
+      console.log('[Chest] Transitioning to VICTORY_SUMMARY');
+      this.mode.set('VICTORY_SUMMARY');
+      return;
+    }
+
+    if (currentMode === 'VICTORY_SUMMARY') {
+      // After victory summary - clear rewards and go to maze
+      console.log('[Chest] Navigating to maze from VICTORY_SUMMARY');
+      this.clearCombatRewardsAndNavigate();
+      return;
+    }
+
+    // Non-combat chest or exploration - go directly to maze
     if (chest && currentMode === 'RESULT_DISPLAY') {
-      console.log('[Chest] Navigating to maze from RESULT_DISPLAY');
+      console.log('[Chest] Navigating to maze from RESULT_DISPLAY (no combat rewards)');
       this.navigation.navigateTo('maze');
     } else {
       console.log('[Chest] handleContinue - conditions not met for navigation');
     }
+  }
+
+  private clearCombatRewardsAndNavigate(): void {
+    this.gameState.updateState(state => ({
+      ...state,
+      pendingCombatRewards: undefined
+    }));
+    this.navigation.navigateTo('maze');
   }
 
   /**
