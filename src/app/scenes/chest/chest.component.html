@@ -100,6 +100,81 @@
       </div>
     }
 
+    <!-- Victory Summary Mode -->
+    @if (mode() === 'VICTORY_SUMMARY') {
+      <div class="victory-summary">
+        <h2 class="victory-title">VICTORY!</h2>
+
+        <!-- Combat XP Section -->
+        @if (pendingCombatRewards(); as rewards) {
+          <div class="xp-section">
+            <div class="section-header">Experience Earned</div>
+            <div class="reward-row">
+              <span class="label">Monsters Defeated:</span>
+              <span class="value">{{ rewards.monstersDefeated }}</span>
+            </div>
+            <div class="reward-row">
+              <span class="label">Total XP:</span>
+              <span class="value highlight">{{ rewards.totalXP }}</span>
+            </div>
+            <div class="reward-row">
+              <span class="label">XP per Character:</span>
+              <span class="value">{{ rewards.xpPerCharacter }}</span>
+            </div>
+            <div class="reward-row muted">
+              <span class="label">Living Characters:</span>
+              <span class="value">{{ rewards.livingCharacterCount }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Chest Rewards Section -->
+        @if (chestResults(); as results) {
+          <div class="treasure-section">
+            <div class="section-header">Treasure Found</div>
+
+            @if (results.goldObtained > 0) {
+              <div class="reward-row">
+                <span class="label">Gold:</span>
+                <span class="value gold">{{ results.goldObtained }}</span>
+              </div>
+            }
+
+            @if (results.itemsObtained.length > 0) {
+              <div class="items-found">
+                <div class="items-header">Items ({{ results.itemsObtained.length }}):</div>
+                @for (item of results.itemsObtained; track item.id) {
+                  <div class="item-row">
+                    <span class="item-name">{{ item.name }}</span>
+                    @if (!item.identified) {
+                      <span class="unidentified">(unidentified)</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (results.goldObtained === 0 && results.itemsObtained.length === 0) {
+              <div class="reward-row muted">
+                <span class="label">Chest abandoned - no treasure collected</span>
+              </div>
+            }
+          </div>
+
+          <!-- Trap Effects Section -->
+          @if (results.trapTriggered) {
+            <div class="trap-section">
+              <div class="section-header warning">Trap Triggered!</div>
+              <div class="trap-type">{{ results.trapType }}</div>
+              <div class="trap-effects">{{ results.trapMessage }}</div>
+            </div>
+          }
+        }
+
+        <p class="continue-hint">Press ENTER to return to the maze...</p>
+      </div>
+    }
+
     <!-- Message Display -->
     @if (messages.hasMessage()) {
       <div class="message"
