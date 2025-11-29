@@ -1263,7 +1263,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     if (hasChest) {
       // Monsters left behind a treasure chest - navigate to chest scene
-      this.handleVictoryWithChest(newRoster, rewards, party, maxMonsterLevel)
+      this.handleVictoryWithChest(newRoster, rewards, party, maxMonsterLevel, allMonsters)
     } else {
       // Monsters dropped loose gold - distribute directly and show victory modal
       this.handleVictoryWithLooseGold(newRoster, rewards)
@@ -1291,7 +1291,8 @@ export class CombatComponent implements OnInit, OnDestroy {
     newRoster: Map<string, Character>,
     rewards: VictoryRewards,
     party: { position: { x: number; y: number; level: number; facing: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' }; members: string[]; gold: number },
-    maxMonsterLevel: number
+    maxMonsterLevel: number,
+    allMonsters: MonsterInstance[]
   ): void {
     // Convert ItemDrop[] to Item[] for the chest
     const chestItems: Item[] = rewards.items
@@ -1331,12 +1332,18 @@ export class CombatComponent implements OnInit, OnDestroy {
       chest.trapType = ChestService.selectTrapType(rewardTier)
     }
 
-    // Update game state: distribute XP, clear combat, set pending chest
+    // Update game state: distribute XP, clear combat, set pending chest and combat rewards
     this.gameState.updateState(state => ({
       ...state,
       roster: newRoster,
       combat: undefined,
-      pendingChest: chest
+      pendingChest: chest,
+      pendingCombatRewards: {
+        totalXP: rewards.totalXP,
+        xpPerCharacter: rewards.xpPerCharacter,
+        livingCharacterCount: rewards.livingCharacterCount,
+        monstersDefeated: allMonsters.length
+      }
     }))
 
     // Store rewards for display

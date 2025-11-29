@@ -840,6 +840,24 @@ describe('CombatComponent', () => {
       expect(rewards).toBeDefined()
       expect(rewards?.totalXP).toBeGreaterThan(0)
     })
+
+    it('stores pendingCombatRewards in game state when victory with chest', () => {
+      // Queue values:
+      // - 0.5 skips item drop (> 0.15 threshold)
+      // - 0.1 for chest probability (succeeds for 30% threshold)
+      // - 0.5 for trap probability
+      // - 0.5 for trap type selection
+      // - 0.5 for chest ID random
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
+
+      component['handleVictory']()
+
+      const state = gameState.state()
+      expect(state.pendingCombatRewards).toBeDefined()
+      expect(state.pendingCombatRewards?.totalXP).toBeGreaterThan(0)
+      expect(state.pendingCombatRewards?.livingCharacterCount).toBe(2)
+      expect(state.pendingCombatRewards?.monstersDefeated).toBeGreaterThan(0)
+    })
   })
 
   describe('Return to Maze', () => {
