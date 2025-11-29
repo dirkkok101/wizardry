@@ -29,51 +29,72 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 
 ## Trap Types
 
-### Damage Traps
+> **Note**: The trap list below includes both original Apple II traps and NES additions.
+> Our implementation uses the combined set for maximum variety.
+
+### Damage Traps (FROM SOURCE CODE)
 
 **POISON NEEDLE** - Low threat
-- Damage: 1d6 to opener
-- Status: Poison (continues after combat)
+- Target: Opener only
+- Effect: Sets poison status (stacks with repeated needles)
 - Cure: LATUMOFIS spell or Temple
 
-**CROSSBOW BOLT** - Medium threat
-- Damage: 2d8 to opener
-- Status: None
-- Risk: Moderate damage
+**CROSSBOW BOLT** - Medium-High threat (scales with level!)
+- Target: Opener only
+- Damage: `(MazeLevel)d8` (e.g., Level 5 = 5d8 = 5-40 damage)
+- Risk: Deadly on deeper floors
 
 **GAS BOMB** - Medium threat
-- Damage: 2d6 to entire party
-- Status: Poison to all party members
-- Risk: Party-wide damage + poison
+- Target: Entire party (Save vs. Breath to resist)
+- Effect: Poison to party members who fail save
+- Dwarves/Thieves/Ninjas: Bonus to resist
+- Cure: LATUMOFIS spell or Temple
 
-**EXPLODING BOX** - High threat
-- Damage: 3d6 to entire party
-- Status: None
-- Risk: Heavy party-wide damage
+**EXPLODING BOX** - High threat (scales with level!)
+- Target: Each party member (50% chance each)
+- Damage: `(MazeLevel)d8` to each affected character
+- Risk: Heavy party-wide damage on deep floors
+
+**SPLINTERS** - Medium threat
+- Target: Each party member (70% chance each)
+- Damage: `(MazeLevel)d6` to each affected character
+
+**BLADES** - High threat
+- Target: Each party member (30% chance each)
+- Damage: `(MazeLevel)d12` to each affected character
+- Lower hit chance but highest damage per hit
 
 **STUNNER** - Medium threat
-- Damage: 1d4 to opener
-- Status: Paralysis
-- Risk: Disables character (can't act in combat)
+- Target: Opener only
+- Effect: **Immediate paralysis (NO saving throw!)**
+- Cure: DIALKO spell or Temple
 
 ### Class-Specific Traps
 
-**MAGE BLASTER (Anti-Mage)** - High threat
-- Damage: 4d6 to Mages and Bishops
-- Other classes: Immune
-- Risk: Can one-shot low-level mages
+**ANTI-MAGE (Mage Blaster)** - CRITICAL THREAT ⚠️
+- Affected: Mages, Samurai, Bishops
+- Resolution: Save vs. Spell
+- **Mages who FAIL**: Paralyzed → if already paralyzed, **TURNED TO STONE!**
+- **Mages who SUCCEED**: Still paralyzed (reduced effect)
+- **Samurai/Bishops who FAIL**: Paralyzed only
+- **Samurai/Bishops who SUCCEED**: **NO effect**
 
-**PRIEST BLASTER (Anti-Priest)** - High threat
-- Damage: 4d6 to Priests, Bishops, Lords
-- Other classes: Immune
-- Risk: Can one-shot low-level priests
+**ANTI-PRIEST (Priest Blaster)** - CRITICAL THREAT ⚠️
+- Affected: Priests, Bishops only
+- **IMPORTANT: Lords are IMMUNE!** (despite having priest spells)
+- Resolution: Save vs. Spell
+- **Priests who FAIL**: Paralyzed → if already paralyzed, **TURNED TO STONE!**
+- **Priests who SUCCEED**: Still paralyzed (reduced effect)
+- **Bishops who FAIL**: Paralyzed only
+- **Bishops who SUCCEED**: **NO effect**
 
 ### Special Traps
 
 **TELEPORTER** - CRITICAL THREAT ⚠️
-- Effect: Teleports entire party to random location
-- Risk: Can teleport INTO WALLS = instant party death
-- Risk: Can teleport to very dangerous dungeon level
+- Target: Entire party
+- Effect: Teleports to random X,Y on same maze level
+- Facing: Random direction after teleport
+- Risk: Disorienting, may strand party in dangerous area
 - **NEVER trigger this trap** - always disarm first
 
 **ALARM** - Medium threat
@@ -97,9 +118,12 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 - Ninjas: AGI 24 for 95% success
 
 **Results**:
-- ✅ Success: Identifies trap type
-- ❌ Failure: No information (can retry)
-- ⚠️ Critical Failure: Triggers trap (1-2% chance)
+- ✅ Success: Identifies correct trap type
+- ❌ Failure: **Reveals RANDOM trap name** (misleads you - key mechanic!)
+- ⚠️ Critical Failure: Triggers trap (small chance)
+
+**CRITICAL**: Failed inspection does NOT say "failed" - it shows a random wrong trap name!
+You cannot tell if the revealed trap is real or a false positive.
 
 **Example**:
 ```
@@ -114,8 +138,9 @@ Treasure chests contain gold and valuable items, but most are protected by dange
 **Cost**: 1 spell point (Level 2)
 **Risk**: None (cannot trigger trap)
 
-**Advantage**: No trigger risk, high success
+**Advantage**: No trigger risk, high success rate
 **Disadvantage**: Costs spell point
+**CRITICAL**: If CALFO fails (5% chance), it reveals a RANDOM trap name (just like failed inspection!)
 
 **Example**:
 ```
@@ -158,12 +183,14 @@ Avoid Trigger% = AGI × 5
 ```
 
 **Retry Strategy**:
-- If failed **without triggering** → Correct trap type + your AGI saved you, keep trying!
-- If triggered → Wrong type OR failed AGI save
+- If failed **without triggering** → You chose the CORRECT trap type + your AGI saved you, keep trying!
+- If triggered → Either wrong trap type OR you had the right type but failed the AGI save
 
-**Dungeon Level Effect**:
-- Easy levels (1-4): Wrong trap name usually allows retry
-- Deep levels (5+): Wrong trap name usually triggers trap
+**WRONG TRAP NAME** (FROM SOURCE CODE):
+- If you enter the WRONG trap name, odds of NOT triggering = Level × 0.1%
+- Level 10 character = 1% avoid (99% trigger!)
+- Level 50 character = 5% avoid (95% trigger!)
+- **Bottom line**: Wrong trap name = almost certainly triggers the trap
 
 ### Option 4: Just Open It
 
@@ -184,14 +211,16 @@ Avoid Trigger% = AGI × 5
 
 ### Recommended Sequence
 
-**1. Inspect or CALFO**
+**1. Inspect AND CALFO (Both!)**
 - Thief inspects: 95% success if AGI 16+
-- OR Priest casts CALFO: 95% success
+- Priest casts CALFO: 95% success
+- **CRITICAL**: Failed checks reveal RANDOM trap names - you can't tell if it's correct!
 
-**2. Double-Check (Optional but Recommended)**
+**2. Double-Check is ESSENTIAL (Not Optional!)**
 - Thief inspects → "POISON NEEDLE"
 - Priest casts CALFO → "POISON NEEDLE"
-- Both agree? Very high confidence!
+- Both agree? Very high confidence the trap name is correct!
+- **If they disagree**: One is a false positive - use caution or leave chest
 
 **3. Disarm Trap**
 - Thief disarms with correct trap type
