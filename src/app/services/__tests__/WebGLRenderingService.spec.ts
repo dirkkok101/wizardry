@@ -90,11 +90,16 @@ describe('WebGLRenderingService', () => {
       texImage2D: jest.fn(),
       texParameteri: jest.fn(),
       activeTexture: jest.fn(),
+      generateMipmap: jest.fn(),
       TEXTURE_2D: 0x0DE1,
       TEXTURE_MIN_FILTER: 0x2801,
       TEXTURE_MAG_FILTER: 0x2800,
+      TEXTURE_WRAP_S: 0x2802,
+      TEXTURE_WRAP_T: 0x2803,
       LINEAR: 0x2601,
       NEAREST: 0x2600,
+      LINEAR_MIPMAP_LINEAR: 0x2703,
+      CLAMP_TO_EDGE: 0x812F,
       TEXTURE0: 0x84C0,
       RGBA: 0x1908,
       UNSIGNED_BYTE: 0x1401,
@@ -180,11 +185,12 @@ describe('WebGLRenderingService', () => {
     return positions;
   };
 
-  it('should initialize WebGL context', () => {
+  it('should initialize WebGL context (prefers WebGL 2)', () => {
     const service = new WebGLRenderingService();
     const result = service.initialize(canvas);
 
-    expect(canvas.getContext).toHaveBeenCalledWith('webgl');
+    // Should try WebGL 2 first for better texture filtering (trilinear with mipmaps on NPOT)
+    expect(canvas.getContext).toHaveBeenCalledWith('webgl2');
     expect(result).toBe(true);
   });
 

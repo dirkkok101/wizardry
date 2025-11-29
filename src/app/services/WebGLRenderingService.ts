@@ -26,7 +26,8 @@ export class WebGLRenderingService {
   // Must be >= near plane (0.1) to avoid rendering artifacts
   private static readonly MIN_DIST_FROM_EDGE = 0.15;
 
-  private gl: WebGLRenderingContext | null = null;
+  private gl: WebGLRenderingContext | WebGL2RenderingContext | null = null;
+  private isWebGL2: boolean = false;
   private program: WebGLProgram | null = null;
   private uniforms: UniformLocations | null = null;
   private attributes: AttributeLocations | null = null;
@@ -51,8 +52,22 @@ export class WebGLRenderingService {
    * @returns True if initialization succeeded
    */
   initialize(canvas: HTMLCanvasElement): boolean {
-    // Get WebGL context
-    this.gl = canvas.getContext('webgl');
+    // Try WebGL 2 first for better texture filtering support (mipmaps on NPOT textures)
+    this.gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
+    if (this.gl) {
+      this.isWebGL2 = true;
+      if (this.debugMode) {
+        console.log('[WebGL] Using WebGL 2 context');
+      }
+    } else {
+      // Fallback to WebGL 1
+      this.gl = canvas.getContext('webgl');
+      this.isWebGL2 = false;
+      if (this.debugMode) {
+        console.log('[WebGL] Falling back to WebGL 1 context');
+      }
+    }
+
     if (!this.gl) {
       if (this.debugMode) {
         console.error('[WebGL] WebGL not supported');
@@ -187,10 +202,30 @@ export class WebGLRenderingService {
       image
     );
 
-    // Set texture parameters
-    // Use LINEAR filtering for smooth high-resolution textures
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    // Check if we can use mipmaps (WebGL 2 supports NPOT, WebGL 1 requires POT)
+    const isPowerOfTwo = (n: number) => (n & (n - 1)) === 0;
+    const canUseMipmaps = this.isWebGL2 || (isPowerOfTwo(image.width) && isPowerOfTwo(image.height));
+
+    if (canUseMipmaps) {
+      // Generate mipmaps for trilinear filtering
+      this.gl.generateMipmap(this.gl.TEXTURE_2D);
+
+      // Use trilinear filtering (LINEAR_MIPMAP_LINEAR interpolates between mipmap levels)
+      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_LINEAR);
+      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+
+      if (this.debugMode) {
+        console.log('[WebGL] Trilinear filtering enabled with mipmaps');
+      }
+    } else {
+      // Fallback to bilinear filtering for NPOT textures in WebGL 1
+      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+      this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+
+      if (this.debugMode) {
+        console.log('[WebGL] Bilinear filtering (NPOT texture in WebGL 1, mipmaps not supported)');
+      }
+    }
 
     // Clamp to edge (no wrapping)
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
