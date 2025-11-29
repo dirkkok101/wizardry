@@ -223,9 +223,14 @@
       border-bottom: 1px dotted var(--color-border);
       font-family: var(--font-body);
       font-size: var(--font-size-sm);
+      color: var(--color-text-primary);
 
       &:last-child {
         border-bottom: none;
+      }
+
+      .label {
+        color: var(--color-gold-primary);
       }
 
       .value {
