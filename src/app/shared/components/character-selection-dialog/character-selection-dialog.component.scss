@@ -1,213 +1,210 @@
 .dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.85);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 950;
-  outline: none;
 }
 
-.dialog-content {
-  background: var(--color-bg-primary, #1a1a2e);
-  border: 2px solid var(--color-border, #4a4a6a);
-  border-radius: 8px;
-  padding: 20px;
-  min-width: 450px;
-  max-width: 600px;
-  font-family: 'VT323', monospace;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-
-.dialog-header {
-  margin-bottom: 20px;
-  text-align: center;
-  border-bottom: 2px solid var(--color-border, #4a4a6a);
-  padding-bottom: 10px;
-
-  h2 {
-    margin: 0;
-    font-size: 1.8rem;
-    color: var(--color-primary, #ffeb3b);
-    letter-spacing: 2px;
-    font-weight: bold;
-  }
-}
-
-.dialog-body {
-  margin-bottom: 20px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-// Override SelectionListComponent styles for character dialog
-:host ::ng-deep {
-  .selection-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .selection-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    font-size: 1.4rem;
-    transition: all 0.2s;
-    border-left: 4px solid var(--color-primary, #00ff00);
-
-    &:not(.disabled) {
-      cursor: pointer;
-
-      &:hover,
-      &.selected {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateX(4px);
-      }
-    }
-
-    &.disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  // Hide the default shortcut display from SelectionListComponent
-  .item-shortcut {
-    display: none;
-  }
-}
-
-.character-item-content {
+.dialog-panel {
+  width: auto;
+  min-width: 400px;
+  max-width: 700px;
+  max-height: 80vh;
+  background: var(--color-bg-darkest);
+  border: 2px solid var(--color-border);
+  border-radius: var(--card-border-radius);
   display: flex;
-  align-items: flex-start;
-  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  &.dead {
-    border-left-color: var(--color-danger, #ff6b6b);
+.panel-header {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    color: var(--color-gold-primary);
+    margin: 0;
+    letter-spacing: 0.1em;
   }
 }
 
-// Apply dead styling to parent selection-item
-:host ::ng-deep .selection-item:has(.character-item-content.dead) {
-  border-left-color: var(--color-danger, #ff6b6b);
-  background: rgba(255, 0, 0, 0.1);
-}
-
-.char-number {
-  font-weight: bold;
-  font-size: 1.8rem;
-  color: var(--color-primary, #ffeb3b);
-  margin-right: 12px;
-  min-width: 30px;
-}
-
-.char-info {
+// Character grid (1 or 2 columns)
+.character-list {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
+  gap: var(--space-2);
+  padding: var(--space-3);
+  overflow-y: auto;
 
-.char-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.char-name {
-  color: var(--color-text, #e0e0e0);
-  font-weight: bold;
-  font-size: 1.5rem;
-  letter-spacing: 1px;
-}
-
-.char-class {
-  color: var(--color-text-muted, #999);
-  font-size: 1.2rem;
-}
-
-.char-stats {
-  display: flex;
-  gap: 12px;
-  font-size: 1.2rem;
-}
-
-.hp {
-  color: var(--color-hp, #4caf50);
-
-  &.critical {
-    color: var(--color-danger, #ff6b6b);
-    font-weight: bold;
+  &.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-.status {
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 1rem;
-  font-weight: bold;
+.character-card {
+  padding: var(--space-2);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+
+  &.clickable {
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--color-gold-dim);
+      background: var(--color-bg-card-hover, rgba(255, 255, 255, 0.05));
+    }
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.dead {
+    border-left: 3px solid var(--color-status-dead);
+  }
 }
 
-.status-dead {
-  background: rgba(255, 0, 0, 0.3);
-  color: #ff6b6b;
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
-.status-poisoned {
-  background: rgba(128, 0, 128, 0.3);
-  color: #b366ff;
+.character-number {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  color: var(--color-gold-primary);
+  min-width: 2rem;
 }
 
-.status-asleep {
-  background: rgba(0, 100, 200, 0.3);
-  color: #66b3ff;
+.character-name {
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  color: var(--color-gold-primary);
+  flex: 1;
 }
 
-.status-paralyzed {
-  background: rgba(200, 200, 0, 0.3);
-  color: #ffff66;
+.select-button {
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: 1px solid var(--color-gold-dim);
+  border-radius: var(--card-border-radius);
+  color: var(--color-gold-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-gold-dim);
+    color: var(--color-bg-darkest);
+  }
 }
 
-.status-stoned {
-  background: rgba(100, 100, 100, 0.3);
-  color: #999;
+.card-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
 }
 
-.status-ashes {
-  background: rgba(50, 50, 50, 0.3);
-  color: #666;
+.class-level {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.hp-text {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-hp-healthy);
+
+  &.critical {
+    color: var(--color-hp-critical);
+  }
 }
 
 .hp-bar {
-  width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-darkest);
   border-radius: 2px;
   overflow: hidden;
-  margin-top: 4px;
+  margin-top: var(--space-1);
+}
 
-  .hp-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ff6b6b 0%, #4caf50 50%, #4caf50 100%);
-    transition: width 0.3s ease;
+.hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-hp-critical), var(--color-hp-healthy));
+  transition: width var(--transition-fast);
+}
+
+.status-badge {
+  display: inline-block;
+  margin-top: var(--space-1);
+  padding: 2px var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  border-radius: 2px;
+  text-transform: uppercase;
+
+  &.dead {
+    background: var(--color-status-dead);
+    color: white;
+  }
+
+  &.poisoned {
+    background: var(--color-status-poisoned);
+    color: white;
+  }
+
+  &.asleep {
+    background: rgba(0, 100, 200, 0.5);
+    color: white;
+  }
+
+  &.paralyzed {
+    background: rgba(200, 200, 0, 0.5);
+    color: var(--color-bg-darkest);
+  }
+
+  &.stoned {
+    background: rgba(100, 100, 100, 0.5);
+    color: white;
+  }
+
+  &.ashes {
+    background: rgba(50, 50, 50, 0.5);
+    color: var(--color-text-muted);
   }
 }
 
-.dialog-footer {
+.no-characters {
+  color: var(--color-text-muted);
+  font-style: italic;
   text-align: center;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-4);
+  grid-column: 1 / -1;
 }
 
-.instruction {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-style: italic;
+.panel-footer {
+  padding: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+
+  .instruction {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+  }
 }

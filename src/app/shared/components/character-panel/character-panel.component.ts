@@ -35,18 +35,18 @@ const STATUS_CODES: Record<CharacterStatus, string> = {
 };
 
 /**
- * Status colors for visual distinction
+ * Status CSS classes for visual distinction
  */
-const STATUS_COLORS: Record<CharacterStatus, string> = {
-  [CharacterStatus.OK]: 'var(--crt-green)',
-  [CharacterStatus.INJURED]: '#eab308',
-  [CharacterStatus.POISONED]: '#a855f7',
-  [CharacterStatus.PARALYZED]: '#eab308',
-  [CharacterStatus.STONED]: '#6b7280',
-  [CharacterStatus.DEAD]: '#ef4444',
-  [CharacterStatus.ASHES]: '#4b5563',
-  [CharacterStatus.LOST]: '#374151',
-  [CharacterStatus.ASLEEP]: '#3b82f6'
+const STATUS_CLASSES: Record<CharacterStatus, string> = {
+  [CharacterStatus.OK]: 'status-ok',
+  [CharacterStatus.INJURED]: 'status-ok',  // Injured uses OK styling but different code
+  [CharacterStatus.POISONED]: 'status-poisoned',
+  [CharacterStatus.PARALYZED]: 'status-paralyzed',
+  [CharacterStatus.STONED]: 'status-stoned',
+  [CharacterStatus.DEAD]: 'status-dead',
+  [CharacterStatus.ASHES]: 'status-ashes',
+  [CharacterStatus.LOST]: 'status-lost',
+  [CharacterStatus.ASLEEP]: 'status-asleep'
 };
 
 /**
@@ -85,9 +85,41 @@ export class CharacterPanelComponent {
   @Input() actions: CharacterAction[] | ((char: Character) => CharacterAction[]) = [{ type: 'inspect' }];
 
   /**
+   * Which action types to show as visible buttons
+   * Defaults to maze-style (inspect, cast-spell)
+   * For tavern, use ['remove', 'inspect', 'moveUp', 'moveDown']
+   */
+  @Input() visibleActionTypes: string[] = ['inspect', 'cast-spell'];
+
+  /**
+   * Status text to display on each character card (e.g., selected combat action)
+   * Map from character ID to status text
+   */
+  @Input() statusTexts: Map<string, string> = new Map();
+
+  /**
+   * ID of the currently highlighted/active character
+   */
+  @Input() highlightedCharacterId: string | null = null;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
+
+  /**
+   * Get status text for a character
+   */
+  getStatusText(char: Character): string | undefined {
+    return this.statusTexts.get(char.id);
+  }
+
+  /**
+   * Check if character is highlighted/active
+   */
+  isHighlighted(char: Character): boolean {
+    return this.highlightedCharacterId === char.id;
+  }
 
   /**
    * Get abbreviated class name
@@ -104,20 +136,20 @@ export class CharacterPanelComponent {
   }
 
   /**
-   * Get status color
+   * Get status CSS class
    */
-  getStatusColor(status: CharacterStatus): string {
-    return STATUS_COLORS[status] || 'var(--crt-green)';
+  getStatusClass(status: CharacterStatus): string {
+    return STATUS_CLASSES[status] || 'status-ok';
   }
 
   /**
-   * Get HP color based on percentage
+   * Get HP CSS class based on percentage
    */
-  getHPColor(char: Character): string {
+  getHPClass(char: Character): string {
     const percentage = char.hp / char.maxHp;
-    if (percentage > 0.5) return 'var(--crt-green)';
-    if (percentage > 0.25) return '#eab308';
-    return '#ef4444';
+    if (percentage > 0.5) return 'hp-healthy';
+    if (percentage > 0.25) return 'hp-warning';
+    return 'hp-critical';
   }
 
   /**
@@ -138,11 +170,11 @@ export class CharacterPanelComponent {
   }
 
   /**
-   * Get visible actions (exclude moveUp/moveDown, only show inspect and cast-spell)
+   * Get visible actions based on visibleActionTypes input
    */
   getVisibleActions(char: Character): CharacterAction[] {
     return this.getActionsForCharacter(char).filter(
-      action => action.type === 'inspect' || action.type === 'cast-spell'
+      action => this.visibleActionTypes.includes(action.type)
     );
   }
 
@@ -153,6 +185,11 @@ export class CharacterPanelComponent {
     switch (actionType) {
       case 'inspect': return 'Inspect';
       case 'cast-spell': return 'Cast';
+      case 'remove': return 'Remove';
+      case 'moveUp': return '↑';
+      case 'moveDown': return '↓';
+      case 'add': return 'Add';
+      case 'buy': return 'Buy';
       default: return actionType;
     }
   }
@@ -205,13 +242,13 @@ export class CharacterPanelComponent {
     const extractPoints = (pool: typeof magePool): number[] => {
       if (!pool) return [];
       return [
-        pool.level1.current,
-        pool.level2.current,
-        pool.level3.current,
-        pool.level4.current,
-        pool.level5.current,
-        pool.level6.current,
-        pool.level7.current
+        pool.level1?.current ?? 0,
+        pool.level2?.current ?? 0,
+        pool.level3?.current ?? 0,
+        pool.level4?.current ?? 0,
+        pool.level5?.current ?? 0,
+        pool.level6?.current ?? 0,
+        pool.level7?.current ?? 0
       ];
     };
 

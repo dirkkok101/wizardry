@@ -9,8 +9,8 @@
   (cancelled)="onCancelled()"
 >
   <ng-template #itemTemplate let-group>
-    <div class="group-item-content" [attr.data-group]="group.id">
-      <span class="group-letter">{{ group.id }})</span>
+    <div class="group-item-content">
+      <span class="group-letter" [attr.data-group]="group.id">{{ group.id }})</span>
       <span class="group-name">{{ group.displayName }}</span>
     </div>
   </ng-template>

@@ -1,103 +1,308 @@
-@use '../../../../styles/variables' as *;
+// Item Card - Modern Retro-Fantasy theme
+// Used for equipment slots and inventory items
 
 .item-card {
-  border: 2px solid $color-border;
-  padding: 0.5rem;
-  background: $color-bg-black;
-  color: $color-text-green;
-  font-family: $font-mono;
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  transition: all var(--transition-fast);
+  overflow: hidden;
+  min-height: 94px; // Minimum height for equipment cards
 
+  &:hover {
+    border-color: var(--color-gold-dim);
+    background: var(--color-bg-card-hover);
+  }
+
+  // Equipped items get gold accent
   &.equipped {
-    background: rgba(0, 255, 0, 0.1);
-    border-color: $color-text-bright;
+    border-color: var(--color-gold-dim);
+    background: linear-gradient(
+      135deg,
+      rgba(212, 165, 116, 0.08) 0%,
+      var(--color-bg-card) 100%
+    );
+
+    .slot-indicator {
+      background: var(--color-gold-primary);
+      color: var(--color-bg-darkest);
+    }
   }
 
+  // Empty slots
   &.empty {
-    opacity: 0.5;
-    font-style: italic;
-    color: $color-text-dim;
+    border-style: dashed;
+    border-color: var(--color-border);
+
+    &:hover {
+      border-color: var(--color-gold-dim);
+      background: var(--color-bg-card);
+    }
+
+    .item-name {
+      color: var(--color-text-muted);
+      font-style: italic;
+      font-weight: normal;
+    }
+
+    .slot-indicator {
+      background: var(--color-bg-dark);
+      color: var(--color-text-muted);
+    }
   }
+
+  // Unidentified items get mysterious styling
+  &.unidentified {
+    .item-name {
+      color: var(--color-text-secondary);
+      font-style: italic;
+    }
+  }
+}
+
+// Slot indicator (left edge label)
+.slot-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  padding: var(--space-1) 4px;
+  background: var(--color-bg-dark);
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  min-width: 24px;
+  border-right: 1px solid var(--color-border);
+}
+
+// Main content area
+.item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  min-width: 0; // Allow text truncation
 }
 
 .item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.25rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .item-name {
-  font-weight: bold;
-  color: $color-amber;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--color-text-gold);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cursed-badge {
-  color: $color-error;
-  font-size: 0.75rem;
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
   font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 4px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid var(--color-danger);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.unidentified-badge {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.item-details {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 .item-type {
-  font-size: 0.875rem;
-  color: $color-text-dim;
-  margin-bottom: 0.25rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .item-stats {
-  font-size: 0.875rem;
-  color: $color-text-green;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-gold);
+  font-weight: 500;
 }
 
 .item-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-1);
   flex-wrap: wrap;
+  margin-top: auto;
+  min-height: 26px; // Ensures consistent height even when empty
+
+  .actions-placeholder {
+    display: block;
+    height: 22px; // Match button height
+  }
 
   button {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-    border: 1px solid $color-border;
-    background: $color-bg-black;
-    color: $color-text-green;
-    font-family: $font-mono;
+    padding: 4px 10px;
+    font-size: var(--font-size-xs);
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-family: var(--font-body);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 
     &:hover:not(:disabled) {
-      background: $color-text-green;
-      color: $color-bg-black;
+      background: var(--color-gold-primary);
+      color: var(--color-bg-darkest);
+      border-color: var(--color-gold-primary);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.95);
     }
 
     &:disabled {
       opacity: 0.3;
       cursor: not-allowed;
-      color: $color-text-dim;
+      color: var(--color-text-muted);
     }
   }
 
+  // Action button variants
   .btn-equip {
-    border-color: $color-text-bright;
-    color: $color-text-bright;
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-gold);
   }
 
   .btn-unequip {
-    border-color: $color-border;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--color-text-secondary);
+      border-color: var(--color-text-secondary);
+    }
   }
 
   .btn-trade {
-    border-color: $color-amber;
-    color: $color-amber;
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-gold);
   }
 
   .btn-drop {
-    border-color: $color-error;
-    color: $color-error;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+
+    &:hover:not(:disabled) {
+      background: var(--color-danger);
+      color: var(--color-bg-darkest);
+    }
   }
 
   .btn-use {
-    border-color: $color-text-bright;
-    color: $color-text-bright;
-    background: rgba(0, 255, 0, 0.1);
+    border-color: var(--color-status-ok);
+    color: var(--color-status-ok);
+
+    &:hover:not(:disabled) {
+      background: var(--color-status-ok);
+      color: var(--color-bg-darkest);
+    }
+  }
+
+  // Shop context buttons
+  .btn-sell {
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-gold);
+  }
+
+  .btn-identify {
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--color-text-secondary);
+      color: var(--color-bg-darkest);
+    }
+  }
+
+  .btn-uncurse {
+    border-color: #a855f7;
+    color: #a855f7;
+
+    &:hover:not(:disabled) {
+      background: #a855f7;
+      color: var(--color-bg-darkest);
+    }
+  }
+}
+
+// MacBook Air 13" - tighter spacing
+@media (max-height: 900px) {
+  .item-card {
+    min-height: 72px; // Minimum height for compact screens
+  }
+
+  .slot-indicator {
+    padding: 2px 3px;
+    font-size: 0.6rem;
+    min-width: 20px;
+  }
+
+  .item-content {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .item-header {
+    margin-bottom: 2px;
+  }
+
+  .item-name {
+    font-size: var(--font-size-xs);
+  }
+
+  .item-details {
+    margin-bottom: var(--space-1);
+  }
+
+  .item-type,
+  .item-stats {
+    font-size: 0.65rem;
+  }
+
+  .item-actions {
+    gap: 3px;
+
+    button {
+      padding: 2px 6px;
+      font-size: 0.6rem;
+    }
   }
 }

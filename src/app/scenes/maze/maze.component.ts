@@ -2,9 +2,11 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, sig
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
-import { SpellSelectionDialogComponent, SpellOption } from '@shared/components/spell-selection-dialog/spell-selection-dialog.component';
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
@@ -37,9 +39,10 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
   imports: [
     CommonModule,
     SceneTitleComponent,
+    SceneFooterComponent,
     CharacterPanelComponent,
     MessageLogComponent,
-    SpellSelectionDialogComponent,
+    SpellPanelComponent,
     CharacterSelectionDialogComponent
   ],
   templateUrl: './maze.component.html',
@@ -60,7 +63,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly showTargetDialog = signal<boolean>(false);
   readonly selectedCaster = signal<Character | null>(null);
   readonly selectedSpell = signal<SpellData | null>(null);
-  readonly availableSpellOptions = signal<SpellOption[]>([]);
   readonly targetOptions = signal<CharacterOption[]>([]);
 
   // WebGL Renderer
@@ -166,8 +168,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Scene title
   readonly sceneTitle = computed(() => `MAZE - LEVEL ${this.currentLevel()}`);
 
-  // Footer menu (kept for reference, now using keyboard hints)
-  readonly footerMenuItems = computed(() => {
+  // Footer menu items for SceneFooterComponent
+  readonly mazeMenuItems = computed((): MenuItem[] => {
     const state = this.gameState.state();
     let canOpen = false;
     let canInspect = false;
@@ -179,14 +181,14 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     return [
-      { id: 'forward', label: 'Forward (W)', shortcut: 'W', enabled: true },
-      { id: 'back', label: 'Backward (S)', shortcut: 'S', enabled: true },
-      { id: 'left', label: 'Turn Left (A)', shortcut: 'A', enabled: true },
-      { id: 'right', label: 'Turn Right (D)', shortcut: 'D', enabled: true },
-      { id: 'strafe_left', label: 'Strafe Left (Q)', shortcut: 'Q', enabled: true },
-      { id: 'strafe_right', label: 'Strafe Right (E)', shortcut: 'E', enabled: true },
-      { id: 'open', label: 'Open Door (O)', shortcut: 'O', enabled: canOpen },
-      { id: 'inspect', label: 'Inspect (I)', shortcut: 'I', enabled: canInspect }
+      { id: 'forward', label: 'Forward', shortcut: 'W', enabled: true },
+      { id: 'back', label: 'Back', shortcut: 'S', enabled: true },
+      { id: 'left', label: 'Turn L', shortcut: 'A', enabled: true },
+      { id: 'right', label: 'Turn R', shortcut: 'D', enabled: true },
+      { id: 'strafe_left', label: 'Strafe L', shortcut: 'Q', enabled: true },
+      { id: 'strafe_right', label: 'Strafe R', shortcut: 'E', enabled: true },
+      { id: 'open', label: 'Door', shortcut: 'O', enabled: canOpen },
+      { id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: canInspect }
     ];
   });
 
@@ -404,50 +406,28 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ============================================================
   // KEYBOARD SHORTCUTS
+  // Note: Letter keys (W/A/S/D/Q/E/O/I) are handled by MenuComponent
+  // via SceneFooterComponent. Only arrow keys and special keys here.
   // ============================================================
 
-  @HostListener('window:keydown.w')
   @HostListener('window:keydown.arrowup')
-  handleKeyW(): void {
+  handleArrowUp(): void {
     if (!this.isDialogOpen()) this.moveForward();
   }
 
-  @HostListener('window:keydown.s')
   @HostListener('window:keydown.arrowdown')
-  handleKeyS(): void {
+  handleArrowDown(): void {
     if (!this.isDialogOpen()) this.moveBackward();
   }
 
-  @HostListener('window:keydown.a')
   @HostListener('window:keydown.arrowleft')
-  handleKeyA(): void {
+  handleArrowLeft(): void {
     if (!this.isDialogOpen()) this.turnLeft();
   }
 
-  @HostListener('window:keydown.d')
   @HostListener('window:keydown.arrowright')
-  handleKeyD(): void {
+  handleArrowRight(): void {
     if (!this.isDialogOpen()) this.turnRight();
-  }
-
-  @HostListener('window:keydown.q')
-  handleKeyQ(): void {
-    if (!this.isDialogOpen()) this.strafeLeft();
-  }
-
-  @HostListener('window:keydown.e')
-  handleKeyE(): void {
-    if (!this.isDialogOpen()) this.strafeRight();
-  }
-
-  @HostListener('window:keydown.o')
-  handleKeyO(): void {
-    if (!this.isDialogOpen()) this.openDoor();
-  }
-
-  @HostListener('window:keydown.i')
-  handleKeyI(): void {
-    if (!this.isDialogOpen()) this.inspectTile();
   }
 
   /**
@@ -637,7 +617,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.moveBackward();
   }
 
-  handleFooterAction(action: string): void {
+  handleMenuAction(action: string): void {
+    // Ignore menu actions when dialogs are open
+    if (this.isDialogOpen()) return;
+
     switch (action) {
       case 'forward':
         this.moveForward();
@@ -777,6 +760,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Open the spell selection dialog for a character
+   * SpellPanelComponent handles spell organization and filtering internally
    */
   private openSpellDialog(characterId: string): void {
     const state = this.gameState.state();
@@ -787,30 +771,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Get spells available in dungeon context
-    const spells = SpellCastingService.getSpellsByContext(caster, 'dungeon');
-
-    if (spells.length === 0) {
+    // Check if character has any dungeon-castable spells
+    if (!SpellCastingService.hasSpellsInContext(caster, 'dungeon')) {
       this.addMessage(`${caster.name} has no spells available.`);
       return;
     }
 
-    // Build spell options with spell point info
-    const spellOptions: SpellOption[] = spells.map((spell, index) => {
-      const pool = spell.casterType === 'mage' ? caster.spellPoints?.mage : caster.spellPoints?.priest;
-      const levelKey = `level${spell.level}` as keyof typeof pool;
-      const points = pool?.[levelKey] || { current: 0, max: 0 };
-
-      return {
-        spell,
-        index: index + 1,
-        enabled: points.current > 0,
-        spellPoints: points
-      };
-    });
-
     this.selectedCaster.set(caster);
-    this.availableSpellOptions.set(spellOptions);
     this.showSpellDialog.set(true);
   }
 
@@ -905,7 +872,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showSpellDialog.set(false);
     this.selectedCaster.set(null);
     this.selectedSpell.set(null);
-    this.availableSpellOptions.set([]);
   }
 
   /**

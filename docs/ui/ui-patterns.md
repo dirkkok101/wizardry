@@ -275,6 +275,59 @@ PARTY SLOTS:
 Select empty slot (3-6):
 ```
 
+**D. Card-Based Modal Dialog (CharacterSelectionDialogComponent):**
+
+Used for spell targeting and in-context character selection. Displays characters as interactive cards with inline `[Select]` buttons, matching the SpellPanelComponent UX patterns.
+
+```
+╔════════════════════════════════════════════════════════════╗
+║                    SELECT TARGET                           ║
+╠════════════════════════════════════════════════════════════╣
+║                                                            ║
+║  ┌─────────────────────────────┐  ┌─────────────────────┐  ║
+║  │ 1) Dirk           [Select]  │  │ 2) Michael [Select] │  ║
+║  │ FIG Lv1       HP: 3/4       │  │ FIG Lv1     HP:4/4  │  ║
+║  │ ████████████░░░░            │  │ ████████████████    │  ║
+║  └─────────────────────────────┘  └─────────────────────┘  ║
+║  ┌─────────────────────────────┐                           ║
+║  │ 3) Fred           [Select]  │                           ║
+║  │ THI Lv1       HP: 5/5       │                           ║
+║  │ ████████████████            │                           ║
+║  └─────────────────────────────┘                           ║
+║                                                            ║
+╠════════════════════════════════════════════════════════════╣
+║              Press 1-6 to select, ESC to cancel            ║
+╚════════════════════════════════════════════════════════════╝
+```
+
+**Features:**
+- Card grid layout (1 column for ≤3, 2 columns for >3 characters)
+- Inline `[Select]` button on same row as character name
+- HP bar visualization with critical state coloring (<25%)
+- Status badges for non-OK statuses (DEAD, POISONED, ASHES, etc.)
+- 3-character class abbreviations (FIG, MAG, PRI, THI, BIS, SAM, LOR, NIN)
+- Design system styling (Cinzel display font, gold/dark theme)
+- Full card clickable for enabled characters
+- Disabled cards have reduced opacity
+- Dead characters marked with red left border
+
+**Input Handling:**
+- **1-6 keys**: Direct character selection (if enabled)
+- **ESC**: Cancel dialog
+- **Card/button click**: Select character
+- **Backdrop click**: Cancel dialog
+
+**Usage:**
+```html
+<app-character-selection-dialog
+  [visible]="showDialog"
+  [characters]="characterOptions"
+  [prompt]="'SELECT TARGET'"
+  (characterSelected)="onCharacterSelected($event)"
+  (cancelled)="onCancel()">
+</app-character-selection-dialog>
+```
+
 ---
 
 ## 3. Single-Keystroke Input Pattern

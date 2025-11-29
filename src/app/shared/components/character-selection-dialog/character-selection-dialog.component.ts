@@ -3,16 +3,12 @@ import {
   input,
   output,
   computed,
-  signal,
-  effect,
-  ViewChild,
-  ElementRef,
-  AfterViewChecked
+  HostListener
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { SelectionListComponent, SelectableOption } from '../selection-list/selection-list.component'
+import { CharacterClass } from '@models/CharacterClass'
 
 export interface CharacterOption {
   character: Character
@@ -21,22 +17,24 @@ export interface CharacterOption {
 }
 
 /**
- * Extended CharacterOption with SelectableOption fields for SelectionListComponent.
+ * Extended CharacterOption with id for tracking.
  */
-export interface CharacterSelectableOption extends CharacterOption, SelectableOption {
+export interface CharacterSelectableOption extends CharacterOption {
   id: string
   shortcut: string
 }
 
 /**
- * CharacterSelectionDialogComponent - Keyboard-driven character picker for spell targeting.
+ * CharacterSelectionDialogComponent - Card-based character picker for spell targeting.
  *
  * Features:
+ * - Card grid layout (1-2 columns based on character count)
+ * - Inline [Select] button for each enabled character
  * - 1-6 keyboard shortcuts for character selection
  * - ESC to cancel
- * - Auto-focus on open
  * - Backdrop click to cancel
- * - Shows character name, class, level, HP, and status
+ * - Shows character name, class, level, HP, status badge
+ * - Design system styling (Cinzel/JetBrains Mono fonts, gold theme)
  *
  * @example
  * <app-character-selection-dialog
@@ -50,11 +48,11 @@ export interface CharacterSelectableOption extends CharacterOption, SelectableOp
 @Component({
   selector: 'app-character-selection-dialog',
   standalone: true,
-  imports: [CommonModule, SelectionListComponent],
+  imports: [CommonModule],
   templateUrl: './character-selection-dialog.component.html',
   styleUrls: ['./character-selection-dialog.component.scss']
 })
-export class CharacterSelectionDialogComponent implements AfterViewChecked {
+export class CharacterSelectionDialogComponent {
   // Signal-based inputs
   readonly visible = input(false)
   readonly characters = input<CharacterOption[]>([])
@@ -64,15 +62,8 @@ export class CharacterSelectionDialogComponent implements AfterViewChecked {
   readonly characterSelected = output<Character>()
   readonly cancelled = output<void>()
 
-  // View reference for focus management
-  @ViewChild('dialogContent') dialogContent?: ElementRef<HTMLDivElement>
-
-  // Track focus state
-  private needsFocus = signal(false)
-
   /**
-   * Convert CharacterOption[] to CharacterSelectableOption[] for SelectionListComponent.
-   * Maps index to shortcut string ('1', '2', etc.).
+   * Convert CharacterOption[] to CharacterSelectableOption[] with id for tracking.
    */
   readonly selectableCharacters = computed((): CharacterSelectableOption[] => {
     return this.characters().map(option => ({
@@ -82,64 +73,94 @@ export class CharacterSelectionDialogComponent implements AfterViewChecked {
     }))
   })
 
-  constructor() {
-    // Watch visibility changes to trigger focus
-    effect(() => {
-      if (this.visible()) {
-        this.needsFocus.set(true)
-      }
-    })
-  }
+  /**
+   * Handle keyboard events for 1-6 selection and ESC cancel.
+   */
+  @HostListener('document:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent): void {
+    if (!this.visible()) return
 
-  ngAfterViewChecked(): void {
-    // Focus the dialog content when it becomes visible
-    if (this.needsFocus() && this.dialogContent?.nativeElement) {
-      this.dialogContent.nativeElement.focus()
-      this.needsFocus.set(false)
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      this.cancelled.emit()
+      return
+    }
+
+    // Handle 1-6 keys for selection
+    const num = parseInt(event.key, 10)
+    if (num >= 1 && num <= 6) {
+      const option = this.selectableCharacters().find(o => o.index === num)
+      if (option?.enabled) {
+        event.preventDefault()
+        this.characterSelected.emit(option.character)
+      }
     }
   }
 
   /**
-   * Handle option selection from SelectionListComponent.
+   * Handle character card or button click.
    */
-  onOptionSelected(option: CharacterSelectableOption): void {
-    this.characterSelected.emit(option.character)
-  }
-
-  /**
-   * Handle cancellation from SelectionListComponent.
-   */
-  onCancelled(): void {
-    this.cancelled.emit()
+  onCharacterClick(option: CharacterSelectableOption): void {
+    if (option.enabled) {
+      this.characterSelected.emit(option.character)
+    }
   }
 
   /**
    * Handle backdrop click to cancel.
    */
   onBackdropClick(event: MouseEvent): void {
-    // Only cancel if clicking the backdrop itself
     if (event.target === event.currentTarget) {
       this.cancelled.emit()
     }
   }
 
   /**
-   * Prevent clicks inside dialog from propagating to backdrop.
+   * Get 3-character class abbreviation.
    */
-  onDialogClick(event: MouseEvent): void {
-    event.stopPropagation()
-  }
-
-  getHpPercent(char: Character): number {
-    if (char.maxHp <= 0) return 0
-    return Math.max(0, Math.min(100, (char.hp / char.maxHp) * 100))
+  getClassAbbr(char: Character): string {
+    const abbrevs: Record<string, string> = {
+      [CharacterClass.FIGHTER]: 'FIG',
+      [CharacterClass.MAGE]: 'MAG',
+      [CharacterClass.PRIEST]: 'PRI',
+      [CharacterClass.THIEF]: 'THI',
+      [CharacterClass.BISHOP]: 'BIS',
+      [CharacterClass.SAMURAI]: 'SAM',
+      [CharacterClass.LORD]: 'LOR',
+      [CharacterClass.NINJA]: 'NIN'
+    }
+    return abbrevs[char.class] || char.class.slice(0, 3).toUpperCase()
   }
 
   /**
-   * Check if the character has a status that should be displayed
-   * (i.e., not OK or INJURED which are normal states)
+   * Get HP percentage for bar display.
    */
-  shouldShowStatus(char: Character): boolean {
-    return char.status !== CharacterStatus.OK && char.status !== CharacterStatus.INJURED
+  getHpPercent(char: Character): number {
+    if (char.maxHp <= 0) return 0
+    return Math.max(0, Math.min(100, Math.round((char.hp / char.maxHp) * 100)))
+  }
+
+  /**
+   * Check if HP is critical (<25%).
+   */
+  isCritical(char: Character): boolean {
+    return this.getHpPercent(char) < 25
+  }
+
+  /**
+   * Check if character is dead or ashes.
+   */
+  isDead(char: Character): boolean {
+    return char.status === CharacterStatus.DEAD || char.status === CharacterStatus.ASHES
+  }
+
+  /**
+   * Get status badge text if not OK or INJURED.
+   */
+  getStatusBadge(char: Character): string | null {
+    if (char.status === CharacterStatus.OK || char.status === CharacterStatus.INJURED) {
+      return null
+    }
+    return char.status
   }
 }

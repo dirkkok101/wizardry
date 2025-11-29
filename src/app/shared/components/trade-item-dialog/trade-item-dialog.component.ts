@@ -5,6 +5,21 @@ import { Character } from '@models/Character';
 import { Item } from '@models/Item';
 import { InventoryService } from '@services/InventoryService';
 
+/**
+ * Class name abbreviations for compact display
+ * Matches CharacterPanelComponent pattern
+ */
+const CLASS_ABBREVIATIONS: Record<string, string> = {
+  'FIGHTER': 'FIG',
+  'MAGE': 'MAG',
+  'PRIEST': 'PRI',
+  'THIEF': 'THI',
+  'BISHOP': 'BIS',
+  'SAMURAI': 'SAM',
+  'LORD': 'LOR',
+  'NINJA': 'NIN'
+};
+
 @Component({
   selector: 'app-trade-item-dialog',
   standalone: true,
@@ -21,6 +36,13 @@ export class TradeItemDialogComponent {
   cancel = output<void>();
 
   selectedCharacterId: string | null = null;
+
+  /**
+   * Get abbreviated class name for compact display
+   */
+  getClassAbbr(charClass: string): string {
+    return CLASS_ABBREVIATIONS[charClass] || charClass.substring(0, 3).toUpperCase();
+  }
 
   getInventoryDisplay(character: Character): string {
     const count = InventoryService.getInventoryCount(character);

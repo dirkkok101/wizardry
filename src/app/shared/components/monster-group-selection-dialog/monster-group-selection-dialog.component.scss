@@ -1,74 +1,28 @@
-// Override SelectionDialogComponent styles for monster-group-specific display
-:host ::ng-deep {
-  .dialog-content {
-    font-family: 'VT323', monospace;
-  }
-
-  .dialog-title {
-    font-size: 1.8rem;
-    letter-spacing: 2px;
-  }
-
-  .selection-item {
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    font-size: 1.6rem;
-    border-left: 4px solid transparent;
-
-    &:not(.disabled) {
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateX(4px);
-      }
-    }
-
-    &.disabled {
-      opacity: 0.4;
-    }
-  }
-
-  // Hide the default shortcut display
-  .item-shortcut {
-    display: none;
-  }
-}
+// Monster Group Selection Dialog - Content-specific styles only
+// Base styling now comes from SelectionDialog and SelectionList components
 
 .group-item-content {
   display: flex;
   align-items: center;
   width: 100%;
+  gap: var(--space-2);
 }
 
 .group-letter {
-  font-weight: bold;
-  font-size: 1.8rem;
-  color: var(--color-primary, #ffeb3b);
-  margin-right: 12px;
-  min-width: 30px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  min-width: 2rem;
+
+  // Color coding by group ID
+  &[data-group="A"] { color: #ff6b6b; }
+  &[data-group="B"] { color: #4ecdc4; }
+  &[data-group="C"] { color: #ffe66d; }
+  &[data-group="D"] { color: #a8e6cf; }
 }
 
 .group-name {
-  color: var(--color-text, #e0e0e0);
-  letter-spacing: 1px;
-}
-
-// Color coding by group ID (matching combat.scss)
-// Applied via parent selector using data-group attribute
-:host ::ng-deep .selection-item {
-  &:has([data-group="A"]) {
-    border-left-color: #ff6b6b;
-  }
-
-  &:has([data-group="B"]) {
-    border-left-color: #4ecdc4;
-  }
-
-  &:has([data-group="C"]) {
-    border-left-color: #ffe66d;
-  }
-
-  &:has([data-group="D"]) {
-    border-left-color: #a8e6cf;
-  }
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  letter-spacing: 0.05em;
 }

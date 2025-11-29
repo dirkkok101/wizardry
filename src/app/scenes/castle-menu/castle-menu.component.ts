@@ -9,9 +9,11 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
-import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
-import { CharacterActionEvent } from '@models/CharacterCardTypes';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
+import { Character } from '@models/Character';
 
 /**
  * Castle Menu Component
@@ -31,7 +33,8 @@ import { SceneType } from '@models/SceneType';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent
+    CharacterPanelComponent,
+    EmptyStateComponent
   ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
@@ -41,6 +44,27 @@ export class CastleMenuComponent implements OnInit {
   private readonly saveService = inject(SaveService);
   private readonly navigation = inject(SceneNavigationService);
   private readonly messages = inject(MessageService);
+
+  /**
+   * Front row characters (positions 1, 2, 3)
+   */
+  readonly frontRowCharacters = computed(() =>
+    GameStateQueries.frontRowCharacters(this.gameState.state())
+  );
+
+  /**
+   * Back row characters (positions 4, 5, 6)
+   */
+  readonly backRowCharacters = computed(() =>
+    GameStateQueries.backRowCharacters(this.gameState.state())
+  );
+
+  /**
+   * Actions available for each character
+   */
+  getActionsForCharacter = (char: Character): CharacterAction[] => {
+    return [{ type: 'inspect' }];
+  };
 
   readonly footerMenuItems = computed((): MenuItem[] => {
     const canEnterMaze = GameStateQueries.canPartyEnterMaze(this.gameState.state());

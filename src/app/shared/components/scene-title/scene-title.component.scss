@@ -1,30 +1,71 @@
 .scene-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 2px solid var(--color-border);
-  background: var(--color-bg-black);
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  min-height: 44px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-darkest);
 
-  h1 {
-    font-size: var(--font-size-xl);
-    color: var(--color-text-primary);
-    margin: 0;
-    text-transform: uppercase;
-    flex: 1;
-    text-align: center;
+  // Subtle gold gradient accent at bottom
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-gold-dim) 20%,
+      var(--color-gold-primary) 50%,
+      var(--color-gold-dim) 80%,
+      transparent
+    );
   }
 
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--color-text-gold);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+
+    // Subtle gold text shadow
+    text-shadow: 0 0 20px var(--color-gold-glow);
+  }
+
+  // Positioned absolutely so title stays centered
   .scene-header-content {
+    position: absolute;
+    right: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--space-4);
   }
 
   .party-gold {
-    font-size: var(--font-size-md);
-    color: var(--color-gold);
-    font-weight: bold;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--color-gold-bright);
+    font-weight: 500;
     white-space: nowrap;
+    padding: var(--space-1) var(--space-3);
+    background: rgba(244, 196, 48, 0.1);
+    border: 1px solid var(--color-gold-dim);
+    border-radius: var(--card-border-radius);
+
+    // Coin icon effect
+    &::before {
+      content: '\1FA99'; // Unicode coin
+      margin-right: var(--space-2);
+    }
   }
 }

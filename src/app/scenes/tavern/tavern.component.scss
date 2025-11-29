@@ -1,91 +1,164 @@
-@use '../../../styles/variables' as *;
+// Tavern Scene - Modern Retro-Fantasy theme
+// Left: compact list of available characters
+// Right: CharacterPanel for party (Front/Back rows)
 
 .tavern-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-darkest);
+}
+
+.tavern-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;  // Allow shrinking in flex container
+  padding: var(--space-2);
+  background: var(--color-bg-darkest);
+  overflow: hidden;
+}
+
+// Message display (spans full width)
+.message {
+  grid-column: 1 / -1;
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  border-radius: var(--card-border-radius);
+
+  &.error {
+    background: rgba(220, 38, 38, 0.15);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+  }
+
+  &.success {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--color-status-ok);
+    border: 1px solid var(--color-status-ok);
+  }
+}
+
+// Left column: Available characters
+.available-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+// Character list container - items use CharacterListItemComponent
+.character-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+
+  // Subtle scrollbar styling
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-bg-dark);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+// Right column: Party display
+.party-section {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.formation-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: $spacing-lg;
+  gap: var(--space-3);
   height: 100%;
-  padding: $spacing-md;
 }
 
-.error-message {
-  grid-column: 1 / -1;
-  background: $color-error;
-  color: $color-bg-black;
-  padding: $spacing-md;
-  border: 2px solid $color-error;
-  text-align: center;
-  font-weight: bold;
-}
-
-.success-message {
-  grid-column: 1 / -1;
-  background: $color-text-green;
-  color: $color-bg-black;
-  padding: $spacing-md;
-  border: 2px solid $color-text-green;
-  text-align: center;
-  font-weight: bold;
-}
-
-.character-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: $spacing-md;
-}
-
-.available-characters {
+.formation-column {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: var(--space-2);
+  overflow: hidden;
 
-  h2 {
-    color: $color-text-green;
-    border-bottom: 1px solid $color-text-green;
-    padding-bottom: $spacing-sm;
-    margin: 0;
-  }
+  // Style the CharacterPanel inside
+  ::ng-deep {
+    .character-panel {
+      flex: 1;
+      overflow-y: auto;
+    }
 
-  .character-grid {
-    overflow-y: auto;
-    max-height: calc(100vh - 250px);
-    padding-right: $spacing-sm;
+    .panel-title {
+      display: none;  // We use row-title instead
+    }
+
+    .character-stack {
+      padding: 0;
+      gap: var(--space-1);
+    }
   }
 }
 
-.party-column {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
+.row-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-1);
+  margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.party-gold-header {
-  background: $color-bg-black;
-  border: 1px solid $color-text-green;
-  padding: $spacing-md;
-  text-align: center;
-  font-size: 1.2rem;
-  color: $color-text-green;
-  font-weight: bold;
-}
 
-.formation-section {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
+// Responsive: stack columns on narrow screens
+@media (max-width: 900px) {
+  .tavern-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
 
-  h3 {
-    color: $color-text-green;
-    border-bottom: 1px solid $color-text-green;
-    padding-bottom: $spacing-xs;
-    margin: 0;
+  .available-section {
+    max-height: 200px;
+  }
+
+  .formation-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
   }
 }
 
-.empty-state {
-  color: $color-text-dim;
-  font-style: italic;
-  padding: $spacing-md;
-  text-align: center;
-  border: 1px dashed $color-text-dim;
+// MacBook Air 13" (1440x900) - tighter spacing
+@media (max-height: 900px) {
+  .tavern-layout {
+    padding: var(--space-2);
+    gap: var(--space-3);
+  }
+
+  .formation-layout {
+    gap: var(--space-2);
+  }
+
+  .row-title {
+    font-size: var(--font-size-xs);
+    padding-bottom: 2px;
+  }
+
+  .formation-column {
+    ::ng-deep .character-stack {
+      gap: 2px;
+    }
+  }
 }

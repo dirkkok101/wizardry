@@ -1,150 +1,152 @@
 @if (character(); as char) {
-  <app-scene-title
-    [title]="char.name"
-    [showPartyGold]="showPartyGold()"
-  />
-
-  <div class="character-inspection">
-    <!-- Message Banner -->
-    @if (messages.hasMessage()) {
-      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
-        {{ messages.messageText() }}
-      </div>
-    }
-
-    <!-- Character Detail Card with stats, spell points, and actions -->
-    <app-character-detail-card
-      [character]="char"
-      [mode]="mode()"
-      [actions]="characterActions()"
-      (actionClick)="handleCharacterAction($event)"
+  <div class="inspection-container">
+    <app-scene-title
+      [title]="char.name"
+      [showPartyGold]="showPartyGold()"
     />
 
-    <!-- Items Grid: Equipment + Inventory -->
-    <div class="items-grid">
-      <!-- Equipment Column -->
-      <div class="equipment-section">
-        <h3>Equipment</h3>
-        <div class="equipment-slots">
-          <app-item-card
-            [item]="weaponSlot()"
-            [slot]="ItemSlot.WEAPON"
-            [isEquipped]="true"
-            [showActions]="showItemActions()"
-            [shopContext]="shopContext()"
-            (actionClick)="handleItemAction($event)"
+    <div class="inspection-content">
+      <div class="inspection-layout">
+        <!-- Column 1: Character Stats -->
+        <section class="stats-section">
+          <h3 class="row-title">Character</h3>
+          <app-character-detail-card
+            [character]="char"
+            [inspectionMode]="mode()"
+            [actions]="characterActions()"
+            (actionClick)="handleCharacterAction($event)"
           />
-          <app-item-card
-            [item]="armorSlot()"
-            [slot]="ItemSlot.ARMOR"
-            [isEquipped]="true"
-            [showActions]="showItemActions()"
-            [shopContext]="shopContext()"
-            (actionClick)="handleItemAction($event)"
-          />
-          <app-item-card
-            [item]="shieldSlot()"
-            [slot]="ItemSlot.SHIELD"
-            [isEquipped]="true"
-            [showActions]="showItemActions()"
-            [shopContext]="shopContext()"
-            (actionClick)="handleItemAction($event)"
-          />
-          <app-item-card
-            [item]="helmetSlot()"
-            [slot]="ItemSlot.HELMET"
-            [isEquipped]="true"
-            [showActions]="showItemActions()"
-            [shopContext]="shopContext()"
-            (actionClick)="handleItemAction($event)"
-          />
-          <app-item-card
-            [item]="gauntletsSlot()"
-            [slot]="ItemSlot.GAUNTLETS"
-            [isEquipped]="true"
-            [showActions]="showItemActions()"
-            [shopContext]="shopContext()"
-            (actionClick)="handleItemAction($event)"
-          />
-        </div>
-      </div>
+        </section>
 
-      <!-- Inventory Column -->
-      <div class="inventory-section">
-        <h3>Inventory ({{ inventoryItems().length }}/8)</h3>
-        <div class="inventory-grid">
-          @for (item of inventoryItems(); track item.id) {
+        <!-- Column 2: Equipment -->
+        <section class="equipment-section">
+          <h3 class="row-title">Equipment</h3>
+          <div class="equipment-slots">
             <app-item-card
-              [item]="item"
-              [isEquipped]="false"
+              [item]="weaponSlot()"
+              [slot]="ItemSlot.WEAPON"
+              [isEquipped]="true"
               [showActions]="showItemActions()"
-              [showUseButton]="showUseButton()"
               [shopContext]="shopContext()"
               (actionClick)="handleItemAction($event)"
             />
-          } @empty {
-            <div class="empty-inventory">No items in inventory</div>
-          }
-        </div>
+            <app-item-card
+              [item]="armorSlot()"
+              [slot]="ItemSlot.ARMOR"
+              [isEquipped]="true"
+              [showActions]="showItemActions()"
+              [shopContext]="shopContext()"
+              (actionClick)="handleItemAction($event)"
+            />
+            <app-item-card
+              [item]="shieldSlot()"
+              [slot]="ItemSlot.SHIELD"
+              [isEquipped]="true"
+              [showActions]="showItemActions()"
+              [shopContext]="shopContext()"
+              (actionClick)="handleItemAction($event)"
+            />
+            <app-item-card
+              [item]="helmetSlot()"
+              [slot]="ItemSlot.HELMET"
+              [isEquipped]="true"
+              [showActions]="showItemActions()"
+              [shopContext]="shopContext()"
+              (actionClick)="handleItemAction($event)"
+            />
+            <app-item-card
+              [item]="gauntletsSlot()"
+              [slot]="ItemSlot.GAUNTLETS"
+              [isEquipped]="true"
+              [showActions]="showItemActions()"
+              [shopContext]="shopContext()"
+              (actionClick)="handleItemAction($event)"
+            />
+          </div>
+        </section>
+
+        <!-- Column 3: Inventory -->
+        <section class="inventory-section">
+          <h3 class="row-title">Inventory ({{ inventoryItems().length }}/8)</h3>
+          <div class="inventory-list">
+            @for (item of inventoryItems(); track item.id) {
+              <app-item-card
+                [item]="item"
+                [isEquipped]="false"
+                [showActions]="showItemActions()"
+                [showUseButton]="showUseButton()"
+                [shopContext]="shopContext()"
+                (actionClick)="handleItemAction($event)"
+              />
+            } @empty {
+              <div class="empty-inventory">No items in inventory</div>
+            }
+          </div>
+        </section>
       </div>
     </div>
+
+    <!-- Trade Dialog -->
+    @if (showTradeDialog() && pendingAction(); as pending) {
+      <app-trade-item-dialog
+        [item]="pending.item"
+        [partyMembers]="partyMembers()"
+        [currentCharacterId]="char.id"
+        (confirm)="confirmTrade($event)"
+        (cancel)="cancelDialog()"
+      />
+    }
+
+    <!-- Drop Confirmation Dialog -->
+    @if (showDropDialog() && pendingAction(); as pending) {
+      <app-confirmation-dialog
+        [message]="'Drop ' + pending.item.name + '? This cannot be undone.'"
+        (confirmed)="confirmDrop()"
+        (cancelled)="cancelDialog()"
+      />
+    }
+
+    <!-- Spell Book Panel (viewing mode) -->
+    <app-spell-panel
+      [visible]="showSpellBookDialog()"
+      [character]="char"
+      [mode]="'viewing'"
+      [title]="char.name + ' - Spell Book'"
+      (closed)="closeSpellBookDialog()"
+    />
+
+    <!-- Spell Casting Panel (casting mode) -->
+    <app-spell-panel
+      [visible]="showSpellCastDialog()"
+      [character]="char"
+      [mode]="'casting'"
+      [context]="'camp'"
+      [title]="'SELECT SPELL'"
+      (spellSelected)="onSpellSelected($event)"
+      (closed)="onSpellDialogCancelled()"
+    />
+
+    <app-scene-footer
+      [menuItems]="footerMenuItems()"
+      (itemSelected)="handleFooterAction($event)"
+    />
   </div>
-
-  <!-- Trade Dialog -->
-  @if (showTradeDialog() && pendingAction(); as pending) {
-    <app-trade-item-dialog
-      [item]="pending.item"
-      [partyMembers]="partyMembers()"
-      [currentCharacterId]="char.id"
-      (confirm)="confirmTrade($event)"
-      (cancel)="cancelDialog()"
-    />
-  }
-
-  <!-- Drop Confirmation Dialog -->
-  @if (showDropDialog() && pendingAction(); as pending) {
-    <app-confirmation-dialog
-      [message]="'Drop ' + pending.item.name + '? This cannot be undone.'"
-      (confirmed)="confirmDrop()"
-      (cancelled)="cancelDialog()"
-    />
-  }
-
-  <!-- Spell Book Dialog -->
-  <app-spell-book-dialog
-    [visible]="showSpellBookDialog()"
-    [character]="char"
-    (closed)="closeSpellBookDialog()"
-  />
-
-  <!-- Spell Selection Dialog (for casting) -->
-  <app-spell-selection-dialog
-    [visible]="showSpellCastDialog()"
-    [spells]="availableSpellOptions()"
-    [caster]="char"
-    [prompt]="'SELECT SPELL'"
-    (spellSelected)="onSpellSelected($event)"
-    (cancelled)="onSpellDialogCancelled()"
-  />
-
-  <app-scene-footer
-    [menuItems]="footerMenuItems()"
-    (itemSelected)="handleFooterAction($event)"
-  />
 } @else {
-  <app-scene-title
-    title="CHARACTER NOT FOUND"
-    [showPartyGold]="false"
-  />
+  <div class="inspection-container">
+    <app-scene-title
+      title="CHARACTER NOT FOUND"
+      [showPartyGold]="false"
+    />
 
-  <div class="character-inspection">
-    <div class="no-character">
-      <p>Character not found</p>
+    <div class="inspection-content">
+      <div class="no-character">
+        <p>Character not found</p>
+      </div>
     </div>
-  </div>
 
-  <app-scene-footer
-    [menuItems]="footerMenuItems()"
-    (itemSelected)="handleFooterAction($event)"
-  />
+    <app-scene-footer
+      [menuItems]="footerMenuItems()"
+      (itemSelected)="handleFooterAction($event)"
+    />
+  </div>
 }

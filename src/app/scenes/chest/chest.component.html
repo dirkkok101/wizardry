@@ -9,18 +9,13 @@
 
         <div class="character-list">
           @for (char of availableCharacters(); track char.id; let i = $index) {
-            <button
-              class="character-option"
-              [class.recommended]="recommendedHandler()?.character?.id === char.id"
-              (click)="selectCharacter(i)"
-            >
-              <span class="number">{{ i + 1 }}.</span>
-              <span class="name">{{ char.name }}</span>
-              <span class="class">({{ char.class }})</span>
-              @if (recommendedHandler()?.character?.id === char.id) {
-                <span class="star">*</span>
-              }
-            </button>
+            <app-character-list-item [character]="char">
+              <ng-template #actions>
+                <button class="action-btn" (click)="selectCharacter(i)">
+                  {{ recommendedHandler()?.character?.id === char.id ? 'Select *' : 'Select' }}
+                </button>
+              </ng-template>
+            </app-character-list-item>
           }
         </div>
 
@@ -60,14 +55,12 @@
 
         <div class="character-list">
           @for (caster of calfoEligibleCasters(); track caster.id; let i = $index) {
-            <button
-              class="character-option"
-              (click)="selectCaster(i)"
-            >
-              <span class="number">{{ i + 1 }}.</span>
-              <span class="name">{{ caster.name }}</span>
-              <span class="sp">(SP: {{ caster.spellPoints?.priest?.level2?.current || 0 }})</span>
-            </button>
+            <app-character-list-item [character]="caster">
+              <ng-template #actions>
+                <span class="sp-display">SP: {{ caster.spellPoints?.priest?.level2?.current || 0 }}</span>
+                <button class="action-btn" (click)="selectCaster(i)">Cast</button>
+              </ng-template>
+            </app-character-list-item>
           }
         </div>
       </div>

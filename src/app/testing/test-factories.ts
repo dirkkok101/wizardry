@@ -43,6 +43,8 @@ export function createTestCharacter(overrides: Partial<Character> = {}): Charact
     knownSpells: [],
     inventory: [],
     gold: 100, // Default starting gold (90-190 in authentic Wizardry 1)
+    deathCount: 0,
+    monsterKills: 0,
     ...overrides
   }
 }

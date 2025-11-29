@@ -54,36 +54,11 @@
     </div>
   </div>
 
-  <!-- Control Footer (Clickable Buttons) -->
-  <div class="control-footer">
-    <div class="control-group">
-      <button class="control-btn" (click)="moveForward()" title="Move Forward">W</button>
-      <button class="control-btn" (click)="moveBackward()" title="Move Backward">S</button>
-      <span class="control-label">Move</span>
-    </div>
-    <div class="control-divider"></div>
-    <div class="control-group">
-      <button class="control-btn" (click)="turnLeft()" title="Turn Left">A</button>
-      <button class="control-btn" (click)="turnRight()" title="Turn Right">D</button>
-      <span class="control-label">Turn</span>
-    </div>
-    <div class="control-divider"></div>
-    <div class="control-group">
-      <button class="control-btn" (click)="strafeLeft()" title="Strafe Left">Q</button>
-      <button class="control-btn" (click)="strafeRight()" title="Strafe Right">E</button>
-      <span class="control-label">Strafe</span>
-    </div>
-    <div class="control-divider"></div>
-    <div class="control-group">
-      <button class="control-btn" (click)="openDoor()" [disabled]="!canOpenDoor()" title="Open Door">O</button>
-      <span class="control-label">Door</span>
-    </div>
-    <div class="control-divider"></div>
-    <div class="control-group">
-      <button class="control-btn" (click)="inspectTile()" [disabled]="!canInspectTile()" title="Inspect">I</button>
-      <span class="control-label">Inspect</span>
-    </div>
-  </div>
+  <!-- Scene Footer with Navigation Controls -->
+  <app-scene-footer
+    [menuItems]="mazeMenuItems()"
+    (itemSelected)="handleMenuAction($event)"
+  />
 
   <!-- Elevator Dialog (if active) -->
   @if (showElevatorDialog()) {
@@ -105,15 +80,18 @@
     </div>
   }
 
-  <!-- Spell Selection Dialog -->
-  <app-spell-selection-dialog
-    [visible]="showSpellDialog()"
-    [spells]="availableSpellOptions()"
-    [caster]="selectedCaster()"
-    [prompt]="'SELECT SPELL'"
-    (spellSelected)="onSpellSelected($event)"
-    (cancelled)="onSpellDialogCancelled()"
-  />
+  <!-- Spell Selection Panel -->
+  @if (selectedCaster()) {
+    <app-spell-panel
+      [visible]="showSpellDialog()"
+      [character]="selectedCaster()!"
+      [mode]="'casting'"
+      [context]="'dungeon'"
+      [title]="'SELECT SPELL'"
+      (spellSelected)="onSpellSelected($event)"
+      (closed)="onSpellDialogCancelled()"
+    />
+  }
 
   <!-- Character Target Selection Dialog -->
   <app-character-selection-dialog

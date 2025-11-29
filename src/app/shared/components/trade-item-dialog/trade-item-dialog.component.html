@@ -1,33 +1,35 @@
 <div class="dialog-overlay" (click)="onCancel()">
   <div class="dialog-content" (click)="$event.stopPropagation()">
     <div class="dialog-header">
-      <h2>TRADE ITEM: {{ item.name }}</h2>
+      <h2>Trade: {{ item.name }}</h2>
     </div>
 
     <div class="dialog-body">
-      <p>Select party member to receive item:</p>
+      <p class="dialog-instruction">Select party member to receive item:</p>
 
-      @for (member of partyMembers; track member.id) {
-        <label class="member-option" [class.disabled]="!canReceive(member)">
-          <input
-            type="radio"
-            name="recipient"
-            [value]="member.id"
-            [(ngModel)]="selectedCharacterId"
-            [disabled]="!canReceive(member)"
-          />
-          <div class="member-info">
+      <div class="member-list">
+        @for (member of partyMembers; track member.id) {
+          <label class="member-row"
+                 [class.disabled]="!canReceive(member)"
+                 [class.selected]="selectedCharacterId === member.id">
+            <input
+              type="radio"
+              name="recipient"
+              [value]="member.id"
+              [(ngModel)]="selectedCharacterId"
+              [disabled]="!canReceive(member)"
+            />
             <span class="member-name">{{ member.name }}</span>
-            <span class="member-class">({{ member.class }}, Lvl {{ member.level }})</span>
+            <span class="member-class">{{ getClassAbbr(member.class) }} Lv{{ member.level }}</span>
             <span class="member-inventory" [class.full]="!canReceive(member)">
-              Inventory: {{ getInventoryDisplay(member) }}
+              {{ getInventoryDisplay(member) }}
               @if (!canReceive(member)) {
-                <span class="full-badge">[FULL]</span>
+                <span class="full-badge">FULL</span>
               }
             </span>
-          </div>
-        </label>
-      }
+          </label>
+        }
+      </div>
 
       @if (partyMembers.length === 0) {
         <p class="no-recipients">No other party members available</p>
@@ -35,13 +37,10 @@
     </div>
 
     <div class="dialog-footer">
-      <button
-        class="btn-confirm"
-        (click)="onConfirm()"
-        [disabled]="!selectedCharacterId">
+      <button class="btn-cancel" (click)="onCancel()">Cancel</button>
+      <button class="btn-confirm" (click)="onConfirm()" [disabled]="!selectedCharacterId">
         Confirm
       </button>
-      <button class="btn-cancel" (click)="onCancel()">Cancel</button>
     </div>
   </div>
 </div>

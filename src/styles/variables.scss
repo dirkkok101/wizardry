@@ -40,8 +40,123 @@ $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
 
-// CRT Retro Theme CSS Custom Properties
+// ============================================================================
+// MODERN RETRO-FANTASY DESIGN SYSTEM
+// ============================================================================
+// A dark fantasy aesthetic with gold/amber accents, designed for the
+// Wizardry 1 remake. Uses Cinzel for display text and JetBrains Mono for stats.
+
 :root {
+  // ---------------------------------------------------------------------------
+  // TYPOGRAPHY
+  // ---------------------------------------------------------------------------
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-body: 'JetBrains Mono', 'Courier New', monospace;
+  --font-size-xs: 0.75rem;    // 12px
+  --font-size-sm: 0.875rem;   // 14px
+  --font-size-base: 1rem;     // 16px
+  --font-size-lg: 1.125rem;   // 18px
+  --font-size-xl: 1.5rem;     // 24px
+  --font-size-2xl: 2rem;      // 32px
+
+  // ---------------------------------------------------------------------------
+  // COLOR PALETTE - Modern Retro-Fantasy
+  // ---------------------------------------------------------------------------
+  // Backgrounds
+  --color-bg-darkest: #0a0a0a;
+  --color-bg-dark: #1a1a1a;
+  --color-bg-card: #252525;
+  --color-bg-card-hover: #2d2d2d;
+  --color-bg-overlay: rgba(0, 0, 0, 0.85);
+
+  // Gold/Amber accents (primary)
+  --color-gold-primary: #d4a574;
+  --color-gold-bright: #f4c430;
+  --color-gold-dim: rgba(212, 165, 116, 0.6);
+  --color-gold-glow: rgba(244, 196, 48, 0.4);
+
+  // Text colors
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666666;
+  --color-text-gold: #d4a574;
+
+  // HP/Status colors
+  --color-hp-healthy: #22c55e;
+  --color-hp-warning: #eab308;
+  --color-hp-critical: #dc2626;
+
+  // Status effect colors
+  --color-status-ok: #22c55e;
+  --color-status-poisoned: #a855f7;
+  --color-status-paralyzed: #3b82f6;
+  --color-status-asleep: #6366f1;
+  --color-status-stoned: #78716c;
+  --color-status-dead: #6b7280;
+  --color-status-ashes: #44403c;
+  --color-status-lost: #1c1917;
+
+  // Semantic colors
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-danger: #dc2626;
+  --color-info: #3b82f6;
+  --color-magic: #a855f7;
+
+  // Borders
+  --color-border: rgba(212, 165, 116, 0.3);
+  --color-border-hover: rgba(212, 165, 116, 0.6);
+  --color-border-active: #d4a574;
+
+  // ---------------------------------------------------------------------------
+  // SPACING SCALE
+  // ---------------------------------------------------------------------------
+  --space-1: 0.25rem;   // 4px
+  --space-2: 0.5rem;    // 8px
+  --space-3: 0.75rem;   // 12px
+  --space-4: 1rem;      // 16px
+  --space-5: 1.25rem;   // 20px
+  --space-6: 1.5rem;    // 24px
+  --space-8: 2rem;      // 32px
+  --space-10: 2.5rem;   // 40px
+  --space-12: 3rem;     // 48px
+
+  // ---------------------------------------------------------------------------
+  // CARD SYSTEM
+  // ---------------------------------------------------------------------------
+  --card-padding-compact: var(--space-2);
+  --card-padding-standard: var(--space-4);
+  --card-padding-large: var(--space-6);
+  --card-border-radius: 4px;
+  --card-border: 1px solid var(--color-border);
+  --card-border-hover: 1px solid var(--color-border-hover);
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+
+  // ---------------------------------------------------------------------------
+  // EFFECTS & GLOWS
+  // ---------------------------------------------------------------------------
+  --glow-gold-sm: 0 0 4px var(--color-gold-glow);
+  --glow-gold-md: 0 0 8px var(--color-gold-glow), 0 0 16px rgba(244, 196, 48, 0.2);
+  --glow-gold-lg: 0 0 12px var(--color-gold-glow), 0 0 24px rgba(244, 196, 48, 0.3);
+
+  // ---------------------------------------------------------------------------
+  // TRANSITIONS
+  // ---------------------------------------------------------------------------
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  // ---------------------------------------------------------------------------
+  // LAYOUT
+  // ---------------------------------------------------------------------------
+  --header-height: 60px;
+  --footer-height: 60px;
+  --content-max-width: 1200px;
+
+  // ---------------------------------------------------------------------------
+  // LEGACY CRT THEME (for backward compatibility during migration)
+  // ---------------------------------------------------------------------------
   --crt-green: #0f0;
   --crt-green-dark: #080;
   --crt-green-dim: rgba(0, 255, 0, 0.6);
@@ -55,44 +170,26 @@ $spacing-xl: 32px;
   --crt-glow-md: 0 0 5px var(--crt-green-glow), 0 0 10px rgba(0, 255, 0, 0.4);
   --crt-glow-lg: 0 0 10px var(--crt-green-glow), 0 0 20px rgba(0, 255, 0, 0.6);
 
-  // Color system for component use
-  --color-primary: #40e0d0;           // Cyan/turquoise for primary actions
-  --color-primary-light: #60f0e0;     // Lighter variant for hover states
-  --color-danger: #ff0000;            // Red for danger/errors
-  --color-danger-light: #ff4444;      // Lighter variant for hover states
-  --color-success: #00ff88;           // Green for success states
-  --color-warning: #ffaa00;           // Amber for warnings
+  // Legacy aliases (map to new system for gradual migration)
+  --color-primary: var(--color-gold-primary);
+  --color-primary-light: var(--color-gold-bright);
+  --color-danger-light: #ef4444;
+  --color-bg: var(--color-bg-darkest);
+  --color-bg-black: var(--color-bg-darkest);
+  --color-panel-bg: var(--color-bg-dark);
+  --color-card-bg: var(--color-bg-card);
+  --color-text: var(--color-text-primary);
+  --color-text-bright: var(--color-text-primary);
+  --color-text-dim: var(--color-text-secondary);
+  --color-border-light: var(--color-border);
+  --color-gold: var(--color-gold-bright);
 
-  // Background colors
-  --color-bg: #000000;                // Pure black background
-  --color-bg-black: #000000;          // Alias for consistency
-  --color-panel-bg: rgba(0, 20, 0, 0.9);
-  --color-card-bg: rgba(0, 40, 0, 0.6);
-
-  // Text colors
-  --color-text: #00ff88;              // Bright green text
-  --color-text-primary: #00ff88;      // Primary text color
-  --color-text-bright: #00ff88;       // Bright text variant
-  --color-text-dim: #008800;          // Dimmed text
-  --color-text-muted: #666666;        // Muted/disabled text
-
-  // UI elements
-  --color-border: #00ff00;            // Green borders
-  --color-border-light: rgba(0, 255, 0, 0.3);
-  --color-gold: #ffaa00;              // Gold/amber for currency
-
-  // Spacing system
+  // Legacy spacing (keep for backward compatibility)
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-
-  // Typography
-  --font-size-sm: 14px;
-  --font-size-md: 16px;
-  --font-size-lg: 20px;
-  --font-size-xl: 24px;
 }
 
 // Animation Timing

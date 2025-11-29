@@ -2,14 +2,34 @@
   <app-scene-title title="CASTLE" [showPartyGold]="true" />
 
   <section class="party-section">
-    <app-party-character-grid
-      source="party"
-      [showFormation]="true"
-      [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
-      [actions]="[{ type: 'inspect' }]"
-      emptyMessage="No party members"
-      (actionClick)="handleActionClick($event)"
-    />
+    @if (frontRowCharacters().length > 0 || backRowCharacters().length > 0) {
+      <div class="formation-layout">
+        <!-- Front Row -->
+        <div class="formation-column">
+          <h3 class="row-title">Front Row</h3>
+          <app-character-panel
+            [characters]="frontRowCharacters()"
+            [actions]="getActionsForCharacter"
+            (actionClick)="handleActionClick($event)"
+          />
+        </div>
+
+        <!-- Back Row -->
+        <div class="formation-column">
+          <h3 class="row-title">Back Row</h3>
+          <app-character-panel
+            [characters]="backRowCharacters()"
+            [actions]="getActionsForCharacter"
+            (actionClick)="handleActionClick($event)"
+          />
+        </div>
+      </div>
+    } @else {
+      <app-empty-state
+        title="No party formed"
+        subtitle="Visit the Tavern to recruit adventurers"
+      />
+    }
   </section>
 
   <main class="content-area">

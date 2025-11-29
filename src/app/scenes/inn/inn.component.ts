@@ -7,9 +7,10 @@ import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
-import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { RestActionCardComponent, RestActionConfig, RestActionType } from '@shared/components/rest-action-card/rest-action-card.component';
 import { RestResultsModalComponent, RestResultsData } from '@shared/components/rest-results-modal/rest-results-modal.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
@@ -33,9 +34,10 @@ import { CharacterStatus } from '@models/CharacterStatus';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent,
+    CharacterPanelComponent,
     RestActionCardComponent,
-    RestResultsModalComponent
+    RestResultsModalComponent,
+    EmptyStateComponent
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']
@@ -57,6 +59,16 @@ export class InnComponent implements OnInit {
   // Party gold (computed from game state)
   readonly partyGold = computed(() =>
     GameStateQueries.partyGold(this.gameState.state())
+  );
+
+  // Front row characters (for 3-column layout)
+  readonly frontRowCharacters = computed(() =>
+    GameStateQueries.frontRowCharacters(this.gameState.state())
+  );
+
+  // Back row characters (for 3-column layout)
+  readonly backRowCharacters = computed(() =>
+    GameStateQueries.backRowCharacters(this.gameState.state())
   );
 
   // Living characters only (for rest calculations)

@@ -18,77 +18,61 @@ export interface RestActionConfig {
  * RestActionCardComponent - Displays a rest action option at the Inn
  *
  * Shows one of three rest actions:
- * - Restore Spells: Free, 1 week at Stables
- * - Heal Party: Costs gold, auto-selects best room tier
- * - Full Rest: Costs gold, heals HP AND restores spells
+ * - Restore Spells (1): Free, 1 week at Stables - restores all spell points
+ * - Heal Party (2): Costs gold, auto-selects best room tier
+ * - Full Rest (3): Costs gold, heals HP AND restores spells
  *
- * Each card shows:
- * - Title and description
- * - Cost (gold and time)
- * - Disabled state with reason when unavailable
+ * Modern Retro-Fantasy themed with gold accents and compact layout.
  */
 @Component({
   selector: 'app-rest-action-card',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <button
-      class="rest-action-card"
-      [class.disabled]="!config.enabled"
-      [disabled]="!config.enabled"
-      (click)="onSelect()"
-    >
+    <div class="rest-action-card" [class.disabled]="!config.enabled">
       <div class="card-header">
         <h3 class="title">{{ config.title }}</h3>
+        <div class="cost-info">
+          @if (config.goldCost > 0) {
+            <span class="gold-cost">{{ config.goldCost }} GP</span>
+          } @else {
+            <span class="gold-cost free">Free</span>
+          }
+        </div>
       </div>
 
-      <p class="description">{{ config.description }}</p>
-
-      <div class="cost-info">
-        @if (config.goldCost > 0) {
-          <span class="gold-cost">{{ config.goldCost }} GP</span>
-          <span class="separator">-</span>
-        }
-        <span class="time-cost">{{ config.costText }}</span>
-      </div>
+      <p class="description">{{ config.costText }}</p>
 
       @if (!config.enabled && config.disabledReason) {
         <div class="disabled-reason">
           {{ config.disabledReason }}
         </div>
       }
-    </button>
+
+      <button
+        class="action-button"
+        [disabled]="!config.enabled"
+        (click)="onSelect()"
+      >
+        [Rest]
+      </button>
+    </div>
   `,
   styles: [`
     .rest-action-card {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      padding: 1rem;
-      background: var(--color-surface, #1a1a1a);
-      border: 2px solid var(--color-primary, #00ff00);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: left;
-      width: 100%;
-      font-family: inherit;
-      color: inherit;
-    }
-
-    .rest-action-card:hover:not(.disabled) {
-      background: var(--color-surface-hover, #2a2a2a);
-      border-color: var(--color-primary-bright, #00ff88);
-      transform: translateY(-2px);
-    }
-
-    .rest-action-card:active:not(.disabled) {
-      transform: translateY(0);
+      gap: var(--space-2);
+      padding: var(--space-2);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--card-border-radius);
+      font-family: var(--font-body);
+      color: var(--color-text-primary);
     }
 
     .rest-action-card.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      border-color: var(--color-text-muted, #666);
+      opacity: 0.6;
     }
 
     .card-header {
@@ -99,47 +83,64 @@ export interface RestActionConfig {
 
     .title {
       margin: 0;
-      font-size: 1.1rem;
-      color: var(--color-primary, #00ff00);
+      font-family: var(--font-display);
+      font-size: var(--font-size-sm);
+      color: var(--color-gold-primary);
+    }
+
+    .cost-info {
+      font-size: var(--font-size-sm);
+    }
+
+    .gold-cost {
+      color: var(--color-gold-primary);
+      font-weight: 600;
+
+      &.free {
+        color: var(--color-status-ok);
+      }
     }
 
     .description {
       margin: 0;
-      font-size: 0.9rem;
-      color: var(--color-text-secondary, #aaa);
-    }
-
-    .cost-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.95rem;
-      padding-top: 0.25rem;
-      border-top: 1px solid var(--color-border, #333);
-    }
-
-    .gold-cost {
-      color: var(--color-gold, #ffd700);
-      font-weight: bold;
-    }
-
-    .separator {
-      color: var(--color-text-muted, #666);
-    }
-
-    .time-cost {
-      color: var(--color-text-secondary, #aaa);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      line-height: 1.4;
     }
 
     .disabled-reason {
-      font-size: 0.85rem;
-      color: var(--color-error, #ff4444);
+      font-size: var(--font-size-xs);
+      color: var(--color-danger);
       font-style: italic;
+    }
+
+    .action-button {
+      align-self: flex-start;
+      padding: var(--space-1) var(--space-2);
+      background: transparent;
+      border: 1px solid var(--color-gold-dim);
+      border-radius: var(--card-border-radius);
+      color: var(--color-gold-primary);
+      font-family: var(--font-body);
+      font-size: var(--font-size-xs);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover:not(:disabled) {
+        background: var(--color-gold-dim);
+        color: var(--color-bg-darkest);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
   `]
 })
 export class RestActionCardComponent {
   @Input({ required: true }) config!: RestActionConfig;
+  @Input() shortcutKey: number = 1;
   @Output() selected = new EventEmitter<RestActionType>();
 
   onSelect(): void {

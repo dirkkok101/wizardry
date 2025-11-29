@@ -17,13 +17,14 @@ import { Character } from '@models/Character'
 import { MenuItem } from '@shared/components/menu/menu.component'
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
-import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component'
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component'
+import { MonsterGroupListItemComponent } from '@shared/components/monster-group-list-item/monster-group-list-item.component'
 import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '@shared/components/monster-group-selection-dialog/monster-group-selection-dialog.component'
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component'
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component'
 import { getGroupDisplayText } from '@utils/MonsterNameUtils'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { getCombatMessageDelay, getActionResultDelay } from '@config/CombatSettings'
-import { CharacterField } from '@models/CharacterCardTypes'
 
 interface SelectedAction {
   characterId: string
@@ -37,9 +38,11 @@ interface SelectedAction {
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent,
+    CharacterPanelComponent,
+    MonsterGroupListItemComponent,
     MonsterGroupSelectionDialogComponent,
-    CharacterSelectionDialogComponent
+    CharacterSelectionDialogComponent,
+    SpellPanelComponent
   ],
   templateUrl: './combat.html',
   styleUrls: ['./combat.scss']
@@ -272,9 +275,6 @@ export class CombatComponent implements OnInit, OnDestroy {
       .filter(c => c.hp > 0)
       .every(c => actions.has(c.id))
   })
-
-  // Visible fields for combat character cards (same as maze)
-  readonly combatCharacterFields: CharacterField[] = ['class', 'level', 'hp', 'ac']
 
   // Selected action texts for character cards (shows what action each character will take)
   readonly selectedActionTexts = computed((): Map<string, string> => {

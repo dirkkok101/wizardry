@@ -95,11 +95,11 @@ describe('InnComponent', () => {
       expect(sceneTitle).toBeTruthy();
     });
 
-    it('shows party character grid', () => {
+    it('shows character panels for front and back rows', () => {
       fixture.detectChanges();
       const compiled = fixture.nativeElement;
-      const characterGrid = compiled.querySelector('app-party-character-grid');
-      expect(characterGrid).toBeTruthy();
+      const characterPanels = compiled.querySelectorAll('app-character-panel');
+      expect(characterPanels.length).toBe(2); // Front row and back row
     });
 
     it('shows three rest action cards', () => {

@@ -1,0 +1,147 @@
+// ============================================================================
+// DESIGN TOKENS - SCSS Variables for Modern Retro-Fantasy Theme
+// ============================================================================
+// These SCSS variables mirror the CSS custom properties in variables.scss
+// for use in calculations, mixins, and compile-time operations.
+
+// ---------------------------------------------------------------------------
+// TYPOGRAPHY
+// ---------------------------------------------------------------------------
+$font-display: 'Cinzel', Georgia, serif;
+$font-body: 'JetBrains Mono', 'Courier New', monospace;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.5rem;     // 24px
+$font-size-2xl: 2rem;      // 32px
+
+// ---------------------------------------------------------------------------
+// COLOR PALETTE
+// ---------------------------------------------------------------------------
+// Backgrounds
+$color-bg-darkest: #0a0a0a;
+$color-bg-dark: #1a1a1a;
+$color-bg-card: #252525;
+$color-bg-card-hover: #2d2d2d;
+$color-bg-overlay: rgba(0, 0, 0, 0.85);
+
+// Gold/Amber accents
+$color-gold-primary: #d4a574;
+$color-gold-bright: #f4c430;
+$color-gold-dim: rgba(212, 165, 116, 0.6);
+$color-gold-glow: rgba(244, 196, 48, 0.4);
+
+// Text colors
+$color-text-primary: #e8e8e8;
+$color-text-secondary: #a0a0a0;
+$color-text-muted: #666666;
+$color-text-gold: #d4a574;
+
+// HP/Status colors
+$color-hp-healthy: #22c55e;
+$color-hp-warning: #eab308;
+$color-hp-critical: #dc2626;
+
+// Status effect colors map (for programmatic access)
+$status-colors: (
+  'ok': #22c55e,
+  'poisoned': #a855f7,
+  'paralyzed': #3b82f6,
+  'asleep': #6366f1,
+  'stoned': #78716c,
+  'dead': #6b7280,
+  'ashes': #44403c,
+  'lost': #1c1917
+);
+
+// Semantic colors
+$color-success: #22c55e;
+$color-warning: #eab308;
+$color-danger: #dc2626;
+$color-info: #3b82f6;
+$color-magic: #a855f7;
+
+// Borders
+$color-border: rgba(212, 165, 116, 0.3);
+$color-border-hover: rgba(212, 165, 116, 0.6);
+$color-border-active: #d4a574;
+
+// ---------------------------------------------------------------------------
+// SPACING SCALE
+// ---------------------------------------------------------------------------
+$space-1: 0.25rem;   // 4px
+$space-2: 0.5rem;    // 8px
+$space-3: 0.75rem;   // 12px
+$space-4: 1rem;      // 16px
+$space-5: 1.25rem;   // 20px
+$space-6: 1.5rem;    // 24px
+$space-8: 2rem;      // 32px
+$space-10: 2.5rem;   // 40px
+$space-12: 3rem;     // 48px
+
+// ---------------------------------------------------------------------------
+// CARD SYSTEM
+// ---------------------------------------------------------------------------
+$card-padding-compact: $space-2;
+$card-padding-standard: $space-4;
+$card-padding-large: $space-6;
+$card-border-radius: 4px;
+$card-gap: $space-4;
+
+// ---------------------------------------------------------------------------
+// EFFECTS & GLOWS
+// ---------------------------------------------------------------------------
+$glow-gold-sm: 0 0 4px $color-gold-glow;
+$glow-gold-md: 0 0 8px $color-gold-glow, 0 0 16px rgba(244, 196, 48, 0.2);
+$glow-gold-lg: 0 0 12px $color-gold-glow, 0 0 24px rgba(244, 196, 48, 0.3);
+
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+$shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+
+// ---------------------------------------------------------------------------
+// TRANSITIONS
+// ---------------------------------------------------------------------------
+$transition-fast: 0.15s ease;
+$transition-normal: 0.25s ease;
+$transition-slow: 0.4s ease;
+
+// ---------------------------------------------------------------------------
+// LAYOUT
+// ---------------------------------------------------------------------------
+$header-height: 60px;
+$footer-height: 60px;
+$content-max-width: 1200px;
+
+// ---------------------------------------------------------------------------
+// BREAKPOINTS (for responsive design)
+// ---------------------------------------------------------------------------
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+
+// MacBook Air 13" optimized
+$breakpoint-macbook-air: 1440px;
+
+// ---------------------------------------------------------------------------
+// UTILITY FUNCTIONS
+// ---------------------------------------------------------------------------
+
+// Get status color by name
+@function status-color($status) {
+  @return map-get($status-colors, $status);
+}
+
+// Calculate HP bar color based on percentage
+@function hp-color($percentage) {
+  @if $percentage > 50 {
+    @return $color-hp-healthy;
+  } @else if $percentage > 25 {
+    @return $color-hp-warning;
+  } @else {
+    @return $color-hp-critical;
+  }
+}

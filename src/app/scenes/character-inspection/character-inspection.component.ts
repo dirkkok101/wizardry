@@ -7,9 +7,7 @@ import { EquipmentService } from '@services/EquipmentService'
 import { InventoryService } from '@services/InventoryService'
 import { SceneNavigationService } from '@services/SceneNavigationService'
 import { SpellLearningService } from '@services/SpellLearningService'
-import { SpellDataLoader } from '@services/SpellDataLoader'
 import { ShopService } from '@services/ShopService'
-import { LoadedSpell } from '@models/SpellDefinition'
 import { GameStateQueries } from '@utils/GameStateQueries'
 import { MessageService } from '@services/MessageService'
 import { Character } from '@models/Character'
@@ -23,8 +21,8 @@ import { ConfirmationDialogComponent } from '@shared/components/confirmation-dia
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
 import { CharacterDetailCardComponent, InspectionMode } from '@shared/components/character-detail-card/character-detail-card.component'
-import { SpellBookDialogComponent } from '@shared/components/spell-book-dialog/spell-book-dialog.component'
-import { SpellSelectionDialogComponent, SpellOption } from '@shared/components/spell-selection-dialog/spell-selection-dialog.component'
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component'
+import { SpellData } from '@services/SpellCastingService'
 import { MenuItem } from '@shared/components/menu/menu.component'
 
 /**
@@ -49,8 +47,7 @@ import { MenuItem } from '@shared/components/menu/menu.component'
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterDetailCardComponent,
-    SpellBookDialogComponent,
-    SpellSelectionDialogComponent
+    SpellPanelComponent
   ],
   templateUrl: './character-inspection.component.html',
   styleUrls: ['./character-inspection.component.scss']
@@ -139,17 +136,13 @@ export class CharacterInspectionComponent {
   })
 
   // Character actions based on mode
+  // Note: Spell Book viewing moved to footer menu
   readonly characterActions = computed((): CharacterAction[] => {
     const char = this.character()
     if (!char) return []
 
     const actions: CharacterAction[] = []
     const mode = this.mode()
-
-    // Spell book viewing available in all modes for casters
-    if (SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
-      actions.push({ type: 'read-spells', label: 'Spells' })
-    }
 
     switch (mode) {
       case 'TRAINING_GROUNDS':
@@ -181,6 +174,12 @@ export class CharacterInspectionComponent {
   // Footer menu items (party-level actions)
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = []
+    const char = this.character()
+
+    // Spell Book option for casters with known spells
+    if (char && SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
+      items.push({ id: 'spells', label: 'Spell Book', shortcut: 'S', enabled: true })
+    }
 
     // Return always available
     items.push({ id: 'back', label: 'Return', shortcut: 'ESC', enabled: true })
@@ -301,7 +300,6 @@ export class CharacterInspectionComponent {
     try {
       const updated = EquipmentService.equipItem(char, item.id)
       this.updateCharacter(updated)
-      this.messages.showSuccess(`Equipped ${item.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to equip item')
     }
@@ -311,15 +309,12 @@ export class CharacterInspectionComponent {
     try {
       const updated = EquipmentService.unequipItem(char, item.slot)
       this.updateCharacter(updated)
-      this.messages.showSuccess(`Unequipped ${item.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to unequip item')
     }
   }
 
-  private useItem(_char: Character, item: Item): void {
-    // Item use would be implemented here
-    this.messages.showSuccess(`Used ${item.name}`)
+  private useItem(_char: Character, _item: Item): void {
     // TODO: Implement actual item use logic
   }
 
@@ -329,8 +324,7 @@ export class CharacterInspectionComponent {
 
     if (result.success && result.state) {
       this.gameState.updateState(() => result.state!)
-      const sellPrice = ShopService.calculateSellPrice(item)
-      this.messages.showSuccess(`Sold ${item.name} for ${sellPrice} gold`)
+      // Gold update in header provides visual feedback
     } else {
       this.messages.showError(result.error || 'Failed to sell item')
     }
@@ -342,15 +336,7 @@ export class CharacterInspectionComponent {
 
     if (result.success && result.state) {
       this.gameState.updateState(() => result.state!)
-      // Get the updated item from state to show its name
-      const updatedChar = result.state.roster.get(char.id)
-      const identifiedItem = updatedChar?.inventory.find(i => i.id === item.id)
-
-      if (identifiedItem?.cursed) {
-        this.messages.showError(`This is ${identifiedItem.name}! IT'S CURSED!`)
-      } else {
-        this.messages.showSuccess(`This is ${identifiedItem?.name || 'Unknown'}!`)
-      }
+      // Item name update in inventory provides visual feedback
     } else {
       this.messages.showError(result.error || 'Failed to identify item')
     }
@@ -362,7 +348,7 @@ export class CharacterInspectionComponent {
 
     if (result.success && result.state) {
       this.gameState.updateState(() => result.state!)
-      this.messages.showSuccess(`${item.name} is no longer cursed!`)
+      // Item visual update in inventory provides feedback
     } else {
       this.messages.showError(result.error || 'Failed to uncurse item')
     }
@@ -390,10 +376,10 @@ export class CharacterInspectionComponent {
     }
     this.updateCharacter(updatedChar)
 
+    // Item name update in inventory provides visual feedback
+    // Show warning only for cursed items (important safety info)
     if (unidentified.cursed) {
       this.messages.showError(`This is ${unidentified.name}! IT'S CURSED!`)
-    } else {
-      this.messages.showSuccess(`This is ${unidentified.name}!`)
     }
   }
 
@@ -411,7 +397,6 @@ export class CharacterInspectionComponent {
       this.updateCharacter(result.to)
       this.showTradeDialog.set(false)
       this.pendingAction.set(null)
-      this.messages.showSuccess(`Traded ${pending.item.name} to ${recipient.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to trade item')
     }
@@ -427,7 +412,6 @@ export class CharacterInspectionComponent {
       this.updateCharacter(updated)
       this.showDropDialog.set(false)
       this.pendingAction.set(null)
-      this.messages.showSuccess(`Dropped ${pending.item.name}`)
     } catch (error: any) {
       this.messages.showError(error.message || 'Failed to drop item')
     }
@@ -443,44 +427,14 @@ export class CharacterInspectionComponent {
     this.showSpellBookDialog.set(false)
   }
 
-  // Spell casting (available spell options)
-  readonly availableSpellOptions = computed((): SpellOption[] => {
-    const char = this.character()
-    if (!char || !char.knownSpells) return []
-
-    const options: SpellOption[] = []
-    let index = 1
-
-    for (const spellId of char.knownSpells) {
-      const spell = SpellDataLoader.getSpell(spellId)
-      if (!spell) continue
-
-      // Only dungeon-castable spells
-      if (!spell.castableIn.includes('dungeon')) continue
-
-      // Get spell points for this level
-      const pool = spell.casterType === 'mage' ? char.spellPoints?.mage : char.spellPoints?.priest
-      const levelKey = `level${spell.level}` as keyof typeof pool
-      const spellPoints = pool?.[levelKey] ?? { current: 0, max: 0 }
-
-      options.push({
-        spell,
-        index: index++,
-        enabled: spellPoints.current > 0,
-        spellPoints
-      })
-
-      if (index > 9) break // Max 9 options
-    }
-
-    return options
-  })
-
-  onSpellSelected(spell: LoadedSpell): void {
+  /**
+   * Handle spell selection from SpellPanelComponent
+   */
+  onSpellSelected(spell: SpellData): void {
     this.showSpellCastDialog.set(false)
-    // Handle spell casting - would need target selection for single-target spells
-    this.messages.showSuccess(`Cast ${spell.name}!`)
     // TODO: Implement full spell casting with deduction and effects
+    // Spell point deduction and visual effects will provide feedback
+    console.log(`Cast ${spell.name}`) // Temporary logging until spell effects implemented
   }
 
   onSpellDialogCancelled(): void {
@@ -499,8 +453,13 @@ export class CharacterInspectionComponent {
   }
 
   handleFooterAction(itemId: string): void {
-    if (itemId === 'back') {
-      this.returnToPrevious()
+    switch (itemId) {
+      case 'back':
+        this.returnToPrevious()
+        break
+      case 'spells':
+        this.showSpellBookDialog.set(true)
+        break
     }
   }
 
@@ -512,5 +471,19 @@ export class CharacterInspectionComponent {
       return
     }
     this.returnToPrevious()
+  }
+
+  @HostListener('window:keydown.s')
+  handleSpellsShortcut(): void {
+    // Don't handle if a dialog is open
+    if (this.showTradeDialog() || this.showDropDialog() ||
+        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+      return
+    }
+    // Only open if character is a caster with spells
+    const char = this.character()
+    if (char && SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
+      this.showSpellBookDialog.set(true)
+    }
   }
 }

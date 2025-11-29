@@ -1,26 +1,29 @@
-@use 'sass:color';
-@use '../../../../styles/variables' as *;
-
 .character-actions {
   display: flex;
-  gap: $spacing-sm;
+  gap: var(--space-2);
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .action-btn {
-  font-family: $font-mono;
-  font-size: $font-size-base;
-  padding: $spacing-xs $spacing-md;
-  background-color: $color-bg-black;
-  color: $color-text-green;
-  border: 1px solid $color-border;
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  background-color: transparent;
+  color: var(--color-text-gold);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: all var(--transition-fast);
 
   &:hover:not(:disabled) {
-    background-color: color.adjust($color-bg-black, $lightness: 5%);
-    border-color: $color-text-bright;
+    background-color: var(--color-gold-primary);
+    color: var(--color-bg-darkest);
+    border-color: var(--color-gold-primary);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
   }
 
   &:disabled {
@@ -33,11 +36,12 @@
   }
 
   &.danger {
-    color: $color-error;
-    border-color: $color-error;
+    color: var(--color-danger);
+    border-color: var(--color-danger);
 
     &:hover:not(:disabled) {
-      border-color: color.adjust($color-error, $lightness: 10%);
+      background-color: var(--color-danger);
+      color: var(--color-bg-darkest);
     }
   }
 }

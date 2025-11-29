@@ -1,4 +1,4 @@
-import { Component, computed, effect, HostListener, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, HostListener, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,12 @@ import { CharacterCreationService, RolledStats, BaseStats } from '@services/Char
 import { SpellLearningService } from '@services/SpellLearningService';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import {
+  CharacterCreationStatsCardComponent,
+  PartialCharacter,
+  AllocationConfig,
+  StatKey
+} from '@shared/components/character-creation-stats-card/character-creation-stats-card.component';
 import { Race, parseRace } from '@models/Race';
 import { CharacterClass, parseClass } from '@models/CharacterClass';
 import { Alignment } from '@models/Alignment';
@@ -39,7 +45,8 @@ interface FinalStats {
     CommonModule,
     FormsModule,
     SceneTitleComponent,
-    SceneFooterComponent
+    SceneFooterComponent,
+    CharacterCreationStatsCardComponent
   ],
   templateUrl: './character-creation.component.html',
   styleUrl: './character-creation.component.scss'
@@ -109,6 +116,9 @@ export class CharacterCreationComponent implements OnInit {
 
   characterName = signal<string>('');
 
+  // Reference to name input for auto-focus
+  @ViewChild('nameInput') nameInput?: ElementRef<HTMLInputElement>;
+
   // Computed signals (derived state)
   readonly raceData = computed(() => {
     const race = this.selectedRace();
@@ -161,6 +171,23 @@ export class CharacterCreationComponent implements OnInit {
   readonly allPointsAllocated = computed(() => {
     const stats = this.rolledStats();
     return stats ? stats.bonusPoints === 0 : false;
+  });
+
+  /**
+   * Check if the current character name is a duplicate (case-insensitive).
+   * Used to prevent creating characters with the same name.
+   */
+  readonly isNameDuplicate = computed(() => {
+    const name = this.characterName().trim().toLowerCase();
+    if (!name) return false;
+
+    const roster = this.gameState.roster();
+    for (const character of roster.values()) {
+      if (character.name.toLowerCase() === name) {
+        return true;
+      }
+    }
+    return false;
   });
 
   readonly eligibleClasses = computed(() => {
@@ -235,13 +262,74 @@ export class CharacterCreationComponent implements OnInit {
         break;
 
       case CreationStep.NAME_CHARACTER:
-        items.push({ id: 'create', label: 'CREATE CHARACTER', shortcut: 'ENTER', enabled: this.characterName().trim().length > 0 });
+        const hasValidName = this.characterName().trim().length > 0 && !this.isNameDuplicate();
+        items.push({ id: 'create', label: 'CREATE CHARACTER', shortcut: 'ENTER', enabled: hasValidName });
         items.push({ id: 'back', label: 'BACK', shortcut: 'ESC', enabled: true });
         break;
     }
 
     return items;
   });
+
+  // ===== CharacterDetailCard Integration =====
+
+  /**
+   * Partial character for display in the CharacterDetailCard.
+   * Builds up progressively as user makes selections.
+   */
+  readonly partialCharacter = computed((): PartialCharacter | null => {
+    const race = this.selectedRace();
+    if (!race) return null;
+
+    const stats = this.finalStats();
+    const partial: PartialCharacter = {
+      race,
+      alignment: this.selectedAlignment() ?? undefined,
+      class: this.selectedClass() ?? undefined,
+      name: this.characterName() || undefined
+    };
+
+    // Add stats if rolled
+    if (stats) {
+      partial.strength = stats.strength;
+      partial.intelligence = stats.intelligence;
+      partial.piety = stats.piety;
+      partial.vitality = stats.vitality;
+      partial.agility = stats.agility;
+      partial.luck = stats.luck;
+    }
+
+    return partial;
+  });
+
+  /**
+   * Allocation configuration for the CharacterDetailCard.
+   * Only available during ROLL_ALLOCATE_CLASS step when stats are rolled.
+   */
+  readonly allocationConfig = computed((): AllocationConfig | undefined => {
+    const rolled = this.rolledStats();
+    const raceData = this.raceData();
+    if (!rolled || !raceData) return undefined;
+
+    return {
+      bonusPoints: rolled.bonusPoints,
+      baseStats: raceData.baseStats,
+      allocatedStats: rolled,
+      maxStat: 18
+    };
+  });
+
+  /**
+   * Handle allocation events from the CharacterDetailCard.
+   * Maps the delta (+1 or -1) to allocate/deallocate methods.
+   */
+  handleAllocation(event: { stat: StatKey; delta: number }): void {
+    if (event.delta > 0) {
+      this.allocatePoint(event.stat);
+    } else {
+      this.deallocatePoint(event.stat);
+    }
+  }
 
   constructor(
     private gameState: GameStateService,
@@ -460,10 +548,16 @@ export class CharacterCreationComponent implements OnInit {
   /**
    * Advances wizard from roll/allocate/class to name character.
    * Guards against advancing without completing allocation and class selection.
+   * Auto-focuses the name input field after transition.
    */
   advanceToNameCharacter() {
     if (!this.canProceedFromRollAllocate()) return;
     this.currentStep.set(CreationStep.NAME_CHARACTER);
+
+    // Focus the name input after Angular renders the new view
+    setTimeout(() => {
+      this.nameInput?.nativeElement.focus();
+    }, 0);
   }
 
   // Navigation: Go back (with clearing logic)
@@ -703,9 +797,9 @@ export class CharacterCreationComponent implements OnInit {
       this.goBackFromNameCharacter();
       return true;
     } else if (key === 'enter') {
-      // Submit character if name is valid
+      // Submit character if name is valid and not duplicate
       const name = this.characterName().trim();
-      if (name) {
+      if (name && !this.isNameDuplicate()) {
         this.submitCharacter(name);
         return true;
       }

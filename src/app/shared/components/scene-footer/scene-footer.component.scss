@@ -1,16 +1,39 @@
 .scene-footer {
-  background: var(--crt-bg-dark);
-  border-top: var(--crt-border);
-  padding: 1rem;
-  box-shadow: 0 -2px 10px rgba(0, 255, 0, 0.3);
+  background: var(--color-bg-dark);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-1) var(--space-4);
+  min-height: var(--footer-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  // Force horizontal layout and CRT styling for footer menus
+  // Subtle gold gradient accent at top
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-gold-dim) 20%,
+      var(--color-gold-primary) 50%,
+      var(--color-gold-dim) 80%,
+      transparent
+    );
+  }
+
+  // Style the child MenuComponent
+  // TODO: Refactor MenuComponent to use CSS custom properties instead of ::ng-deep
   ::ng-deep app-menu {
     .menu {
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: var(--space-3);
       border: none;
       margin: 0;
       padding: 0;
@@ -19,22 +42,22 @@
       &__item {
         flex: 0 0 auto;
         white-space: nowrap;
-        background: rgba(0, 0, 0, 0.5);
-        border: 2px solid rgba(0, 255, 0, 0.5);
-        color: var(--crt-green);
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.85rem;
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-gold);
+        padding: var(--space-2) var(--space-4);
+        border-radius: var(--card-border-radius);
+        font-family: var(--font-body);
+        font-size: var(--font-size-sm);
         cursor: pointer;
-        transition: all 0.2s ease;
-        text-shadow: 0 0 2px var(--crt-green-dim);
+        transition: all var(--transition-fast);
 
         &:hover:not(.menu__item--disabled) {
-          background: rgba(0, 255, 0, 0.1);
-          border-color: var(--crt-green);
-          box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+          background: var(--color-bg-card-hover);
+          border-color: var(--color-gold-primary);
+          box-shadow: var(--glow-gold-sm);
           transform: translateY(-2px);
+          color: var(--color-gold-bright);
         }
 
         &:active:not(.menu__item--disabled) {
@@ -42,32 +65,58 @@
         }
 
         &--disabled {
-          opacity: 0.3;
+          opacity: 0.4;
           cursor: not-allowed;
+          color: var(--color-text-muted);
+        }
+
+        &--selected {
+          background: rgba(212, 165, 116, 0.15);
+          border-color: var(--color-gold-primary);
+          box-shadow: var(--glow-gold-md);
         }
 
         .menu__shortcut {
-          opacity: 0.7;
-          font-size: 0.75rem;
-          margin-left: 0.25rem;
+          opacity: 0.6;
+          font-size: var(--font-size-xs);
+          margin-left: var(--space-2);
+          color: var(--color-text-secondary);
         }
       }
     }
   }
 }
 
-// Mobile responsiveness
-@media (max-width: 768px) {
+// Responsive: MacBook Air 13" and smaller
+@media (max-width: 1440px) {
   .scene-footer {
-    padding: 0.75rem;
+    padding: var(--space-1) var(--space-3);
 
     ::ng-deep app-menu {
       .menu {
-        gap: 0.25rem;
+        gap: var(--space-2);
 
         &__item {
-          padding: 0.4rem 0.75rem;
-          font-size: 0.75rem;
+          padding: var(--space-2) var(--space-3);
+          font-size: var(--font-size-xs);
+        }
+      }
+    }
+  }
+}
+
+// Mobile
+@media (max-width: 768px) {
+  .scene-footer {
+    padding: var(--space-2);
+
+    ::ng-deep app-menu {
+      .menu {
+        gap: var(--space-1);
+
+        &__item {
+          padding: var(--space-1) var(--space-2);
+          font-size: var(--font-size-xs);
         }
       }
     }

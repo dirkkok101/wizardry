@@ -1,33 +1,87 @@
 <div class="title-screen" [class.loading]="isLoading()">
-  <!-- Title Bitmap (placeholder for future graphic) -->
-  <div class="title-logo">
-    <h1>WIZARDRY</h1>
-    <p class="subtitle">Proving Grounds of the Mad Overlord</p>
+  <!-- Background atmospheric effects -->
+  <div class="background-effects">
+    <div class="vignette"></div>
+    <div class="particles" aria-hidden="true">
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+      <span class="particle"></span>
+    </div>
   </div>
 
-  <!-- Loading indicator -->
-  <div class="loading-status" *ngIf="isLoading() && !errorMessage()">
-    <p>Loading assets...</p>
+  <!-- Ornate frame decoration -->
+  <div class="ornate-frame" aria-hidden="true">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="border-line border-top"></div>
+    <div class="border-line border-bottom"></div>
   </div>
 
-  <!-- Error state -->
-  <div class="error-status" *ngIf="errorMessage()">
-    <p class="error-message">{{ errorMessage() }}</p>
-  </div>
+  <!-- Main content -->
+  <main class="content">
+    <!-- Title block with glow effect -->
+    <header class="title-block">
+      <h1 class="title">WIZARDRY</h1>
+      <p class="subtitle">Proving Grounds of the Mad Overlord</p>
+      <div class="title-decoration" aria-hidden="true">
+        <span class="deco-line"></span>
+        <span class="deco-diamond"></span>
+        <span class="deco-line"></span>
+      </div>
+    </header>
 
-  <!-- Ready state -->
-  <div class="ready-prompt" *ngIf="!isLoading() && !errorMessage()" appKeystrokeInput (keystroke)="handleKeyPress($event)">
-    <p class="press-key">Press any key to continue</p>
+    <!-- Loading indicator -->
+    @if (isLoading() && !errorMessage()) {
+      <div class="loading-status">
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <p>Entering the dungeon...</p>
+      </div>
+    }
 
-    <!-- Save data indicator -->
-    <p class="save-indicator" *ngIf="hasSaveData()">
-      Saved game detected
-    </p>
-  </div>
+    <!-- Error state -->
+    @if (errorMessage()) {
+      <div class="error-status">
+        <p class="error-message">{{ errorMessage() }}</p>
+      </div>
+    }
 
-  <!-- Copyright -->
-  <div class="copyright">
-    <p>&copy; 1981 Sir-Tech Software, Inc.</p>
-    <p>Remake 2025</p>
-  </div>
+    <!-- Ready state -->
+    @if (!isLoading() && !errorMessage()) {
+      <div class="ready-prompt" appKeystrokeInput (keystroke)="handleKeyPress($event)">
+        <p class="press-key">Press any key to continue</p>
+
+        @if (hasSaveData()) {
+          <p class="save-indicator">
+            <span class="save-icon">&#9670;</span>
+            Saved game detected
+          </p>
+        }
+      </div>
+    }
+
+    <!-- Copyright footer -->
+    <footer class="copyright">
+      <span>&copy; 1981 Sir-Tech Software, Inc.</span>
+      <span class="divider">&#183;</span>
+      <span>Remake 2025</span>
+    </footer>
+  </main>
 </div>

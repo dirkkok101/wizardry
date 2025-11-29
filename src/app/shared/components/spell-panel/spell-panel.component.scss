@@ -1,0 +1,222 @@
+.spell-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.spell-panel {
+  // Content-sized modal - not full screen
+  width: auto;
+  min-width: 400px;
+  max-width: 700px;
+  max-height: 80vh;
+  background: var(--color-bg-darkest);
+  border: 2px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    color: var(--color-gold-primary);
+    margin: 0;
+    letter-spacing: 0.1em;
+  }
+
+  .caster-info {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-1);
+  }
+}
+
+// Caster type tabs (Mage/Priest) + SP display
+.caster-tabs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+}
+
+.caster-tab-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.caster-tab {
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-primary);
+  }
+
+  &.active {
+    background: var(--color-gold-dim);
+    border-color: var(--color-gold-primary);
+    color: var(--color-bg-darkest);
+    font-weight: 600;
+  }
+}
+
+// Level tabs bar (L1-L7 + SP display)
+.level-tab-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.level-tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.level-tab {
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 2.5rem;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-gold-dim);
+  }
+
+  &.active {
+    background: var(--color-gold-primary);
+    border-color: var(--color-gold-primary);
+    color: var(--color-bg-darkest);
+    font-weight: 600;
+  }
+
+  &.empty {
+    opacity: 0.4;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.sp-display {
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+  font-weight: 600;
+}
+
+// Spell list (1 or 2 columns)
+.spell-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  overflow-y: auto;
+
+  &.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.spell-card {
+  padding: var(--space-2);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+
+  &.clickable {
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--color-gold-dim);
+      background: var(--color-bg-card-hover, rgba(255, 255, 255, 0.05));
+    }
+  }
+}
+
+.spell-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.spell-name {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+}
+
+.spell-effect {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.cast-button {
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: 1px solid var(--color-gold-dim);
+  border-radius: var(--card-border-radius);
+  color: var(--color-gold-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-gold-dim);
+    color: var(--color-bg-darkest);
+  }
+}
+
+.no-spells {
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: var(--space-4);
+  grid-column: 1 / -1;  // Span both columns in 2-column mode
+}
+
+.panel-footer {
+  padding: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+
+  .instruction {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+  }
+}

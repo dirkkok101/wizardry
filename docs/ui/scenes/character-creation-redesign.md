@@ -1,234 +1,258 @@
-# Character Creation Scene (Redesigned)
+# Character Creation Scene
 
 ## Overview
 
-Form-based character creation with 2-column layout and progressive enabling. All 5 sections visible from start, enabled as prerequisites are met.
+Step-by-step wizard for creating new characters with a two-column layout: controls on the left, character preview on the right.
 
 ## Layout
 
 ```
-┌─────────────────────────────────────────────────┐
-│         CHARACTER CREATION (SceneTitle)         │
-├──────────────────────┬──────────────────────────┤
-│ LEFT COLUMN          │ RIGHT COLUMN             │
-│                      │                          │
-│ 1. CHOOSE RACE       │ 4. CHOOSE CLASS          │
-│    [Human] [Elf]     │    [Fighter] [Mage]      │
-│    [Dwarf] [Gnome]   │    [Priest] [Thief]      │
-│    [Hobbit]          │    [Bishop] [Samurai]    │
-│    Description...    │    [Lord] [Ninja]        │
-│    Base Stats...     │    Description...        │
-│                      │                          │
-│ 2. CHOOSE ALIGNMENT  │ 5. NAME CHARACTER        │
-│    [Good] [Neutral]  │    Name: [________]      │
-│    [Evil]            │                          │
-│                      │                          │
-│ 3. ROLL STATS        │                          │
-│    [ROLL DICE]       │                          │
-│    STR: 8 + 7 = 15   │                          │
-│    INT: 8 + 12 = 20  │                          │
-│    ...               │                          │
-├──────────────────────┴──────────────────────────┤
-│              [Success/Error Message]            │
-├─────────────────────────────────────────────────┤
-│ [SAVE] [CANCEL] [BACK TO TRAINING GROUNDS]      │
-│           (SceneFooter with Menu)               │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│              CHARACTER CREATION (SceneTitle)                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────┐  ┌───────────────────────────┐ │
+│  │ CONTROLS COLUMN         │  │ CHARACTER PREVIEW         │ │
+│  │                         │  │                           │ │
+│  │ Step 1 of 7      [Race] │  │ ┌───────────────────────┐ │ │
+│  │ ─────────────────────── │  │ │ Race: HUMAN           │ │ │
+│  │                         │  │ │ Alignment: GOOD       │ │ │
+│  │ [1] Human  [2] Elf      │  │ │ Class: FIGHTER        │ │ │
+│  │ [3] Dwarf  [4] Gnome    │  │ │ ─────────────────     │ │ │
+│  │ [5] Hobbit              │  │ │ Points Remaining: 5   │ │ │
+│  │                         │  │ │ ─────────────────     │ │ │
+│  │ Description panel...    │  │ │ STR  12  [-][+] +1dmg │ │ │
+│  │                         │  │ │ VIT  11  [-][+] +0HP  │ │ │
+│  │ Press 1-5 to select     │  │ │ INT  10  [-][+] +0lrn │ │ │
+│  │                         │  │ │ AGI  13  [-][+] +1AC  │ │ │
+│  └─────────────────────────┘  │ │ PIE   9  [-][+] -1lrn │ │ │
+│                               │ │ LUK  10  [-][+] +0%fl │ │ │
+│                               │ │ ─────────────────     │ │ │
+│                               │ │ Use +/- to allocate   │ │ │
+│                               │ │ your bonus points     │ │ │
+│                               │ └───────────────────────┘ │ │
+│                               └───────────────────────────┘ │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│          [BACK]  [REROLL]  [SAVE]  (SceneFooter)            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Progressive Enabling
+## Wizard Steps
 
-| Section | Enabled When | Disabled Appearance |
-|---------|-------------|---------------------|
-| 1. Race | Always | N/A |
-| 2. Alignment | Race selected | 40% opacity, no clicks |
-| 3. Stats | Alignment selected | 40% opacity, no clicks |
-| 4. Class | Stats rolled | 40% opacity, no clicks |
-| 5. Name | Class selected | 40% opacity, no clicks |
-| Save button | Name entered | Disabled in footer |
+| Step | Title | Description |
+|------|-------|-------------|
+| 1 | Select Race | Choose from 5 races |
+| 2 | Select Alignment | Choose Good, Neutral, or Evil |
+| 3 | Select Class | Choose from 8 classes (eligibility based on alignment) |
+| 4 | Roll Stats | Roll for bonus points |
+| 5 | Allocate Stats | Distribute bonus points with +/- buttons |
+| 6 | Name Character | Enter character name (1-15 chars) |
+| 7 | Confirm | Review and save |
 
-## Data Formula
+## Character Preview Card
 
-**NEW (Data-Driven):**
-```
-finalStat = raceBaseStats[stat] + rolled_amount
-Example: Human STR = 8 (base) + 7 (rolled) = 15 (final)
-```
+The right column displays a `CharacterCreationStatsCardComponent` with **progressive reveal**:
 
-**Display Format:**
-```
-STR: 8 + 7 = 15
-     ↑   ↑   ↑
-   base roll final
-```
+### Progressive Reveal Pattern
 
-## Class Eligibility
+| Selection Made | Fields Shown |
+|---------------|--------------|
+| None | Empty placeholder |
+| Race | Race row |
+| Alignment | Race + Alignment rows |
+| Class | Race + Alignment + Class rows |
+| Stats rolled | All above + Stats section with allocation |
 
-- All 8 classes always visible
-- Ineligible classes grayed out with ✗ indicator
-- Only eligible classes clickable
-- Eligibility recalculated on stat reroll
+### Stats Section
 
-## Keyboard Shortcuts
+When stats are rolled, shows:
+- **Instructions**: "Use +/- to allocate your bonus points"
+- **Points Remaining**: Countdown of available bonus points
+- **Stat rows**: Each stat with value, +/- buttons, and modifier
 
-- `R` - Roll/reroll stats (when alignment selected)
-- `S` - Save character (when form complete)
-- `Esc` - Cancel (shows confirmation if form has data)
-- `B` - Back to training grounds
+### Stat Modifier Display
+
+| Stat | Modifier Formula | Display |
+|------|-----------------|---------|
+| STR | (stat-10)/2 | `+X dmg` |
+| VIT | Tiered table | `+X HP/lvl` |
+| INT | (stat-10)/2 | `+X learn` |
+| AGI | (stat-10)/2 | `+X AC` |
+| PIE | (stat-10)/2 | `+X learn` |
+| LUK | (stat-10)*2 | `+X% flee` |
 
 ## Components Used
 
-- `SceneTitleComponent` - Reusable header
-- `SceneFooterComponent` - Reusable footer with MenuComponent
-- `ConfirmationDialogComponent` - Cancel confirmation
+| Component | Purpose |
+|-----------|---------|
+| `SceneTitleComponent` | Header with "CHARACTER CREATION" |
+| `SceneFooterComponent` | Navigation buttons |
+| `CharacterCreationStatsCardComponent` | Right column preview with progressive reveal |
+| `ConfirmationDialogComponent` | Cancel confirmation |
+
+## Keyboard Shortcuts
+
+| Key | Action | Step |
+|-----|--------|------|
+| 1-5 | Select race | Race |
+| 1-3 | Select alignment | Alignment |
+| 1-8 | Select class | Class |
+| R | Roll/Reroll stats | Roll Stats |
+| +/- | Allocate stats | Allocate |
+| Enter | Confirm name | Name |
+| Esc | Back/Cancel | Any |
+
+## Class Eligibility
+
+Classes have alignment restrictions:
+
+| Class | Alignments |
+|-------|------------|
+| Fighter | Any |
+| Mage | Any |
+| Priest | Good, Evil |
+| Thief | Neutral, Evil |
+| Bishop | Good, Evil |
+| Samurai | Good, Neutral |
+| Lord | Good only |
+| Ninja | Evil only |
+
+Ineligible classes show:
+- Grayed out (40% opacity)
+- Red X marker
+- Requirements tooltip (e.g., "Need: Evil")
+
+## Stat Allocation Logic
+
+### Base Formula
+```
+finalStat = raceBaseStat + allocatedPoints
+```
+
+### Constraints
+- **Minimum**: Race base stat (cannot go below)
+- **Maximum**: 18 (classic Wizardry cap)
+- **Bonus Points**: Random roll (varies by race)
+
+### Allocation Config
+```typescript
+interface AllocationConfig {
+  bonusPoints: number        // Remaining to allocate
+  baseStats: RaceBaseStats   // From race data
+  allocatedStats: RolledStats // Current allocation
+  maxStat: number            // 18
+}
+```
 
 ## State Management
 
-- Signal-based reactive state
-- Computed signals for derived state
-- No wizard state machine
-- Progressive reset on upstream changes
+Uses Angular signals for reactive state:
+
+```typescript
+// Current wizard step
+currentStep = signal<WizardStep>('race')
+
+// Selections
+selectedRace = signal<Race | null>(null)
+selectedAlignment = signal<Alignment | null>(null)
+selectedClass = signal<CharacterClass | null>(null)
+characterName = signal<string>('')
+
+// Stats
+rolledStats = signal<RolledStats | null>(null)
+allocatedStats = signal<RolledStats | null>(null)
+
+// Computed: partial character for preview
+partialCharacter = computed(() => ({
+  race: this.selectedRace(),
+  alignment: this.selectedAlignment(),
+  class: this.selectedClass(),
+  ...this.computedStats()
+}))
+
+// Computed: allocation config
+allocationConfig = computed(() => {
+  if (!this.rolledStats()) return undefined
+  return {
+    bonusPoints: this.remainingBonusPoints(),
+    baseStats: this.raceBaseStats(),
+    allocatedStats: this.allocatedStats(),
+    maxStat: 18
+  }
+})
+```
+
+## Validation
+
+| Field | Rules |
+|-------|-------|
+| Race | Required |
+| Alignment | Required |
+| Class | Required, must be eligible |
+| Stats | Must be rolled |
+| Allocation | All bonus points must be allocated |
+| Name | 1-15 characters, alphanumeric + spaces |
+
+## Navigation
+
+| Action | Destination |
+|--------|-------------|
+| Save (success) | Training Grounds |
+| Back | Previous step (or Training Grounds from step 1) |
+| Cancel | Training Grounds (with confirmation if data entered) |
 
 ## Success Flow
 
-1. Save character
-2. Show success message: "{Name} created successfully!"
-3. Wait 2 seconds
-4. Reset form to empty state
-5. Allow creating another character
+1. User clicks Save
+2. Character created via `CharacterService.createCharacter()`
+3. Success message: "{Name} created successfully!"
+4. Navigate to Training Grounds after 2 seconds
 
-## Data Flow
+## Visual Design
 
-The character creation process uses a cascading data flow through services:
+### Controls Column
+- **Step header**: Gold text with step indicator (secondary text)
+- **Buttons**: Dark cards with gold hover, selected state has gold glow
+- **Description panels**: Dark background with gold left border
+- **Hints**: Secondary text color, italic
 
-```
-RaceService
-  ↓
-  └─→ Provides base stats for selected race
-      ↓
-      ↓ (Race selection triggers)
-      ↓
-ClassService
-  ├─→ Evaluates class eligibility based on current stats
-  ├─→ Gray out ineligible classes (show ✗)
-  └─→ Only eligible classes are clickable
-      ↓
-      ↓ (Stats rolled or modified)
-      ↓
-ClassService (re-evaluate)
-  └─→ Recalculate eligibility for new stats
-      ↓
-      ↓ (Class selected)
-      ↓
-CharacterService
-  └─→ Create character with final stats and class
-```
+### Character Preview
+- Uses `CharacterCreationStatsCardComponent`
+- Dark card background
+- Gold accents for stat values
+- +/- buttons with disabled states
 
-## Component Structure
+### Text Colors
+| Element | CSS Variable |
+|---------|--------------|
+| Step title | `--color-text-gold` |
+| Step indicator | `--color-text-secondary` |
+| Hints/instructions | `--color-text-secondary` |
+| Empty placeholders | `--color-text-secondary` |
+| Stat labels | `--color-text-secondary` |
+| Stat values | `--color-text-gold` |
 
-```
-CharacterCreationScene
-├── SceneTitleComponent
-│   └── Displays "CHARACTER CREATION"
-│
-├── Main Form Container (2 columns)
-│   │
-│   ├── LEFT COLUMN
-│   │   ├── 1. Race Selection
-│   │   │   ├── Button group: Human, Elf, Dwarf, Gnome, Hobbit
-│   │   │   ├── Race description
-│   │   │   └── Base stats table
-│   │   │
-│   │   ├── 2. Alignment Selection
-│   │   │   └── Button group: Good, Neutral, Evil
-│   │   │
-│   │   └── 3. Stat Rolling
-│   │       ├── [ROLL DICE] button
-│   │       └── Stat display with formula:
-│   │           STR: 8 + 7 = 15
-│   │           INT: 8 + 12 = 20
-│   │           (etc. for all 6 stats)
-│   │
-│   └── RIGHT COLUMN
-│       ├── 4. Class Selection
-│       │   ├── Button grid: 8 classes (2x4)
-│       │   ├── Ineligible classes: grayed + ✗
-│       │   ├── Only eligible classes clickable
-│       │   └── Class description
-│       │
-│       └── 5. Character Name
-│           └── Text input field
-│
-├── Message Display Area
-│   └── Success/Error messages centered
-│
-└── SceneFooterComponent
-    └── Menu: [SAVE] [CANCEL] [BACK TO TRAINING GROUNDS]
-```
-
-## Success Message and Form Reset
-
-When a character is successfully created:
-
-1. Character is saved to roster via `CharacterService.createCharacter()`
-2. Success message displays: **"{CharacterName} created successfully!"**
-3. Wait 2 seconds for user acknowledgment
-4. Automatically reset entire form to empty state:
-   - Race: no selection
-   - Alignment: no selection
-   - Stats: cleared (awaiting new roll)
-   - Class: no selection
-   - Name: empty text field
-5. Focus returns to race selection
-6. User can immediately create another character
-
-This flow allows batch character creation in a single session without navigating away and back.
-
-## Navigation Options
-
-From the character creation scene, users can:
-
-- **[SAVE]** - Save character and reset form (enabled only when name is entered)
-- **[CANCEL]** - Close form with confirmation dialog if form has data
-- **[BACK TO TRAINING GROUNDS]** - Return to Training Grounds scene
-- **Esc key** - Same as cancel (confirmation if data present)
-- **B key** - Same as back button
-
-## Form Validation
-
-- **Race**: Required (must select one)
-- **Alignment**: Required (must select one)
-- **Stats**: Required (must roll at least once)
-- **Class**: Required (must select an eligible class)
-- **Name**: Required (minimum 1 character, maximum 20 characters)
-
-All sections must be complete before save button becomes enabled.
-
-## Testing Strategy
+## Testing
 
 ### Unit Tests
-
-- Race selection enabling/disabling alignment section
-- Alignment selection enabling/disabling stats section
-- Stats rolling enables class section
-- Class selection enables name section
-- Name entry enables save button
-- Progressive reset on upstream changes
-- Class eligibility calculation with recalculation on stat reroll
-- Keyboard shortcuts (R, S, Esc, B)
-- Success message display and form reset after save
+- Step progression
+- Selection handling
+- Class eligibility calculation
+- Stat allocation logic
+- Form validation
+- Keyboard shortcuts
 
 ### Integration Tests
-
-- Complete character creation flow from race to save
+- Complete character creation flow
 - Character appears in roster after save
-- Form properly resets for next character creation
-- Navigation back to training grounds preserves other state
+- Proper navigation on cancel/back
 
-## Accessibility
+## File Locations
 
-- All form sections have proper labels
-- Disabled sections have visual indicators (opacity + no cursor)
-- Keyboard shortcuts fully support gameplay without mouse
-- Success/error messages are screen-reader compatible
-- Form inputs have proper ARIA attributes
+| File | Purpose |
+|------|---------|
+| `src/app/scenes/character-creation/character-creation.component.ts` | Main component |
+| `src/app/scenes/character-creation/character-creation.component.html` | Template |
+| `src/app/scenes/character-creation/character-creation.component.scss` | Styles |
+| `src/app/shared/components/character-creation-stats-card/` | Preview card component |

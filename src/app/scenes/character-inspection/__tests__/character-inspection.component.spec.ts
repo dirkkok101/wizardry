@@ -129,7 +129,7 @@ describe('CharacterInspectionComponent', () => {
     expect(members[0].id).toBe('char-456');
   });
 
-  it('displays success message on successful equip', () => {
+  it('does not show success message on successful equip (self-evident action)', () => {
     const mockItem = {
       id: 'test-sword',
       name: 'Test Sword',
@@ -158,10 +158,8 @@ describe('CharacterInspectionComponent', () => {
 
     component.handleItemAction({ type: 'equip', item: mockItem as any });
 
-    // Now using MessageService instead of message signal
-    expect(component.messages.hasMessage()).toBe(true);
-    expect(component.messages.isSuccess()).toBe(true);
-    expect(component.messages.messageText()).toContain('Equipped');
+    // Equip/unequip are self-evident actions - no success message shown
+    expect(component.messages.hasMessage()).toBe(false);
   });
 
   it('displays error message on failed equip', () => {
@@ -188,47 +186,8 @@ describe('CharacterInspectionComponent', () => {
     expect(component.messages.isError()).toBe(true);
   });
 
-  it('clears message after 3 seconds', (done) => {
-    jest.useFakeTimers();
-
-    const mockItem = {
-      id: 'test-sword',
-      name: 'Test Sword',
-      type: 'WEAPON' as any,
-      slot: 'WEAPON' as any,
-      price: 100,
-      cursed: false,
-      identified: true,
-      equipped: false
-    };
-
-    jest.spyOn(ItemDataLoader, 'getItem').mockReturnValue(mockItem as any);
-
-    gameState.updateState(state => {
-      const char = state.roster.get('char-123')!;
-      return {
-        ...state,
-        roster: new Map(state.roster).set('char-123', {
-          ...char,
-          inventory: [mockItem as any]
-        })
-      };
-    });
-
-    fixture.detectChanges();
-
-    component.handleItemAction({ type: 'equip', item: mockItem as any });
-
-    // Now using MessageService instead of message signal
-    expect(component.messages.hasMessage()).toBe(true);
-
-    jest.advanceTimersByTime(3000);
-
-    expect(component.messages.hasMessage()).toBe(false);
-
-    jest.useRealTimers();
-    done();
-  });
+  // Note: Success message auto-clear test removed as part of notification cleanup
+  // Error messages are still shown and auto-cleared by MessageService
 });
 
 describe('CharacterInspectionComponent mode detection', () => {
@@ -400,7 +359,7 @@ describe('CharacterInspectionComponent mode detection', () => {
   });
 
   describe('character actions by mode', () => {
-    it('includes read-spells action for caster with spells in all modes', () => {
+    it('includes Spell Book in footer menu for caster with spells', () => {
       const casterWithSpells = createTestCharacter({
         id: 'char-123',
         class: CharacterClass.MAGE,
@@ -419,11 +378,11 @@ describe('CharacterInspectionComponent mode detection', () => {
 
       fixture.detectChanges();
 
-      const actions = component.characterActions();
-      expect(actions.some(a => a.type === 'read-spells')).toBe(true);
+      const footerItems = component.footerMenuItems();
+      expect(footerItems.some(item => item.id === 'spells')).toBe(true);
     });
 
-    it('excludes read-spells action for non-caster', () => {
+    it('excludes Spell Book from footer menu for non-caster', () => {
       const fighter = createTestCharacter({
         id: 'char-123',
         class: CharacterClass.FIGHTER,
@@ -442,8 +401,8 @@ describe('CharacterInspectionComponent mode detection', () => {
 
       fixture.detectChanges();
 
-      const actions = component.characterActions();
-      expect(actions.some(a => a.type === 'read-spells')).toBe(false);
+      const footerItems = component.footerMenuItems();
+      expect(footerItems.some(item => item.id === 'spells')).toBe(false);
     });
 
     it('includes cast-spell action in CAMP mode for caster with spell points', () => {

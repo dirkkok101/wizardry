@@ -1,9 +1,7 @@
 <div class="character-detail-card">
-  <!-- Header: Race, Class, Level, Alignment, Status -->
+  <!-- Header -->
   <div class="card-header">
-    <span class="classification">
-      {{ character.race }} {{ character.class }} Lvl {{ character.level }}
-    </span>
+    <span class="classification">{{ character.race }} {{ character.class }} LVL {{ character.level }}</span>
     <span class="separator">•</span>
     <span class="alignment">{{ character.alignment }}</span>
     <app-status-badge [status]="character.status" variant="badge" />
@@ -11,41 +9,106 @@
 
   <div class="card-divider"></div>
 
-  <!-- Attributes: 3x2 grid -->
+  <!-- Attributes -->
   <div class="attributes-section">
-    <div class="stat-row">
-      <span class="stat">STR: <em>{{ character.strength }}</em></span>
-      <span class="stat">INT: <em>{{ character.intelligence }}</em></span>
-      <span class="stat">PIE: <em>{{ character.piety }}</em></span>
+    <div class="stat">
+      <span class="stat-label">STR</span>
+      <span class="stat-value">{{ character.strength }}</span>
+      <span class="stat-modifier">{{ strModifierDisplay }}</span>
     </div>
-    <div class="stat-row">
-      <span class="stat">VIT: <em>{{ character.vitality }}</em></span>
-      <span class="stat">AGI: <em>{{ character.agility }}</em></span>
-      <span class="stat">LUK: <em>{{ character.luck }}</em></span>
+    <div class="stat">
+      <span class="stat-label">VIT</span>
+      <span class="stat-value">{{ character.vitality }}</span>
+      <span class="stat-modifier">{{ vitBonusDisplay }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">INT</span>
+      <span class="stat-value">{{ character.intelligence }}</span>
+      <span class="stat-modifier">{{ intModifierDisplay }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">AGI</span>
+      <span class="stat-value">{{ character.agility }}</span>
+      <span class="stat-modifier">{{ agiModifierDisplay }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">PIE</span>
+      <span class="stat-value">{{ character.piety }}</span>
+      <span class="stat-modifier">{{ pieModifierDisplay }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">LUK</span>
+      <span class="stat-value">{{ character.luck }}</span>
+      <span class="stat-modifier">{{ lukEffectDisplay }}</span>
     </div>
   </div>
 
   <div class="card-divider"></div>
 
-  <!-- Combat Stats -->
+  <!-- Combat Stats with HP bar -->
   <div class="combat-section">
-    <span class="combat-stat">HP: <em>{{ character.hp }}/{{ character.maxHp }}</em></span>
-    <span class="combat-stat">AC: <em>{{ character.ac }}</em></span>
-    <span class="combat-stat">XP: <em>{{ formatNumber(character.experience) }}</em></span>
+    <div class="combat-stat hp-stat">
+      <div class="stat-header">
+        <span>HP</span>
+        <em>{{ character.hp }}/{{ character.maxHp }}</em>
+      </div>
+      <div class="progress-bar hp-bar">
+        <div class="progress-fill" [class]="hpBarColorClass" [style.width.%]="hpPercentage"></div>
+      </div>
+    </div>
+    <div class="combat-stat">
+      <span>AC</span>
+      <em>{{ character.ac }}</em>
+    </div>
+    <div class="combat-stat">
+      <span>Attacks</span>
+      <em>{{ attacksPerRound }}/round</em>
+    </div>
+    <div class="combat-stat">
+      <span>Damage</span>
+      <em>{{ damageDisplay }}</em>
+    </div>
   </div>
 
-  <!-- XP Progress (optional) -->
-  @if (showXpProgress && canStillLevel) {
-    <div class="xp-progress">
-      Next Level: {{ formatNumber(nextLevelXP) }} XP
-      <span class="xp-remaining">({{ formatNumber(xpToNextLevel) }} to go)</span>
+  <div class="card-divider"></div>
+
+  <!-- XP + History (two-column layout) -->
+  <div class="xp-history-section">
+    <!-- Left: XP column -->
+    <div class="xp-column">
+      <div class="combat-stat">
+        <span>XP</span>
+        <em>{{ formatNumber(character.experience) }}</em>
+      </div>
+      @if (showXpProgress && canStillLevel) {
+        <div class="progress-bar xp-bar">
+          <div class="progress-fill" [style.width.%]="xpProgressPercentage"></div>
+        </div>
+        <div class="xp-info">
+          <span class="xp-remaining">{{ formatNumber(xpToNextLevel) }} to lvl {{ character.level + 1 }}</span>
+        </div>
+      }
+      @if (showXpProgress && !canStillLevel) {
+        <div class="xp-info max-level">Max Level</div>
+      }
     </div>
-  }
-  @if (showXpProgress && !canStillLevel) {
-    <div class="xp-progress max-level">
-      Maximum Level Reached
+
+    <!-- Right: History column -->
+    <div class="history-column">
+      <div class="history-stat">
+        <span>Age</span>
+        <em>{{ character.age }} yrs</em>
+      </div>
+      <div class="history-stat">
+        <span>Deaths</span>
+        <em>{{ character.deathCount }}</em>
+      </div>
+      <div class="history-stat">
+        <span>Kills</span>
+        <em>{{ character.monsterKills }}</em>
+      </div>
     </div>
-  }
+  </div>
 
   <!-- Spell Points (casters only) -->
   @if (hasSpellPoints) {

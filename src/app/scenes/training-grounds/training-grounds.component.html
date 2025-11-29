@@ -2,26 +2,28 @@
   <!-- Title -->
   <app-scene-title [title]="'TRAINING GROUNDS'" />
 
-  <!-- Character Cards Grid -->
-  <main class="character-grid">
+  <!-- Character Roster -->
+  <main class="roster-content">
     @if (availableCharacters().length === 0) {
-      <div class="empty-state">
-        <p>No characters available</p>
-        <p>Create your first adventurer to begin!</p>
-      </div>
+      <app-empty-state
+        title="No characters available"
+        subtitle="Create your first adventurer to begin!"
+      />
     } @else {
-      @for (item of availableCharacters(); track item.character.id) {
-        <app-character-card
-          [character]="item.character"
-          [visibleFields]="['race', 'class', 'level', 'hp', 'ac']"
-          [actions]="[
-            { type: 'inspect' },
-            { type: 'delete', variant: 'danger' }
-          ]"
-          variant="default"
-          (actionClick)="handleActionClick($event)">
-        </app-character-card>
-      }
+      <div class="character-list">
+        @for (char of availableCharacters(); track char.character.id) {
+          <app-character-list-item
+            [character]="char.character"
+            [showAlignment]="true"
+            [showStatus]="true"
+            [status]="char.status">
+            <ng-template #actions>
+              <button class="action-btn" (click)="handleInspectCharacter(char.character.id)">Inspect</button>
+              <button class="action-btn danger" (click)="handleDeleteCharacter(char.character.id)">Delete</button>
+            </ng-template>
+          </app-character-list-item>
+        }
+      </div>
     }
   </main>
 

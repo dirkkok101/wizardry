@@ -30,63 +30,71 @@ export interface RestResultsData {
     @if (visible) {
       <div class="modal-overlay" tabindex="0" #modalOverlay
            role="dialog" aria-modal="true" aria-labelledby="rest-modal-title">
-        <div class="modal-content">
+        <div class="modal-content" [class.has-level-ups]="results.levelUps.length > 0">
           <h2 class="modal-title" id="rest-modal-title">Rest Complete</h2>
 
-          <div class="summary-section">
-            <div class="summary-item">
-              <span class="label">Time Passed:</span>
-              <span class="value">{{ results.weeksRested }} week(s)</span>
+          <div class="modal-body" [class.has-level-ups]="results.levelUps.length > 0">
+            <!-- Left column: Summary + Party Status -->
+            <div class="results-column">
+              <div class="summary-section">
+                <div class="summary-item">
+                  <span class="label">Time Passed:</span>
+                  <span class="value">{{ results.weeksRested }} week(s)</span>
+                </div>
+                @if (results.goldSpent > 0) {
+                  <div class="summary-item">
+                    <span class="label">Gold Spent:</span>
+                    <span class="value gold">{{ results.goldSpent }} GP</span>
+                  </div>
+                }
+              </div>
+
+              @if (characterResults.length > 0) {
+                <div class="character-results">
+                  <h3>Party Status</h3>
+                  @for (char of characterResults; track char.id) {
+                    <div class="character-row">
+                      <span class="char-name">{{ char.name }}</span>
+                      <span class="char-stats">
+                        @if (char.hpGained > 0) {
+                          <span class="hp-gained">+{{ char.hpGained }} HP</span>
+                        }
+                        @if (char.spellsRestored) {
+                          <span class="spells-restored">Spells Restored</span>
+                        }
+                        @if (char.hpGained === 0 && !char.spellsRestored) {
+                          <span class="no-change">No change</span>
+                        }
+                      </span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
-            @if (results.goldSpent > 0) {
-              <div class="summary-item">
-                <span class="label">Gold Spent:</span>
-                <span class="value gold">{{ results.goldSpent }} GP</span>
+
+            <!-- Right column: Level Ups (only when present) -->
+            @if (results.levelUps.length > 0) {
+              <div class="level-ups-column">
+                <div class="level-ups">
+                  <h3>Level Up!</h3>
+                  @for (levelUp of results.levelUps; track levelUp.characterId) {
+                    <div class="level-up-entry">
+                      <div class="level-up-header">
+                        <span class="char-name">{{ levelUp.characterName }}</span>
+                        <span class="new-level">Level {{ levelUp.newLevel }}</span>
+                      </div>
+                      <div class="stat-grid">
+                        <span class="stat-item">+{{ levelUp.hpIncrease }} HP</span>
+                        @for (stat of getStatChanges(levelUp); track stat.name) {
+                          <span class="stat-item">+{{ stat.value }} {{ stat.name }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
-
-          @if (characterResults.length > 0) {
-            <div class="character-results">
-              <h3>Party Status</h3>
-              @for (char of characterResults; track char.id) {
-                <div class="character-row">
-                  <span class="char-name">{{ char.name }}</span>
-                  <span class="char-stats">
-                    @if (char.hpGained > 0) {
-                      <span class="hp-gained">+{{ char.hpGained }} HP</span>
-                    }
-                    @if (char.spellsRestored) {
-                      <span class="spells-restored">Spells Restored</span>
-                    }
-                    @if (char.hpGained === 0 && !char.spellsRestored) {
-                      <span class="no-change">No change</span>
-                    }
-                  </span>
-                </div>
-              }
-            </div>
-          }
-
-          @if (results.levelUps.length > 0) {
-            <div class="level-ups">
-              <h3>Level Up!</h3>
-              @for (levelUp of results.levelUps; track levelUp.characterId) {
-                <div class="level-up-entry">
-                  <div class="level-up-header">
-                    <span class="char-name">{{ levelUp.characterName }}</span>
-                    <span class="new-level">Level {{ levelUp.newLevel }}</span>
-                  </div>
-                  <div class="level-up-details">
-                    <span class="hp-increase">+{{ levelUp.hpIncrease }} HP</span>
-                    @for (stat of getStatChanges(levelUp); track stat.name) {
-                      <span class="stat-change">+{{ stat.value }} {{ stat.name }}</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
 
           <div class="modal-actions">
             <button class="primary-button" (click)="dismiss()">
@@ -100,10 +108,7 @@ export interface RestResultsData {
   styles: [`
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0, 0, 0, 0.85);
       display: flex;
       align-items: center;
@@ -113,142 +118,222 @@ export interface RestResultsData {
     }
 
     .modal-content {
-      background: var(--color-background, #000);
-      border: 2px solid var(--color-primary, #00ff00);
-      padding: 1.5rem;
+      background: var(--color-bg-darkest);
+      border: 2px solid var(--color-border);
+      border-radius: var(--card-border-radius);
+      padding: var(--space-4);
       max-width: 500px;
       width: 90%;
       max-height: 80vh;
       overflow-y: auto;
+      box-shadow: 0 0 20px rgba(212, 165, 116, 0.2);
+    }
+
+    .modal-content.has-level-ups {
+      max-width: 800px;
+    }
+
+    .modal-body {
+      display: block;
+    }
+
+    .modal-body.has-level-ups {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    .results-column {
+      min-width: 0;
+    }
+
+    .level-ups-column {
+      min-width: 0;
+    }
+
+    @media (max-width: 600px) {
+      .modal-content.has-level-ups {
+        max-width: 500px;
+      }
+
+      .modal-body.has-level-ups {
+        grid-template-columns: 1fr;
+      }
     }
 
     .modal-title {
-      margin: 0 0 1rem 0;
-      color: var(--color-primary, #00ff00);
+      margin: 0 0 var(--space-3) 0;
+      font-family: var(--font-display);
+      font-size: var(--font-size-xl);
+      color: var(--color-gold-primary);
       text-align: center;
-      font-size: 1.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
     .summary-section {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--color-border, #333);
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
     }
 
     .summary-item {
       display: flex;
       justify-content: space-between;
+      font-family: var(--font-body);
+      font-size: var(--font-size-sm);
     }
 
     .label {
-      color: var(--color-text-secondary, #aaa);
+      color: var(--color-text-primary);
     }
 
     .value {
-      color: var(--color-text, #fff);
+      color: var(--color-text-primary);
     }
 
     .value.gold {
-      color: var(--color-gold, #ffd700);
+      color: var(--color-gold-bright);
+      font-weight: 600;
     }
 
     h3 {
-      margin: 0 0 0.5rem 0;
-      color: var(--color-primary, #00ff00);
-      font-size: 1rem;
+      margin: 0 0 var(--space-2) 0;
+      font-family: var(--font-display);
+      font-size: var(--font-size-md);
+      color: var(--color-gold-primary);
+      letter-spacing: 0.05em;
     }
 
     .character-results {
-      margin-bottom: 1rem;
+      margin-bottom: var(--space-3);
     }
 
     .character-row {
       display: flex;
       justify-content: space-between;
-      padding: 0.25rem 0;
+      padding: var(--space-1) 0;
+      font-family: var(--font-body);
+      font-size: var(--font-size-sm);
     }
 
     .char-name {
-      color: var(--color-text, #fff);
+      color: var(--color-text-primary);
     }
 
     .char-stats {
       display: flex;
-      gap: 0.75rem;
+      gap: var(--space-3);
     }
 
     .hp-gained {
-      color: var(--color-success, #00ff00);
+      color: var(--color-status-ok);
+      font-weight: 500;
     }
 
     .spells-restored {
-      color: var(--color-info, #00bfff);
+      color: var(--color-magic);
+      font-weight: 500;
     }
 
     .no-change {
-      color: var(--color-text-muted, #666);
+      color: var(--color-text-muted);
       font-style: italic;
     }
 
     .level-ups {
-      background: var(--color-surface, #1a1a1a);
-      border: 1px solid var(--color-gold, #ffd700);
-      padding: 0.75rem;
-      margin-bottom: 1rem;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-gold-primary);
+      border-radius: var(--card-border-radius);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+      box-shadow: 0 0 8px rgba(212, 165, 116, 0.15);
     }
 
     .level-ups h3 {
-      color: var(--color-gold, #ffd700);
+      color: var(--color-gold-bright);
+      text-transform: uppercase;
     }
 
     .level-up-entry {
-      margin-bottom: 0.5rem;
+      padding-bottom: var(--space-2);
+      margin-bottom: var(--space-2);
+      border-bottom: 1px solid var(--color-border);
+      font-family: var(--font-body);
+    }
+
+    .level-up-entry:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
 
     .level-up-header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.25rem;
+      align-items: center;
+      margin-bottom: var(--space-1);
+      font-size: var(--font-size-sm);
     }
 
     .new-level {
-      color: var(--color-gold, #ffd700);
-      font-weight: bold;
+      background: var(--color-gold-primary);
+      color: var(--color-bg-darkest);
+      padding: 2px var(--space-2);
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: var(--font-size-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .level-up-details {
+    .stat-grid {
       display: flex;
-      gap: 0.75rem;
-      font-size: 0.9rem;
-      color: var(--color-success, #00ff00);
+      flex-wrap: wrap;
+      gap: var(--space-1) var(--space-3);
     }
 
-    .hp-increase, .stat-change {
-      color: var(--color-success, #00ff00);
+    .stat-item {
+      color: var(--color-status-ok);
+      font-weight: 600;
+      font-size: var(--font-size-xs);
     }
 
     .modal-actions {
       display: flex;
       justify-content: center;
-      margin-top: 1rem;
+      margin-top: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-border);
     }
 
     .primary-button {
-      padding: 0.5rem 1.5rem;
-      background: var(--color-primary, #00ff00);
-      color: var(--color-background, #000);
-      border: none;
+      padding: var(--space-2) var(--space-4);
+      background: transparent;
+      color: var(--color-gold-primary);
+      border: 1px solid var(--color-gold-primary);
+      border-radius: var(--card-border-radius);
       cursor: pointer;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: bold;
+      font-family: var(--font-body);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all var(--transition-fast);
+      min-width: 120px;
     }
 
     .primary-button:hover {
-      background: var(--color-primary-bright, #00ff88);
+      background: var(--color-gold-primary);
+      color: var(--color-bg-darkest);
+      box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
+    }
+
+    .primary-button:active {
+      transform: scale(0.95);
     }
   `]
 })

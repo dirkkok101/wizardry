@@ -322,6 +322,103 @@ docs/
 └── research/         # Source validation and research
 ```
 
+## UI Design System
+
+The project uses a **Modern Retro-Fantasy** design system with gold/amber accents on dark backgrounds. This aesthetic honors the 1981 Wizardry roots while providing a polished modern experience.
+
+### Design Tokens (CSS Custom Properties)
+
+All styling uses CSS custom properties defined in `src/styles/variables.scss`:
+
+```css
+/* Colors */
+--color-bg-darkest: #0a0a0a;      /* Primary background */
+--color-bg-card: #1a1a1a;          /* Card backgrounds */
+--color-gold-primary: #d4a574;     /* Primary gold accent */
+--color-text-gold: #d4a574;        /* Gold text for emphasis */
+--color-text-primary: #e0e0e0;     /* Primary text */
+--color-text-secondary: #a0a0a0;   /* Secondary text */
+
+/* Typography */
+--font-display: 'Cinzel', Georgia, serif;   /* Headings, titles */
+--font-body: 'JetBrains Mono', monospace;   /* Stats, buttons */
+
+/* Status Colors */
+--color-status-ok: #22c55e;        /* OK/Healthy */
+--color-status-poisoned: #a855f7;  /* Poisoned */
+--color-status-dead: #6b7280;      /* Dead */
+/* ... and more in variables.scss */
+
+/* HP Colors */
+--color-hp-healthy: #22c55e;       /* >50% HP */
+--color-hp-warning: #f59e0b;       /* 25-50% HP */
+--color-hp-critical: #ef4444;      /* <25% HP */
+```
+
+### Fonts (Google Fonts)
+
+- **Cinzel**: Fantasy display font for scene titles, section headers
+- **JetBrains Mono**: Monospace font for stats, character info, buttons
+
+Fonts are loaded in `src/index.html`.
+
+### Component Styling Guidelines
+
+**Always use CSS custom properties** for colors, spacing, and typography:
+
+```scss
+// ✅ Correct - uses design tokens
+.my-component {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+}
+
+// ❌ Wrong - hardcoded values
+.my-component {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  padding: 12px;
+}
+```
+
+### Card Variants
+
+`CharacterCardComponent` supports two variants:
+- **default**: Full-height cards with all details (for dedicated character views)
+- **compact**: Minimal height, no dividers (for grids, lists, maze panels)
+
+```html
+<!-- Compact variant for dense layouts -->
+<app-character-card [character]="char" variant="compact" />
+```
+
+`PartyCharacterGridComponent` passes the variant through to child cards:
+```html
+<app-party-character-grid source="party" variant="compact" />
+```
+
+### Shared Components
+
+All scenes should use these shared components for consistency:
+
+| Component | Purpose |
+|-----------|---------|
+| `SceneTitleComponent` | Scene header with gold styling, optional party gold |
+| `SceneFooterComponent` | Footer menu with gold-themed buttons |
+| `CharacterCardComponent` | Individual character display (default/compact) |
+| `CharacterPanelComponent` | Ultra-compact vertical character stack (maze sidebars) |
+| `PartyCharacterGridComponent` | Character grid with formation support |
+
+### Key Style Files
+
+| File | Purpose |
+|------|---------|
+| `src/styles/variables.scss` | All CSS custom properties |
+| `src/styles/_design-tokens.scss` | SCSS variables mirroring CSS properties |
+| `src/styles/_card-mixins.scss` | Reusable card styling mixins |
+
 ## TypeScript Configuration
 
 - **Strict mode enabled**: All code must satisfy strict TypeScript checks

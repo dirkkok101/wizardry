@@ -1,0 +1,61 @@
+<div class="creation-stats-card">
+  <!-- Header: Three separate rows for Race, Alignment, Class -->
+  <div class="info-section">
+    @if (partialCharacter?.race) {
+      <div class="info-row">
+        <span class="info-label">Race:</span>
+        <span class="info-value">{{ partialCharacter!.race }}</span>
+      </div>
+    }
+    @if (partialCharacter?.alignment) {
+      <div class="info-row">
+        <span class="info-label">Alignment:</span>
+        <span class="info-value">{{ partialCharacter!.alignment }}</span>
+      </div>
+    }
+    @if (partialCharacter?.class) {
+      <div class="info-row">
+        <span class="info-label">Class:</span>
+        <span class="info-value">{{ partialCharacter!.class }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Stats Section (only when allocation available) -->
+  @if (hasStats) {
+    <div class="divider"></div>
+
+    <div class="instructions">
+      Use +/- to allocate your bonus points
+    </div>
+
+    <div class="allocation-header">
+      <span>Points Remaining:</span>
+      <span class="points-value" [class.zero]="allocationConfig!.bonusPoints === 0">
+        {{ allocationConfig!.bonusPoints }}
+      </span>
+    </div>
+
+    <div class="stats-section">
+      @for (stat of stats; track stat.key) {
+        <div class="stat-row">
+          <button
+            class="btn-adjust btn-decrement"
+            [disabled]="!canDecrement(stat.key)"
+            (click)="decrementStat(stat.key)"
+            type="button"
+          >−</button>
+          <span class="stat-label">{{ stat.label }}</span>
+          <span class="stat-value">{{ getStatValue(stat.key) ?? '--' }}</span>
+          <button
+            class="btn-adjust btn-increment"
+            [disabled]="!canIncrement(stat.key)"
+            (click)="incrementStat(stat.key)"
+            type="button"
+          >+</button>
+          <span class="stat-modifier">{{ getStatModifier(stat.key) }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

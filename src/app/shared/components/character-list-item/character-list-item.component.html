@@ -1,0 +1,21 @@
+<div [class]="itemClass">
+  <span class="char-name">{{ character.name }}</span>
+  <span class="char-info">{{ getClassAbbr(character.class) }} Lv{{ character.level }}</span>
+  <span class="char-race">{{ character.race }}</span>
+
+  @if (showAlignment) {
+    <span class="char-alignment" [class]="'align-' + character.alignment.toLowerCase()">
+      {{ character.alignment }}
+    </span>
+  }
+
+  @if (showStatus && status) {
+    <span class="char-status" [class]="'status-' + status.toLowerCase()">
+      {{ status }}
+    </span>
+  }
+
+  <div class="list-actions">
+    <ng-container *ngTemplateOutlet="actionsTemplate"></ng-container>
+  </div>
+</div>

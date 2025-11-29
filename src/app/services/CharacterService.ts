@@ -255,7 +255,9 @@ function createCharacter(
     gold,
     password: params.password,
     createdAt: Date.now(),
-    lastModified: Date.now()
+    lastModified: Date.now(),
+    deathCount: 0,
+    monsterKills: 0
   }
 
   // Add to roster
@@ -543,7 +545,11 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     inventory: [],
 
     // Gold (pooled to party when character joins)
-    gold
+    gold,
+
+    // History tracking
+    deathCount: 0,
+    monsterKills: 0
   }
 
   return character
@@ -557,5 +563,6 @@ export const CharacterService = {
   getEligibleClasses,
   validateCharacterName,
   validatePassword,
-  createCharacterFromStats
+  createCharacterFromStats,
+  getVitalityBonus
 }

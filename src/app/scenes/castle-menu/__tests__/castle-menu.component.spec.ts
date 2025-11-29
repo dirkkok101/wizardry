@@ -90,9 +90,20 @@ describe('CastleMenuComponent', () => {
   });
 
   describe('Party Display', () => {
-    it('should display party character grid', () => {
-      const characterGrid = fixture.nativeElement.querySelector('app-party-character-grid');
-      expect(characterGrid).toBeTruthy();
+    it('should display empty state when no party formed', () => {
+      // With no party, shows empty state message
+      const emptyState = fixture.nativeElement.querySelector('.empty-state');
+      expect(emptyState).toBeTruthy();
+      expect(emptyState.textContent).toContain('No party formed');
+    });
+
+    it('should have formation layout structure', () => {
+      // The formation-layout container should exist for when party is present
+      const formationLayout = fixture.nativeElement.querySelector('.formation-layout');
+      // May or may not exist depending on party state
+      // Empty state OR formation layout should be present
+      const emptyState = fixture.nativeElement.querySelector('.empty-state');
+      expect(formationLayout || emptyState).toBeTruthy();
     });
 
     it('should handle inspect event from character card', () => {

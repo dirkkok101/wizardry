@@ -30,15 +30,10 @@ describe('RestActionCardComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('displays the title and description', () => {
+  it('displays the title and cost text', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.title')?.textContent).toContain('Restore Spells');
-    expect(compiled.querySelector('.description')?.textContent).toContain('Rest at the stables');
-  });
-
-  it('displays cost text', () => {
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.time-cost')?.textContent).toContain('1 week at Stables');
+    expect(compiled.querySelector('.description')?.textContent).toContain('1 week at Stables');
   });
 
   it('displays gold cost when non-zero', () => {
@@ -53,15 +48,17 @@ describe('RestActionCardComponent', () => {
     expect(compiled.querySelector('.gold-cost')?.textContent).toContain('500 GP');
   });
 
-  it('hides gold cost when zero', () => {
+  it('displays "Free" when gold cost is zero', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.gold-cost')).toBeNull();
+    const goldCost = compiled.querySelector('.gold-cost');
+    expect(goldCost?.textContent).toContain('Free');
+    expect(goldCost?.classList.contains('free')).toBe(true);
   });
 
-  it('emits selected event when clicked', () => {
+  it('emits selected event when action button clicked', () => {
     const spy = jest.spyOn(component.selected, 'emit');
 
-    const button = fixture.nativeElement.querySelector('.rest-action-card');
+    const button = fixture.nativeElement.querySelector('.action-button');
     button.click();
 
     expect(spy).toHaveBeenCalledWith('restore-spells');
@@ -72,10 +69,16 @@ describe('RestActionCardComponent', () => {
     fixture.detectChanges();
 
     const spy = jest.spyOn(component.selected, 'emit');
-    const button = fixture.nativeElement.querySelector('.rest-action-card');
+    const button = fixture.nativeElement.querySelector('.action-button');
     button.click();
 
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('displays action button with Rest label', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const button = compiled.querySelector('.action-button');
+    expect(button?.textContent?.trim()).toBe('[Rest]');
   });
 
   it('displays disabled reason when provided', () => {

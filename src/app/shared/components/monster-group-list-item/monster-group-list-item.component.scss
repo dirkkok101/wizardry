@@ -1,0 +1,78 @@
+// Monster Group List Item - Compact row for monster group display in combat
+// Follows CharacterListItemComponent pattern
+
+:host {
+  display: block;
+}
+
+.list-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-gold-dim);
+    background: var(--color-bg-card-hover);
+  }
+
+  &.selectable {
+    cursor: pointer;
+
+    &:hover:not(.defeated) {
+      border-color: var(--color-gold-primary);
+      background: rgba(212, 165, 116, 0.1);
+    }
+  }
+
+  &.selected {
+    border-color: var(--color-gold-primary);
+    background: rgba(212, 165, 116, 0.15);
+    box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+  }
+
+  &.defeated {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Group ID indicator (A, B, C, D)
+.group-id {
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+// Alive/Total count
+.group-count {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+// Monster name
+.monster-name {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Responsive: tighter spacing on smaller screens
+@media (max-height: 900px) {
+  .list-item {
+    padding: var(--space-1) var(--space-2);
+  }
+}

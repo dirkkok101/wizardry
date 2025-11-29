@@ -20,6 +20,16 @@ export interface ShopContext {
   getSellPrice: (item: Item) => number;
 }
 
+// Short display labels for slot indicators (keeps vertical text uniform height)
+const SLOT_DISPLAY_LABELS: Record<ItemSlot, string> = {
+  [ItemSlot.WEAPON]: 'WEAPON',
+  [ItemSlot.ARMOR]: 'ARMOR',
+  [ItemSlot.SHIELD]: 'SHIELD',
+  [ItemSlot.HELMET]: 'HEAD',
+  [ItemSlot.GAUNTLETS]: 'HANDS',
+  [ItemSlot.NONE]: ''
+}
+
 @Component({
   selector: 'app-item-card',
   standalone: true,
@@ -43,9 +53,17 @@ export class ItemCardComponent {
     }
   }
 
+  /**
+   * Get short display label for slot indicator
+   */
+  get slotDisplayLabel(): string {
+    if (!this.slot) return ''
+    return SLOT_DISPLAY_LABELS[this.slot] || this.slot
+  }
+
   get displayName(): string {
     if (!this.item) {
-      return this.slot ? `Empty ${this.slot}` : 'Empty Slot';
+      return this.slot ? `Empty ${this.slotDisplayLabel}` : 'Empty Slot';
     }
 
     if (!this.item.identified) {

@@ -12,10 +12,10 @@
         emptyMessage="No afflicted party members"
       />
     } @else {
-      <div class="empty-state">
-        <p>Your party is in good health.</p>
-        <p>No one requires the temple's services at this time.</p>
-      </div>
+      <app-empty-state
+        title="Your party is in good health"
+        subtitle="No one requires the temple's services at this time"
+      />
     }
 
     @if (messages.hasMessage()) {

@@ -1,6 +1,3 @@
-@use 'sass:color';
-@use '../../../../styles/variables' as *;
-
 // Character card dimensions
 $card-min-height-default: 120px;
 $card-min-height-compact: 80px;
@@ -8,51 +5,73 @@ $card-min-height-compact: 80px;
 .character-card {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  background-color: $color-bg-black;
-  border: 2px solid $color-border;
-  padding: $spacing-md;
-  font-family: $font-mono;
-  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  gap: var(--space-3);
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  padding: var(--space-4);
+  font-family: var(--font-body);
+  transition: all var(--transition-normal);
   position: relative;
-  border-radius: 4px;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
 
+  // Default variant
   &.default {
     min-height: $card-min-height-default;
+    padding: var(--space-4);
+    font-size: var(--font-size-base);
   }
 
+  // Compact variant (for dense layouts)
   &.compact {
-    min-height: $card-min-height-compact;
+    min-height: auto;  // No minimum, fit content
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--font-size-sm);
+    gap: var(--space-1);
+
+    // Hide dividers in compact mode
+    .card-divider {
+      display: none;
+    }
+
+    .card-header {
+      gap: var(--space-2);
+    }
+
+    .hp-bar-container {
+      margin-top: 0;
+    }
   }
 
   &:hover {
-    background-color: color.adjust($color-bg-black, $lightness: 5%);
-    border-color: $color-text-bright;
+    background-color: var(--color-bg-card-hover);
+    border-color: var(--color-border-hover);
+    box-shadow: var(--card-shadow-hover);
   }
 
   // Highlighted state (active character in combat)
   &.highlighted {
-    border-color: $color-primary;
-    background-color: rgba(0, 255, 0, 0.1);
-    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+    border-color: var(--color-gold-primary);
+    background-color: rgba(212, 165, 116, 0.1);
+    box-shadow: var(--glow-gold-md);
   }
 
   // Dead state - use selective opacity to keep action buttons clearly visible
-  // Previously used opacity: 0.5 on whole card which made buttons look disabled
   &.dead {
-    background-color: rgba(100, 0, 0, 0.3);
-    border-color: rgba(150, 50, 50, 0.6);
+    background-color: rgba(107, 114, 128, 0.15);
+    border-color: var(--color-status-dead);
 
     // Fade informational content but keep it readable
     .card-header,
     .card-stats {
-      opacity: 0.7;
+      opacity: 0.6;
+      filter: grayscale(60%);
     }
 
     // Keep action buttons at full opacity so they're clearly clickable
-    // This prevents confusion where enabled buttons look disabled
     .card-actions {
       opacity: 1;
+      filter: none;
     }
   }
 }
@@ -61,29 +80,43 @@ $card-min-height-compact: 80px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: $spacing-md;
+  gap: var(--space-3);
 }
 
 .character-name {
-  font-size: $font-size-large;
-  font-weight: bold;
-  color: $color-text-bright;
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-gold);
+  letter-spacing: 0.02em;
+
+  .compact & {
+    font-size: var(--font-size-base);
+  }
 }
 
 .card-divider {
   height: 1px;
-  background-color: $color-border;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-border) 20%,
+    var(--color-border) 80%,
+    transparent
+  );
   margin: 0;
 }
 
 .card-stats {
   display: flex;
   flex-direction: column;
+  color: var(--color-text-primary);
 }
 
 .card-actions {
   display: flex;
   justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 // Active indicator (pulsing arrow for current character in combat)
@@ -92,27 +125,28 @@ $card-min-height-compact: 80px;
   top: 50%;
   left: -20px;
   transform: translateY(-50%);
-  color: $color-primary;
+  color: var(--color-gold-bright);
   font-size: 1rem;
   animation: pulse 1s infinite;
+  text-shadow: var(--glow-gold-sm);
 }
 
 // Status text (e.g., selected action in combat)
 .status-text {
-  font-size: 0.8rem;
-  color: $color-primary;
-  font-weight: bold;
+  font-size: var(--font-size-xs);
+  color: var(--color-gold-primary);
+  font-weight: 500;
   text-align: center;
-  padding: 0.25rem;
-  background: rgba(0, 255, 0, 0.1);
-  border: 1px solid $color-primary;
+  padding: var(--space-1) var(--space-2);
+  background: rgba(212, 165, 116, 0.1);
+  border: 1px solid var(--color-gold-dim);
   border-radius: 2px;
-  margin-top: $spacing-xs;
+  margin-top: var(--space-1);
 }
 
 // HP Bar
 .hp-bar-container {
-  margin-top: $spacing-xs;
+  margin-top: var(--space-1);
 }
 
 .hp-bar {
@@ -124,46 +158,49 @@ $card-min-height-compact: 80px;
 
   .hp-fill {
     height: 100%;
-    transition: width 0.3s ease, background 0.3s ease;
+    transition: width var(--transition-normal), background var(--transition-normal);
+    border-radius: 3px;
 
     &.healthy {
-      background: linear-gradient(90deg, #00aa00, #00ff00);
+      background: linear-gradient(90deg, var(--color-hp-healthy), #4ade80);
     }
 
     &.low {
-      background: linear-gradient(90deg, #ff8800, #ffaa00);
+      background: linear-gradient(90deg, var(--color-hp-warning), #fbbf24);
     }
 
     &.critical {
-      background: linear-gradient(90deg, #ff0000, #ff4444);
+      background: linear-gradient(90deg, var(--color-hp-critical), #f87171);
+      animation: pulse-critical 1s ease-in-out infinite;
     }
   }
 }
 
 .hp-context {
-  font-size: $font-size-small;
-  color: $color-text-dim;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
   margin-top: 2px;
   font-style: italic;
 }
 
 // Dead badge
 .dead-badge {
-  color: $color-danger;
-  font-weight: bold;
-  font-size: 0.75rem;
+  color: var(--color-danger);
+  font-weight: 500;
+  font-size: var(--font-size-xs);
   text-align: center;
-  padding: 0.15rem;
-  background: rgba(255, 0, 0, 0.2);
+  padding: var(--space-1);
+  background: rgba(220, 38, 38, 0.15);
   border-radius: 2px;
-  margin-top: $spacing-xs;
+  margin-top: var(--space-1);
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes pulse-critical {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }

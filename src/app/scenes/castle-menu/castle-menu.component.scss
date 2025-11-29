@@ -1,67 +1,91 @@
-@use '../../../styles/variables' as *;
+// Castle Menu scene - Modern Retro-Fantasy theme
+// Uses CharacterPanelComponent for compact maze-style cards
 
 .castle-menu {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: $color-bg-black;
-  color: $color-text-green;
-  font-family: $font-mono;
+  background-color: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
 }
 
 .party-section {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-bottom: $border-width $border-style $color-border;
-  padding: $padding-standard;
-
-  h2 {
-    font-size: $font-size-large;
-    margin-bottom: $spacing-md;
-    color: $color-text-bright;
-    text-align: center;
-    border-bottom: $border-width $border-style $color-border;
-    padding-bottom: $spacing-sm;
-  }
+  padding: var(--space-2);
 }
 
-.party-members {
+// Two-column layout for front/back rows (side by side like maze)
+.formation-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: $spacing-sm;
-  max-width: 100%;
-
-  // Limit to 3 columns max for better card sizing
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.no-party {
-  text-align: center;
-  color: $color-text-dim;
-  font-style: italic;
-  margin-top: $spacing-lg;
-  grid-column: 1 / -1;
-}
-
-.content-area {
-  flex: 1;
-  padding: $padding-standard;
-  overflow-y: auto;
+.formation-column {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  gap: var(--space-1);
 }
 
-// Mobile responsive
+.row-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-1);
+  margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+// Style the character panel within the formation
+.formation-column {
+  ::ng-deep {
+    .character-panel {
+      flex: 1;
+    }
+
+    .panel-title {
+      display: none; // We use our own row-title
+    }
+
+    .character-stack {
+      padding: 0;
+      gap: var(--space-1);
+    }
+
+    .character-card {
+      padding: var(--space-2);
+    }
+  }
+}
+
+
+// Content area acts as flex spacer to push footer to bottom
+.content-area {
+  flex: 1;
+  min-height: 0;
+}
+
+// MacBook Air 13" (1440x900) - smaller row title
+@media (max-height: 900px) {
+  .row-title {
+    font-size: var(--font-size-xs);
+    padding-bottom: 2px;
+  }
+}
+
+// Mobile responsive - stack columns vertically
 @media (max-width: 768px) {
-  .party-members {
+  .formation-layout {
     grid-template-columns: 1fr;
+    gap: var(--space-2);
   }
 
   .party-section {
-    max-height: 40vh;
+    max-height: 60vh;
     overflow-y: auto;
   }
 }
