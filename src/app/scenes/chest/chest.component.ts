@@ -175,6 +175,13 @@ export class ChestComponent implements OnInit, OnDestroy {
       ];
     }
 
+    // In victory summary mode
+    if (mode === 'VICTORY_SUMMARY') {
+      return [
+        { id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
+      ];
+    }
+
     // ACTION_SELECT mode - main menu
     if (!chest || !opener) {
       return [

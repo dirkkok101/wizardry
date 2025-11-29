@@ -753,6 +753,23 @@ describe('ChestComponent', () => {
     })
   })
 
+  describe('footerMenuItems', () => {
+    beforeEach(() => {
+      component.ngOnInit()
+    })
+
+    it('shows continue button in VICTORY_SUMMARY mode', () => {
+      component.mode.set('VICTORY_SUMMARY')
+
+      const items = component.footerMenuItems()
+
+      expect(items).toHaveLength(1)
+      expect(items[0].id).toBe('continue')
+      expect(items[0].label).toBe('Return to Maze')
+      expect(items[0].shortcut).toBe('ENTER')
+    })
+  })
+
   describe('VICTORY_SUMMARY mode', () => {
     beforeEach(() => {
       component.ngOnInit()
