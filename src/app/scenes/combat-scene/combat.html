@@ -104,49 +104,16 @@
       </section>
     </div>
 
-    <!-- Spell Selection Menu -->
-    @if (showSpellMenu()) {
-      <div class="spell-menu-overlay">
-        <div class="spell-menu">
-          <h3>{{ activeCharacter()!.name }} - SELECT SPELL</h3>
-          <div class="spell-list">
-            @for (spell of availableSpells(); track spell.id) {
-              <button class="spell-option" (click)="selectSpell(spell.id)">
-                <div class="spell-header">
-                  <div class="spell-name">{{ spell.name }}</div>
-                  @if (spellPointsByLevel().get(spell.casterType + '-' + spell.level); as points) {
-                    <div class="spell-points" [class.low-points]="points.current <= 1">
-                      {{ points.current }}/{{ points.max }} SP
-                    </div>
-                  }
-                </div>
-                <div class="spell-info">
-                  <span class="spell-level">Level {{ spell.level }}</span>
-                  @if (spell.damage) {
-                    <span class="spell-effect">{{ spell.damage.dice }} {{ spell.damage.type || 'damage' }}</span>
-                  }
-                  @if (spell.healing && spell.healing.dice) {
-                    <span class="spell-effect">Heal {{ spell.healing.dice }}</span>
-                  }
-                  @if (spell.healing && spell.healing.type === 'full') {
-                    <span class="spell-effect">Full heal</span>
-                  }
-                  @if (spell.statusEffect) {
-                    <span class="spell-effect">{{ spell.statusEffect }}</span>
-                  }
-                  @if (spell.acModifier) {
-                    <span class="spell-effect">AC {{ spell.acModifier > 0 ? '+' : '' }}{{ spell.acModifier }}</span>
-                  }
-                </div>
-              </button>
-            }
-          </div>
-          <button class="cancel-btn" (click)="cancelActionSelection()">
-            (Esc) Cancel
-          </button>
-        </div>
-      </div>
-    }
+    <!-- Spell Selection Panel -->
+    <app-spell-panel
+      [visible]="showSpellMenu()"
+      [character]="activeCharacter()!"
+      [mode]="'casting'"
+      [context]="'combat'"
+      [title]="'SELECT SPELL'"
+      (spellSelected)="selectSpell($event.id)"
+      (closed)="cancelActionSelection()"
+    />
 
     <!-- Monster Group Selection Dialog -->
     <app-monster-group-selection-dialog

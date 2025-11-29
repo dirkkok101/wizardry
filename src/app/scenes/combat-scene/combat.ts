@@ -21,6 +21,7 @@ import { CharacterPanelComponent } from '@shared/components/character-panel/char
 import { MonsterGroupListItemComponent } from '@shared/components/monster-group-list-item/monster-group-list-item.component'
 import { MonsterGroupSelectionDialogComponent, MonsterGroupOption } from '@shared/components/monster-group-selection-dialog/monster-group-selection-dialog.component'
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component'
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component'
 import { getGroupDisplayText } from '@utils/MonsterNameUtils'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { getCombatMessageDelay, getActionResultDelay } from '@config/CombatSettings'
@@ -40,7 +41,8 @@ interface SelectedAction {
     CharacterPanelComponent,
     MonsterGroupListItemComponent,
     MonsterGroupSelectionDialogComponent,
-    CharacterSelectionDialogComponent
+    CharacterSelectionDialogComponent,
+    SpellPanelComponent
   ],
   templateUrl: './combat.html',
   styleUrls: ['./combat.scss']
