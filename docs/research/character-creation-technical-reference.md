@@ -482,26 +482,105 @@ A character is guaranteed at least 1 spell point per known spell in each circle.
 
 ## 14. Class Changing
 
-### 14.1 Class Change Effects
+Class changes occur exclusively at the **Training Grounds** (Castle → Edge of Town → Training Grounds). The Adventurer's Inn serves different purposes (resting, spell recovery, leveling up).
 
+> **Important**: Visiting Training Grounds with an assembled party causes automatic disbanding.
+
+### 14.1 Training Grounds Menu Flow
+
+1. **Training Grounds main menu**: (C)reate, (I)nspect, (R)oster, (L)eave
+2. Press **(I)** to inspect a character, then type character's name + RETURN
+3. Enter password if set (displays as X's for privacy)
+4. **Character options submenu**: (I)nspect, (D)elete, **(C)hange Class**, (A)lter Password
+5. Press **(C)** to initiate class change
+6. Game displays **only classes you currently qualify for** based on stats and alignment
+7. Select desired class letter, or remain in current class
+
+### 14.2 Class Change Effects
+
+**What Resets:**
 - Level resets to 1
 - Experience points reset to 0
-- Attributes reset to racial base values
-- **HP is preserved** (main benefit)
-- **Spells are preserved** (keeps 1 spell point per known spell)
-- Equipment is unequipped (but retained)
+- Attributes reset to racial base values (see Section 1.1)
 
-### 14.2 Age Increase on Class Change
+**What is Preserved:**
+- **HP is fully preserved** via the MaxLev hidden variable
+- **All learned spells remain permanently known**
+- Equipment remains in inventory (but becomes unequipped)
+
+**Spell Point Minimums After Class Change:**
+- Minimum of **1 spell point per known spell per circle** is guaranteed
+- If character learned at least one spell in any circle, they remain **eligible to learn more spells in that circle forever**, even as non-casting classes
+- A Fighter who was once a Level 13 Mage can learn new Level 7 spells at Fighter level-ups
+
+**Equipment:**
+- All equipment becomes unequipped but remains in inventory
+- New class restrictions apply immediately
+- A Priest who was a Fighter can no longer wield swords
+
+### 14.3 The MaxLev Hidden Variable
+
+HP preservation works through the **MaxLev** field in the character record, which tracks the highest level ever achieved:
+
+```pascal
+MAXLEV : INTEGER;  (* Highest level achieved - HP preservation key *)
+```
+
+- When class changes occur, HP remains tied to this historical maximum
+- HP can **never decrease** except through level drain
+- After class change, HP gains appear slow because current HP exceeds what the new class would normally have
+- When level-drained: `newMaxHP = OldMaxHP × NewLevel / OldMaxLev`
+
+**HP "Stickiness"**: Because HP recalculates each level-up and can never decrease, HP values trend toward the high end of possible values over time.
+
+### 14.4 Age Increase on Class Change
 
 ```
-Age increase = (52 * random(0,2)) + 252 weeks
-Minimum: 252 weeks (~4.85 years)
-Maximum: 356 weeks (~6.85 years)
+Age increase = (1d3 + 3) years + 44 weeks
+Equivalent: (52 × random(0,2)) + 252 weeks
+Minimum: ~4.85 years (252 weeks)
+Maximum: ~6.85 years (356 weeks)
 ```
 
-### 14.3 Thieves Dagger
+**Age-Related Death Risk:**
+- At age 50+, vitality may decline during level-ups
+- If vitality reaches 2, the character dies permanently
 
-Invoking the Thieves Dagger special item allows a Thief to change to Ninja without meeting the attribute requirements. Character must be Evil or Neutral alignment.
+### 14.5 Thieves Dagger (Special Item)
+
+The **Thieves Dagger** provides a critical shortcut for creating Ninjas:
+
+- **Bypasses ALL stat requirements** for Ninja class
+- **Preserves current level, stats, and XP** - NO reset occurs
+- Only requirement is Evil alignment (Thieves can be Neutral or Evil)
+- Allows creating a Level 50 Thief → Ninja with full stats intact
+
+This is the primary method for achieving the Ninja class, since the 102 total stat points required (17×6) exceeds the maximum rollable bonus points (+29).
+
+### 14.6 Optimal Class Change Strategies
+
+**Super-Fighter Route:**
+1. Start as Evil Priest → level to 11-13 (learn MADI and full priest spells)
+2. Switch to Mage → level to 13 (learn TILTOWAIT, MALOR, all mage spells)
+3. Switch to Fighter (or eventually Lord/Ninja)
+4. Result: Fighter with all spells, massive accumulated HP, and full combat prowess
+
+**Optimal Timing:**
+- Mage at Level 13 (for TILTOWAIT and MALOR)
+- Priest at Level 11-13 (for MADI or MALIKTO)
+- Fighter as high as desired for HP accumulation
+
+**Lord Farming:**
+- Requires building a Good character with STR 15, IQ 12, PIE 12, VIT 15, AGI 14, LUC 15
+- Strategy: start as Mage with 17-20 bonus points, level ~13 times to gain stats through natural progression, then switch to Lord
+
+### 14.7 No Previous Class Tracking
+
+The game does **not** store previous class information. The character record only tracks:
+- Current level (CHARLEV)
+- Current class (CLASS)
+- MaxLev for HP preservation
+- Permanently learned spells (MAGESP/PRIESTSP arrays)
 
 ---
 
@@ -592,15 +671,104 @@ If Vitality = 3 when spell cast: Character is LOST forever
 
 ---
 
-## 18. Implementation Notes
+## 18. Aging Mechanics
 
-### 18.1 Random Number Generation
+### 18.1 What Causes Aging
+
+Despite manual claims, **resting at the Inn does NOT age characters**. Age only increases through:
+
+| Action | Age Increase |
+|--------|--------------|
+| Class Change | 4-7 years ((1d3+3) years + 44 weeks) |
+| Disbanding Party | 25 weeks |
+| Temple of Cant Services | 1-52 weeks (random) |
+
+### 18.2 Age Effects
+
+- At age 50+, vitality may decline during level-ups
+- If vitality drops to 2, character dies permanently ("DIED OF OLD AGE")
+- Younger characters have higher chance to gain stats on level-up (~86% at age 18)
+
+---
+
+## 19. Character Record Structure
+
+Based on Thomas William Ewers' reverse-engineered Pascal source code:
+
+```pascal
+TYPE
+  TCHARACTER = RECORD
+    NAME         : STRING[15];    (* Character name, 1-15 chars *)
+    PASSWORD     : STRING[8];     (* Optional password *)
+    CHARLEV      : INTEGER;       (* Current level *)
+    CLASS        : INTEGER;       (* 0=Fighter, 1=Mage, 2=Priest, 3=Thief,
+                                     4=Bishop, 5=Samurai, 6=Lord, 7=Ninja *)
+    RACE         : INTEGER;       (* 0=Human, 1=Elf, 2=Dwarf, 3=Gnome, 4=Hobbit *)
+    ALIGNMENT    : INTEGER;       (* 0=Good, 1=Neutral, 2=Evil *)
+    MAXLEV       : INTEGER;       (* Highest level achieved - HP key *)
+    CURHP        : INTEGER;       (* Current hit points *)
+    MAXHP        : INTEGER;       (* Maximum hit points *)
+    STR, IQ, PIE : INTEGER;       (* Attributes *)
+    VIT, AGI, LUC: INTEGER;
+    GOLD         : LONGINT;       (* Gold pieces *)
+    EXP          : LONGINT;       (* Experience points *)
+    AGE          : INTEGER;       (* Age in weeks *)
+    STATUS       : INTEGER;       (* OK, AFRAID, ASLEEP, etc. *)
+    MAGESP       : ARRAY[1..7] OF INTEGER;   (* Mage spell points per circle *)
+    PRIESTSP     : ARRAY[1..7] OF INTEGER;   (* Priest spell points per circle *)
+    LUCKSKIL     : ARRAY[1..5] OF INTEGER;   (* Saving throws *)
+    INVENTORY    : ARRAY[1..8] OF INTEGER;   (* Equipment slots *)
+    (* ... additional fields ... *)
+  END;
+```
+
+**Key Design Notes:**
+- No "previous class" field - game doesn't track class history
+- MaxLev enables HP preservation across class changes
+- Spell points stored per circle, not per spell
+- Character data stored in SCENARIO.DATA using UCSD Pascal's GETREC/PUTREC
+
+---
+
+## 20. Known Bugs and Quirks
+
+### 20.1 LostXYL Poison Cure Bug
+
+The X coordinate field is repurposed during expeditions to store poison value. Disbanding the party resets coordinates, **inadvertently curing poison**.
+
+### 20.2 Haman/Mahaman Bug
+
+Due to a precedence error in the code:
+```
+RANDOM (MOD 3) * MAHAMFLG   // What was written
+RANDOM MOD (3 * MAHAMFLG)   // What was intended
+```
+
+Two spell effects—"Shields Party" (AC=-10) and "Resurrects and Heals Party"—**never trigger**. Only 3 of 5 intended effects work.
+
+### 20.3 Save vs. Wand is Unused
+
+The LUCKSKIL[2] saving throw (Save vs. Wand) is **never referenced anywhere in code**. Elves receive a -2 bonus to this stat for no benefit.
+
+### 20.4 Bishop Identify Exploit
+
+Typing an item number not on the list during Bishop identification grants **massive XP** (up to 100,000,000). PC developers intentionally preserved this bug "to be fair."
+
+### 20.5 NES Version AC Bug
+
+A critical implementation error in the NES version means armor class modifiers are **not used in combat calculations**—characters are effectively unarmored regardless of equipment. The NES version also has different dungeon layouts for floors 6-8 and is a complete rewrite rather than a port.
+
+---
+
+## 21. Implementation Notes
+
+### 21.1 Random Number Generation
 
 - `random(0, N)` = inclusive range from 0 to N
 - `random(1, N)` = inclusive range from 1 to N (for dice rolls)
 - All division uses integer division (floor/truncate toward zero)
 
-### 18.2 Status Priority
+### 21.2 Status Priority
 
 From best to worst:
 ```
@@ -609,9 +777,22 @@ OK -> AFRAID -> ASLEEP -> PLYZE -> STONED -> DEAD -> ASHES -> LOST
 
 A character can only have one status. If inflicted with a new status, the **worse** status is kept. Poison is tracked separately.
 
-### 18.3 Character Name Length
+### 21.3 Character Name Length
 
 1 to 15 characters.
+
+### 21.4 Class ID Values
+
+```
+0 = Fighter
+1 = Mage
+2 = Priest
+3 = Thief
+4 = Bishop
+5 = Samurai
+6 = Lord
+7 = Ninja
+```
 
 ---
 
