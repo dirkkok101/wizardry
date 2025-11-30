@@ -29,10 +29,21 @@
   "spellLevels": {
     "priest": 6
   },
-  "spells": ["malikto", "lorto", "mabadi"],
-  "specialAbilities": ["multiple_attacks", "spellcasting"],
+  "spells": [
+    "malikto",
+    "lorto",
+    "mabadi"
+  ],
+  "specialAbilities": [
+    "multiple_attacks",
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "fire_giant",
+    "chance": 100
+  }
 }

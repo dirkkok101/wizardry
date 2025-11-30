@@ -24,10 +24,19 @@
   "spellLevels": {
     "mage": 2
   },
-  "spells": ["dilto", "sopic"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "dilto",
+    "sopic"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "champ_samurai",
+    "chance": 30
+  }
 }

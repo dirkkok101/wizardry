@@ -30,12 +30,28 @@
     "mage": 5,
     "priest": 4
   },
-  "spells": ["madalto", "lakanito", "badi", "dial"],
-  "specialAbilities": ["multiple_attacks", "spellcasting", "regeneration"],
+  "spells": [
+    "madalto",
+    "lakanito",
+    "badi",
+    "dial"
+  ],
+  "specialAbilities": [
+    "multiple_attacks",
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 2,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "high_priest_greater",
+    "chance": 100
+  }
 }

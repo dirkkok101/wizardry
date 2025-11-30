@@ -24,11 +24,23 @@
   "spellLevels": {
     "mage": 6
   },
-  "spells": ["tiltowait", "zilwan"],
+  "spells": [
+    "tiltowait",
+    "zilwan"
+  ],
   "levelDrain": 4,
-  "specialAbilities": ["paralyze", "level_drain", "spellcasting", "regeneration"],
+  "specialAbilities": [
+    "paralyze",
+    "level_drain",
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [],
   "regeneration": 4,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "vampire",
+    "chance": 100
+  }
 }

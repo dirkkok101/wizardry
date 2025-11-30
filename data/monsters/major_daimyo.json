@@ -27,9 +27,16 @@
   ],
   "xp": 2340,
   "spellResist": 20,
-  "specialAbilities": ["multiple_attacks", "call_help"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "call_help"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_5_priest",
+    "chance": 50
+  }
 }

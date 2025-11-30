@@ -21,9 +21,16 @@
     }
   ],
   "xp": 1120,
-  "specialAbilities": ["can_sleep", "can_run"],
+  "specialAbilities": [
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "dragon_fly",
+    "chance": 20
+  }
 }

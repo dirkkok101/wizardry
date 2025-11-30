@@ -31,13 +31,37 @@
     "mage": 7,
     "priest": 7
   },
-  "spells": ["tiltowait", "mahaman", "haman", "malor", "malikto"],
+  "spells": [
+    "tiltowait",
+    "mahaman",
+    "haman",
+    "malor",
+    "malikto"
+  ],
   "levelDrain": 4,
-  "specialAbilities": ["multiple_attacks", "petrify", "poison", "paralyze", "critical_hit", "level_drain", "spellcasting", "regeneration"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "petrify",
+    "poison",
+    "paralyze",
+    "critical_hit",
+    "level_drain",
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    }
   ],
   "regeneration": 5,
   "isBoss": true,
@@ -50,5 +74,11 @@
     "x": 17,
     "y": 3
   },
-  "dropItems": ["werdna_amulet"]
+  "dropItems": [
+    "werdna_amulet"
+  ],
+  "partner": {
+    "monsterId": "vampire_lord",
+    "chance": 100
+  }
 }

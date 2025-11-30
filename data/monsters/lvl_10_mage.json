@@ -24,10 +24,20 @@
   "spellLevels": {
     "mage": 5
   },
-  "spells": ["madalto", "lakanito", "makanito"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "madalto",
+    "lakanito",
+    "makanito"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "gorgon",
+    "chance": 30
+  }
 }

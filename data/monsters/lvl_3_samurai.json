@@ -34,10 +34,21 @@
   "spellLevels": {
     "mage": 1
   },
-  "spells": ["katino", "halito"],
-  "specialAbilities": ["spellcasting", "multiple_attacks", "can_run"],
+  "spells": [
+    "katino",
+    "halito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "multiple_attacks",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "creeping_coin",
+    "chance": 20
+  }
 }

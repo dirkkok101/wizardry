@@ -36,9 +36,16 @@
     }
   ],
   "xp": 1640,
-  "specialAbilities": ["multiple_attacks", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "gorgon",
+    "chance": 20
+  }
 }

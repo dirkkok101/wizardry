@@ -31,9 +31,16 @@
     }
   ],
   "xp": 1720,
-  "specialAbilities": ["multiple_attacks", "regeneration"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "regeneration"
+  ],
   "resistances": [],
   "regeneration": 3,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "troll",
+    "chance": 5
+  }
 }

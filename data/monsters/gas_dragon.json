@@ -34,13 +34,24 @@
   "spellLevels": {
     "mage": 1
   },
-  "spells": ["katino", "halito"],
+  "spells": [
+    "katino",
+    "halito"
+  ],
   "breathWeapon": {
     "type": "poison"
   },
-  "specialAbilities": ["multiple_attacks", "breath_weapon", "spellcasting"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "breath_weapon",
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "dragon_fly",
+    "chance": 40
+  }
 }

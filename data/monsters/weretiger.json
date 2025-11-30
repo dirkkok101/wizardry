@@ -31,11 +31,23 @@
     }
   ],
   "xp": 1405,
-  "specialAbilities": ["multiple_attacks", "poison", "can_sleep", "regeneration"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "poison",
+    "can_sleep",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 1,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "werewolf",
+    "chance": 20
+  }
 }

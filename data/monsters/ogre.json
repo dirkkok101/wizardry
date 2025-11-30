@@ -21,9 +21,16 @@
     }
   ],
   "xp": 960,
-  "specialAbilities": ["can_sleep", "can_run"],
+  "specialAbilities": [
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "vorpal_bunny",
+    "chance": 20
+  }
 }

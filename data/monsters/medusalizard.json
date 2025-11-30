@@ -21,9 +21,15 @@
     }
   ],
   "xp": 1040,
-  "specialAbilities": ["petrify"],
+  "specialAbilities": [
+    "petrify"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "spirit",
+    "chance": 20
+  }
 }

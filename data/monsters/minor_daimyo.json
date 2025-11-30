@@ -21,9 +21,16 @@
     }
   ],
   "xp": 1200,
-  "specialAbilities": ["can_sleep", "call_help"],
+  "specialAbilities": [
+    "can_sleep",
+    "call_help"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "bishop",
+    "chance": 20
+  }
 }

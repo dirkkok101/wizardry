@@ -24,17 +24,48 @@
   "breathWeapon": {
     "type": "cold"
   },
-  "specialAbilities": ["breath_weapon", "petrify", "poison", "paralyze", "critical_hit"],
+  "specialAbilities": [
+    "breath_weapon",
+    "petrify",
+    "poison",
+    "paralyze",
+    "critical_hit"
+  ],
   "resistances": [
-    { "type": "physical", "value": 100 },
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "physical",
+      "value": 100
+    },
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "murphy_ghost",
+    "chance": 100
+  }
 }

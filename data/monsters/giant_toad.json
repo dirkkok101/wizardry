@@ -31,11 +31,22 @@
     }
   ],
   "xp": 795,
-  "specialAbilities": ["multiple_attacks", "poison", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "poison",
+    "can_run"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "coyote",
+    "chance": 20
+  }
 }

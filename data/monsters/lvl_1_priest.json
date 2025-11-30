@@ -29,5 +29,6 @@
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": { "monsterId": "rogue", "chance": 25 }
 }

@@ -31,9 +31,17 @@
     }
   ],
   "xp": 960,
-  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "lvl_5_priest",
+    "chance": 10
+  }
 }

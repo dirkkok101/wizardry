@@ -26,9 +26,16 @@
     }
   ],
   "xp": 1020,
-  "specialAbilities": ["multiple_attacks", "critical_hit"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "critical_hit"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "nightstalker",
+    "chance": 20
+  }
 }

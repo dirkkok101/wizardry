@@ -23,9 +23,16 @@
   "xp": 2115,
   "specialAbilities": [],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lesser_demon",
+    "chance": 10
+  }
 }

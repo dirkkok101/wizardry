@@ -24,10 +24,20 @@
   "spellLevels": {
     "mage": 3
   },
-  "spells": ["mahalito", "molito"],
-  "specialAbilities": ["spellcasting", "regeneration"],
+  "spells": [
+    "mahalito",
+    "molito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [],
   "regeneration": 1,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "troll",
+    "chance": 10
+  }
 }

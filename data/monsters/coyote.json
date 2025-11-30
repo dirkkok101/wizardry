@@ -21,13 +21,28 @@
     }
   ],
   "xp": 780,
-  "specialAbilities": ["can_run"],
+  "specialAbilities": [
+    "can_run"
+  ],
   "resistances": [
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 }
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "vorpal_bunny",
+    "chance": 25
+  }
 }

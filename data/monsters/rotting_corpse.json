@@ -31,9 +31,16 @@
     }
   ],
   "xp": 680,
-  "specialAbilities": ["multiple_attacks", "paralyze"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "paralyze"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "grave_mist",
+    "chance": 10
+  }
 }

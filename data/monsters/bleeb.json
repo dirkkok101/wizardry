@@ -26,17 +26,46 @@
     }
   ],
   "xp": 3300,
-  "specialAbilities": ["multiple_attacks", "can_run", "call_help"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_run",
+    "call_help"
+  ],
   "resistances": [
-    { "type": "physical", "value": 100 },
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "physical",
+      "value": 100
+    },
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "master_ninja",
+    "chance": 20
+  }
 }

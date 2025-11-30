@@ -34,5 +34,6 @@
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": { "monsterId": "creeping_coin", "chance": 100 }
 }

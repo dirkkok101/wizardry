@@ -25,10 +25,21 @@
     "mage": 3,
     "priest": 4
   },
-  "spells": ["mahalito", "dalto", "badios", "badi"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "mahalito",
+    "dalto",
+    "badios",
+    "badi"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "gorgon",
+    "chance": 20
+  }
 }

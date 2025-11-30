@@ -26,9 +26,15 @@
     }
   ],
   "xp": 740,
-  "specialAbilities": ["multiple_attacks"],
+  "specialAbilities": [
+    "multiple_attacks"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "bishop",
+    "chance": 20
+  }
 }

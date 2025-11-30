@@ -24,10 +24,22 @@
   "spellLevels": {
     "priest": 2
   },
-  "spells": ["badios", "montino"],
-  "specialAbilities": ["spellcasting", "poison", "can_sleep", "can_run"],
+  "spells": [
+    "badios",
+    "montino"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "poison",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "lvl_1_priest",
+    "chance": 30
+  }
 }

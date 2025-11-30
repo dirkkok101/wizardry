@@ -21,11 +21,21 @@
     }
   ],
   "xp": 1235,
-  "specialAbilities": ["paralyze", "can_run"],
+  "specialAbilities": [
+    "paralyze",
+    "can_run"
+  ],
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "gaze_hound",
+    "chance": 20
+  }
 }

@@ -21,12 +21,27 @@
     }
   ],
   "xp": 1320,
-  "specialAbilities": ["poison", "paralyze", "can_run", "regeneration"],
+  "specialAbilities": [
+    "poison",
+    "paralyze",
+    "can_run",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 }
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    }
   ],
   "regeneration": 1,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "vorpal_bunny",
+    "chance": 30
+  }
 }

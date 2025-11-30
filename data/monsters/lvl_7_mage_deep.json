@@ -24,10 +24,19 @@
   "spellLevels": {
     "mage": 5
   },
-  "spells": ["lahalito", "makanito"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "lahalito",
+    "makanito"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "wyvern",
+    "chance": 30
+  }
 }

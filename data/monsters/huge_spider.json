@@ -21,9 +21,16 @@
     }
   ],
   "xp": 600,
-  "specialAbilities": ["poison", "can_sleep"],
+  "specialAbilities": [
+    "poison",
+    "can_sleep"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "boring_beetle",
+    "chance": 10
+  }
 }

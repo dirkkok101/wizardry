@@ -35,15 +35,37 @@
   "spellLevels": {
     "mage": 3
   },
-  "spells": ["mahalito", "molito"],
+  "spells": [
+    "mahalito",
+    "molito"
+  ],
   "levelDrain": 2,
-  "specialAbilities": ["multiple_attacks", "paralyze", "level_drain", "spellcasting", "regeneration"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "paralyze",
+    "level_drain",
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 }
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    }
   ],
   "regeneration": 1,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "vampire",
+    "chance": 15
+  }
 }

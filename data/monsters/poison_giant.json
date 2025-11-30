@@ -25,9 +25,15 @@
   "breathWeapon": {
     "type": "poison"
   },
-  "specialAbilities": ["breath_weapon"],
+  "specialAbilities": [
+    "breath_weapon"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "will_o_wisp",
+    "chance": 50
+  }
 }

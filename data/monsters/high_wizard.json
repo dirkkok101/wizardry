@@ -24,12 +24,26 @@
   "spellLevels": {
     "mage": 6
   },
-  "spells": ["tiltowait", "zilwan", "lakanito"],
-  "specialAbilities": ["spellcasting", "can_sleep"],
+  "spells": [
+    "tiltowait",
+    "zilwan",
+    "lakanito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "can_sleep"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_8_bishop",
+    "chance": 100
+  }
 }

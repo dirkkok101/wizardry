@@ -21,9 +21,15 @@
     }
   ],
   "xp": 960,
-  "specialAbilities": ["can_sleep"],
+  "specialAbilities": [
+    "can_sleep"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "attack_dog",
+    "chance": 35
+  }
 }

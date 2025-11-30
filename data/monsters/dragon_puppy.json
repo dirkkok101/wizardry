@@ -24,9 +24,15 @@
   "breathWeapon": {
     "type": "cold"
   },
-  "specialAbilities": ["breath_weapon"],
+  "specialAbilities": [
+    "breath_weapon"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "wererat",
+    "chance": 10
+  }
 }

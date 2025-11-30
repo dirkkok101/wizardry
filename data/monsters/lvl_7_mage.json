@@ -24,10 +24,20 @@
   "spellLevels": {
     "mage": 4
   },
-  "spells": ["dalto", "lahalito"],
-  "specialAbilities": ["spellcasting", "can_sleep"],
+  "spells": [
+    "dalto",
+    "lahalito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "can_sleep"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_6_ninja",
+    "chance": 20
+  }
 }

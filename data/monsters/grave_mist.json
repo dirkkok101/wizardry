@@ -31,9 +31,16 @@
     }
   ],
   "xp": 1080,
-  "specialAbilities": ["multiple_attacks", "paralyze"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "paralyze"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "shade",
+    "chance": 20
+  }
 }

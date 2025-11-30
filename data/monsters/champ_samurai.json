@@ -24,10 +24,19 @@
   "spellLevels": {
     "mage": 1
   },
-  "spells": ["katino", "halito"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "katino",
+    "halito"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "high_priest_lesser",
+    "chance": 25
+  }
 }

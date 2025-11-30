@@ -24,10 +24,20 @@
   "spellLevels": {
     "mage": 3
   },
-  "spells": ["mahalito", "molito"],
-  "specialAbilities": ["spellcasting", "can_sleep"],
+  "spells": [
+    "mahalito",
+    "molito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "can_sleep"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_4_thief",
+    "chance": 20
+  }
 }

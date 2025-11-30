@@ -41,9 +41,17 @@
     }
   ],
   "xp": 1360,
-  "specialAbilities": ["multiple_attacks", "poison", "critical_hit"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "poison",
+    "critical_hit"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_1_ninja",
+    "chance": 20
+  }
 }

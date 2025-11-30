@@ -49,11 +49,21 @@
   "breathWeapon": {
     "type": "fire"
   },
-  "specialAbilities": ["multiple_attacks", "breath_weapon"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "breath_weapon"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "arch_mage_lesser",
+    "chance": 20
+  }
 }

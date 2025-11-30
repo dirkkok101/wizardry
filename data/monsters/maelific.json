@@ -30,11 +30,25 @@
   "spellLevels": {
     "mage": 7
   },
-  "spells": ["tiltowait", "mahaman"],
+  "spells": [
+    "tiltowait",
+    "mahaman"
+  ],
   "levelDrain": 3,
-  "specialAbilities": ["multiple_attacks", "poison", "paralyze", "level_drain", "spellcasting", "regeneration"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "poison",
+    "paralyze",
+    "level_drain",
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [],
   "regeneration": 3,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "poison_giant",
+    "chance": 100
+  }
 }

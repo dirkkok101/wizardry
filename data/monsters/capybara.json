@@ -21,9 +21,16 @@
     }
   ],
   "xp": 520,
-  "specialAbilities": ["poison", "can_run"],
+  "specialAbilities": [
+    "poison",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "coyote",
+    "chance": 20
+  }
 }

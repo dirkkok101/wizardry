@@ -21,11 +21,20 @@
     }
   ],
   "xp": 755,
-  "specialAbilities": ["can_sleep"],
+  "specialAbilities": [
+    "can_sleep"
+  ],
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "coyote",
+    "chance": 50
+  }
 }

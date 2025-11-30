@@ -24,10 +24,19 @@
   "spellLevels": {
     "priest": 3
   },
-  "spells": ["matu", "dial"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "matu",
+    "dial"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_6_ninja",
+    "chance": 20
+  }
 }

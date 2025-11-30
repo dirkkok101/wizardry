@@ -26,16 +26,39 @@
     "mage": 3,
     "priest": 3
   },
-  "spells": ["mahalito", "matu", "dial"],
-  "specialAbilities": ["level_drain", "spellcasting"],
+  "spells": [
+    "mahalito",
+    "matu",
+    "dial"
+  ],
+  "specialAbilities": [
+    "level_drain",
+    "spellcasting"
+  ],
   "levelDrain": 2,
   "resistances": [
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lifestealer",
+    "chance": 50
+  }
 }

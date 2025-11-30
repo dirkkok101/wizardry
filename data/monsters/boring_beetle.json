@@ -25,5 +25,9 @@
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "huge_spider",
+    "chance": 20
+  }
 }

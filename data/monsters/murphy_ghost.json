@@ -22,16 +22,41 @@
   ],
   "xp": 4450,
   "spellResist": 40,
-  "specialAbilities": ["can_sleep", "regeneration"],
+  "specialAbilities": [
+    "can_sleep",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 1,
   "isBoss": true,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "murphy_ghost",
+    "chance": 80
+  }
 }

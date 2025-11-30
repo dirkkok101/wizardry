@@ -35,5 +35,6 @@
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": { "monsterId": "lvl_1_ninja", "chance": 20 }
 }

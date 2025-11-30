@@ -25,10 +25,22 @@
     "mage": 1,
     "priest": 3
   },
-  "spells": ["halito", "badios", "montino", "matu"],
-  "specialAbilities": ["spellcasting", "can_sleep"],
+  "spells": [
+    "halito",
+    "badios",
+    "montino",
+    "matu"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "can_sleep"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "minor_daimyo",
+    "chance": 10
+  }
 }

@@ -26,9 +26,16 @@
     }
   ],
   "xp": 1220,
-  "specialAbilities": ["multiple_attacks", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": {
+    "monsterId": "lvl_8_priest",
+    "chance": 20
+  }
 }

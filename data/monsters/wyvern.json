@@ -26,9 +26,16 @@
     }
   ],
   "xp": 1540,
-  "specialAbilities": ["multiple_attacks", "poison"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "poison"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "spirit",
+    "chance": 20
+  }
 }

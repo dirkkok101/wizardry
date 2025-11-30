@@ -22,12 +22,21 @@
   ],
   "xp": 1475,
   "spellResist": 25,
-  "specialAbilities": ["level_drain"],
+  "specialAbilities": [
+    "level_drain"
+  ],
   "levelDrain": 1,
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "ogre_lord",
+    "chance": 23
+  }
 }

@@ -25,12 +25,26 @@
   "spellLevels": {
     "mage": 3
   },
-  "spells": ["mahalito", "molito"],
-  "specialAbilities": ["spellcasting", "poison", "regeneration"],
+  "spells": [
+    "mahalito",
+    "molito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "poison",
+    "regeneration"
+  ],
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 1,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "gargoyle",
+    "chance": 20
+  }
 }

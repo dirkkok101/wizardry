@@ -24,9 +24,16 @@
   "spellResist": 95,
   "specialAbilities": [],
   "resistances": [
-    { "type": "cold", "value": 100 }
+    {
+      "type": "cold",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "thief",
+    "chance": 30
+  }
 }

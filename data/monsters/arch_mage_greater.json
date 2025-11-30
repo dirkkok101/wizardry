@@ -24,10 +24,20 @@
   "spellLevels": {
     "mage": 6
   },
-  "spells": ["tiltowait", "zilwan", "lakanito"],
-  "specialAbilities": ["spellcasting"],
+  "spells": [
+    "tiltowait",
+    "zilwan",
+    "lakanito"
+  ],
+  "specialAbilities": [
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "high_wizard",
+    "chance": 100
+  }
 }

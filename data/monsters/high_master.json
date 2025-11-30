@@ -31,16 +31,41 @@
     }
   ],
   "xp": 3000,
-  "specialAbilities": ["multiple_attacks", "critical_hit"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "critical_hit"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "hatamoto",
+    "chance": 100
+  }
 }

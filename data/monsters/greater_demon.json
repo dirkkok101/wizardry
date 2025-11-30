@@ -45,10 +45,25 @@
   "spellLevels": {
     "mage": 5
   },
-  "spells": ["madalto", "lakanito", "makanito"],
-  "specialAbilities": ["multiple_attacks", "poison", "paralyze", "call_help", "spellcasting", "regeneration"],
+  "spells": [
+    "madalto",
+    "lakanito",
+    "makanito"
+  ],
+  "specialAbilities": [
+    "multiple_attacks",
+    "poison",
+    "paralyze",
+    "call_help",
+    "spellcasting",
+    "regeneration"
+  ],
   "resistances": [],
   "regeneration": 1,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": {
+    "monsterId": "lvl_8_ninja",
+    "chance": 70
+  }
 }
