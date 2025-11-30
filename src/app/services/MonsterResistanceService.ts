@@ -283,44 +283,38 @@ export class MonsterResistanceService {
   /**
    * Roll for status recovery using default formulas
    *
-   * Wizardry 1 recovery mechanics (per round):
-   * - ASLEEP: Higher chance to wake up (50% - 5% per monster level)
-   * - PARALYZED: Lower base chance (30% - 3% per monster level)
-   * - SILENCED: Moderate chance (40% - 4% per monster level)
-   * - FEAR/BLIND: Same as silenced (40% - 4% per monster level)
+   * Per Apple II source code:
+   * - PARALYZED: (MonsterLevel × 7)%, maximum 50%
+   * - ASLEEP: Higher level monsters wake easier (50 + 5×level)%, cap 95%
+   * - SILENCED/FEAR: Moderate recovery (level × 5)%, cap 50%
    *
-   * Higher level monsters stay incapacitated longer
-   * Minimum 5% recovery chance for all status types
+   * Higher level monsters recover FASTER from status effects
    */
   static rollRecovery(
     monsterLevel: number,
     statusType: 'ASLEEP' | 'PARALYZED' | 'SILENCED' | 'FEAR'
   ): boolean {
-    let baseChance: number
-    let levelPenalty: number
+    let chance: number
 
     switch (statusType) {
       case 'ASLEEP':
-        // Sleep is easier to shake off
-        baseChance = 50
-        levelPenalty = 5
+        // Sleep recovery: easier for higher level monsters to wake
+        // Per Apple II source: monsters recover quickly from sleep
+        chance = Math.min(50 + (monsterLevel * 5), 95)
         break
       case 'PARALYZED':
-        // Paralysis is harder to recover from
-        baseChance = 30
-        levelPenalty = 3
+        // Paralysis recovery: (MonsterLevel × 7)%, maximum 50%
+        // Per Apple II source code (line 570 of technical reference)
+        chance = Math.min(monsterLevel * 7, 50)
         break
       case 'SILENCED':
       case 'FEAR':
       default:
-        // Moderate recovery for other effects
-        baseChance = 40
-        levelPenalty = 4
+        // Other status: moderate recovery
+        chance = Math.min(monsterLevel * 5, 50)
         break
     }
 
-    // Calculate chance with minimum of 5%
-    const chance = Math.max(5, baseChance - (levelPenalty * monsterLevel))
     return RandomService.chance(chance)
   }
 }

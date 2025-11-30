@@ -411,6 +411,35 @@ describe('MonsterResistanceService', () => {
     })
   })
 
+  describe('rollRecovery paralysis formula', () => {
+    it('uses (level * 7)% capped at 50% per Apple II source', () => {
+      // Level 5 monster: 5 * 7 = 35% recovery chance
+      RandomService.queueNextValues([0.3])  // 30% < 35% = should recover
+
+      const recovered = MonsterResistanceService.rollRecovery(5, 'PARALYZED')
+
+      expect(recovered).toBe(true)
+    })
+
+    it('caps paralysis recovery at 50%', () => {
+      // Level 10 monster: 10 * 7 = 70% -> capped at 50%
+      RandomService.queueNextValues([0.45])  // 45% < 50% = should recover
+
+      const recovered = MonsterResistanceService.rollRecovery(10, 'PARALYZED')
+
+      expect(recovered).toBe(true)
+    })
+
+    it('level 10 monster fails recovery at 55%', () => {
+      // Level 10: capped at 50%, so 55% roll should fail
+      RandomService.queueNextValues([0.55])  // 55% > 50% = should NOT recover
+
+      const recovered = MonsterResistanceService.rollRecovery(10, 'PARALYZED')
+
+      expect(recovered).toBe(false)
+    })
+  })
+
   describe('checkMagicResistance', () => {
     describe('with spellResist field', () => {
       it('uses spellResist field not resistances array', () => {
