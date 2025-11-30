@@ -56,9 +56,5 @@
       "effect": "Some spells are unlearned from caster's spellbook"
     }
   },
-  "bugs": {
-    "originalBug": "Two additional effects were coded but never trigger due to CASE statement logic error",
-    "missingEffects": ["SHIELDS PARTY (AC=-10)", "RESURRECTS AND HEALS PARTY"],
-    "implementation": "Bug-free version includes all 5 intended effects"
-  }
+  "notes": "Bug-free version includes all 5 intended effects (see known-bugs.md for original bug details)"
 }

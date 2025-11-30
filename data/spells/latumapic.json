@@ -13,8 +13,5 @@
     "reveals": ["monster_name", "monster_type"]
   },
   "duration": "Entire expedition",
-  "bugs": {
-    "originalBug": "Original code only identified one random monster group instead of all groups",
-    "implementation": "Bug-free version identifies ALL groups as intended"
-  }
+  "notes": "Bug-free version identifies ALL groups (see known-bugs.md for original bug details)"
 }

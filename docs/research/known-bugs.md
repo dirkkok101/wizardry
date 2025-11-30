@@ -10,7 +10,9 @@ This document identifies bugs discovered through reverse-engineering of Thomas W
 |-----|-------------------|--------------|-----------|
 | Inn Resting Age | No aging | **FIX** | Match manual's intent |
 | Poison Cure on Disband | Cures poison | **FIX** | Unintended exploit |
-| Haman/Mahaman Effects | 2 of 5 effects never trigger | **FIX** | Already fixed in spell data |
+| Haman/Mahaman Effects | 2 of 5 effects never trigger | **FIX** | Designer intent clear |
+| MONTINO Silence Recovery | Monsters never recover | **FIX** | Designer intent clear |
+| LATUMAPIC Single Group | Only identifies one group | **FIX** | Designer intent clear |
 | Save vs. Wand | Unused in code | **KEEP** | Affects only Elf bonus display |
 | Bishop Identify Exploit | Massive XP for wrong input | **FIX** | Game-breaking exploit |
 | HP Stickiness | HP trends high | **KEEP** | Intended behavior, not a bug |
@@ -55,11 +57,35 @@ Only 3 of 5 effects actually work in the original.
 
 **Our Fix**: **All 5 effects can trigger.** We implement the correct random distribution as the designers intended.
 
-**Implementation**: Already fixed in `data/spells/haman.json` and `data/spells/mahaman.json` with `bugFreeEffects` field.
+**Implementation**: Spell data includes all 5 effects with `bugFix: true` flag on effects 4 and 5.
 
 ---
 
-### 4. Save vs. Wand Unused
+### 4. MONTINO Silence Recovery Bug
+
+**Original Bug**: In the Apple II code, the silence recovery timer was never decremented. Once silenced, monsters NEVER recovered from the silenced status for the remainder of combat.
+
+**Impact**: Made MONTINO overpowered—a single successful cast permanently disabled enemy spellcasting.
+
+**Our Fix**: **Silenced monsters CAN recover.** Recovery chance per round is `(Monster Level × 10)%` capped at 50%.
+
+**Implementation**: Code implements the intended recovery formula.
+
+---
+
+### 5. LATUMAPIC Single Group Bug
+
+**Original Bug**: Despite the spell description saying it identifies ALL monster groups, the code only identified one random group per casting.
+
+**Impact**: Required multiple castings to identify all monster groups in combat.
+
+**Our Fix**: **Identifies ALL groups** in a single casting as intended.
+
+**Implementation**: Code identifies all monster groups, not just one random group.
+
+---
+
+### 7. Save vs. Wand Unused
 
 **Original Bug**: The `LUCKSKIL[2]` saving throw category (Wand) is never checked anywhere in the game code. Elves receive a -2 bonus to this stat that provides no gameplay benefit.
 
@@ -71,7 +97,7 @@ Only 3 of 5 effects actually work in the original.
 
 ---
 
-### 5. Bishop Identify Exploit
+### 8. Bishop Identify Exploit
 
 **Original Bug**: During Bishop item identification, typing an item number that doesn't exist on the list grants massive XP (up to 100,000,000 XP). This was intentionally preserved by PC port developers "to be fair."
 
@@ -83,7 +109,7 @@ Only 3 of 5 effects actually work in the original.
 
 ---
 
-### 6. HP Stickiness (NOT A BUG)
+### 9. HP Stickiness (NOT A BUG)
 
 **Original Behavior**: Because HP is recalculated by rolling ALL hit dice each level-up (keeping the higher of new roll vs current), HP values trend toward the high end of possible values over time.
 

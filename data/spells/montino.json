@@ -24,12 +24,8 @@
     "type": "permanent_until_combat_ends",
     "recovery": {
       "formula": "(Monster Level × 10)% per round",
-      "cap": "50%",
-      "notes": "Bug-free implementation - silenced monsters CAN recover (original had bug where recovery never occurred)"
+      "cap": "50%"
     }
   },
-  "bugs": {
-    "originalBug": "In original Apple II code, silence recovery timer was never decremented - silenced monsters NEVER recovered",
-    "implementation": "Bug-free version allows recovery per formula"
-  }
+  "notes": "Bug-free version allows recovery (see known-bugs.md for original bug details)"
 }
