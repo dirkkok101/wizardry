@@ -207,29 +207,12 @@ function attemptDisarm(
   chest: Chest,
   enteredTrapName: string
 ): TrapDisarmResult {
-  console.log('[TrapService] attemptDisarm called:', {
-    character: character.name,
-    characterClass: character.class,
-    characterLevel: character.level,
-    chestTrapType: chest.trapType,
-    chestMazeLevel: chest.mazeLevel,
-    enteredTrapName,
-    enteredTrapNameLength: enteredTrapName.length
-  })
-
   // Check if trap name matches
   if (!chest.trapType || !trapNameMatches(enteredTrapName, chest.trapType)) {
     // Wrong trap name - check if it triggers
     // Original formula uses character level (higher level = tiny chance to avoid trigger)
     const triggerChance = calculateWrongNameTriggerChance(character.level)
     const triggered = RandomService.chance(triggerChance)
-    console.log('[TrapService] Wrong trap name detected:', {
-      chestTrapType: chest.trapType,
-      enteredTrapName,
-      characterLevel: character.level,
-      triggerChance,
-      triggered
-    })
     return {
       success: false,
       triggered,
@@ -241,15 +224,7 @@ function attemptDisarm(
   const disarmChance = calculateDisarmChance(character, chest.mazeLevel)
   const success = RandomService.chance(disarmChance)
 
-  console.log('[TrapService] Correct trap name, attempting disarm:', {
-    disarmChance,
-    success,
-    characterLevel: character.level,
-    mazeLevel: chest.mazeLevel
-  })
-
   if (success) {
-    console.log('[TrapService] Disarm SUCCESS')
     return {
       success: true,
       triggered: false,
@@ -260,12 +235,6 @@ function attemptDisarm(
   // Failed disarm - check AGI save to avoid triggering
   const avoidChance = calculateTriggerAvoidance(character)
   const avoided = RandomService.chance(avoidChance)
-
-  console.log('[TrapService] Disarm FAILED, checking trigger avoidance:', {
-    avoidChance,
-    avoided,
-    triggered: !avoided
-  })
 
   return {
     success: false,
