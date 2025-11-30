@@ -36,9 +36,10 @@ const ResistanceSchema = z.object({
     'physical', // Half damage from Lorto, Malikto, Molito, Tiltowait
     'fire',     // Half damage from Litokan, Mahalito, Lahalito
     'cold',     // Half damage from Dalto, Madalto
-    'magic',    // General magic resistance (purpose weapon bonus)
-    'poison',   // Resistance to poison effects
-    'drain',    // Resistance to level drain
+    'magic',    // Purpose weapon bonus ONLY (e.g., Mage Masher vs mages)
+                // NOTE: For flat spell resistance %, use the spellResist field instead
+    'poison',   // Resistance to poison status effect
+    'drain',    // Resistance to level drain attacks
     'stone'     // Resistance to petrification
   ]),
   value: z.number().int().min(0).max(100)
