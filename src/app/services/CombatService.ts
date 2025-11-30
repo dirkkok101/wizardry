@@ -624,8 +624,84 @@ export class CombatService {
       return this.executeAdvanceCommand(state, command)
     }
 
+    if (command.type === 'BREATH') {
+      return this.executeBreathCommand(state, command, existingCharacterUpdates)
+    }
+
     // TODO: Handle other command types (USE_ITEM)
     return { newState: state, messages: ['Unknown command type'] }
+  }
+
+  /**
+   * Execute a breath weapon attack (Apple II reference)
+   * Damage = monster's current HP / 2 (rounded down)
+   * Hits all party members
+   * Resistance AND save = ~25% damage (multiplicative)
+   */
+  private static executeBreathCommand(
+    state: CombatState,
+    command: CombatCommand,
+    existingCharacterUpdates?: Map<string, Character>
+  ): CommandExecutionResult {
+    const monster = command.actor as MonsterInstance
+    const breathType = command.data?.breathType || 'fire'
+    const baseDamage = command.data?.damage || Math.floor(monster.hp / 2)
+    const targets = Array.isArray(command.target) ? command.target : [command.target]
+    const messages: string[] = []
+    const characterUpdates = new Map<string, Character>(existingCharacterUpdates)
+
+    messages.push(`${monster.name} breathes ${breathType}!`)
+
+    for (const target of targets) {
+      if (!target || !('id' in target)) continue
+      if ('monsterId' in target) continue // Skip monster targets (breath doesn't hit monsters)
+
+      const char = target as Character
+      let finalDamage = baseDamage
+
+      // Check for elemental resistance (halves damage, rounded up)
+      const hasResistance = this.hasElementalResistance(char, breathType)
+      if (hasResistance) {
+        finalDamage = Math.ceil(finalDamage / 2)
+      }
+
+      // Check for save vs breath (halves damage, rounded up)
+      const saveChance = CharacterResistanceService.getSaveChance(char, 'breath')
+      const madeSave = RandomService.chance(saveChance)
+      if (madeSave) {
+        finalDamage = Math.ceil(finalDamage / 2)
+      }
+
+      // Apply damage
+      const currentChar = characterUpdates.get(char.id) || char
+      const newHp = Math.max(0, currentChar.hp - finalDamage)
+      const isDead = newHp <= 0
+
+      const updatedChar: Character = {
+        ...currentChar,
+        hp: newHp,
+        status: isDead ? CharacterStatus.DEAD : currentChar.status
+      }
+      characterUpdates.set(char.id, updatedChar)
+
+      // Build result message
+      let resultMsg = `${this.RESULT_MARKER}${char.name} takes ${finalDamage} damage`
+      if (hasResistance) resultMsg += ' (resisted)'
+      if (madeSave) resultMsg += ' (saved)'
+      if (isDead) resultMsg += ' - KILLED!'
+      messages.push(resultMsg)
+    }
+
+    return { newState: state, messages, characterUpdates }
+  }
+
+  /**
+   * Check if character has elemental resistance to breath type
+   */
+  private static hasElementalResistance(char: Character, breathType: string): boolean {
+    // TODO: Check equipped items for elemental resistance
+    // For now, always return false (will be implemented in Task 10)
+    return false
   }
 
   /**
