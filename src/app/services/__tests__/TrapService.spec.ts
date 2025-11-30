@@ -655,6 +655,51 @@ describe('TrapService', () => {
     })
   })
 
+  // ============================================
+  // SCRAMBLED LETTERS SYSTEM TESTS
+  // ============================================
+
+  describe('scrambleLetters', () => {
+    it('should scramble all letters from trap name', () => {
+      RandomService.setSeed(12345)  // Deterministic shuffle
+      const result = TrapService.scrambleLetters('POISON NEEDLE')
+
+      // Should have same letters, different order
+      const originalLetters = 'POISON NEEDLE'.split('').sort().join('')
+      const scrambledLetters = result.map(l => l.char).sort().join('')
+      expect(scrambledLetters).toBe(originalLetters)
+
+      // All should start as hidden
+      expect(result.every(l => l.state === 'hidden')).toBe(true)
+    })
+
+    it('should preserve spaces in scramble', () => {
+      RandomService.setSeed(12345)
+      const result = TrapService.scrambleLetters('GAS BOMB')
+
+      const spaceCount = result.filter(l => l.char === ' ').length
+      expect(spaceCount).toBe(1)  // "GAS BOMB" has 1 space
+    })
+
+    it('should track original positions', () => {
+      RandomService.setSeed(12345)
+      const result = TrapService.scrambleLetters('ABC')
+
+      // Each letter should have a unique original position 0, 1, or 2
+      const positions = result.map(l => l.position).sort()
+      expect(positions).toEqual([0, 1, 2])
+    })
+
+    it('should handle single character', () => {
+      const result = TrapService.scrambleLetters('X')
+
+      expect(result.length).toBe(1)
+      expect(result[0].char).toBe('X')
+      expect(result[0].position).toBe(0)
+      expect(result[0].state).toBe('hidden')
+    })
+  })
+
   describe('getRecommendedHandler', () => {
     it('should recommend Thief over Fighter', () => {
       const fighter = createTestCharacter({

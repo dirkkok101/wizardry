@@ -18,7 +18,9 @@ import {
   TrapInspectionResult,
   TrapDisarmResult,
   TrapTriggerResult,
-  trapNameMatches
+  trapNameMatches,
+  ScrambledLetter,
+  LetterState
 } from '@models/Trap'
 import { RandomService } from './RandomService'
 import { TrapDataLoader } from './TrapDataLoader'
@@ -433,6 +435,33 @@ function getRecommendedHandler(
   return best
 }
 
+// ============================================
+// SCRAMBLED LETTERS SYSTEM
+// ============================================
+
+/**
+ * Scramble the letters of a trap name for the identification puzzle
+ * Returns letters in random order, all initially hidden
+ *
+ * @param trapName Display name of the trap (from TrapEffect.name)
+ * @returns Array of scrambled letters with hidden state
+ */
+function scrambleLetters(trapName: string): ScrambledLetter[] {
+  const letters: ScrambledLetter[] = trapName.split('').map((char, index) => ({
+    char,
+    state: 'hidden' as LetterState,
+    position: index
+  }))
+
+  // Fisher-Yates shuffle using RandomService
+  for (let i = letters.length - 1; i > 0; i--) {
+    const j = RandomService.random(0, i)
+    ;[letters[i], letters[j]] = [letters[j], letters[i]]
+  }
+
+  return letters
+}
+
 export const TrapService = {
   // Calculation functions
   calculateInspectChance,
@@ -450,5 +479,8 @@ export const TrapService = {
   castCalfo,
 
   // Utility
-  getRecommendedHandler
+  getRecommendedHandler,
+
+  // Scrambled letters system
+  scrambleLetters
 }
