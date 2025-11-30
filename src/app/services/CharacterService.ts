@@ -152,10 +152,27 @@ function initializeSpellPoints(characterClass: CharacterClass): CharacterSpellPo
 }
 
 /**
- * Generate random age (14-16, original Wizardry range)
+ * Convert age in weeks to years (for display and stat change calculations)
+ */
+function ageInYears(ageInWeeks: number): number {
+  return Math.floor(ageInWeeks / 52)
+}
+
+/**
+ * Generate random starting age in weeks (authentic Wizardry 1 mechanics)
+ *
+ * Formula: (18 * 52) + random(0, 299) = 936 to 1235 weeks
+ * Result: 18 years 0 weeks to ~23 years 39 weeks
+ *
+ * Age is stored in weeks to enable precise aging mechanics:
+ * - Temple services: +1-52 weeks per service
+ * - Class change: +4-7 years (208-364 weeks)
+ * - Disbanding party: +25 weeks per character
+ *
+ * Source: Thomas William Ewers' reverse-engineered Apple II source
  */
 function generateAge(): number {
-  return RandomService.random(14, 16)
+  return (18 * 52) + RandomService.random(0, 299) // 936-1235 weeks
 }
 
 /**
@@ -166,19 +183,19 @@ function generateCharacterId(): string {
 }
 
 /**
- * Generate starting gold for new character
+ * Generate starting gold for new character (authentic Wizardry 1 mechanics)
  *
- * Formula: 90 + random(0-100) = 90-190 gold pieces
+ * Formula: 90 + random(0, 99) = 90 to 189 gold pieces
  *
  * Based on original Wizardry 1 (1981) mechanics where new characters
  * received random starting gold to purchase equipment at Boltac's.
  * This enabled the "gold pool exploit" where players could create
  * dummy characters, pool their gold, then delete them.
  *
- * Sources: zimlab.com/wizardry, strategywiki.org
+ * Source: Thomas William Ewers' reverse-engineered Apple II source
  */
 function generateStartingGold(): number {
-  return 90 + RandomService.random(0, 100)
+  return 90 + RandomService.random(0, 99) // 90-189 gold
 }
 
 /**
@@ -206,11 +223,20 @@ function createCharacter(
   const agility = baseAgility + raceModifiers.agi
   const luck = baseLuck + raceModifiers.luc
 
-  // Calculate starting HP using ClassService hit dice + VIT bonus
+  // Calculate starting HP using ClassService hit dice + VIT bonus (authentic Wizardry 1)
   const classData = ClassService.getClassData(params.class)
   const roll = rollHitDice(classData.hitDice)
   const vitBonus = getVitalityBonus(vitality)
-  const maxHp = Math.max(1, roll + vitBonus)
+  const baseHP = roll + vitBonus
+
+  // 50% chance for full value, 50% chance for 90% of full value, min 2
+  let maxHp: number
+  if (RandomService.roll(0.5)) {
+    maxHp = baseHP
+  } else {
+    maxHp = Math.floor(0.9 * baseHP)
+  }
+  maxHp = Math.max(2, maxHp)
 
   // Initialize VIM (vitality for resurrection)
   const vim: MaxCurrent = {
@@ -218,7 +244,7 @@ function createCharacter(
     max: vitality
   }
 
-  // Generate age (14-16)
+  // Generate age in weeks (18-23 years)
   const age = generateAge()
 
   // Initialize spell points for caster classes
@@ -448,17 +474,36 @@ function validatePassword(password: string): ValidationResult {
 }
 
 /**
- * Calculate starting HP based on class hit dice + VIT modifier.
+ * Calculate starting HP based on class hit dice + VIT modifier (authentic Wizardry 1 mechanics)
  *
  * Uses ClassService.getClassData().hitDice (e.g., "1d10", "1d8")
- * Applies VIT bonus (authentic Wizardry 1 mechanics)
- * Minimum HP is 1 (cannot start with 0 or negative HP)
+ * Applies VIT bonus per Wizardry 1 table
+ *
+ * Original formula (from reverse-engineered source):
+ *   if random() < 0.5:
+ *     HP = HitDie + VitalityMod
+ *   else:
+ *     HP = floor(0.9 × (HitDie + VitalityMod))
+ *   Minimum HP = 2
+ *
+ * Source: Thomas William Ewers' reverse-engineered Apple II source
  */
 function calculateStartingHP(characterClass: CharacterClass, vitality: number): { hp: number; maxHp: number } {
   const classData = ClassService.getClassData(characterClass)
   const roll = rollHitDice(classData.hitDice)
   const vitBonus = getVitalityBonus(vitality)
-  const maxHp = Math.max(1, roll + vitBonus)
+  const baseHP = roll + vitBonus
+
+  // 50% chance for full value, 50% chance for 90% of full value
+  let maxHp: number
+  if (RandomService.roll(0.5)) {
+    maxHp = baseHP
+  } else {
+    maxHp = Math.floor(0.9 * baseHP)
+  }
+
+  // Minimum HP is 2 (authentic Wizardry 1)
+  maxHp = Math.max(2, maxHp)
 
   return { hp: maxHp, maxHp }
 }
@@ -488,7 +533,7 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     max: stats.vitality
   }
 
-  // Generate age (14-16)
+  // Generate age in weeks (18-23 years)
   const age = generateAge()
 
   // Initialize spell points for caster classes
@@ -562,5 +607,6 @@ export const CharacterService = {
   validateCharacterName,
   validatePassword,
   createCharacterFromStats,
-  getVitalityBonus
+  getVitalityBonus,
+  ageInYears
 }

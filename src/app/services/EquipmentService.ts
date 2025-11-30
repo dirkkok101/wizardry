@@ -1,4 +1,5 @@
 import { Character } from '@models/Character';
+import { CharacterClass } from '@models/CharacterClass';
 import { Item } from '@models/Item';
 import { ItemSlot } from '@models/ItemType';
 import { InventoryService } from './InventoryService';
@@ -117,9 +118,18 @@ export class EquipmentService {
   /**
    * Calculate AC based on equipment
    * Formula: Base 10 - armor bonus - shield bonus - AGI modifier
+   *
+   * Authentic Wizardry 1: Ninjas get AC bonus equal to level when not wearing armor
    */
   static calculateAC(character: Character): number {
     let ac = 10; // Base AC
+
+    // Check if Ninja and not wearing armor (naked Ninja AC bonus)
+    const isNakedNinja = character.class === CharacterClass.NINJA && !character.equippedArmor;
+    if (isNakedNinja) {
+      // Authentic Wizardry 1: Ninja AC bonus = -level when not wearing armor
+      ac -= character.level;
+    }
 
     // Equipment bonuses - directly access Item objects from slots
     const equippedItems: (Item | undefined)[] = [

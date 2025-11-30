@@ -20,12 +20,12 @@ export class CombatService {
 
   /**
    * Calculate initiative for combatant
-   * Formula: random(0-9) + AGI_modifier (minimum 1)
+   * Authentic Wizardry 1 formula: random(1-10) + AGI_modifier (minimum 1)
    */
   static calculateInitiative(combatant: Combatant): number {
     const agi = combatant.agility || 10
     const agiMod = Math.floor((agi - 10) / 2)
-    const roll = RandomService.random(0, 9)  // 0-9
+    const roll = RandomService.random(1, 10)  // 1-10 (authentic Wizardry 1)
 
     return Math.max(1, roll + agiMod)
   }
@@ -98,11 +98,27 @@ export class CombatService {
     return Math.max(5, Math.min(95, rawChance))
   }
 
+  /**
+   * Class-specific hit probability modifiers (HPCALCMD)
+   * Authentic Wizardry 1 values from reverse-engineered source
+   */
+  private static readonly CLASS_HIT_MODIFIERS: Record<string, number> = {
+    FIGHTER: 0,
+    MAGE: -4,
+    PRIEST: -2,
+    THIEF: -2,
+    BISHOP: -4,
+    SAMURAI: 1,
+    LORD: 1,
+    NINJA: 1
+  }
+
   private static getAttackBonus(combatant: Combatant): number {
-    // For characters: level + STR modifier
+    // For characters: level + STR modifier + class modifier (HPCALCMD)
     if ('class' in combatant && combatant.class) {
       const strMod = Math.floor((combatant.strength - 10) / 2)
-      return combatant.level + strMod
+      const classModifier = this.CLASS_HIT_MODIFIERS[combatant.class] ?? 0
+      return combatant.level + strMod + classModifier
     }
     // For monsters: level
     return combatant.level || 1
@@ -132,9 +148,18 @@ export class CombatService {
     let damage = Math.max(1, baseDamage + strMod)
 
     // Critical hit: (2 × Level)% chance, max 50%
+    // Authentic Wizardry 1: Boss/unique monsters resist critical hits
     const attackerLevel = attacker.level || 1
     const critChance = Math.min(50, attackerLevel * 2)
-    const critical = RandomService.chance(critChance)
+    let critical = RandomService.chance(critChance)
+
+    // Check if defender is a monster that resists critical hits
+    if (critical && 'monsterId' in defender) {
+      const template = MonsterDataLoader.getMonster(defender.monsterId)
+      if (template && (template.isBoss || template.isUnique)) {
+        critical = false  // Boss/unique monsters resist decapitation/criticals
+      }
+    }
 
     if (critical) {
       damage *= 2
@@ -168,11 +193,53 @@ export class CombatService {
     }
   }
 
+  /**
+   * Class-specific unarmed damage (authentic Wizardry 1)
+   * Most classes: 1d2
+   * Ninja: 1d4 + level/3 (rounded down)
+   */
+  private static readonly CLASS_UNARMED_DAMAGE: Record<string, { die: number; bonus: boolean }> = {
+    FIGHTER: { die: 2, bonus: false },
+    MAGE: { die: 2, bonus: false },
+    PRIEST: { die: 2, bonus: false },
+    THIEF: { die: 2, bonus: false },
+    BISHOP: { die: 2, bonus: false },
+    SAMURAI: { die: 2, bonus: false },
+    LORD: { die: 2, bonus: false },
+    NINJA: { die: 4, bonus: true }  // Ninja gets level bonus
+  }
+
   private static rollDamage(combatant: Combatant): number {
-    // For characters: basic weapon damage (simplified)
+    // For characters: use equipped weapon or unarmed damage
     if ('class' in combatant) {
-      return RandomService.rollDie(6)  // 1d6
+      const char = combatant as Character
+
+      // Check for equipped weapon
+      if (char.equippedWeapon) {
+        const weapon = char.equippedWeapon
+        // Use damageRoll if available (has min/max), otherwise fall back to damage
+        if (weapon.damageRoll) {
+          const baseDamage = RandomService.random(weapon.damageRoll.min, weapon.damageRoll.max)
+          const enhancement = weapon.enhancement || 0
+          return baseDamage + enhancement
+        } else if (weapon.damage) {
+          const enhancement = weapon.enhancement || 0
+          return RandomService.rollDie(weapon.damage) + enhancement
+        }
+      }
+
+      // Unarmed damage (authentic Wizardry 1)
+      const unarmedConfig = this.CLASS_UNARMED_DAMAGE[char.class] ?? { die: 2, bonus: false }
+      let damage = RandomService.rollDie(unarmedConfig.die)
+
+      // Ninja gets level-based unarmed bonus
+      if (unarmedConfig.bonus) {
+        damage += Math.floor(char.level / 3)
+      }
+
+      return damage
     }
+
     // For monsters: roll from damage array
     if ('damage' in combatant && combatant.damage && combatant.damage.length > 0) {
       const dice = combatant.damage[0]
@@ -870,10 +937,11 @@ export class CombatService {
     // TODO: Add isUndead property to monsters
     // For now, assume all monsters can be dispelled (simplified)
 
-    // Calculate dispel chance: (CasterLevel - UndeadLevel) × 10, clamped to 5-95%
+    // Calculate dispel chance: (2 × CasterLevel - UndeadLevel) × 5, clamped to 5-95%
+    // Authentic Wizardry 1 formula from reverse-engineered source
     const casterLevel = caster.level || 1
     const undeadLevel = aliveMonsters[0].level || 1
-    const rawChance = (casterLevel - undeadLevel) * 10
+    const rawChance = (2 * casterLevel - undeadLevel) * 5
     const dispelChance = Math.max(5, Math.min(95, rawChance))
 
     // Roll for success

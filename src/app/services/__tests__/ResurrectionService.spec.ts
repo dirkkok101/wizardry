@@ -47,30 +47,30 @@ describe('ResurrectionService', () => {
     })
 
     describe('resurrection (DEAD → OK)', () => {
-      it('calculates success rate: 50% base + (vitality × 2%)', () => {
-        const char = createChar(18)
+      it('calculates success rate: 50% base + (vitality × 3%) - authentic Wizardry 1', () => {
+        const char = createChar(10)
         const rate = ResurrectionService.getSuccessRate(char, ServiceType.RESURRECT)
-        expect(rate).toBe(86) // 50 + (18 × 2) = 86%
+        expect(rate).toBe(80) // 50 + (10 × 3) = 80%
       })
 
       it('handles low vitality characters', () => {
         const char = createChar(3)
         const rate = ResurrectionService.getSuccessRate(char, ServiceType.RESURRECT)
-        expect(rate).toBe(56) // 50 + (3 × 2) = 56%
+        expect(rate).toBe(59) // 50 + (3 × 3) = 59%
       })
 
-      it('handles high vitality characters', () => {
+      it('handles high vitality characters (can exceed 100%)', () => {
         const char = createChar(18)
         const rate = ResurrectionService.getSuccessRate(char, ServiceType.RESURRECT)
-        expect(rate).toBe(86) // 50 + (18 × 2) = 86%
+        expect(rate).toBe(104) // 50 + (18 × 3) = 104% (clamped to 100 by chance roll)
       })
     })
 
     describe('restoration (ASHES → OK)', () => {
-      it('calculates success rate: 40% base + (vitality × 1%)', () => {
-        const char = createChar(15)
+      it('calculates success rate: 40% base + (vitality × 3%) - authentic Wizardry 1', () => {
+        const char = createChar(10)
         const rate = ResurrectionService.getSuccessRate(char, ServiceType.RESTORE)
-        expect(rate).toBe(55) // 40 + (15 × 1) = 55%
+        expect(rate).toBe(70) // 40 + (10 × 3) = 70%
       })
 
       it('has lower success rate than resurrection', () => {
@@ -84,7 +84,8 @@ describe('ResurrectionService', () => {
 
   describe('attemptService', () => {
     it('returns success/failure based on success rate', () => {
-      const char = createChar(18)
+      // Use VIT 5 for testable success rate: 50 + (5 × 3) = 65%
+      const char = createChar(5)
 
       // Run service attempt multiple times
       const results = Array.from({ length: 100 }, () =>
@@ -93,9 +94,9 @@ describe('ResurrectionService', () => {
 
       const successCount = results.filter(Boolean).length
 
-      // With 86% success rate, expect roughly 80-92 successes out of 100
-      expect(successCount).toBeGreaterThan(70)
-      expect(successCount).toBeLessThan(95)
+      // With 65% success rate, expect roughly 50-80 successes out of 100
+      expect(successCount).toBeGreaterThan(45)
+      expect(successCount).toBeLessThan(85)
     })
 
     it('always succeeds for cure services', () => {

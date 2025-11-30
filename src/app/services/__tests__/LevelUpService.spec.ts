@@ -5,18 +5,18 @@ import { CharacterClass } from '@models/CharacterClass'
 
 describe('LevelUpService', () => {
   describe('getXPRequirement', () => {
-    it('calculates XP requirement for Fighter level 2', () => {
+    it('calculates XP requirement for Fighter level 2 (authentic table)', () => {
       const xp = LevelUpService.getXPRequirement(2, CharacterClass.FIGHTER)
 
-      // Fighters level fast: base 1000 * 2^1.5 * 0.8 ≈ 2262
-      expect(xp).toBe(2262)
+      // Authentic Wizardry 1 XP table: Fighter level 2 = 1000
+      expect(xp).toBe(1000)
     })
 
-    it('calculates XP requirement for Mage level 2', () => {
+    it('calculates XP requirement for Mage level 2 (authentic table)', () => {
       const xp = LevelUpService.getXPRequirement(2, CharacterClass.MAGE)
 
-      // Mages level slow: base 1000 * 2^1.5 * 1.2 ≈ 3394
-      expect(xp).toBe(3394)
+      // Authentic Wizardry 1 XP table: Mage level 2 = 1100
+      expect(xp).toBe(1100)
     })
 
     it('calculates increasing XP for higher levels', () => {
@@ -45,7 +45,7 @@ describe('LevelUpService', () => {
     it('returns false when character lacks XP', () => {
       const character = createTestCharacter({
         level: 1,
-        experience: 1000,
+        experience: 500,  // Fighter level 2 requires 1000 XP in authentic tables
         class: CharacterClass.FIGHTER
       })
 
@@ -120,10 +120,13 @@ describe('LevelUpService', () => {
   })
 
   describe('rollStatChanges', () => {
+    // Age is now stored in weeks: years * 52 = weeks
+    // e.g., 20 years = 1040 weeks, 50 years = 2600 weeks
+
     it('returns stat changes object', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 20
+        age: 20 * 52 // 20 years in weeks
       })
 
       const statChanges = LevelUpService.rollStatChanges(character)
@@ -135,7 +138,7 @@ describe('LevelUpService', () => {
     it('changes stats by at most 1 point each (increase or decrease)', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 50 // Middle age for balanced chances
+        age: 50 * 52 // Middle age (50 years) for balanced chances
       })
 
       const statChanges = LevelUpService.rollStatChanges(character)
@@ -149,7 +152,7 @@ describe('LevelUpService', () => {
     it('young characters (age 20) almost always gain stats', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 20, // Young: 130-20=110% capped to 95%
+        age: 20 * 52, // Young (20 years): 130-20=110% capped to 95%
         strength: 10,
         intelligence: 10,
         piety: 10,
@@ -183,7 +186,7 @@ describe('LevelUpService', () => {
     it('old characters (age 80) often lose stats', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 80, // Old: 130-80=50%
+        age: 80 * 52, // Old (80 years): 130-80=50%
         strength: 10,
         intelligence: 10,
         piety: 10,
@@ -216,7 +219,7 @@ describe('LevelUpService', () => {
     it('respects stat cap of 18 (no increase above 18)', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 20,
+        age: 20 * 52, // 20 years in weeks
         strength: 18 // Already at cap
       })
 
@@ -234,7 +237,7 @@ describe('LevelUpService', () => {
     it('respects stat floor of 3 (no decrease below 3)', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 90, // Very old
+        age: 90 * 52, // Very old (90 years)
         strength: 3 // Already at floor
       })
 
@@ -252,7 +255,7 @@ describe('LevelUpService', () => {
     it('75% chance each stat is checked for modification', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        age: 30
+        age: 30 * 52 // 30 years in weeks
       })
 
       // Queue value above 75% threshold - stat should NOT be checked
@@ -294,23 +297,26 @@ describe('LevelUpService', () => {
       expect(result.updatedCharacter.level).toBe(2)
     })
 
-    it('increases max HP by rolled amount', () => {
+    it('uses HP reroll system (keeps higher of current or new roll)', () => {
+      // Set maxHP low so reroll will almost certainly be higher
       const character = createTestCharacter({
         level: 1,
         experience: 3000,
         class: CharacterClass.FIGHTER,
-        hp: 15,
-        maxHp: 15,
+        hp: 5,
+        maxHp: 5,  // Low enough that 2d10+6 (VIT 16 = +3 × 2 levels) will be higher
+        maxLev: 1,
         vitality: 16
       })
 
       const result = LevelUpService.performLevelUp(character)
 
-      // d10 + 3 VIT (16 = +3) = 4-13 increase
-      const hpIncrease = result.updatedCharacter.maxHp - 15
-      expect(hpIncrease).toBeGreaterThanOrEqual(4)
-      expect(hpIncrease).toBeLessThanOrEqual(13)
-      expect(result.levelUpData.hpIncrease).toBe(hpIncrease)
+      // Reroll system: roll 2d10 + 6 (level 2, VIT +3), keep higher
+      // New roll range: 8-26, old maxHP: 5
+      // New maxHP should be at least 8 (minimum reroll)
+      expect(result.updatedCharacter.maxHp).toBeGreaterThanOrEqual(8)
+      expect(result.updatedCharacter.maxLev).toBe(2)
+      expect(result.levelUpData.hpIncrease).toBe(result.updatedCharacter.maxHp - 5)
     })
 
     it('sets HP to new max HP', () => {
@@ -334,7 +340,7 @@ describe('LevelUpService', () => {
         class: CharacterClass.FIGHTER,
         hp: 15,
         maxHp: 15,
-        age: 20, // Young for better stat growth
+        age: 20 * 52, // Young (20 years) for better stat growth
         strength: 14,
         intelligence: 10,
         piety: 10,
@@ -370,7 +376,7 @@ describe('LevelUpService', () => {
         class: CharacterClass.FIGHTER,
         hp: 15,
         maxHp: 15,
-        age: 80, // Old: 130-80=50% threshold
+        age: 80 * 52, // Old (80 years): 130-80=50% threshold
         strength: 14
       })
 
@@ -388,19 +394,22 @@ describe('LevelUpService', () => {
     })
 
     it('returns level up data for UI display', () => {
+      // Use low maxHP to ensure reroll gives increase
       const character = createTestCharacter({
         level: 1,
         experience: 3000,
         class: CharacterClass.FIGHTER,
-        hp: 15,
-        maxHp: 15,
-        age: 30
+        hp: 5,
+        maxHp: 5,
+        maxLev: 1,
+        age: 30 * 52  // Age in weeks
       })
 
       const result = LevelUpService.performLevelUp(character)
 
       expect(result.levelUpData.newLevel).toBe(2)
-      expect(result.levelUpData.hpIncrease).toBeGreaterThan(0)
+      // With reroll system, hpIncrease >= 0 (0 if old was higher)
+      expect(result.levelUpData.hpIncrease).toBeGreaterThanOrEqual(0)
       expect(result.levelUpData.statChanges).toBeDefined()
     })
 
@@ -411,7 +420,7 @@ describe('LevelUpService', () => {
         class: CharacterClass.MAGE,
         hp: 8,
         maxHp: 8,
-        age: 20,
+        age: 20 * 52, // 20 years in weeks
         spellPoints: {
           mage: {
             level1: { current: 2, max: 2 },
@@ -438,7 +447,7 @@ describe('LevelUpService', () => {
         class: CharacterClass.PRIEST,
         hp: 10,
         maxHp: 10,
-        age: 20,
+        age: 20 * 52, // 20 years in weeks
         spellPoints: {
           priest: {
             level1: { current: 2, max: 2 },
@@ -465,7 +474,7 @@ describe('LevelUpService', () => {
         class: CharacterClass.MAGE,
         hp: 12,
         maxHp: 12,
-        age: 20,
+        age: 20 * 52, // 20 years in weeks
         spellPoints: {
           mage: {
             level1: { current: 3, max: 3 },
@@ -502,27 +511,29 @@ describe('LevelUpService', () => {
     })
   })
 
-  describe('getXPRequirement - all classes', () => {
+  describe('getXPRequirement - all classes (authentic tables)', () => {
     it('calculates correct XP for all basic classes at level 2', () => {
-      // Fighter (0.8 multiplier) - fastest to level
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.FIGHTER)).toBe(2262)
-      // Thief (0.9 multiplier)
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.THIEF)).toBe(2545)
-      // Priest (1.0 multiplier)
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.PRIEST)).toBe(2828)
-      // Mage (1.2 multiplier) - slower
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.MAGE)).toBe(3394)
+      // Authentic Wizardry 1 XP tables
+      // Thief - fastest to level
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.THIEF)).toBe(900)
+      // Fighter
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.FIGHTER)).toBe(1000)
+      // Priest
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.PRIEST)).toBe(1050)
+      // Mage
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.MAGE)).toBe(1100)
     })
 
     it('calculates correct XP for elite classes at level 2', () => {
-      // Samurai (1.1 multiplier)
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.SAMURAI)).toBe(3111)
-      // Lord (1.1 multiplier)
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.LORD)).toBe(3111)
-      // Ninja (1.2 multiplier)
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.NINJA)).toBe(3394)
-      // Bishop (1.3 multiplier) - slowest
-      expect(LevelUpService.getXPRequirement(2, CharacterClass.BISHOP)).toBe(3676)
+      // Authentic Wizardry 1 XP tables
+      // Bishop
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.BISHOP)).toBe(1200)
+      // Samurai
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.SAMURAI)).toBe(1250)
+      // Lord
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.LORD)).toBe(1300)
+      // Ninja - slowest
+      expect(LevelUpService.getXPRequirement(2, CharacterClass.NINJA)).toBe(1450)
     })
 
     it('all classes can level up with sufficient XP', () => {

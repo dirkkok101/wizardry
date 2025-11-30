@@ -1,5 +1,6 @@
 import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { CharacterSpellPoints, SpellPointPool } from '@models/SpellPoints'
 import { RandomService } from './RandomService'
 import { ClassService } from './ClassService'
@@ -17,6 +18,7 @@ interface LevelUpData {
   newLevel: number
   hpIncrease: number
   statChanges: StatChanges
+  diedFromVitalityLoss?: boolean  // True if character died from VIT dropping to 0
 }
 
 interface LevelUpResult {
@@ -26,16 +28,36 @@ interface LevelUpResult {
 
 export const MAX_LEVEL = 13
 
-// Class XP multipliers (lower = faster leveling)
-const CLASS_XP_MULTIPLIERS: Record<CharacterClass, number> = {
-  [CharacterClass.FIGHTER]: 0.8,
-  [CharacterClass.THIEF]: 0.9,
-  [CharacterClass.MAGE]: 1.2,
-  [CharacterClass.PRIEST]: 1.0,
-  [CharacterClass.BISHOP]: 1.3,
-  [CharacterClass.SAMURAI]: 1.1,
-  [CharacterClass.LORD]: 1.1,
-  [CharacterClass.NINJA]: 1.2
+/**
+ * Authentic Wizardry 1 XP tables per class.
+ * Index 0 = level 1, index 12 = level 13.
+ * Source: Thomas William Ewers' reverse-engineered Apple II source
+ */
+const CLASS_XP_TABLES: Record<CharacterClass, number[]> = {
+  [CharacterClass.FIGHTER]: [
+    0, 1000, 1724, 2972, 5124, 8834, 15231, 26256, 45268, 78052, 134575, 232039, 400144
+  ],
+  [CharacterClass.MAGE]: [
+    0, 1100, 1896, 3269, 5636, 9718, 16755, 28882, 49795, 85857, 148033, 255243, 440159
+  ],
+  [CharacterClass.PRIEST]: [
+    0, 1050, 1810, 3121, 5380, 9276, 15993, 27569, 47532, 81955, 141304, 243641, 420151
+  ],
+  [CharacterClass.THIEF]: [
+    0, 900, 1551, 2675, 4611, 7951, 13708, 23631, 40742, 70247, 121118, 208835, 360130
+  ],
+  [CharacterClass.BISHOP]: [
+    0, 1200, 2069, 3567, 6149, 10601, 18278, 31507, 54322, 93662, 161491, 278447, 480173
+  ],
+  [CharacterClass.SAMURAI]: [
+    0, 1250, 2155, 3716, 6405, 11043, 19040, 32820, 56586, 97565, 168220, 290049, 500180
+  ],
+  [CharacterClass.LORD]: [
+    0, 1300, 2241, 3864, 6661, 11484, 19801, 34132, 58849, 101468, 174949, 301650, 520187
+  ],
+  [CharacterClass.NINJA]: [
+    0, 1450, 2500, 4310, 7431, 12812, 22092, 38080, 65660, 113211, 195199, 336577, 580209
+  ]
 }
 
 // Hit dice by class (for HP rolls)
@@ -63,13 +85,16 @@ const SPELL_LEVEL_REQUIREMENTS: Record<number, number> = {
 
 export class LevelUpService {
   /**
-   * Calculate XP required for a given level
-   * Uses exponential growth: 1000 * level^1.5 * class multiplier
+   * Get XP required for a given level using authentic Wizardry 1 tables.
+   * Returns XP needed to reach the specified level.
    */
   static getXPRequirement(level: number, characterClass: CharacterClass): number {
-    const baseXP = 1000
-    const multiplier = CLASS_XP_MULTIPLIERS[characterClass]
-    return Math.floor(baseXP * Math.pow(level, 1.5) * multiplier)
+    const table = CLASS_XP_TABLES[characterClass]
+    if (level < 1 || level > MAX_LEVEL) {
+      return Infinity
+    }
+    // Table index 0 = level 1, index 1 = level 2, etc.
+    return table[level - 1]
   }
 
   /**
@@ -85,6 +110,40 @@ export class LevelUpService {
   }
 
   /**
+   * Roll HP using authentic Wizardry 1 reroll system.
+   * Rolls ALL hit dice based on maxLev, returns higher of: current maxHP or new roll.
+   *
+   * Formula: Roll (maxLev × hitDie) dice, add (maxLev × vitBonus)
+   * Keep higher of current maxHP or new total.
+   *
+   * @param character - Character leveling up
+   * @param newMaxLev - The new maxLev value (max of current maxLev and new level)
+   * @returns Object with newMaxHp and the hpIncrease (can be 0 if current was higher)
+   */
+  static rollHPWithReroll(character: Character, newMaxLev: number): { newMaxHp: number; hpIncrease: number } {
+    const hitDie = CLASS_HIT_DICE[character.class]
+    const vitBonus = this.getVitalityBonus(character.vitality)
+
+    // Roll ALL dice for maxLev levels
+    let newRoll = 0
+    for (let i = 0; i < newMaxLev; i++) {
+      newRoll += RandomService.rollDie(hitDie)
+    }
+    // Add vitality bonus for each level
+    newRoll += newMaxLev * vitBonus
+
+    // Minimum HP is maxLev (at least 1 HP per level)
+    newRoll = Math.max(newMaxLev, newRoll)
+
+    // Keep higher of current or new roll
+    const newMaxHp = Math.max(character.maxHp, newRoll)
+    const hpIncrease = newMaxHp - character.maxHp
+
+    return { newMaxHp, hpIncrease }
+  }
+
+  /**
+   * @deprecated Use rollHPWithReroll instead. Kept for backwards compatibility.
    * Roll HP increase based on class hit die and VIT bonus
    * Returns 1-X where X is hit die + VIT bonus (minimum 1)
    */
@@ -116,19 +175,22 @@ export class LevelUpService {
    * For each stat:
    *   75% chance the stat is checked
    *   If checked: roll 1-100
-   *     If roll <= (130 - age): stat +1 (increase)
+   *     If roll <= (130 - ageInYears): stat +1 (increase)
    *     Else: stat -1 (decrease)
    *
    * Younger characters have better growth, older characters risk stat decreases.
    * Stats are clamped to 3-18 range.
+   *
+   * Note: Age is stored in weeks, converted to years for this calculation.
    */
   static rollStatChanges(character: Character): StatChanges {
     const changes: StatChanges = {}
-    const age = character.age
+    // Convert age from weeks to years for stat change calculation
+    const ageInYears = Math.floor(character.age / 52)
 
-    // Calculate increase threshold based on age
-    // Age 15: 115% capped to 95%, Age 30: 100%, Age 50: 80%, etc.
-    const increaseThreshold = Math.min(95, Math.max(5, 130 - age))
+    // Calculate increase threshold based on age in years
+    // Age 18: 112% capped to 95%, Age 30: 100%, Age 50: 80%, etc.
+    const increaseThreshold = Math.min(95, Math.max(5, 130 - ageInYears))
 
     const stats: Array<keyof StatChanges> = [
       'strength',
@@ -170,13 +232,31 @@ export class LevelUpService {
   }
 
   /**
-   * Perform level up: increment level, roll HP, roll stats, increase spell points
+   * Perform level up: increment level, roll HP (with reroll system),
+   * roll stats (with death on VIT drop), increase spell points.
+   *
+   * Authentic Wizardry 1 mechanics:
+   * - HP uses reroll system: roll ALL dice, keep higher of current or new
+   * - maxLev tracks highest level achieved (for HP preservation)
+   * - If vitality drops to 0, character dies
+   *
    * Returns updated character and level up data for display
    */
   static performLevelUp(character: Character): LevelUpResult {
-    const hpIncrease = this.rollHPIncrease(character)
     const statChanges = this.rollStatChanges(character)
     const newLevel = character.level + 1
+
+    // Calculate new vitality after stat changes
+    const newVitality = character.vitality + (statChanges.vitality || 0)
+
+    // Check for death from vitality dropping to 0 or below
+    const diedFromVitalityLoss = newVitality <= 0
+
+    // Update maxLev (highest level achieved) for HP calculation
+    const newMaxLev = Math.max(character.maxLev || character.level, newLevel)
+
+    // Roll HP using authentic reroll system
+    const { newMaxHp, hpIncrease } = this.rollHPWithReroll(character, newMaxLev)
 
     // Calculate updated spell points for the new level
     const updatedSpellPoints = this.calculateSpellPointsForLevel(character, newLevel)
@@ -184,21 +264,25 @@ export class LevelUpService {
     const updatedCharacter: Character = {
       ...character,
       level: newLevel,
-      maxHp: character.maxHp + hpIncrease,
-      hp: character.maxHp + hpIncrease, // Fully heal on level up
+      maxLev: newMaxLev,
+      maxHp: newMaxHp,
+      hp: diedFromVitalityLoss ? 0 : newMaxHp, // Dead if VIT dropped to 0, else fully heal
       strength: character.strength + (statChanges.strength || 0),
       intelligence: character.intelligence + (statChanges.intelligence || 0),
       piety: character.piety + (statChanges.piety || 0),
-      vitality: character.vitality + (statChanges.vitality || 0),
+      vitality: Math.max(0, newVitality), // Don't go negative
       agility: character.agility + (statChanges.agility || 0),
       luck: character.luck + (statChanges.luck || 0),
-      spellPoints: updatedSpellPoints
+      spellPoints: updatedSpellPoints,
+      // If died from VIT loss, update status
+      status: diedFromVitalityLoss ? CharacterStatus.DEAD : character.status
     }
 
     const levelUpData: LevelUpData = {
       newLevel,
       hpIncrease,
-      statChanges
+      statChanges,
+      diedFromVitalityLoss
     }
 
     return {

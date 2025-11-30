@@ -11,12 +11,12 @@ describe('CombatService', () => {
         CombatService.calculateInitiative(char)
       )
 
-      // Formula: random(0-9) + AGI_modifier
+      // Authentic Wizardry 1 formula: random(1-10) + AGI_modifier
       // AGI 18 = +4 modifier
-      // Range: 4-13 (0+4 to 9+4)
+      // Range: 5-14 (1+4 to 10+4)
       results.forEach(init => {
-        expect(init).toBeGreaterThanOrEqual(4)
-        expect(init).toBeLessThanOrEqual(13)
+        expect(init).toBeGreaterThanOrEqual(5)
+        expect(init).toBeLessThanOrEqual(14)
       })
     })
 
@@ -40,10 +40,10 @@ describe('CombatService', () => {
         CombatService.calculateInitiative(char)
       )
 
-      // AGI 10 = +0 modifier, range 0-9, but min 1
+      // AGI 10 = +0 modifier, authentic Wizardry 1 range 1-10
       results.forEach(init => {
         expect(init).toBeGreaterThanOrEqual(1)
-        expect(init).toBeLessThanOrEqual(9)
+        expect(init).toBeLessThanOrEqual(10)
       })
     })
   })

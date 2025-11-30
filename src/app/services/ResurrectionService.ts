@@ -5,18 +5,21 @@ import { RandomService } from './RandomService'
 /**
  * ResurrectionService - Handles resurrection and restoration success rates
  *
- * Success rates are based on character Vitality:
+ * Authentic Wizardry 1 success rates based on character Vitality:
  * - Cure services: 100% (always succeed)
- * - Resurrection (DEAD → OK): 50% + (Vitality × 2%)
- * - Restoration (ASHES → OK): 40% + (Vitality × 1%)
+ * - Resurrection (DEAD → OK): 50% + (Vitality × 3%)
+ * - Restoration (ASHES → OK): 40% + (Vitality × 3%)
  *
  * On failure:
  * - Resurrection failure: DEAD → ASHES
  * - Restoration failure: ASHES → LOST (permanent death)
+ *
+ * Source: Thomas William Ewers' reverse-engineered Apple II source
  */
 export class ResurrectionService {
   /**
    * Calculate success rate for a temple service based on character vitality.
+   * Authentic Wizardry 1 formulas using 3×VIT multiplier.
    */
   static getSuccessRate(character: Character, service: ServiceType): number {
     switch (service) {
@@ -25,12 +28,12 @@ export class ResurrectionService {
         return 100 // Cure services always succeed
 
       case ServiceType.RESURRECT:
-        // 50% base + (Vitality × 2%)
-        return 50 + (character.vitality * 2)
+        // Authentic Wizardry 1: 50% + (Vitality × 3%)
+        return 50 + (character.vitality * 3)
 
       case ServiceType.RESTORE:
-        // 40% base + (Vitality × 1%)
-        return 40 + (character.vitality * 1)
+        // Authentic Wizardry 1: 40% + (Vitality × 3%)
+        return 40 + (character.vitality * 3)
 
       default:
         return 100

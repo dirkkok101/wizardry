@@ -829,9 +829,10 @@ describe('CharacterService', () => {
         selectedClass: CharacterClass.FIGHTER
       })
 
+      // Age is stored in weeks: (18*52) + random(0,299) = 936-1235 weeks (18-23 years)
       expect(char.age).toBeDefined()
-      expect(char.age).toBeGreaterThanOrEqual(14)
-      expect(char.age).toBeLessThanOrEqual(16)
+      expect(char.age).toBeGreaterThanOrEqual(936) // 18 years in weeks
+      expect(char.age).toBeLessThanOrEqual(1235) // ~23 years 39 weeks
     })
 
     it('initializes spell points for mage class', () => {

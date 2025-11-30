@@ -239,12 +239,13 @@ export class SpellLearningService {
 
   /**
    * Attempt to learn spells from a specific caster type.
-   * Per authentic Wizardry mechanics, characters can retry failed spells on each level-up.
-   * This method attempts to learn unlearned spells at ALL accessible spell levels.
+   * Per authentic Wizardry mechanics:
+   * - First spell of each circle is GUARANTEED when the circle is first unlocked
+   * - Characters can retry failed spells on each level-up using INT/30 or PIE/30 chance
    */
   private static attemptLearnSpells(
     character: Character,
-    _oldLevel: number,
+    oldLevel: number,
     newLevel: number,
     requirements: Record<number, number>,
     casterType: 'mage' | 'priest',
@@ -268,26 +269,46 @@ export class SpellLearningService {
         continue // Not accessible yet
       }
 
-      // Get available spells at this level
-      for (const spell of allSpells.values()) {
-        if (spell.casterType === casterType && spell.level === spellLevel) {
-          if (knownSpellIds.has(spell.id)) {
-            continue // Already known
-          }
+      // Check if this spell circle was JUST unlocked (first spell guaranteed)
+      const isNewlyUnlockedCircle = oldLevel < reqLevel && newLevel >= reqLevel
+      let guaranteedFirstSpell = isNewlyUnlockedCircle
 
-          // Roll for learning (authentic Wizardry formula)
-          const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST'
-          const learnChance = this.getSpellLearnChance(character, spellType)
+      // Get available spells at this level (sort by ID for consistent ordering)
+      const circleSpells = Array.from(allSpells.values())
+        .filter(s => s.casterType === casterType && s.level === spellLevel)
+        .sort((a, b) => a.id.localeCompare(b.id))
 
-          if (RandomService.roll(learnChance)) {
-            learnedSpells.push({
-              id: spell.id,
-              name: spell.name,
-              level: spell.level,
-              type: spellType
-            })
-            knownSpellIds.add(spell.id)
-          }
+      for (const spell of circleSpells) {
+        if (knownSpellIds.has(spell.id)) {
+          continue // Already known
+        }
+
+        const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST'
+
+        // First spell of a newly unlocked circle is guaranteed (authentic Wizardry 1)
+        if (guaranteedFirstSpell) {
+          learnedSpells.push({
+            id: spell.id,
+            name: spell.name,
+            level: spell.level,
+            type: spellType
+          })
+          knownSpellIds.add(spell.id)
+          guaranteedFirstSpell = false // Only one guaranteed spell per circle
+          continue
+        }
+
+        // Roll for learning (authentic Wizardry formula: INT/30 or PIE/30)
+        const learnChance = this.getSpellLearnChance(character, spellType)
+
+        if (RandomService.roll(learnChance)) {
+          learnedSpells.push({
+            id: spell.id,
+            name: spell.name,
+            level: spell.level,
+            type: spellType
+          })
+          knownSpellIds.add(spell.id)
         }
       }
     }
