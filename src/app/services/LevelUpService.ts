@@ -217,7 +217,7 @@ export class LevelUpService {
           if (currentValue > 3) {
             // Authentic Wizardry 1: Stats at 18 have 5/6 chance to resist decrease
             // Roll 1d6 - only decrease if roll is 1 (1/6 = 16.67% chance)
-            if (currentValue !== 18 || RandomService.random(1, 6) === 1) {
+            if (currentValue !== 18 || RandomService.rollDie(6) === 1) {
               changes[stat] = -1
             }
           }

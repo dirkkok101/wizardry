@@ -166,6 +166,7 @@ export class TempleComponent implements OnInit {
     switch (service) {
       case ServiceType.CURE_POISON: return 'Cure Poison';
       case ServiceType.CURE_PARALYSIS: return 'Cure Paralysis';
+      case ServiceType.CURE_STONED: return 'Cure Stoned';
       case ServiceType.RESURRECT: return 'Resurrect';
       case ServiceType.RESTORE: return 'Restore';
       default: return 'Service';
@@ -228,6 +229,7 @@ export class TempleComponent implements OnInit {
     switch (service) {
       case ServiceType.CURE_POISON: return `${name} has been cured of poison. (Cost: ${cost}g)`;
       case ServiceType.CURE_PARALYSIS: return `${name} has been cured of paralysis. (Cost: ${cost}g)`;
+      case ServiceType.CURE_STONED: return `${name} has been cured of petrification. (Cost: ${cost}g)`;
       case ServiceType.RESURRECT: return `${name} has been resurrected! (Cost: ${cost}g)`;
       case ServiceType.RESTORE: return `${name} has been restored from ashes! (Cost: ${cost}g)`;
       default: return `${name} has been healed. (Cost: ${cost}g)`;
@@ -243,6 +245,7 @@ export class TempleComponent implements OnInit {
     switch (id) {
       case 'cure-poison': return ServiceType.CURE_POISON;
       case 'cure-paralysis': return ServiceType.CURE_PARALYSIS;
+      case 'cure-stoned': return ServiceType.CURE_STONED;
       case 'resurrect': return ServiceType.RESURRECT;
       case 'restore': return ServiceType.RESTORE;
       default: return null;

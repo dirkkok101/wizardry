@@ -73,12 +73,17 @@ export type NoResistanceFormula = z.infer<typeof NoResistanceFormulaSchema>
 
 /**
  * Instant death can be a boolean or an object with details
+ * Extended to support MAKANITO-style kill thresholds and saving throw options
  */
 const InstantDeathSchema = z.union([
   z.boolean(),
   z.object({
-    type: z.string(),
-    savingThrow: z.boolean().optional()
+    type: z.string().optional(),
+    savingThrow: z.boolean().optional(),
+    noSavingThrow: z.boolean().optional(),
+    killThreshold: z.object({
+      maxHitDice: z.number().optional()
+    }).optional()
   })
 ])
 
@@ -285,7 +290,9 @@ export const SpellDefinitionSchema = z.object({
   }).passthrough().optional(),
   comparison: z.string().optional(),
   bugFix: z.boolean().optional(),
-  stacking: z.boolean().optional()
+  stacking: z.boolean().optional(),
+  /** Creature types immune to this spell (e.g., 'undead', 'constructs') */
+  immunities: z.array(z.string()).optional()
 }).transform((data) => {
   // Migrate legacy acBonus to acModifier
   if (data.acBonus !== undefined && data.acModifier === undefined) {

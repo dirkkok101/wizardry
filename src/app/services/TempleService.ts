@@ -107,12 +107,14 @@ export class TempleService {
       // HP restoration based on service type:
       // - RESURRECT: Character returns with 1 HP (barely alive)
       // - RESTORE: Character returns with full HP (per original Wizardry 1)
-      // - Cure services: No HP change
+      // - Cure services (POISON, PARALYSIS, STONED): Preserve current HP
       if (service === ServiceType.RESURRECT) {
         newHp = 1
       } else if (service === ServiceType.RESTORE) {
         newHp = character.maxHp
       }
+      // Note: Cure services (CURE_POISON, CURE_PARALYSIS, CURE_STONED)
+      // intentionally do not modify HP - they only restore status to OK
     } else {
       // Handle failures (only resurrection and restoration can fail)
       if (service === ServiceType.RESURRECT) {

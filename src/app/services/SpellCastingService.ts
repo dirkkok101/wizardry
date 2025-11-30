@@ -186,6 +186,8 @@ export class SpellCastingService {
     // Handle status effect spells
     if (spell.statusEffect) {
       // Extract status effect string (handle both string and object forms)
+      // Note: statusEffect.criticalMechanic is defined in SpellDefinition but
+      // not yet implemented. It's intended for spells with special crit behavior.
       const statusEffectStr = typeof spell.statusEffect === 'object'
         ? spell.statusEffect.type
         : spell.statusEffect

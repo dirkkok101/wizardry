@@ -307,7 +307,8 @@ export class SpellPanelComponent {
       return 'Instant death'
     }
     if (spell.statusEffect) {
-      const effectStr = typeof spell.statusEffect === 'object'
+      // Type guard handles both string literals and object form { type: string }
+      const effectStr = typeof spell.statusEffect === 'object' && spell.statusEffect !== null
         ? spell.statusEffect.type
         : spell.statusEffect
       return effectStr.toLowerCase()

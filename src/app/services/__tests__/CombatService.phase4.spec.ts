@@ -165,12 +165,13 @@ describe('CombatService - Phase 4: Status Effects', () => {
 
       CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      // Verify calculateHitChance was called with -4 penalty
+      // Verify calculateHitChance was called with -4 penalty (5th param is victimPosition)
       expect(calculateHitChanceSpy).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        -4
+        -4,
+        expect.anything()  // victimPosition
       )
 
       calculateHitChanceSpy.mockRestore()
@@ -194,12 +195,13 @@ describe('CombatService - Phase 4: Status Effects', () => {
 
       CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      // Verify calculateHitChance was called with 0 penalty
+      // Verify calculateHitChance was called with 0 penalty (5th param is victimPosition)
       expect(calculateHitChanceSpy).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        0
+        0,
+        expect.anything()  // victimPosition
       )
 
       calculateHitChanceSpy.mockRestore()

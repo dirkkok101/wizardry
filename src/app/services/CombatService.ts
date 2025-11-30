@@ -156,9 +156,10 @@ export class CombatService {
     attacker: Combatant,
     defender: Combatant,
     defenderAcModifier: number = 0,
-    attackerPenalty: number = 0
+    attackerPenalty: number = 0,
+    victimPosition: number = 0
   ): AttackResult {
-    const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty)
+    const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty, victimPosition)
     const hitRoll = RandomService.randomFloat(0, 100)
 
     if (hitRoll >= hitChance) {
@@ -559,7 +560,17 @@ export class CombatService {
     const isBlind = this.hasStatusEffect(state, command.actor.id, 'BLIND')
     const attackerPenalty = isBlind ? -4 : 0
 
-    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty)
+    // Calculate victim position for authentic Wizardry 1 hit modifier
+    // Monsters in back of their group are easier to hit (+3% per position)
+    let victimPosition = 0
+    if ('monsterId' in target) {
+      const group = state.monsterGroups.find(g => g.monsters.some(m => m.id === target.id))
+      if (group) {
+        victimPosition = group.monsters.findIndex(m => m.id === target.id)
+      }
+    }
+
+    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty, victimPosition)
     const actorName = this.getCombatantName(command.actor)
     const targetName = this.getCombatantName(target)
 
@@ -965,9 +976,16 @@ export class CombatService {
     // Action message
     const actionMessage = `${actorName} attempts to DISPEL Group ${groupId}`
 
-    // Check if group contains undead
-    // TODO: Add isUndead property to monsters
-    // For now, assume all monsters can be dispelled (simplified)
+    // KNOWN LIMITATION: Undead check not implemented
+    // In authentic Wizardry 1, DISPEL only works on undead monsters.
+    // Currently applies to ALL monsters which makes it overpowered.
+    //
+    // TODO: Implement proper undead classification:
+    // 1. Add 'undead: boolean' property to MonsterTemplate and MonsterInstance
+    // 2. Filter monsters by undead property before applying dispel
+    // 3. Return "has no effect" message for non-undead groups
+    //
+    // See: docs/research/spell-reference.md for authentic mechanics
 
     // Calculate dispel chance - Authentic Wizardry 1 formula:
     // Base: 50% + (5 × CharLevel) - (10 × MonsterLevel)

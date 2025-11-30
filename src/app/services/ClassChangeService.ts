@@ -21,7 +21,7 @@ interface ClassChangeResult {
  * - Level resets to 1, but maxLev is preserved for HP reroll
  * - XP resets to 0
  * - Known spells are retained
- * - Character ages (52 weeks = 1 year per class change)
+ * - Character ages significantly (4-6 years, randomized - see getClassChangeAgeWeeks)
  * - Spell points recalculated for new class at level 1
  *
  * Source: Thomas William Ewers' reverse-engineered Apple II source

@@ -224,12 +224,13 @@ describe('CombatService - Phase 5: Status Effect Spells', () => {
 
       CombatService.executeCommand(state, attackCmd, parryingCombatants)
 
-      // Verify -4 penalty was applied
+      // Verify -4 penalty was applied (5th param is victimPosition)
       expect(calculateHitChanceSpy).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        -4
+        -4,
+        expect.anything()  // victimPosition
       )
 
       calculateHitChanceSpy.mockRestore()
