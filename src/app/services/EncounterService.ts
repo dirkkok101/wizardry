@@ -4,6 +4,31 @@ import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { RandomService } from './RandomService'
 
+type Alignment = 'good' | 'neutral' | 'evil'
+type MonsterClass = 'fighter' | 'mage' | 'priest' | 'thief' | 'giant' | 'mythical' |
+  'dragon' | 'animal' | 'were' | 'undead' | 'demon' | 'insect' | 'enchanted'
+
+/**
+ * Friendly encounter chances by monster class (per Apple II source)
+ * Only Good-aligned parties can encounter friendly monsters
+ * See: docs/research/monster-technical-reference.md lines 789-814
+ */
+const FRIENDLY_CHANCES: Record<MonsterClass, number> = {
+  dragon: 26,
+  priest: 16,
+  fighter: 11,
+  mage: 6,
+  thief: 4,
+  giant: 1,
+  mythical: 1,
+  animal: 1,
+  were: 1,
+  undead: 1,
+  demon: 1,
+  insect: 1,
+  enchanted: 1
+}
+
 // Import encounter tables
 import level1Encounters from '@data/encounters/level-1-encounters.json'
 import level2Encounters from '@data/encounters/level-2-encounters.json'
@@ -148,5 +173,34 @@ export const EncounterService = {
 
     // Mixed attackers (both melee and ranged): 60% front
     return RandomService.roll(0.6) ? 'front' : 'back'
+  },
+
+  /**
+   * Check if an encounter should be friendly
+   * Per Apple II source: only Good parties can meet friendly monsters
+   *
+   * Friendly encounter chances by monster class:
+   * - Dragon: 26%
+   * - Priest: 16%
+   * - Fighter: 11%
+   * - Mage: 6%
+   * - Thief: 4%
+   * - All others: 1%
+   *
+   * @param partyAlignment - Party's alignment (good/neutral/evil)
+   * @param monsterClass - Monster's class type
+   * @returns true if monsters are friendly
+   */
+  checkFriendlyEncounter(
+    partyAlignment: Alignment,
+    monsterClass: MonsterClass
+  ): boolean {
+    // Only Good-aligned parties can encounter friendly monsters
+    if (partyAlignment !== 'good') {
+      return false
+    }
+
+    const friendlyChance = FRIENDLY_CHANCES[monsterClass] ?? 1
+    return RandomService.chance(friendlyChance)
   },
 }

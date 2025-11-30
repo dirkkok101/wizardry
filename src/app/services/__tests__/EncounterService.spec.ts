@@ -342,4 +342,50 @@ describe('EncounterService', () => {
       expect(frontCount).toBeLessThan(80)
     })
   })
+
+  describe('checkFriendlyEncounter', () => {
+    it('returns false for evil-aligned parties', () => {
+      const result = EncounterService.checkFriendlyEncounter('evil', 'dragon')
+
+      expect(result).toBe(false)
+    })
+
+    it('returns false for neutral-aligned parties', () => {
+      const result = EncounterService.checkFriendlyEncounter('neutral', 'dragon')
+
+      expect(result).toBe(false)
+    })
+
+    it('checks 26% chance for dragon class with good party', () => {
+      RandomService.queueNextValues([0.2])  // 20% < 26% = friendly
+
+      const result = EncounterService.checkFriendlyEncounter('good', 'dragon')
+
+      expect(result).toBe(true)
+    })
+
+    it('checks 11% chance for fighter class with good party', () => {
+      RandomService.queueNextValues([0.1])  // 10% < 11% = friendly
+
+      const result = EncounterService.checkFriendlyEncounter('good', 'fighter')
+
+      expect(result).toBe(true)
+    })
+
+    it('checks 1% chance for undead class with good party', () => {
+      RandomService.queueNextValues([0.005])  // 0.5% < 1% = friendly
+
+      const result = EncounterService.checkFriendlyEncounter('good', 'undead')
+
+      expect(result).toBe(true)
+    })
+
+    it('fails friendly check when roll exceeds chance', () => {
+      RandomService.queueNextValues([0.5])  // 50% > 26% = not friendly
+
+      const result = EncounterService.checkFriendlyEncounter('good', 'dragon')
+
+      expect(result).toBe(false)
+    })
+  })
 })
