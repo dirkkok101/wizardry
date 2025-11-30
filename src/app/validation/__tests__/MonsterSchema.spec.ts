@@ -346,6 +346,68 @@ describe('MonsterSchema', () => {
     })
   })
 
+  describe('partner field validation', () => {
+    // Helper to create valid monster base
+    const createValidMonster = (overrides: Record<string, unknown> = {}) => ({
+      id: 'test_monster',
+      numericId: 0,
+      name: 'Test Monster',
+      level: 1,
+      numberAppearing: { min: 1, max: 1 },
+      hp: { min: 1, max: 10 },
+      ac: 10,
+      damage: [],
+      xp: 100,
+      monsterClass: 'animal',
+      specialAbilities: [],
+      resistances: [],
+      regeneration: 0,
+      isBoss: false,
+      canFlee: false,
+      ...overrides
+    })
+
+    it('accepts valid partner data', () => {
+      const monster = createValidMonster({
+        partner: { monsterId: 'kobold', chance: 20 }
+      })
+
+      const result = safeValidateMonster(monster)
+
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects partner with chance > 100', () => {
+      const monster = createValidMonster({
+        partner: { monsterId: 'kobold', chance: 150 }
+      })
+
+      const result = safeValidateMonster(monster)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects partner with chance < 0', () => {
+      const monster = createValidMonster({
+        partner: { monsterId: 'kobold', chance: -10 }
+      })
+
+      const result = safeValidateMonster(monster)
+
+      expect(result.success).toBe(false)
+    })
+
+    it('allows monsters without partner field', () => {
+      const monster = createValidMonster()
+      // Explicitly remove partner if it exists
+      delete (monster as Record<string, unknown>).partner
+
+      const result = safeValidateMonster(monster)
+
+      expect(result.success).toBe(true)
+    })
+  })
+
   describe('safeValidateMonster', () => {
     it('returns success for valid data', () => {
       const validMonster = {

@@ -63,6 +63,16 @@ const LocationSchema = z.object({
   y: z.number().int().min(0).max(19)
 })
 
+/**
+ * Partner chain schema for encounter generation
+ * Per Apple II source: each monster has a % chance to spawn partner groups
+ * Chain continues until: partner check fails, max 4 groups, or loop detected
+ */
+const PartnerSchema = z.object({
+  monsterId: z.string().min(1),  // ID of partner monster to spawn
+  chance: z.number().int().min(0).max(100)  // % chance to spawn partner group
+})
+
 const SpellLevelsSchema = z.object({
   mage: z.number().int().min(1).max(7).optional(),
   priest: z.number().int().min(1).max(7).optional()
@@ -155,7 +165,11 @@ export const MonsterSchema = z.object({
 
   // Combat positioning (optional - inferred from abilities if not specified)
   attackRange: AttackRangeSchema.optional(),
-  prefersBack: z.boolean().optional()
+  prefersBack: z.boolean().optional(),
+
+  // Partner chain for encounter generation (per Apple II source)
+  // When this monster spawns, there's a % chance to also spawn partner group
+  partner: PartnerSchema.optional()
 }).strict() // Strict mode: reject unknown properties
 
 // Refinements for cross-field validation
