@@ -78,6 +78,21 @@
         </div>
 
         <p class="input-hint">Type the trap name exactly, then press ENTER</p>
+
+        @if (lastActionMessage()) {
+          <div class="action-message retry-message">
+            {{ lastActionMessage() }}
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Leave Confirmation Mode -->
+    @if (mode() === 'LEAVE_CONFIRM') {
+      <div class="leave-confirm">
+        <p class="warning-icon">?</p>
+        <p class="warning-text">Leave this chest unopened?</p>
+        <p class="warning-detail">Any treasure inside will be LOST FOREVER!</p>
       </div>
     }
 

@@ -762,23 +762,27 @@ export class ChestComponent implements OnInit, OnDestroy {
     }
 
     const result = TrapService.attemptDisarm(opener, chest, this.trapNameInput());
+    this.logger.debug('[Chest] Disarm result:', result);
+
     if (result.success) {
+      // Success - disarm trap, go to ACTION_SELECT
       this.chest.update(c => c ? { ...c, trapDisarmed: true, trapped: false } : c);
       this.lastActionMessage.set(`${opener.name} successfully disarmed the trap!`);
+      this.mode.set('ACTION_SELECT');
+      this.trapNameInput.set('');
     } else if (result.triggered) {
+      // Trap triggered
       if (result.wrongName) {
         this.lastActionMessage.set('Wrong trap name! The trap triggers!');
       } else {
         this.lastActionMessage.set('Disarm failed! The trap triggers!');
       }
       this.triggerTrap(chest, opener);
-      return;
     } else {
+      // Failed but didn't trigger - stay in TRAP_NAME_INPUT for retry
       this.lastActionMessage.set(`${opener.name} could not disarm it. Try again?`);
+      this.trapNameInput.set('');  // Clear input for retry
     }
-    this.mode.set('ACTION_SELECT');
-    this.trapNameInput.set('');
-    this.logger.debug('[Chest] Disarm result:', result);
   }
 
   /**

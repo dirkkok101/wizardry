@@ -348,6 +348,24 @@ describe('ChestComponent', () => {
 
       expect(component.chest()?.trapDisarmed).toBe(true)
     })
+
+    it('stays in TRAP_NAME_INPUT mode after failed disarm without trigger', () => {
+      // Queue: fail disarm (0.99 > any reasonable chance), pass AGI save (0.01 < AGI)
+      RandomService.queueNextValues([0.99, 0.01])
+
+      component.handleFooterAction('disarm')
+      component.trapNameInput.set('POISON NEEDLE')
+
+      // Submit trap name
+      const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' })
+      component.handleKeyboard(enterEvent)
+
+      // Should stay in TRAP_NAME_INPUT for retry
+      expect(component.mode()).toBe('TRAP_NAME_INPUT')
+      expect(component.trapNameInput()).toBe('')  // Input cleared for retry
+      expect(component.lastActionMessage()).toContain('could not disarm')
+      expect(component.chest()?.trapDisarmed).toBe(false)  // Trap still armed
+    })
   })
 
   describe('open action', () => {
@@ -444,6 +462,9 @@ describe('ChestComponent', () => {
           }]
         }
       } : c)
+
+      // Queue random to select thief (index 0) as item recipient
+      RandomService.queueNextValues([0.0])
 
       component.handleFooterAction('open')
 
