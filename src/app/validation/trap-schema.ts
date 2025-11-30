@@ -52,6 +52,25 @@ const TrapSpecialEffectSchema = z.enum([
 ])
 
 /**
+ * Resistance types for character resistance checks (data-driven)
+ * Matches ResistanceType from CharacterResistance.ts
+ */
+const ResistanceTypeSchema = z.enum([
+  // Trap-specific resistances
+  'poisonGasTrap',   // Gas Bomb trap
+  'antiMageTrap',    // Anti-Mage trap
+  'antiPriestTrap',  // Anti-Priest trap
+  // Status effect resistances
+  'poison',          // Poison status
+  'paralysis',       // Paralysis status
+  'stoning',         // Petrification
+  'silence',         // Silence status
+  // Combat resistances
+  'critical',        // Critical hits
+  'breath'           // Breath attacks
+])
+
+/**
  * Effect type categories for trap classification
  *
  * Note: This field categorizes traps for documentation and future extensibility.
@@ -93,7 +112,8 @@ export const TrapSchema = z.object({
   statusEffect: CharacterStatusSchema.optional(),
   specialEffect: TrapSpecialEffectSchema.optional(),
   hitChance: z.number().min(0).max(1).optional(),
-  description: z.string().min(1, 'Description is required')
+  description: z.string().min(1, 'Description is required'),
+  resistanceType: ResistanceTypeSchema.optional()  // Data-driven resistance type for character checks
 }).refine(
   data => {
     // class_specific traps must have targetClasses
@@ -144,5 +164,6 @@ export const TrapSchemas = {
   TrapTiers: TrapTiersSchema,
   CharacterClass: CharacterClassSchema,
   CharacterStatus: CharacterStatusSchema,
-  DamageFormula: DamageFormulaSchema
+  DamageFormula: DamageFormulaSchema,
+  ResistanceType: ResistanceTypeSchema
 }

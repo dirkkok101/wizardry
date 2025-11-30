@@ -1,4 +1,4 @@
-// src/services/ResistanceService.ts
+// src/services/MonsterResistanceService.ts
 import { MonsterInstance } from '@models/Combat'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { MonsterTemplate } from '@validation/MonsterSchema'
@@ -8,7 +8,7 @@ import { FormulaService } from './FormulaService'
 import { TypedFormula } from '@validation/spell-schema'
 
 /**
- * ResistanceService - Implements Wizardry 1 spell resistance mechanics
+ * MonsterResistanceService - Implements Wizardry 1 monster spell resistance mechanics
  *
  * Research-based formulas:
  * - (20 × Level)% - KATINO (sleep)
@@ -44,7 +44,7 @@ export interface InstantDeathCheck {
   reason?: string
 }
 
-export class ResistanceService {
+export class MonsterResistanceService {
   /**
    * Check if a monster resists a spell effect
    * Uses formulas from spell JSON and monster template data

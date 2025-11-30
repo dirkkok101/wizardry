@@ -136,7 +136,8 @@ export class TrapDataLoader {
       hitChance: validated.hitChance,
       description: validated.description,
       effectType: validated.effectType,
-      tiers: validated.tiers
+      tiers: validated.tiers,
+      resistanceType: validated.resistanceType  // Data-driven resistance type
     }
   }
 

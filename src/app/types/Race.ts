@@ -1,3 +1,5 @@
+import { CharacterResistances } from './CharacterResistance'
+
 /**
  * Character Races - Original Wizardry races
  */
@@ -41,6 +43,7 @@ export interface RaceData {
   name: string
   baseStats: RaceBaseStats
   savingThrowBonus: SavingThrowBonus
+  resistances?: CharacterResistances  // Percentage-based protections
   statTotal: number
   description: string
   strengths: string[]

@@ -9,6 +9,7 @@ import { RandomService } from '../RandomService'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { Race } from '@models/Race'
 import { TrapId } from '@models/Trap'
 import { Chest, RewardTier } from '@models/Chest'
 
@@ -445,8 +446,8 @@ describe('TrapService', () => {
       const opener = createTestCharacter({ id: 'opener' })
       const party = [opener]
 
-      // Queue dice roll for 1d6 damage
-      RandomService.queueNextValues([0.5])
+      // Queue: hit roll + resistance roll (0.99 > 25% = no resistance) + 1d6 damage
+      RandomService.queueNextValues([0.5, 0.99, 0.5])
 
       const result = TrapService.applyTrapEffects('POISON_NEEDLE', opener, party)
 
@@ -564,8 +565,9 @@ describe('TrapService', () => {
         })
         const party = [opener]
 
-        // STUNNER applies PARALYZED - queue hit roll
-        RandomService.queueNextValues([0.5])
+        // STUNNER applies PARALYZED - queue hit roll + resistance roll
+        // 0.5 < 1.0 = hit, 0.99 > 0.25 (25% resist) = fails resistance check
+        RandomService.queueNextValues([0.5, 0.99])
 
         const result = TrapService.applyTrapEffects('STUNNER', opener, party)
 
@@ -580,8 +582,8 @@ describe('TrapService', () => {
         })
         const party = [opener]
 
-        // POISON_NEEDLE applies damage + POISONED
-        RandomService.queueNextValues([0.5])  // 1d6 damage
+        // Queue: hit roll + resistance roll (0.99 > 25% = no resistance) + 1d6 damage
+        RandomService.queueNextValues([0.5, 0.99, 0.5])
 
         const result = TrapService.applyTrapEffects('POISON_NEEDLE', opener, party)
 
@@ -597,7 +599,8 @@ describe('TrapService', () => {
         })
         const party = [opener]
 
-        RandomService.queueNextValues([0.5])
+        // Queue hit roll + resistance roll (0.99 > 25% = no resistance)
+        RandomService.queueNextValues([0.5, 0.99])
 
         const result = TrapService.applyTrapEffects('STUNNER', opener, party)
 
@@ -661,6 +664,135 @@ describe('TrapService', () => {
         expect(result.damageDealt.has('char2')).toBe(false)
         expect(result.message).toContain('Fighter takes')
         expect(result.message).toContain('Mage avoids')
+      })
+    })
+
+    describe('resistance checks (authentic Wizardry 1)', () => {
+      it('should allow character to resist poison trap damage', () => {
+        // High luck Ninja has better poison resistance
+        const ninja = createTestCharacter({
+          id: 'ninja',
+          name: 'Ninja',
+          class: CharacterClass.NINJA,
+          race: Race.HUMAN,
+          level: 10,  // +10% level bonus
+          luck: 18    // +15% luck bonus
+          // Total: 15% (class) + 5% (race) + 10% (level) + 15% (luck) = 45% poison resistance
+        })
+        const party = [ninja]
+
+        // Queue: hit roll (pass) + resistance roll (0.1 < 0.45 = resist)
+        RandomService.queueNextValues([0.5, 0.1])
+
+        const result = TrapService.applyTrapEffects('POISON_NEEDLE', ninja, party)
+
+        // Character resisted - no damage or status applied
+        expect(result.damageDealt.has('ninja')).toBe(false)
+        expect(result.statusApplied.has('ninja')).toBe(false)
+        expect(result.message).toContain('resists the trap')
+      })
+
+      it('should NOT resist when resistance roll fails', () => {
+        const fighter = createTestCharacter({
+          id: 'fighter',
+          name: 'Fighter',
+          class: CharacterClass.FIGHTER,
+          race: Race.HUMAN,
+          level: 1,
+          luck: 5  // 15% + 5% + 0% + 0% = 20% poison resistance
+        })
+        const party = [fighter]
+
+        // Queue: hit roll + resistance roll (0.95 > 0.20 = no resist) + damage roll
+        RandomService.queueNextValues([0.5, 0.95, 0.5])
+
+        const result = TrapService.applyTrapEffects('POISON_NEEDLE', fighter, party)
+
+        // Character did NOT resist - damage and status applied
+        expect(result.damageDealt.has('fighter')).toBe(true)
+        expect(result.statusApplied.get('fighter')).toBe(CharacterStatus.POISONED)
+      })
+
+      it('should give Dwarf +20% poisonGasTrap resistance vs GAS_BOMB', () => {
+        const dwarf = createTestCharacter({
+          id: 'dwarf',
+          name: 'Dwarf Fighter',
+          class: CharacterClass.FIGHTER,  // No gas resistance
+          race: Race.DWARF,               // +20% poisonGasTrap
+          level: 10,                       // +10% level bonus
+          luck: 12                         // +10% luck bonus
+          // Total: 0% + 20% + 10% + 10% = 40% poisonGasTrap resistance
+        })
+        const party = [dwarf]
+
+        // Queue: hit roll + resistance roll (0.1 < 0.40 = resist)
+        RandomService.queueNextValues([0.5, 0.1])
+
+        const result = TrapService.applyTrapEffects('GAS_BOMB', dwarf, party)
+
+        // Dwarf resisted the gas bomb
+        expect(result.damageDealt.has('dwarf')).toBe(false)
+        expect(result.statusApplied.has('dwarf')).toBe(false)
+        expect(result.message).toContain('resists the trap')
+      })
+
+      it('should give Hobbit +15% antiMageTrap resistance vs MAGE_BLASTER', () => {
+        const hobbitMage = createTestCharacter({
+          id: 'mage',
+          name: 'Hobbit Mage',
+          class: CharacterClass.MAGE,     // +15% antiMageTrap
+          race: Race.HOBBIT,               // +15% antiMageTrap
+          level: 1,
+          luck: 5
+          // Total: 15% + 15% + 0% + 0% = 30% antiMageTrap resistance
+        })
+        const party = [hobbitMage]
+
+        // Queue: hit roll + resistance roll (0.1 < 0.30 = resist)
+        RandomService.queueNextValues([0.5, 0.1])
+
+        const result = TrapService.applyTrapEffects('MAGE_BLASTER', hobbitMage, party)
+
+        // Hobbit Mage resisted the mage blaster
+        expect(result.damageDealt.has('mage')).toBe(false)
+        expect(result.message).toContain('resists the trap')
+      })
+
+      it('should apply resistance independently per party member', () => {
+        const ninja = createTestCharacter({
+          id: 'ninja',
+          name: 'Ninja',
+          class: CharacterClass.NINJA,     // +15% poisonGasTrap
+          race: Race.DWARF,                 // +20% poisonGasTrap
+          level: 10,
+          luck: 12
+          // Total: 15% + 20% + 10% + 10% = 55% poisonGasTrap resistance
+        })
+        const fighter = createTestCharacter({
+          id: 'fighter',
+          name: 'Fighter',
+          class: CharacterClass.FIGHTER,   // No poisonGasTrap
+          race: Race.HUMAN,                 // No poisonGasTrap
+          level: 1,
+          luck: 5
+          // Total: 0% + 0% + 0% + 0% = 0% poisonGasTrap resistance
+        })
+        const party = [ninja, fighter]
+
+        // Queue: ninja (hit + resist), fighter (hit + no resist + damage + damage)
+        // GAS_BOMB does 2d6 damage and targets entire party
+        RandomService.queueNextValues([
+          0.5, 0.1,           // Ninja: hit roll, resist roll (resists)
+          0.5, 0.99, 0.5, 0.5 // Fighter: hit roll, resist roll (fails), 2d6 damage
+        ])
+
+        const result = TrapService.applyTrapEffects('GAS_BOMB', ninja, party)
+
+        // Ninja resisted, Fighter did not
+        expect(result.damageDealt.has('ninja')).toBe(false)
+        expect(result.damageDealt.has('fighter')).toBe(true)
+        expect(result.statusApplied.has('ninja')).toBe(false)
+        expect(result.statusApplied.get('fighter')).toBe(CharacterStatus.POISONED)
       })
     })
   })

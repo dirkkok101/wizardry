@@ -6,5 +6,6 @@
   "targetMode": "class_specific",
   "targetClasses": ["MAGE", "BISHOP"],
   "damageFormula": "4d6",
+  "resistanceType": "antiMageTrap",
   "description": "Damages all Mages and Bishops"
 }

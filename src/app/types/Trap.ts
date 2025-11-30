@@ -1,4 +1,5 @@
 import { CharacterClass } from './CharacterClass'
+import { CharacterResistances, ResistanceType } from './CharacterResistance'
 import { CharacterStatus } from './CharacterStatus'
 
 /**
@@ -75,6 +76,7 @@ export interface TrapEffect {
   description: string               // Human-readable description
   effectType: string                // Category for documentation (damage, condition, teleport, alarm)
   tiers: number[]                   // Which reward tiers this trap can appear in
+  resistanceType?: ResistanceType   // Data-driven resistance type for character resistance checks
 }
 
 /**

@@ -5,7 +5,9 @@ import { SpellEffect, Combatant, MonsterInstance } from '@models/Combat'
 import { SpellDataLoader } from './SpellDataLoader'
 import { LoadedSpell } from '@models/SpellDefinition'
 import { RandomService } from './RandomService'
-import { ResistanceService } from './ResistanceService'
+import { MonsterResistanceService } from './MonsterResistanceService'
+import { CharacterResistanceService } from './CharacterResistanceService'
+import { ResistanceType } from '@models/CharacterResistance'
 
 // Spell targeting types
 export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self'
@@ -25,6 +27,38 @@ const SPELL_SUCCESS_RATES = {
 
 // Use LoadedSpell from SpellDefinition
 export type SpellData = LoadedSpell
+
+/**
+ * Map spell damage type or status effect to character resistance type
+ * Used when monsters cast spells on party members
+ *
+ * @param spell The spell being cast
+ * @returns ResistanceType or null if no resistance applies
+ */
+function mapSpellToResistanceType(spell: LoadedSpell): ResistanceType | null {
+  // Breath/elemental damage spells - use breath resistance (half damage on save)
+  if (spell.damage?.type) {
+    const damageType = spell.damage.type.toLowerCase()
+    if (['fire', 'cold', 'lightning', 'breath', 'dragon'].includes(damageType)) {
+      return 'breath'
+    }
+  }
+
+  // Status effect spells
+  if (spell.statusEffect) {
+    const effect = typeof spell.statusEffect === 'object'
+      ? spell.statusEffect.type
+      : spell.statusEffect
+
+    const effectUpper = effect.toUpperCase()
+    if (effectUpper === 'POISONED' || effectUpper === 'POISON') return 'poison'
+    if (effectUpper === 'PARALYZED' || effectUpper === 'PARALYSIS') return 'paralysis'
+    if (effectUpper === 'STONED' || effectUpper === 'PETRIFIED') return 'stoning'
+    if (effectUpper === 'SILENCED' || effectUpper === 'SILENCE') return 'silence'
+  }
+
+  return null
+}
 
 export class SpellCastingService {
   static canCastSpell(caster: Character, spellId: string): {
@@ -145,9 +179,10 @@ export class SpellCastingService {
         }
       }
 
-      // Apply resistance checks for each target (monsters only)
+      // Apply resistance checks for each target
       const damage: number[] = []
       const resistedTargets: string[] = []
+      const resistanceType = mapSpellToResistanceType(spell)
 
       for (const target of validTargets) {
         let baseDamage = this.rollDice(spell.damage!.dice)
@@ -155,7 +190,7 @@ export class SpellCastingService {
         // Check resistance for monsters
         if ('monsterId' in target) {
           const monster = target as MonsterInstance
-          const resistResult = ResistanceService.checkResistance(monster, spell)
+          const resistResult = MonsterResistanceService.checkResistance(monster, spell)
 
           if (resistResult.resisted) {
             // Fully resisted - no damage
@@ -166,6 +201,21 @@ export class SpellCastingService {
 
           // Apply damage multiplier (0.5 for elemental resistance)
           baseDamage = Math.floor(baseDamage * resistResult.damageMultiplier)
+        }
+
+        // Check resistance for characters (breath attacks = half damage on success)
+        if ('class' in target && resistanceType) {
+          const character = target as Character
+          const resistResult = CharacterResistanceService.checkResistance(character, resistanceType)
+
+          // Breath attacks: half damage on success (never fully resisted)
+          if (resistanceType === 'breath') {
+            baseDamage = Math.floor(baseDamage * resistResult.damageMultiplier)
+            if (resistResult.damageMultiplier < 1) {
+              resistedTargets.push(`${character.name} (half)`)
+            }
+          }
+          // Other damage types might be fully resisted in future
         }
 
         damage.push(baseDamage)
@@ -192,18 +242,30 @@ export class SpellCastingService {
         ? spell.statusEffect.type
         : spell.statusEffect
 
-      // Check resistance for each target (monsters only)
+      // Check resistance for each target
       const statusEffects: { target: string; effect: string }[] = []
       const resistedTargets: string[] = []
+      const resistanceType = mapSpellToResistanceType(spell)
 
       for (const target of targets) {
         // Check resistance for monsters
         if ('monsterId' in target) {
           const monster = target as MonsterInstance
-          const resistResult = ResistanceService.checkStatusEffectResistance(monster, spell)
+          const resistResult = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
           if (resistResult.resisted) {
             resistedTargets.push(monster.name)
+            continue
+          }
+        }
+
+        // Check resistance for characters (status effects can be fully resisted)
+        if ('class' in target && resistanceType) {
+          const character = target as Character
+          const resistResult = CharacterResistanceService.checkResistance(character, resistanceType)
+
+          if (resistResult.resisted) {
+            resistedTargets.push(character.name)
             continue
           }
         }
@@ -390,7 +452,7 @@ export class SpellCastingService {
         // Check immunity/resistance for monsters
         if ('monsterId' in target) {
           const monster = target as MonsterInstance
-          const deathCheck = ResistanceService.checkInstantDeathResistance(monster, spell)
+          const deathCheck = MonsterResistanceService.checkInstantDeathResistance(monster, spell)
 
           if (deathCheck.immune) {
             immuneTargets.push(monster.name)

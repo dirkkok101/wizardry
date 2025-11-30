@@ -6,5 +6,6 @@
   "targetMode": "party",
   "damageFormula": "2d6",
   "statusEffect": "POISONED",
+  "resistanceType": "poisonGasTrap",
   "description": "Poison gas affects entire party"
 }

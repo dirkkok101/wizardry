@@ -6,5 +6,6 @@
   "targetMode": "class_specific",
   "targetClasses": ["PRIEST", "BISHOP", "LORD"],
   "damageFormula": "4d6",
+  "resistanceType": "antiPriestTrap",
   "description": "Damages all Priests, Bishops, and Lords"
 }

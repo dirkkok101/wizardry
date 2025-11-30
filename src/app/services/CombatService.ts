@@ -7,7 +7,8 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
 import { EncounterService } from './EncounterService'
 import { RandomService } from './RandomService'
-import { ResistanceService } from './ResistanceService'
+import { MonsterResistanceService } from './MonsterResistanceService'
+import { CharacterResistanceService } from './CharacterResistanceService'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -641,10 +642,36 @@ export class CombatService {
       })
     }
 
+    /**
+     * Authentic Wizardry 1 Critical Hit Resistance
+     * Characters can resist critical hits based on class, race, level, and luck.
+     * If resisted, the attack still hits but deals normal damage (not critical).
+     *
+     * Fighters, Ninjas have inherent critical resistance (15%).
+     * Higher level and luck provide additional resistance.
+     */
+    let criticalResisted = false
+    if (attackResult.critical && 'monsterId' in command.actor && 'class' in target) {
+      const character = target as Character
+      const resistResult = CharacterResistanceService.checkResistance(character, 'critical')
+
+      if (resistResult.resisted) {
+        criticalResisted = true
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Combat] ${character.name} resists critical hit!`, {
+            resistChance: resistResult.resistChance,
+            breakdown: resistResult.breakdown
+          })
+        }
+      }
+    }
+
     // Build result message
     let resultText: string
-    if (attackResult.critical) {
+    if (attackResult.critical && !criticalResisted) {
       resultText = `${actorName} scores a CRITICAL HIT for ${finalDamage} damage!`
+    } else if (attackResult.critical && criticalResisted) {
+      resultText = `${actorName} scores a critical hit, but ${targetName} resists! ${finalDamage} damage!`
     } else {
       resultText = `${actorName} hits for ${finalDamage} damage!`
     }
@@ -2440,7 +2467,7 @@ export class CombatService {
         const statusType = monster.status === 'ASLEEP' ? 'ASLEEP' : 'PARALYZED'
 
         // Roll for recovery using ResistanceService
-        if (ResistanceService.rollRecovery(monster.level, statusType)) {
+        if (MonsterResistanceService.rollRecovery(monster.level, statusType)) {
           messages.push(`${monster.name} recovers from ${statusType.toLowerCase()}!`)
           return { ...monster, status: 'ALIVE' as CombatantStatus }
         }
@@ -2458,7 +2485,7 @@ export class CombatService {
 
         // Check SILENCED recovery
         if (monsterEffects.has('SILENCED')) {
-          if (ResistanceService.rollRecovery(monster.level, 'SILENCED')) {
+          if (MonsterResistanceService.rollRecovery(monster.level, 'SILENCED')) {
             const updatedEffects = new Set(monsterEffects)
             updatedEffects.delete('SILENCED')
             if (updatedEffects.size === 0) {
@@ -2472,7 +2499,7 @@ export class CombatService {
 
         // Check BLIND (treated as FEAR for recovery)
         if (monsterEffects.has('BLIND')) {
-          if (ResistanceService.rollRecovery(monster.level, 'FEAR')) {
+          if (MonsterResistanceService.rollRecovery(monster.level, 'FEAR')) {
             const updatedEffects = new Set(monsterEffects)
             updatedEffects.delete('BLIND')
             if (updatedEffects.size === 0) {

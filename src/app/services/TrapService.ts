@@ -25,6 +25,8 @@ import {
 } from '@models/Trap'
 import { RandomService } from './RandomService'
 import { TrapDataLoader } from './TrapDataLoader'
+import { CharacterResistanceService } from './CharacterResistanceService'
+import { ResistanceType } from '@models/CharacterResistance'
 
 /**
  * Inspection chance multiplier by class
@@ -54,6 +56,39 @@ const MAX_SUCCESS_CHANCE = 95
  * Critical failure chance during inspection (1-2%)
  */
 const INSPECT_CRITICAL_FAILURE_CHANCE = 2
+
+/**
+ * Map trap effect to resistance type (DATA-DRIVEN)
+ *
+ * Authentic Wizardry 1 resistance mapping, now loaded from trap JSON files:
+ * - gas_bomb → poisonGasTrap (from data/traps/gas_bomb.json)
+ * - mage_blaster → antiMageTrap (from data/traps/mage_blaster.json)
+ * - priest_blaster → antiPriestTrap (from data/traps/priest_blaster.json)
+ *
+ * Falls back to status effect-based resistance for traps without explicit resistanceType:
+ * - poison_needle → poison (via statusEffect field)
+ * - stunner → paralysis (via statusEffect field)
+ *
+ * @param trapEffect The trap effect (containing optional resistanceType)
+ * @param statusEffect Optional status effect being applied
+ * @returns Resistance type to check, or null if no resistance applies
+ */
+function mapTrapToResistanceType(
+  trapEffect: TrapEffect,
+  statusEffect?: CharacterStatus
+): ResistanceType | null {
+  // Use resistance type from trap data if specified (data-driven approach)
+  if (trapEffect.resistanceType) {
+    return trapEffect.resistanceType
+  }
+
+  // Fall back to status effect-based resistances for traps without explicit resistanceType
+  if (statusEffect === CharacterStatus.POISONED) return 'poison'
+  if (statusEffect === CharacterStatus.PARALYZED) return 'paralysis'
+  if (statusEffect === CharacterStatus.STONED) return 'stoning'
+
+  return null
+}
 
 /**
  * Get trap effect from TrapDataLoader
@@ -356,10 +391,20 @@ function applyTrapEffects(
   // Apply damage if applicable (scaled by maze level)
   if (effect.damageFormula && targets.length > 0) {
     const hitChance = effect.hitChance ?? 1.0  // Default to always hit
+    const resistanceType = mapTrapToResistanceType(effect, effect.statusEffect)
 
     for (const target of targets) {
       // Roll for hit (0-1 random vs hitChance threshold)
       if (RandomService.roll(hitChance)) {
+        // Check resistance before applying damage (authentic Wizardry 1)
+        if (resistanceType) {
+          const resistResult = CharacterResistanceService.checkResistance(target, resistanceType)
+          if (resistResult.resisted) {
+            messages.push(`${target.name} resists the trap!`)
+            continue  // Skip damage for this target
+          }
+        }
+
         const baseDamage = RandomService.rollDiceNotation(effect.damageFormula)
         const scaledDamage = calculateScaledDamage(baseDamage, mazeLevel)
         damageDealt.set(target.id, scaledDamage)
@@ -373,6 +418,7 @@ function applyTrapEffects(
   // Apply status effect if applicable (with escalation check)
   if (effect.statusEffect && targets.length > 0) {
     const hitChance = effect.hitChance ?? 1.0
+    const resistanceType = mapTrapToResistanceType(effect, effect.statusEffect)
 
     for (const target of targets) {
       // Only apply status if not already rolled for damage (avoid double roll)
@@ -382,6 +428,16 @@ function applyTrapEffects(
         : RandomService.roll(hitChance)  // Roll now for status-only effects
 
       if (shouldApply) {
+        // Check resistance for status-only effects (if not already checked for damage)
+        // For traps with both damage and status, resistance was checked in damage phase
+        if (!effect.damageFormula && resistanceType) {
+          const resistResult = CharacterResistanceService.checkResistance(target, resistanceType)
+          if (resistResult.resisted) {
+            messages.push(`${target.name} resists the ${effect.statusEffect.toLowerCase()}!`)
+            continue  // Skip status for this target
+          }
+        }
+
         // Authentic Wizardry 1: Status escalation
         const finalStatus = escalateStatus(target.status, effect.statusEffect)
         statusApplied.set(target.id, finalStatus)

@@ -1,5 +1,5 @@
-// src/services/__tests__/ResistanceService.spec.ts
-import { ResistanceService } from '../ResistanceService'
+// src/services/__tests__/MonsterResistanceService.spec.ts
+import { MonsterResistanceService } from '../MonsterResistanceService'
 import { MonsterInstance } from '@models/Combat'
 import { LoadedSpell } from '@models/SpellDefinition'
 import { RandomService } from '../RandomService'
@@ -35,7 +35,7 @@ const createTestSpell = (overrides: Partial<LoadedSpell> = {}): LoadedSpell => (
   ...overrides
 } as LoadedSpell)
 
-describe('ResistanceService', () => {
+describe('MonsterResistanceService', () => {
   beforeEach(() => {
     RandomService.resetSeed()
   })
@@ -51,7 +51,7 @@ describe('ResistanceService', () => {
       }
 
       RandomService.queueNextValues([0.7]) // 70% > 60% threshold = not resisted
-      const result = ResistanceService.checkTypedResistance(3, typed)
+      const result = MonsterResistanceService.checkTypedResistance(3, typed)
 
       expect(result.resistChance).toBe(60)
       expect(result.resisted).toBe(false)
@@ -64,7 +64,7 @@ describe('ResistanceService', () => {
       }
 
       RandomService.queueNextValues([0.9]) // 90% < 95% = resisted
-      const result = ResistanceService.checkTypedResistance(1, typed)
+      const result = MonsterResistanceService.checkTypedResistance(1, typed)
 
       expect(result.resistChance).toBe(95)
       expect(result.resisted).toBe(true)
@@ -72,7 +72,7 @@ describe('ResistanceService', () => {
 
     it('returns 0% for none type', () => {
       const typed = { type: 'none' as const }
-      const result = ResistanceService.checkTypedResistance(10, typed)
+      const result = MonsterResistanceService.checkTypedResistance(10, typed)
 
       expect(result.resistChance).toBe(0)
       expect(result.resisted).toBe(false)
@@ -98,7 +98,7 @@ describe('ResistanceService', () => {
 
       // Queue roll to fail resistance (0.7 > 0.6 threshold for 60% resist)
       RandomService.queueNextValues([0.7])
-      const result = ResistanceService.checkStatusEffectResistance(monster, spell)
+      const result = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
       expect(result.resistChance).toBe(60)
       expect(result.resisted).toBe(false)
@@ -122,7 +122,7 @@ describe('ResistanceService', () => {
 
       // Queue roll to succeed resistance (0.5 < 0.6 threshold for 60% resist)
       RandomService.queueNextValues([0.5])
-      const result = ResistanceService.checkStatusEffectResistance(monster, spell)
+      const result = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
       expect(result.resistChance).toBe(60)
       expect(result.resisted).toBe(true)
@@ -146,7 +146,7 @@ describe('ResistanceService', () => {
 
       // Queue roll for 50% chance
       RandomService.queueNextValues([0.49])
-      const result = ResistanceService.checkStatusEffectResistance(monster, spell)
+      const result = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
       expect(result.resistChance).toBe(50)
       expect(result.resisted).toBe(true)
@@ -156,7 +156,7 @@ describe('ResistanceService', () => {
       const monster = createTestMonster({ level: 2 })
       const spell = createTestSpell({ statusEffect: 'ASLEEP' })
 
-      const result = ResistanceService.checkStatusEffectResistance(monster, spell)
+      const result = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
       expect(result.resistChance).toBe(0)
       expect(result.resisted).toBe(false)
@@ -180,7 +180,7 @@ describe('ResistanceService', () => {
 
       // 20 × 10 = 200%, but cap is 100%
       RandomService.queueNextValues([0.99])
-      const result = ResistanceService.checkStatusEffectResistance(monster, spell)
+      const result = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
       expect(result.resistChance).toBe(100) // Capped at 100
       expect(result.resisted).toBe(true)
@@ -197,10 +197,10 @@ describe('ResistanceService', () => {
         cap: 50
       }
 
-      expect(ResistanceService.getRecoveryChanceFromTyped(1, typed)).toBe(20)
-      expect(ResistanceService.getRecoveryChanceFromTyped(2, typed)).toBe(40)
-      expect(ResistanceService.getRecoveryChanceFromTyped(3, typed)).toBe(50) // Capped
-      expect(ResistanceService.getRecoveryChanceFromTyped(5, typed)).toBe(50) // Capped
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(1, typed)).toBe(20)
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(2, typed)).toBe(40)
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(3, typed)).toBe(50) // Capped
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(5, typed)).toBe(50) // Capped
     })
 
     it('calculates paralysis recovery: (7 × Level)%, capped at 50%', () => {
@@ -212,9 +212,9 @@ describe('ResistanceService', () => {
         cap: 50
       }
 
-      expect(ResistanceService.getRecoveryChanceFromTyped(1, typed)).toBe(7)
-      expect(ResistanceService.getRecoveryChanceFromTyped(5, typed)).toBe(35)
-      expect(ResistanceService.getRecoveryChanceFromTyped(8, typed)).toBe(50) // 56 capped to 50
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(1, typed)).toBe(7)
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(5, typed)).toBe(35)
+      expect(MonsterResistanceService.getRecoveryChanceFromTyped(8, typed)).toBe(50) // 56 capped to 50
     })
   })
 
@@ -229,7 +229,7 @@ describe('ResistanceService', () => {
       }
 
       RandomService.queueNextValues([0.1]) // 10% < 20% (level 1)
-      expect(ResistanceService.rollRecoveryFromTyped(1, typed)).toBe(true)
+      expect(MonsterResistanceService.rollRecoveryFromTyped(1, typed)).toBe(true)
     })
 
     it('returns false when roll fails', () => {
@@ -242,7 +242,7 @@ describe('ResistanceService', () => {
       }
 
       RandomService.queueNextValues([0.9]) // 90% > 20% (level 1)
-      expect(ResistanceService.rollRecoveryFromTyped(1, typed)).toBe(false)
+      expect(MonsterResistanceService.rollRecoveryFromTyped(1, typed)).toBe(false)
     })
   })
 
@@ -260,7 +260,7 @@ describe('ResistanceService', () => {
 
       it('kills eligible monsters (level ≤ 7) without saving throw', () => {
         const monster = createTestMonster({ level: 5 })
-        const result = ResistanceService.checkInstantDeathResistance(monster, makanito)
+        const result = MonsterResistanceService.checkInstantDeathResistance(monster, makanito)
 
         expect(result.immune).toBe(false)
         expect(result.resisted).toBe(false)
@@ -269,7 +269,7 @@ describe('ResistanceService', () => {
 
       it('immunity for undead', () => {
         const undead = createTestMonster({ level: 3, undead: true })
-        const result = ResistanceService.checkInstantDeathResistance(undead, makanito)
+        const result = MonsterResistanceService.checkInstantDeathResistance(undead, makanito)
 
         expect(result.immune).toBe(true)
         expect(result.reason).toBe('Undead are immune')
@@ -277,7 +277,7 @@ describe('ResistanceService', () => {
 
       it('immunity for level 8+ monsters', () => {
         const highLevel = createTestMonster({ level: 8 })
-        const result = ResistanceService.checkInstantDeathResistance(highLevel, makanito)
+        const result = MonsterResistanceService.checkInstantDeathResistance(highLevel, makanito)
 
         expect(result.immune).toBe(true)
         expect(result.reason).toContain('exceeds 7HD threshold')
@@ -303,7 +303,7 @@ describe('ResistanceService', () => {
 
       it('undead are immune (do not breathe)', () => {
         const undead = createTestMonster({ undead: true })
-        const result = ResistanceService.checkInstantDeathResistance(undead, lakanito)
+        const result = MonsterResistanceService.checkInstantDeathResistance(undead, lakanito)
 
         expect(result.immune).toBe(true)
         expect(result.reason).toBe('Undead do not breathe')
@@ -312,7 +312,7 @@ describe('ResistanceService', () => {
       it('applies (6 × Level)% resistance', () => {
         const monster = createTestMonster({ level: 10 })
         RandomService.queueNextValues([0.5]) // 50% < 60% resist chance
-        const result = ResistanceService.checkInstantDeathResistance(monster, lakanito)
+        const result = MonsterResistanceService.checkInstantDeathResistance(monster, lakanito)
 
         expect(result.immune).toBe(false)
         expect(result.resistChance).toBe(60)
@@ -322,7 +322,7 @@ describe('ResistanceService', () => {
       it('low level monsters have low resistance', () => {
         const monster = createTestMonster({ level: 1 })
         RandomService.queueNextValues([0.1]) // 10% > 6% resist chance
-        const result = ResistanceService.checkInstantDeathResistance(monster, lakanito)
+        const result = MonsterResistanceService.checkInstantDeathResistance(monster, lakanito)
 
         expect(result.resistChance).toBe(6)
         expect(result.resisted).toBe(false)
@@ -348,7 +348,7 @@ describe('ResistanceService', () => {
       it('applies (10 × Level)% resistance', () => {
         const monster = createTestMonster({ level: 5 })
         RandomService.queueNextValues([0.4]) // 40% < 50% resist chance
-        const result = ResistanceService.checkInstantDeathResistance(monster, badi)
+        const result = MonsterResistanceService.checkInstantDeathResistance(monster, badi)
 
         expect(result.immune).toBe(false)
         expect(result.resistChance).toBe(50)
@@ -358,7 +358,7 @@ describe('ResistanceService', () => {
       it('level 10+ monsters are effectively immune (100% resist)', () => {
         const monster = createTestMonster({ level: 10 })
         RandomService.queueNextValues([0.99]) // Will always resist at 100%
-        const result = ResistanceService.checkInstantDeathResistance(monster, badi)
+        const result = MonsterResistanceService.checkInstantDeathResistance(monster, badi)
 
         expect(result.resistChance).toBe(100)
         expect(result.resisted).toBe(true)
@@ -372,7 +372,7 @@ describe('ResistanceService', () => {
         resistances: [{ type: 'fire' as const, value: 50 }]
       }
 
-      const result = ResistanceService.checkElementalResistance(template as any, 'fire')
+      const result = MonsterResistanceService.checkElementalResistance(template as any, 'fire')
 
       expect(result.resisted).toBe(false) // Not fully resisted
       expect(result.damageMultiplier).toBe(0.5) // Half damage
@@ -384,7 +384,7 @@ describe('ResistanceService', () => {
         resistances: [{ type: 'cold' as const, value: 100 }]
       }
 
-      const result = ResistanceService.checkElementalResistance(template as any, 'cold')
+      const result = MonsterResistanceService.checkElementalResistance(template as any, 'cold')
 
       expect(result.damageMultiplier).toBe(0.5)
       expect(result.reason).toBe('cold resistant')
@@ -395,7 +395,7 @@ describe('ResistanceService', () => {
         resistances: [{ type: 'fire' as const, value: 100 }]
       }
 
-      const result = ResistanceService.checkElementalResistance(template as any, 'physical')
+      const result = MonsterResistanceService.checkElementalResistance(template as any, 'physical')
 
       expect(result.damageMultiplier).toBe(1.0)
     })
@@ -405,7 +405,7 @@ describe('ResistanceService', () => {
         resistances: [{ type: 'magic' as const, value: 50 }]
       }
 
-      const result = ResistanceService.checkElementalResistance(template as any, 'fire')
+      const result = MonsterResistanceService.checkElementalResistance(template as any, 'fire')
 
       expect(result.damageMultiplier).toBe(1.0)
     })
@@ -418,7 +418,7 @@ describe('ResistanceService', () => {
       }
 
       RandomService.queueNextValues([0.2]) // 20% < 30% = resisted
-      const result = ResistanceService.checkMagicResistance(template as any)
+      const result = MonsterResistanceService.checkMagicResistance(template as any)
 
       expect(result.resisted).toBe(true)
       expect(result.resistChance).toBe(30)
@@ -431,7 +431,7 @@ describe('ResistanceService', () => {
       }
 
       RandomService.queueNextValues([0.5]) // 50% > 30% = not resisted
-      const result = ResistanceService.checkMagicResistance(template as any)
+      const result = MonsterResistanceService.checkMagicResistance(template as any)
 
       expect(result.resisted).toBe(false)
       expect(result.damageMultiplier).toBe(1.0)
@@ -442,7 +442,7 @@ describe('ResistanceService', () => {
         resistances: [{ type: 'fire' as const, value: 50 }]
       }
 
-      const result = ResistanceService.checkMagicResistance(template as any)
+      const result = MonsterResistanceService.checkMagicResistance(template as any)
 
       expect(result.resisted).toBe(false)
       expect(result.resistChance).toBe(0)
