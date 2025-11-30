@@ -364,17 +364,50 @@
 - `true`: **Ninja only**
 - `false`: Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord
 
+**savingThrowBonuses**: `object` - Class saving throw bonuses (negative = better)
+- Keys: "death", "petrify", "wand", "breath", "spell"
+- Values: Negative numbers improve saves
+
+| Class | Death | Petrify | Wand | Breath | Spell |
+|-------|-------|---------|------|--------|-------|
+| Fighter | -3 | — | — | — | — |
+| Mage | — | — | — | — | -3 |
+| Priest | — | -3 | — | — | — |
+| Thief | — | — | — | -3 | — |
+| Bishop | — | -2 | -2 | — | -2 |
+| Samurai | -2 | — | — | — | -2 |
+| Lord | -2 | -2 | — | — | — |
+| Ninja | -3 | -2 | -4 | -3 | -2 |
+
+**resistances**: `object` - Class resistance bonuses (percentage)
+- Keys: "poison", "paralysis", "critical", "stoning", "breath", "poisonGasTrap", "antiMageTrap", "antiPriestTrap", "silence"
+- Values: Percentage bonus to resistance
+- Each resistance type is stored as a separate field for independent evaluation
+
+| Class | poison | paralysis | critical | stoning | breath | poisonGasTrap | antiMageTrap | antiPriestTrap | silence |
+|-------|--------|-----------|----------|---------|--------|---------------|--------------|----------------|---------|
+| Fighter | 15 | 15 | 15 | — | — | — | — | — | — |
+| Mage | — | — | — | — | — | — | 15 | 15 | 15 |
+| Priest | — | — | — | 15 | — | — | — | — | — |
+| Thief | — | — | — | — | — | 15 | — | — | — |
+| Bishop | — | — | — | 10 | 10 | — | 10 | 10 | 10 |
+| Samurai | 10 | 10 | 10 | — | — | — | 10 | 10 | 10 |
+| Lord | 10 | 10 | 10 | 10 | — | — | — | — | — |
+| Ninja | 15 | 15 | 15 | 10 | 20 | 15 | 10 | 10 | 10 |
+
 ## Class Changing Mechanics
 
 **Class Change System**: Characters can change class after creation
 - **Location**: Training Grounds
-- **Cost**: Time (character ages during retraining)
+- **Cost**: Time (character ages 5-7 years)
 - **Process**:
   1. Character resets to level 1 in new class
-  2. All stats reset to racial minimum values
-  3. HP reset based on new class hit dice
-  4. Spells preserved from previous class
-  5. Equipment restrictions apply immediately
+  2. XP resets to 0
+  3. All stats reset to **racial minimum values** (not kept!)
+  4. HP is **preserved** via MaxLev tracking (never decreases)
+  5. All learned spells are **permanently retained**
+  6. Equipment unequipped but remains in inventory
+  7. New class restrictions apply immediately
 
 **Strategic Use**:
 - Create hybrid spell lists (e.g., Mage → Bishop → Fighter for combat mage)
@@ -390,7 +423,7 @@
 - Must meet new class stat requirements (with racial minimums)
 - Must have compatible alignment
 - Cannot change if in dungeon
-- Character ages 1-3 weeks per class change
+- Character ages **5-7 years** per class change (1d3+3 years + 44 weeks)
 
 ## Special Ability Reference
 
@@ -492,8 +525,9 @@
 ## Validation
 
 All class data validated against:
-- Wizardry Wiki (wizardry.fandom.com)
-- Strategy Wiki - Character Classes
+- Thomas William Ewers' reverse-engineered Apple II Pascal source code
+- Snafaru's Wizardry Game Code Calculations (zimlab.com)
+- Data Driven Gamer blog (datadrivengamer.blogspot.com)
 - Original Wizardry 1 manual
 
 **Total Classes**: 8 (4 basic + 4 elite)

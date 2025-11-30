@@ -33,6 +33,11 @@
   "savingThrowBonuses": {
     "spell": -3
   },
+  "resistances": {
+    "antiMageTrap": 15,
+    "antiPriestTrap": 15,
+    "silence": 15
+  },
   "specialAbilities": ["Can cast mage spells"],
   "canIdentifyItems": false,
   "canDispelUndead": false,

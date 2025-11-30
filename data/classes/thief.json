@@ -22,6 +22,10 @@
   "savingThrowBonuses": {
     "breath": -3
   },
+  "resistances": {
+    "poisonGasTrap": 15,
+    "notes": "+15% resistance vs Poison Gas Traps"
+  },
   "trapInspection": {
     "formula": "min(agility * 6, 95)",
     "notes": "Percentage chance to identify trap type"

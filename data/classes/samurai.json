@@ -40,6 +40,14 @@
     "death": -2,
     "spell": -2
   },
+  "resistances": {
+    "poison": 10,
+    "paralysis": 10,
+    "critical": 10,
+    "antiMageTrap": 10,
+    "antiPriestTrap": 10,
+    "silence": 10
+  },
   "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (all 7 levels, starts at character level 4)"],
   "canIdentifyItems": false,
   "canDispelUndead": false,

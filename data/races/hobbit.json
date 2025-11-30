@@ -14,8 +14,9 @@
     "spell": -3
   },
   "resistances": {
-    "antiMageAntiPriestSilence": 15,
-    "notes": "+15% resistance vs Anti-Mage/Anti-Priest Traps and Silence"
+    "antiMageTrap": 15,
+    "antiPriestTrap": 15,
+    "silence": 15
   },
   "description": "Hobbits are incredibly lucky and nimble, making them excellent thieves. They are the weakest physically.",
   "strengths": ["Exceptional luck", "High agility", "Excellent spell resistance"],

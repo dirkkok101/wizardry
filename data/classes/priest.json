@@ -33,6 +33,10 @@
   "savingThrowBonuses": {
     "petrify": -3
   },
+  "resistances": {
+    "stoning": 15,
+    "notes": "+15% resistance vs Stoning effects"
+  },
   "specialAbilities": ["Can dispel undead"],
   "canIdentifyItems": false,
   "canDispelUndead": true,

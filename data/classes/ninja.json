@@ -32,6 +32,17 @@
     "breath": -3,
     "spell": -2
   },
+  "resistances": {
+    "poison": 15,
+    "paralysis": 15,
+    "critical": 15,
+    "stoning": 10,
+    "breath": 20,
+    "poisonGasTrap": 15,
+    "antiMageTrap": 10,
+    "antiPriestTrap": 10,
+    "silence": 10
+  },
   "nakedACFormula": "10 - (level / 3) - 2",
   "criticalHitFormula": {
     "chance": "min(level * 2, 50)",

@@ -23,6 +23,11 @@
   "savingThrowBonuses": {
     "death": -3
   },
+  "resistances": {
+    "poison": 15,
+    "paralysis": 15,
+    "critical": 15
+  },
   "specialAbilities": ["Can use all weapons and armor"],
   "canIdentifyItems": false,
   "canDispelUndead": false,

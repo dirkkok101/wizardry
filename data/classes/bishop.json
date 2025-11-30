@@ -12,6 +12,12 @@
     "wand": -2,
     "spell": -2
   },
+  "resistances": {
+    "stoning": 10,
+    "breath": 10,
+    "antiMageAntiPriestSilence": 10,
+    "notes": "+10% resistance vs Stoning, Breath attacks, Anti-Mage/Anti-Priest Traps and Silence"
+  },
   "equipmentRestrictions": {
     "weapons": ["mace", "flail", "staff"],
     "armor": ["cloth", "leather", "chain", "plate"],

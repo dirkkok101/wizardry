@@ -40,6 +40,12 @@
     "death": -2,
     "petrify": -2
   },
+  "resistances": {
+    "poison": 10,
+    "paralysis": 10,
+    "critical": 10,
+    "stoning": 10
+  },
   "dispelUndeadPenalty": -40,
   "dispelUndeadMinLevel": 9,
   "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (all 7 levels, starts at character level 4)", "Can dispel undead"],

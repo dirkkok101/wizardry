@@ -48,7 +48,7 @@
       "weaknesses": ["Low VIT (6) = fragile", "Low LUC (6)"],
       "bestClasses": ["mage", "priest", "bishop"],
       "savingThrowBonuses": {
-        "wand": -1
+        "wand": -2
       }
     },
     {
@@ -67,7 +67,9 @@
       "strengths": ["Best starting VIT (10)", "High STR (10)", "Excellent PIE (10)"],
       "weaknesses": ["Very low AGI (5) = poor initiative/AC"],
       "bestClasses": ["fighter", "priest", "lord"],
-      "savingThrowBonuses": {}
+      "savingThrowBonuses": {
+        "breath": -4
+      }
     },
     {
       "id": "gnome",
@@ -146,15 +148,25 @@
 - Uses class IDs: "fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"
 
 **savingThrowBonuses**: `object` - Saving throw bonuses by type
-- Empty object `{}` if no bonuses
 - Keys: "death", "petrify", "wand", "breath", "spell"
 - Values: Negative numbers improve saves (lower is better)
 - Race bonuses:
   - Human: `{ "death": -1 }`
-  - Elf: `{ "wand": -1 }`
-  - Dwarf: `{}` (no bonuses)
+  - Elf: `{ "wand": -2 }` (unused in original game code)
+  - Dwarf: `{ "breath": -4 }`
   - Gnome: `{ "petrify": -2 }`
   - Hobbit: `{ "spell": -3 }`
+
+**resistances**: `object` - Racial resistance bonuses (percentage)
+- Keys: "poison", "paralysis", "critical", "breath", "poisonGasTrap", "stoning", "antiMageTrap", "antiPriestTrap", "silence"
+- Values: Percentage bonus to resistance
+- Each resistance type is stored as a separate field for independent evaluation
+- Race resistances:
+  - Human: `{ "poison": 5, "paralysis": 5, "critical": 5 }`
+  - Elf: `{ "breath": 10 }` (halves damage)
+  - Dwarf: `{ "poisonGasTrap": 20 }`
+  - Gnome: `{ "stoning": 10 }`
+  - Hobbit: `{ "antiMageTrap": 15, "antiPriestTrap": 15, "silence": 15 }`
 
 ## Bonus Point Requirements
 
@@ -198,7 +210,8 @@ Save% = (CharacterLevel/5 + Luck/6 - ClassBonus - RaceBonus) * 5%
 
 Race bonuses reduce the percentage (improve save chance):
 - Human: -1 vs death effects
-- Elf: -1 vs wand effects
+- Elf: -2 vs wand effects (unused in original game code)
+- Dwarf: -4 vs breath attacks
 - Gnome: -2 vs petrification
 - Hobbit: -3 vs spells
 
@@ -249,8 +262,9 @@ Race bonuses reduce the percentage (improve save chance):
 ## Validation
 
 All racial data validated against:
+- Thomas William Ewers' reverse-engineered Apple II Pascal source code
+- Snafaru's Wizardry Game Code Calculations (zimlab.com)
 - Data Driven Gamer blog (datadrivengamer.blogspot.com)
-- Strategy Wiki - Trebor's Castle
 - Original Wizardry 1 manual
 
 **Total Races**: 5
