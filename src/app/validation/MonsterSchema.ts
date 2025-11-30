@@ -32,14 +32,28 @@ const HpRangeSchema = z.object({
 )
 
 const ResistanceSchema = z.object({
-  type: z.enum(['fire', 'cold', 'magic', 'poison']),
+  type: z.enum([
+    'fire',    // Half damage from fire spells
+    'cold',    // Half damage from cold spells
+    'magic',   // General magic resistance (for non-elemental)
+    'poison',  // Resistance to poison effects
+    'drain',   // Resistance to level drain
+    'stone'    // Resistance to petrification
+  ]),
   value: z.number().int().min(0).max(100)
 })
 
 const BreathWeaponSchema = z.object({
-  type: z.enum(['fire', 'cold', 'poison', 'petrify']),
-  damage: z.string().regex(/^\d+d\d+$/, 'Damage must be in format "NdM"'),
-  target: z.enum(['party', 'single'])
+  type: z.enum([
+    'fire',    // Fire breath (Dragon Fly, Chimera, Fire Dragon)
+    'cold',    // Cold breath (Dragon Puppy, Flack)
+    'poison',  // Poison breath (Gas Dragon, Poison Giant)
+    'stone',   // Stone breath (Gorgon) - does damage only, not petrify
+    'drain'    // Drain breath (Dragon Zombie, Creeping Coin)
+  ])
+  // Note: Breath damage is ALWAYS CurrentHP ÷ 2, dealt to ALL party members
+  // Save vs. Breath = half damage, Elemental protection = half damage
+  // Both = quarter damage
 })
 
 const LocationSchema = z.object({
@@ -68,6 +82,8 @@ export type AttackRange = z.infer<typeof AttackRangeSchema>
 export const MonsterSchema = z.object({
   // Required fields
   id: z.string().min(1),
+  // Original game monster ID (0-100) for reference/sorting
+  numericId: z.number().int().min(0).max(100),
   name: z.string().min(1),
   level: z.number().int().min(1).max(10),
   numberAppearing: NumberAppearingSchema,
@@ -75,37 +91,45 @@ export const MonsterSchema = z.object({
   ac: z.number().int().min(-10).max(20),
   damage: z.array(DiceRollSchema),
   xp: z.number().int().min(0),
-  type: z.enum([
-    'normal',
-    'undead',
-    'humanoid',
-    'demon',
-    'dragon',
-    'mythical',
-    'werebeast'
+  // Monster class from original Wizardry (13 classes)
+  // Affects: friendly encounter %, spell targeting, turn undead
+  monsterClass: z.enum([
+    'fighter',    // 11% friendly - Standard humanoid fighters
+    'mage',       // 6% friendly - Spellcaster humanoids
+    'priest',     // 16% friendly - Divine casters
+    'thief',      // 4% friendly - Rogues
+    'giant',      // Never friendly - Large humanoids
+    'mythical',   // 1% friendly - Gorgon, Medusalizard
+    'dragon',     // 26% friendly - Dragons and dragonkin
+    'animal',     // 1% friendly - Beasts and creatures
+    'were',       // 1% friendly - Lycanthropes
+    'undead',     // 1% friendly - Makanito immune, Dispell target
+    'demon',      // 1% friendly - High spell resist
+    'insect',     // 1% friendly - Spiders, beetles
+    'enchanted'   // 1% friendly - Magical creatures
   ]),
-  class: z.enum([
-    'fighter',
-    'mage',
-    'priest',
-    'thief',
-    'bishop',
-    'samurai',
-    'lord',
-    'ninja'
-  ]).nullable(),
   specialAbilities: z.array(z.enum([
-    'spellcasting',
-    'breath_weapon',
-    'poison',
-    'paralyze',
-    'petrify',
-    'decapitate',
-    'level_drain',
-    'regeneration',
-    'multiple_attacks',
-    'summon_reinforcements',
-    'magic_resistance'
+    // Combat abilities
+    'spellcasting',           // Can cast spells (requires spellLevels)
+    'breath_weapon',          // Breath attack (requires breathWeapon)
+    'multiple_attacks',       // Has multiple damage rolls
+    'critical_hit',           // Can instant-kill (level×2% chance, max 50%)
+    'decapitate',             // Ninja-style instant kill
+
+    // Status infliction
+    'poison',                 // Can poison targets
+    'paralyze',               // Can paralyze targets
+    'petrify',                // Can turn to stone
+    'level_drain',            // Drains character levels (requires levelDrain)
+
+    // Defensive
+    'regeneration',           // Heals HP per round (requires regeneration > 0)
+    'magic_resistance',       // Flat % spell resistance (requires spellResist)
+
+    // Behavioral (for service logic)
+    'can_sleep',              // Can be affected by Katino
+    'can_run',                // Can flee when demoralized
+    'call_help'               // Can summon reinforcements mid-combat
   ])),
   resistances: z.array(ResistanceSchema),
   regeneration: z.number().int().min(0).max(10),
@@ -123,6 +147,10 @@ export const MonsterSchema = z.object({
   location: LocationSchema.optional(),
   dropItems: z.array(z.string()).optional(),
   levelDrain: z.number().int().min(1).max(4).optional(),
+  // Flat % chance to resist damage spells (separate from elemental resistance)
+  // Affected spells: Badios, Badial, Badialma, Litokan, Lorto, Malikto,
+  // Halito, Mahalito, Molito, Dalto, Lahalito, Madalto, Zilwan, Tiltowait
+  spellResist: z.number().int().min(0).max(100).optional(),
 
   // Combat positioning (optional - inferred from abilities if not specified)
   attackRange: AttackRangeSchema.optional(),

@@ -7,6 +7,7 @@ describe('MonsterSchema', () => {
     it('validates a basic monster', () => {
       const validMonster = {
         id: 'test_slime',
+        numericId: 0,
         name: 'Test Slime',
         level: 1,
         numberAppearing: { min: 2, max: 4 },
@@ -14,8 +15,7 @@ describe('MonsterSchema', () => {
         ac: 12,
         damage: [{ dice: '1d1', min: 1, max: 1 }],
         xp: 55,
-        type: 'normal',
-        class: null,
+        monsterClass: 'enchanted',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
@@ -31,6 +31,7 @@ describe('MonsterSchema', () => {
     it('validates a spellcaster with required fields', () => {
       const validSpellcaster = {
         id: 'test_mage',
+        numericId: 10,
         name: 'Test Mage',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -38,8 +39,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 475,
-        type: 'humanoid',
-        class: 'mage',
+        monsterClass: 'mage',
         specialAbilities: ['spellcasting'],
         spellLevels: { mage: 1 },
         spells: ['katino', 'halito'],
@@ -57,6 +57,7 @@ describe('MonsterSchema', () => {
     it('validates a monster with breath weapon', () => {
       const validBreather = {
         id: 'test_dragon',
+        numericId: 81,
         name: 'Test Dragon',
         level: 5,
         numberAppearing: { min: 1, max: 4 },
@@ -67,13 +68,10 @@ describe('MonsterSchema', () => {
           { dice: '2d8', min: 2, max: 16 }
         ],
         xp: 5360,
-        type: 'dragon',
-        class: null,
+        monsterClass: 'dragon',
         specialAbilities: ['breath_weapon', 'multiple_attacks'],
         breathWeapon: {
-          type: 'fire',
-          damage: '8d6',
-          target: 'party'
+          type: 'fire'
         },
         resistances: [],
         regeneration: 0,
@@ -88,6 +86,7 @@ describe('MonsterSchema', () => {
     it('validates a level-draining undead', () => {
       const validLevelDrainer = {
         id: 'test_vampire',
+        numericId: 86,
         name: 'Test Vampire',
         level: 10,
         numberAppearing: { min: 1, max: 4 },
@@ -98,8 +97,7 @@ describe('MonsterSchema', () => {
           { dice: '3d8', min: 3, max: 24 }
         ],
         xp: 3330,
-        type: 'undead',
-        class: null,
+        monsterClass: 'undead',
         specialAbilities: ['level_drain', 'multiple_attacks', 'regeneration'],
         levelDrain: 2,
         resistances: [],
@@ -127,6 +125,7 @@ describe('MonsterSchema', () => {
     it('rejects monster with invalid dice format', () => {
       const invalidDice = {
         id: 'bad_dice',
+        numericId: 0,
         name: 'Bad Dice',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -134,8 +133,7 @@ describe('MonsterSchema', () => {
         ac: 10,
         damage: [{ dice: 'invalid', min: 1, max: 8 }],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
@@ -149,6 +147,7 @@ describe('MonsterSchema', () => {
     it('rejects monster with invalid AC range', () => {
       const invalidAC = {
         id: 'bad_ac',
+        numericId: 0,
         name: 'Bad AC',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -156,8 +155,7 @@ describe('MonsterSchema', () => {
         ac: 25, // Out of range
         damage: [],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
@@ -171,6 +169,7 @@ describe('MonsterSchema', () => {
     it('rejects spellcaster without spells', () => {
       const noSpells = {
         id: 'bad_mage',
+        numericId: 0,
         name: 'Bad Mage',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -178,8 +177,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'humanoid',
-        class: 'mage',
+        monsterClass: 'mage',
         specialAbilities: ['spellcasting'], // Has ability but no spells
         resistances: [],
         regeneration: 0,
@@ -193,6 +191,7 @@ describe('MonsterSchema', () => {
     it('rejects breath weapon ability without breathWeapon definition', () => {
       const noBreath = {
         id: 'bad_dragon',
+        numericId: 0,
         name: 'Bad Dragon',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -200,8 +199,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'dragon',
-        class: null,
+        monsterClass: 'dragon',
         specialAbilities: ['breath_weapon'], // Has ability but no definition
         resistances: [],
         regeneration: 0,
@@ -215,6 +213,7 @@ describe('MonsterSchema', () => {
     it('rejects regeneration > 0 without regeneration ability', () => {
       const badRegen = {
         id: 'bad_regen',
+        numericId: 0,
         name: 'Bad Regen',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -222,8 +221,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: [], // No regeneration ability
         resistances: [],
         regeneration: 3, // But has regeneration value
@@ -237,6 +235,7 @@ describe('MonsterSchema', () => {
     it('rejects level_drain ability without levelDrain amount', () => {
       const noDrainAmount = {
         id: 'bad_drainer',
+        numericId: 0,
         name: 'Bad Drainer',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -244,8 +243,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'undead',
-        class: null,
+        monsterClass: 'undead',
         specialAbilities: ['level_drain'], // Has ability but no amount
         resistances: [],
         regeneration: 0,
@@ -259,6 +257,7 @@ describe('MonsterSchema', () => {
     it('rejects final boss that is not unique', () => {
       const notUnique = {
         id: 'fake_boss',
+        numericId: 0,
         name: 'Fake Boss',
         level: 10,
         numberAppearing: { min: 1, max: 1 },
@@ -266,8 +265,7 @@ describe('MonsterSchema', () => {
         ac: -5,
         damage: [],
         xp: 10000,
-        type: 'humanoid',
-        class: null,
+        monsterClass: 'mage',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
@@ -282,6 +280,7 @@ describe('MonsterSchema', () => {
     it('rejects fixed encounter without location', () => {
       const noLocation = {
         id: 'fixed_no_loc',
+        numericId: 0,
         name: 'Fixed No Location',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -289,8 +288,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
@@ -305,6 +303,7 @@ describe('MonsterSchema', () => {
     it('rejects magic_resistance ability without magic resistance value', () => {
       const noMagicRes = {
         id: 'bad_magic_res',
+        numericId: 0,
         name: 'Bad Magic Res',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -312,8 +311,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: ['magic_resistance'], // Has ability but no resistance
         resistances: [], // Empty resistances
         regeneration: 0,
@@ -327,6 +325,7 @@ describe('MonsterSchema', () => {
     it('rejects unknown properties (strict mode)', () => {
       const extraProps = {
         id: 'extra_props',
+        numericId: 0,
         name: 'Extra Props',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -334,8 +333,7 @@ describe('MonsterSchema', () => {
         ac: 4,
         damage: [],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
@@ -352,6 +350,7 @@ describe('MonsterSchema', () => {
     it('returns success for valid data', () => {
       const validMonster = {
         id: 'test',
+        numericId: 0,
         name: 'Test',
         level: 1,
         numberAppearing: { min: 1, max: 1 },
@@ -359,8 +358,7 @@ describe('MonsterSchema', () => {
         ac: 10,
         damage: [],
         xp: 100,
-        type: 'normal',
-        class: null,
+        monsterClass: 'animal',
         specialAbilities: [],
         resistances: [],
         regeneration: 0,
