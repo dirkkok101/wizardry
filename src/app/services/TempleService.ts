@@ -11,33 +11,59 @@ import { ResurrectionService } from './ResurrectionService'
  * Provides healing, curing, and resurrection services.
  * All services require payment (tithe) based on character level.
  * Gold is deducted from party, not individual characters.
+ *
+ * Authentic Wizardry 1 mechanics:
+ * - Resurrection ages character by 1 year (52 weeks)
+ * - Restoration ages character by 1 year (52 weeks)
+ * - Cure services do not age character
  */
 
 interface ServiceResult {
   success: boolean
   error?: string
   state?: GameState
+  ageIncrease?: number  // Weeks aged by service
 }
 
 export class TempleService {
   /**
    * Calculate tithe (cost) for a temple service.
    *
-   * Base costs per level:
+   * Authentic Wizardry 1 base costs per level:
    * - Cure Poison: 10 gold
-   * - Cure Paralysis: 20 gold
+   * - Cure Paralysis: 100 gold
+   * - Cure Stoned: 200 gold
    * - Resurrect (DEAD → OK): 250 gold
    * - Restore (ASHES → OK): 500 gold
    */
   static calculateTithe(character: Character, service: ServiceType): number {
     const baseCosts: Record<ServiceType, number> = {
       [ServiceType.CURE_POISON]: 10,
-      [ServiceType.CURE_PARALYSIS]: 20,
+      [ServiceType.CURE_PARALYSIS]: 100,  // Authentic Wizardry 1 (was 20)
+      [ServiceType.CURE_STONED]: 200,     // Authentic Wizardry 1
       [ServiceType.RESURRECT]: 250,
       [ServiceType.RESTORE]: 500
     }
 
     return baseCosts[service] * character.level
+  }
+
+  /**
+   * Get age increase for a temple service (authentic Wizardry 1)
+   *
+   * - Resurrection: 1 year (52 weeks)
+   * - Restoration: 1 year (52 weeks)
+   * - Cure services: No aging
+   */
+  static getServiceAgeIncrease(service: ServiceType): number {
+    const ageIncreases: Record<ServiceType, number> = {
+      [ServiceType.CURE_POISON]: 0,
+      [ServiceType.CURE_PARALYSIS]: 0,
+      [ServiceType.CURE_STONED]: 0,
+      [ServiceType.RESURRECT]: 52,  // 1 year
+      [ServiceType.RESTORE]: 52     // 1 year
+    }
+    return ageIncreases[service]
   }
 
   /**
@@ -100,11 +126,15 @@ export class TempleService {
       }
     }
 
-    // Update character status and HP
+    // Calculate age increase (authentic Wizardry 1)
+    const ageIncrease = this.getServiceAgeIncrease(service)
+
+    // Update character status, HP, and age
     const updatedCharacter = {
       ...character,
       status: newStatus,
-      hp: newHp
+      hp: newHp,
+      age: character.age + ageIncrease
     }
 
     newState = {
@@ -113,9 +143,9 @@ export class TempleService {
     }
 
     if (!success && errorMessage) {
-      return { success: false, error: errorMessage, state: newState }
+      return { success: false, error: errorMessage, state: newState, ageIncrease }
     }
 
-    return { success: true, state: newState }
+    return { success: true, state: newState, ageIncrease }
   }
 }

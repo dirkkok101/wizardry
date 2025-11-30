@@ -127,8 +127,9 @@ export class EquipmentService {
     // Check if Ninja and not wearing armor (naked Ninja AC bonus)
     const isNakedNinja = character.class === CharacterClass.NINJA && !character.equippedArmor;
     if (isNakedNinja) {
-      // Authentic Wizardry 1: Ninja AC bonus = -level when not wearing armor
-      ac -= character.level;
+      // Authentic Wizardry 1: Naked Ninja AC = 10 - (Level/3) - 2
+      // At Level 6: AC 6, Level 12: AC 4, Level 21: AC 1
+      ac -= Math.floor(character.level / 3) + 2;
     }
 
     // Equipment bonuses - directly access Item objects from slots

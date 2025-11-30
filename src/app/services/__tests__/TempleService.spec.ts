@@ -27,6 +27,7 @@ describe('TempleService', () => {
     agility: 10,
     luck: 10,
     experience: 10000,
+    age: 1040,  // 20 years in weeks
     ac: 5,
     inventory: [],
     password: 'test',
@@ -60,9 +61,14 @@ describe('TempleService', () => {
       expect(tithe).toBe(50) // 10 × 5
     })
 
-    it('calculates cure paralysis tithe (20 × level)', () => {
+    it('calculates cure paralysis tithe (100 × level) - authentic Wizardry 1', () => {
       const tithe = TempleService.calculateTithe(mockCharacter, ServiceType.CURE_PARALYSIS)
-      expect(tithe).toBe(100) // 20 × 5
+      expect(tithe).toBe(500) // 100 × 5 (authentic Wizardry 1)
+    })
+
+    it('calculates cure stoned tithe (200 × level) - authentic Wizardry 1', () => {
+      const tithe = TempleService.calculateTithe(mockCharacter, ServiceType.CURE_STONED)
+      expect(tithe).toBe(1000) // 200 × 5 (authentic Wizardry 1)
     })
 
     it('calculates resurrection tithe (250 × level)', () => {
@@ -79,6 +85,28 @@ describe('TempleService', () => {
       const highLevelChar = { ...mockCharacter, level: 10 }
       const tithe = TempleService.calculateTithe(highLevelChar, ServiceType.RESURRECT)
       expect(tithe).toBe(2500) // 250 × 10
+    })
+  })
+
+  describe('getServiceAgeIncrease (authentic Wizardry 1)', () => {
+    it('cure poison does not age character', () => {
+      expect(TempleService.getServiceAgeIncrease(ServiceType.CURE_POISON)).toBe(0)
+    })
+
+    it('cure paralysis does not age character', () => {
+      expect(TempleService.getServiceAgeIncrease(ServiceType.CURE_PARALYSIS)).toBe(0)
+    })
+
+    it('cure stoned does not age character', () => {
+      expect(TempleService.getServiceAgeIncrease(ServiceType.CURE_STONED)).toBe(0)
+    })
+
+    it('resurrection ages character by 1 year (52 weeks)', () => {
+      expect(TempleService.getServiceAgeIncrease(ServiceType.RESURRECT)).toBe(52)
+    })
+
+    it('restoration ages character by 1 year (52 weeks)', () => {
+      expect(TempleService.getServiceAgeIncrease(ServiceType.RESTORE)).toBe(52)
     })
   })
 
@@ -119,7 +147,7 @@ describe('TempleService', () => {
 
     it('cures paralyzed character', () => {
       const paralyzedChar = { ...mockCharacter, status: CharacterStatus.PARALYZED }
-      const state = createTestGameState(500)
+      const state = createTestGameState(1000)  // More gold for authentic cost
       state.roster.set(mockCharacter.id, paralyzedChar)
 
       const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_PARALYSIS)
@@ -127,7 +155,20 @@ describe('TempleService', () => {
       expect(result.success).toBe(true)
       const updatedChar = result.state!.roster.get(mockCharacter.id)
       expect(updatedChar!.status).toBe(CharacterStatus.OK)
-      expect(result.state!.party.gold).toBe(400) // 500 - 100
+      expect(result.state!.party.gold).toBe(500) // 1000 - 500 (100 × 5 authentic)
+    })
+
+    it('cures stoned character', () => {
+      const stonedChar = { ...mockCharacter, status: CharacterStatus.STONED }
+      const state = createTestGameState(2000)
+      state.roster.set(mockCharacter.id, stonedChar)
+
+      const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_STONED)
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get(mockCharacter.id)
+      expect(updatedChar!.status).toBe(CharacterStatus.OK)
+      expect(result.state!.party.gold).toBe(1000) // 2000 - 1000 (200 × 5 authentic)
     })
 
     it('handles resurrection with high vitality (should succeed)', () => {
@@ -245,7 +286,7 @@ describe('TempleService', () => {
 
     it('does not change HP for cure paralysis service', () => {
       const paralyzedChar = { ...mockCharacter, status: CharacterStatus.PARALYZED, hp: 10, maxHp: 25 }
-      const state = createTestGameState(500)
+      const state = createTestGameState(1000)  // More gold for authentic cost
       state.roster.set(mockCharacter.id, paralyzedChar)
 
       const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_PARALYSIS)
@@ -254,6 +295,106 @@ describe('TempleService', () => {
       const updatedChar = result.state!.roster.get(mockCharacter.id)
       expect(updatedChar!.hp).toBe(10) // HP unchanged
       expect(updatedChar!.status).toBe(CharacterStatus.OK)
+    })
+
+    it('does not change HP for cure stoned service', () => {
+      const stonedChar = { ...mockCharacter, status: CharacterStatus.STONED, hp: 10, maxHp: 25 }
+      const state = createTestGameState(2000)
+      state.roster.set(mockCharacter.id, stonedChar)
+
+      const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_STONED)
+
+      expect(result.success).toBe(true)
+      const updatedChar = result.state!.roster.get(mockCharacter.id)
+      expect(updatedChar!.hp).toBe(10) // HP unchanged
+      expect(updatedChar!.status).toBe(CharacterStatus.OK)
+    })
+
+    describe('temple aging (authentic Wizardry 1)', () => {
+      it('resurrection ages character by 1 year (52 weeks)', () => {
+        const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 18, hp: 0, age: 1040 } // 20 years
+        const state = createTestGameState(2000)
+        state.roster.set(mockCharacter.id, deadChar)
+
+        RandomService.queueNextValues([0.5])  // Success
+
+        const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESURRECT)
+
+        expect(result.success).toBe(true)
+        expect(result.ageIncrease).toBe(52)  // 1 year
+        const updatedChar = result.state!.roster.get(mockCharacter.id)
+        expect(updatedChar!.age).toBe(1092)  // 1040 + 52 = 21 years
+      })
+
+      it('restoration ages character by 1 year (52 weeks)', () => {
+        const ashesChar = { ...mockCharacter, status: CharacterStatus.ASHES, vitality: 18, hp: 0, age: 1040 }
+        const state = createTestGameState(3000)
+        state.roster.set(mockCharacter.id, ashesChar)
+
+        RandomService.queueNextValues([0.3])  // Success
+
+        const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESTORE)
+
+        expect(result.success).toBe(true)
+        expect(result.ageIncrease).toBe(52)
+        const updatedChar = result.state!.roster.get(mockCharacter.id)
+        expect(updatedChar!.age).toBe(1092)
+      })
+
+      it('failed resurrection still ages character', () => {
+        const deadChar = { ...mockCharacter, status: CharacterStatus.DEAD, vitality: 3, hp: 0, age: 1040 }
+        const state = createTestGameState(2000)
+        state.roster.set(mockCharacter.id, deadChar)
+
+        RandomService.queueNextValues([0.9])  // Failure
+
+        const result = TempleService.performService(state, mockCharacter.id, ServiceType.RESURRECT)
+
+        expect(result.success).toBe(false)
+        expect(result.ageIncrease).toBe(52)
+        const updatedChar = result.state!.roster.get(mockCharacter.id)
+        expect(updatedChar!.age).toBe(1092)  // Still aged
+        expect(updatedChar!.status).toBe(CharacterStatus.ASHES)
+      })
+
+      it('cure poison does not age character', () => {
+        const poisonedChar = { ...mockCharacter, status: CharacterStatus.POISONED, age: 1040 }
+        const state = createTestGameState(500)
+        state.roster.set(mockCharacter.id, poisonedChar)
+
+        const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_POISON)
+
+        expect(result.success).toBe(true)
+        expect(result.ageIncrease).toBe(0)
+        const updatedChar = result.state!.roster.get(mockCharacter.id)
+        expect(updatedChar!.age).toBe(1040)  // Unchanged
+      })
+
+      it('cure paralysis does not age character', () => {
+        const paralyzedChar = { ...mockCharacter, status: CharacterStatus.PARALYZED, age: 1040 }
+        const state = createTestGameState(1000)
+        state.roster.set(mockCharacter.id, paralyzedChar)
+
+        const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_PARALYSIS)
+
+        expect(result.success).toBe(true)
+        expect(result.ageIncrease).toBe(0)
+        const updatedChar = result.state!.roster.get(mockCharacter.id)
+        expect(updatedChar!.age).toBe(1040)  // Unchanged
+      })
+
+      it('cure stoned does not age character', () => {
+        const stonedChar = { ...mockCharacter, status: CharacterStatus.STONED, age: 1040 }
+        const state = createTestGameState(2000)
+        state.roster.set(mockCharacter.id, stonedChar)
+
+        const result = TempleService.performService(state, mockCharacter.id, ServiceType.CURE_STONED)
+
+        expect(result.success).toBe(true)
+        expect(result.ageIncrease).toBe(0)
+        const updatedChar = result.state!.roster.get(mockCharacter.id)
+        expect(updatedChar!.age).toBe(1040)  // Unchanged
+      })
     })
   })
 })

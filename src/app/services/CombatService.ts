@@ -79,49 +79,77 @@ export class CombatService {
 
   /**
    * Calculate hit chance percentage
-   * Formula: (attackBonus + defenderAC + 10) × 5%
+   * Formula: (attackBonus + defenderAC + 10) × 5% + (3 × victimPosition)
    * Clamped between 5% and 95%
    *
    * @param defenderAcModifier - AC modifier (e.g., -2 for PARRY). Lower AC = better defense
    * @param attackerPenalty - Attack penalty (e.g., -4 for BLIND)
+   * @param victimPosition - Position in monster group (0-indexed). Authentic Wizardry 1: +3% per position
    */
   static calculateHitChance(
     attacker: Combatant,
     defender: Combatant,
     defenderAcModifier: number = 0,
-    attackerPenalty: number = 0
+    attackerPenalty: number = 0,
+    victimPosition: number = 0
   ): number {
     const attackBonus = this.getAttackBonus(attacker) + attackerPenalty
     const effectiveAc = defender.ac + defenderAcModifier
-    const rawChance = (attackBonus + effectiveAc + 10) * 5
+
+    // Base chance formula
+    let rawChance = (attackBonus + effectiveAc + 10) * 5
+
+    // Authentic Wizardry 1: +3% per victim position (monsters in back are easier to hit)
+    // This represents the front monsters providing cover for those behind
+    rawChance += 3 * victimPosition
 
     return Math.max(5, Math.min(95, rawChance))
   }
 
   /**
-   * Class-specific hit probability modifiers (HPCALCMD)
-   * Authentic Wizardry 1 values from reverse-engineered source
+   * Strong combat classes for hit calculation
+   * These classes use the formula: 2 + floor(Level/3)
    */
-  private static readonly CLASS_HIT_MODIFIERS: Record<string, number> = {
-    FIGHTER: 0,
-    MAGE: -4,
-    PRIEST: -2,
-    THIEF: -2,
-    BISHOP: -4,
-    SAMURAI: 1,
-    LORD: 1,
-    NINJA: 1
+  private static readonly STRONG_COMBAT_CLASSES = ['FIGHTER', 'PRIEST', 'SAMURAI', 'LORD', 'NINJA']
+
+  /**
+   * Calculate class-based hit modifier (HPCALCMD) - Authentic Wizardry 1
+   *
+   * Formula from Thomas William Ewers' reverse-engineered Apple II source:
+   * - Fighter/Priest/Samurai/Lord/Ninja: 2 + floor(Level/3)
+   * - Mage/Thief/Bishop: floor(Level/5)
+   *
+   * This creates a level-scaling hit bonus that differs by class archetype.
+   */
+  private static getHitCalcMod(combatant: Combatant): number {
+    const level = combatant.level || 1
+
+    // Check if this is a character with a class
+    if ('class' in combatant && combatant.class) {
+      if (this.STRONG_COMBAT_CLASSES.includes(combatant.class)) {
+        // Strong classes: 2 + floor(Level/3)
+        return 2 + Math.floor(level / 3)
+      }
+      // Weak classes (Mage/Thief/Bishop): floor(Level/5)
+      return Math.floor(level / 5)
+    }
+
+    // Monsters use their level directly
+    return level
   }
 
   private static getAttackBonus(combatant: Combatant): number {
-    // For characters: level + STR modifier + class modifier (HPCALCMD)
+    // Authentic Wizardry 1: HitCalcMod + STR modifier
+    const hitCalcMod = this.getHitCalcMod(combatant)
+
+    // For characters: add STR modifier
     if ('class' in combatant && combatant.class) {
       const strMod = Math.floor((combatant.strength - 10) / 2)
-      const classModifier = this.CLASS_HIT_MODIFIERS[combatant.class] ?? 0
-      return combatant.level + strMod + classModifier
+      return hitCalcMod + strMod
     }
-    // For monsters: level
-    return combatant.level || 1
+
+    // For monsters: just HitCalcMod (which is their level)
+    return hitCalcMod
   }
 
   static resolveAttack(
@@ -937,11 +965,26 @@ export class CombatService {
     // TODO: Add isUndead property to monsters
     // For now, assume all monsters can be dispelled (simplified)
 
-    // Calculate dispel chance: (2 × CasterLevel - UndeadLevel) × 5, clamped to 5-95%
-    // Authentic Wizardry 1 formula from reverse-engineered source
+    // Calculate dispel chance - Authentic Wizardry 1 formula:
+    // Base: 50% + (5 × CharLevel) - (10 × MonsterLevel)
+    // Class penalties:
+    //   - Priest: no penalty (always available)
+    //   - Bishop (level 4+): -20%
+    //   - Lord (level 9+): -40%
     const casterLevel = caster.level || 1
     const undeadLevel = aliveMonsters[0].level || 1
-    const rawChance = (2 * casterLevel - undeadLevel) * 5
+
+    // Base formula
+    let rawChance = 50 + (5 * casterLevel) - (10 * undeadLevel)
+
+    // Apply class penalties
+    const casterClass = caster.class
+    if (casterClass === 'BISHOP' && casterLevel >= 4) {
+      rawChance -= 20
+    } else if (casterClass === 'LORD' && casterLevel >= 9) {
+      rawChance -= 40
+    }
+
     const dispelChance = Math.max(5, Math.min(95, rawChance))
 
     // Roll for success

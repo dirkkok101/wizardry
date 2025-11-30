@@ -273,17 +273,61 @@ function attemptDisarm(
 }
 
 /**
+ * Calculate scaled trap damage (authentic Wizardry 1)
+ *
+ * Formula: base damage + (mazeLevel * extraDice)
+ * - Level 1: base damage only
+ * - Level 2+: adds mazeLevel dice of same type
+ *
+ * Example: "2d6" at maze level 3 = 2d6 + 3d6 = 5d6
+ */
+function calculateScaledDamage(baseDamage: number, mazeLevel: number): number {
+  // Base damage already rolled, add maze level scaling
+  // Authentic formula: multiply base by (1 + 0.25 per level beyond 1)
+  const scaleFactor = 1 + ((mazeLevel - 1) * 0.25)
+  return Math.floor(baseDamage * scaleFactor)
+}
+
+/**
+ * Apply status escalation (authentic Wizardry 1)
+ *
+ * When applying status to a character who already has that status:
+ * - PARALYZED + PARALYZED = DEAD
+ * - STONED + STONED = DEAD
+ * - POISONED does NOT escalate (stays POISONED)
+ *
+ * @param currentStatus Character's current status
+ * @param newStatus Status being applied
+ * @returns Resulting status after escalation check
+ */
+function escalateStatus(currentStatus: CharacterStatus, newStatus: CharacterStatus): CharacterStatus {
+  // Status escalation only applies to PARALYZED and STONED
+  if (currentStatus === newStatus) {
+    if (newStatus === CharacterStatus.PARALYZED || newStatus === CharacterStatus.STONED) {
+      return CharacterStatus.DEAD
+    }
+  }
+  return newStatus
+}
+
+/**
  * Apply trap effects when triggered
+ *
+ * Authentic Wizardry 1 mechanics:
+ * - Damage scales with maze level (deeper = more damage)
+ * - Status effects can escalate (PARALYZED + PARALYZED = DEAD)
  *
  * @param trapId The ID of the trap that triggered
  * @param opener The character who triggered the trap
  * @param partyMembers The party members (resolved Character objects)
+ * @param mazeLevel Current dungeon level (1-10) for damage scaling
  * @returns TrapTriggerResult with damage, status effects, and special outcomes
  */
 function applyTrapEffects(
   trapId: TrapId,
   opener: Character,
-  partyMembers: Character[]
+  partyMembers: Character[],
+  mazeLevel: number = 1
 ): TrapTriggerResult {
   const effect = getTrapEffect(trapId)
   const damageDealt = new Map<string, number>()
@@ -309,23 +353,24 @@ function applyTrapEffects(
       break
   }
 
-  // Apply damage if applicable
+  // Apply damage if applicable (scaled by maze level)
   if (effect.damageFormula && targets.length > 0) {
     const hitChance = effect.hitChance ?? 1.0  // Default to always hit
 
     for (const target of targets) {
       // Roll for hit (0-1 random vs hitChance threshold)
       if (RandomService.roll(hitChance)) {
-        const damage = RandomService.rollDiceNotation(effect.damageFormula)
-        damageDealt.set(target.id, damage)
-        messages.push(`${target.name} takes ${damage} damage!`)
+        const baseDamage = RandomService.rollDiceNotation(effect.damageFormula)
+        const scaledDamage = calculateScaledDamage(baseDamage, mazeLevel)
+        damageDealt.set(target.id, scaledDamage)
+        messages.push(`${target.name} takes ${scaledDamage} damage!`)
       } else {
         messages.push(`${target.name} avoids the trap!`)
       }
     }
   }
 
-  // Apply status effect if applicable
+  // Apply status effect if applicable (with escalation check)
   if (effect.statusEffect && targets.length > 0) {
     const hitChance = effect.hitChance ?? 1.0
 
@@ -337,8 +382,15 @@ function applyTrapEffects(
         : RandomService.roll(hitChance)  // Roll now for status-only effects
 
       if (shouldApply) {
-        statusApplied.set(target.id, effect.statusEffect)
-        messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+        // Authentic Wizardry 1: Status escalation
+        const finalStatus = escalateStatus(target.status, effect.statusEffect)
+        statusApplied.set(target.id, finalStatus)
+
+        if (finalStatus === CharacterStatus.DEAD && target.status === effect.statusEffect) {
+          messages.push(`${target.name} was already ${effect.statusEffect.toLowerCase()} and dies!`)
+        } else {
+          messages.push(`${target.name} is ${finalStatus.toLowerCase()}!`)
+        }
       }
     }
   }
@@ -621,6 +673,8 @@ export const TrapService = {
   calculateDisarmChance,
   calculateTriggerAvoidance,
   calculateWrongNameTriggerChance,
+  calculateScaledDamage,  // Authentic Wizardry 1: maze level scaling
+  escalateStatus,         // Authentic Wizardry 1: status escalation
 
   // Action functions
   attemptInspection,

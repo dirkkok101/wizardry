@@ -1,6 +1,7 @@
 // src/services/__tests__/CombatService.spec.ts
 import { CombatService } from '../CombatService'
 import { createTestCharacter, createTestMonster } from '@testing/test-factories'
+import { CharacterClass } from '@models/CharacterClass'
 
 describe('CombatService', () => {
   describe('calculateInitiative', () => {
@@ -134,18 +135,20 @@ describe('CombatService', () => {
 
   describe('calculateHitChance', () => {
     it('calculates basic hit chance formula', () => {
-      const attacker = createTestCharacter({ level: 1 })  // Attack bonus ~1
+      const attacker = createTestCharacter({ level: 1, strength: 10 })
       const defender = createTestMonster({ ac: 8 })
 
       const hitChance = CombatService.calculateHitChance(attacker, defender)
 
       // Formula: (attackBonus + defenderAC + 10) × 5%
-      // (1 + 8 + 10) × 5% = 19 × 5% = 95%
+      // Fighter level 1: hitCalcMod = 2 + floor(1/3) = 2
+      // attackBonus = 2 + 0 (strMod) = 2
+      // (2 + 8 + 10) × 5% = 100% → capped to 95%
       expect(hitChance).toBe(95)
     })
 
     it('caps hit chance at 95%', () => {
-      const attacker = createTestCharacter({ level: 10 })  // High attack bonus
+      const attacker = createTestCharacter({ level: 10 })
       const defender = createTestMonster({ ac: 10 })
 
       const hitChance = CombatService.calculateHitChance(attacker, defender)
@@ -155,11 +158,206 @@ describe('CombatService', () => {
 
     it('has minimum hit chance of 5%', () => {
       const attacker = createTestCharacter({ level: 1 })
-      const defender = createTestMonster({ ac: -10 })  // Very low AC
+      const defender = createTestMonster({ ac: -10 })
 
       const hitChance = CombatService.calculateHitChance(attacker, defender)
 
       expect(hitChance).toBeGreaterThanOrEqual(5)
+    })
+
+    describe('HitCalcMod formula (authentic Wizardry 1)', () => {
+      // Fighter/Priest/Samurai/Lord/Ninja: 2 + floor(Level/3)
+      // Mage/Thief/Bishop: floor(Level/5)
+
+      it('Fighter level 1: hitCalcMod = 2 + floor(1/3) = 2', () => {
+        const fighter = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 1,
+          strength: 10 // 0 STR mod
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(fighter, defender)
+
+        // attackBonus = 2, (2 + 0 + 10) × 5% = 60%
+        expect(hitChance).toBe(60)
+      })
+
+      it('Fighter level 6: hitCalcMod = 2 + floor(6/3) = 4', () => {
+        const fighter = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 6,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(fighter, defender)
+
+        // attackBonus = 4, (4 + 0 + 10) × 5% = 70%
+        expect(hitChance).toBe(70)
+      })
+
+      it('Fighter level 12: hitCalcMod = 2 + floor(12/3) = 6', () => {
+        const fighter = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 12,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(fighter, defender)
+
+        // attackBonus = 6, (6 + 0 + 10) × 5% = 80%
+        expect(hitChance).toBe(80)
+      })
+
+      it('Mage level 1: hitCalcMod = floor(1/5) = 0', () => {
+        const mage = createTestCharacter({
+          class: CharacterClass.MAGE,
+          level: 1,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(mage, defender)
+
+        // attackBonus = 0, (0 + 0 + 10) × 5% = 50%
+        expect(hitChance).toBe(50)
+      })
+
+      it('Mage level 10: hitCalcMod = floor(10/5) = 2', () => {
+        const mage = createTestCharacter({
+          class: CharacterClass.MAGE,
+          level: 10,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(mage, defender)
+
+        // attackBonus = 2, (2 + 0 + 10) × 5% = 60%
+        expect(hitChance).toBe(60)
+      })
+
+      it('Priest uses strong class formula (like Fighter)', () => {
+        const priest = createTestCharacter({
+          class: CharacterClass.PRIEST,
+          level: 6,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(priest, defender)
+
+        // Priest level 6: hitCalcMod = 2 + floor(6/3) = 4
+        // attackBonus = 4, (4 + 0 + 10) × 5% = 70%
+        expect(hitChance).toBe(70)
+      })
+
+      it('Thief uses weak class formula (like Mage)', () => {
+        const thief = createTestCharacter({
+          class: CharacterClass.THIEF,
+          level: 10,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(thief, defender)
+
+        // Thief level 10: hitCalcMod = floor(10/5) = 2
+        // attackBonus = 2, (2 + 0 + 10) × 5% = 60%
+        expect(hitChance).toBe(60)
+      })
+
+      it('STR modifier still applies', () => {
+        const fighter = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 1,
+          strength: 16 // +3 STR mod
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(fighter, defender)
+
+        // hitCalcMod = 2, strMod = 3, attackBonus = 5
+        // (5 + 0 + 10) × 5% = 75%
+        expect(hitChance).toBe(75)
+      })
+    })
+
+    describe('VictimPosition modifier (authentic Wizardry 1)', () => {
+      // +3% per position in monster group (0-indexed)
+      // Position 0 = +0%, Position 1 = +3%, Position 2 = +6%, etc.
+
+      it('position 0 (front) has no modifier', () => {
+        const attacker = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 1,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(attacker, defender, 0, 0, 0)
+
+        // Base: (2 + 0 + 10) × 5% = 60%, position 0: +0%
+        expect(hitChance).toBe(60)
+      })
+
+      it('position 1 adds +3%', () => {
+        const attacker = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 1,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(attacker, defender, 0, 0, 1)
+
+        // Base: 60%, position 1: +3% = 63%
+        expect(hitChance).toBe(63)
+      })
+
+      it('position 2 adds +6%', () => {
+        const attacker = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 1,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(attacker, defender, 0, 0, 2)
+
+        // Base: 60%, position 2: +6% = 66%
+        expect(hitChance).toBe(66)
+      })
+
+      it('position 5 adds +15%', () => {
+        const attacker = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 1,
+          strength: 10
+        })
+        const defender = createTestMonster({ ac: 0 })
+
+        const hitChance = CombatService.calculateHitChance(attacker, defender, 0, 0, 5)
+
+        // Base: 60%, position 5: +15% = 75%
+        expect(hitChance).toBe(75)
+      })
+
+      it('position modifier is still capped at 95%', () => {
+        const attacker = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          level: 12,
+          strength: 18
+        })
+        const defender = createTestMonster({ ac: 10 })
+
+        // Even with high position, should cap at 95%
+        const hitChance = CombatService.calculateHitChance(attacker, defender, 0, 0, 10)
+
+        expect(hitChance).toBe(95)
+      })
     })
   })
 })

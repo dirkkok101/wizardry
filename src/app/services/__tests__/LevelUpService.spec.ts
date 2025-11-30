@@ -266,6 +266,93 @@ describe('LevelUpService', () => {
       // First stat (strength) should not be modified
       expect(statChanges.strength).toBeUndefined()
     })
+
+    describe('Level 18 stat protection (authentic Wizardry 1)', () => {
+      // Stats at 18 have 5/6 (83.3%) chance to resist decrease on level-up
+      // Roll 1d6: only decrease if roll is 1
+
+      it('stat at 18 resists decrease when d6 roll is not 1', () => {
+        const character = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          age: 80 * 52, // Old character (80 years): 130-80=50% threshold
+          strength: 18  // At cap
+        })
+
+        // Queue: stat check (below 75%), roll (above 50% = decrease), d6 roll (not 1)
+        RandomService.queueNextValues([
+          0.5,  // STR: checked (50% < 75%)
+          0.60, // Roll 60 > 50% threshold = would decrease
+          0.5   // d6 roll: 0.5 maps to 3 (not 1) = resist decrease
+        ])
+
+        const statChanges = LevelUpService.rollStatChanges(character)
+
+        // Stat should NOT decrease due to 5/6 protection
+        expect(statChanges.strength).toBeUndefined()
+      })
+
+      it('stat at 18 decreases when d6 roll is 1 (1/6 chance)', () => {
+        const character = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          age: 80 * 52, // Old character
+          strength: 18
+        })
+
+        // Queue: stat check, roll (decrease), d6 roll is 1
+        RandomService.queueNextValues([
+          0.5,   // STR: checked
+          0.60,  // Roll > 50% threshold = would decrease
+          0.01   // d6 roll: 0.01 maps to 1 = decrease applies
+        ])
+
+        const statChanges = LevelUpService.rollStatChanges(character)
+
+        // Stat SHOULD decrease (rolled 1 on d6)
+        expect(statChanges.strength).toBe(-1)
+      })
+
+      it('stat below 18 decreases normally without d6 protection roll', () => {
+        const character = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          age: 80 * 52,
+          strength: 17 // Not at 18
+        })
+
+        // Queue: stat check, roll (decrease) - no d6 roll needed for stats below 18
+        RandomService.queueNextValues([
+          0.5,  // STR: checked
+          0.60  // Roll > 50% threshold = decrease (no protection)
+        ])
+
+        const statChanges = LevelUpService.rollStatChanges(character)
+
+        // Stat should decrease immediately (no protection for stats below 18)
+        expect(statChanges.strength).toBe(-1)
+      })
+
+      it('multiple stats at 18 each get independent protection rolls', () => {
+        const character = createTestCharacter({
+          class: CharacterClass.FIGHTER,
+          age: 80 * 52,
+          strength: 18,
+          intelligence: 18,
+          piety: 10 // Not at 18
+        })
+
+        // Queue values for all three stats
+        RandomService.queueNextValues([
+          0.5, 0.60, 0.01,  // STR: checked, decrease, d6=1 (decreases)
+          0.5, 0.60, 0.5,   // INT: checked, decrease, d6=3 (protected)
+          0.5, 0.60         // PIE: checked, decrease (no protection for 10)
+        ])
+
+        const statChanges = LevelUpService.rollStatChanges(character)
+
+        expect(statChanges.strength).toBe(-1)      // Failed protection roll
+        expect(statChanges.intelligence).toBeUndefined() // Protected
+        expect(statChanges.piety).toBe(-1)         // No protection
+      })
+    })
   })
 
   describe('rollStatIncreases (deprecated)', () => {

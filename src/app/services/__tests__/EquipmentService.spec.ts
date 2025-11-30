@@ -215,6 +215,106 @@ describe('EquipmentService', () => {
     });
   });
 
+  describe('calculateAC', () => {
+    describe('Naked Ninja AC bonus (authentic Wizardry 1)', () => {
+      // Authentic formula: AC = 10 - floor(Level/3) - 2
+      it('calculates Level 1 naked Ninja AC as 8', () => {
+        const ninja: Character = {
+          ...fighter,
+          class: 'NINJA' as const,
+          level: 1,
+          agility: 10, // 0 AGI modifier
+          equippedArmor: undefined
+        };
+        // AC = 10 - floor(1/3) - 2 = 10 - 0 - 2 = 8
+        expect(EquipmentService.calculateAC(ninja)).toBe(8);
+      });
+
+      it('calculates Level 6 naked Ninja AC as 6', () => {
+        const ninja: Character = {
+          ...fighter,
+          class: 'NINJA' as const,
+          level: 6,
+          agility: 10,
+          equippedArmor: undefined
+        };
+        // AC = 10 - floor(6/3) - 2 = 10 - 2 - 2 = 6
+        expect(EquipmentService.calculateAC(ninja)).toBe(6);
+      });
+
+      it('calculates Level 12 naked Ninja AC as 4', () => {
+        const ninja: Character = {
+          ...fighter,
+          class: 'NINJA' as const,
+          level: 12,
+          agility: 10,
+          equippedArmor: undefined
+        };
+        // AC = 10 - floor(12/3) - 2 = 10 - 4 - 2 = 4
+        expect(EquipmentService.calculateAC(ninja)).toBe(4);
+      });
+
+      it('calculates Level 21 naked Ninja AC as 1', () => {
+        const ninja: Character = {
+          ...fighter,
+          class: 'NINJA' as const,
+          level: 21,
+          agility: 10,
+          equippedArmor: undefined
+        };
+        // AC = 10 - floor(21/3) - 2 = 10 - 7 - 2 = 1
+        expect(EquipmentService.calculateAC(ninja)).toBe(1);
+      });
+
+      it('naked Ninja AC stacks with AGI modifier', () => {
+        const ninja: Character = {
+          ...fighter,
+          class: 'NINJA' as const,
+          level: 12,
+          agility: 18, // +4 AGI modifier
+          equippedArmor: undefined
+        };
+        // AC = 10 - floor(12/3) - 2 - 4 = 10 - 4 - 2 - 4 = 0
+        expect(EquipmentService.calculateAC(ninja)).toBe(0);
+      });
+
+      it('does not apply Ninja bonus when wearing armor', () => {
+        const armor: Item = {
+          id: 'leather',
+          name: 'Leather Armor',
+          type: ItemType.ARMOR,
+          slot: ItemSlot.ARMOR,
+          price: 50,
+          defense: 2,
+          cursed: false,
+          identified: true,
+          equipped: true
+        };
+        const ninja: Character = {
+          ...fighter,
+          class: 'NINJA' as const,
+          level: 12,
+          agility: 10,
+          equippedArmor: armor
+        };
+        // AC = 10 - 2 (armor) = 8 (no naked bonus)
+        expect(EquipmentService.calculateAC(ninja)).toBe(8);
+      });
+
+      it('does not apply Ninja bonus to other classes', () => {
+        const thief: Character = {
+          ...fighter,
+          class: 'THIEF' as const,
+          level: 12,
+          agility: 10,
+          equippedArmor: undefined
+        };
+        // AC = 10 (base only, no Ninja bonus)
+        expect(EquipmentService.calculateAC(thief)).toBe(10);
+      });
+    });
+  });
+
   describe('AC Calculation Integration', () => {
     it('calculates AC correctly with full equipment set', () => {
       // Create test items directly

@@ -192,6 +192,59 @@ describe('TrapService', () => {
     })
   })
 
+  describe('calculateScaledDamage (authentic Wizardry 1)', () => {
+    it('should return base damage on maze level 1', () => {
+      // Level 1: scale factor = 1 + (0 * 0.25) = 1.0
+      expect(TrapService.calculateScaledDamage(10, 1)).toBe(10)
+    })
+
+    it('should increase damage by 25% per maze level beyond 1', () => {
+      // Level 2: scale factor = 1 + (1 * 0.25) = 1.25
+      expect(TrapService.calculateScaledDamage(10, 2)).toBe(12) // 10 * 1.25 = 12.5 → 12
+    })
+
+    it('should scale significantly on deep levels', () => {
+      // Level 5: scale factor = 1 + (4 * 0.25) = 2.0
+      expect(TrapService.calculateScaledDamage(10, 5)).toBe(20)
+
+      // Level 10: scale factor = 1 + (9 * 0.25) = 3.25
+      expect(TrapService.calculateScaledDamage(10, 10)).toBe(32) // 10 * 3.25 = 32.5 → 32
+    })
+
+    it('should floor the result', () => {
+      // Level 3: scale factor = 1 + (2 * 0.25) = 1.5
+      expect(TrapService.calculateScaledDamage(7, 3)).toBe(10) // 7 * 1.5 = 10.5 → 10
+    })
+  })
+
+  describe('escalateStatus (authentic Wizardry 1)', () => {
+    it('should not escalate POISONED (stays POISONED)', () => {
+      const result = TrapService.escalateStatus(CharacterStatus.POISONED, CharacterStatus.POISONED)
+      expect(result).toBe(CharacterStatus.POISONED)
+    })
+
+    it('should escalate PARALYZED + PARALYZED to DEAD', () => {
+      const result = TrapService.escalateStatus(CharacterStatus.PARALYZED, CharacterStatus.PARALYZED)
+      expect(result).toBe(CharacterStatus.DEAD)
+    })
+
+    it('should escalate STONED + STONED to DEAD', () => {
+      const result = TrapService.escalateStatus(CharacterStatus.STONED, CharacterStatus.STONED)
+      expect(result).toBe(CharacterStatus.DEAD)
+    })
+
+    it('should not escalate OK to POISONED (just apply new status)', () => {
+      const result = TrapService.escalateStatus(CharacterStatus.OK, CharacterStatus.POISONED)
+      expect(result).toBe(CharacterStatus.POISONED)
+    })
+
+    it('should not escalate different statuses (apply new one)', () => {
+      // Already paralyzed, getting poisoned → just poisoned
+      const result = TrapService.escalateStatus(CharacterStatus.PARALYZED, CharacterStatus.POISONED)
+      expect(result).toBe(CharacterStatus.POISONED)
+    })
+  })
+
   describe('attemptInspection', () => {
     it('should succeed when roll is under inspect chance', () => {
       const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
@@ -450,6 +503,108 @@ describe('TrapService', () => {
       const result = TrapService.applyTrapEffects('ALARM', opener, party)
 
       expect(result.specialEffect).toBe('combat')
+    })
+
+    describe('maze level scaling (authentic Wizardry 1)', () => {
+      it('should apply base damage on maze level 1', () => {
+        const opener = createTestCharacter({ id: 'opener' })
+        const party = [opener]
+
+        // Queue dice roll for 2d8 damage
+        RandomService.queueNextValues([0.5, 0.5])  // ~5 + ~5 = 10 base
+
+        const result = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party, 1)
+
+        const baseDamage = result.damageDealt.get('opener')!
+        expect(baseDamage).toBeGreaterThan(0)
+      })
+
+      it('should scale damage by 25% per level beyond 1', () => {
+        const opener = createTestCharacter({ id: 'opener' })
+        const party = [opener]
+
+        // Test level 1 vs level 5
+        // Seed for deterministic damage
+        RandomService.setSeed(12345)
+        const result1 = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party, 1)
+        const damage1 = result1.damageDealt.get('opener')!
+
+        // Same rolls at level 5 should give 2x damage (1 + 4*0.25 = 2.0)
+        RandomService.setSeed(12345)
+        const result5 = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party, 5)
+        const damage5 = result5.damageDealt.get('opener')!
+
+        expect(damage5).toBe(damage1 * 2)
+      })
+
+      it('should apply scaling to party-wide traps', () => {
+        const member1 = createTestCharacter({ id: 'char1' })
+        const member2 = createTestCharacter({ id: 'char2' })
+        const party = [member1, member2]
+
+        // GAS_BOMB hits entire party
+        RandomService.setSeed(12345)
+        const result1 = TrapService.applyTrapEffects('GAS_BOMB', member1, party, 1)
+
+        RandomService.setSeed(12345)
+        const result5 = TrapService.applyTrapEffects('GAS_BOMB', member1, party, 5)
+
+        // Each member should have 2x damage at level 5
+        expect(result5.damageDealt.get('char1')!).toBe(result1.damageDealt.get('char1')! * 2)
+        expect(result5.damageDealt.get('char2')!).toBe(result1.damageDealt.get('char2')! * 2)
+      })
+    })
+
+    describe('status escalation (authentic Wizardry 1)', () => {
+      it('should escalate PARALYZED to DEAD on already paralyzed character', () => {
+        const opener = createTestCharacter({
+          id: 'opener',
+          name: 'Stunned',
+          status: CharacterStatus.PARALYZED
+        })
+        const party = [opener]
+
+        // STUNNER applies PARALYZED - queue hit roll
+        RandomService.queueNextValues([0.5])
+
+        const result = TrapService.applyTrapEffects('STUNNER', opener, party)
+
+        expect(result.statusApplied.get('opener')).toBe(CharacterStatus.DEAD)
+        expect(result.message).toContain('already paralyzed and dies')
+      })
+
+      it('should NOT escalate POISONED (stays POISONED)', () => {
+        const opener = createTestCharacter({
+          id: 'opener',
+          status: CharacterStatus.POISONED
+        })
+        const party = [opener]
+
+        // POISON_NEEDLE applies damage + POISONED
+        RandomService.queueNextValues([0.5])  // 1d6 damage
+
+        const result = TrapService.applyTrapEffects('POISON_NEEDLE', opener, party)
+
+        // Should stay POISONED, not escalate
+        expect(result.statusApplied.get('opener')).toBe(CharacterStatus.POISONED)
+        expect(result.message).not.toContain('dies')
+      })
+
+      it('should apply status normally to OK character', () => {
+        const opener = createTestCharacter({
+          id: 'opener',
+          status: CharacterStatus.OK
+        })
+        const party = [opener]
+
+        RandomService.queueNextValues([0.5])
+
+        const result = TrapService.applyTrapEffects('STUNNER', opener, party)
+
+        expect(result.statusApplied.get('opener')).toBe(CharacterStatus.PARALYZED)
+        expect(result.message).toContain('paralyzed')
+        expect(result.message).not.toContain('dies')
+      })
     })
 
     describe('hitChance', () => {

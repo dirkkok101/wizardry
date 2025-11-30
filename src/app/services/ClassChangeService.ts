@@ -3,6 +3,8 @@ import { CharacterClass } from '@models/CharacterClass'
 import { CharacterSpellPoints, SpellPointPool } from '@models/SpellPoints'
 import { ClassService } from './ClassService'
 import { LevelUpService } from './LevelUpService'
+import { RaceService } from './RaceService'
+import { RandomService } from './RandomService'
 
 interface ClassChangeResult {
   success: boolean
@@ -26,9 +28,19 @@ interface ClassChangeResult {
  */
 export class ClassChangeService {
   /**
-   * Age increase per class change in weeks (1 year)
+   * Calculate age increase for class change (authentic Wizardry 1)
+   *
+   * Formula: (1d3 + 3) years + 44 weeks
+   * - 1d3 + 3 = 4 to 6 years
+   * - Plus 44 weeks
+   * - Total range: 252-356 weeks (4.8-6.8 years)
+   *
+   * This makes class changing a significant decision due to the age penalty.
    */
-  private static readonly CLASS_CHANGE_AGE_WEEKS = 52
+  private static getClassChangeAgeWeeks(): number {
+    const years = RandomService.rollDie(3) + 3  // 1d3 + 3 = 4-6 years
+    return (years * 52) + 44  // Convert to weeks + 44
+  }
 
   /**
    * Check if character can change to a new class
@@ -45,33 +57,34 @@ export class ClassChangeService {
       return { allowed: false, reason: 'Invalid class' }
     }
 
-    // Check stat requirements
-    const statRequirements = classData.statRequirements
-    if (statRequirements) {
-      if (statRequirements.strength && character.strength < statRequirements.strength) {
-        return { allowed: false, reason: `Requires ${statRequirements.strength} STR` }
+    // Check stat requirements (uses short names from ClassRequirements: str, int, pie, vit, agi, luc)
+    const requirements = classData.requirements
+    if (requirements) {
+      if (requirements.str && character.strength < requirements.str) {
+        return { allowed: false, reason: `Requires ${requirements.str} STR` }
       }
-      if (statRequirements.intelligence && character.intelligence < statRequirements.intelligence) {
-        return { allowed: false, reason: `Requires ${statRequirements.intelligence} INT` }
+      if (requirements.int && character.intelligence < requirements.int) {
+        return { allowed: false, reason: `Requires ${requirements.int} INT` }
       }
-      if (statRequirements.piety && character.piety < statRequirements.piety) {
-        return { allowed: false, reason: `Requires ${statRequirements.piety} PIE` }
+      if (requirements.pie && character.piety < requirements.pie) {
+        return { allowed: false, reason: `Requires ${requirements.pie} PIE` }
       }
-      if (statRequirements.vitality && character.vitality < statRequirements.vitality) {
-        return { allowed: false, reason: `Requires ${statRequirements.vitality} VIT` }
+      if (requirements.vit && character.vitality < requirements.vit) {
+        return { allowed: false, reason: `Requires ${requirements.vit} VIT` }
       }
-      if (statRequirements.agility && character.agility < statRequirements.agility) {
-        return { allowed: false, reason: `Requires ${statRequirements.agility} AGI` }
+      if (requirements.agi && character.agility < requirements.agi) {
+        return { allowed: false, reason: `Requires ${requirements.agi} AGI` }
       }
-      if (statRequirements.luck && character.luck < statRequirements.luck) {
-        return { allowed: false, reason: `Requires ${statRequirements.luck} LUC` }
+      if (requirements.luc && character.luck < requirements.luc) {
+        return { allowed: false, reason: `Requires ${requirements.luc} LUC` }
       }
     }
 
-    // Check alignment requirements
-    if (classData.alignmentRequirements && classData.alignmentRequirements.length > 0) {
-      if (!classData.alignmentRequirements.includes(character.alignment)) {
-        return { allowed: false, reason: `Requires ${classData.alignmentRequirements.join(' or ')} alignment` }
+    // Check alignment restrictions (uses lowercase values: "good", "neutral", "evil")
+    if (classData.alignmentRestrictions && classData.alignmentRestrictions.length > 0) {
+      const characterAlignment = character.alignment.toLowerCase()
+      if (!classData.alignmentRestrictions.includes(characterAlignment)) {
+        return { allowed: false, reason: `Requires ${classData.alignmentRestrictions.join(' or ')} alignment` }
       }
     }
 
@@ -96,6 +109,7 @@ export class ClassChangeService {
    * - Level resets to 1
    * - maxLev is preserved (for HP reroll system)
    * - XP resets to 0
+   * - Stats reset to racial base (authentic Wizardry 1)
    * - Known spells retained
    * - Character ages by 1 year (52 weeks)
    * - Spell points recalculated for new class
@@ -115,13 +129,27 @@ export class ClassChangeService {
     // Calculate new spell points for the new class at level 1
     const newSpellPoints = this.calculateSpellPointsForClassChange(character, newClass)
 
-    // Create updated character
+    // Get racial base stats (authentic Wizardry 1 - stats reset on class change)
+    const raceData = RaceService.getRaceData(character.race)
+    const baseStats = raceData.baseStats
+
+    // Calculate age increase (authentic Wizardry 1: 4-6 years + 44 weeks)
+    const ageIncrease = this.getClassChangeAgeWeeks()
+
+    // Create updated character with stats reset to racial base
     const updatedCharacter: Character = {
       ...character,
       class: newClass,
       level: 1,  // Reset to level 1
       experience: 0,  // Reset XP
-      age: character.age + this.CLASS_CHANGE_AGE_WEEKS,  // Age by 1 year
+      age: character.age + ageIncrease,  // Age by 4-6+ years (authentic)
+      // Authentic Wizardry 1: Stats reset to racial base on class change
+      strength: baseStats.str,
+      intelligence: baseStats.int,
+      piety: baseStats.pie,
+      vitality: baseStats.vit,
+      agility: baseStats.agi,
+      luck: baseStats.luc,
       // maxLev is preserved - this is the key for HP reroll system
       // maxHp stays the same (reroll happens on next level up)
       spellPoints: newSpellPoints,
@@ -131,7 +159,7 @@ export class ClassChangeService {
     return {
       success: true,
       updatedCharacter,
-      ageIncrease: this.CLASS_CHANGE_AGE_WEEKS
+      ageIncrease
     }
   }
 

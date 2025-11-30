@@ -1,6 +1,7 @@
 // Phase 3 Spell Casting Features Tests
 import { CombatService } from '../CombatService'
 import { SpellCastingService } from '../SpellCastingService'
+import { RandomService } from '../RandomService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
 import { MonsterGroup } from '@models/Combat'
 import { CharacterStatus } from '@models/CharacterStatus'
@@ -154,7 +155,8 @@ describe('CombatService - Phase 3: Spell Casting', () => {
 
   describe('DISPEL (Turn Undead) Action', () => {
     it('calculates correct dispel chance based on level difference', () => {
-      // Test formula: (CasterLevel - UndeadLevel) × 10, clamped to 5-95%
+      // Authentic Wizardry 1 formula: 50% + (5 × CasterLevel) - (10 × MonsterLevel)
+      // Level 10 Priest vs Level 5 zombie: 50 + 50 - 50 = 50%
 
       const priest = createTestCharacter({
         id: 'priest1',
@@ -180,7 +182,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      // (10 - 5) × 10 = 50% chance, 30% roll < 50% = success
+      // 50 + (10×5) - (10×5) = 50% chance, 30% roll < 50% = success
       expect(result.messages.join(' ')).toContain('undead destroyed')
 
       Math.random = originalRandom
@@ -222,6 +224,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
     })
 
     it('fails when roll exceeds dispel chance', () => {
+      // Formula: 50 + (5×5) - (10×3) = 50 + 25 - 30 = 45%
       const priest = createTestCharacter({
         id: 'priest1',
         class: 'Priest',
@@ -239,13 +242,13 @@ describe('CombatService - Phase 3: Spell Casting', () => {
 
       // Mock random to ensure failure
       const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.90) // 90% > 20% expected chance
+      Math.random = jest.fn(() => 0.50) // 50% > 45% expected chance
 
       const cmd = CombatService.createCommand(priest, 'DISPEL', zombie, { groupId: 'A' })
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      // (5 - 3) × 10 = 20% chance, 90% roll > 20% = failure
+      // 50 + 25 - 30 = 45% chance, 50% roll > 45% = failure
       expect(result.messages.join(' ')).toContain('undead resist')
 
       // Monster should be unchanged
@@ -257,6 +260,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
     })
 
     it('clamps dispel chance to minimum 5%', () => {
+      // Formula: 50 + (5×1) - (10×10) = 50 + 5 - 100 = -45 → clamped to 5%
       const priest = createTestCharacter({
         id: 'priest1',
         class: 'Priest',
@@ -280,7 +284,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      // (1 - 10) × 10 = -90 → clamped to 5%
+      // 50 + 5 - 100 = -45% → clamped to 5%
       // 4% roll < 5% = success
       expect(result.messages.join(' ')).toContain('undead destroyed')
 
@@ -288,6 +292,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
     })
 
     it('clamps dispel chance to maximum 95%', () => {
+      // Formula: 50 + (5×50) - (10×1) = 50 + 250 - 10 = 290 → clamped to 95%
       const priest = createTestCharacter({
         id: 'priest1',
         class: 'Priest',
@@ -311,11 +316,130 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const parryingCombatants = new Set<string>()
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
-      // (50 - 1) × 10 = 490 → clamped to 95%
+      // 50 + 250 - 10 = 290% → clamped to 95%
       // 96% roll > 95% = failure
       expect(result.messages.join(' ')).toContain('undead resist')
 
       Math.random = originalRandom
+    })
+
+    it('applies -20% penalty for Bishop (level 4+)', () => {
+      // Formula: 50 + (5×10) - (10×5) - 20 = 50 + 50 - 50 - 20 = 30%
+      const bishop = createTestCharacter({
+        id: 'bishop1',
+        class: 'Bishop',
+        level: 10
+      })
+
+      const zombie = createTestMonster({ id: 'z1', level: 5 })
+      const state = createTestCombatState({
+        monsterGroups: [{
+          id: 'A',
+          monsters: [zombie],
+          formation: 'front'
+        }]
+      })
+
+      // Queue random value - 35% > 30% = failure (with penalty)
+      // RandomService.chance(30) returns true if random < 0.30
+      RandomService.queueNextValues([0.35]) // 35% > 30% = failure
+
+      const cmd = CombatService.createCommand(bishop, 'DISPEL', zombie, { groupId: 'A' })
+      const parryingCombatants = new Set<string>()
+      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+
+      // Bishop gets -20% penalty: 50 + 50 - 50 - 20 = 30%
+      // 35% roll > 30% = failure
+      expect(result.messages.join(' ')).toContain('undead resist')
+    })
+
+    it('applies -40% penalty for Lord (level 9+)', () => {
+      // Formula: 50 + (5×10) - (10×5) - 40 = 50 + 50 - 50 - 40 = 10%
+      const lord = createTestCharacter({
+        id: 'lord1',
+        class: 'Lord',
+        level: 10
+      })
+
+      const zombie = createTestMonster({ id: 'z1', level: 5 })
+      const state = createTestCombatState({
+        monsterGroups: [{
+          id: 'A',
+          monsters: [zombie],
+          formation: 'front'
+        }]
+      })
+
+      // Queue random values - 15% > 10% = failure (with penalty)
+      // Need to queue multiple since there may be other random calls
+      RandomService.queueNextValues([0.99, 0.99, 0.99]) // 99% > any chance = failure
+
+      const cmd = CombatService.createCommand(lord, 'DISPEL', zombie, { groupId: 'A' })
+      const parryingCombatants = new Set<string>()
+      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+
+      // Lord gets -40% penalty: 50 + 50 - 50 - 40 = 10%
+      // 99% roll > 10% = failure
+      expect(result.messages.join(' ')).toContain('undead resist')
+    })
+
+    it('does not apply Bishop penalty below level 4', () => {
+      // Level 3 Bishop should have NO penalty
+      // Formula: 50 + (5×3) - (10×1) = 50 + 15 - 10 = 55%
+      const bishop = createTestCharacter({
+        id: 'bishop1',
+        class: 'Bishop',
+        level: 3
+      })
+
+      const zombie = createTestMonster({ id: 'z1', level: 1 })
+      const state = createTestCombatState({
+        monsterGroups: [{
+          id: 'A',
+          monsters: [zombie],
+          formation: 'front'
+        }]
+      })
+
+      // Queue random values - may need multiple for the code path
+      // chance(55) succeeds if random * 100 < 55
+      RandomService.queueNextValues([0.01, 0.01, 0.01]) // 1% always succeeds
+
+      const cmd = CombatService.createCommand(bishop, 'DISPEL', zombie, { groupId: 'A' })
+      const parryingCombatants = new Set<string>()
+      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+
+      // No penalty at level 3: 50 + 15 - 10 = 55%
+      expect(result.messages.join(' ')).toContain('undead destroyed')
+    })
+
+    it('does not apply Lord penalty below level 9', () => {
+      // Level 8 Lord should have NO penalty
+      // Formula: 50 + (5×8) - (10×1) = 50 + 40 - 10 = 80%
+      const lord = createTestCharacter({
+        id: 'lord1',
+        class: 'Lord',
+        level: 8
+      })
+
+      const zombie = createTestMonster({ id: 'z1', level: 1 })
+      const state = createTestCombatState({
+        monsterGroups: [{
+          id: 'A',
+          monsters: [zombie],
+          formation: 'front'
+        }]
+      })
+
+      // Queue random values - may need multiple for the code path
+      RandomService.queueNextValues([0.01, 0.01, 0.01]) // 1% always succeeds
+
+      const cmd = CombatService.createCommand(lord, 'DISPEL', zombie, { groupId: 'A' })
+      const parryingCombatants = new Set<string>()
+      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+
+      // No penalty at level 8: 50 + 40 - 10 = 80%
+      expect(result.messages.join(' ')).toContain('undead destroyed')
     })
 
     it('requires groupId in command data', () => {
