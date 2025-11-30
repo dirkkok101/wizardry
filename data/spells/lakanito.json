@@ -1,17 +1,25 @@
 {
   "id": "lakanito",
   "name": "LAKANITO",
-  "level": 5,
+  "translation": "Suffocation",
+  "level": 6,
   "casterType": "mage",
-  "category": "offensive",
+  "category": "instant_death",
   "target": "group",
-  "description": "Vacuum attack, ignores some resistances",
-  "castableIn": [
-    "combat"
-  ],
-  "damage": {
-    "dice": "6d6",
-    "type": "air"
+  "description": "Suffocates all air-breathing monsters in the group - instant death spell",
+  "castableIn": ["combat"],
+  "instantDeath": {
+    "type": "suffocation",
+    "requirement": "Target must breathe air"
   },
-  "ignoresAC": true
+  "resistance": {
+    "formula": "(6 × Monster Level)%",
+    "examples": {
+      "level1": "6% resist",
+      "level10": "60% resist",
+      "level17plus": "Effectively immune (100%+)"
+    }
+  },
+  "immunities": ["undead", "constructs", "non_breathing_creatures"],
+  "notes": "Instant death spell with level-based resistance; completely useless against undead"
 }

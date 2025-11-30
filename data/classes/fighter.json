@@ -15,12 +15,19 @@
   "hitDice": "1d10",
   "spellAccess": null,
   "attacksPerLevel": {
-    "1-4": 1,
-    "5-9": 2,
-    "10-14": 3,
-    "15+": 4
+    "formula": "(level / 5) + 1",
+    "max": 10
   },
-  "xpTable": [2000, 4000, 8000, 16000, 32000, 64000, 128000, 250000, 500000, 1000000, 1500000],
+  "xpTable": [1000, 1724, 2972, 5124, 8834, 15231, 26260, 45275, 78060, 134586, 232044, 400075],
+  "xpPerLevelAfter13": 289709,
+  "savingThrowBonuses": {
+    "death": -3
+  },
+  "resistances": {
+    "poison": 15,
+    "paralysis": 15,
+    "critical": 15
+  },
   "specialAbilities": ["Can use all weapons and armor"],
   "canIdentifyItems": false,
   "canDispelUndead": false,

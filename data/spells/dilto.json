@@ -1,13 +1,17 @@
 {
   "id": "dilto",
   "name": "DILTO",
+  "translation": "Darkness",
   "level": 2,
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Blinds enemy group",
-  "statusEffect": "BLIND",
-  "castableIn": [
-    "combat"
-  ]
+  "description": "Creates darkness around enemy group, making them easier to hit",
+  "castableIn": ["combat"],
+  "effect": {
+    "acModifier": 2,
+    "stacks": true
+  },
+  "duration": "Until combat ends",
+  "comparison": "Half as effective as MORLIS (+3 AC)"
 }

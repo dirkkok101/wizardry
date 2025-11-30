@@ -21,18 +21,35 @@
   "spellAccess": {
     "priest": {
       "minLevel": 4,
-      "maxLevel": 6
+      "maxLevel": 7
     }
   },
-  "attacksPerLevel": {
-    "1-4": 1,
-    "5-9": 2,
-    "10-14": 3,
-    "15+": 4
+  "spellPointFormula": {
+    "priest": { "A": 3, "B": 2 }
   },
-  "xpTable": [3750, 7500, 15000, 30000, 60000, 120000, 240000, 480000, 960000, 1440000, 1920000],
-  "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (max level 6)", "Can dispel undead"],
+  "spellLevelAccess": {
+    "priest": [4, 6, 8, 10, 12, 14, 16]
+  },
+  "attacksPerLevel": {
+    "formula": "(level / 5) + 1",
+    "max": 10
+  },
+  "xpTable": [1300, 2280, 4000, 7017, 12310, 21596, 37887, 66468, 116610, 204578, 358908, 629663],
+  "xpPerLevelAfter13": 475008,
+  "savingThrowBonuses": {
+    "death": -2,
+    "petrify": -2
+  },
+  "resistances": {
+    "poison": 10,
+    "paralysis": 10,
+    "critical": 10,
+    "stoning": 10
+  },
+  "dispelUndeadPenalty": -40,
+  "dispelUndeadMinLevel": 9,
+  "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (all 7 levels, starts at character level 4)", "Can dispel undead"],
   "canIdentifyItems": false,
   "canDispelUndead": true,
-  "canCriticalHit": true
+  "canCriticalHit": false
 }

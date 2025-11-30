@@ -1,16 +1,23 @@
 {
   "id": "mahalito",
   "name": "MAHALITO",
+  "translation": "Big Fire",
   "level": 3,
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "4d6 fire damage",
-  "castableIn": [
-    "combat"
-  ],
+  "description": "Large fireball that hits all monsters in a group",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "4d6",
+    "min": 4,
+    "max": 24,
+    "average": 14,
     "type": "fire"
+  },
+  "resistance": {
+    "type": "fire",
+    "effect": "half_damage",
+    "additionalResistance": "Magic Resistance provides save to negate"
   }
 }

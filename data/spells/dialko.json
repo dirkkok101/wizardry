@@ -1,15 +1,15 @@
 {
   "id": "dialko",
   "name": "DIALKO",
+  "translation": "Softness",
   "level": 3,
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Removes paralysis and sleep from one ally",
-  "castableIn": [
-    "combat",
-    "dungeon",
-    "town"
-  ],
-  "removeStatusEffect": "PARALYZED"
+  "description": "Cures paralysis and sleep status - essential for rescuing disabled party members",
+  "castableIn": ["combat", "camp"],
+  "effect": {
+    "type": "cure_status",
+    "cures": ["paralysis", "sleep"]
+  }
 }

@@ -115,14 +115,14 @@
         "helmets": ["leather"]
       },
       "spellAccess": null,
-      "specialAbilities": ["disarm_traps", "backstab"],
-      "hitDice": "1d8",
+      "specialAbilities": ["disarm_traps"],
+      "hitDice": "1d6",
       "attacksPerLevel": {
         "1+": 1
       },
       "canIdentifyItems": false,
       "canDispelUndead": false,
-      "canCriticalHit": true
+      "canCriticalHit": false
     },
     {
       "id": "bishop",
@@ -130,11 +130,10 @@
       "type": "elite",
       "description": "Master of both divine and arcane magic. Can identify cursed items. Slower spell progression.",
       "requirements": {
-        "str": 12,
         "int": 12,
         "pie": 12
       },
-      "alignmentRestrictions": [],
+      "alignmentRestrictions": ["good", "evil"],
       "equipmentRestrictions": {
         "weapons": ["mace", "flail", "staff"],
         "armor": [],
@@ -181,12 +180,12 @@
       },
       "spellAccess": {
         "mage": {
-          "minLevel": 1,
-          "maxLevel": 6
+          "minLevel": 4,
+          "maxLevel": 7
         }
       },
-      "specialAbilities": ["spellcasting_mage", "critical_hit"],
-      "hitDice": "1d10",
+      "specialAbilities": ["spellcasting_mage"],
+      "hitDice": "1d8",
       "attacksPerLevel": {
         "1-4": 1,
         "5-9": 2,
@@ -195,7 +194,7 @@
       },
       "canIdentifyItems": false,
       "canDispelUndead": false,
-      "canCriticalHit": true
+      "canCriticalHit": false
     },
     {
       "id": "lord",
@@ -219,11 +218,11 @@
       },
       "spellAccess": {
         "priest": {
-          "minLevel": 1,
-          "maxLevel": 6
+          "minLevel": 4,
+          "maxLevel": 7
         }
       },
-      "specialAbilities": ["spellcasting_priest", "dispel_undead", "critical_hit"],
+      "specialAbilities": ["spellcasting_priest", "dispel_undead"],
       "hitDice": "1d10",
       "attacksPerLevel": {
         "1-4": 1,
@@ -233,7 +232,7 @@
       },
       "canIdentifyItems": false,
       "canDispelUndead": true,
-      "canCriticalHit": true
+      "canCriticalHit": false
     },
     {
       "id": "ninja",
@@ -250,16 +249,17 @@
       },
       "alignmentRestrictions": ["evil"],
       "equipmentRestrictions": {
-        "weapons": ["dagger", "short_sword", "shuriken"],
-        "armor": ["leather", "chain", "none"],
-        "shields": ["small"],
-        "helmets": ["leather"]
+        "weapons": ["dagger", "short_sword", "shuriken", "staff", "nunchaku"],
+        "armor": ["none"],
+        "shields": [],
+        "helmets": []
       },
       "spellAccess": null,
       "specialAbilities": ["critical_hit", "decapitate", "disarm_traps"],
-      "hitDice": "1d8",
+      "hitDice": "1d6",
       "attacksPerLevel": {
-        "1+": 2
+        "formula": "(level / 5) + 2",
+        "max": 10
       },
       "canIdentifyItems": false,
       "canDispelUndead": false,
@@ -335,15 +335,14 @@
 - `"identify_items"`: Can identify cursed items (Bishop only)
 - `"dispel_undead"`: Extra effective against undead (Priest, Bishop, Lord)
 - `"disarm_traps"`: Can disarm traps (Thief, Ninja)
-- `"backstab"`: Bonus damage from behind (Thief)
-- `"critical_hit"`: Chance for critical hits (Samurai, Lord, Ninja, Thief)
-- `"decapitate"`: Instant kill chance (Ninja only)
+- `"critical_hit"`: Chance for instant kill hits (**Ninja only**)
+- `"decapitate"`: Same as critical_hit (Ninja only)
 
 **hitDice**: `string` - Hit point die per level
 - `"1d4"`: Mage (lowest HP)
-- `"1d6"`: Bishop
-- `"1d8"`: Priest, Thief, Ninja
-- `"1d10"`: Fighter, Samurai, Lord (highest HP)
+- `"1d6"`: Thief, Bishop, Ninja
+- `"1d8"`: Priest, Samurai (Samurai rolls **Level+1 dice** as bonus)
+- `"1d10"`: Fighter, Lord
 
 **attacksPerLevel**: `object` - Attacks per round by level range
 - Keys: Level range strings (e.g., "1-4", "5-9", "13+")
@@ -361,21 +360,54 @@
 - `true`: Priest, Bishop, Lord
 - `false`: Fighter, Mage, Thief, Samurai, Ninja
 
-**canCriticalHit**: `boolean` - Can perform critical hits/backstabs?
-- `true`: Thief, Samurai, Lord, Ninja
-- `false`: Fighter, Mage, Priest, Bishop
+**canCriticalHit**: `boolean` - Can perform critical hits (instant kill)?
+- `true`: **Ninja only**
+- `false`: Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord
+
+**savingThrowBonuses**: `object` - Class saving throw bonuses (negative = better)
+- Keys: "death", "petrify", "wand", "breath", "spell"
+- Values: Negative numbers improve saves
+
+| Class | Death | Petrify | Wand | Breath | Spell |
+|-------|-------|---------|------|--------|-------|
+| Fighter | -3 | — | — | — | — |
+| Mage | — | — | — | — | -3 |
+| Priest | — | -3 | — | — | — |
+| Thief | — | — | — | -3 | — |
+| Bishop | — | -2 | -2 | — | -2 |
+| Samurai | -2 | — | — | — | -2 |
+| Lord | -2 | -2 | — | — | — |
+| Ninja | -3 | -2 | -4 | -3 | -2 |
+
+**resistances**: `object` - Class resistance bonuses (percentage)
+- Keys: "poison", "paralysis", "critical", "stoning", "breath", "poisonGasTrap", "antiMageTrap", "antiPriestTrap", "silence"
+- Values: Percentage bonus to resistance
+- Each resistance type is stored as a separate field for independent evaluation
+
+| Class | poison | paralysis | critical | stoning | breath | poisonGasTrap | antiMageTrap | antiPriestTrap | silence |
+|-------|--------|-----------|----------|---------|--------|---------------|--------------|----------------|---------|
+| Fighter | 15 | 15 | 15 | — | — | — | — | — | — |
+| Mage | — | — | — | — | — | — | 15 | 15 | 15 |
+| Priest | — | — | — | 15 | — | — | — | — | — |
+| Thief | — | — | — | — | — | 15 | — | — | — |
+| Bishop | — | — | — | 10 | 10 | — | 10 | 10 | 10 |
+| Samurai | 10 | 10 | 10 | — | — | — | 10 | 10 | 10 |
+| Lord | 10 | 10 | 10 | 10 | — | — | — | — | — |
+| Ninja | 15 | 15 | 15 | 10 | 20 | 15 | 10 | 10 | 10 |
 
 ## Class Changing Mechanics
 
 **Class Change System**: Characters can change class after creation
 - **Location**: Training Grounds
-- **Cost**: Time (character ages during retraining)
+- **Cost**: Time (character ages 5-7 years)
 - **Process**:
   1. Character resets to level 1 in new class
-  2. All stats reset to racial minimum values
-  3. HP reset based on new class hit dice
-  4. Spells preserved from previous class
-  5. Equipment restrictions apply immediately
+  2. XP resets to 0
+  3. All stats reset to **racial minimum values** (not kept!)
+  4. HP is **preserved** via MaxLev tracking (never decreases)
+  5. All learned spells are **permanently retained**
+  6. Equipment unequipped but remains in inventory
+  7. New class restrictions apply immediately
 
 **Strategic Use**:
 - Create hybrid spell lists (e.g., Mage → Bishop → Fighter for combat mage)
@@ -391,19 +423,19 @@
 - Must meet new class stat requirements (with racial minimums)
 - Must have compatible alignment
 - Cannot change if in dungeon
-- Character ages 1-3 weeks per class change
+- Character ages **5-7 years** per class change (1d3+3 years + 44 weeks)
 
 ## Special Ability Reference
 
 ### Spellcasting
 - **spellcasting_mage**: Access to offensive, utility, and transformation magic
 - **spellcasting_priest**: Access to healing, buffs, and holy damage
-- Classes: Mage (1-7), Priest (1-7), Bishop (1-7 both), Samurai (Mage 1-6), Lord (Priest 1-6)
+- Classes: Mage (1-7), Priest (1-7), Bishop (1-7 both), Samurai (Mage 1-7, starts level 4), Lord (Priest 1-7, starts level 4)
 
 ### Combat Abilities
-- **critical_hit**: Chance for bonus damage on successful hit
-- **decapitate**: Chance for instant kill (Ninja only, extremely rare)
-- **backstab**: Bonus damage when attacking from behind (Thief only)
+- **critical_hit**: Chance for instant kill (Ninja only). Formula: min(level × 2, 50)%
+- **decapitate**: Same as critical_hit (Ninja only)
+- Note: Thief, Samurai, and Lord do NOT have critical hits
 
 ### Utility Abilities
 - **identify_items**: Detect cursed items before equipping (Bishop only)
@@ -423,7 +455,7 @@
 | Bishop | Mace, Flail, Staff only |
 | Samurai | All |
 | Lord | All |
-| Ninja | Dagger, Short Sword, Shuriken |
+| Ninja | Dagger, Short Sword, Shuriken, Staff, Nunchaku |
 
 ### Armor
 
@@ -436,7 +468,7 @@
 | Bishop | All |
 | Samurai | All |
 | Lord | All |
-| Ninja | Leather, Chain |
+| Ninja | None (best AC unarmored) |
 
 ### Shields
 
@@ -449,7 +481,7 @@
 | Bishop | All |
 | Samurai | All |
 | Lord | All |
-| Ninja | Small only |
+| Ninja | None |
 
 ### Helmets
 
@@ -462,7 +494,7 @@
 | Bishop | None |
 | Samurai | All |
 | Lord | All |
-| Ninja | Leather only |
+| Ninja | None |
 
 ## Class Tier Comparison
 
@@ -493,8 +525,9 @@
 ## Validation
 
 All class data validated against:
-- Wizardry Wiki (wizardry.fandom.com)
-- Strategy Wiki - Character Classes
+- Thomas William Ewers' reverse-engineered Apple II Pascal source code
+- Snafaru's Wizardry Game Code Calculations (zimlab.com)
+- Data Driven Gamer blog (datadrivengamer.blogspot.com)
 - Original Wizardry 1 manual
 
 **Total Classes**: 8 (4 basic + 4 elite)
@@ -502,15 +535,16 @@ All class data validated against:
 ## Notes
 
 - **Easiest to Create**: Fighter (STR ≥ 11 only)
-- **Hardest to Create**: Ninja (all stats ≥ 17)
+- **Hardest to Create**: Ninja (**IMPOSSIBLE at character creation** - requires 52+ bonus points, max is 29)
 - **Most Versatile**: Bishop (both spell types, item identification)
-- **Highest HP**: Fighter, Samurai, Lord (1d10 per level)
+- **Highest HP**: Fighter, Lord (1d10 per level). Samurai gets +1 bonus die (d8 but Level+1 dice).
 - **Lowest HP**: Mage (1d4 per level)
-- **Most Attacks**: Fighter at level 13+ (4 attacks per round)
-- **Instant Kill**: Ninja only (decapitate ability)
+- **Most Attacks**: Ninja at high level (formula: 2 + level/5, max 10)
+- **Critical Hits**: **Ninja only** (Thief, Samurai, Lord do NOT have critical hits)
 - **Item Expert**: Bishop only (identify cursed items)
 - **Best Healers**: Priest, Bishop, Lord (priest spells)
 - **Best Damage**: Mage, Bishop (high-level mage spells)
+- **Samurai/Lord Spells**: Unlock at character level 4, not level 1
 
-**Last Updated**: 2025-10-26
-**Next Review**: After implementing character creation and class change systems
+**Last Updated**: 2025-11-30
+**Status**: ✅ Complete - validated against reverse-engineered source code

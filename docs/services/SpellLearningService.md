@@ -32,7 +32,11 @@ LearnChance = (INT or PIE) / 30
 
 // For mage spells: use INT
 // For priest spells: use PIE
+// IQ 18 = 60% per eligible Mage spell
+// Piety 15 = 50% per eligible Priest spell
 ```
+
+**IMPORTANT**: The **first spell of each circle is always GUARANTEED** when you gain access to that spell level—no roll required.
 
 **Example**:
 ```typescript
@@ -137,10 +141,19 @@ function getAccessibleSpellLevels(
 
 **Returns**: Array of spell levels accessible (1-7)
 
-**Class Spell Access**:
-- Mage/Priest: All 7 levels by high level
-- Bishop: All 7 mage + 7 priest (learns slower)
-- Samurai/Lord: Levels 1-6 only (no L7 spells)
+**Spell Level Access by Class Level**:
+
+| Spell Level | Mage/Priest | Bishop (Mage) | Bishop (Priest) | Samurai | Lord |
+|------------|-------------|---------------|-----------------|---------|------|
+| 1 | Level 1 | Level 1 | Level 4 | Level 4 | Level 4 |
+| 2 | Level 1 | Level 5 | Level 8 | Level 7 | Level 6 |
+| 3 | Level 3 | Level 9 | Level 12 | Level 10 | Level 8 |
+| 4 | Level 5 | Level 13 | Level 16 | Level 13 | Level 10 |
+| 5 | Level 7 | Level 17 | Level 20 | Level 16 | Level 12 |
+| 6 | Level 9 | Level 21 | Level 24 | Level 19 | Level 14 |
+| 7 | Level 11 | Level 25 | Level 28 | Level 22 | Level 16 |
+
+**Note**: Lords reach 7th-level Priest spells at level 16—significantly faster than Samurai reach 7th-level Mage spells at level 22.
 
 **Example**:
 ```typescript
@@ -258,13 +271,14 @@ See [SpellLearningService.test.ts](../../tests/services/SpellLearningService.tes
 - INT 15 mage has 50% learn chance
 - PIE 15 priest has 50% learn chance
 - INT 18 has 60% learn chance (max)
+- **First spell of each circle is GUARANTEED (no roll)**
 - Level-up attempts all accessible spells
 - Bishops learn both mage and priest spells
-- Samurai/Lord capped at Level 6 spells
+- **Samurai reach L7 at level 22, Lord reach L7 at level 16**
 - Spell point allocation increases with level
 - Unlearned spells excludes spell book
 - Learn chance uses INT for mage, PIE for priest
-- Bishop learn penalty applied
+- **Class-changed characters retain spell learning eligibility for circles they know at least one spell in**
 
 ## Related
 

@@ -1,17 +1,22 @@
 {
   "id": "badios",
   "name": "BADIOS",
+  "translation": "Harm",
   "level": 1,
   "casterType": "priest",
   "category": "offensive",
   "target": "single",
-  "description": "1d8 damage to undead",
-  "castableIn": [
-    "combat"
-  ],
+  "description": "Deals damage to a single monster",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",
-    "type": "holy"
+    "min": 1,
+    "max": 8,
+    "average": 4.5,
+    "type": "divine"
   },
-  "undeadOnly": true
+  "resistance": {
+    "type": "magic_resistance",
+    "notes": "Subject to Spell Resistance"
+  }
 }

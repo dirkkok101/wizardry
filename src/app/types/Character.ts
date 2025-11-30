@@ -28,9 +28,10 @@ export interface Character {
   luck: number
 
   // Progression
-  level: number         // 1-13+
+  level: number         // 1-13+ (current level)
+  maxLev: number        // Highest level ever achieved (for HP preservation on class change)
   experience: number    // XP total
-  age: number           // Starting 14-16, increases with inn rests
+  age: number           // In weeks. Starting: (18*52) + random(0,299) = 18-23 years
 
   // Combat Stats
   hp: number            // Current hit points

@@ -27,7 +27,9 @@
       "strengths": ["Balanced", "Versatile"],
       "weaknesses": ["Low PIE (5) makes Priest classes harder"],
       "bestClasses": ["fighter", "mage", "thief"],
-      "savingThrowBonus": {}
+      "savingThrowBonuses": {
+        "death": -1
+      }
     },
     {
       "id": "elf",
@@ -45,8 +47,8 @@
       "strengths": ["Excellent for Mage (INT 10)", "Excellent for Priest (PIE 10)", "Natural spellcaster"],
       "weaknesses": ["Low VIT (6) = fragile", "Low LUC (6)"],
       "bestClasses": ["mage", "priest", "bishop"],
-      "savingThrowBonus": {
-        "luckskil": -2
+      "savingThrowBonuses": {
+        "wand": -2
       }
     },
     {
@@ -65,9 +67,8 @@
       "strengths": ["Best starting VIT (10)", "High STR (10)", "Excellent PIE (10)"],
       "weaknesses": ["Very low AGI (5) = poor initiative/AC"],
       "bestClasses": ["fighter", "priest", "lord"],
-      "savingThrowBonus": {
-        "breath": -4,
-        "gas": -4
+      "savingThrowBonuses": {
+        "breath": -4
       }
     },
     {
@@ -86,7 +87,9 @@
       "strengths": ["Highest AGI (10)", "Good PIE (10)", "Balanced"],
       "weaknesses": ["No standout high stats"],
       "bestClasses": ["thief", "priest", "bishop"],
-      "savingThrowBonus": {}
+      "savingThrowBonuses": {
+        "petrify": -2
+      }
     },
     {
       "id": "hobbit",
@@ -103,8 +106,10 @@
       "description": "Lucky rogue with extreme LUC advantage. Hardest race to qualify for elite classes but highest stat total.",
       "strengths": ["Highest LUC by far (15)", "High AGI (10)", "Highest stat total (50)"],
       "weaknesses": ["Lowest STR (5)", "Low VIT (6)", "Low stats overall"],
-      "bestClasses": ["thief", "ninja"],
-      "savingThrowBonus": {}
+      "bestClasses": ["thief"],
+      "savingThrowBonuses": {
+        "spell": -3
+      }
     }
   ]
 }
@@ -142,13 +147,26 @@
 **bestClasses**: `array` - Class IDs this race excels at (references classes.json)
 - Uses class IDs: "fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"
 
-**savingThrowBonus**: `object` - Saving throw bonuses by type
-- Empty object `{}` if no bonuses
-- Keys: "breath", "gas", "luckskil", etc.
-- Values: Negative numbers improve saves (e.g. -4 = +4 bonus)
-- Examples:
-  - Dwarf: `{ "breath": -4, "gas": -4 }`
-  - Elf: `{ "luckskil": -2 }`
+**savingThrowBonuses**: `object` - Saving throw bonuses by type
+- Keys: "death", "petrify", "wand", "breath", "spell"
+- Values: Negative numbers improve saves (lower is better)
+- Race bonuses:
+  - Human: `{ "death": -1 }`
+  - Elf: `{ "wand": -2 }` (unused in original game code)
+  - Dwarf: `{ "breath": -4 }`
+  - Gnome: `{ "petrify": -2 }`
+  - Hobbit: `{ "spell": -3 }`
+
+**resistances**: `object` - Racial resistance bonuses (percentage)
+- Keys: "poison", "paralysis", "critical", "breath", "poisonGasTrap", "stoning", "antiMageTrap", "antiPriestTrap", "silence"
+- Values: Percentage bonus to resistance
+- Each resistance type is stored as a separate field for independent evaluation
+- Race resistances:
+  - Human: `{ "poison": 5, "paralysis": 5, "critical": 5 }`
+  - Elf: `{ "breath": 10 }` (halves damage)
+  - Dwarf: `{ "poisonGasTrap": 20 }`
+  - Gnome: `{ "stoning": 10 }`
+  - Hobbit: `{ "antiMageTrap": 15, "antiPriestTrap": 15, "silence": 15 }`
 
 ## Bonus Point Requirements
 
@@ -191,8 +209,11 @@ Save% = (CharacterLevel/5 + Luck/6 - ClassBonus - RaceBonus) * 5%
 ```
 
 Race bonuses reduce the percentage (improve save chance):
-- Dwarf: -4 vs breath/gas traps
-- Elf: -2 vs LUCKSKIL
+- Human: -1 vs death effects
+- Elf: -2 vs wand effects (unused in original game code)
+- Dwarf: -4 vs breath attacks
+- Gnome: -2 vs petrification
+- Hobbit: -3 vs spells
 
 ## File Organization
 
@@ -234,15 +255,16 @@ Race bonuses reduce the percentage (improve save chance):
 
 ### Hobbit
 - **Role**: Lucky rogue
-- **Best For**: Thieves, Ninjas (with exceptional rolls)
-- **Avoid**: Most elite classes (very high bonus point requirements)
-- **Strategy**: Rely on extreme LUC for critical hits and treasure
+- **Best For**: Thieves (highest AGI and LUC)
+- **Avoid**: Elite classes (Ninja is impossible at creation; requires 52+ points, max is 29)
+- **Strategy**: Rely on extreme LUC for saving throws and treasure. Best candidate for class change to Ninja after leveling.
 
 ## Validation
 
 All racial data validated against:
+- Thomas William Ewers' reverse-engineered Apple II Pascal source code
+- Snafaru's Wizardry Game Code Calculations (zimlab.com)
 - Data Driven Gamer blog (datadrivengamer.blogspot.com)
-- Strategy Wiki - Trebor's Castle
 - Original Wizardry 1 manual
 
 **Total Races**: 5
@@ -254,7 +276,7 @@ All racial data validated against:
 - **Lowest Base Stat**: Human PIE (5) and Hobbit STR (5)
 - **Most Balanced**: Human (no stat above 9, no stat below 5 except PIE)
 - **Most Specialized**: Hobbit (LUC 15 vs other stats 5-10)
-- **Elite Class Difficulty**: Hobbit is actually best for Lord and Ninja despite low stats (due to extreme LUC)
+- **Ninja**: Impossible to create at character creation (requires 52+ bonus points, max is 29). Can only be achieved through class change after leveling up.
 
-**Last Updated**: 2025-10-26
-**Next Review**: After implementing character creation system
+**Last Updated**: 2025-11-30
+**Status**: ✅ Complete - validated against reverse-engineered source code

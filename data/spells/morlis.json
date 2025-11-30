@@ -1,13 +1,24 @@
 {
   "id": "morlis",
   "name": "MORLIS",
+  "translation": "Fear",
   "level": 4,
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Paralyze enemy group (paralyzed enemies cannot act and take 2x damage)",
-  "castableIn": [
-    "combat"
-  ],
-  "statusEffect": "PARALYZED"
+  "description": "Causes fear in an enemy group, making them easier to hit",
+  "castableIn": ["combat"],
+  "statusEffect": {
+    "type": "fear",
+    "acModifier": 3
+  },
+  "resistance": {
+    "type": "level_based",
+    "notes": "Subject to monster level-based resistance"
+  },
+  "recovery": {
+    "formula": "(Monster Level × 10)% per round",
+    "cap": "50%"
+  },
+  "duration": "Until combat ends or recovered"
 }

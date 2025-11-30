@@ -1,16 +1,22 @@
 {
   "id": "lorto",
   "name": "LORTO",
+  "translation": "Blades",
   "level": 6,
   "casterType": "priest",
   "category": "offensive",
   "target": "group",
-  "description": "Blades of energy strike all enemies in group",
-  "castableIn": [
-    "combat"
-  ],
+  "description": "Priest's strongest group damage spell - blades of energy strike all enemies",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "6d6",
+    "min": 6,
+    "max": 36,
+    "average": 21,
     "type": "physical"
+  },
+  "resistance": {
+    "type": "magic_resistance",
+    "notes": "Subject to Spell Resistance"
   }
 }

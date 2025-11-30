@@ -7,6 +7,17 @@
     "pie": 12
   },
   "alignmentRestrictions": ["good", "evil"],
+  "savingThrowBonuses": {
+    "petrify": -2,
+    "wand": -2,
+    "spell": -2
+  },
+  "resistances": {
+    "stoning": 10,
+    "breath": 10,
+    "antiMageAntiPriestSilence": 10,
+    "notes": "+10% resistance vs Stoning, Breath attacks, Anti-Mage/Anti-Priest Traps and Silence"
+  },
   "equipmentRestrictions": {
     "weapons": ["mace", "flail", "staff"],
     "armor": ["cloth", "leather", "chain", "plate"],
@@ -20,16 +31,27 @@
       "maxLevel": 7
     },
     "priest": {
-      "minLevel": 1,
+      "minLevel": 4,
       "maxLevel": 7
     }
+  },
+  "spellPointFormula": {
+    "mage": { "A": 0, "B": 4 },
+    "priest": { "A": 3, "B": 4 }
+  },
+  "spellLevelAccess": {
+    "mage": [1, 5, 9, 13, 17, 21, 25],
+    "priest": [4, 8, 12, 16, 20, 24, 28]
   },
   "attacksPerLevel": {
     "1+": 1
   },
-  "xpTable": [3000, 6000, 12000, 24000, 48000, 96000, 190000, 380000, 760000, 1140000, 1520000],
-  "specialAbilities": ["Can cast both mage and priest spells", "Can identify cursed items"],
+  "xpTable": [1200, 2105, 3677, 6477, 11363, 19935, 34973, 61356, 107642, 188845, 331307, 581240],
+  "xpPerLevelAfter13": 428479,
+  "specialAbilities": ["Can cast both mage and priest spells", "Can identify cursed items", "Can dispel undead (level 4+, -20% penalty)"],
   "canIdentifyItems": true,
-  "canDispelUndead": false,
+  "canDispelUndead": true,
+  "dispelUndeadPenalty": -20,
+  "dispelUndeadMinLevel": 4,
   "canCriticalHit": false
 }

@@ -13,6 +13,11 @@
   "savingThrowBonus": {
     "spell": -3
   },
+  "resistances": {
+    "antiMageTrap": 15,
+    "antiPriestTrap": 15,
+    "silence": 15
+  },
   "description": "Hobbits are incredibly lucky and nimble, making them excellent thieves. They are the weakest physically.",
   "strengths": ["Exceptional luck", "High agility", "Excellent spell resistance"],
   "weaknesses": ["Very low strength", "Very fragile"],

@@ -13,6 +13,11 @@
   "savingThrowBonus": {
     "death": -1
   },
+  "resistances": {
+    "poison": 5,
+    "paralysis": 5,
+    "critical": 5
+  },
   "description": "Humans are the most balanced race with no exceptional strengths or weaknesses. They can pursue any class effectively.",
   "strengths": ["Balanced stats", "No penalties", "Can be any class"],
   "weaknesses": ["No exceptional stats", "Minimal saving throw bonuses"],

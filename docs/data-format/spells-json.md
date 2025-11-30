@@ -6,33 +6,21 @@
 
 `data/spells/` directory containing individual spell JSON files.
 
-**Current State**: 49 JSON files defining 56 spell definitions (23 Mage + 33 Priest)
+**Current State**: 50 JSON files defining 50 spell definitions (21 Mage + 29 Priest)
 
 ## File Organization
 
 Spells are stored as **individual JSON files** in `data/spells/`:
 
 - **Naming Convention**: `{spell-name}.json` (lowercase, e.g., `halito.json`, `dios.json`)
-- **Multi-level Spells**: Use consolidated format with `levels` array (e.g., `badi.json` contains both level 5 and level 6 versions)
-- **File Count**: 49 files (reduced from 56 by consolidating multi-level spell families)
+- **One spell per file**: Each JSON file contains a single spell definition
+- **File Count**: 50 files (one per spell)
 
-### Consolidated Spell Families
+## Format
 
-The following spells use the consolidated format (shared metadata + levels array):
+### Single Spell Per File
 
-1. **badi.json** - Priest levels 5+6 (instant death progression)
-2. **mabadi.json** - Priest levels 5+7 (party-wide instant death)
-3. **dial.json** - Priest levels 3+5 (healing progression)
-4. **haman.json** - Mage levels 6+7 (monster transformation)
-5. **mahaman.json** - Mage levels 6+7 (transform all groups)
-6. **tiltowait.json** - Mage levels 6+7 (ultimate damage)
-7. **malikto.json** - Priest levels 6+7 (petrification)
-
-## Format Types
-
-### Format 1: Legacy Single-Level Spell
-
-Used for spells that appear at only one level.
+Each spell is defined in its own JSON file with all metadata.
 
 **Example**: `data/spells/halito.json`
 
@@ -40,78 +28,40 @@ Used for spells that appear at only one level.
 {
   "id": "halito",
   "name": "HALITO",
+  "translation": "Little Fire",
   "level": 1,
   "casterType": "mage",
   "category": "offensive",
-  "target": "group",
-  "description": "1d8 fire damage to enemy group",
+  "target": "single",
+  "description": "Basic single-target fire attack spell",
   "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",
+    "min": 1,
+    "max": 8,
+    "average": 4.5,
     "type": "fire"
+  },
+  "resistance": {
+    "type": "fire",
+    "effect": "half_damage"
   }
 }
 ```
 
-### Format 2: Consolidated Multi-Level Spell
-
-Used for spells that appear at multiple levels (e.g., BADI at levels 5 and 6).
-
-**Example**: `data/spells/badi.json`
-
-```json
-{
-  "name": "BADI",
-  "casterType": "priest",
-  "category": "offensive",
-  "castableIn": ["combat"],
-  "levels": [
-    {
-      "level": 5,
-      "id": "badi",
-      "description": "Instant death to enemy group",
-      "target": "group",
-      "effect": {
-        "type": "instant_death"
-      }
-    },
-    {
-      "level": 6,
-      "id": "badi_6",
-      "description": "Greater instant death",
-      "target": "group",
-      "effect": {
-        "type": "instant_death"
-      }
-    }
-  ]
-}
-```
-
-**Consolidated Format Benefits**:
-- Shared metadata at top level (no duplication)
-- Spell progression visible in single file
-- Easier to maintain spell families
-- Clearer relationship between level variants
-
-**Runtime Handling**: `SpellDataLoader` automatically detects the format and flattens consolidated spells into individual `SpellDefinition` objects.
-
 ## Field Definitions
 
-### Top-Level Fields (Both Formats)
+### Top-Level Fields
 
-**For Legacy Format**: All fields at top level
-**For Consolidated Format**: Shared fields at top level, level-specific fields in `levels` array
+All fields are at the top level of each spell JSON file.
 
 ### Required Fields (All Spells)
 
-**id**: `string` - Unique spell identifier (lowercase, e.g., "halito", "badi_6")
-- For consolidated format: appears in `levels[].id`
+**id**: `string` - Unique spell identifier (lowercase, e.g., "halito", "dios")
 
 **name**: `string` - Display name (uppercase Wizardry format, e.g., "HALITO", "BADI")
 
 **level**: `number` - Spell level (1-7)
-- For consolidated format: appears in `levels[].level`
 
 **casterType**: `"mage" | "priest"` - Which class can cast this spell
 
@@ -228,17 +178,17 @@ node scripts/validate-spells.mjs
 4. Offensive spells must have either `damage` OR `effect` field
 5. Healing spells must have `healing` field
 6. Spell counts must match research documentation:
-   - Mage: 23 spells across levels 1-7
-   - Priest: 33 spells across levels 1-7
+   - Mage: 21 spells across levels 1-7
+   - Priest: 29 spells across levels 1-7
 
 ### Spell Count Validation
 
 | Caster | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 | Level 7 | Total |
 |--------|---------|---------|---------|---------|---------|---------|---------|-------|
-| Mage   | 4       | 3       | 2       | 3       | 3       | 5       | 3       | **23**|
-| Priest | 5       | 4       | 5       | 7       | 6       | 3       | 3       | **33**|
+| Mage   | 4       | 2       | 2       | 3       | 3       | 4       | 3       | **21**|
+| Priest | 5       | 4       | 4       | 4       | 6       | 4       | 2       | **29**|
 
-**Total**: 56 spell definitions in 49 JSON files
+**Total**: 50 spell definitions in 50 JSON files
 
 ## Spell Point System
 
@@ -255,10 +205,8 @@ node scripts/validate-spells.mjs
 Spells are loaded at runtime by `SpellDataLoader`:
 
 1. Loads all JSON files from `data/spells/`
-2. Detects format (legacy vs consolidated)
-3. Flattens consolidated format into individual spell definitions
-4. Validates each spell with Zod schema
-5. Caches results for performance
+2. Validates each spell with Zod schema
+3. Caches results for performance
 
 **Error Handling**: Individual spell failures don't crash the game - failed spells are tracked separately.
 
@@ -271,15 +219,23 @@ Spells are loaded at runtime by `SpellDataLoader`:
 {
   "id": "halito",
   "name": "HALITO",
+  "translation": "Little Fire",
   "level": 1,
   "casterType": "mage",
   "category": "offensive",
-  "target": "group",
-  "description": "1d8 fire damage to enemy group",
+  "target": "single",
+  "description": "Basic single-target fire attack spell",
   "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",
+    "min": 1,
+    "max": 8,
+    "average": 4.5,
     "type": "fire"
+  },
+  "resistance": {
+    "type": "fire",
+    "effect": "half_damage"
   }
 }
 ```
@@ -291,48 +247,44 @@ Spells are loaded at runtime by `SpellDataLoader`:
 {
   "id": "dios",
   "name": "DIOS",
+  "translation": "Heal",
   "level": 1,
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Restore 1d8 HP",
-  "castableIn": ["combat", "dungeon", "town"],
+  "description": "Basic healing spell - minor HP restoration",
+  "castableIn": ["combat", "camp"],
   "healing": {
     "dice": "1d8",
-    "type": "normal"
+    "min": 1,
+    "max": 8,
+    "average": 4.5
   }
 }
 ```
 
-### Example 3: Instant Death Spell (Consolidated Format)
+### Example 3: Instant Death Spell
 
 `data/spells/badi.json`:
 ```json
 {
+  "id": "badi",
   "name": "BADI",
+  "translation": "Death",
+  "level": 5,
   "casterType": "priest",
-  "category": "offensive",
+  "category": "instant_death",
+  "target": "single",
+  "description": "Attempts to instantly kill one monster - binary outcome",
   "castableIn": ["combat"],
-  "levels": [
-    {
-      "level": 5,
-      "id": "badi",
-      "description": "Instant death to enemy group",
-      "target": "group",
-      "effect": {
-        "type": "instant_death"
-      }
-    },
-    {
-      "level": 6,
-      "id": "badi_6",
-      "description": "Greater instant death",
-      "target": "group",
-      "effect": {
-        "type": "instant_death"
-      }
-    }
-  ]
+  "instantDeath": {
+    "type": "divine_word",
+    "savingThrow": true
+  },
+  "resistance": {
+    "formula": "(Monster Level × 10)%",
+    "notes": "Level 10+ monsters are immune"
+  }
 }
 ```
 
@@ -343,30 +295,31 @@ Spells are loaded at runtime by `SpellDataLoader`:
 {
   "id": "malor",
   "name": "MALOR",
-  "level": 6,
+  "translation": "Apport",
+  "level": 7,
   "casterType": "mage",
   "category": "utility",
   "target": "party",
-  "description": "Teleport party to any coordinates (DANGEROUS)",
-  "castableIn": ["dungeon"],
-  "utility": "teleport",
-  "teleportSuccessRate": 0.75,
-  "failureResult": "Teleporting into rock causes instant party death"
+  "description": "Teleports party to specified coordinates - EXTREMELY DANGEROUS",
+  "castableIn": ["combat", "camp"],
+  "teleport": {
+    "campMode": "Player inputs coordinates",
+    "combatMode": "Random safe location on current level",
+    "danger": "Teleporting into solid rock = INSTANT PARTY DEATH"
+  }
 }
 ```
 
 ## Notes
 
-- **Multi-Level Spells**: Some spells appear at multiple levels with increased power (HAMAN, MAHAMAN, TILTOWAIT, BADI, MABADI, DIAL, MALIKTO)
 - **Dangerous Spells**: MALOR is extremely dangerous - wrong coordinates = instant party death
-- **Low Success Rates**: LOKTOFEIT has very low success rate (caster level × 2%, max 14% at level 7)
-- **Resurrection**: DI (90% success, body→ashes on fail) vs KADORTO (50% success, ashes→lost forever on fail)
+- **Low Success Rates**: LOKTOFEIT has very low success rate ((caster level × 2 + 1)%, max 27% at level 13), and success loses all equipment
+- **Resurrection Success**: DI and KADORTO both use (Vitality × 4)% success rate; DI returns with 1 HP, KADORTO returns with full HP
+- **Resurrection Failure**: DI failure turns body to ashes; KADORTO failure from ashes = lost forever
 - **Field Name Change**: Original `type` field split into `casterType` (who casts) and `category` (spell type) to avoid ambiguity
 
 ## References
 
-- **Spell Reference**: `docs/research/spell-reference.md` - Complete validated spell list
+- **Spell Reference**: `docs/research/spell-reference.md` - Complete validated spell list (50 spells)
 - **Game Design**: `docs/game-design/04-spells.md` - Spell mechanics and rules
 - **Type Definitions**: `src/types/SpellDefinition.ts` - TypeScript interfaces
-- **Consolidated Format**: `src/types/SpellFileData.ts` - Multi-level spell format
-- **Validation Script**: `scripts/validate-spells.mjs` - Automated validation

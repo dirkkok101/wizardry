@@ -12,6 +12,12 @@
   "transformsTo": null,
   "special": {
     "invoke": "class_change",
-    "targetClass": "ninja"
+    "targetClass": "ninja",
+    "bypassStatRequirements": true,
+    "preservesLevel": true,
+    "preservesStats": true,
+    "preservesXP": true,
+    "requiresAlignment": "evil",
+    "notes": "Unlike normal class change, Thieves Dagger preserves current level, stats, and XP - NO reset occurs. Only requirement is Evil alignment."
   }
 }

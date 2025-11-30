@@ -273,58 +273,77 @@ Can retry MELITO on next level-up
 
 ## Spell Categories
 
-### Mage Spells (35 total across 7 levels)
+### Mage Spells (21 total across 7 levels)
 
 **Offensive Spells**:
-- Level 1: HALITO (1d8 fire, group)
-- Level 2: MELITO (1d8 each, group)
-- Level 3: MAHALITO (4d6 fire, group), MOLITO (3d6 each)
+- Level 1: HALITO (1d8 fire, single)
+- Level 3: MAHALITO (4d6 fire, group), MOLITO (3d6 non-elem, group)
 - Level 4: DALTO (6d6 cold, group), LAHALITO (6d6 fire, group)
-- Level 5: MADALTO (8d6 cold, group), LAKANITO (6d6 each, group)
-- Level 6: ZILWAN (10d6 to all groups), MASOPIC (poison cloud)
-- Level 7: TILTOWAIT (8d8+ group destruction)
+- Level 5: MADALTO (8d8 cold, group), MAKANITO (instant death, all)
+- Level 6: LAKANITO (instant death, group), ZILWAN (10d200 holy, single undead)
+- Level 7: TILTOWAIT (10d15, all groups)
 
 **Debuff Spells**:
-- KATINO (sleep enemy group)
-- DILTO (blind enemy group)
-- MANIFO (paralyze/petrify)
-- MAKANITO (kill enemies)
+- KATINO (sleep, group) - Level 1
+- DILTO (AC+2, group) - Level 2
+- MORLIS (AC+3 fear, group) - Level 4
+- MAMORLIS (AC+3 fear, all) - Level 5
 
 **Utility Spells**:
-- DUMAPIC (show coordinates)
-- HAMAN (defensive, reduces damage)
-- MALOR (teleport to location)
+- DUMAPIC (show coordinates) - Level 1
+- HAMAN (random powerful effect + level drain) - Level 6
+- MAHAMAN (random powerful effect + level drain) - Level 7
+- MALOR (teleport to coordinates) - Level 7
 
 **Buff Spells**:
-- MOGREF (-2 AC to ally)
+- MOGREF (-2 AC, caster) - Level 1
+- SOPIC (-4 AC, caster) - Level 2
+- MASOPIC (-4 AC, party) - Level 6
 
-### Priest Spells (30 total across 7 levels)
+### Priest Spells (29 total across 7 levels)
 
 **Healing Spells**:
-- DIOS (1d8 HP to single ally)
-- DIAL (2d8 HP to party)
-- MADI (3d8 HP to party)
-- MADI (4d8+ HP to party)
+- DIOS (1d8 HP, single) - Level 1
+- DIAL (2d8 HP, single) - Level 4
+- DIALMA (3d8 HP, single) - Level 5
+- MADI (full HP + cure status, single) - Level 6
 
 **Buff Spells**:
-- KALKI (reduce AC, party)
-- PORFIC (defense against magic)
-- BAMATU (reduce AC, better)
-- LATUMOFIS (cure poison/paralyze)
+- KALKI (-1 AC, party) - Level 1
+- PORFIC (-4 AC, caster) - Level 1
+- MATU (-2 AC, party) - Level 2
+- BAMATU (-4 AC, party) - Level 3
+- MAPORFIC (-2 AC, party, expedition) - Level 4
 
 **Offensive Spells**:
-- BADIOS (2d6+ holy damage)
-- BADIAL (3d6+ holy damage to group)
-- BADI (6d6+ holy damage)
+- BADIOS (1d8, single) - Level 1
+- BADIAL (2d8, single) - Level 4
+- BADIALMA (3d8, single) - Level 5
+- LITOKAN (3d8 fire, group) - Level 5
+- LORTO (6d6 physical, group) - Level 6
+- MABADI (reduce to 1d8 HP, single) - Level 6
+- MALIKTO (12d6 divine, all) - Level 7
+
+**Status Spells**:
+- MANIFO (paralyze, group) - Level 2
+- MONTINO (silence, group) - Level 2
+- DIALKO (cure paralysis/sleep) - Level 3
+- LATUMOFIS (cure poison) - Level 4
 
 **Utility Spells**:
-- MILWA (light in darkness)
-- LATUMAPIC (identify trap type)
-- LOKTOFEIT (recall to town, level × 2% success)
+- MILWA (light, 15-29 turns) - Level 1
+- CALFO (identify trap, 95% accurate) - Level 2
+- LATUMAPIC (identify all monsters) - Level 3
+- LOMILWA (permanent light) - Level 3
+- KANDI (locate dead bodies) - Level 5
+- LOKTOFEIT (recall to castle, lose equipment) - Level 6
+
+**Instant Death Spells**:
+- BADI (instant death, single) - Level 5
 
 **Resurrection Spells**:
-- DI (resurrect dead, ~90% success)
-- KADORTO (raise ashes, ~50% success)
+- DI (resurrect dead, VIT×4% success, returns with 1 HP) - Level 5
+- KADORTO (resurrect dead/ashes, VIT×4% success, returns with full HP) - Level 7
 
 See [Spell Reference](../research/spell-reference.md) for complete spell list with effects.
 
@@ -578,7 +597,7 @@ function applyACBuff(character: Character, amount: number): Character {
 - [Spells Game Design](../game-design/04-spells.md) - Player-facing spell guide
 
 **Research**:
-- [Spell Reference](../research/spell-reference.md) - All 65+ spells with full data
+- [Spell Reference](../research/spell-reference.md) - All 50 spells (21 Mage + 29 Priest) with full data
 - [Combat Formulas](../research/combat-formulas.md) - Spell learning formula validation
 
 **Data Files**:

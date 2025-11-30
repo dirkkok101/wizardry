@@ -16,22 +16,40 @@
     "shields": ["small", "large"],
     "helmets": ["leather", "iron", "steel"]
   },
-  "hitDice": "1d10",
+  "hitDice": "1d8",
+  "hitDiceBonus": "+1 extra die roll per level",
   "spellAccess": {
     "mage": {
       "minLevel": 4,
-      "maxLevel": 6
+      "maxLevel": 7
     }
   },
-  "attacksPerLevel": {
-    "1-4": 1,
-    "5-9": 2,
-    "10-14": 3,
-    "15+": 4
+  "spellPointFormula": {
+    "mage": { "A": 3, "B": 3 }
   },
-  "xpTable": [3500, 7000, 14000, 28000, 56000, 112000, 224000, 450000, 900000, 1350000, 1800000],
-  "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (max level 6)"],
+  "spellLevelAccess": {
+    "mage": [4, 7, 10, 13, 16, 19, 22]
+  },
+  "attacksPerLevel": {
+    "formula": "(level / 5) + 1",
+    "max": 10
+  },
+  "xpTable": [1200, 2105, 3677, 6477, 11363, 19935, 34973, 61356, 107642, 188845, 331307, 581240],
+  "xpPerLevelAfter13": 428479,
+  "savingThrowBonuses": {
+    "death": -2,
+    "spell": -2
+  },
+  "resistances": {
+    "poison": 10,
+    "paralysis": 10,
+    "critical": 10,
+    "antiMageTrap": 10,
+    "antiPriestTrap": 10,
+    "silence": 10
+  },
+  "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (all 7 levels, starts at character level 4)"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
-  "canCriticalHit": true
+  "canCriticalHit": false
 }

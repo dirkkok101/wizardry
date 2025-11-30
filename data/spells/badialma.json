@@ -1,19 +1,22 @@
 {
   "id": "badialma",
   "name": "BADIALMA",
-  "level": 4,
+  "translation": "Great Hurt",
+  "level": 5,
   "casterType": "priest",
   "category": "offensive",
-  "target": "all_enemies",
-  "description": "4d8 damage to all undead",
-  "castableIn": [
-    "combat"
-  ],
+  "target": "single",
+  "description": "Greatest single-target damage spell for priests",
+  "castableIn": ["combat"],
   "damage": {
-    "dice": "4d8",
-    "type": "holy"
+    "dice": "3d8",
+    "min": 3,
+    "max": 24,
+    "average": 13.5,
+    "type": "divine"
   },
-  "effectiveAgainst": [
-    "undead"
-  ]
+  "resistance": {
+    "type": "magic_resistance",
+    "notes": "Subject to Spell Resistance"
+  }
 }

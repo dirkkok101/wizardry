@@ -1,13 +1,17 @@
 {
   "id": "calfo",
   "name": "CALFO",
+  "translation": "X-Ray Vision",
   "level": 2,
   "casterType": "priest",
   "category": "utility",
-  "target": "party",
-  "description": "Identify trap type (95% success)",
-  "castableIn": [
-    "dungeon"
-  ],
-  "utility": "identify_trap"
+  "target": "caster",
+  "description": "Identifies trap type on a chest before opening",
+  "castableIn": ["looting"],
+  "effect": {
+    "type": "identify_trap",
+    "successRate": 95,
+    "failureChance": "5% chance of wrong trap type"
+  },
+  "notes": "Use before opening chests to know what trap to expect"
 }

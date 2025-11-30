@@ -1,13 +1,24 @@
 {
   "id": "litokan",
   "name": "LITOKAN",
+  "translation": "Flame Tower",
   "level": 5,
   "casterType": "priest",
-  "category": "utility",
-  "target": "party",
-  "description": "Teleport party back to last safe location (stairs or entrance)",
-  "castableIn": [
-    "dungeon"
-  ],
-  "utility": "recall"
+  "category": "offensive",
+  "target": "group",
+  "description": "Priest's primary group damage spell - summons a tower of flame",
+  "castableIn": ["combat"],
+  "damage": {
+    "dice": "3d8",
+    "min": 3,
+    "max": 24,
+    "average": 13.5,
+    "type": "fire"
+  },
+  "resistance": {
+    "type": "fire",
+    "effect": "half_damage",
+    "additionalResistance": "Spell Resistance provides save",
+    "notes": "Fire-resistant monsters take half damage; Magic Resistance provides save"
+  }
 }

@@ -1,16 +1,23 @@
 {
   "id": "dalto",
   "name": "DALTO",
+  "translation": "Blizzard",
   "level": 4,
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "6d6 cold damage",
-  "castableIn": [
-    "combat"
-  ],
+  "description": "Powerful cold-based attack against a monster group",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "6d6",
+    "min": 6,
+    "max": 36,
+    "average": 21,
     "type": "cold"
+  },
+  "resistance": {
+    "type": "cold",
+    "effect": "half_damage",
+    "additionalResistance": "Magic Resistance provides save"
   }
 }

@@ -1,14 +1,29 @@
 {
   "id": "loktofeit",
   "name": "LOKTOFEIT",
-  "level": 5,
+  "translation": "Recall",
+  "level": 6,
   "casterType": "priest",
   "category": "utility",
   "target": "party",
-  "description": "Teleport party to castle entrance (level * 2% success)",
-  "castableIn": [
-    "dungeon"
-  ],
-  "utility": "recall",
-  "recallSuccessRate": "level_based"
+  "description": "Emergency teleport to Castle - low success rate AND devastating cost on success",
+  "castableIn": ["combat", "camp"],
+  "escape": {
+    "destination": "Castle/town",
+    "successFormula": "(Character Level × 2 + 1)%",
+    "successExamples": {
+      "level13": "27%",
+      "level20": "41%"
+    },
+    "onSuccess": {
+      "equipment": "ALL EQUIPMENT IS LOST",
+      "gold": "MOST GOLD IS LOST",
+      "notes": "The cost is devastating even on success"
+    },
+    "onFailure": {
+      "effect": "Nothing happens",
+      "notes": "Spell slot wasted, can retry"
+    }
+  },
+  "notes": "Absolute last resort only - low success rate and devastating cost. Use MALOR instead if available."
 }

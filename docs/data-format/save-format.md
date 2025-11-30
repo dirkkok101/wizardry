@@ -262,11 +262,13 @@ Stores user settings and preferences.
 
 **alignment**: `string` - Alignment ("good", "neutral", "evil")
 
-**level**: `number` - Character level
+**level**: `number` - Current character level
+
+**maxLev**: `number` - Highest level ever achieved (used for HP preservation during class changes and level drain calculations)
 
 **xp**: `number` - Experience points
 
-**age**: `number` - Age in years (affects stat gains)
+**age**: `number` - Age in weeks (affects stat gains on level-up). Starting age: (18×52) + random(0,299) weeks
 
 **stats**: `object` - Base stats
 - `str`, `int`, `pie`, `vit`, `agi`, `luc`: Stat values

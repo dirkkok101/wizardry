@@ -1,17 +1,19 @@
 {
   "id": "molito",
   "name": "MOLITO",
+  "translation": "Spark Storm",
   "level": 3,
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "3d6 damage to each enemy",
-  "castableIn": [
-    "combat"
-  ],
+  "description": "Non-elemental storm attack - lower damage than MAHALITO but not subject to fire resistance",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "3d6",
-    "type": "lightning"
+    "min": 3,
+    "max": 18,
+    "average": 10.5,
+    "type": "non-elemental"
   },
-  "damageMode": "each"
+  "notes": "Lower damage than MAHALITO but bypasses fire resistance"
 }

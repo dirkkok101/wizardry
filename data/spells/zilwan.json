@@ -1,13 +1,27 @@
 {
   "id": "zilwan",
   "name": "ZILWAN",
-  "level": 5,
+  "translation": "Dispel",
+  "level": 6,
   "casterType": "mage",
-  "category": "utility",
-  "target": "group",
-  "description": "Removes magical effects from enemy group",
-  "castableIn": [
-    "combat"
-  ],
-  "dispelMagic": true
+  "category": "offensive",
+  "target": "single",
+  "description": "Massive damage spell that ONLY affects UNDEAD - completely useless against living creatures",
+  "castableIn": ["combat"],
+  "damage": {
+    "dice": "10d200",
+    "min": 10,
+    "max": 2000,
+    "average": 1005,
+    "type": "holy"
+  },
+  "restriction": {
+    "validTargets": ["undead"],
+    "notes": "Completely useless against living creatures - deals 0 damage to non-undead"
+  },
+  "resistance": {
+    "type": "none",
+    "notes": "No saving throw - guaranteed destruction of any undead"
+  },
+  "notes": "The 10d200 formula ensures destruction of any undead; minimum damage (10) exceeds most undead HP"
 }
