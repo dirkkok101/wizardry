@@ -13,6 +13,10 @@
   "savingThrowBonus": {
     "petrify": -2
   },
+  "resistances": {
+    "stoning": 10,
+    "notes": "+10% resistance vs Stoning effects"
+  },
   "description": "Gnomes are small but nimble, with good piety and agility. They make excellent thieves and clerics.",
   "strengths": ["Good agility and piety", "Petrification resistance"],
   "weaknesses": ["Low strength", "Fragile"],

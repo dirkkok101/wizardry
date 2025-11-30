@@ -20,11 +20,13 @@
     }
   },
   "attacksPerLevel": {
-    "1-4": 1,
-    "5-9": 2,
-    "10+": 3
+    "1+": 1
   },
-  "xpTable": [1750, 3500, 7000, 14000, 28000, 55000, 110000, 225000, 450000, 675000, 900000],
+  "xpTable": [1050, 1810, 3120, 5379, 9274, 15989, 27567, 47529, 81946, 141286, 243596, 419993],
+  "xpPerLevelAfter13": 304132,
+  "savingThrowBonuses": {
+    "petrify": -3
+  },
   "specialAbilities": ["Can dispel undead"],
   "canIdentifyItems": false,
   "canDispelUndead": true,

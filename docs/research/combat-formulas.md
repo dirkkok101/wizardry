@@ -1,16 +1,18 @@
 # Wizardry 1 Combat Formulas and Mechanics
 
 **Sources**:
+- Thomas William Ewers' reverse-engineered Apple II source code (2012-2014)
+- Snafaru's Wizardry #1-2-3 Game Code Calculations (zimlab.com)
 - Data Driven Gamer blog (datadrivengamer.blogspot.com)
-- Zimlab Wizardry Fan Page (www.zimlab.com/wizardry)
 
-**Validated**: 2025-10-25
-**Status**: ✅ Confirmed from authoritative sources
+**Last Updated**: 2025-11-30
+**Status**: ✅ Validated against authoritative sources
 
-**Validation Attempt**: 2025-10-26
-- Source #32 (Faster Thoughts - Damage Mechanics): ❌ Not applicable (covers Wizardry Variants Daphne, not Wizardry 1)
-- Source #31 (Strategy Wiki - Enemies): ⚠️ Provides monster stats only, no combat formulas
-- Note: Combat formulas in this document remain validated from original sources only
+> **IMPORTANT**: For complete character creation mechanics, see:
+> [character-creation-technical-reference.md](./character-creation-technical-reference.md)
+>
+> This document focuses on combat formulas. The technical reference covers
+> all character creation, leveling, spell points, and attribute mechanics.
 
 ---
 
@@ -96,17 +98,28 @@ Minimum = 1  // Can't go below 1
 ```
 
 ### Agility Modifiers
-| AGI | Modifier | Initiative Range |
-|-----|----------|------------------|
-| 3 | -2 | 1 (min capped) |
-| 4-5 | -1 | 1-9 |
-| 6-8 | 0 | 1-10 |
-| 9-11 | +1 | 2-11 |
-| 12-14 | +2 | 3-12 |
-| 15-17 | +3 | 4-13 |
-| 18+ | +4 | 5-14 |
 
-**Notes**: Fastest initiative goes first each round
+**Lower initiative acts first** (D&D style):
+
+| AGI | Modifier | Notes       |
+|-----|----------|-------------|
+| 3   | +2       | Slowest     |
+| 4-5 | +1       |             |
+| 6-7 | 0        | Base        |
+| 8-14| -1       |             |
+| 15  | -2       |             |
+| 16  | -3       |             |
+| 17  | -4       |             |
+| 18  | -5       | Fastest     |
+
+**Initiative Formula**:
+```
+Character: random(1,10) + AgilityMod, clamped to 1-10
+Monster: random(0,7) + 2 (range: 2-9)
+Lower acts first. Characters win ties vs. monsters.
+```
+
+**Notes**: Lower initiative value = acts first each round
 
 ---
 
@@ -144,12 +157,12 @@ Others (Mage, Priest, Thief, Bishop):
 // Step 1: Calculate HPCALCMD (hit calculation modifier)
 HPCALCMD = BaseMod + floor(Level / Divisor)
 
-// Fighter, Priest, Samurai, Lord:
+// Fighter, Priest, Samurai, Lord, Ninja:
 BaseMod = 2
 Divisor = 3
 HPCALCMD = 2 + floor(Level / 3)
 
-// Mage, Thief, Bishop, Ninja:
+// Mage, Thief, Bishop:
 BaseMod = 0
 Divisor = 5
 HPCALCMD = floor(Level / 5)
@@ -332,18 +345,21 @@ IDChance% = (INT + PIE + Level) / 99
 **Target**: Undead enemy groups only
 
 ```
-DispellChance% = (CasterLevel - UndeadLevel) × 10
+Base = 50% + (5 × CharacterLevel) - (10 × MonsterLevel)
+
+Priest: Base (no penalty, always available)
+Bishop: Base - 20% (available at level 4+)
+Lord: Base - 40% (available at level 9+)
 
 // Clamped to 5% - 95% range
-FinalChance% = max(5, min(95, DispellChance))
+FinalChance% = max(5, min(95, AdjustedBase))
 ```
 
 **Examples**:
-- Level 5 Priest vs Level 3 Zombies: (5-3) × 10 = 20%
-- Level 10 Lord vs Level 5 Ghouls: (10-5) × 10 = 50%
-- Level 15 Bishop vs Level 10 Wraiths: (15-10) × 10 = 50%
-- Level 8 Priest vs Level 12 Vampire: (8-12) × 10 = -40 → 5% (minimum)
-- Level 20 Bishop vs Level 2 Zombies: (20-2) × 10 = 180 → 95% (maximum)
+- Level 5 Priest vs Level 3 Zombies: 50% + 25% - 30% = 45%
+- Level 10 Priest vs Level 5 Ghouls: 50% + 50% - 50% = 50%
+- Level 8 Bishop vs Level 4 Wraiths: 50% + 40% - 40% - 20% = 30%
+- Level 12 Lord vs Level 6 Vampire: 50% + 60% - 60% - 40% = 10%
 
 ### DISPELL Effects
 
@@ -757,15 +773,17 @@ Mage: 1d4
 Priest: 1d8
 Thief: 1d6
 Bishop: 1d6
-Samurai: 1d10
+Samurai: 1d8 (gets +1 extra die roll per level)
 Lord: 1d10
-Ninja: 1d8
+Ninja: 1d6
 
 VIT_Modifier:
-VIT 3-5: -1 HP
+VIT 3: -2 HP
+VIT 4-5: -1 HP
 VIT 6-15: 0 HP
-VIT 16-17: +1 HP
-VIT 18+: +2 HP
+VIT 16: +1 HP
+VIT 17: +2 HP
+VIT 18: +3 HP
 
 Minimum HP gain: 1 (can't go below)
 ```

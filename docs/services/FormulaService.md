@@ -2,6 +2,9 @@
 
 **Pure function service for game formulas and calculations.**
 
+> **IMPORTANT**: For authoritative formula reference, see:
+> [character-creation-technical-reference.md](../research/character-creation-technical-reference.md)
+
 ## Responsibility
 
 Implements all Wizardry 1 formulas including hit chance, damage, initiative, spell learning, level-up stat changes, and resurrection rates.
@@ -29,11 +32,11 @@ function calculateHitChance(
 **Formula**:
 ```
 HPCALCMD = BaseMod + floor(Level / Divisor)
-  Fighter/Priest/Samurai/Lord: BaseMod=2, Divisor=3
-  Mage/Thief/Bishop/Ninja: BaseMod=0, Divisor=5
+  Fighter/Priest/Samurai/Lord/Ninja: BaseMod=2, Divisor=3
+  Mage/Thief/Bishop: BaseMod=0, Divisor=5
 
-HitChance = (HPCALCMD + TargetAC + 29) × 5%
-Capped at 95% (always 5% miss chance)
+HitChance = (HPCALCMD + MonsterAC + (3 × VictimPosition) - 1) × 5%
+Clamped to range: 5% to 95%
 ```
 
 **Example**:
@@ -98,23 +101,25 @@ function calculateInitiative(combatant: Combatant): number
 
 **Formula**:
 ```
-Initiative = random(0-9) + AgilityModifier
-Minimum = 1
+Character: random(1,10) + AgilityMod, clamped to 1-10
+Monster: random(0,7) + 2 (range: 2-9)
+Lower acts first. Characters win ties vs. monsters.
 ```
 
-**Agility Modifiers**:
-- AGI 3: -2
-- AGI 4-5: -1
-- AGI 6-8: 0
-- AGI 9-11: +1
-- AGI 12-14: +2
-- AGI 15-17: +3
-- AGI 18+: +4
+**Agility Modifiers** (lower is better - acts first):
+- AGI 3: +2 (Slowest)
+- AGI 4-5: +1
+- AGI 6-7: 0 (Base)
+- AGI 8-14: -1
+- AGI 15: -2
+- AGI 16: -3
+- AGI 17: -4
+- AGI 18: -5 (Fastest)
 
 **Example**:
 ```typescript
 const initiative = FormulaService.calculateInitiative({ agi: 15 })
-// initiative = random(0-9) + 3 = 3-12 (AGI 15 = +3)
+// initiative = random(1-10) + (-2) = -1 to 8, clamped to 1-8
 ```
 
 ### calculateSpellLearningChance
@@ -199,22 +204,26 @@ function calculateHPGainOnLevelUp(
 **Returns**: HP gained (minimum 1)
 
 **Formula**:
+Wizardry uses a unique HP system where ALL dice are re-rolled every level:
 ```
-HPGain = ClassHitDice + VIT_Modifier
+1. Roll ALL dice for current level (plus bonuses)
+2. If new roll > current max HP: new max = roll
+3. If new roll <= current max HP: new max = current max + 1
+4. Always gain at least 1 HP
 
 ClassHitDice:
-  Fighter/Samurai/Lord: 1d10
-  Priest/Ninja: 1d8
-  Thief/Bishop: 1d6
+  Fighter/Lord: 1d10
+  Priest/Samurai: 1d8 (Samurai gets +1 extra die per level)
+  Thief/Bishop/Ninja: 1d6
   Mage: 1d4
 
-VIT_Modifier:
-  VIT 3-5: -1
+VIT_Modifier (per die):
+  VIT 3: -2
+  VIT 4-5: -1
   VIT 6-15: 0
-  VIT 16-17: +1
-  VIT 18+: +2
-
-Minimum = 1 (can't lose HP on level-up)
+  VIT 16: +1
+  VIT 17: +2
+  VIT 18: +3
 ```
 
 **Example**:
@@ -299,17 +308,23 @@ function calculateResurrectionChance(
 
 **Formula**:
 ```
-DI (dead -> alive): ~90% - age_penalty - vim_penalty
-KADORTO (ashes -> alive): ~50% - age_penalty - vim_penalty
+Temple Resurrection:
+  Dead: (50 + (3 × Vitality))%
+  Ashes: (40 + (3 × Vitality))%
+
+DI/KADORTO Spells:
+  Success rate: (4 × Vitality)%
+  On success: Target permanently loses 1 Vitality
+  If Vitality = 3 when spell cast: Character LOST forever
 ```
 
 **Example**:
 ```typescript
 const chance = FormulaService.calculateResurrectionChance(
   deadCharacter,
-  "DI"
+  "temple"
 )
-// chance = 90% - penalties = ~85% (young character)
+// VIT 15: 50 + (3 × 15) = 95% success at temple
 ```
 
 ### calculateMonsterIdentificationChance
@@ -364,32 +379,39 @@ function calculateSpellPoints(
 **Returns**: Spell points for that level (0-9)
 
 **Formula**:
+Each class has Value A and Value B:
 ```
-Points = max(
-  spellsLearned,
-  1 + firstSpellLevel - currentCharLevel,
-  cap at 9
-)
+| Class            | Value A | Value B |
+|------------------|---------|---------|
+| Priest           | 0       | 2       |
+| Mage             | 0       | 2       |
+| Bishop (Priest)  | 3       | 4       |
+| Bishop (Mage)    | 0       | 4       |
+| Lord (Priest)    | 3       | 2       |
+| Samurai (Mage)   | 3       | 3       |
+
+SP = CharacterLevel - ValueA + ValueB - (ValueB × Circle)
+Clamped to range: 0-9
+Minimum 1 SP per known spell in each circle
 ```
 
 **Example**:
 ```typescript
-const points = FormulaService.calculateSpellPoints(
-  mage,
-  3,
-  "mage"
-)
-// points = 5 (mage has learned 5 level-3 spells)
+const points = FormulaService.calculateSpellPoints(mage, 3, "mage")
+// Level 5 Mage, circle 3:
+// SP = 5 - 0 + 2 - (2 × 3) = 5 + 2 - 6 = 1 point
 ```
 
 ## Formula Validation
 
 All formulas validated against:
-- Data Driven Gamer blog
-- Zimlab Wizardry Fan Page
-- Original game testing
+- Thomas William Ewers' reverse-engineered Apple II source code (2012-2014)
+- Snafaru's Wizardry #1-2-3 Game Code Calculations (zimlab.com)
+- Data Driven Gamer blog (datadrivengamer.blogspot.com)
 
-See [Combat Formulas](../research/combat-formulas.md) for source validation.
+See:
+- [Character Creation Technical Reference](../research/character-creation-technical-reference.md) - Complete mechanics
+- [Combat Formulas](../research/combat-formulas.md) - Combat-specific formulas
 
 ## Dependencies
 

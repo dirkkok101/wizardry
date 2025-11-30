@@ -13,6 +13,10 @@
   "savingThrowBonus": {
     "breath": -4
   },
+  "resistances": {
+    "poisonGasTrap": 20,
+    "notes": "+20% resistance vs Poison Gas Traps"
+  },
   "description": "Dwarves are strong and hardy, excelling in combat roles. They are the toughest race but lack agility.",
   "strengths": ["High strength and vitality", "Excellent breath weapon resistance"],
   "weaknesses": ["Low agility", "Poor at magic"],
