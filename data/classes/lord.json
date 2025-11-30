@@ -24,6 +24,12 @@
       "maxLevel": 7
     }
   },
+  "spellPointFormula": {
+    "priest": { "A": 3, "B": 2 }
+  },
+  "spellLevelAccess": {
+    "priest": [4, 6, 8, 10, 12, 14, 16]
+  },
   "attacksPerLevel": {
     "formula": "(level / 5) + 1",
     "max": 10
@@ -36,7 +42,7 @@
   },
   "dispelUndeadPenalty": -40,
   "dispelUndeadMinLevel": 9,
-  "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (max level 6)", "Can dispel undead"],
+  "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (all 7 levels, starts at character level 4)", "Can dispel undead"],
   "canIdentifyItems": false,
   "canDispelUndead": true,
   "canCriticalHit": true

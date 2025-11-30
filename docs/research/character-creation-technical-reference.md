@@ -279,11 +279,24 @@ function calculateNewMaxHP(character: Character): number {
 
 ### 7.2 Intelligence and Piety
 
+**Spell Learning Probability:**
 ```
 Chance to learn Mage spell: IQ / 30 (per eligible spell)
 Chance to learn Priest spell: PIE / 30 (per eligible spell)
-First spell in each circle is always learned automatically
+
+IQ 18 = 60% per eligible Mage spell
+Piety 15 = 50% per eligible Priest spell
 ```
+
+**The first spell of each circle is always GUARANTEED** when you gain access to that spell level—no roll required.
+
+**Starting spells:**
+- New Mages/Bishops: HALITO and KATINO
+- New Priests: DIOS and BADIOS
+- Class-change to Mage: learns KATINO
+- Class-change to Priest: learns DIOS
+
+**Critical class-change mechanic:** If you know at least one spell in a circle, you remain eligible to learn all other spells in that circle—even after changing to a non-casting class. A Mage who learns MALOR at level 13, then becomes a Fighter, can still learn TILTOWAIT and MAHAMAN when leveling as a Fighter.
 
 Monster identification chance per round:
 ```
@@ -446,23 +459,82 @@ Priest: Base (no penalty, always available)
 
 ### 12.1 Spell Points Formula
 
-Each spellcasting class has two values (A and B):
+Each spellcasting class has two values (A and B) that determine spell point progression:
 
-| Class            | Value A | Value B |
-|------------------|---------|---------|
-| Priest           | 0       | 2       |
-| Mage             | 0       | 2       |
-| Bishop (Priest)  | 3       | 4       |
-| Bishop (Mage)    | 0       | 4       |
-| Lord (Priest)    | 3       | 2       |
-| Samurai (Mage)   | 3       | 3       |
+| Class            | Value A | Value B | Spell Type |
+|------------------|---------|---------|------------|
+| Mage             | 0       | 2       | Mage       |
+| Priest           | 0       | 2       | Priest     |
+| Bishop (Mage)    | 0       | 4       | Mage       |
+| Bishop (Priest)  | 3       | 4       | Priest     |
+| Lord             | 3       | 2       | Priest     |
+| Samurai          | 3       | 3       | Mage       |
 
 ```
-SP = CharacterLevel - ValueA + ValueB - (ValueB * Circle)
+SP = CharacterLevel - ValueA + ValueB - (ValueB × Circle)
 Clamped to range: 0-9
 ```
 
-A character is guaranteed at least 1 spell point per known spell in each circle.
+**Example**: Level 9 Mage calculating spell points:
+- Circle 1: 9 - 0 + 2 - (2×1) = **9 SP**
+- Circle 5: 9 - 0 + 2 - (2×5) = **1 SP**
+
+The formula explains why Bishops progress at half-speed (B=4 vs B=2 doubles the per-circle penalty) and why Lords outpace Samurai despite similar descriptions.
+
+### 12.2 Known Spells Guarantee Minimum SP
+
+The game compares formula results against spells known per circle, taking the **higher value**. A class-changed character retaining 6 known spells in Circle 5 gets at least 6 SP there, regardless of formula output. Since **spells are never forgotten**, this preserves viability after class changes.
+
+### 12.3 Spell Level Access by Class
+
+Pure casters (Mage and Priest) gain spell levels every two character levels:
+
+| Spell Level | Mage/Priest | Bishop (Mage) | Bishop (Priest) | Samurai | Lord |
+|------------|-------------|---------------|-----------------|---------|------|
+| 1 | Level 1 | Level 1 | Level 4 | Level 4 | Level 4 |
+| 2 | Level 1 | Level 5 | Level 8 | Level 7 | Level 6 |
+| 3 | Level 3 | Level 9 | Level 12 | Level 10 | Level 8 |
+| 4 | Level 5 | Level 13 | Level 16 | Level 13 | Level 10 |
+| 5 | Level 7 | Level 17 | Level 20 | Level 16 | Level 12 |
+| 6 | Level 9 | Level 21 | Level 24 | Level 19 | Level 14 |
+| 7 | Level 11 | Level 25 | Level 28 | Level 22 | **Level 16** |
+
+**Lords reach 7th-level Priest spells at level 16**—significantly faster than Samurai reach 7th-level Mage spells at level 22.
+
+### 12.4 Complete Spell Point Progression Tables
+
+**Mage/Priest progression (A=0, B=2):**
+
+| Level | L1 | L2 | L3 | L4 | L5 | L6 | L7 |
+|-------|----|----|----|----|----|----|-----|
+| 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 5 | 5 | 3 | 1 | 0 | 0 | 0 | 0 |
+| 9 | 9 | 7 | 5 | 3 | 1 | 0 | 0 |
+| 13 | 9 | 9 | 9 | 7 | 5 | 3 | 1 |
+| 21+ | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
+
+**Maximum 9 SP per spell level** caps progression, reached at level 21 for pure casters.
+
+**Lord (Priest spells, A=3, B=2):**
+- Begins at level 4 with 1/0/0/0/0/0/0
+- Reaches 9/9/9/9/7/5/3 by level 18+
+
+**Samurai (Mage spells, A=3, B=3):**
+- Begins at level 4 with 1/0/0/0/0/0/0
+- Reaches 9/9/9/9/9/7/4 by level 25+
+
+**Bishop:** Manages two separate progression tracks—Mage spells start immediately with slower B=4 scaling, Priest spells begin at level 4 with even slower A=3, B=4 scaling.
+
+### 12.5 Spell Point Recovery
+
+The **only** method to restore spell points is resting at the Adventurer's Inn:
+
+| Room Type | Cost | HP Recovery | SP Recovery |
+|-----------|------|-------------|-------------|
+| Stables | Free | None | **ALL restored** |
+| Paid rooms | Varies | Yes (varies by room) | None |
+
+**Optimal strategy:** Rest at Stables (free) to restore spell points, cast healing spells, rest again—repeat until party is fully restored without spending gold.
 
 ---
 
@@ -586,27 +658,30 @@ The game does **not** store previous class information. The character record onl
 
 ## 15. Attribute Changes on Level Up
 
+When a character levels up, each of the six attributes is evaluated independently for potential modification.
+
 ### 15.1 Level Up Attribute Algorithm
 
 ```typescript
 for (each attribute) {
-    if (random(0, 99) < 75) {  // 75% chance to check
-        if (age < random(0, 129)) {  // Age check
-            // Young - might increase
+    if (random(0, 99) < 75) {  // 75% chance to modify (25% no change)
+        // Core formula: Age in Years / 130 = probability of decrease
+        if (ageInYears < random(0, 129)) {
+            // Young - will increase
             if (attribute < 18) {
                 attribute++;
             }
         } else {
-            // Old - might decrease
+            // Old - will decrease
             if (attribute === 18) {
-                if (random(0, 5) !== 0) {  // 5/6 stay at 18
-                    // Stay at 18
+                if (random(0, 5) !== 0) {  // 5/6 (83.3%) resist decrease
+                    // Stay at 18 - protected!
                 } else {
                     attribute = 17;
                 }
             } else {
                 attribute--;
-                if (vit < 3) {
+                if (vitality < 3) {
                     // CHARACTER_DIES ("DIED OF OLD AGE")
                 }
             }
@@ -615,12 +690,26 @@ for (each attribute) {
 }
 ```
 
-### 15.2 Key Observations
+### 15.2 Age-Based Probability Table
 
+The core formula `Age in Years / 130` creates a sliding scale:
+
+| Character Age | Decrease Probability | Increase Probability | Notes |
+|--------------|---------------------|---------------------|-------|
+| 18 years | 13.8% | 86.2% | New characters |
+| 26 years | 20% | 80% | Still favorable |
+| 50 years | 38.5% | 61.5% | Starting to decline |
+| 65 years | 50% | 50% | Even odds |
+| 100 years | 76.9% | 23.1% | High risk |
+| 130+ years | 100% | 0% | Always decrease |
+
+### 15.3 Key Observations
+
+- **75% chance** each attribute is evaluated (25% chance nothing happens)
 - Younger characters are more likely to gain stats (~86% at age 18)
-- Attributes at 18 have 5/6 (83.3%) chance to resist decrease
-- Vitality dropping below 3 causes death ("DIED OF OLD AGE")
-- 25% chance per attribute for NO change regardless of age
+- **Attributes at 18 have 5/6 (83.3%) chance to resist decrease** - this makes maxed stats valuable
+- Vitality dropping to **2 or below** causes permanent death ("DIED OF OLD AGE")
+- **Stats never force class removal** - dropping below requirements won't kick you out of your current class, only prevents future class changes
 
 ---
 

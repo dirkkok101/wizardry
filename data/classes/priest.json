@@ -19,6 +19,12 @@
       "maxLevel": 7
     }
   },
+  "spellPointFormula": {
+    "priest": { "A": 0, "B": 2 }
+  },
+  "spellLevelAccess": {
+    "priest": [1, 1, 3, 5, 7, 9, 11]
+  },
   "attacksPerLevel": {
     "1+": 1
   },

@@ -24,6 +24,12 @@
       "maxLevel": 7
     }
   },
+  "spellPointFormula": {
+    "mage": { "A": 3, "B": 3 }
+  },
+  "spellLevelAccess": {
+    "mage": [4, 7, 10, 13, 16, 19, 22]
+  },
   "attacksPerLevel": {
     "formula": "(level / 5) + 1",
     "max": 10
@@ -34,7 +40,7 @@
     "death": -2,
     "spell": -2
   },
-  "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (max level 6)"],
+  "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (all 7 levels, starts at character level 4)"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
   "canCriticalHit": true

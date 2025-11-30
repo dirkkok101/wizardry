@@ -25,9 +25,17 @@
       "maxLevel": 7
     },
     "priest": {
-      "minLevel": 1,
+      "minLevel": 4,
       "maxLevel": 7
     }
+  },
+  "spellPointFormula": {
+    "mage": { "A": 0, "B": 4 },
+    "priest": { "A": 3, "B": 4 }
+  },
+  "spellLevelAccess": {
+    "mage": [1, 5, 9, 13, 17, 21, 25],
+    "priest": [4, 8, 12, 16, 20, 24, 28]
   },
   "attacksPerLevel": {
     "1+": 1
