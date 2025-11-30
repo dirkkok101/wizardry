@@ -229,12 +229,11 @@ describe('MonsterService', () => {
     } as MonsterTemplate)
 
     it('generates primary group when no partner', () => {
-      // Kobold in our data doesn't have partner yet (we'll add it in Task 7)
-      // Use a monster we know exists without partner
-      const groups = MonsterService.generateEncounterWithPartners('kobold')
+      // Dragon Fly has no partner in Apple II source
+      const groups = MonsterService.generateEncounterWithPartners('dragon_fly')
 
       expect(groups.length).toBe(1)
-      expect(groups[0].monsterId).toBe('kobold')
+      expect(groups[0].monsterId).toBe('dragon_fly')
       expect(groups[0].monsters.length).toBeGreaterThan(0)
     })
 
