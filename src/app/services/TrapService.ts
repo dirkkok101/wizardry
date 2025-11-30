@@ -283,18 +283,35 @@ function applyTrapEffects(
 
   // Apply damage if applicable
   if (effect.damageFormula && targets.length > 0) {
+    const hitChance = effect.hitChance ?? 1.0  // Default to always hit
+
     for (const target of targets) {
-      const damage = RandomService.rollDiceNotation(effect.damageFormula)
-      damageDealt.set(target.id, damage)
-      messages.push(`${target.name} takes ${damage} damage!`)
+      // Roll for hit (0-1 random vs hitChance threshold)
+      if (RandomService.roll(hitChance)) {
+        const damage = RandomService.rollDiceNotation(effect.damageFormula)
+        damageDealt.set(target.id, damage)
+        messages.push(`${target.name} takes ${damage} damage!`)
+      } else {
+        messages.push(`${target.name} avoids the trap!`)
+      }
     }
   }
 
   // Apply status effect if applicable
   if (effect.statusEffect && targets.length > 0) {
+    const hitChance = effect.hitChance ?? 1.0
+
     for (const target of targets) {
-      statusApplied.set(target.id, effect.statusEffect)
-      messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+      // Only apply status if not already rolled for damage (avoid double roll)
+      // If there's no damageFormula, we need to roll for status
+      const shouldApply = effect.damageFormula
+        ? damageDealt.has(target.id)  // Hit was already determined
+        : RandomService.roll(hitChance)  // Roll now for status-only effects
+
+      if (shouldApply) {
+        statusApplied.set(target.id, effect.statusEffect)
+        messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+      }
     }
   }
 

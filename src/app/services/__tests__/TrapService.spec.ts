@@ -451,6 +451,63 @@ describe('TrapService', () => {
 
       expect(result.specialEffect).toBe('combat')
     })
+
+    describe('hitChance', () => {
+      it('should hit when roll is below hitChance (SPLINTERS 70%)', () => {
+        const opener = createTestCharacter({ id: 'opener', name: 'Fighter' })
+        const party = [opener]
+
+        // Queue: hit roll (0.5 < 0.7 = hit), then damage roll for 1d6
+        RandomService.queueNextValues([0.5, 0.5])
+
+        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, opener, party)
+
+        expect(result.damageDealt.has('opener')).toBe(true)
+        expect(result.message).toContain('takes')
+      })
+
+      it('should miss when roll exceeds hitChance (BLADES 30%)', () => {
+        const opener = createTestCharacter({ id: 'opener', name: 'Fighter' })
+        const party = [opener]
+
+        // Queue: hit roll (0.8 > 0.3 = miss)
+        RandomService.queueNextValues([0.8])
+
+        const result = TrapService.applyTrapEffects(TrapType.BLADES, opener, party)
+
+        expect(result.damageDealt.has('opener')).toBe(false)
+        expect(result.message).toContain('avoids')
+      })
+
+      it('should always hit traps without hitChance (default 1.0)', () => {
+        const opener = createTestCharacter({ id: 'opener', name: 'Fighter' })
+        const party = [opener]
+
+        // CROSSBOW_BOLT has no hitChance, should always hit
+        // Queue damage roll only (2d8)
+        RandomService.queueNextValues([0.5, 0.5])
+
+        const result = TrapService.applyTrapEffects(TrapType.CROSSBOW_BOLT, opener, party)
+
+        expect(result.damageDealt.has('opener')).toBe(true)
+      })
+
+      it('should roll hitChance independently for each party member', () => {
+        const member1 = createTestCharacter({ id: 'char1', name: 'Fighter' })
+        const member2 = createTestCharacter({ id: 'char2', name: 'Mage' })
+        const party = [member1, member2]
+
+        // SPLINTERS (70% hit) - queue: char1 hits (0.5 < 0.7), damage, char2 misses (0.8 > 0.7)
+        RandomService.queueNextValues([0.5, 0.5, 0.8])
+
+        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, member1, party)
+
+        expect(result.damageDealt.has('char1')).toBe(true)
+        expect(result.damageDealt.has('char2')).toBe(false)
+        expect(result.message).toContain('Fighter takes')
+        expect(result.message).toContain('Mage avoids')
+      })
+    })
   })
 
   describe('canCastCalfo', () => {

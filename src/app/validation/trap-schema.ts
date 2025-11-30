@@ -70,6 +70,7 @@ export const TrapSchema = z.object({
   damageFormula: DamageFormulaSchema.optional(),
   statusEffect: CharacterStatusSchema.optional(),
   specialEffect: TrapSpecialEffectSchema.optional(),
+  hitChance: z.number().min(0).max(1).optional(),
   description: z.string().min(1, 'Description is required')
 }).refine(
   data => {

@@ -45,6 +45,7 @@ export interface TrapEffect {
   damageFormula?: string            // e.g., "2d6", "3d8"
   statusEffect?: CharacterStatus    // Status to apply (POISONED, PARALYZED)
   specialEffect?: TrapSpecialEffect // For TELEPORTER and ALARM
+  hitChance?: number                // 0-1 probability (default 1.0 = always hits)
   description: string               // Human-readable description
 }
 
