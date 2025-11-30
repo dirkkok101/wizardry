@@ -52,6 +52,14 @@ describe('SpellDataLoader', () => {
       // Temporarily replace the mock to return invalid data for one spell
       const originalFetch = global.fetch;
       (global.fetch as any) = jest.fn((url: string) => {
+        // Handle manifest file
+        if (url.includes('/index.json')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(['halito', 'mogref', 'katino'])
+          } as Response)
+        }
+
         const spellId = url.split('/').pop()?.replace('.json', '')
 
         if (spellId === 'halito') {

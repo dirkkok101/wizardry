@@ -4,6 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "generate:manifests": "npx tsx scripts/generate-data-manifests.ts",
+    "prebuild": "npm run generate:manifests",
     "build": "ng build",
     "test": "jest",
     "test:watch": "jest --watch",

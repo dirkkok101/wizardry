@@ -8,6 +8,14 @@ describe('RaceService', () => {
     global.fetch = jest.fn((url: string) => {
       const path = url.toString()
 
+      // Handle manifest file request
+      if (path.includes('/assets/races/index.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(['human', 'elf', 'dwarf', 'gnome', 'hobbit'])
+        } as Response)
+      }
+
       // Race data mocks (using EXPECTED_RACE_DATA to ensure consistency with validation)
       if (path.includes('/assets/races/human.json')) {
         return Promise.resolve({

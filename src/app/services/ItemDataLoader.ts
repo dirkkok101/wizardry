@@ -3,14 +3,15 @@ import { ItemType, ItemSlot } from '@models/ItemType';
 import { CharacterClass } from '@models/CharacterClass';
 import { Alignment } from '@models/Alignment';
 import { ItemSchema, ValidatedItem } from '@validation/item-schema';
-import { AssetLoadingService } from './AssetLoadingService';
 
 /**
  * Service for loading and validating item data from JSON files
- * Uses AssetLoadingService for centralized loading infrastructure
- * Implements caching to prevent multiple loads
- * Gracefully handles individual item failures
- * Validates all items with Zod schemas at runtime
+ *
+ * Data-driven architecture:
+ * - All item definitions live in data/items/*.json
+ * - Manifest file (data/items/index.json) lists all item IDs
+ * - No hardcoded item lists in code
+ * - Zod validates all item data at runtime
  */
 export class ItemDataLoader {
   private static itemsCache: Map<string, Item> | null = null;
@@ -44,7 +45,7 @@ export class ItemDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Uses AssetLoadingService for centralized infrastructure
+   * Reads manifest file to discover all items
    */
   private static async performLoad(): Promise<Map<string, Item>> {
     this.loading = true;
@@ -54,25 +55,36 @@ export class ItemDataLoader {
     const items = new Map<string, Item>();
 
     try {
-      // Use AssetLoadingService to load item JSON files
-      const assetLoader = new AssetLoadingService();
-      const rawItems = await assetLoader.loadDataFiles<any>('items');
+      // Load manifest to get list of all item IDs
+      const manifestResponse = await fetch('/assets/items/index.json');
+      if (!manifestResponse.ok) {
+        throw new Error('Failed to load item manifest');
+      }
+      const itemFileNames: string[] = await manifestResponse.json();
 
-      // Validate each item with Zod and convert to runtime Item format
-      for (const [itemId, rawItem] of rawItems.entries()) {
+      // Load each item file
+      for (const fileName of itemFileNames) {
         try {
+          const response = await fetch(`/assets/items/${fileName}.json`);
+          if (!response.ok) {
+            this.failedItems.set(fileName, `HTTP ${response.status}`);
+            continue;
+          }
+
+          const rawItem = await response.json();
+
           // Validate with Zod
           const validated: ValidatedItem = ItemSchema.parse(rawItem);
 
           // Transform to runtime Item format
           const item = this.transformValidatedToItem(validated);
 
-          items.set(itemId, item);
+          items.set(item.id, item);
         } catch (error) {
           // Track validation failure but continue loading other items
           const errorMessage = error instanceof Error ? error.message : String(error);
-          this.failedItems.set(itemId, errorMessage);
-          console.warn(`Failed to validate item ${itemId}:`, errorMessage);
+          this.failedItems.set(fileName, errorMessage);
+          console.warn(`Failed to validate item ${fileName}:`, errorMessage);
         }
       }
 
@@ -90,7 +102,7 @@ export class ItemDataLoader {
 
       return items;
     } catch (error) {
-      // Catastrophic failure (e.g., directory not found)
+      // Catastrophic failure (e.g., manifest not found)
       this.loadError = error as Error;
       console.error('Failed to load items:', error);
       throw error;

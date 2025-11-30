@@ -9,7 +9,7 @@ import { RandomService } from '../RandomService'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { TrapType } from '@models/Trap'
+import { TrapId } from '@models/Trap'
 import { Chest, RewardTier } from '@models/Chest'
 
 // Helper to create a test chest
@@ -17,7 +17,7 @@ function createTestChest(overrides: Partial<Chest> = {}): Chest {
   return {
     id: 'test-chest',
     trapped: true,
-    trapType: TrapType.POISON_NEEDLE,
+    trapId: 'POISON_NEEDLE',
     trapIdentified: false,
     trapDisarmed: false,
     rewardTier: 1 as RewardTier,
@@ -203,13 +203,13 @@ describe('TrapService', () => {
       const result = TrapService.attemptInspection(thief, chest)
 
       expect(result.success).toBe(true)
-      expect(result.trapIdentified).toBe(TrapType.POISON_NEEDLE)
+      expect(result.trapIdentified).toBe('POISON_NEEDLE')
       expect(result.triggered).toBe(false)
     })
 
     it('should return random trap name on failed inspection (deception mechanic)', () => {
       const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 18 })
-      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
+      const chest = createTestChest({ trapId: 'POISON_NEEDLE' })
 
       // Queue values: crit check pass, inspection fail, AGI trigger check pass (roll < AGI), random trap pick
       RandomService.queueNextValues([0.5, 0.99, 0.1, 0.3])
@@ -253,7 +253,7 @@ describe('TrapService', () => {
 
     it('should not trigger on untrapped chest even with critical failure', () => {
       const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
-      const chest = createTestChest({ trapped: false, trapType: null })
+      const chest = createTestChest({ trapped: false, trapId: null })
 
       // Queue value for critical failure check
       RandomService.queueNextValues([0.01])
@@ -265,7 +265,7 @@ describe('TrapService', () => {
 
     it('should return random trap on failed inspection of untrapped chest', () => {
       const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 10 })
-      const chest = createTestChest({ trapped: false, trapType: null })
+      const chest = createTestChest({ trapped: false, trapId: null })
 
       // Queue: crit pass, inspect fail, random trap selection
       RandomService.queueNextValues([0.5, 0.99, 0.3])
@@ -381,7 +381,7 @@ describe('TrapService', () => {
       // Queue dice roll for 2d8 damage
       RandomService.queueNextValues([0.5, 0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.CROSSBOW_BOLT, opener, party)
+      const result = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party)
 
       expect(result.damageDealt.has('opener')).toBe(true)
       expect(result.damageDealt.get('opener')).toBeGreaterThan(0)
@@ -395,7 +395,7 @@ describe('TrapService', () => {
       // Queue dice roll for 1d6 damage
       RandomService.queueNextValues([0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.POISON_NEEDLE, opener, party)
+      const result = TrapService.applyTrapEffects('POISON_NEEDLE', opener, party)
 
       expect(result.statusApplied.get('opener')).toBe(CharacterStatus.POISONED)
     })
@@ -409,7 +409,7 @@ describe('TrapService', () => {
       // Queue dice rolls for 2d6 damage for each party member (2 dice × 3 members = 6 rolls)
       RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.GAS_BOMB, opener, party)
+      const result = TrapService.applyTrapEffects('GAS_BOMB', opener, party)
 
       expect(result.damageDealt.size).toBe(3)
       expect(result.statusApplied.size).toBe(3)
@@ -425,7 +425,7 @@ describe('TrapService', () => {
       // Queue dice rolls for 4d6 damage for each affected target (4 dice × 2 targets = 8 rolls)
       RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.MAGE_BLASTER, opener, party)
+      const result = TrapService.applyTrapEffects('MAGE_BLASTER', opener, party)
 
       expect(result.damageDealt.has('mage')).toBe(true)
       expect(result.damageDealt.has('bishop')).toBe(true)
@@ -437,7 +437,7 @@ describe('TrapService', () => {
       const opener = createTestCharacter({ id: 'opener' })
       const party = [opener]
 
-      const result = TrapService.applyTrapEffects(TrapType.TELEPORTER, opener, party)
+      const result = TrapService.applyTrapEffects('TELEPORTER', opener, party)
 
       expect(result.specialEffect).toBe('teleport')
       expect(result.damageDealt.size).toBe(0)
@@ -447,7 +447,7 @@ describe('TrapService', () => {
       const opener = createTestCharacter({ id: 'opener' })
       const party = [opener]
 
-      const result = TrapService.applyTrapEffects(TrapType.ALARM, opener, party)
+      const result = TrapService.applyTrapEffects('ALARM', opener, party)
 
       expect(result.specialEffect).toBe('combat')
     })
@@ -460,7 +460,7 @@ describe('TrapService', () => {
         // Queue: hit roll (0.5 < 0.7 = hit), then damage roll for 1d6
         RandomService.queueNextValues([0.5, 0.5])
 
-        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, opener, party)
+        const result = TrapService.applyTrapEffects('SPLINTERS', opener, party)
 
         expect(result.damageDealt.has('opener')).toBe(true)
         expect(result.message).toContain('takes')
@@ -473,7 +473,7 @@ describe('TrapService', () => {
         // Queue: hit roll (0.8 > 0.3 = miss)
         RandomService.queueNextValues([0.8])
 
-        const result = TrapService.applyTrapEffects(TrapType.BLADES, opener, party)
+        const result = TrapService.applyTrapEffects('BLADES', opener, party)
 
         expect(result.damageDealt.has('opener')).toBe(false)
         expect(result.message).toContain('avoids')
@@ -487,7 +487,7 @@ describe('TrapService', () => {
         // Queue damage roll only (2d8)
         RandomService.queueNextValues([0.5, 0.5])
 
-        const result = TrapService.applyTrapEffects(TrapType.CROSSBOW_BOLT, opener, party)
+        const result = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party)
 
         expect(result.damageDealt.has('opener')).toBe(true)
       })
@@ -500,7 +500,7 @@ describe('TrapService', () => {
         // SPLINTERS (70% hit) - queue: char1 hits (0.5 < 0.7), damage, char2 misses (0.8 > 0.7)
         RandomService.queueNextValues([0.5, 0.5, 0.8])
 
-        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, member1, party)
+        const result = TrapService.applyTrapEffects('SPLINTERS', member1, party)
 
         expect(result.damageDealt.has('char1')).toBe(true)
         expect(result.damageDealt.has('char2')).toBe(false)
@@ -610,13 +610,13 @@ describe('TrapService', () => {
       const result = TrapService.castCalfo(priest, chest)
 
       expect(result.success).toBe(true)
-      expect(result.trapIdentified).toBe(TrapType.POISON_NEEDLE)
+      expect(result.trapIdentified).toBe('POISON_NEEDLE')
       expect(result.triggered).toBe(false)
     })
 
     it('should return random trap name on 5% failure (deception mechanic)', () => {
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
+      const chest = createTestChest({ trapId: 'POISON_NEEDLE' })
 
       // Queue failure roll (> 95% = fail), then random trap selection
       RandomService.queueNextValues([0.99, 0.3])
@@ -643,7 +643,7 @@ describe('TrapService', () => {
 
     it('should return null trap on success for untrapped chest', () => {
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const chest = createTestChest({ trapped: false, trapType: null })
+      const chest = createTestChest({ trapped: false, trapId: null })
 
       // Queue success roll
       RandomService.queueNextValues([0.5])
@@ -652,6 +652,229 @@ describe('TrapService', () => {
 
       expect(result.success).toBe(true)
       expect(result.trapIdentified).toBeNull()  // Correctly identifies no trap
+    })
+  })
+
+  // ============================================
+  // SCRAMBLED LETTERS SYSTEM TESTS
+  // ============================================
+
+  describe('scrambleLetters', () => {
+    it('should scramble all letters from trap name', () => {
+      RandomService.setSeed(12345)  // Deterministic shuffle
+      const result = TrapService.scrambleLetters('POISON NEEDLE')
+
+      // Should have same letters, different order
+      const originalLetters = 'POISON NEEDLE'.split('').sort().join('')
+      const scrambledLetters = result.map(l => l.char).sort().join('')
+      expect(scrambledLetters).toBe(originalLetters)
+
+      // All should start as hidden
+      expect(result.every(l => l.state === 'hidden')).toBe(true)
+    })
+
+    it('should preserve spaces in scramble', () => {
+      RandomService.setSeed(12345)
+      const result = TrapService.scrambleLetters('GAS BOMB')
+
+      const spaceCount = result.filter(l => l.char === ' ').length
+      expect(spaceCount).toBe(1)  // "GAS BOMB" has 1 space
+    })
+
+    it('should track original positions', () => {
+      RandomService.setSeed(12345)
+      const result = TrapService.scrambleLetters('ABC')
+
+      // Each letter should have a unique original position 0, 1, or 2
+      const positions = result.map(l => l.position).sort()
+      expect(positions).toEqual([0, 1, 2])
+    })
+
+    it('should handle single character', () => {
+      const result = TrapService.scrambleLetters('X')
+
+      expect(result.length).toBe(1)
+      expect(result[0].char).toBe('X')
+      expect(result[0].position).toBe(0)
+      expect(result[0].state).toBe('hidden')
+    })
+  })
+
+  describe('revealLetters', () => {
+    it('should reveal percentage of letters based on skill', () => {
+      RandomService.setSeed(12345)
+      const scrambled = TrapService.scrambleLetters('POISON NEEDLE')
+
+      // High skill = reveal ~80% as green, ~20% as red
+      // Note: "POISON NEEDLE" is 13 chars; 80% + 20% = 10 + 2 = 12 (floored)
+      const revealed = TrapService.revealLetters(scrambled, 80, 20)
+
+      const greenCount = revealed.filter(l => l.state === 'green').length
+      const redCount = revealed.filter(l => l.state === 'red').length
+      const hiddenCount = revealed.filter(l => l.state === 'hidden').length
+
+      // ~80% green = 10, ~20% red = 2, 1 hidden (rounding)
+      expect(greenCount).toBe(10)
+      expect(redCount).toBe(2)
+      expect(hiddenCount).toBe(1)
+    })
+
+    it('should reveal fewer letters for low skill', () => {
+      RandomService.setSeed(12345)
+      const scrambled = TrapService.scrambleLetters('POISON NEEDLE')
+
+      // Low skill = reveal only 30% as green, 30% as red
+      const revealed = TrapService.revealLetters(scrambled, 30, 30)
+
+      const greenCount = revealed.filter(l => l.state === 'green').length
+      const hiddenCount = revealed.filter(l => l.state === 'hidden').length
+
+      expect(greenCount).toBeLessThan(6)  // Less than half green
+      expect(hiddenCount).toBeGreaterThan(0)  // Some still hidden
+    })
+
+    it('should not modify already revealed letters', () => {
+      RandomService.setSeed(12345)
+      const scrambled = TrapService.scrambleLetters('ABC')
+
+      // First reveal: 50% green
+      const firstReveal = TrapService.revealLetters(scrambled, 50, 0)
+      const greenBefore = firstReveal.filter(l => l.state === 'green').length
+
+      // Second reveal: more green should accumulate
+      const secondReveal = TrapService.revealLetters(firstReveal, 50, 0)
+      const greenAfter = secondReveal.filter(l => l.state === 'green').length
+
+      expect(greenAfter).toBeGreaterThanOrEqual(greenBefore)
+    })
+
+    it('should return clone without modifying original', () => {
+      const scrambled = TrapService.scrambleLetters('ABC')
+      const original = scrambled[0].state
+
+      TrapService.revealLetters(scrambled, 100, 0)
+
+      expect(scrambled[0].state).toBe(original)
+    })
+  })
+
+  describe('createScrambledState', () => {
+    it('should create initial scrambled state for a trap', () => {
+      RandomService.setSeed(12345)
+      const state = TrapService.createScrambledState('POISON_NEEDLE')
+
+      expect(state.actualTrapId).toBe('POISON_NEEDLE')
+      expect(state.fullyRevealed).toBe(false)
+      expect(state.inspectionCount).toBe(0)
+      expect(state.letters.length).toBe(13)  // "POISON NEEDLE"
+      expect(state.letters.every(l => l.state === 'hidden')).toBe(true)
+    })
+
+    it('should use trap name from TrapDataLoader', () => {
+      RandomService.setSeed(12345)
+      const state = TrapService.createScrambledState('GAS_BOMB')
+
+      // Letters should contain all characters from "GAS BOMB"
+      const chars = state.letters.map(l => l.char).sort().join('')
+      expect(chars).toBe(' ABBGMOS')  // sorted: space, A, B, B, G, M, O, S
+    })
+  })
+
+  describe('calculateRevealPercents', () => {
+    it('should calculate higher percents for thieves', () => {
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
+      const { greenPercent, redPercent } = TrapService.calculateRevealPercents(thief)
+
+      // Thief with AGI 16 = 95% inspect chance (capped)
+      // Green = 95 * 0.8 = 76, Red = 95 * 0.2 = 19
+      expect(greenPercent).toBe(76)
+      expect(redPercent).toBe(19)
+    })
+
+    it('should calculate lower percents for fighters', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 12 })
+      const { greenPercent, redPercent } = TrapService.calculateRevealPercents(fighter)
+
+      // Fighter with AGI 12 = 12% inspect chance
+      // Green = 12 * 0.8 = 9, Red = 12 * 0.2 = 2
+      expect(greenPercent).toBe(9)
+      expect(redPercent).toBe(2)
+    })
+  })
+
+  describe('performInspection', () => {
+    it('should update scrambled state with revealed letters', () => {
+      RandomService.setSeed(12345)
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
+      const initialState = TrapService.createScrambledState('POISON_NEEDLE')
+
+      const result = TrapService.performInspection(thief, initialState)
+
+      expect(result.inspectionCount).toBe(1)
+      expect(result.fullyRevealed).toBe(false)
+
+      const revealed = result.letters.filter(l => l.state !== 'hidden')
+      expect(revealed.length).toBeGreaterThan(0)
+    })
+
+    it('should stack inspections', () => {
+      RandomService.setSeed(12345)
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 12 })
+      let state = TrapService.createScrambledState('POISON_NEEDLE')
+
+      state = TrapService.performInspection(thief, state)
+      const firstRevealCount = state.letters.filter(l => l.state !== 'hidden').length
+
+      state = TrapService.performInspection(thief, state)
+      const secondRevealCount = state.letters.filter(l => l.state !== 'hidden').length
+
+      expect(secondRevealCount).toBeGreaterThanOrEqual(firstRevealCount)
+      expect(state.inspectionCount).toBe(2)
+    })
+
+    it('should preserve actualTrapId', () => {
+      RandomService.setSeed(12345)
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
+      const initialState = TrapService.createScrambledState('GAS_BOMB')
+
+      const result = TrapService.performInspection(thief, initialState)
+
+      expect(result.actualTrapId).toBe('GAS_BOMB')
+    })
+  })
+
+  describe('performCalfo', () => {
+    it('should reveal all letters as green', () => {
+      RandomService.setSeed(12345)
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const initialState = TrapService.createScrambledState('POISON_NEEDLE')
+
+      const result = TrapService.performCalfo(priest, initialState)
+
+      expect(result.fullyRevealed).toBe(true)
+      expect(result.letters.every(l => l.state === 'green')).toBe(true)
+    })
+
+    it('should keep letters scrambled (not in original order)', () => {
+      RandomService.setSeed(12345)
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const initialState = TrapService.createScrambledState('POISON_NEEDLE')
+
+      const result = TrapService.performCalfo(priest, initialState)
+      const displayText = result.letters.map(l => l.char).join('')
+
+      // Should still be scrambled, not "POISON NEEDLE"
+      expect(displayText).not.toBe('POISON NEEDLE')
+    })
+
+    it('should preserve actualTrapId', () => {
+      RandomService.setSeed(12345)
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const initialState = TrapService.createScrambledState('GAS_BOMB')
+
+      const result = TrapService.performCalfo(priest, initialState)
+
+      expect(result.actualTrapId).toBe('GAS_BOMB')
     })
   })
 

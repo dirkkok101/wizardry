@@ -1314,7 +1314,7 @@ export class CombatComponent implements OnInit, OnDestroy {
     const chest: Chest = {
       id: `chest_combat_${Date.now()}_${RandomService.random(1000, 9999)}`,
       trapped: RandomService.roll(TRAP_PROBABILITY_BY_TIER[rewardTier]),
-      trapType: null,
+      trapId: null,
       trapIdentified: false,
       trapDisarmed: false,
       rewardTier,
@@ -1327,9 +1327,13 @@ export class CombatComponent implements OnInit, OnDestroy {
       source: 'combat_victory'
     }
 
-    // Set trap type if trapped (using ChestService for consistency)
+    // Set trap id if trapped (using ChestService for consistency)
+    // Note: selectTrapId is async but we fire-and-forget for simplicity
+    // The trap ID will be set before the chest is opened
     if (chest.trapped) {
-      chest.trapType = ChestService.selectTrapType(rewardTier)
+      ChestService.selectTrapId(rewardTier).then(trapId => {
+        chest.trapId = trapId
+      })
     }
 
     // Update game state: distribute XP, clear combat, set pending chest and combat rewards

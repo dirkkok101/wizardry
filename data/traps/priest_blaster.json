@@ -1,6 +1,8 @@
 {
   "id": "PRIEST_BLASTER",
   "name": "PRIEST BLASTER",
+  "effectType": "damage",
+  "tiers": [4, 5],
   "targetMode": "class_specific",
   "targetClasses": ["PRIEST", "BISHOP", "LORD"],
   "damageFormula": "4d6",

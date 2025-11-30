@@ -24,21 +24,10 @@ import {
   ITEM_CHANCE_BY_TIER,
   MAX_INVENTORY_SIZE
 } from '@models/Chest'
-import { TrapType } from '@models/Trap'
+import { TrapId } from '@models/Trap'
 import { RandomService } from './RandomService'
+import { TrapDataLoader } from './TrapDataLoader'
 import { isAlive } from '@utils/CharacterStatusHelpers'
-
-/**
- * Trap types available at each reward tier
- * Lower tiers have simpler traps, higher tiers can have any trap
- */
-const TRAP_TYPES_BY_TIER: Record<RewardTier, TrapType[]> = {
-  1: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.ALARM],
-  2: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.CROSSBOW_BOLT, TrapType.ALARM],
-  3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.SPLINTERS, TrapType.BLADES, TrapType.STUNNER, TrapType.TELEPORTER],
-  4: [TrapType.EXPLODING_BOX, TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER],
-  5: [TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]
-}
 
 /**
  * Generate a unique chest ID
@@ -49,10 +38,18 @@ function generateChestId(): string {
 
 /**
  * Select a trap type appropriate for the reward tier
+ * Uses data-driven trap definitions from TrapDataLoader
  */
-function selectTrapType(rewardTier: RewardTier): TrapType {
-  const availableTraps = TRAP_TYPES_BY_TIER[rewardTier]
-  return RandomService.pickRandom(availableTraps)
+async function selectTrapId(rewardTier: RewardTier): Promise<TrapId> {
+  const availableTraps = await TrapDataLoader.getTrapsForTier(rewardTier)
+  if (availableTraps.length === 0) {
+    // Fallback to any trap if none defined for this tier
+    const allTraps = await TrapDataLoader.loadAllTraps()
+    const trapIds = Array.from(allTraps.keys())
+    return RandomService.pickRandom(trapIds)
+  }
+  const selectedTrap = RandomService.pickRandom(availableTraps)
+  return selectedTrap.id
 }
 
 /**
@@ -112,12 +109,12 @@ function createPlaceholderItem(rewardTier: RewardTier, mazeLevel: number, slot: 
  * @param source How the chest was discovered
  * @returns Fully configured Chest object
  */
-function generateChest(
+async function generateChest(
   rewardTier: RewardTier,
   mazeLevel: number,
   position: Position,
   source: ChestSource
-): Chest {
+): Promise<Chest> {
   // Determine if trapped
   const trapProbability = TRAP_PROBABILITY_BY_TIER[rewardTier]
   const trapped = RandomService.roll(trapProbability)
@@ -131,7 +128,7 @@ function generateChest(
   return {
     id: generateChestId(),
     trapped,
-    trapType: trapped ? selectTrapType(rewardTier) : null,
+    trapId: trapped ? await selectTrapId(rewardTier) : null,
     trapIdentified: false,
     trapDisarmed: false,
     rewardTier,
@@ -146,11 +143,11 @@ function generateChest(
  * Generate a chest for a combat victory
  * Reward tier is based on monster difficulty
  */
-function generateCombatChest(
+async function generateCombatChest(
   monsterLevel: number,
   mazeLevel: number,
   position: Position
-): Chest {
+): Promise<Chest> {
   // Map monster level to reward tier (simplified)
   const rewardTier = Math.min(5, Math.max(1, Math.ceil(monsterLevel / 3))) as RewardTier
   return generateChest(rewardTier, mazeLevel, position, 'combat_victory')
@@ -158,20 +155,21 @@ function generateCombatChest(
 
 /**
  * Generate a boss chest (always high tier, always trapped)
+ * Boss chests use tier 5 traps (most dangerous)
  */
-function generateBossChest(
+async function generateBossChest(
   mazeLevel: number,
   position: Position
-): Chest {
-  const chest = generateChest(5, mazeLevel, position, 'boss')
-  // Boss chests are always trapped
+): Promise<Chest> {
+  const chest = await generateChest(5, mazeLevel, position, 'boss')
+  // Boss chests are always trapped - use immutable update pattern
   if (!chest.trapped) {
-    chest.trapped = true
-    chest.trapType = RandomService.pickRandom([
-      TrapType.TELEPORTER,
-      TrapType.MAGE_BLASTER,
-      TrapType.PRIEST_BLASTER
-    ])
+    const trapId = await selectTrapId(5)
+    return {
+      ...chest,
+      trapped: true,
+      trapId
+    }
   }
   return chest
 }
@@ -317,7 +315,7 @@ function createEmptyChest(mazeLevel: number, position: Position): Chest {
   return {
     id: generateChestId(),
     trapped: false,
-    trapType: null,
+    trapId: null,
     trapIdentified: true,
     trapDisarmed: false,
     rewardTier: 1,
@@ -333,14 +331,14 @@ function createEmptyChest(mazeLevel: number, position: Position): Chest {
  */
 function createChestWithContents(
   contents: TreasureContents,
-  trapType: TrapType | null,
+  trapId: TrapId | null,
   mazeLevel: number,
   position: Position
 ): Chest {
   return {
     id: generateChestId(),
-    trapped: trapType !== null,
-    trapType,
+    trapped: trapId !== null,
+    trapId,
     trapIdentified: false,
     trapDisarmed: false,
     rewardTier: 3,  // Default to mid-tier
@@ -360,7 +358,7 @@ export const ChestService = {
   createChestWithContents,
 
   // Content generation (internal, exposed for testing)
-  selectTrapType,
+  selectTrapId,
   generateGold,
   generateItems,
 

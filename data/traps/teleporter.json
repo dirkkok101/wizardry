@@ -1,6 +1,8 @@
 {
   "id": "TELEPORTER",
   "name": "TELEPORTER",
+  "effectType": "teleport",
+  "tiers": [3, 4, 5],
   "targetMode": "special",
   "specialEffect": "teleport",
   "description": "Teleports party to random location"

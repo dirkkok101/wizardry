@@ -52,6 +52,26 @@ const TrapSpecialEffectSchema = z.enum([
 ])
 
 /**
+ * Effect type categories for trap classification
+ *
+ * Note: This field categorizes traps for documentation and future extensibility.
+ * Current trap routing uses specific fields (damageFormula, statusEffect, specialEffect)
+ * rather than effectType. This allows traps to combine multiple effect types
+ * (e.g., a trap that deals damage AND applies a status effect).
+ */
+const TrapEffectTypeSchema = z.enum([
+  'damage',      // Primary effect is HP damage (e.g., crossbow_bolt, exploding_box)
+  'condition',   // Primary effect is status (e.g., poison_needle, stunner)
+  'teleport',    // Primary effect is teleportation (e.g., teleporter)
+  'alarm'        // Primary effect is triggering combat (e.g., alarm)
+])
+
+/**
+ * Reward tiers (1-5) that a trap can appear in
+ */
+const TrapTiersSchema = z.array(z.number().int().min(1).max(5)).min(1)
+
+/**
  * Damage formula pattern (e.g., "1d6", "2d8", "3d6")
  */
 const DamageFormulaSchema = z.string().regex(
@@ -65,6 +85,8 @@ const DamageFormulaSchema = z.string().regex(
 export const TrapSchema = z.object({
   id: z.string().min(1, 'Trap ID is required'),
   name: z.string().min(1, 'Trap name is required'),
+  effectType: TrapEffectTypeSchema,
+  tiers: TrapTiersSchema,
   targetMode: TrapTargetModeSchema,
   targetClasses: z.array(CharacterClassSchema).optional(),
   damageFormula: DamageFormulaSchema.optional(),
@@ -108,11 +130,18 @@ export const TrapSchema = z.object({
 export type ValidatedTrap = z.infer<typeof TrapSchema>
 
 /**
+ * TypeScript types inferred from schemas
+ */
+export type TrapEffectType = z.infer<typeof TrapEffectTypeSchema>
+
+/**
  * Export individual schemas for testing
  */
 export const TrapSchemas = {
   TrapTargetMode: TrapTargetModeSchema,
   TrapSpecialEffect: TrapSpecialEffectSchema,
+  TrapEffectType: TrapEffectTypeSchema,
+  TrapTiers: TrapTiersSchema,
   CharacterClass: CharacterClassSchema,
   CharacterStatus: CharacterStatusSchema,
   DamageFormula: DamageFormulaSchema

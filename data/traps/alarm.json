@@ -1,6 +1,8 @@
 {
   "id": "ALARM",
   "name": "ALARM",
+  "effectType": "alarm",
+  "tiers": [1, 2, 5],
   "targetMode": "special",
   "specialEffect": "combat",
   "description": "Triggers monster encounter"

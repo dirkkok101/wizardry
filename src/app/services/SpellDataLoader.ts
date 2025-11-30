@@ -1,16 +1,19 @@
 import { SpellDefinition, LoadedSpell } from '@models/SpellDefinition'
 import { SpellFileData, SpellLevelData } from '@models/SpellFileData'
 import { SpellDefinitionSchema } from '@validation/spell-schema'
-import { getDataFileList } from './AssetLoadingService'
 
 /**
  * Service for loading and validating spell data from JSON files
+ *
+ * Data-driven architecture:
+ * - All spell definitions live in data/spells/*.json
+ * - Manifest file (data/spells/index.json) lists all spell IDs
+ * - No hardcoded spell lists in code
+ * - Zod validates all spell data at runtime
+ *
  * Supports both formats:
  * - Legacy: Single-level spells with all fields at top level
  * - Consolidated: Multi-level spells with shared metadata and `levels` array
- * Uses AssetLoadingService for centralized loading infrastructure
- * Implements caching to prevent multiple loads
- * Gracefully handles individual spell failures
  */
 export class SpellDataLoader {
   private static spellCache: Map<string, LoadedSpell> | null = null
@@ -145,9 +148,9 @@ export class SpellDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Gets file list from AssetLoadingService but loads files directly with fetch()
-   * to support both legacy (single-level) and consolidated (multi-level) formats.
-   * Cannot use loadDataFiles() since consolidated format lacks top-level `id` field.
+   * Reads manifest file to discover all spells
+   * Loads files directly with fetch() to support both legacy (single-level)
+   * and consolidated (multi-level) formats.
    */
   private static async performLoad(): Promise<Map<string, LoadedSpell>> {
     this.loading = true
@@ -158,56 +161,62 @@ export class SpellDataLoader {
     const loadedAt = Date.now()
 
     try {
-      // Get file list from AssetLoadingService
-      const fileList = getDataFileList('spells')
+      // Load manifest to get list of all spell file names
+      const manifestResponse = await fetch('/assets/spells/index.json')
+      if (!manifestResponse.ok) {
+        throw new Error('Failed to load spell manifest')
+      }
+      const spellFileNames: string[] = await manifestResponse.json()
 
-      // Load each spell file directly (not using loadDataFiles since consolidated format has no top-level id)
-      for (const filename of fileList) {
-        const path = `/assets/spells/${filename}`
+      // Load each spell file
+      for (const fileName of spellFileNames) {
         try {
-          const response = await fetch(path)
+          const response = await fetch(`/assets/spells/${fileName}.json`)
           if (!response.ok) {
-            throw new Error(`Failed to load ${path}: ${response.statusText}`)
+            this.failedSpells.set(fileName, `HTTP ${response.status}`)
+            continue
           }
+
           const rawSpell = await response.json()
-        try {
-          // Detect format and convert to SpellDefinition array
-          const spellDefinitions: SpellDefinition[] = this.isConsolidatedFormat(rawSpell)
-            ? this.flattenConsolidatedSpell(rawSpell)
-            : [rawSpell as SpellDefinition]
 
-          // Validate and load each spell definition
-          for (const spellDef of spellDefinitions) {
-            try {
-              // Validate with Zod
-              const validated = SpellDefinitionSchema.parse(spellDef)
+          try {
+            // Detect format and convert to SpellDefinition array
+            const spellDefinitions: SpellDefinition[] = this.isConsolidatedFormat(rawSpell)
+              ? this.flattenConsolidatedSpell(rawSpell)
+              : [rawSpell as SpellDefinition]
 
-              // Convert to LoadedSpell
-              const loadedSpell: LoadedSpell = {
-                ...validated,
-                loaded: true,
-                validatedAt: loadedAt
+            // Validate and load each spell definition
+            for (const spellDef of spellDefinitions) {
+              try {
+                // Validate with Zod
+                const validated = SpellDefinitionSchema.parse(spellDef)
+
+                // Convert to LoadedSpell
+                const loadedSpell: LoadedSpell = {
+                  ...validated,
+                  loaded: true,
+                  validatedAt: loadedAt
+                }
+
+                spells.set(spellDef.id, loadedSpell)
+              } catch (error) {
+                // Track validation failure but continue loading other spells
+                const errorMessage = error instanceof Error ? error.message : String(error)
+                this.failedSpells.set(spellDef.id, errorMessage)
+                console.warn(`Failed to validate spell ${spellDef.id}:`, errorMessage)
               }
-
-              spells.set(spellDef.id, loadedSpell)
-            } catch (error) {
-              // Track validation failure but continue loading other spells
-              const errorMessage = error instanceof Error ? error.message : String(error)
-              this.failedSpells.set(spellDef.id, errorMessage)
-              console.warn(`Failed to validate spell ${spellDef.id}:`, errorMessage)
             }
-          }
           } catch (error) {
             // Track file parsing failure
             const errorMessage = error instanceof Error ? error.message : String(error)
-            this.failedSpells.set(filename, errorMessage)
-            console.warn(`Failed to process spell file ${filename}:`, errorMessage)
+            this.failedSpells.set(fileName, errorMessage)
+            console.warn(`Failed to process spell file ${fileName}:`, errorMessage)
           }
         } catch (error) {
           // Track fetch error
           const errorMessage = error instanceof Error ? error.message : String(error)
-          this.failedSpells.set(filename, errorMessage)
-          console.warn(`Failed to fetch spell file ${filename}:`, errorMessage)
+          this.failedSpells.set(fileName, errorMessage)
+          console.warn(`Failed to fetch spell file ${fileName}:`, errorMessage)
         }
       }
 
@@ -215,17 +224,17 @@ export class SpellDataLoader {
 
       const successCount = spells.size
       const failCount = this.failedSpells.size
-      const totalCount = fileList.length  // Total files attempted
+      const totalCount = spellFileNames.length  // Total files attempted
 
       if (failCount > 0) {
-        console.warn(`Loaded ${successCount} spell definitions from ${fileList.length} files (${failCount} files failed)`)
+        console.warn(`Loaded ${successCount} spell definitions from ${totalCount} files (${failCount} files failed)`)
       } else {
-        console.log(`Loaded ${successCount} spell definitions from ${fileList.length} files`)
+        console.log(`Loaded ${successCount} spell definitions from ${totalCount} files`)
       }
 
       return spells
     } catch (error) {
-      // Catastrophic failure (e.g., directory not found)
+      // Catastrophic failure (e.g., manifest not found)
       this.loadError = error as Error
       console.error('Failed to load spells:', error)
       throw error

@@ -1,6 +1,8 @@
 {
   "id": "POISON_NEEDLE",
   "name": "POISON NEEDLE",
+  "effectType": "condition",
+  "tiers": [1, 2],
   "targetMode": "opener",
   "damageFormula": "1d6",
   "statusEffect": "POISONED",

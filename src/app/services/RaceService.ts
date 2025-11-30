@@ -1,8 +1,16 @@
 import { Race, RaceData, getRaceId } from '@models/Race'
 import { SaveType } from '@models/SavingThrow'
-import { AssetLoadingService } from './AssetLoadingService'
 import { validateAndLoadRaceData } from '@models/RaceValidation'
 
+/**
+ * Service for loading and providing race data
+ *
+ * Data-driven architecture:
+ * - All race definitions live in data/races/*.json
+ * - Manifest file (data/races/index.json) lists all race IDs
+ * - No hardcoded race lists in code
+ * - Validates all race data against Zod schema and source material
+ */
 class RaceServiceClass {
   private raceData: Map<string, RaceData> | null = null
   private failedRaces: Map<string, string> = new Map() // raceId → error message
@@ -11,20 +19,31 @@ class RaceServiceClass {
   /**
    * Initialize the race service by loading all race data
    * Validates all race data against Zod schema and source material
-   * Similar to SpellDataLoader pattern but throws on any failure (races are critical)
+   * Throws on any failure (races are critical for game initialization)
    */
   async initialize(): Promise<void> {
     console.log('Loading races...')
 
-    const service = new AssetLoadingService()
-    const rawData = await service.loadDataFiles<RaceData>('races')
+    // Load manifest to get list of all race file names
+    const manifestResponse = await fetch('/assets/races/index.json')
+    if (!manifestResponse.ok) {
+      throw new Error('Failed to load race manifest')
+    }
+    const raceFileNames: string[] = await manifestResponse.json()
 
     // Validate each race data file
     const validatedData = new Map<string, RaceData>()
     this.failedRaces.clear()
 
-    for (const [raceId, data] of rawData.entries()) {
+    for (const fileName of raceFileNames) {
       try {
+        const response = await fetch(`/assets/races/${fileName}.json`)
+        if (!response.ok) {
+          this.failedRaces.set(fileName, `HTTP ${response.status}`)
+          continue
+        }
+
+        const data = await response.json()
         const validation = validateAndLoadRaceData(data)
 
         if (!validation.success) {
@@ -33,15 +52,15 @@ class RaceServiceClass {
             ...(validation.sourceErrors || [])
           ]
           const errorMessage = errorDetails.join('\n  ')
-          this.failedRaces.set(raceId, errorMessage)
-          console.warn(`Failed to validate race ${raceId}:`, errorMessage)
+          this.failedRaces.set(fileName, errorMessage)
+          console.warn(`Failed to validate race ${fileName}:`, errorMessage)
         } else {
-          validatedData.set(raceId, validation.data!)
+          validatedData.set(validation.data!.id, validation.data!)
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
-        this.failedRaces.set(raceId, errorMessage)
-        console.warn(`Failed to validate race ${raceId}:`, errorMessage)
+        this.failedRaces.set(fileName, errorMessage)
+        console.warn(`Failed to validate race ${fileName}:`, errorMessage)
       }
     }
 
