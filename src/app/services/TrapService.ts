@@ -548,6 +548,28 @@ function calculateRevealPercents(character: Character): { greenPercent: number; 
   return { greenPercent, redPercent }
 }
 
+/**
+ * Perform an inspection and update the scrambled state
+ * Stacks with previous inspections - already revealed letters stay revealed
+ *
+ * @param character The character performing inspection
+ * @param currentState Current scrambled trap state
+ * @returns New state with updated letters and incremented inspection count
+ */
+function performInspection(
+  character: Character,
+  currentState: ScrambledTrapState
+): ScrambledTrapState {
+  const { greenPercent, redPercent } = calculateRevealPercents(character)
+  const updatedLetters = revealLetters(currentState.letters, greenPercent, redPercent)
+
+  return {
+    ...currentState,
+    letters: updatedLetters,
+    inspectionCount: currentState.inspectionCount + 1
+  }
+}
+
 export const TrapService = {
   // Calculation functions
   calculateInspectChance,
@@ -571,5 +593,6 @@ export const TrapService = {
   scrambleLetters,
   revealLetters,
   createScrambledState,
-  calculateRevealPercents
+  calculateRevealPercents,
+  performInspection
 }

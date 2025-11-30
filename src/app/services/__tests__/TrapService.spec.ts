@@ -802,6 +802,47 @@ describe('TrapService', () => {
     })
   })
 
+  describe('performInspection', () => {
+    it('should update scrambled state with revealed letters', () => {
+      RandomService.setSeed(12345)
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
+      const initialState = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+
+      const result = TrapService.performInspection(thief, initialState)
+
+      expect(result.inspectionCount).toBe(1)
+      expect(result.fullyRevealed).toBe(false)
+
+      const revealed = result.letters.filter(l => l.state !== 'hidden')
+      expect(revealed.length).toBeGreaterThan(0)
+    })
+
+    it('should stack inspections', () => {
+      RandomService.setSeed(12345)
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 12 })
+      let state = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+
+      state = TrapService.performInspection(thief, state)
+      const firstRevealCount = state.letters.filter(l => l.state !== 'hidden').length
+
+      state = TrapService.performInspection(thief, state)
+      const secondRevealCount = state.letters.filter(l => l.state !== 'hidden').length
+
+      expect(secondRevealCount).toBeGreaterThanOrEqual(firstRevealCount)
+      expect(state.inspectionCount).toBe(2)
+    })
+
+    it('should preserve actualTrapType', () => {
+      RandomService.setSeed(12345)
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
+      const initialState = TrapService.createScrambledState(TrapType.GAS_BOMB)
+
+      const result = TrapService.performInspection(thief, initialState)
+
+      expect(result.actualTrapType).toBe(TrapType.GAS_BOMB)
+    })
+  })
+
   describe('getRecommendedHandler', () => {
     it('should recommend Thief over Fighter', () => {
       const fighter = createTestCharacter({
