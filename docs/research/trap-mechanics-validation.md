@@ -848,7 +848,11 @@ function calculateTrapDamage(trapType: TrapType, mazeLevel: number): TrapDamageR
 - ✅ **Saving Throw Formulas**: Complete with class/race bonuses
 - ✅ **Implementation Text Strings**: "DISARMED!", "You could not disarm it!", "You set it off!", "Oopps..."
 
-**Validation Date**: 2025-11-29
+### Intentional Deviations
+
+- **Elf Breath Resistance**: Our implementation gives Elves +10% breath resistance. This is an intentional game balance deviation - original Elves only had the wand save bonus which is never checked in Wizardry 1 (vestigial D&D code). See `data/races/elf.json` for documentation.
+
+**Validation Date**: 2025-11-30
 **Validated By**: Claude Code (research compilation with source code verification)
 
 ### Primary Sources Used

@@ -175,10 +175,10 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   // FAILED INSPECTION - Two-stage resolution per original source code
 
   // Stage 1: AGI-based trigger check (only if trapped)
-  // Original formula: If (RANDOM MOD 20) >= AGI, trap triggers
+  // Original formula: If (RANDOM MOD 20) > AGI, trap triggers
   if (chest.trapped) {
     const triggerRoll = RandomService.random(0, 19)
-    if (triggerRoll >= character.agility) {
+    if (triggerRoll > character.agility) {
       return {
         success: false,
         trapIdentified: null,

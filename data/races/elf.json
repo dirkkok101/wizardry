@@ -15,7 +15,7 @@
   },
   "resistances": {
     "breath": 10,
-    "notes": "+10% resistance vs Breath attacks (reduces damage by half)"
+    "notes": "Breath resistance is an intentional game balance deviation - original Elves only had useless wand save bonus (Save vs. Wand is never checked in Wizardry 1)"
   },
   "description": "Elves are intelligent and pious, making them excellent spellcasters. However, they are physically fragile.",
   "strengths": ["High intelligence and piety", "Good agility", "Wand saving throw bonus"],
