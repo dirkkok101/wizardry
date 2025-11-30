@@ -700,6 +700,64 @@ describe('TrapService', () => {
     })
   })
 
+  describe('revealLetters', () => {
+    it('should reveal percentage of letters based on skill', () => {
+      RandomService.setSeed(12345)
+      const scrambled = TrapService.scrambleLetters('POISON NEEDLE')
+
+      // High skill = reveal ~80% as green, ~20% as red
+      // Note: "POISON NEEDLE" is 13 chars; 80% + 20% = 10 + 2 = 12 (floored)
+      const revealed = TrapService.revealLetters(scrambled, 80, 20)
+
+      const greenCount = revealed.filter(l => l.state === 'green').length
+      const redCount = revealed.filter(l => l.state === 'red').length
+      const hiddenCount = revealed.filter(l => l.state === 'hidden').length
+
+      // ~80% green = 10, ~20% red = 2, 1 hidden (rounding)
+      expect(greenCount).toBe(10)
+      expect(redCount).toBe(2)
+      expect(hiddenCount).toBe(1)
+    })
+
+    it('should reveal fewer letters for low skill', () => {
+      RandomService.setSeed(12345)
+      const scrambled = TrapService.scrambleLetters('POISON NEEDLE')
+
+      // Low skill = reveal only 30% as green, 30% as red
+      const revealed = TrapService.revealLetters(scrambled, 30, 30)
+
+      const greenCount = revealed.filter(l => l.state === 'green').length
+      const hiddenCount = revealed.filter(l => l.state === 'hidden').length
+
+      expect(greenCount).toBeLessThan(6)  // Less than half green
+      expect(hiddenCount).toBeGreaterThan(0)  // Some still hidden
+    })
+
+    it('should not modify already revealed letters', () => {
+      RandomService.setSeed(12345)
+      const scrambled = TrapService.scrambleLetters('ABC')
+
+      // First reveal: 50% green
+      const firstReveal = TrapService.revealLetters(scrambled, 50, 0)
+      const greenBefore = firstReveal.filter(l => l.state === 'green').length
+
+      // Second reveal: more green should accumulate
+      const secondReveal = TrapService.revealLetters(firstReveal, 50, 0)
+      const greenAfter = secondReveal.filter(l => l.state === 'green').length
+
+      expect(greenAfter).toBeGreaterThanOrEqual(greenBefore)
+    })
+
+    it('should return clone without modifying original', () => {
+      const scrambled = TrapService.scrambleLetters('ABC')
+      const original = scrambled[0].state
+
+      TrapService.revealLetters(scrambled, 100, 0)
+
+      expect(scrambled[0].state).toBe(original)
+    })
+  })
+
   describe('getRecommendedHandler', () => {
     it('should recommend Thief over Fighter', () => {
       const fighter = createTestCharacter({

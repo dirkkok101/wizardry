@@ -462,6 +462,56 @@ function scrambleLetters(trapName: string): ScrambledLetter[] {
   return letters
 }
 
+/**
+ * Reveal letters based on character's inspection skill
+ * Only reveals letters that are currently hidden.
+ * Preserves already revealed letters (stacking inspections).
+ *
+ * @param letters Current scrambled letters
+ * @param greenPercent Percentage of TOTAL letters to reveal as confirmed (green)
+ * @param redPercent Percentage of TOTAL letters to reveal as uncertain (red)
+ * @returns New letter array with reveals applied (original not modified)
+ */
+function revealLetters(
+  letters: ScrambledLetter[],
+  greenPercent: number,
+  redPercent: number
+): ScrambledLetter[] {
+  const result = letters.map(l => ({ ...l }))  // Clone
+
+  // Get indices of hidden letters only
+  const hiddenIndices = result
+    .map((l, i) => l.state === 'hidden' ? i : -1)
+    .filter(i => i >= 0)
+
+  // Shuffle hidden indices for random reveal order
+  for (let i = hiddenIndices.length - 1; i > 0; i--) {
+    const j = RandomService.random(0, i)
+    ;[hiddenIndices[i], hiddenIndices[j]] = [hiddenIndices[j], hiddenIndices[i]]
+  }
+
+  // Calculate how many of TOTAL letters to reveal
+  const totalLetters = letters.length
+  const greenToReveal = Math.floor(totalLetters * greenPercent / 100)
+  const redToReveal = Math.floor(totalLetters * redPercent / 100)
+  const totalToReveal = greenToReveal + redToReveal
+
+  // Reveal up to totalToReveal hidden letters
+  let revealed = 0
+  for (const idx of hiddenIndices) {
+    if (revealed >= totalToReveal) break
+
+    if (revealed < greenToReveal) {
+      result[idx].state = 'green'
+    } else {
+      result[idx].state = 'red'
+    }
+    revealed++
+  }
+
+  return result
+}
+
 export const TrapService = {
   // Calculation functions
   calculateInspectChance,
@@ -482,5 +532,6 @@ export const TrapService = {
   getRecommendedHandler,
 
   // Scrambled letters system
-  scrambleLetters
+  scrambleLetters,
+  revealLetters
 }
