@@ -457,9 +457,10 @@ describe('ChestComponent', () => {
       component.selectCharacter(0)
     })
 
-    it('navigates to maze', () => {
+    it('shows confirmation prompt when leaving', () => {
       component.handleFooterAction('leave')
-      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+      expect(component.mode()).toBe('LEAVE_CONFIRM')
+      expect(component.lastActionMessage()).toContain('Leave chest unopened')
     })
   })
 
@@ -476,13 +477,15 @@ describe('ChestComponent', () => {
       expect(component.mode()).toBe('ACTION_SELECT')
     })
 
-    it('handles ESC key to leave', () => {
+    it('handles ESC key to show leave confirmation', () => {
       component.selectCharacter(0)
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' })
       component.handleKeyboard(event)
 
-      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+      // ESC calls handleCancel which calls handleLeave, showing LEAVE_CONFIRM
+      expect(component.mode()).toBe('LEAVE_CONFIRM')
+      expect(component.lastActionMessage()).toContain('Leave chest unopened')
     })
 
     it('handles action shortcuts in ACTION_SELECT mode', () => {
@@ -661,7 +664,16 @@ describe('ChestComponent', () => {
       component.ngOnInit()
     })
 
-    it('shows victory summary when leaving chest from combat', () => {
+    it('shows confirmation prompt before leaving', () => {
+      component.mode.set('ACTION_SELECT')
+
+      component['handleLeave']()
+
+      expect(component.mode()).toBe('LEAVE_CONFIRM')
+      expect(component.lastActionMessage()).toContain('Leave chest unopened')
+    })
+
+    it('shows victory summary when confirming leave from combat', () => {
       gameState.updateState(s => ({
         ...s,
         pendingCombatRewards: {
@@ -671,22 +683,32 @@ describe('ChestComponent', () => {
           monstersDefeated: 3
         }
       }))
-      component.mode.set('ACTION_SELECT')
+      component.mode.set('LEAVE_CONFIRM')
 
-      component['handleLeave']()
+      component['confirmLeave']()
 
       expect(component.mode()).toBe('VICTORY_SUMMARY')
       expect(component.chestResults()?.goldObtained).toBe(0)
       expect(navigationService.navigateTo).not.toHaveBeenCalled()
     })
 
-    it('navigates directly to maze when leaving non-combat chest', () => {
+    it('navigates to maze when confirming leave from non-combat chest', () => {
       // No pendingCombatRewards
-      component.mode.set('ACTION_SELECT')
+      component.mode.set('LEAVE_CONFIRM')
 
-      component['handleLeave']()
+      component['confirmLeave']()
 
       expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
+    })
+
+    it('returns to action select when canceling leave', () => {
+      component.mode.set('LEAVE_CONFIRM')
+      component.lastActionMessage.set('Leave chest unopened? (Y/N)')
+
+      component.handleFooterAction('cancel-leave')
+
+      expect(component.mode()).toBe('ACTION_SELECT')
+      expect(component.lastActionMessage()).toBe('')
     })
   })
 

@@ -29,7 +29,8 @@ type ChestMode =
   | 'TRAP_NAME_INPUT'   // Entering trap name for disarm
   | 'INVENTORY_WARNING' // Confirmation when inventory could overflow
   | 'RESULT_DISPLAY'    // Showing trap/treasure outcome
-  | 'VICTORY_SUMMARY';  // Showing combined combat + chest rewards
+  | 'VICTORY_SUMMARY'   // Showing combined combat + chest rewards
+  | 'LEAVE_CONFIRM';    // Confirmation before leaving unopened chest
 
 /**
  * Chest Component
@@ -179,6 +180,14 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (mode === 'VICTORY_SUMMARY') {
       return [
         { id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
+      ];
+    }
+
+    // In leave confirmation mode
+    if (mode === 'LEAVE_CONFIRM') {
+      return [
+        { id: 'confirm-leave', label: 'Yes, Leave', shortcut: 'Y', enabled: true },
+        { id: 'cancel-leave', label: 'No, Stay', shortcut: 'N', enabled: true }
       ];
     }
 
@@ -341,6 +350,17 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Leave confirmation mode - Y/N
+    if (mode === 'LEAVE_CONFIRM') {
+      if (key === 'Y') {
+        this.confirmLeave();
+      } else if (key === 'N') {
+        this.mode.set('ACTION_SELECT');
+        this.lastActionMessage.set('');
+      }
+      return;
+    }
+
     // Action select mode - action shortcuts
     if (mode === 'ACTION_SELECT') {
       console.log('[Chest] ACTION_SELECT mode, key:', key);
@@ -369,6 +389,11 @@ export class ChestComponent implements OnInit, OnDestroy {
       case 'cancel': this.handleCancel(); break;
       case 'continue': this.handleContinue(); break;
       case 'confirm-open': this.openChest(true); break;
+      case 'confirm-leave': this.confirmLeave(); break;
+      case 'cancel-leave':
+        this.mode.set('ACTION_SELECT');
+        this.lastActionMessage.set('');
+        break;
     }
   }
 
@@ -835,12 +860,21 @@ export class ChestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle Leave action
+   * Handle Leave action - show confirmation before leaving
    */
   private handleLeave(): void {
+    console.log('[Chest] handleLeave - showing confirmation');
+    this.mode.set('LEAVE_CONFIRM');
+    this.lastActionMessage.set('Leave chest unopened? (Y/N)');
+  }
+
+  /**
+   * Confirm leaving chest - actually navigate away
+   */
+  private confirmLeave(): void {
     const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
 
-    console.log('[Chest] handleLeave called:', { hasCombatRewards });
+    console.log('[Chest] confirmLeave called:', { hasCombatRewards });
 
     if (hasCombatRewards) {
       // From combat - show victory summary even if chest abandoned
@@ -856,7 +890,7 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('[Chest] handleLeave - navigating to maze');
+    console.log('[Chest] confirmLeave - navigating to maze');
     this.logger.debug('[Chest] Leaving chest');
     this.navigation.navigateTo('maze');
   }
