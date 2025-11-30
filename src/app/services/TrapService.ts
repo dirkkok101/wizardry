@@ -11,6 +11,7 @@ import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { Chest } from '@models/Chest'
+import { canAct } from '@utils/CharacterStatusHelpers'
 import {
   TrapType,
   TrapEffect,
@@ -396,12 +397,8 @@ function getRecommendedHandler(
   let best: { character: Character; inspectChance: number; disarmChance: number } | null = null
 
   for (const member of partyMembers) {
-    // Skip dead/incapacitated characters
-    if (member.status === CharacterStatus.DEAD ||
-        member.status === CharacterStatus.ASHES ||
-        member.status === CharacterStatus.LOST ||
-        member.status === CharacterStatus.PARALYZED ||
-        member.status === CharacterStatus.STONED) {
+    // Skip characters who cannot act (dead, paralyzed, etc.)
+    if (!canAct(member)) {
       continue
     }
 

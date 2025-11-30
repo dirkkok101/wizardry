@@ -8,6 +8,7 @@ import { TrapService } from '@services/TrapService';
 import { ChestService } from '@services/ChestService';
 import { RandomService } from '@services/RandomService';
 import { GameStateQueries } from '@utils/GameStateQueries';
+import { canAct } from '@utils/CharacterStatusHelpers';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterListItemComponent } from '@shared/components/character-list-item/character-list-item.component';
@@ -113,13 +114,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   // Characters who can act (not dead/paralyzed)
   readonly availableCharacters = computed(() => {
-    return this.partyMembers().filter(c =>
-      c.status !== CharacterStatus.DEAD &&
-      c.status !== CharacterStatus.ASHES &&
-      c.status !== CharacterStatus.LOST &&
-      c.status !== CharacterStatus.PARALYZED &&
-      c.status !== CharacterStatus.STONED
-    );
+    return this.partyMembers().filter(canAct);
   });
 
   // Characters who can cast CALFO
