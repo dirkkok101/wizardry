@@ -1,10 +1,11 @@
 // src/services/SpellCastingService.ts
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { SpellEffect, Combatant } from '@models/Combat'
+import { SpellEffect, Combatant, MonsterInstance } from '@models/Combat'
 import { SpellDataLoader } from './SpellDataLoader'
 import { LoadedSpell } from '@models/SpellDefinition'
 import { RandomService } from './RandomService'
+import { ResistanceService } from './ResistanceService'
 
 // Spell targeting types
 export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self'
@@ -15,10 +16,11 @@ export type StatusCure = 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep'
 // Spell success rate constants
 const SPELL_SUCCESS_RATES = {
   MALOR_TELEPORT: 0.75,
-  KADORTO_RESURRECTION: 0.50,
-  DI_RESURRECTION: 0.90,
   LOKTOFEIT_LEVEL_MULTIPLIER: 2,
-  LOKTOFEIT_MAX_RATE: 95
+  LOKTOFEIT_MAX_RATE: 95,
+  // Resurrection now uses Vitality-based formula from spell JSON
+  RESURRECTION_VITALITY_MULTIPLIER: 4,  // (Vitality × 4)%
+  RESURRECTION_CRITICAL_VITALITY: 3     // At this vitality or below, failure = LOST
 } as const
 
 // Use LoadedSpell from SpellDefinition
@@ -143,19 +145,68 @@ export class SpellCastingService {
         }
       }
 
-      const damage = validTargets.map(() => this.rollDice(spell.damage!.dice))
+      // Apply resistance checks for each target (monsters only)
+      const damage: number[] = []
+      const resistedTargets: string[] = []
+
+      for (const target of validTargets) {
+        let baseDamage = this.rollDice(spell.damage!.dice)
+
+        // Check resistance for monsters
+        if ('monsterId' in target) {
+          const monster = target as MonsterInstance
+          const resistResult = ResistanceService.checkResistance(monster, spell)
+
+          if (resistResult.resisted) {
+            // Fully resisted - no damage
+            resistedTargets.push(monster.name)
+            damage.push(0)
+            continue
+          }
+
+          // Apply damage multiplier (0.5 for elemental resistance)
+          baseDamage = Math.floor(baseDamage * resistResult.damageMultiplier)
+        }
+
+        damage.push(baseDamage)
+      }
+
+      // Build result message
+      let message = `${spell.name} deals ${damage.filter(d => d > 0).join(', ')} damage!`
+      if (resistedTargets.length > 0) {
+        message += ` (${resistedTargets.join(', ')} resisted)`
+      }
+
       return {
         damage,
-        message: `${spell.name} deals ${damage.join(', ')} damage!`
+        message
       }
     }
 
     // Handle status effect spells
     if (spell.statusEffect) {
-      const statusEffects = targets.map(target => ({
-        target: target.id,
-        effect: spell.statusEffect!
-      }))
+      // Check resistance for each target (monsters only)
+      const statusEffects: { target: string; effect: string }[] = []
+      const resistedTargets: string[] = []
+
+      for (const target of targets) {
+        // Check resistance for monsters
+        if ('monsterId' in target) {
+          const monster = target as MonsterInstance
+          const resistResult = ResistanceService.checkStatusEffectResistance(monster, spell)
+
+          if (resistResult.resisted) {
+            resistedTargets.push(monster.name)
+            continue
+          }
+        }
+
+        // Target did not resist - apply status effect
+        statusEffects.push({
+          target: target.id,
+          effect: spell.statusEffect!
+        })
+      }
 
       // Generate appropriate message based on effect
       let effectMsg = ''
@@ -174,9 +225,18 @@ export class SpellCastingService {
           break
       }
 
+      // Build result message
+      let message = `${spell.name} ${effectMsg}`
+      if (resistedTargets.length > 0) {
+        message += ` (${resistedTargets.join(', ')} resisted)`
+      }
+      if (statusEffects.length === 0) {
+        message = `${spell.name} has no effect! (all targets resisted)`
+      }
+
       return {
         statusEffects,
-        message: `${spell.name} ${effectMsg}`
+        message
       }
     }
 
@@ -236,15 +296,15 @@ export class SpellCastingService {
       /**
        * Handle recall to town (LOKTOFEIT)
        * Returns party to town from dungeon
-       * Success rate: (caster level × 2)%, maximum 95%
-       * Uses SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER and LOKTOFEIT_MAX_RATE
+       * Success rate: (caster level × 2 + 1)%, maximum 95%
+       * Research: Original was Level×2%, corrected to (Level×2+1)%
        * Failure: Party remains in dungeon
        */
       if (spell.utility === 'recall') {
-        // Success rate: caster level × 2%, max 95%
+        // Success rate: (caster level × 2 + 1)%, max 95%
         const casterLevel = caster.level || 1
         const successRate = Math.min(
-          casterLevel * SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER,
+          (casterLevel * SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER) + 1,
           SPELL_SUCCESS_RATES.LOKTOFEIT_MAX_RATE
         )
         const success = RandomService.chance(successRate)
@@ -284,21 +344,98 @@ export class SpellCastingService {
       }
     }
 
-    // Handle instant death spell (MAKANITO)
-    if (spell.instantDeath) {
-      const instantDeath = targets.map(t => t.id)
+    /**
+     * Handle monster identification (LATUMAPIC)
+     * Bug-fixed: Original Wizardry only identified ONE random group
+     * Corrected behavior: Identifies ALL monster groups for the entire expedition
+     */
+    if (spell.effect?.type === 'identify_monsters') {
+      // Get all unique group IDs from the targets
+      const groupIds = new Set<'A' | 'B' | 'C' | 'D'>()
+      for (const target of targets) {
+        // Extract group ID from target - targets should include group info
+        // For now, we identify ALL groups passed as targets
+        if ('id' in target) {
+          const groupId = target.id as 'A' | 'B' | 'C' | 'D'
+          if (['A', 'B', 'C', 'D'].includes(groupId)) {
+            groupIds.add(groupId)
+          }
+        }
+      }
+
       return {
-        instantDeath,
-        message: `${spell.name} invokes instant death!`
+        monsterIdentification: {
+          groupIds: Array.from(groupIds)
+        },
+        message: `${spell.name} reveals the identity of all monsters!`
       }
     }
 
-    // Handle resurrection spell (KADORTO)
+    // Handle instant death spells (MAKANITO, LAKANITO, BADI)
+    if (spell.instantDeath) {
+      // Check immunity and resistance for each target
+      const instantDeath: string[] = []
+      const immuneTargets: string[] = []
+      const resistedTargets: string[] = []
+
+      for (const target of targets) {
+        // Check immunity/resistance for monsters
+        if ('monsterId' in target) {
+          const monster = target as MonsterInstance
+          const deathCheck = ResistanceService.checkInstantDeathResistance(monster, spell)
+
+          if (deathCheck.immune) {
+            immuneTargets.push(monster.name)
+            continue
+          }
+
+          if (deathCheck.resisted) {
+            resistedTargets.push(monster.name)
+            continue
+          }
+        }
+
+        // Target is killed
+        instantDeath.push(target.id)
+      }
+
+      // Build result message
+      let message = ''
+      if (instantDeath.length > 0) {
+        message = `${spell.name} invokes instant death!`
+      } else {
+        message = `${spell.name} fails to claim any victims!`
+      }
+      if (immuneTargets.length > 0) {
+        message += ` (${immuneTargets.join(', ')} immune)`
+      }
+      if (resistedTargets.length > 0) {
+        message += ` (${resistedTargets.join(', ')} resisted)`
+      }
+
+      return {
+        instantDeath,
+        message
+      }
+    }
+
+    // Handle resurrection spell (DI, KADORTO)
+    // Note: Resurrection requires Character data for Vitality-based success rate
+    // This path is for fallback when called via resolveSpellEffect without Character data
     if (spell.resurrection) {
-      const resurrection = targets.map(t => t.id)
+      // When called without Character data, return basic result
+      // The proper resurrection is done via resolveResurrection() with Character data
+      const resurrection = targets.map(t => ({
+        targetId: t.id,
+        success: false,
+        resultStatus: 'ASHES' as const,
+        newHp: 0,
+        vitalityLoss: 1,
+        message: 'Resurrection requires Character data - use resolveResurrection()'
+      }))
       return {
         resurrection,
-        message: `${spell.name} resurrects the fallen!`
+        message: `${spell.name} - use resolveResurrection() for proper handling`
       }
     }
 
@@ -409,5 +546,138 @@ export class SpellCastingService {
       if (a.level !== b.level) return a.level - b.level
       return a.name.localeCompare(b.name)
     })
+  }
+
+  /**
+   * Resolve resurrection spell (DI, KADORTO) with Vitality-based success rate
+   *
+   * Research-based mechanics:
+   * - Success rate: (Vitality × 4)%, capped at 100%
+   * - DI: DEAD → OK (1 HP) on success, DEAD → ASHES on failure
+   * - KADORTO: DEAD/ASHES → OK (full HP) on success, DEAD → ASHES or ASHES → LOST on failure
+   * - Critical: If Vitality ≤ 3 at cast time, failure always results in LOST
+   * - Both spells reduce Vitality by 1 on any attempt (success or failure)
+   *
+   * @param spellId - 'di' or 'kadorto'
+   * @param target - The dead/ashed character to resurrect
+   * @returns Resurrection result with updated character state
+   */
+  static resolveResurrection(
+    spellId: string,
+    target: Character
+  ): {
+    success: boolean
+    resultStatus: 'OK' | 'ASHES' | 'LOST'
+    newHp: number
+    vitalityLoss: number
+    message: string
+    updatedCharacter: Character
+  } {
+    const spell = SpellDataLoader.getSpell(spellId)
+    if (!spell || !spell.resurrection) {
+      return {
+        success: false,
+        resultStatus: target.status === CharacterStatus.DEAD ? 'ASHES' : 'LOST',
+        newHp: 0,
+        vitalityLoss: 0,
+        message: 'Invalid resurrection spell',
+        updatedCharacter: target
+      }
+    }
+
+    const isDI = spellId.toLowerCase() === 'di'
+    const targetIsAshes = target.status === CharacterStatus.ASHES
+
+    // DI only works on DEAD, not ASHES
+    if (isDI && targetIsAshes) {
+      return {
+        success: false,
+        resultStatus: 'ASHES',
+        newHp: 0,
+        vitalityLoss: 0,
+        message: `${spell.name} cannot resurrect ashes - use KADORTO`,
+        updatedCharacter: target
+      }
+    }
+
+    // Calculate success rate: (Vitality × 4)%, capped at 100%
+    const successRate = Math.min(
+      target.vitality * SPELL_SUCCESS_RATES.RESURRECTION_VITALITY_MULTIPLIER,
+      100
+    )
+
+    // Check for critical low vitality (≤3 means failure = LOST)
+    const isCriticalVitality = target.vitality <= SPELL_SUCCESS_RATES.RESURRECTION_CRITICAL_VITALITY
+
+    // Roll for success
+    const success = RandomService.chance(successRate)
+
+    // Vitality is always reduced by 1 on any attempt
+    const newVitality = Math.max(0, target.vitality - 1)
+
+    if (success) {
+      // Success: resurrect with appropriate HP
+      const newHp = isDI ? 1 : target.maxHp  // DI = 1 HP, KADORTO = full HP
+      const newStatus = CharacterStatus.OK
+
+      return {
+        success: true,
+        resultStatus: 'OK',
+        newHp,
+        vitalityLoss: 1,
+        message: `${spell.name} succeeds! ${target.name} rises with ${isDI ? '1' : 'full'} HP!`,
+        updatedCharacter: {
+          ...target,
+          status: newStatus,
+          hp: newHp,
+          vitality: newVitality
+        }
+      }
+    } else {
+      // Failure: determine result based on current status and vitality
+      let resultStatus: 'ASHES' | 'LOST'
+      let newStatus: CharacterStatus
+
+      if (isCriticalVitality) {
+        // Critical vitality: any failure = LOST
+        resultStatus = 'LOST'
+        newStatus = CharacterStatus.LOST
+      } else if (targetIsAshes) {
+        // KADORTO on ASHES: failure = LOST
+        resultStatus = 'LOST'
+        newStatus = CharacterStatus.LOST
+      } else {
+        // DEAD: failure = ASHES
+        resultStatus = 'ASHES'
+        newStatus = CharacterStatus.ASHES
+      }
+
+      const lostMessage = resultStatus === 'LOST'
+        ? `${target.name} is lost forever!`
+        : `${target.name} crumbles to ashes!`
+
+      return {
+        success: false,
+        resultStatus,
+        newHp: 0,
+        vitalityLoss: 1,
+        message: `${spell.name} fails! ${lostMessage}`,
+        updatedCharacter: {
+          ...target,
+          status: newStatus,
+          hp: 0,
+          vitality: newVitality
+        }
+      }
+    }
+  }
+
+  /**
+   * Calculate resurrection success rate for display purposes
+   * @param vitality - Character's vitality stat
+   * @returns Success percentage (0-100)
+   */
+  static getResurrectionSuccessRate(vitality: number): number {
+    return Math.min(vitality * SPELL_SUCCESS_RATES.RESURRECTION_VITALITY_MULTIPLIER, 100)
   }
 }

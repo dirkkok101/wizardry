@@ -46,6 +46,16 @@ const SavingThrowBonusSchema = z.object({
 }).strict()
 
 /**
+ * Resistances provide percentage-based protection against specific effects
+ * Each race has different resistances (e.g., dwarves resist poison gas traps)
+ * Values are percentages (0-100) except 'notes' which is descriptive text
+ */
+const ResistancesSchema = z.record(
+  z.string(),
+  z.union([z.number().int().min(0).max(100), z.string()])
+).optional()
+
+/**
  * Valid race IDs from original Wizardry 1
  */
 const RaceIdSchema = z.enum(['human', 'elf', 'dwarf', 'gnome', 'hobbit'])
@@ -72,6 +82,7 @@ export const RaceDataSchema = z.object({
   name: z.string().min(1),
   baseStats: RaceBaseStatsSchema,
   savingThrowBonus: SavingThrowBonusSchema,
+  resistances: ResistancesSchema,
   statTotal: z.number().int().min(46).max(50),
   description: z.string().min(1),
   strengths: z.array(z.string().min(1)).min(1),

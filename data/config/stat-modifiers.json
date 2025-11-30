@@ -1,0 +1,54 @@
+{
+  "vitalityHPModifier": {
+    "description": "HP modifier per level based on Vitality stat (authentic Wizardry 1)",
+    "source": "docs/research/character-creation-technical-reference.md section 5.4",
+    "ranges": [
+      { "min": 3, "max": 3, "modifier": -2 },
+      { "min": 4, "max": 5, "modifier": -1 },
+      { "min": 6, "max": 15, "modifier": 0 },
+      { "min": 16, "max": 16, "modifier": 1 },
+      { "min": 17, "max": 17, "modifier": 2 },
+      { "min": 18, "max": 99, "modifier": 3 }
+    ]
+  },
+  "strengthHitModifier": {
+    "description": "Hit probability modifier (percentage) based on Strength stat",
+    "source": "docs/research/character-creation-technical-reference.md section 7.1",
+    "ranges": [
+      { "min": 3, "max": 3, "modifier": -15 },
+      { "min": 4, "max": 4, "modifier": -10 },
+      { "min": 5, "max": 5, "modifier": -5 },
+      { "min": 6, "max": 15, "modifier": 0 },
+      { "min": 16, "max": 16, "modifier": 5 },
+      { "min": 17, "max": 17, "modifier": 10 },
+      { "min": 18, "max": 99, "modifier": 15 }
+    ]
+  },
+  "strengthDamageModifier": {
+    "description": "Damage per swing modifier based on Strength stat",
+    "source": "docs/research/character-creation-technical-reference.md section 7.1",
+    "ranges": [
+      { "min": 3, "max": 3, "modifier": -3 },
+      { "min": 4, "max": 4, "modifier": -2 },
+      { "min": 5, "max": 5, "modifier": -1 },
+      { "min": 6, "max": 15, "modifier": 0 },
+      { "min": 16, "max": 16, "modifier": 1 },
+      { "min": 17, "max": 17, "modifier": 2 },
+      { "min": 18, "max": 99, "modifier": 3 }
+    ]
+  },
+  "agilityInitiativeModifier": {
+    "description": "Initiative modifier based on Agility (lower is faster, acts first)",
+    "source": "docs/research/character-creation-technical-reference.md section 7.3",
+    "ranges": [
+      { "min": 3, "max": 3, "modifier": 2 },
+      { "min": 4, "max": 5, "modifier": 1 },
+      { "min": 6, "max": 7, "modifier": 0 },
+      { "min": 8, "max": 14, "modifier": -1 },
+      { "min": 15, "max": 15, "modifier": -2 },
+      { "min": 16, "max": 16, "modifier": -3 },
+      { "min": 17, "max": 17, "modifier": -4 },
+      { "min": 18, "max": 99, "modifier": -5 }
+    ]
+  }
+}

@@ -72,6 +72,7 @@ export interface MonsterGroup {
   id: 'A' | 'B' | 'C' | 'D'
   monsters: MonsterInstance[]
   formation: 'front' | 'back'  // Row position
+  identified: boolean  // True if LATUMAPIC has revealed monster names (expedition-long)
 }
 
 export interface CombatState {
@@ -121,7 +122,14 @@ export interface SpellEffect {
     type: 'stats' | 'identity'  // 'stats' for MILWA, 'identity' for LATUMAPIC
   }
   instantDeath?: string[]  // Target IDs to instantly kill (MAKANITO)
-  resurrection?: string[]  // Target IDs to resurrect (KADORTO)
+  resurrection?: {  // Resurrection results (DI, KADORTO)
+    targetId: string
+    success: boolean
+    resultStatus: 'OK' | 'ASHES' | 'LOST'  // Final status after attempt
+    newHp: number | 'full'  // 1 for DI, full for KADORTO on success
+    vitalityLoss: number  // 1 on attempt
+    message: string
+  }[]
   statusCures?: {  // Status effects to cure (LITOKAN, LATUMOFIS)
     targetIds: string[]
     cureType: 'poison' | 'paralysis' | 'silence' | 'blind' | 'asleep' | 'all'
@@ -139,6 +147,9 @@ export interface SpellEffect {
   }
   recall?: {  // Recall to town (LOKTOFEIT)
     success: boolean
+  }
+  monsterIdentification?: {  // LATUMAPIC - identifies ALL monster groups (bug-fixed)
+    groupIds: Array<'A' | 'B' | 'C' | 'D'>  // All groups that are now identified
   }
   message: string
 }

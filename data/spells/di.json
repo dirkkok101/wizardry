@@ -27,7 +27,14 @@
       "result": "ashes",
       "notes": "Character is converted to ASHES status"
     },
-    "criticalWarning": "If Vitality is 3 or lower when cast, failure results in character being permanently LOST"
+    "criticalWarning": "If Vitality is 3 or lower when cast, failure results in character being permanently LOST",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "vitality",
+      "multiplier": 4,
+      "base": 0,
+      "cap": 100
+    }
   },
   "comparison": "Temple of Cant is safer with (50 + 3×Vitality)% success rate"
 }

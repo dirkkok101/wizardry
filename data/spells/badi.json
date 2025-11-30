@@ -18,6 +18,13 @@
       "level5": "50% resist",
       "level10": "100% immune"
     },
-    "notes": "Level 10+ monsters are immune"
+    "notes": "Level 10+ monsters are immune",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 10,
+      "base": 0,
+      "cap": 100
+    }
   }
 }

@@ -19,10 +19,24 @@
       "level1": "60% resist",
       "level5": "100% immune"
     },
-    "notes": "Level 5+ monsters are effectively immune"
+    "notes": "Level 5+ monsters are effectively immune",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 10,
+      "base": 50,
+      "cap": 100
+    }
   },
   "recovery": {
     "formula": "(Monster Level × 7)% per round",
-    "cap": "50%"
+    "cap": "50%",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 7,
+      "base": 0,
+      "cap": 50
+    }
   }
 }

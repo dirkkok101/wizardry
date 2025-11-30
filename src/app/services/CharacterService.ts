@@ -10,6 +10,7 @@ import { MaxCurrent } from '@models/MaxCurrent'
 import { ClassService } from './ClassService'
 import { RaceService } from './RaceService'
 import { RandomService } from './RandomService'
+import { StatModifierService } from './StatModifierService'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface ValidationResult {
@@ -91,17 +92,14 @@ function rollHitDice(hitDice: string): number {
 
 /**
  * Get VIT bonus for HP rolls (authentic Wizardry 1 mechanics)
- * VIT 3-5 = -3, 6-7 = -2, 8-9 = -1, 10-11 = 0, 12-13 = +1, 14-15 = +2, 16-17 = +3, 18 = +4
+ *
+ * Data-driven: Uses StatModifierService to load values from JSON config.
+ * VIT 3 = -2, VIT 4-5 = -1, VIT 6-15 = 0, VIT 16 = +1, VIT 17 = +2, VIT 18+ = +3
+ *
+ * Source: docs/research/character-creation-technical-reference.md section 5.4
  */
 function getVitalityBonus(vitality: number): number {
-  if (vitality <= 5) return -3
-  if (vitality <= 7) return -2
-  if (vitality <= 9) return -1
-  if (vitality <= 11) return 0
-  if (vitality <= 13) return 1
-  if (vitality <= 15) return 2
-  if (vitality <= 17) return 3
-  return 4
+  return StatModifierService.getVitalityHPModifier(vitality)
 }
 
 /**

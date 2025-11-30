@@ -18,6 +18,13 @@
       "level1": "6% resist",
       "level10": "60% resist",
       "level17plus": "Effectively immune (100%+)"
+    },
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 6,
+      "base": 0,
+      "cap": 100
     }
   },
   "immunities": ["undead", "constructs", "non_breathing_creatures"],

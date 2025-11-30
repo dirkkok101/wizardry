@@ -14,11 +14,26 @@
   },
   "resistance": {
     "type": "level_based",
-    "notes": "Subject to monster level-based resistance"
+    "formula": "(Monster Level × 10)%",
+    "notes": "Subject to monster level-based resistance",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 10,
+      "base": 0,
+      "cap": 100
+    }
   },
   "recovery": {
     "formula": "(Monster Level × 10)% per round",
-    "cap": "50%"
+    "cap": "50%",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 10,
+      "base": 0,
+      "cap": 50
+    }
   },
   "duration": "Until combat ends or recovered"
 }

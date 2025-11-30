@@ -12,6 +12,7 @@ import { SpellDataLoader } from './SpellDataLoader'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { ClassDataLoader } from './ClassDataLoader'
 import { TrapDataLoader } from './TrapDataLoader'
+import { StatModifierService } from './StatModifierService'
 
 let gameState: GameState | null = null
 
@@ -132,6 +133,14 @@ async function initializeGame(): Promise<void> {
   } catch (error) {
     console.error('Failed to initialize races:', error)
     throw error // Races are critical, re-throw error
+  }
+
+  // Initialize stat modifier service (critical for HP calculations)
+  try {
+    await StatModifierService.initialize()
+  } catch (error) {
+    console.error('Failed to initialize stat modifiers:', error)
+    throw error // Stat modifiers are critical, re-throw error
   }
 
   // Initialize remaining data services

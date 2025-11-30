@@ -3,6 +3,10 @@ import { SpellDataLoader } from '../SpellDataLoader'
 // Note: Real spell data is loaded from data/spells/ via setup-jest.ts
 // This follows the project philosophy: "No mocks for services - test with real data"
 
+// Data-driven: load spell count from index.json (source of truth)
+const spellIndex = require('@data/spells/index.json') as string[]
+const EXPECTED_SPELL_COUNT = spellIndex.length
+
 describe('SpellDataLoader - Performance', () => {
   beforeEach(() => {
     SpellDataLoader.clearCache()
@@ -26,11 +30,11 @@ describe('SpellDataLoader - Performance', () => {
 
     console.log(`Cache access in ${duration.toFixed(2)}ms`)
     expect(duration).toBeLessThan(1)  // Should be instant
-    expect(spells.size).toBeGreaterThan(50)
+    expect(spells.size).toBe(EXPECTED_SPELL_COUNT)
   })
 
-  it('loads all 51 authentic Wizardry 1 spells', async () => {
+  it('loads all spells from index', async () => {
     const spells = await SpellDataLoader.loadAllSpells()
-    expect(spells.size).toBe(51)  // 22 Mage + 29 Priest spell definitions
+    expect(spells.size).toBe(EXPECTED_SPELL_COUNT)
   })
 })

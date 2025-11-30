@@ -191,6 +191,9 @@ export class SpellDataLoader {
                 // Validate with Zod
                 const validated = SpellDefinitionSchema.parse(spellDef)
 
+                // Warn if spell has formula strings but no typed data
+                this.warnMissingTypedData(validated)
+
                 // Convert to LoadedSpell
                 const loadedSpell: LoadedSpell = {
                   ...validated,
@@ -317,5 +320,42 @@ export class SpellDataLoader {
     this.loaded = false
     this.loadError = null
     this.failedSpells.clear()
+  }
+
+  /**
+   * Warn if spell has formula strings but no typed data
+   * This helps track migration progress to typed formulas
+   *
+   * Code should ONLY read typed data, not parse formula strings.
+   * Spells with formula strings but no typed field need migration.
+   */
+  private static warnMissingTypedData(spell: any): void {
+    const warnings: string[] = []
+
+    // Check resistance formula
+    if (spell.resistance?.formula && !spell.resistance?.typed) {
+      warnings.push('resistance.formula without resistance.typed')
+    }
+
+    // Check recovery formula
+    if (spell.recovery?.formula && !spell.recovery?.typed) {
+      warnings.push('recovery.formula without recovery.typed')
+    }
+
+    // Check resurrection success formula
+    if (typeof spell.resurrection === 'object' &&
+        spell.resurrection?.successFormula &&
+        !spell.resurrection?.typed) {
+      warnings.push('resurrection.successFormula without resurrection.typed')
+    }
+
+    // Check escape success formula
+    if (spell.escape?.successFormula && !spell.escape?.typed) {
+      warnings.push('escape.successFormula without escape.typed')
+    }
+
+    if (warnings.length > 0) {
+      console.warn(`Spell ${spell.id} has formula strings without typed data: ${warnings.join(', ')}`)
+    }
   }
 }

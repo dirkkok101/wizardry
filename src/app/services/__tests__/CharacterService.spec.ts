@@ -8,6 +8,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { BaseStats } from '../CharacterCreationService'
 import { ClassService } from '../ClassService'
 import { RaceService } from '../RaceService'
+import { StatModifierService } from '../StatModifierService'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -18,6 +19,21 @@ describe('CharacterService', () => {
     // Mock fetch to load real data files from data/ directory
     global.fetch = jest.fn((url: string) => {
       const urlPath = url.toString()
+
+      // Handle config files (stat-modifiers.json)
+      if (urlPath.includes('/assets/config/stat-modifiers.json')) {
+        const dataPath = path.join(__dirname, '../../../../data/config/stat-modifiers.json')
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8')
+          const jsonData = JSON.parse(fileContent)
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response)
+        } catch (error) {
+          return Promise.reject(new Error(`File not found: ${dataPath}`))
+        }
+      }
 
       // Extract filename from URL (e.g., '/assets/races/human.json' -> 'human.json')
       const match = urlPath.match(/\/(races|classes|spells|monsters|items)\/([^/]+\.json)/)
@@ -41,9 +57,10 @@ describe('CharacterService', () => {
       return Promise.reject(new Error(`Not found: ${urlPath}`))
     }) as jest.Mock
 
-    // Initialize ClassService and RaceService for data-driven character creation
+    // Initialize services for data-driven character creation
     await ClassService.initialize()
     await RaceService.initialize()
+    await StatModifierService.initialize()
   })
 
   beforeEach(() => {
@@ -701,7 +718,7 @@ describe('CharacterService', () => {
     })
 
     it('calculates starting HP using class hit dice + VIT bonus (authentic Wizardry)', () => {
-      // VIT 14-15 gives +2 bonus
+      // Authentic Wizardry 1: VIT 6-15 gives +0 bonus (flat middle range)
       const fighterChar = CharacterService.createCharacterFromStats({
         name: 'Fighter',
         password: 'test',
@@ -720,45 +737,46 @@ describe('CharacterService', () => {
         selectedClass: CharacterClass.MAGE
       })
 
-      // Fighter uses 1d10 + VIT bonus (+2 for VIT 14), so HP should be 3-12
-      expect(fighterChar.hp).toBeGreaterThanOrEqual(3)
-      expect(fighterChar.hp).toBeLessThanOrEqual(12)
+      // Fighter uses 1d10 + VIT bonus (+0 for VIT 14), so HP should be 1-10
+      expect(fighterChar.hp).toBeGreaterThanOrEqual(1)
+      expect(fighterChar.hp).toBeLessThanOrEqual(10)
       expect(fighterChar.maxHp).toBe(fighterChar.hp)
 
-      // Mage uses 1d4 + VIT bonus (+2 for VIT 14), so HP should be 3-6
-      expect(mageChar.hp).toBeGreaterThanOrEqual(3)
-      expect(mageChar.hp).toBeLessThanOrEqual(6)
+      // Mage uses 1d4 + VIT bonus (+0 for VIT 14), so HP should be 1-4
+      expect(mageChar.hp).toBeGreaterThanOrEqual(1)
+      expect(mageChar.hp).toBeLessThanOrEqual(4)
       expect(mageChar.maxHp).toBe(mageChar.hp)
     })
 
     it('applies minimum HP of 1 even with low VIT penalty', () => {
-      // VIT 5 gives -3 penalty
+      // Authentic Wizardry 1: VIT 4-5 gives -1 penalty
+      // Use VIT 3 for maximum penalty of -2
       const lowVitMage = CharacterService.createCharacterFromStats({
         name: 'WeakMage',
         password: 'test',
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
-        stats: { ...validStats, vitality: 5 },
+        stats: { ...validStats, vitality: 3 },
         selectedClass: CharacterClass.MAGE
       })
 
-      // Mage 1d4 - 3 could be negative, but minimum is 1
+      // Mage 1d4 - 2 could be negative (1-2 = -1), but minimum is 1
       expect(lowVitMage.hp).toBeGreaterThanOrEqual(1)
       expect(lowVitMage.maxHp).toBe(lowVitMage.hp)
     })
 
     it('applies high VIT bonus for starting HP', () => {
-      // VIT 16-17 gives +3 bonus
+      // Authentic Wizardry 1: VIT 16 = +1, VIT 17 = +2, VIT 18+ = +3
       const highVitFighter = CharacterService.createCharacterFromStats({
         name: 'ToughFighter',
         password: 'test',
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
-        stats: { ...validStats, vitality: 16 },
+        stats: { ...validStats, vitality: 18 },
         selectedClass: CharacterClass.FIGHTER
       })
 
-      // Fighter uses 1d10 + VIT bonus (+3 for VIT 16), so HP should be 4-13
+      // Fighter uses 1d10 + VIT bonus (+3 for VIT 18), so HP should be 4-13
       expect(highVitFighter.hp).toBeGreaterThanOrEqual(4)
       expect(highVitFighter.hp).toBeLessThanOrEqual(13)
       expect(highVitFighter.maxHp).toBe(highVitFighter.hp)
@@ -912,7 +930,7 @@ describe('CharacterService', () => {
     })
 
     it('uses ClassService hit dice + VIT bonus for HP calculation', () => {
-      // validStats has vitality: 14 which gives +2 bonus
+      // Authentic Wizardry 1: validStats has vitality: 14 which gives +0 bonus (VIT 6-15 = 0)
       const fighterChar = CharacterService.createCharacterFromStats({
         name: 'Fighter',
         password: 'test',
@@ -931,12 +949,12 @@ describe('CharacterService', () => {
         selectedClass: CharacterClass.MAGE
       })
 
-      // Fighter uses 1d10 + VIT bonus (+2 for VIT 14), so HP should be 3-12
-      // Mage uses 1d4 + VIT bonus (+2 for VIT 14), so HP should be 3-6
-      expect(fighterChar.hp).toBeGreaterThanOrEqual(3)
-      expect(fighterChar.hp).toBeLessThanOrEqual(12)
-      expect(mageChar.hp).toBeGreaterThanOrEqual(3)
-      expect(mageChar.hp).toBeLessThanOrEqual(6)
+      // Fighter uses 1d10 + VIT bonus (+0 for VIT 14), so HP should be 1-10
+      // Mage uses 1d4 + VIT bonus (+0 for VIT 14), so HP should be 1-4
+      expect(fighterChar.hp).toBeGreaterThanOrEqual(1)
+      expect(fighterChar.hp).toBeLessThanOrEqual(10)
+      expect(mageChar.hp).toBeGreaterThanOrEqual(1)
+      expect(mageChar.hp).toBeLessThanOrEqual(4)
     })
 
     it('initializes character with starting gold in range 90-190 (authentic Wizardry 1)', () => {

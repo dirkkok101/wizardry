@@ -23,6 +23,13 @@
     "onFailure": {
       "effect": "Nothing happens",
       "notes": "Spell slot wasted, can retry"
+    },
+    "typed": {
+      "type": "level_scaled",
+      "variable": "caster_level",
+      "multiplier": 2,
+      "base": 1,
+      "cap": 100
     }
   },
   "notes": "Absolute last resort only - low success rate and devastating cost. Use MALOR instead if available."

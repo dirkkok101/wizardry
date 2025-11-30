@@ -18,14 +18,28 @@
       "level1": "10% resist",
       "level5": "50% resist",
       "level10": "100% immune"
+    },
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 10,
+      "base": 0,
+      "cap": 100
+    }
+  },
+  "recovery": {
+    "formula": "(Monster Level × 10)% per round",
+    "cap": "50%",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 10,
+      "base": 0,
+      "cap": 50
     }
   },
   "duration": {
-    "type": "permanent_until_combat_ends",
-    "recovery": {
-      "formula": "(Monster Level × 10)% per round",
-      "cap": "50%"
-    }
+    "type": "permanent_until_combat_ends"
   },
   "notes": "Bug-free version allows recovery (see known-bugs.md for original bug details)"
 }

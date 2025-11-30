@@ -7,6 +7,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
 import { EncounterService } from './EncounterService'
 import { RandomService } from './RandomService'
+import { ResistanceService } from './ResistanceService'
 import { v4 as uuidv4 } from 'uuid'
 
 export class CombatService {
@@ -128,20 +129,42 @@ export class CombatService {
     // Roll damage
     const baseDamage = this.rollDamage(attacker)
     const strMod = this.getStrengthModifier(attacker)
-    const damage = Math.max(1, baseDamage + strMod)
+    let damage = Math.max(1, baseDamage + strMod)
 
     // Critical hit: (2 × Level)% chance, max 50%
     const attackerLevel = attacker.level || 1
     const critChance = Math.min(50, attackerLevel * 2)
     const critical = RandomService.chance(critChance)
 
-    const finalDamage = critical ? damage * 2 : damage
+    if (critical) {
+      damage *= 2
+    }
+
+    // Helpless target multiplier: sleeping/paralyzed targets take 2× damage
+    // Research: Per Wizardry 1 mechanics, helpless targets are automatically hit
+    // and take double damage from physical attacks
+    const isHelpless = this.isHelplessTarget(defender)
+    if (isHelpless) {
+      damage *= 2
+    }
+
+    const finalDamage = damage
+
+    // Build appropriate message
+    let message = `${finalDamage} damage!`
+    if (critical && isHelpless) {
+      message = `Critical Hit on helpless target! ${finalDamage} damage!`
+    } else if (critical) {
+      message = `Critical Hit! ${finalDamage} damage!`
+    } else if (isHelpless) {
+      message = `Strikes helpless target! ${finalDamage} damage!`
+    }
 
     return {
       hit: true,
       damage: finalDamage,
       critical,
-      message: critical ? `Critical Hit! ${finalDamage} damage!` : `${finalDamage} damage!`
+      message
     }
   }
 
@@ -163,6 +186,27 @@ export class CombatService {
       return Math.floor((combatant.strength - 10) / 2)
     }
     return 0
+  }
+
+  /**
+   * Check if target is helpless (sleeping or paralyzed)
+   * Helpless targets take 2× damage from physical attacks (Wizardry 1 mechanic)
+   */
+  private static isHelplessTarget(combatant: Combatant): boolean {
+    // Check status field for characters and monsters
+    if ('status' in combatant) {
+      const status = combatant.status
+      // Check for sleeping or paralyzed status
+      // Status can be CharacterStatus enum or CombatantStatus string
+      if (typeof status === 'string') {
+        const statusStr = status.toUpperCase()
+        return statusStr === 'ASLEEP' || statusStr === 'PARALYZED'
+      }
+      // For numeric enum values (CharacterStatus)
+      // CharacterStatus.ASLEEP = 3, CharacterStatus.PARALYZED = 4
+      return status === 3 || status === 4
+    }
+    return false
   }
 
   /**
@@ -1547,6 +1591,11 @@ export class CombatService {
       }
     }
 
+    // Process monster status effect recovery (per-round chance to shake off effects)
+    const monsterRecoveryResult = this.processMonsterStatusRecovery(currentState)
+    currentState = monsterRecoveryResult.newState
+    messages.push(...monsterRecoveryResult.messages)
+
     // Tick down status effect durations at end of round
     const durationResult = this.tickStatusDurations(currentState, party)
     currentState = durationResult.newState
@@ -1855,6 +1904,19 @@ export class CombatService {
           }
         }
       }
+    }
+
+    // Process monster status effect recovery (per-round chance to shake off effects)
+    const monsterRecoveryResult = this.processMonsterStatusRecovery(currentState)
+    currentState = monsterRecoveryResult.newState
+
+    // Create monster recovery event if any monsters recovered
+    if (monsterRecoveryResult.messages.length > 0) {
+      events.push({
+        type: 'status',
+        messages: monsterRecoveryResult.messages,
+        monsterGroupsSnapshot: currentState.monsterGroups
+      })
     }
 
     // Tick down status effect durations at end of round
@@ -2211,6 +2273,92 @@ export class CombatService {
 
     return {
       newState: { ...currentState, statusDurations: newDurations },
+      messages
+    }
+  }
+
+  /**
+   * Process monster status effect recovery (per-round chance to shake off effects)
+   *
+   * Based on Wizardry 1 research:
+   * - Sleep: (20 × Level)% per round, capped at 50%
+   * - Fear: (10 × Level)% per round, capped at 50%
+   * - Paralysis: (7 × Level)% per round, capped at 50%
+   * - Silence: (10 × Level)% per round, capped at 50% (bug-fixed)
+   *
+   * @returns Updated state with recovered monsters and messages
+   */
+  static processMonsterStatusRecovery(
+    state: CombatState
+  ): { newState: CombatState; messages: string[] } {
+    let currentState = state
+    const messages: string[] = []
+
+    // Check each monster for status effects that can recover
+    const newMonsterGroups = currentState.monsterGroups.map(group => ({
+      ...group,
+      monsters: group.monsters.map(monster => {
+        // Only process monsters with recoverable status effects
+        if (monster.status !== 'ASLEEP' && monster.status !== 'PARALYZED') {
+          return monster
+        }
+
+        // Determine recovery type based on status
+        const statusType = monster.status === 'ASLEEP' ? 'ASLEEP' : 'PARALYZED'
+
+        // Roll for recovery using ResistanceService
+        if (ResistanceService.rollRecovery(monster.level, statusType)) {
+          messages.push(`${monster.name} recovers from ${statusType.toLowerCase()}!`)
+          return { ...monster, status: 'ALIVE' as CombatantStatus }
+        }
+
+        return monster
+      })
+    }))
+
+    // Also check for SILENCED and FEAR in statusEffects map
+    const newStatusEffects = new Map(currentState.statusEffects)
+    for (const group of currentState.monsterGroups) {
+      for (const monster of group.monsters) {
+        const monsterEffects = newStatusEffects.get(monster.id)
+        if (!monsterEffects) continue
+
+        // Check SILENCED recovery
+        if (monsterEffects.has('SILENCED')) {
+          if (ResistanceService.rollRecovery(monster.level, 'SILENCED')) {
+            const updatedEffects = new Set(monsterEffects)
+            updatedEffects.delete('SILENCED')
+            if (updatedEffects.size === 0) {
+              newStatusEffects.delete(monster.id)
+            } else {
+              newStatusEffects.set(monster.id, updatedEffects)
+            }
+            messages.push(`${monster.name} recovers from silence!`)
+          }
+        }
+
+        // Check BLIND (treated as FEAR for recovery)
+        if (monsterEffects.has('BLIND')) {
+          if (ResistanceService.rollRecovery(monster.level, 'FEAR')) {
+            const updatedEffects = new Set(monsterEffects)
+            updatedEffects.delete('BLIND')
+            if (updatedEffects.size === 0) {
+              newStatusEffects.delete(monster.id)
+            } else {
+              newStatusEffects.set(monster.id, updatedEffects)
+            }
+            messages.push(`${monster.name} recovers from blindness!`)
+          }
+        }
+      }
+    }
+
+    return {
+      newState: {
+        ...currentState,
+        monsterGroups: newMonsterGroups,
+        statusEffects: newStatusEffects
+      },
       messages
     }
   }

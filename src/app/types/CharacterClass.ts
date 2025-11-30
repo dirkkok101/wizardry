@@ -51,10 +51,66 @@ export interface SpellAccess {
 }
 
 /**
+ * Attacks per level - formula-based format
+ */
+export interface AttacksPerLevelFormula {
+  formula: string   // e.g. "(level / 5) + 1"
+  max: number       // Maximum attacks per round
+}
+
+/**
  * Attacks per level mapping (range-based)
  */
-export interface AttacksPerLevel {
+export interface AttacksPerLevelRange {
   [levelRange: string]: number  // e.g. "1-4": 1, "5-9": 2
+}
+
+/**
+ * Attacks per level - supports both formula and range formats
+ */
+export type AttacksPerLevel = AttacksPerLevelFormula | AttacksPerLevelRange
+
+/**
+ * Saving throw bonuses (negative modifiers = better saves)
+ */
+export interface SavingThrowBonuses {
+  death?: number
+  wand?: number
+  breath?: number
+  petrify?: number
+  spell?: number
+}
+
+/**
+ * Resistances - percentage-based protection
+ */
+export interface Resistances {
+  [key: string]: number | string  // numeric value or notes string
+}
+
+/**
+ * Spell point formula entry
+ * Formula: gain spell point at level (A + B*N) for spell level N
+ */
+export interface SpellPointFormulaEntry {
+  A: number
+  B: number
+}
+
+/**
+ * Spell point formula for caster classes
+ */
+export interface SpellPointFormula {
+  mage?: SpellPointFormulaEntry
+  priest?: SpellPointFormulaEntry
+}
+
+/**
+ * Spell level access - levels at which each spell level becomes available
+ */
+export interface SpellLevelAccess {
+  mage?: number[]    // Array of 7 levels (spell levels 1-7)
+  priest?: number[]  // Array of 7 levels (spell levels 1-7)
 }
 
 /**
@@ -70,10 +126,17 @@ export interface ClassData {
   hitDice: string                  // "1d4", "1d6", "1d8", "1d10"
   spellAccess: SpellAccess | null
   attacksPerLevel: AttacksPerLevel
-  xpTable: number[]                // XP required for levels 2-13 (11 entries)
+  xpTable: number[]                // XP required for levels 2-13+ (11-12 entries)
+  xpPerLevelAfter13?: number       // XP per level after 13
+  savingThrowBonuses?: SavingThrowBonuses
+  resistances?: Resistances
+  spellPointFormula?: SpellPointFormula
+  spellLevelAccess?: SpellLevelAccess
   specialAbilities: string[]
   canIdentifyItems: boolean
   canDispelUndead: boolean
+  dispelUndeadPenalty?: number     // Penalty to dispel undead roll (e.g., -20 for Bishop)
+  dispelUndeadMinLevel?: number    // Minimum level to dispel undead
   canCriticalHit: boolean
 }
 
@@ -109,10 +172,34 @@ export function parseAlignmentRestrictions(restrictions: string[]): Alignment[] 
 }
 
 /**
+ * Type guard to check if attacksPerLevel is formula-based
+ */
+export function isFormulaBasedAttacks(attacksPerLevel: AttacksPerLevel): attacksPerLevel is AttacksPerLevelFormula {
+  return 'formula' in attacksPerLevel && 'max' in attacksPerLevel
+}
+
+/**
  * Get attacks per round for a given level
+ * Supports both formula-based and range-based formats
  */
 export function getAttacksForLevel(attacksPerLevel: AttacksPerLevel, level: number): number {
-  // Find matching range
+  // Handle formula-based format
+  if (isFormulaBasedAttacks(attacksPerLevel)) {
+    // Evaluate the formula safely (only supports simple formulas)
+    const formula = attacksPerLevel.formula
+    // Parse "(level / N) + M" style formulas
+    const match = formula.match(/\(level\s*\/\s*(\d+)\)\s*\+\s*(\d+)/)
+    if (match) {
+      const divisor = parseInt(match[1])
+      const base = parseInt(match[2])
+      const attacks = Math.floor(level / divisor) + base
+      return Math.min(attacks, attacksPerLevel.max)
+    }
+    // Fallback: just return 1 if formula not understood
+    return 1
+  }
+
+  // Handle range-based format
   for (const [range, attacks] of Object.entries(attacksPerLevel)) {
     if (range.includes('+')) {
       // "1+" means level 1 and up

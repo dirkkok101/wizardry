@@ -64,23 +64,34 @@ export const SpellAccessSchema = z.object({
 export const HitDiceSchema = z.enum(['1d4', '1d6', '1d8', '1d10'])
 
 /**
- * Attacks per level schema
- * Keys must be valid range notation like "1-4", "5-9", "10+", "1+"
- * Values must be positive integers
+ * Attacks per level schema - supports two formats:
+ * 1. Formula-based: { formula: "(level / 5) + 1", max: 10 }
+ * 2. Range-based: { "1-4": 1, "5-9": 2, "10+": 3 }
  */
-export const AttacksPerLevelSchema = z.record(
+const AttacksPerLevelFormulaSchema = z.object({
+  formula: z.string(),
+  max: z.number().int().min(1).max(10)
+})
+
+const AttacksPerLevelRangeSchema = z.record(
   z.string().regex(/^(\d+-\d+|\d+\+)$/),
   z.number().int().min(1).max(10)
 )
 
+export const AttacksPerLevelSchema = z.union([
+  AttacksPerLevelFormulaSchema,
+  AttacksPerLevelRangeSchema
+])
+
 /**
  * XP table schema
- * Must have exactly 11 entries (for levels 2-13)
+ * Must have 11-12 entries (for levels 2-13 or 2-14)
  * Each value must be a positive integer
  * Values should be in ascending order
  */
 export const XPTableSchema = z.array(z.number().int().positive())
-  .length(11)
+  .min(11)
+  .max(12)
   .refine(
     (arr) => {
       for (let i = 1; i < arr.length; i++) {
@@ -94,6 +105,74 @@ export const XPTableSchema = z.array(z.number().int().positive())
   )
 
 /**
+ * Saving throw bonuses for classes (negative modifiers = better saves)
+ */
+export const SavingThrowBonusesSchema = z.object({
+  death: z.number().int().min(-10).max(0).optional(),
+  wand: z.number().int().min(-10).max(0).optional(),
+  breath: z.number().int().min(-10).max(0).optional(),
+  petrify: z.number().int().min(-10).max(0).optional(),
+  spell: z.number().int().min(-10).max(0).optional()
+}).strict().optional()
+
+/**
+ * Resistances provide percentage-based protection against specific effects
+ * Values are percentages (0-100) except 'notes' which is descriptive text
+ */
+export const ResistancesSchema = z.record(
+  z.string(),
+  z.union([z.number().int().min(0).max(100), z.string()])
+).optional()
+
+/**
+ * Spell point formula for caster classes
+ * Formula: gain spell point at level (A + B*N) for spell level N
+ */
+const SpellPointFormulaEntrySchema = z.object({
+  A: z.number().int().min(0),
+  B: z.number().int().min(1)
+})
+
+export const SpellPointFormulaSchema = z.object({
+  mage: SpellPointFormulaEntrySchema.optional(),
+  priest: SpellPointFormulaEntrySchema.optional()
+}).strict().optional()
+
+/**
+ * Spell level access - array of levels at which each spell level becomes available
+ * Index 0 = spell level 1, Index 6 = spell level 7
+ */
+export const SpellLevelAccessSchema = z.object({
+  mage: z.array(z.number().int().min(1)).length(7).optional(),
+  priest: z.array(z.number().int().min(1)).length(7).optional()
+}).strict().optional()
+
+/**
+ * Trap inspection formula for Thief/Ninja
+ */
+const TrapInspectionSchema = z.object({
+  formula: z.string(),
+  notes: z.string().optional()
+}).strict().optional()
+
+/**
+ * Trap disarm formula for Thief/Ninja
+ */
+const TrapDisarmSchema = z.object({
+  formula: z.string(),
+  notes: z.string().optional()
+}).strict().optional()
+
+/**
+ * Critical hit formula for Ninja
+ */
+const CriticalHitFormulaSchema = z.object({
+  chance: z.string(),
+  resist: z.string(),
+  notes: z.string().optional()
+}).strict().optional()
+
+/**
  * Complete class data schema
  */
 export const ClassDataSchema = z.object({
@@ -104,13 +183,27 @@ export const ClassDataSchema = z.object({
   alignmentRestrictions: z.array(AlignmentSchema),
   equipmentRestrictions: EquipmentRestrictionsSchema,
   hitDice: HitDiceSchema,
+  hitDiceBonus: z.string().optional(),  // Samurai: extra die roll per level
   spellAccess: SpellAccessSchema,
   attacksPerLevel: AttacksPerLevelSchema,
   xpTable: XPTableSchema,
+  xpPerLevelAfter13: z.number().int().positive().optional(),
+  savingThrowBonuses: SavingThrowBonusesSchema,
+  resistances: ResistancesSchema,
+  spellPointFormula: SpellPointFormulaSchema,
+  spellLevelAccess: SpellLevelAccessSchema,
   specialAbilities: z.array(z.string()),
   canIdentifyItems: z.boolean(),
   canDispelUndead: z.boolean(),
-  canCriticalHit: z.boolean()
+  dispelUndeadPenalty: z.number().int().min(-100).max(0).optional(),
+  dispelUndeadMinLevel: z.number().int().min(1).max(13).optional(),
+  canCriticalHit: z.boolean(),
+  // Class-specific abilities
+  nakedACFormula: z.string().optional(),  // Ninja: AC bonus when unarmored
+  criticalHitFormula: CriticalHitFormulaSchema,  // Ninja: decapitation mechanic
+  trapInspection: TrapInspectionSchema,  // Thief/Ninja: identify trap type
+  trapDisarm: TrapDisarmSchema,  // Thief/Ninja: disarm trap chance
+  unarmedDamage: z.string().optional()  // Ninja: damage when unarmed
 }).strict()
 
 /**

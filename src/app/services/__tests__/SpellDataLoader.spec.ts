@@ -4,6 +4,10 @@ import { SpellDefinition } from '@models/SpellDefinition'
 // Note: global.fetch is mocked in setup-jest.ts to load real spell data from data/spells/
 // This follows the project philosophy: "No mocks for services - test with real data"
 
+// Data-driven: load spell count from index.json (source of truth)
+const spellIndex = require('@data/spells/index.json') as string[]
+const EXPECTED_SPELL_COUNT = spellIndex.length
+
 afterEach(() => {
   SpellDataLoader.clearCache()
 })
@@ -13,11 +17,8 @@ describe('SpellDataLoader', () => {
     it('loads and validates all spell JSON files', async () => {
       const spells = await SpellDataLoader.loadAllSpells()
 
-      // All 51 authentic Wizardry 1 spell definitions pass validation (22 Mage + 29 Priest)
-      // 51 JSON files contain 51 spell definitions (single-level format after Phase 3 cleanup)
-      // Multi-level variants and Wizardry 5 spells have been removed
-      // Note: Some spells like LOMILWA appear in both Mage and Priest spell lists at different levels
-      expect(spells.size).toBe(51)
+      // Data-driven: all spells in index.json should load successfully
+      expect(spells.size).toBe(EXPECTED_SPELL_COUNT)
       expect(SpellDataLoader.getFailedSpells().size).toBe(0)
 
       // Verify some successfully loaded spells
@@ -126,7 +127,7 @@ describe('SpellDataLoader', () => {
       await SpellDataLoader.loadAllSpells()
       const spells = SpellDataLoader.getAllSpells()
 
-      expect(spells.size).toBe(51)  // All 51 spell definitions validated
+      expect(spells.size).toBe(EXPECTED_SPELL_COUNT)
     })
 
     it('throws error if spells not loaded', () => {
@@ -153,7 +154,7 @@ describe('SpellDataLoader', () => {
 
       await SpellDataLoader.loadAllSpells()
 
-      expect(SpellDataLoader.getLoadedCount()).toBe(51)  // All 51 spell definitions validated
+      expect(SpellDataLoader.getLoadedCount()).toBe(EXPECTED_SPELL_COUNT)
     })
 
     it('returns total count including failed spells', async () => {

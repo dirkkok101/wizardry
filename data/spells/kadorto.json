@@ -26,7 +26,14 @@
       "fromDead": "Character becomes ASHES",
       "fromAshes": "Character is permanently LOST FOREVER"
     },
-    "criticalWarning": "If Vitality is 3 or lower, failure = permanent loss"
+    "criticalWarning": "If Vitality is 3 or lower, failure = permanent loss",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "vitality",
+      "multiplier": 4,
+      "base": 0,
+      "cap": 100
+    }
   },
   "comparison": "Strictly superior to DI - works on Ashes and restores full HP instead of 1 HP"
 }

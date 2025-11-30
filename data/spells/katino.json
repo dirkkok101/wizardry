@@ -18,12 +18,26 @@
       "level1": "20% resist",
       "level3": "60% resist",
       "level5plus": "100% immune"
+    },
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 20,
+      "base": 0,
+      "cap": 100
     }
   },
   "recovery": {
     "formula": "(20 × Monster Level)% per round",
     "cap": "50%",
-    "notes": "Higher level monsters wake faster"
+    "notes": "Higher level monsters wake faster",
+    "typed": {
+      "type": "level_scaled",
+      "variable": "monster_level",
+      "multiplier": 20,
+      "base": 0,
+      "cap": 50
+    }
   },
   "notes": "Exceptionally powerful against low-level monster groups; ineffective against Level 5+ monsters"
 }
