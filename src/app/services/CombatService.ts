@@ -876,7 +876,11 @@ export class CombatService {
 
     // Apply resurrection to character targets (KADORTO)
     if (spellEffect.resurrection && spellEffect.resurrection.length > 0) {
-      for (const targetId of spellEffect.resurrection) {
+      for (const resResult of spellEffect.resurrection) {
+        // Only apply successful resurrections
+        if (!resResult.success || resResult.resultStatus !== 'OK') continue
+
+        const targetId = resResult.targetId
         // Find the character in targets
         const target = targets.find(t => t.id === targetId)
         if (target && 'class' in target) {

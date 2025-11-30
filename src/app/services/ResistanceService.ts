@@ -170,9 +170,14 @@ export class ResistanceService {
   ): InstantDeathCheck {
     const template = MonsterDataLoader.getMonster(monster.monsterId)
 
+    // Type guard for object-style instant death
+    const instantDeathObj = typeof spell.instantDeath === 'object' && spell.instantDeath !== null
+      ? spell.instantDeath
+      : null
+
     // MAKANITO-style: Kill threshold with no save
-    if (spell.instantDeath?.killThreshold) {
-      const maxHD = spell.instantDeath.killThreshold.maxHitDice || 7
+    if (instantDeathObj?.killThreshold) {
+      const maxHD = instantDeathObj.killThreshold.maxHitDice || 7
 
       // Check undead immunity
       if (spell.immunities?.includes('undead') && monster.undead) {
@@ -185,13 +190,13 @@ export class ResistanceService {
       }
 
       // No saving throw for MAKANITO
-      if (spell.instantDeath.noSavingThrow) {
+      if (instantDeathObj.noSavingThrow) {
         return { immune: false, resisted: false, resistChance: 0, reason: 'No saving throw' }
       }
     }
 
     // LAKANITO-style: Suffocation (breathers only)
-    if (spell.instantDeath?.type === 'suffocation') {
+    if (instantDeathObj?.type === 'suffocation') {
       // Undead don't breathe
       if (monster.undead) {
         return { immune: true, resisted: false, resistChance: 0, reason: 'Undead do not breathe' }
@@ -214,7 +219,7 @@ export class ResistanceService {
     }
 
     // BADI-style: Single target instant death with resistance
-    if (spell.instantDeath?.savingThrow && spell.resistance?.typed) {
+    if (instantDeathObj?.savingThrow && spell.resistance?.typed) {
       const resistChance = FormulaService.calculate(spell.resistance.typed, { monsterLevel: monster.level })
       const resisted = RandomService.chance(Math.min(resistChance, 100))
       return { immune: false, resisted, resistChance, reason: resisted ? `Resisted (${resistChance}%)` : undefined }
@@ -268,6 +273,50 @@ export class ResistanceService {
     typed: TypedFormula
   ): boolean {
     const chance = this.getRecoveryChanceFromTyped(monsterLevel, typed)
+    return RandomService.chance(chance)
+  }
+
+  /**
+   * Roll for status recovery using default formulas
+   *
+   * Wizardry 1 recovery mechanics (per round):
+   * - ASLEEP: Higher chance to wake up (50% - 5% per monster level)
+   * - PARALYZED: Lower base chance (30% - 3% per monster level)
+   * - SILENCED: Moderate chance (40% - 4% per monster level)
+   * - FEAR/BLIND: Same as silenced (40% - 4% per monster level)
+   *
+   * Higher level monsters stay incapacitated longer
+   * Minimum 5% recovery chance for all status types
+   */
+  static rollRecovery(
+    monsterLevel: number,
+    statusType: 'ASLEEP' | 'PARALYZED' | 'SILENCED' | 'FEAR'
+  ): boolean {
+    let baseChance: number
+    let levelPenalty: number
+
+    switch (statusType) {
+      case 'ASLEEP':
+        // Sleep is easier to shake off
+        baseChance = 50
+        levelPenalty = 5
+        break
+      case 'PARALYZED':
+        // Paralysis is harder to recover from
+        baseChance = 30
+        levelPenalty = 3
+        break
+      case 'SILENCED':
+      case 'FEAR':
+      default:
+        // Moderate recovery for other effects
+        baseChance = 40
+        levelPenalty = 4
+        break
+    }
+
+    // Calculate chance with minimum of 5%
+    const chance = Math.max(5, baseChance - (levelPenalty * monsterLevel))
     return RandomService.chance(chance)
   }
 }

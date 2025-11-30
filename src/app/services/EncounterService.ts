@@ -102,7 +102,8 @@ export const EncounterService = {
       groups.push({
         id: groupIds[i],
         monsters: monsters,
-        formation: this.determineFormation(monsters)
+        formation: this.determineFormation(monsters),
+        identified: false
       })
     }
 

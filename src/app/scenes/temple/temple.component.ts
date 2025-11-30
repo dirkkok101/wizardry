@@ -96,6 +96,7 @@ export class TempleComponent implements OnInit {
     switch (serviceType) {
       case ServiceType.CURE_POISON: return 'cure-poison';
       case ServiceType.CURE_PARALYSIS: return 'cure-paralysis';
+      case ServiceType.CURE_STONED: return 'cure-stoned';
       case ServiceType.RESURRECT: return 'resurrect';
       case ServiceType.RESTORE: return 'restore';
     }
@@ -108,6 +109,7 @@ export class TempleComponent implements OnInit {
     switch (status) {
       case CharacterStatus.POISONED: return ServiceType.CURE_POISON;
       case CharacterStatus.PARALYZED: return ServiceType.CURE_PARALYSIS;
+      case CharacterStatus.STONED: return ServiceType.CURE_STONED;
       case CharacterStatus.DEAD: return ServiceType.RESURRECT;
       case CharacterStatus.ASHES: return ServiceType.RESTORE;
       default: return null;

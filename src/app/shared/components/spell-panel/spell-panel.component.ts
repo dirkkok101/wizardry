@@ -307,7 +307,10 @@ export class SpellPanelComponent {
       return 'Instant death'
     }
     if (spell.statusEffect) {
-      return spell.statusEffect.toLowerCase()
+      const effectStr = typeof spell.statusEffect === 'object'
+        ? spell.statusEffect.type
+        : spell.statusEffect
+      return effectStr.toLowerCase()
     }
     return spell.description
   }

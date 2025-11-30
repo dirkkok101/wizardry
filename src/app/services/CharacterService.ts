@@ -267,6 +267,7 @@ function createCharacter(
     agility,
     luck,
     level: 1,
+    maxLev: 1,  // Highest level ever achieved (for HP reroll on class change)
     experience: 0,
     age,
     hp: maxHp,
@@ -551,6 +552,7 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
     alignment,
     class: selectedClass,
     level: 1,
+    maxLev: 1,  // Highest level ever achieved (for HP reroll on class change)
     experience: 0,
     age,
 

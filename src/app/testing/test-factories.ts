@@ -31,6 +31,7 @@ export function createTestCharacter(overrides: Partial<Character> = {}): Charact
     agility: 10,
     luck: 10,
     level: 1,
+    maxLev: overrides.maxLev ?? overrides.level ?? 1,
     experience: 0,
     age: 15,
     hp: 10,
@@ -191,7 +192,8 @@ export function createTestCombatState(overrides: Partial<CombatState> = {}): Com
     {
       id: 'A',
       monsters: [createTestMonster()],
-      formation: 'front'
+      formation: 'front',
+      identified: false
     }
   ]
 
@@ -253,7 +255,8 @@ export function createTestCombatStateForUI(overrides?: {
     {
       id: 'A',
       monsters: defaultMonsters,
-      formation: 'front'
+      formation: 'front',
+      identified: false
     }
   ]
 

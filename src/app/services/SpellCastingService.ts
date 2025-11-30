@@ -185,6 +185,11 @@ export class SpellCastingService {
 
     // Handle status effect spells
     if (spell.statusEffect) {
+      // Extract status effect string (handle both string and object forms)
+      const statusEffectStr = typeof spell.statusEffect === 'object'
+        ? spell.statusEffect.type
+        : spell.statusEffect
+
       // Check resistance for each target (monsters only)
       const statusEffects: { target: string; effect: string }[] = []
       const resistedTargets: string[] = []
@@ -204,13 +209,14 @@ export class SpellCastingService {
         // Target did not resist - apply status effect
         statusEffects.push({
           target: target.id,
-          effect: spell.statusEffect!
+          effect: statusEffectStr
         })
       }
 
       // Generate appropriate message based on effect
       let effectMsg = ''
-      switch (spell.statusEffect) {
+      const effectUpper = statusEffectStr.toUpperCase()
+      switch (effectUpper) {
         case 'ASLEEP':
           effectMsg = 'puts the enemy group to sleep!'
           break
