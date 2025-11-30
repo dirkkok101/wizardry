@@ -105,12 +105,12 @@
 
 **Samurai**: STR ≥ 15, VIT ≥ 14, INT ≥ 11, PIE ≥ 10, AGI ≥ 10, not evil
 - Fights like Fighter
-- Casts Mage spells (1-6)
+- Casts Mage spells (all 7 levels, starts at character level 4, level 7 spells at character level 22)
 - All weapons/armor
 
 **Lord**: STR ≥ 15, VIT ≥ 15, INT ≥ 12, PIE ≥ 12, AGI ≥ 14, LUC ≥ 15, good only
 - Fights like Fighter
-- Casts Priest spells (1-6)
+- Casts Priest spells (all 7 levels, starts at character level 4, level 7 spells at character level 16)
 - All weapons/armor
 - Hardest to create (requires all stats high)
 

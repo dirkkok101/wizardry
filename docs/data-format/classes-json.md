@@ -430,7 +430,7 @@
 ### Spellcasting
 - **spellcasting_mage**: Access to offensive, utility, and transformation magic
 - **spellcasting_priest**: Access to healing, buffs, and holy damage
-- Classes: Mage (1-7), Priest (1-7), Bishop (1-7 both), Samurai (Mage 1-6), Lord (Priest 1-6)
+- Classes: Mage (1-7), Priest (1-7), Bishop (1-7 both), Samurai (Mage 1-7, starts level 4), Lord (Priest 1-7, starts level 4)
 
 ### Combat Abilities
 - **critical_hit**: Chance for instant kill (Ninja only). Formula: min(level × 2, 50)%

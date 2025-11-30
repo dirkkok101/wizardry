@@ -226,9 +226,9 @@ For each stat:
 ### Optimizing Stat Growth
 
 **Stay Young**:
-- Rest at inn ages characters
 - Younger = better stat increases
-- Balance resting vs. aging
+- Main aging sources: class changes, Temple services, disbanding party
+- **Note**: In the original Apple II version, inn resting did NOT age characters (a bug—the manual claimed otherwise). In our remake, we fix this: **resting at the inn DOES age characters** as the manual intended.
 
 **Early Levels**:
 - Level up frequently
@@ -332,20 +332,24 @@ Level 40+: 10 attacks (max)
 
 ### Hit Chance Progression
 
-**Formula**: HPCALCMD increases with level
-- Fighter/Priest/Samurai/Lord: 2 + floor(Level/3)
-- Others: floor(Level/5)
+**Formula**: HitCalcMod increases with level
+- Fighter/Priest/Samurai/Lord/Ninja: 2 + floor(Level/3)
+- Mage/Thief/Bishop: floor(Level/5)
 
 **Higher Level**: Easier to hit enemies
 
-### Critical Hit Chance
+### Critical Hit (Ninja Only)
 
-**Formula**: (2 × Level)%, max 50%
+**Only Ninjas can perform critical hits** (instant kill/decapitation).
+
+**Chance Formula**: min(Level × 2, 50)%
 - Level 1: 2%
 - Level 10: 20%
 - Level 25+: 50% (max)
 
-**Decapitation**: Ninjas can instant-kill on critical
+**Monster Resistance**: `(MonsterLevel + 10) < random(0, 34)`
+- Monsters level 24+ **cannot** be critically hit (always resist)
+- Lower-level monsters have increasing vulnerability
 
 ## Aging
 
@@ -356,11 +360,13 @@ Level 40+: 10 attacks (max)
 | Activity | Age Increase |
 |----------|-------------|
 | Class change | **1d3+3 years + 44 weeks** (~5-7 years) |
-| Temple services | 1-52 weeks per visit |
+| Temple services | 1d52 weeks (1-52 weeks per visit) |
 | Disbanding party | 25 weeks per character |
-| Inn resting | **0** (Apple II bug—manual says otherwise) |
+| Inn resting | **1 week per rest** (original had a bug where this was 0—we fix it) |
 
 **Starting Age**: 18 years + 0-299 random weeks (so 18-23+ years)
+
+**Note**: See [Known Bugs](../research/known-bugs.md) for details on bugs we fix vs. preserve.
 
 **Cannot Reverse**: Age only increases (no youth potions)
 
@@ -390,13 +396,14 @@ Level 40+: 10 attacks (max)
 
 ### Managing Age
 
-**Key Insight**: Inn resting is FREE due to Apple II bug. Main aging sources are class changes and Temple visits.
+**Key Insight**: In our remake, **all resting ages characters** (fixing an original bug). Plan your rests carefully.
 
 **Strategies**:
 1. **Minimize class changes**: Each costs 5-7 years
 2. **Use DI/KADORTO spells** instead of Temple for resurrection (costs VIT, not age)
 3. **Level quickly while young**: Best stat growth in early years
 4. **Build high Vitality**: Protects against old age death
+5. **Balance resting**: Use Stables (free, SP only) when you don't need HP recovery
 
 ## Power Curves
 
@@ -441,3 +448,4 @@ Level 40+: 10 attacks (max)
 - [Spells](./04-spells.md) - Spell learning
 - [Combat](./05-combat.md) - Combat scaling with level
 - [Combat Formulas](../research/combat-formulas.md) - Exact progression formulas
+- [Known Bugs](../research/known-bugs.md) - Original bugs and our fixes
