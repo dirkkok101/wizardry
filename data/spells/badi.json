@@ -1,13 +1,23 @@
 {
   "id": "badi",
   "name": "BADI",
+  "translation": "Death",
   "level": 5,
   "casterType": "priest",
-  "category": "offensive",
-  "target": "group",
-  "description": "Instant death to enemy group",
-  "castableIn": [
-    "combat"
-  ],
-  "instantDeath": true
+  "category": "instant_death",
+  "target": "single",
+  "description": "Attempts to instantly kill one monster - binary outcome: instant death or no effect",
+  "castableIn": ["combat"],
+  "instantDeath": {
+    "type": "divine_word",
+    "savingThrow": true
+  },
+  "resistance": {
+    "formula": "(Monster Level × 10)%",
+    "examples": {
+      "level5": "50% resist",
+      "level10": "100% immune"
+    },
+    "notes": "Level 10+ monsters are immune"
+  }
 }

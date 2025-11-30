@@ -1,18 +1,17 @@
 {
   "id": "dial",
   "name": "DIAL",
+  "translation": "More Heal",
   "level": 4,
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Restore 2d8 HP",
-  "castableIn": [
-    "combat",
-    "dungeon",
-    "town"
-  ],
+  "description": "Improved healing spell - restores more HP to a single party member",
+  "castableIn": ["combat", "camp"],
   "healing": {
     "dice": "2d8",
-    "type": "normal"
+    "min": 2,
+    "max": 16,
+    "average": 9
   }
 }

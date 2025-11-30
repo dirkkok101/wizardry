@@ -1,13 +1,16 @@
 {
   "id": "matu",
   "name": "MATU",
+  "translation": "Blessing",
   "level": 2,
   "casterType": "priest",
   "category": "buff",
   "target": "party",
-  "description": "-2 AC to entire party",
-  "castableIn": [
-    "combat"
-  ],
-  "acModifier": -2
+  "description": "Greater blessing - reduces AC for entire party",
+  "castableIn": ["combat"],
+  "effect": {
+    "acModifier": -2,
+    "stacks": true
+  },
+  "duration": "Until combat ends"
 }

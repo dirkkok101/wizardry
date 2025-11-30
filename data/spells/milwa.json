@@ -1,14 +1,21 @@
 {
   "id": "milwa",
   "name": "MILWA",
+  "translation": "Light",
   "level": 1,
   "casterType": "priest",
   "category": "utility",
-  "target": "group",
-  "description": "Illuminates dungeon and reveals monster stats",
-  "utility": "reveal_stats",
-  "castableIn": [
-    "combat",
-    "dungeon"
-  ]
+  "target": "party",
+  "description": "Creates light, extends vision range, and reveals secret doors",
+  "castableIn": ["combat", "camp"],
+  "effect": {
+    "type": "illumination",
+    "reveals": ["secret_doors"]
+  },
+  "duration": {
+    "min": 15,
+    "max": 29,
+    "unit": "turns",
+    "terminatedBy": "darkness zones"
+  }
 }

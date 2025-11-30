@@ -1,12 +1,16 @@
 {
   "id": "kandi",
   "name": "KANDI",
-  "level": 4,
+  "translation": "Locate Soul",
+  "level": 5,
   "casterType": "priest",
   "category": "utility",
-  "target": "dead_body",
-  "description": "Find specific character in dungeon",
-  "castableIn": [
-    "dungeon"
-  ]
+  "target": "caster",
+  "description": "Reveals coordinates of dead or missing party members - essential for body recovery expeditions",
+  "castableIn": ["camp"],
+  "effect": {
+    "type": "locate_dead",
+    "reveals": ["x_position", "y_position", "dungeon_level"]
+  },
+  "notes": "Useful for body recovery expeditions after party wipe or emergency escape"
 }

@@ -1,18 +1,18 @@
 {
   "id": "dios",
   "name": "DIOS",
+  "translation": "Heal",
   "level": 1,
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Restore 1d8 HP",
-  "castableIn": [
-    "combat",
-    "dungeon",
-    "town"
-  ],
+  "description": "Basic healing spell - restores HP to a single party member",
+  "castableIn": ["combat", "camp"],
   "healing": {
     "dice": "1d8",
-    "type": "normal"
-  }
+    "min": 1,
+    "max": 8,
+    "average": 4.5
+  },
+  "notes": "No level scaling - always 1-8 HP"
 }

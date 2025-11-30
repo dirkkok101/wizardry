@@ -1,16 +1,22 @@
 {
   "id": "badial",
   "name": "BADIAL",
-  "level": 3,
+  "translation": "More Hurt",
+  "level": 4,
   "casterType": "priest",
   "category": "offensive",
-  "target": "all_enemies",
-  "description": "2d8 damage to all enemy groups",
-  "castableIn": [
-    "combat"
-  ],
+  "target": "single",
+  "description": "Improved damage spell targeting a single monster",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "2d8",
-    "type": "holy"
+    "min": 2,
+    "max": 16,
+    "average": 9,
+    "type": "divine"
+  },
+  "resistance": {
+    "type": "magic_resistance",
+    "notes": "Subject to Spell Resistance"
   }
 }

@@ -1,14 +1,19 @@
 {
   "id": "dumapic",
   "name": "DUMAPIC",
+  "translation": "Clarity",
   "level": 1,
   "casterType": "mage",
   "category": "utility",
   "target": "party",
-  "description": "Shows current coordinates and facing direction",
-  "castableIn": [
-    "dungeon",
-    "combat"
-  ],
-  "utility": "show_coordinates"
+  "description": "Reveals exact party coordinates (X, Y) and current dungeon level",
+  "castableIn": ["camp"],
+  "effect": {
+    "type": "reveal_coordinates",
+    "reveals": ["x_position", "y_position", "dungeon_level", "facing_direction"]
+  },
+  "restrictions": {
+    "level10": "Does not function on Level 10 (Werdna's lair)"
+  },
+  "notes": "Essential before MALOR teleportation to avoid death in solid rock."
 }

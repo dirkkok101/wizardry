@@ -1,13 +1,16 @@
 {
   "id": "masopic",
   "name": "MASOPIC",
+  "translation": "Big Glass",
   "level": 6,
   "casterType": "mage",
   "category": "buff",
   "target": "party",
-  "description": "Makes entire party invisible (-4 AC for battle duration)",
-  "castableIn": [
-    "combat"
-  ],
-  "acModifier": -4
+  "description": "Makes entire party transparent, significantly reducing AC for all members",
+  "castableIn": ["combat"],
+  "effect": {
+    "acModifier": -4,
+    "stacks": true
+  },
+  "duration": "Until combat ends"
 }
