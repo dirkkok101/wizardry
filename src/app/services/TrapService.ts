@@ -20,7 +20,8 @@ import {
   TrapTriggerResult,
   trapNameMatches,
   ScrambledLetter,
-  LetterState
+  LetterState,
+  ScrambledTrapState
 } from '@models/Trap'
 import { RandomService } from './RandomService'
 import { TrapDataLoader } from './TrapDataLoader'
@@ -512,6 +513,41 @@ function revealLetters(
   return result
 }
 
+/**
+ * Create initial scrambled trap state from a trap type
+ * Gets the display name from TrapDataLoader (data-driven)
+ *
+ * @param trapType The trap type enum value
+ * @returns Complete scrambled state with all letters hidden
+ */
+function createScrambledState(trapType: TrapType): ScrambledTrapState {
+  const trapEffect = getTrapEffect(trapType)
+  return {
+    letters: scrambleLetters(trapEffect.name),
+    actualTrapType: trapType,
+    fullyRevealed: false,
+    inspectionCount: 0
+  }
+}
+
+/**
+ * Calculate reveal percentages based on character's inspection skill
+ * Uses the existing calculateInspectChance formula
+ *
+ * @param character The character performing inspection
+ * @returns greenPercent (confirmed) and redPercent (uncertain) values
+ */
+function calculateRevealPercents(character: Character): { greenPercent: number; redPercent: number } {
+  const inspectChance = calculateInspectChance(character)
+
+  // Green = 80% of inspect chance, Red = 20% of inspect chance
+  // So a 95% thief reveals ~76% green, ~19% red
+  const greenPercent = Math.floor(inspectChance * 0.8)
+  const redPercent = Math.floor(inspectChance * 0.2)
+
+  return { greenPercent, redPercent }
+}
+
 export const TrapService = {
   // Calculation functions
   calculateInspectChance,
@@ -533,5 +569,7 @@ export const TrapService = {
 
   // Scrambled letters system
   scrambleLetters,
-  revealLetters
+  revealLetters,
+  createScrambledState,
+  calculateRevealPercents
 }

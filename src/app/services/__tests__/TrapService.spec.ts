@@ -758,6 +758,50 @@ describe('TrapService', () => {
     })
   })
 
+  describe('createScrambledState', () => {
+    it('should create initial scrambled state for a trap', () => {
+      RandomService.setSeed(12345)
+      const state = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+
+      expect(state.actualTrapType).toBe(TrapType.POISON_NEEDLE)
+      expect(state.fullyRevealed).toBe(false)
+      expect(state.inspectionCount).toBe(0)
+      expect(state.letters.length).toBe(13)  // "POISON NEEDLE"
+      expect(state.letters.every(l => l.state === 'hidden')).toBe(true)
+    })
+
+    it('should use trap name from TrapDataLoader', () => {
+      RandomService.setSeed(12345)
+      const state = TrapService.createScrambledState(TrapType.GAS_BOMB)
+
+      // Letters should contain all characters from "GAS BOMB"
+      const chars = state.letters.map(l => l.char).sort().join('')
+      expect(chars).toBe(' ABBGMOS')  // sorted: space, A, B, B, G, M, O, S
+    })
+  })
+
+  describe('calculateRevealPercents', () => {
+    it('should calculate higher percents for thieves', () => {
+      const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
+      const { greenPercent, redPercent } = TrapService.calculateRevealPercents(thief)
+
+      // Thief with AGI 16 = 95% inspect chance (capped)
+      // Green = 95 * 0.8 = 76, Red = 95 * 0.2 = 19
+      expect(greenPercent).toBe(76)
+      expect(redPercent).toBe(19)
+    })
+
+    it('should calculate lower percents for fighters', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 12 })
+      const { greenPercent, redPercent } = TrapService.calculateRevealPercents(fighter)
+
+      // Fighter with AGI 12 = 12% inspect chance
+      // Green = 12 * 0.8 = 9, Red = 12 * 0.2 = 2
+      expect(greenPercent).toBe(9)
+      expect(redPercent).toBe(2)
+    })
+  })
+
   describe('getRecommendedHandler', () => {
     it('should recommend Thief over Fighter', () => {
       const fighter = createTestCharacter({
