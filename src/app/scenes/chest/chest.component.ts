@@ -520,10 +520,31 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Handle teleporter trap effect
+   * Teleports party to random position on same maze level
    */
   private handleTeleport(): void {
-    // TODO: Implement random teleport
-    this.lastActionMessage.update(m => m + ' You are teleported away!');
+    // Generate random position on same maze level (20x20 dungeon)
+    const maxCoord = 19
+    const newX = RandomService.random(0, maxCoord)
+    const newY = RandomService.random(0, maxCoord)
+    const facings: Array<'NORTH' | 'SOUTH' | 'EAST' | 'WEST'> = ['NORTH', 'SOUTH', 'EAST', 'WEST']
+    const newFacing = RandomService.pickRandom(facings)
+
+    // Update party position in game state
+    this.gameState.updateState(state => ({
+      ...state,
+      party: {
+        ...state.party,
+        position: {
+          ...state.party.position,
+          x: newX,
+          y: newY,
+          facing: newFacing
+        }
+      }
+    }))
+
+    this.lastActionMessage.update(m => m + ` Teleported to (${newX}, ${newY}) facing ${newFacing}!`)
 
     // Set chest results for victory summary (no treasure, trap triggered)
     this.chestResults.set({
