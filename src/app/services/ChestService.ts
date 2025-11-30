@@ -177,13 +177,32 @@ function generateBossChest(
 }
 
 /**
- * Check if opener has enough inventory space for chest contents
+ * Select the party member who will receive items from a chest
  *
+ * This pre-selects the recipient using the same logic as distributeTreasure,
+ * allowing inventory warnings to accurately show who will receive items.
+ *
+ * @param partyMembers Array of Character objects in the party
+ * @returns Selected recipient, or null if no living members
+ */
+function selectRecipient(partyMembers: Character[]): Character | null {
+  const livingMembers = partyMembers.filter(isAlive)
+  if (livingMembers.length === 0) {
+    return null
+  }
+  return RandomService.pickRandom(livingMembers)
+}
+
+/**
+ * Check if recipient has enough inventory space for chest contents
+ *
+ * @param recipient The character who will receive items (from selectRecipient)
+ * @param chest The chest being opened
  * @returns InventoryWarning if there's a risk of losing items, null otherwise
  */
-function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning | null {
+function checkInventorySpace(recipient: Character, chest: Chest): InventoryWarning | null {
   const itemCount = chest.contents.items.length
-  const freeSlots = MAX_INVENTORY_SIZE - opener.inventory.length
+  const freeSlots = MAX_INVENTORY_SIZE - recipient.inventory.length
 
   if (itemCount > freeSlots) {
     const itemsAtRisk = itemCount - freeSlots
@@ -191,7 +210,7 @@ function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning 
       itemCount,
       freeSlots,
       itemsAtRisk,
-      warning: `WARNING: ${opener.name} has only ${freeSlots} free slot${freeSlots === 1 ? '' : 's'}. ` +
+      warning: `WARNING: ${recipient.name} has only ${freeSlots} free slot${freeSlots === 1 ? '' : 's'}. ` +
                `${itemsAtRisk} item${itemsAtRisk === 1 ? '' : 's'} will be LOST FOREVER!`
     }
   }
@@ -209,28 +228,35 @@ function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning 
  *
  * @param chest The opened chest
  * @param partyMembers Array of Character objects in the party
+ * @param preSelectedRecipient Optional pre-selected recipient (from selectRecipient)
  * @returns Distribution result with received items, lost items, and recipient info
  */
 function distributeTreasure(
   chest: Chest,
-  partyMembers: Character[]
+  partyMembers: Character[],
+  preSelectedRecipient?: Character
 ): TreasureDistributionResult {
-  // Find living party members who can receive items
-  const livingMembers = partyMembers.filter(isAlive)
+  // Use pre-selected recipient if provided, otherwise select randomly
+  let recipient: Character | null = preSelectedRecipient ?? null
 
-  // If no living members, all items are lost
-  if (livingMembers.length === 0) {
-    return {
-      goldAdded: chest.contents.gold,
-      itemsReceived: [],
-      itemsLost: [...chest.contents.items],
-      recipientId: '',
-      recipientName: 'No one'
+  if (!recipient) {
+    // Find living party members who can receive items
+    const livingMembers = partyMembers.filter(isAlive)
+
+    // If no living members, all items are lost
+    if (livingMembers.length === 0) {
+      return {
+        goldAdded: chest.contents.gold,
+        itemsReceived: [],
+        itemsLost: [...chest.contents.items],
+        recipientId: '',
+        recipientName: 'No one'
+      }
     }
-  }
 
-  // Select random living member as recipient (original Wizardry behavior)
-  const recipient = RandomService.pickRandom(livingMembers)
+    // Select random living member as recipient (original Wizardry behavior)
+    recipient = RandomService.pickRandom(livingMembers)
+  }
 
   const result: TreasureDistributionResult = {
     goldAdded: chest.contents.gold,
@@ -339,6 +365,7 @@ export const ChestService = {
   generateItems,
 
   // Distribution
+  selectRecipient,
   checkInventorySpace,
   distributeTreasure,
   getDistributionMessage

@@ -76,6 +76,9 @@ export class ChestComponent implements OnInit, OnDestroy {
   // Selected CALFO caster (for spell casting)
   readonly selectedCaster = signal<Character | null>(null);
 
+  // Pre-selected item recipient (for accurate inventory warnings)
+  private readonly preSelectedRecipient = signal<Character | null>(null);
+
   // Trap name input for disarm attempt
   readonly trapNameInput = signal<string>('');
 
@@ -409,12 +412,18 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check inventory space
-    const warning = ChestService.checkInventorySpace(opener, chest);
-    if (warning) {
-      this.inventoryWarning.set(warning.warning);
-      this.mode.set('INVENTORY_WARNING');
-      return;
+    // Pre-select recipient so inventory warning shows correct name
+    const recipient = ChestService.selectRecipient(this.partyMembers());
+    this.preSelectedRecipient.set(recipient);
+
+    // Check inventory space for the actual recipient
+    if (recipient) {
+      const warning = ChestService.checkInventorySpace(recipient, chest);
+      if (warning) {
+        this.inventoryWarning.set(warning.warning);
+        this.mode.set('INVENTORY_WARNING');
+        return;
+      }
     }
     this.openChest(false);
   }
@@ -574,7 +583,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Distribute treasure from chest
-   * Note: opener parameter kept for API compatibility but items go to random living member
+   * Uses pre-selected recipient if available (for consistent inventory warnings)
    */
   private distributeTreasure(chest: Chest, _opener: Character): void {
     const state = this.gameState.state();
@@ -583,8 +592,13 @@ export class ChestComponent implements OnInit, OnDestroy {
     const partyMembers = state.party.members
       .map(id => state.roster.get(id))
       .filter((c): c is Character => c !== undefined);
-    // Call service with party members - it picks random living member
-    const result = ChestService.distributeTreasure(chest, partyMembers);
+
+    // Use pre-selected recipient if available, otherwise service picks randomly
+    const preSelected = this.preSelectedRecipient();
+    const result = ChestService.distributeTreasure(chest, partyMembers, preSelected ?? undefined);
+
+    // Clear pre-selected recipient after use
+    this.preSelectedRecipient.set(null);
     // Update game state with gold and items
     this.gameState.updateState(state => {
       const newRoster = new Map(state.roster);
