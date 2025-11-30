@@ -843,6 +843,41 @@ describe('TrapService', () => {
     })
   })
 
+  describe('performCalfo', () => {
+    it('should reveal all letters as green', () => {
+      RandomService.setSeed(12345)
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const initialState = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+
+      const result = TrapService.performCalfo(priest, initialState)
+
+      expect(result.fullyRevealed).toBe(true)
+      expect(result.letters.every(l => l.state === 'green')).toBe(true)
+    })
+
+    it('should keep letters scrambled (not in original order)', () => {
+      RandomService.setSeed(12345)
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const initialState = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+
+      const result = TrapService.performCalfo(priest, initialState)
+      const displayText = result.letters.map(l => l.char).join('')
+
+      // Should still be scrambled, not "POISON NEEDLE"
+      expect(displayText).not.toBe('POISON NEEDLE')
+    })
+
+    it('should preserve actualTrapType', () => {
+      RandomService.setSeed(12345)
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const initialState = TrapService.createScrambledState(TrapType.GAS_BOMB)
+
+      const result = TrapService.performCalfo(priest, initialState)
+
+      expect(result.actualTrapType).toBe(TrapType.GAS_BOMB)
+    })
+  })
+
   describe('getRecommendedHandler', () => {
     it('should recommend Thief over Fighter', () => {
       const fighter = createTestCharacter({

@@ -570,6 +570,25 @@ function performInspection(
   }
 }
 
+/**
+ * Perform CALFO spell - reveals all letters as green but keeps them scrambled
+ * The player must still unscramble the letters to identify the trap
+ *
+ * @param _caster The character casting CALFO (unused, kept for API consistency)
+ * @param currentState Current scrambled trap state
+ * @returns New state with all letters green and fullyRevealed = true
+ */
+function performCalfo(
+  _caster: Character,
+  currentState: ScrambledTrapState
+): ScrambledTrapState {
+  return {
+    ...currentState,
+    letters: currentState.letters.map(l => ({ ...l, state: 'green' as LetterState })),
+    fullyRevealed: true
+  }
+}
+
 export const TrapService = {
   // Calculation functions
   calculateInspectChance,
@@ -594,5 +613,6 @@ export const TrapService = {
   revealLetters,
   createScrambledState,
   calculateRevealPercents,
-  performInspection
+  performInspection,
+  performCalfo
 }
