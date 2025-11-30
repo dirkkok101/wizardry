@@ -122,6 +122,7 @@ export class TrapDataLoader {
 
     return {
       type,
+      name: validated.name,  // Display name for scrambled letters
       targetMode,
       targetClasses,
       damageFormula: validated.damageFormula,

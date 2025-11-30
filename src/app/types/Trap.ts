@@ -36,10 +36,35 @@ export type TrapSpecialEffect =
   | 'combat'    // ALARM - triggers monster encounter
 
 /**
+ * Letter revelation states for scrambled trap identification
+ */
+export type LetterState = 'green' | 'red' | 'hidden' | 'excluded'
+
+/**
+ * A single letter in the scrambled trap display
+ */
+export interface ScrambledLetter {
+  char: string           // The letter character (A-Z or space)
+  state: LetterState     // Revelation state
+  position: number       // Original position in actual trap name (for matching)
+}
+
+/**
+ * Complete scrambled trap state for UI display
+ */
+export interface ScrambledTrapState {
+  letters: ScrambledLetter[]      // Scrambled letters with states
+  actualTrapType: TrapType        // The real trap (hidden from player)
+  fullyRevealed: boolean          // True if CALFO used (all green)
+  inspectionCount: number         // How many inspections performed
+}
+
+/**
  * Configuration for a trap type's effect
  */
 export interface TrapEffect {
   type: TrapType
+  name: string                    // Display name for scrambled letters (from JSON data)
   targetMode: TrapTargetMode
   targetClasses?: CharacterClass[]  // For class_specific traps
   damageFormula?: string            // e.g., "2d6", "3d8"
