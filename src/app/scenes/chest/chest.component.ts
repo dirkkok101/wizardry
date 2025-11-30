@@ -331,7 +331,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     const mazeLevel = state.dungeon?.currentLevel ?? 1;
 
     const chest = await ChestService.generateChest(
-      3,  // Reward tier
+      14,  // Reward tier (mid-tier in Reward 2 system 10-19)
       mazeLevel,
       { x: position.x, y: position.y, facing: position.facing },
       'combat_victory'

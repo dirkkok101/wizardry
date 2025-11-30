@@ -69,13 +69,15 @@ export interface TrapEffect {
   name: string                      // Display name for scrambled letters (e.g., "POISON NEEDLE")
   targetMode: TrapTargetMode
   targetClasses?: CharacterClass[]  // For class_specific traps
-  damageFormula?: string            // e.g., "2d6", "3d8"
+  primaryTargetClasses?: CharacterClass[]  // Authentic Wizardry 1: primary targets always affected (even on save success), secondary can resist
+  damageFormula?: string            // @deprecated - use diceType
+  diceType?: number                 // Die type for damage (6, 8, 12). Damage = (mazeLevel)d{diceType}
   statusEffect?: CharacterStatus    // Status to apply (POISONED, PARALYZED)
   specialEffect?: TrapSpecialEffect // For TELEPORTER and ALARM
   hitChance?: number                // 0-1 probability (default 1.0 = always hits)
   description: string               // Human-readable description
   effectType: string                // Category for documentation (damage, condition, teleport, alarm)
-  tiers: number[]                   // Which reward tiers this trap can appear in
+  tiers: number[]                   // Which reward tiers this trap can appear in (10-19 Reward 2 values)
   resistanceType?: ResistanceType   // Data-driven resistance type for character resistance checks
 }
 

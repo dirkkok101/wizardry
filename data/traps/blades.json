@@ -2,9 +2,9 @@
   "id": "BLADES",
   "name": "BLADES",
   "effectType": "damage",
-  "tiers": [3],
+  "tiers": [10, 11, 12, 13, 14, 15, 16, 17, 19],
   "targetMode": "party",
+  "diceType": 12,
   "hitChance": 0.30,
-  "damageFormula": "1d12",
-  "description": "Razor-sharp blades swing across the chest"
+  "description": "Razor blades swing across the chest"
 }

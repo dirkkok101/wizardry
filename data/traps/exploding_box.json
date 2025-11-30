@@ -2,8 +2,9 @@
   "id": "EXPLODING_BOX",
   "name": "EXPLODING BOX",
   "effectType": "damage",
-  "tiers": [3, 4],
+  "tiers": [10, 11, 12, 13, 14, 15, 16, 17, 19],
   "targetMode": "party",
-  "damageFormula": "3d6",
-  "description": "Explodes, damaging entire party"
+  "diceType": 8,
+  "hitChance": 0.50,
+  "description": "The chest explodes, potentially hitting party members"
 }

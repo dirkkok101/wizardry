@@ -2,7 +2,7 @@
   "id": "ALARM",
   "name": "ALARM",
   "effectType": "alarm",
-  "tiers": [1, 2, 5],
+  "tiers": [15, 17, 19],
   "targetMode": "special",
   "specialEffect": "combat",
   "description": "Triggers monster encounter"

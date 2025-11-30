@@ -1,11 +1,10 @@
 {
   "id": "GAS_BOMB",
   "name": "GAS BOMB",
-  "effectType": "damage",
-  "tiers": [1, 2],
+  "effectType": "condition",
+  "tiers": [11, 13, 14, 15, 17, 18, 19],
   "targetMode": "party",
-  "damageFormula": "2d6",
   "statusEffect": "POISONED",
   "resistanceType": "poisonGasTrap",
-  "description": "Poison gas affects entire party"
+  "description": "Poison gas fills the area, affecting entire party"
 }

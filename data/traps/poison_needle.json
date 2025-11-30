@@ -2,9 +2,8 @@
   "id": "POISON_NEEDLE",
   "name": "POISON NEEDLE",
   "effectType": "condition",
-  "tiers": [1, 2],
+  "tiers": [10, 11, 12, 13, 14, 15, 17],
   "targetMode": "opener",
-  "damageFormula": "1d6",
   "statusEffect": "POISONED",
-  "description": "Poisons the opener"
+  "description": "A hidden needle poisons the opener"
 }

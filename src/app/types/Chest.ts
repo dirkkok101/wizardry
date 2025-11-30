@@ -12,10 +12,15 @@ export type ChestSource =
   | 'boss'             // Special boss encounter chest
 
 /**
- * Treasure reward tier (1-5)
- * Affects trap probability, gold amounts, and item quality
+ * Treasure reward tier (Reward 2 values from Wizardry 1)
+ *
+ * Authentic Wizardry 1: Monsters have a Reward 2 value (10-19) that determines:
+ * - Which trap pool to draw from
+ * - Gold amounts and item quality
+ *
+ * Higher values = more dangerous traps, better rewards
  */
-export type RewardTier = 1 | 2 | 3 | 4 | 5
+export type RewardTier = 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19
 
 /**
  * Contents of a treasure chest
@@ -64,36 +69,54 @@ export interface InventoryWarning {
 }
 
 /**
- * Trap probability by reward tier
+ * Trap probability by reward tier (Reward 2 values 10-19)
+ * Higher Reward 2 = more likely to be trapped
  */
 export const TRAP_PROBABILITY_BY_TIER: Record<RewardTier, number> = {
-  1: 0.5,   // 50% trapped
-  2: 0.6,   // 60% trapped
-  3: 0.7,   // 70% trapped
-  4: 0.8,   // 80% trapped
-  5: 0.9    // 90% trapped
+  10: 0.50,   // 50% trapped (lowest tier)
+  11: 0.55,
+  12: 0.60,
+  13: 0.65,
+  14: 0.70,
+  15: 0.75,
+  16: 0.80,
+  17: 0.85,
+  18: 0.90,
+  19: 0.95    // 95% trapped (highest tier)
 }
 
 /**
- * Gold ranges by reward tier
+ * Gold ranges by reward tier (Reward 2 values 10-19)
+ * Scaled progression from minimal to generous rewards
  */
 export const GOLD_RANGE_BY_TIER: Record<RewardTier, { min: number; max: number }> = {
-  1: { min: 10, max: 100 },
-  2: { min: 50, max: 300 },
-  3: { min: 100, max: 600 },
-  4: { min: 300, max: 1500 },
-  5: { min: 500, max: 5000 }
+  10: { min: 10, max: 100 },
+  11: { min: 25, max: 150 },
+  12: { min: 50, max: 250 },
+  13: { min: 75, max: 400 },
+  14: { min: 100, max: 600 },
+  15: { min: 150, max: 900 },
+  16: { min: 200, max: 1200 },
+  17: { min: 300, max: 2000 },
+  18: { min: 400, max: 3500 },
+  19: { min: 500, max: 5000 }
 }
 
 /**
  * Item drop chance by reward tier (for first and second item slots)
+ * Higher Reward 2 = better chance of items
  */
 export const ITEM_CHANCE_BY_TIER: Record<RewardTier, { first: number; second: number }> = {
-  1: { first: 0.28, second: 0.14 },
-  2: { first: 0.46, second: 0.23 },
-  3: { first: 0.64, second: 0.32 },
-  4: { first: 0.82, second: 0.41 },
-  5: { first: 1.00, second: 0.50 }  // Tier 5 always has at least 1 item
+  10: { first: 0.20, second: 0.10 },
+  11: { first: 0.28, second: 0.14 },
+  12: { first: 0.36, second: 0.18 },
+  13: { first: 0.44, second: 0.22 },
+  14: { first: 0.52, second: 0.26 },
+  15: { first: 0.60, second: 0.30 },
+  16: { first: 0.70, second: 0.35 },
+  17: { first: 0.80, second: 0.40 },
+  18: { first: 0.90, second: 0.45 },
+  19: { first: 1.00, second: 0.50 }  // Tier 19 always has at least 1 item
 }
 
 /**

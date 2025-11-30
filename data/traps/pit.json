@@ -1,9 +1,0 @@
-{
-  "id": "PIT",
-  "name": "PIT",
-  "effectType": "damage",
-  "tiers": [3, 4],
-  "targetMode": "opener",
-  "damageFormula": "2d6",
-  "description": "The opener falls into a hidden pit"
-}

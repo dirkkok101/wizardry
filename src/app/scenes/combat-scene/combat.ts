@@ -1307,8 +1307,9 @@ export class CombatComponent implements OnInit, OnDestroy {
       })
       .filter((item): item is Item => item !== null)
 
-    // Determine reward tier based on monster level
-    const rewardTier = Math.min(5, Math.max(1, Math.ceil(maxMonsterLevel / 3))) as RewardTier
+    // Determine reward tier based on monster level (Reward 2 system: 10-19)
+    // Level 1-2 = tier 10, Level 3-4 = tier 11, etc.
+    const rewardTier = Math.min(19, Math.max(10, 10 + Math.floor((maxMonsterLevel - 1) / 2))) as RewardTier
 
     // Create chest with gold and items from victory
     const chest: Chest = {

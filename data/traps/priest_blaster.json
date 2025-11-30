@@ -1,11 +1,12 @@
 {
   "id": "PRIEST_BLASTER",
   "name": "PRIEST BLASTER",
-  "effectType": "damage",
-  "tiers": [4, 5],
+  "effectType": "condition",
+  "tiers": [16, 18, 19],
   "targetMode": "class_specific",
-  "targetClasses": ["PRIEST", "BISHOP", "LORD"],
-  "damageFormula": "4d6",
+  "targetClasses": ["PRIEST", "BISHOP"],
+  "primaryTargetClasses": ["PRIEST"],
+  "statusEffect": "PARALYZED",
   "resistanceType": "antiPriestTrap",
-  "description": "Damages all Priests, Bishops, and Lords"
+  "description": "A divine trap that paralyzes holy casters. Lords are immune."
 }

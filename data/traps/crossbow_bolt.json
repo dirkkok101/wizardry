@@ -2,8 +2,8 @@
   "id": "CROSSBOW_BOLT",
   "name": "CROSSBOW BOLT",
   "effectType": "damage",
-  "tiers": [2, 3],
+  "tiers": [10, 11, 12, 13, 14, 15, 16, 17, 19],
   "targetMode": "opener",
-  "damageFormula": "2d8",
-  "description": "Fires a crossbow bolt at the opener"
+  "diceType": 8,
+  "description": "A crossbow bolt fires at the opener"
 }

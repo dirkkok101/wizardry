@@ -2,9 +2,8 @@
   "id": "STUNNER",
   "name": "STUNNER",
   "effectType": "condition",
-  "tiers": [3],
+  "tiers": [10, 11, 12, 13, 14, 15, 16, 17, 19],
   "targetMode": "opener",
-  "damageFormula": "1d4",
   "statusEffect": "PARALYZED",
-  "description": "Paralyzes the opener"
+  "description": "A stunning trap paralyzes the opener"
 }

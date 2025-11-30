@@ -37,19 +37,82 @@ function generateChestId(): string {
 }
 
 /**
- * Select a trap type appropriate for the reward tier
- * Uses data-driven trap definitions from TrapDataLoader
+ * Authentic Wizardry 1 trap distribution (FROM SOURCE CODE):
+ *
+ * Base Distribution (when chest IS trapped):
+ * - 33.3%: Poison Needle
+ * - 33.3%: Gas Bomb
+ * - 33.3%: Type3 trap → 20% each for:
+ *   - Crossbow Bolt
+ *   - Exploding Box
+ *   - Splinters
+ *   - Blades
+ *   - Stunner
+ *
+ * High-tier rewards (14+) can substitute with dangerous traps:
+ * - TELEPORTER (tier 14+)
+ * - MAGE_BLASTER (tier 14+)
+ * - PRIEST_BLASTER (tier 16+)
+ * - ALARM (all tiers)
+ */
+
+// Type3 traps (20% each when Type3 is selected)
+const TYPE3_TRAPS: TrapId[] = [
+  'CROSSBOW_BOLT',
+  'EXPLODING_BOX',
+  'SPLINTERS',
+  'BLADES',
+  'STUNNER'
+]
+
+// High-tier trap substitutions with minimum tier requirements
+const HIGH_TIER_TRAPS: Array<{ trapId: TrapId, minTier: RewardTier, weight: number }> = [
+  { trapId: 'ALARM', minTier: 10, weight: 10 },           // Can appear at any tier
+  { trapId: 'TELEPORTER', minTier: 14, weight: 15 },     // Mid-high tiers
+  { trapId: 'MAGE_BLASTER', minTier: 14, weight: 10 },   // Mid-high tiers
+  { trapId: 'PRIEST_BLASTER', minTier: 16, weight: 10 }  // High tiers only
+]
+
+/**
+ * Select a trap type using authentic Wizardry 1 distribution
+ *
+ * @param rewardTier Reward tier (10-19) affects high-tier trap availability
+ * @returns Selected trap ID
  */
 async function selectTrapId(rewardTier: RewardTier): Promise<TrapId> {
-  const availableTraps = await TrapDataLoader.getTrapsForTier(rewardTier)
-  if (availableTraps.length === 0) {
-    // Fallback to any trap if none defined for this tier
-    const allTraps = await TrapDataLoader.loadAllTraps()
-    const trapIds = Array.from(allTraps.keys())
-    return RandomService.pickRandom(trapIds)
+  // For high-tier rewards, chance to get dangerous traps
+  // Chance increases with tier: (tier - 10) * 5% = 0% at tier 10, 45% at tier 19
+  const highTierChance = (rewardTier - 10) * 0.05
+
+  if (RandomService.roll(highTierChance)) {
+    // Select from high-tier traps available at this reward tier
+    const availableHighTier = HIGH_TIER_TRAPS.filter(t => rewardTier >= t.minTier)
+    if (availableHighTier.length > 0) {
+      const totalWeight = availableHighTier.reduce((sum, t) => sum + t.weight, 0)
+      let roll = RandomService.random(1, totalWeight)
+      for (const trap of availableHighTier) {
+        roll -= trap.weight
+        if (roll <= 0) {
+          return trap.trapId
+        }
+      }
+    }
   }
-  const selectedTrap = RandomService.pickRandom(availableTraps)
-  return selectedTrap.id
+
+  // Authentic base distribution: 33.3% each for Poison Needle, Gas Bomb, Type3
+  // (The 25% "no trap" case is handled in generateChest, not here)
+  const baseRoll = RandomService.random(1, 3)
+
+  switch (baseRoll) {
+    case 1:
+      return 'POISON_NEEDLE'
+    case 2:
+      return 'GAS_BOMB'
+    case 3:
+    default:
+      // Type3: 20% each for 5 traps
+      return RandomService.pickRandom(TYPE3_TRAPS)
+  }
 }
 
 /**
@@ -141,30 +204,51 @@ async function generateChest(
 
 /**
  * Generate a chest for a combat victory
- * Reward tier is based on monster difficulty
+ *
+ * Authentic Wizardry 1: Each monster has a Reward 2 value (10-19)
+ * that determines trap pool and treasure quality.
+ *
+ * For now, we map monster level to Reward 2 value:
+ * - Level 1-2: Tier 10
+ * - Level 3-4: Tier 11
+ * - Level 5-6: Tier 12
+ * ... and so on up to Tier 19 for highest level monsters
+ *
+ * @param monsterReward2 Monster's Reward 2 value (10-19), or monster level to convert
+ * @param mazeLevel Current dungeon level
+ * @param position Where the chest was found
  */
 async function generateCombatChest(
-  monsterLevel: number,
+  monsterReward2: number,
   mazeLevel: number,
   position: Position
 ): Promise<Chest> {
-  // Map monster level to reward tier (simplified)
-  const rewardTier = Math.min(5, Math.max(1, Math.ceil(monsterLevel / 3))) as RewardTier
+  // If passed a small number (monster level), convert to Reward 2 range
+  // If passed a value in 10-19 range, use it directly
+  let rewardTier: RewardTier
+  if (monsterReward2 >= 10 && monsterReward2 <= 19) {
+    rewardTier = monsterReward2 as RewardTier
+  } else {
+    // Map monster level to Reward 2 tier (10-19)
+    // Level 1-2 = tier 10, Level 3-4 = tier 11, etc.
+    const tier = Math.min(19, Math.max(10, 10 + Math.floor((monsterReward2 - 1) / 2)))
+    rewardTier = tier as RewardTier
+  }
   return generateChest(rewardTier, mazeLevel, position, 'combat_victory')
 }
 
 /**
  * Generate a boss chest (always high tier, always trapped)
- * Boss chests use tier 5 traps (most dangerous)
+ * Boss chests use tier 19 traps (most dangerous in Reward 2 system)
  */
 async function generateBossChest(
   mazeLevel: number,
   position: Position
 ): Promise<Chest> {
-  const chest = await generateChest(5, mazeLevel, position, 'boss')
+  const chest = await generateChest(19, mazeLevel, position, 'boss')
   // Boss chests are always trapped - use immutable update pattern
   if (!chest.trapped) {
-    const trapId = await selectTrapId(5)
+    const trapId = await selectTrapId(19)
     return {
       ...chest,
       trapped: true,
@@ -318,7 +402,7 @@ function createEmptyChest(mazeLevel: number, position: Position): Chest {
     trapId: null,
     trapIdentified: true,
     trapDisarmed: false,
-    rewardTier: 1,
+    rewardTier: 10,  // Lowest tier in Reward 2 system
     contents: { gold: 0, items: [] },
     sourcePosition: position,
     mazeLevel,
@@ -341,7 +425,7 @@ function createChestWithContents(
     trapId,
     trapIdentified: false,
     trapDisarmed: false,
-    rewardTier: 3,  // Default to mid-tier
+    rewardTier: 14,  // Default to mid-tier in Reward 2 system
     contents,
     sourcePosition: position,
     mazeLevel,

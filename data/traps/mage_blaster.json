@@ -1,11 +1,12 @@
 {
   "id": "MAGE_BLASTER",
   "name": "MAGE BLASTER",
-  "effectType": "damage",
-  "tiers": [4, 5],
+  "effectType": "condition",
+  "tiers": [14, 16, 18, 19],
   "targetMode": "class_specific",
-  "targetClasses": ["MAGE", "BISHOP"],
-  "damageFormula": "4d6",
+  "targetClasses": ["MAGE", "BISHOP", "SAMURAI"],
+  "primaryTargetClasses": ["MAGE"],
+  "statusEffect": "PARALYZED",
   "resistanceType": "antiMageTrap",
-  "description": "Damages all Mages and Bishops"
+  "description": "A magical trap that paralyzes arcane casters"
 }

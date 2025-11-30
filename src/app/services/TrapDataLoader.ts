@@ -117,6 +117,9 @@ export class TrapDataLoader {
     // Map target classes if present
     const targetClasses = validated.targetClasses?.map(cls => this.mapClassString(cls))
 
+    // Map primary target classes if present (Authentic Wizardry 1: Anti-Mage/Anti-Priest mechanics)
+    const primaryTargetClasses = validated.primaryTargetClasses?.map(cls => this.mapClassString(cls))
+
     // Map status effect if present
     const statusEffect = validated.statusEffect
       ? this.mapStatusString(validated.statusEffect)
@@ -130,7 +133,9 @@ export class TrapDataLoader {
       name: validated.name,
       targetMode: validated.targetMode as TrapTargetMode,
       targetClasses,
+      primaryTargetClasses,  // Authentic Wizardry 1: primary targets always affected, secondary can save
       damageFormula: validated.damageFormula,
+      diceType: validated.diceType,  // Authentic: die type for maze-level scaling
       statusEffect,
       specialEffect,
       hitChance: validated.hitChance,

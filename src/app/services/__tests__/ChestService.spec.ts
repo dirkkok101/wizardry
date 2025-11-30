@@ -27,10 +27,10 @@ describe('ChestService', () => {
     it('should generate a chest with correct properties', async () => {
       RandomService.setSeed(12345)
 
-      const chest = await ChestService.generateChest(3, 5, createTestPosition(), 'combat_victory')
+      const chest = await ChestService.generateChest(14, 5, createTestPosition(), 'combat_victory')
 
       expect(chest.id).toContain('chest_')
-      expect(chest.rewardTier).toBe(3)
+      expect(chest.rewardTier).toBe(14)
       expect(chest.mazeLevel).toBe(5)
       expect(chest.source).toBe('combat_victory')
       expect(chest.trapIdentified).toBe(false)
@@ -41,38 +41,38 @@ describe('ChestService', () => {
     it('should respect trap probability by tier', async () => {
       const position = createTestPosition()
 
-      // Test tier 1 (50% trap chance)
+      // Test tier 10 (50% trap chance)
       RandomService.queueNextValues([0.6])  // > 50% = no trap
-      const tier1NoTrap = await ChestService.generateChest(1, 1, position, 'combat_victory')
-      expect(tier1NoTrap.trapped).toBe(false)
+      const tier10NoTrap = await ChestService.generateChest(10, 1, position, 'combat_victory')
+      expect(tier10NoTrap.trapped).toBe(false)
 
       RandomService.queueNextValues([0.4])  // < 50% = trapped
-      const tier1Trapped = await ChestService.generateChest(1, 1, position, 'combat_victory')
-      expect(tier1Trapped.trapped).toBe(true)
+      const tier10Trapped = await ChestService.generateChest(10, 1, position, 'combat_victory')
+      expect(tier10Trapped.trapped).toBe(true)
 
-      // Test tier 5 (90% trap chance)
-      RandomService.queueNextValues([0.95])  // > 90% = no trap
-      const tier5NoTrap = await ChestService.generateChest(5, 10, position, 'combat_victory')
-      expect(tier5NoTrap.trapped).toBe(false)
+      // Test tier 19 (95% trap chance)
+      RandomService.queueNextValues([0.99])  // > 95% = no trap
+      const tier19NoTrap = await ChestService.generateChest(19, 10, position, 'combat_victory')
+      expect(tier19NoTrap.trapped).toBe(false)
 
-      RandomService.queueNextValues([0.85])  // < 90% = trapped
-      const tier5Trapped = await ChestService.generateChest(5, 10, position, 'combat_victory')
-      expect(tier5Trapped.trapped).toBe(true)
+      RandomService.queueNextValues([0.90])  // < 95% = trapped
+      const tier19Trapped = await ChestService.generateChest(19, 10, position, 'combat_victory')
+      expect(tier19Trapped.trapped).toBe(true)
     })
 
     it('should generate gold within tier range', async () => {
       RandomService.setSeed(12345)
       const position = createTestPosition()
 
-      const tier1Chest = await ChestService.generateChest(1, 1, position, 'combat_victory')
-      const tier1Range = GOLD_RANGE_BY_TIER[1]
-      expect(tier1Chest.contents.gold).toBeGreaterThanOrEqual(tier1Range.min)
-      expect(tier1Chest.contents.gold).toBeLessThanOrEqual(tier1Range.max)
+      const tier10Chest = await ChestService.generateChest(10, 1, position, 'combat_victory')
+      const tier10Range = GOLD_RANGE_BY_TIER[10]
+      expect(tier10Chest.contents.gold).toBeGreaterThanOrEqual(tier10Range.min)
+      expect(tier10Chest.contents.gold).toBeLessThanOrEqual(tier10Range.max)
 
-      const tier5Chest = await ChestService.generateChest(5, 10, position, 'boss')
-      const tier5Range = GOLD_RANGE_BY_TIER[5]
-      expect(tier5Chest.contents.gold).toBeGreaterThanOrEqual(tier5Range.min)
-      expect(tier5Chest.contents.gold).toBeLessThanOrEqual(tier5Range.max)
+      const tier19Chest = await ChestService.generateChest(19, 10, position, 'boss')
+      const tier19Range = GOLD_RANGE_BY_TIER[19]
+      expect(tier19Chest.contents.gold).toBeGreaterThanOrEqual(tier19Range.min)
+      expect(tier19Chest.contents.gold).toBeLessThanOrEqual(tier19Range.max)
     })
   })
 
@@ -80,15 +80,30 @@ describe('ChestService', () => {
     it('should map monster level to reward tier', async () => {
       const position = createTestPosition()
 
-      // Monster level 1-3 → tier 1
+      // Monster level 1-2 → tier 10
       RandomService.setSeed(100)
       const lowTier = await ChestService.generateCombatChest(2, 1, position)
-      expect(lowTier.rewardTier).toBe(1)
+      expect(lowTier.rewardTier).toBe(10)
 
-      // Monster level 10+ → tier 4-5
+      // Monster level 9 → tier 14 (formula: 10 + floor((9-1)/2) = 10 + 4 = 14)
+      // Using level 9 because levels 10-19 overlap with Reward 2 range and are treated as direct values
       RandomService.setSeed(100)
-      const highTier = await ChestService.generateCombatChest(12, 10, position)
-      expect(highTier.rewardTier).toBeGreaterThanOrEqual(4)
+      const midTier = await ChestService.generateCombatChest(9, 5, position)
+      expect(midTier.rewardTier).toBe(14)
+
+      // Monster level 20+ → tier 19 (capped at max)
+      RandomService.setSeed(100)
+      const highTier = await ChestService.generateCombatChest(25, 10, position)
+      expect(highTier.rewardTier).toBe(19)
+    })
+
+    it('should accept Reward 2 values directly', async () => {
+      const position = createTestPosition()
+
+      // Pass Reward 2 value directly (10-19 range)
+      RandomService.setSeed(100)
+      const directTier = await ChestService.generateCombatChest(15, 5, position)
+      expect(directTier.rewardTier).toBe(15)
     })
 
     it('should set source as combat_victory', async () => {
@@ -101,7 +116,7 @@ describe('ChestService', () => {
   describe('generateBossChest', () => {
     it('should always be trapped', async () => {
       // Even if random would say no trap, boss chests force trapped
-      RandomService.queueNextValues([0.99])  // Would normally be > 90% = no trap
+      RandomService.queueNextValues([0.99])  // Would normally be > 95% = no trap
       const chest = await ChestService.generateBossChest(10, createTestPosition())
       expect(chest.trapped).toBe(true)
       expect(chest.trapId).not.toBeNull()
@@ -113,10 +128,10 @@ describe('ChestService', () => {
       expect(chest.source).toBe('boss')
     })
 
-    it('should be tier 5', async () => {
+    it('should be tier 19 (highest in Reward 2 system)', async () => {
       RandomService.setSeed(100)
       const chest = await ChestService.generateBossChest(10, createTestPosition())
-      expect(chest.rewardTier).toBe(5)
+      expect(chest.rewardTier).toBe(19)
     })
   })
 
@@ -477,6 +492,7 @@ describe('ChestService', () => {
       expect(chest.trapIdentified).toBe(true)
       expect(chest.contents.gold).toBe(0)
       expect(chest.contents.items).toHaveLength(0)
+      expect(chest.rewardTier).toBe(10)  // Lowest tier in Reward 2 system
     })
   })
 
@@ -495,6 +511,7 @@ describe('ChestService', () => {
       expect(chest.contents.gold).toBe(1000)
       expect(chest.contents.items).toHaveLength(1)
       expect(chest.mazeLevel).toBe(5)
+      expect(chest.rewardTier).toBe(14)  // Default mid-tier in Reward 2 system
     })
 
     it('should create untrapped chest when trapId is null', () => {
@@ -510,35 +527,69 @@ describe('ChestService', () => {
     })
   })
 
-  describe('selectTrapId', () => {
-    it('should select from tier-appropriate traps', async () => {
-      // Tier 1 traps: POISON_NEEDLE, GAS_BOMB, ALARM (based on TEST_TRAPS)
-      RandomService.setSeed(12345)
-      const tier1Trap = await ChestService.selectTrapId(1)
-      const tier1TrapIds = ['POISON_NEEDLE', 'GAS_BOMB', 'ALARM']
-      expect(tier1TrapIds).toContain(tier1Trap)
+  describe('selectTrapId (authentic Wizardry 1 distribution)', () => {
+    // Base traps from authentic distribution
+    const BASE_TRAPS = ['POISON_NEEDLE', 'GAS_BOMB']
+    const TYPE3_TRAPS = ['CROSSBOW_BOLT', 'EXPLODING_BOX', 'SPLINTERS', 'BLADES', 'STUNNER']
+    const HIGH_TIER_TRAPS = ['ALARM', 'TELEPORTER', 'MAGE_BLASTER', 'PRIEST_BLASTER']
+    const ALL_BASE_TRAPS = [...BASE_TRAPS, ...TYPE3_TRAPS]
 
-      // Tier 5 traps: TELEPORTER, MAGE_BLASTER, PRIEST_BLASTER, ALARM
+    it('should select from base distribution at low tiers', async () => {
+      // At tier 10, high-tier chance is 0%, so we always get base traps
       RandomService.setSeed(12345)
-      const tier5Trap = await ChestService.selectTrapId(5)
-      const tier5TrapIds = ['TELEPORTER', 'MAGE_BLASTER', 'PRIEST_BLASTER', 'ALARM']
-      expect(tier5TrapIds).toContain(tier5Trap)
+
+      // Generate multiple traps to verify distribution
+      const traps: TrapId[] = []
+      for (let i = 0; i < 50; i++) {
+        traps.push(await ChestService.selectTrapId(10))
+      }
+
+      // All should be base traps (no high-tier at tier 10)
+      for (const trap of traps) {
+        expect(ALL_BASE_TRAPS).toContain(trap)
+      }
     })
 
-    it('should select traps from correct tier data', async () => {
+    it('should include Type3 traps (Crossbow, Exploding, Splinters, Blades, Stunner)', async () => {
       RandomService.setSeed(12345)
-      const tier3Traps: TrapId[] = []
+      const traps: TrapId[] = []
 
-      // Generate 100 tier 3 traps to ensure we see the variety
+      // Generate many traps to see Type3 variety
+      for (let i = 0; i < 200; i++) {
+        traps.push(await ChestService.selectTrapId(10))
+      }
+
+      // Should see at least one Type3 trap
+      const hasType3 = traps.some(t => TYPE3_TRAPS.includes(t))
+      expect(hasType3).toBe(true)
+    })
+
+    it('should include high-tier traps at tier 19 (45% chance)', async () => {
+      RandomService.setSeed(12345)
+      const traps: TrapId[] = []
+
+      // Generate many traps at tier 19
+      for (let i = 0; i < 200; i++) {
+        traps.push(await ChestService.selectTrapId(19))
+      }
+
+      // Should see at least one high-tier trap (45% chance per roll)
+      const hasHighTier = traps.some(t => HIGH_TIER_TRAPS.includes(t))
+      expect(hasHighTier).toBe(true)
+    })
+
+    it('should have variety in trap selection', async () => {
+      RandomService.setSeed(12345)
+      const traps: TrapId[] = []
+
+      // Generate many traps at tier 14 (mid-tier, 20% high-tier chance)
       for (let i = 0; i < 100; i++) {
-        tier3Traps.push(await ChestService.selectTrapId(3))
+        traps.push(await ChestService.selectTrapId(14))
       }
 
-      // Tier 3 traps in our test data: GAS_BOMB, CROSSBOW_BOLT, TELEPORTER, STUNNER, EXPLODING_BOX, SPLINTERS, BLADES, PIT
-      const validTier3 = ['GAS_BOMB', 'CROSSBOW_BOLT', 'TELEPORTER', 'STUNNER', 'EXPLODING_BOX', 'SPLINTERS', 'BLADES', 'PIT']
-      for (const trap of tier3Traps) {
-        expect(validTier3).toContain(trap)
-      }
+      // Should have variety
+      const uniqueTraps = new Set(traps)
+      expect(uniqueTraps.size).toBeGreaterThan(3)  // At least 4 different trap types
     })
   })
 
@@ -546,7 +597,8 @@ describe('ChestService', () => {
     it('should generate gold within tier range', () => {
       RandomService.setSeed(12345)
 
-      for (let tier = 1; tier <= 5; tier++) {
+      // Test all Reward 2 tiers (10-19)
+      for (let tier = 10; tier <= 19; tier++) {
         const gold = ChestService.generateGold(tier as RewardTier)
         const range = GOLD_RANGE_BY_TIER[tier as RewardTier]
         expect(gold).toBeGreaterThanOrEqual(range.min)

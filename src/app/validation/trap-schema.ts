@@ -86,17 +86,25 @@ const TrapEffectTypeSchema = z.enum([
 ])
 
 /**
- * Reward tiers (1-5) that a trap can appear in
+ * Reward 2 tiers (10-19) that a trap can appear in
+ * Based on authentic Wizardry 1 monster reward values
  */
-const TrapTiersSchema = z.array(z.number().int().min(1).max(5)).min(1)
+const TrapTiersSchema = z.array(z.number().int().min(10).max(19)).min(1)
 
 /**
  * Damage formula pattern (e.g., "1d6", "2d8", "3d6")
+ * @deprecated Use diceType instead for authentic maze-level scaling
  */
 const DamageFormulaSchema = z.string().regex(
   /^\d+d\d+$/,
   'Damage formula must be in format "XdY" (e.g., "1d6", "2d8")'
 )
+
+/**
+ * Dice type for damage calculation (e.g., 6 for d6, 8 for d8, 12 for d12)
+ * Authentic Wizardry 1: damage = (mazeLevel)d{diceType}
+ */
+const DiceTypeSchema = z.number().int().min(4).max(20)
 
 /**
  * Main trap schema for validating trap JSON files
@@ -108,7 +116,9 @@ export const TrapSchema = z.object({
   tiers: TrapTiersSchema,
   targetMode: TrapTargetModeSchema,
   targetClasses: z.array(CharacterClassSchema).optional(),
-  damageFormula: DamageFormulaSchema.optional(),
+  primaryTargetClasses: z.array(CharacterClassSchema).optional(),  // Authentic Wizardry 1: primary targets always affected, secondary can save
+  damageFormula: DamageFormulaSchema.optional(),  // @deprecated - use diceType
+  diceType: DiceTypeSchema.optional(),            // Preferred: dice type for maze-level scaling
   statusEffect: CharacterStatusSchema.optional(),
   specialEffect: TrapSpecialEffectSchema.optional(),
   hitChance: z.number().min(0).max(1).optional(),
@@ -134,13 +144,13 @@ export const TrapSchema = z.object({
   { message: 'special traps must have specialEffect' }
 ).refine(
   data => {
-    // Non-special traps should have damage or status effect
-    if (data.targetMode !== 'special' && !data.damageFormula && !data.statusEffect) {
+    // Non-special traps should have damage (diceType or damageFormula) or status effect
+    if (data.targetMode !== 'special' && !data.diceType && !data.damageFormula && !data.statusEffect) {
       return false
     }
     return true
   },
-  { message: 'Non-special traps must have damageFormula or statusEffect' }
+  { message: 'Non-special traps must have diceType, damageFormula, or statusEffect' }
 )
 
 /**
@@ -165,5 +175,6 @@ export const TrapSchemas = {
   CharacterClass: CharacterClassSchema,
   CharacterStatus: CharacterStatusSchema,
   DamageFormula: DamageFormulaSchema,
+  DiceType: DiceTypeSchema,
   ResistanceType: ResistanceTypeSchema
 }

@@ -2,7 +2,7 @@
   "id": "TELEPORTER",
   "name": "TELEPORTER",
   "effectType": "teleport",
-  "tiers": [3, 4, 5],
+  "tiers": [12, 13, 16, 17, 19],
   "targetMode": "special",
   "specialEffect": "teleport",
   "description": "Teleports party to random location"

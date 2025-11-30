@@ -308,40 +308,63 @@ function attemptDisarm(
 }
 
 /**
- * Calculate scaled trap damage (authentic Wizardry 1)
+ * Calculate trap damage (authentic Wizardry 1)
  *
- * Formula: base damage + (mazeLevel * extraDice)
- * - Level 1: base damage only
- * - Level 2+: adds mazeLevel dice of same type
+ * Formula: (MazeLevel)d{diceType}
+ * - Roll MazeLevel dice of the specified type
+ * - Example: Level 3 with d8 = 3d8 damage
  *
- * Example: "2d6" at maze level 3 = 2d6 + 3d6 = 5d6
+ * This is the authentic Wizardry 1 trap damage formula where
+ * deeper dungeon levels = more dice (not higher multiplier)
+ *
+ * @param diceType The die type (6, 8, 12, etc.)
+ * @param mazeLevel Current dungeon level (1-10)
+ * @returns Total damage from rolling mazeLevel dice
  */
-function calculateScaledDamage(baseDamage: number, mazeLevel: number): number {
-  // Base damage already rolled, add maze level scaling
-  // Authentic formula: multiply base by (1 + 0.25 per level beyond 1)
-  const scaleFactor = 1 + ((mazeLevel - 1) * 0.25)
-  return Math.floor(baseDamage * scaleFactor)
+function calculateTrapDamage(diceType: number, mazeLevel: number): number {
+  // Authentic Wizardry 1: roll (mazeLevel) dice of the given type
+  return RandomService.rollDice(mazeLevel, diceType)
 }
 
 /**
  * Apply status escalation (authentic Wizardry 1)
  *
- * When applying status to a character who already has that status:
- * - PARALYZED + PARALYZED = DEAD
+ * Escalation behavior depends on trap type:
+ *
+ * Class-specific traps (Anti-Mage, Anti-Priest):
+ * - First hit: Apply status (PARALYZED)
+ * - Second hit while PARALYZED: STONED (not DEAD)
+ *
+ * Regular status traps:
  * - STONED + STONED = DEAD
  * - POISONED does NOT escalate (stays POISONED)
  *
  * @param currentStatus Character's current status
  * @param newStatus Status being applied
+ * @param isClassSpecific True for class-specific traps (Anti-Mage/Anti-Priest)
  * @returns Resulting status after escalation check
  */
-function escalateStatus(currentStatus: CharacterStatus, newStatus: CharacterStatus): CharacterStatus {
-  // Status escalation only applies to PARALYZED and STONED
-  if (currentStatus === newStatus) {
-    if (newStatus === CharacterStatus.PARALYZED || newStatus === CharacterStatus.STONED) {
-      return CharacterStatus.DEAD
-    }
+function escalateStatus(
+  currentStatus: CharacterStatus,
+  newStatus: CharacterStatus,
+  isClassSpecific: boolean = false
+): CharacterStatus {
+  // No escalation if applying same status
+  if (currentStatus !== newStatus) {
+    return newStatus
   }
+
+  // Class-specific traps: PARALYZED + PARALYZED = STONED (authentic Wizardry 1)
+  if (isClassSpecific && newStatus === CharacterStatus.PARALYZED) {
+    return CharacterStatus.STONED
+  }
+
+  // Regular escalation: STONED + STONED = DEAD
+  if (newStatus === CharacterStatus.STONED) {
+    return CharacterStatus.DEAD
+  }
+
+  // POISONED does not escalate (stays POISONED)
   return newStatus
 }
 
@@ -349,8 +372,9 @@ function escalateStatus(currentStatus: CharacterStatus, newStatus: CharacterStat
  * Apply trap effects when triggered
  *
  * Authentic Wizardry 1 mechanics:
- * - Damage scales with maze level (deeper = more damage)
- * - Status effects can escalate (PARALYZED + PARALYZED = DEAD)
+ * - Damage uses (MazeLevel)d{diceType} formula
+ * - Class-specific traps: PARALYZED + PARALYZED = STONED
+ * - Regular status traps: STONED + STONED = DEAD
  *
  * @param trapId The ID of the trap that triggered
  * @param opener The character who triggered the trap
@@ -371,6 +395,8 @@ function applyTrapEffects(
 
   // Determine targets based on target mode
   let targets: Character[] = []
+  const isClassSpecific = effect.targetMode === 'class_specific'
+
   switch (effect.targetMode) {
     case 'opener':
       targets = [opener]
@@ -388,8 +414,8 @@ function applyTrapEffects(
       break
   }
 
-  // Apply damage if applicable (scaled by maze level)
-  if (effect.damageFormula && targets.length > 0) {
+  // Apply damage if applicable - uses diceType with maze-level scaling
+  if (effect.diceType && targets.length > 0) {
     const hitChance = effect.hitChance ?? 1.0  // Default to always hit
     const resistanceType = mapTrapToResistanceType(effect, effect.statusEffect)
 
@@ -405,47 +431,92 @@ function applyTrapEffects(
           }
         }
 
-        const baseDamage = RandomService.rollDiceNotation(effect.damageFormula)
-        const scaledDamage = calculateScaledDamage(baseDamage, mazeLevel)
-        damageDealt.set(target.id, scaledDamage)
-        messages.push(`${target.name} takes ${scaledDamage} damage!`)
+        // Authentic Wizardry 1: (mazeLevel)d{diceType}
+        const damage = calculateTrapDamage(effect.diceType, mazeLevel)
+        damageDealt.set(target.id, damage)
+        messages.push(`${target.name} takes ${damage} damage!`)
       } else {
         messages.push(`${target.name} avoids the trap!`)
       }
     }
   }
 
-  // Apply status effect if applicable (with escalation check)
+  // Apply status effect if applicable (with authentic Wizardry 1 save mechanics)
   if (effect.statusEffect && targets.length > 0) {
     const hitChance = effect.hitChance ?? 1.0
     const resistanceType = mapTrapToResistanceType(effect, effect.statusEffect)
+    const hasPrimaryTargets = isClassSpecific && effect.primaryTargetClasses && effect.primaryTargetClasses.length > 0
 
     for (const target of targets) {
       // Only apply status if not already rolled for damage (avoid double roll)
-      // If there's no damageFormula, we need to roll for status
-      const shouldApply = effect.damageFormula
+      // If there's no diceType, we need to roll for status
+      const shouldApply = effect.diceType
         ? damageDealt.has(target.id)  // Hit was already determined
         : RandomService.roll(hitChance)  // Roll now for status-only effects
 
       if (shouldApply) {
-        // Check resistance for status-only effects (if not already checked for damage)
-        // For traps with both damage and status, resistance was checked in damage phase
-        if (!effect.damageFormula && resistanceType) {
+        // Check resistance (Save vs. Spell for class-specific traps)
+        let saveSucceeded = false
+        if (!effect.diceType && resistanceType) {
           const resistResult = CharacterResistanceService.checkResistance(target, resistanceType)
-          if (resistResult.resisted) {
+          saveSucceeded = resistResult.resisted
+        }
+
+        // Authentic Wizardry 1: Primary vs Secondary class behavior for class-specific traps
+        if (hasPrimaryTargets) {
+          const isPrimaryTarget = effect.primaryTargetClasses!.includes(target.class)
+
+          if (isPrimaryTarget) {
+            // PRIMARY CLASS (e.g., MAGE for Anti-Mage, PRIEST for Anti-Priest):
+            // - Save success: Still paralyzed, but NO escalation to STONED
+            // - Save failure + already paralyzed: STONED
+            // - Save failure + not paralyzed: PARALYZED
+            if (saveSucceeded) {
+              // Save succeeded: Apply status but do NOT escalate
+              statusApplied.set(target.id, effect.statusEffect)
+              messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+            } else {
+              // Save failed: Apply with potential escalation to STONED
+              const finalStatus = escalateStatus(target.status, effect.statusEffect, true)
+              statusApplied.set(target.id, finalStatus)
+
+              if (finalStatus === CharacterStatus.STONED && target.status === CharacterStatus.PARALYZED) {
+                messages.push(`${target.name} was already paralyzed and turns to stone!`)
+              } else {
+                messages.push(`${target.name} is ${finalStatus.toLowerCase()}!`)
+              }
+            }
+          } else {
+            // SECONDARY CLASS (e.g., SAMURAI/BISHOP for Anti-Mage, BISHOP for Anti-Priest):
+            // - Save success: NO effect whatsoever
+            // - Save failure: Paralyzed only (NEVER escalates to STONED)
+            if (saveSucceeded) {
+              messages.push(`${target.name} resists the trap!`)
+              // No status applied - secondary class successfully saved
+            } else {
+              // Secondary class fails save: Apply status but NEVER escalate
+              statusApplied.set(target.id, effect.statusEffect)
+              messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+            }
+          }
+        } else {
+          // Non-class-specific traps or traps without primaryTargetClasses: Original behavior
+          if (saveSucceeded) {
             messages.push(`${target.name} resists the ${effect.statusEffect.toLowerCase()}!`)
             continue  // Skip status for this target
           }
-        }
 
-        // Authentic Wizardry 1: Status escalation
-        const finalStatus = escalateStatus(target.status, effect.statusEffect)
-        statusApplied.set(target.id, finalStatus)
+          // Authentic Wizardry 1: Status escalation (class-specific vs regular)
+          const finalStatus = escalateStatus(target.status, effect.statusEffect, isClassSpecific)
+          statusApplied.set(target.id, finalStatus)
 
-        if (finalStatus === CharacterStatus.DEAD && target.status === effect.statusEffect) {
-          messages.push(`${target.name} was already ${effect.statusEffect.toLowerCase()} and dies!`)
-        } else {
-          messages.push(`${target.name} is ${finalStatus.toLowerCase()}!`)
+          if (finalStatus === CharacterStatus.STONED && isClassSpecific && target.status === CharacterStatus.PARALYZED) {
+            messages.push(`${target.name} was already paralyzed and turns to stone!`)
+          } else if (finalStatus === CharacterStatus.DEAD && target.status === effect.statusEffect) {
+            messages.push(`${target.name} was already ${effect.statusEffect.toLowerCase()} and dies!`)
+          } else {
+            messages.push(`${target.name} is ${finalStatus.toLowerCase()}!`)
+          }
         }
       }
     }
@@ -729,8 +800,8 @@ export const TrapService = {
   calculateDisarmChance,
   calculateTriggerAvoidance,
   calculateWrongNameTriggerChance,
-  calculateScaledDamage,  // Authentic Wizardry 1: maze level scaling
-  escalateStatus,         // Authentic Wizardry 1: status escalation
+  calculateTrapDamage,    // Authentic Wizardry 1: (mazeLevel)d{diceType}
+  escalateStatus,         // Authentic Wizardry 1: class-specific and regular escalation
 
   // Action functions
   attemptInspection,

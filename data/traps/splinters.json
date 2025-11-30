@@ -2,9 +2,9 @@
   "id": "SPLINTERS",
   "name": "SPLINTERS",
   "effectType": "damage",
-  "tiers": [3],
+  "tiers": [10, 11, 12, 13, 14, 15, 16, 17, 19],
   "targetMode": "party",
+  "diceType": 6,
   "hitChance": 0.70,
-  "damageFormula": "1d6",
-  "description": "Wooden splinters spray out, hitting party members"
+  "description": "Wooden splinters spray across the party"
 }
