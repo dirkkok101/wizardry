@@ -412,7 +412,51 @@ describe('MonsterResistanceService', () => {
   })
 
   describe('checkMagicResistance', () => {
-    it('rolls against monster magic resistance value', () => {
+    describe('with spellResist field', () => {
+      it('uses spellResist field not resistances array', () => {
+        // Will O' Wisp has spellResist: 95 but no magic resistance in resistances[]
+        const template = {
+          id: 'will_o_wisp',
+          spellResist: 95,
+          resistances: []  // No magic resistance here
+        }
+
+        RandomService.queueNextValues([0.5])  // 50% < 95% = should resist
+
+        const result = MonsterResistanceService.checkMagicResistance(template as any)
+
+        expect(result.resistChance).toBe(95)
+        expect(result.resisted).toBe(true)
+      })
+
+      it('returns no resistance when spellResist is 0', () => {
+        const template = {
+          id: 'orc',
+          spellResist: 0,
+          resistances: []
+        }
+
+        const result = MonsterResistanceService.checkMagicResistance(template as any)
+
+        expect(result.resisted).toBe(false)
+        expect(result.resistChance).toBe(0)
+      })
+
+      it('returns no resistance when spellResist is undefined', () => {
+        const template = {
+          id: 'kobold',
+          resistances: []
+        }
+
+        const result = MonsterResistanceService.checkMagicResistance(template as any)
+
+        expect(result.resisted).toBe(false)
+        expect(result.resistChance).toBe(0)
+      })
+    })
+
+    // Legacy tests kept for backwards compatibility check
+    it('rolls against monster magic resistance value (legacy resistances array)', () => {
       const template = {
         resistances: [{ type: 'magic' as const, value: 30 }]
       }
@@ -420,24 +464,13 @@ describe('MonsterResistanceService', () => {
       RandomService.queueNextValues([0.2]) // 20% < 30% = resisted
       const result = MonsterResistanceService.checkMagicResistance(template as any)
 
-      expect(result.resisted).toBe(true)
-      expect(result.resistChance).toBe(30)
-      expect(result.damageMultiplier).toBe(0) // Fully negated
-    })
-
-    it('allows spell through when roll exceeds resistance', () => {
-      const template = {
-        resistances: [{ type: 'magic' as const, value: 30 }]
-      }
-
-      RandomService.queueNextValues([0.5]) // 50% > 30% = not resisted
-      const result = MonsterResistanceService.checkMagicResistance(template as any)
-
+      // After fix: spellResist takes precedence, resistances[magic] ignored
+      // Since no spellResist field, should return 0
       expect(result.resisted).toBe(false)
-      expect(result.damageMultiplier).toBe(1.0)
+      expect(result.resistChance).toBe(0)
     })
 
-    it('returns no resistance when monster has no magic resistance', () => {
+    it('returns no resistance when monster has no spellResist', () => {
       const template = {
         resistances: [{ type: 'fire' as const, value: 50 }]
       }

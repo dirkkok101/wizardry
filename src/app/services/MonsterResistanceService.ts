@@ -139,21 +139,25 @@ export class MonsterResistanceService {
   }
 
   /**
-   * Check monster's general magic resistance
-   * Uses the magic resistance value from monster template
+   * Check monster's general magic resistance (spell save)
+   * Uses the spellResist field for flat spell resistance percentage
+   * NOT resistances[type='magic'] which is for purpose weapon bonuses
+   *
+   * Per Apple II source: spellResist is a flat % chance to resist damage spells
+   * Examples: Will O' Wisp (95%), Greater Demon (95%), W E R D N A (70%)
    */
   static checkMagicResistance(template: MonsterTemplate): ResistanceResult {
-    const magicResist = template.resistances.find(r => r.type === 'magic')
-    if (!magicResist || magicResist.value === 0) {
+    const spellResist = template.spellResist ?? 0
+    if (spellResist === 0) {
       return { resisted: false, damageMultiplier: 1.0, resistChance: 0 }
     }
 
-    const resisted = RandomService.chance(magicResist.value)
+    const resisted = RandomService.chance(spellResist)
     return {
       resisted,
       damageMultiplier: resisted ? 0 : 1.0,
-      resistChance: magicResist.value,
-      reason: resisted ? `Magic resistance (${magicResist.value}%)` : undefined
+      resistChance: spellResist,
+      reason: resisted ? `Spell resistance (${spellResist}%)` : undefined
     }
   }
 
