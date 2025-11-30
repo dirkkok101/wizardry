@@ -25,5 +25,6 @@
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": false,
+  "partner": { "monsterId": "creeping_crud", "chance": 20 }
 }

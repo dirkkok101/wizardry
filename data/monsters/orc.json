@@ -27,5 +27,6 @@
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": { "monsterId": "kobold", "chance": 20 }
 }

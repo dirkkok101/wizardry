@@ -33,5 +33,6 @@
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": true
+  "canFlee": true,
+  "partner": { "monsterId": "orc", "chance": 15 }
 }
