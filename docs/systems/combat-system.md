@@ -70,19 +70,50 @@ interface CombatAction {
 }
 ```
 
+## Surprise Mechanics
+
+When an encounter begins, surprise is determined:
+
+```
+// Step 1: Check if party surprises monsters
+IF random(1-100) <= 20:  // 20% chance
+    PartySurprises = true
+    // Party gets a free round of actions
+    // Monsters cannot act in round 1
+
+// Step 2: If party didn't surprise, check if monsters surprise party
+ELSE IF random(1-100) <= 20:  // 20% chance
+    MonstersSurprise = true
+    // Monsters get a free round of attacks
+    // Party cannot act in round 1
+
+// Step 3: Neither side surprised
+ELSE:
+    NormalCombat = true
+    // Both sides act in round 1
+```
+
+**Effects of Surprise**:
+- Surprised side cannot act during the first combat round
+- Surprising side gets a full round of actions uncontested
+- After first round, combat proceeds normally
+
+---
+
 ## Combat Flow
 
 ### Combat Initiation
 
 **Trigger Points**:
-- Random encounter while moving in dungeon
+- Random encounter while moving in dungeon (1% per step)
+- Kicking doors into flagged rooms (12.5% if no chest, 100% if chest)
 - Fixed encounter at specific tile
 - Boss encounter (cannot flee)
 
 **Process**:
 1. Encounter check (dice roll vs. dungeon level)
-2. Select monster groups (1-4 groups)
-3. Determine monster formations (front/back)
+2. Select monster groups (1-4 groups, max = MIN(MazeLevel + 1, 4))
+3. Roll for surprise (20% party surprises, else 20% monsters surprise)
 4. Transition game state: NAVIGATION → COMBAT
 5. Initialize combat state
 6. Display combat UI
@@ -136,58 +167,66 @@ Each combat round has **4 phases**:
 
 ### Initiative Calculation
 
-**Formula** (validated from Wizardry 1):
+**CRITICAL: Lower initiative acts FIRST** (like D&D, not highest-first)
+
+**Character Initiative Formula**:
 ```
-Initiative = random(0-9) + AgilityModifier
-Minimum = 1  (cannot go below 1)
+Base Roll = 1d10 (random 1-10)
+Initiative = Base Roll + AgilityModifier
+Final Initiative = CLAMP(Initiative, 1, 10)
 ```
 
-### Agility Modifiers
+**Monster Initiative Formula**:
+```
+Monster Initiative = 1d8 + 1 (range: 2-9)
+// Monsters do NOT use agility modifiers
+```
 
-| AGI | Modifier | Initiative Range |
-|-----|----------|------------------|
-| 3 | -2 | 1 (min capped) |
-| 4-5 | -1 | 1-9 |
-| 6-8 | 0 | 1-10 |
-| 9-11 | +1 | 2-11 |
-| 12-14 | +2 | 3-12 |
-| 15-17 | +3 | 4-13 |
-| 18+ | +4 | 5-14 |
+### Agility Modifiers (Higher AGI = FASTER = Lower Initiative)
+
+| AGI | Modifier | Effect |
+|-----|----------|--------|
+| 3 | +2 | Slowest (penalty) |
+| 4-5 | +1 | Slow |
+| 6-7 | 0 | Average |
+| 8-14 | -1 | Fast |
+| 15 | -2 | Very fast |
+| 16 | -3 | Very fast |
+| 17 | -4 | Extremely fast |
+| 18 | -5 | Fastest |
 
 **Character Example**:
 ```
-Fighter (AGI 10):
-  Modifier = +1
-  Roll = random(0-9) = 7
-  Initiative = 7 + 1 = 8
+Ninja (AGI 18):
+  Modifier = -5
+  Roll = 1d10 = 7
+  Initiative = 7 + (-5) = 2  → Acts EARLY
 ```
 
 **Monster Example**:
 ```
-Orc (AGI 8):
-  Modifier = 0
-  Roll = random(0-9) = 5
-  Initiative = 5 + 0 = 5
+Orc:
+  Roll = 1d8 + 1 = 6
+  Initiative = 6  → Acts in middle
 ```
 
 ### Turn Order
 
 **Sorting**:
-- Highest initiative acts first
-- Ties broken by random roll
+- **LOWER initiative acts FIRST**
+- **Ties**: Characters act before monsters
 - Turn order recalculated each round
 
-**Example Turn Order**:
+**Example Turn Order** (sorted lowest to highest):
 ```
-Round 1:
-1. Samurai (Init 12) - Attack
-2. Thief (Init 11) - Attack
-3. Orc Leader (Init 9) - Attack
-4. Fighter (Init 8) - Attack
+Round 1 (LOWEST FIRST):
+1. Ninja (Init 2) - Attack          [FIRST - fastest]
+2. Orc #2 (Init 3) - Attack
+3. Priest (Init 5) - Cast KALKI
+4. Orc #1 (Init 6) - Attack
 5. Mage (Init 7) - Cast MAHALITO
-6. Orc #1 (Init 6) - Attack
-7. Priest (Init 5) - Cast KALKI
-8. Orc #2 (Init 3) - Attack
+6. Fighter (Init 8) - Attack
+7. Orc Leader (Init 9) - Attack     [LAST - slowest]
 ```
 
 ## Attack Resolution
@@ -346,17 +385,51 @@ Group C: 2 Orc Shamans (back row)
 
 ### Monster AI
 
-**Action Selection**:
-1. **Spellcasters**: 50% cast spell, 50% attack
-2. **Melee**: 90% attack, 10% defend
-3. **Ranged**: 70% ranged attack, 30% defend
-4. **Fleeing**: If >75% of group dead, 25% chance flee
+**Action Selection** (Corrected):
+```
+IF monster.canCastSpells:
+    IF random(1-100) <= 75:  // 75% spell cast chance
+        CastSpell()
+    ELSE:
+        PhysicalAttack()
+ELSE:
+    PhysicalAttack()
+```
+
+**Spellcasting Probability**: **75%** (not 50%)
+
+**Mage Spell Level Degradation**:
+When a monster casts a mage spell, it may cast at a lower level than its maximum:
+
+| Roll | Effect |
+|------|--------|
+| 71% | Use max spell level |
+| 20.59% | Drop 1 level |
+| 5.96% | Drop 2 levels |
+| 1.73% | Drop 3 levels |
+| 0.5% | Drop 4 levels |
+| ... | (Continues geometrically) |
+
+**Priest Spells**: Always use maximum level (no degradation)
+
+**Spell Level Depletion** (per group):
+After each spell cast by a group:
+```
+DepletionChance = 1 / (GroupSize + 2)
+IF triggered:
+    Group's spell level decreases by 1 for remaining combat
+```
+
+**Call for Help**:
+If group has fewer than 5 monsters:
+- **75%** chance monster attempts to call
+- Success rate: `MonsterLevel × 5%`
+- Success adds more monsters to group
 
 **Target Selection**:
-- **Front Row Preference**: 80% target front row
-- **Back Row**: 20% target back row
-- **Low HP Preference**: 30% bonus to target wounded
-- **Random**: Otherwise random party member
+- Targets are selected randomly from available party members
+- Front row characters more likely to be hit by melee
+- Spells may target specific rows or entire party
 
 ### Special Monster Abilities
 
@@ -461,73 +534,107 @@ function calculateSpellDamage(
 
 **Effect**: Attempt to instantly destroy undead enemy group
 
-**Formula**:
+**Formula** (Corrected):
 ```
-DispellChance% = (CasterLevel - UndeadLevel) × 10
-FinalChance% = max(5, min(95, DispellChance))
+Base = 50% + (5 × CharacterLevel) - (10 × MonsterLevel)
+
+// Class penalties:
+Priest: No penalty (available from level 1)
+Bishop: -20% penalty (available from level 4)
+Lord: -40% penalty (available from level 9)
+
+// Apply penalty and clamp
+AdjustedChance = Base - ClassPenalty
+FinalChance% = CLAMP(AdjustedChance, 5%, 95%)
 ```
 
 **Examples**:
-- Level 5 Priest vs Level 3 Zombies: (5-3) × 10 = **20%**
-- Level 10 Lord vs Level 5 Ghouls: (10-5) × 10 = **50%**
-- Level 8 Priest vs Level 12 Vampire: (8-12) × 10 = -40 → **5%** (minimum)
-- Level 20 Bishop vs Level 2 Zombies: (20-2) × 10 = 180 → **95%** (maximum)
+- Level 5 Priest vs Level 3 Zombies: 50% + 25% - 30% = **45%**
+- Level 10 Priest vs Level 5 Ghouls: 50% + 50% - 50% = **50%**
+- Level 8 Bishop vs Level 4 Wraiths: 50% + 40% - 40% - 20% = **30%**
+- Level 12 Lord vs Level 6 Vampire: 50% + 60% - 60% - 40% = **10%**
+- Level 20 Priest vs Level 12 Vampire Lord: 50% + 100% - 120% = **30%**
 
-**Undead Targets**:
-- **Low-Level**: Zombies (1-2), Creeping Coins (2-3)
-- **Mid-Level**: Ghouls (3-4), Gas Cloud (4-5)
-- **High-Level**: Spectres (7-8), Wraiths (8-9)
-- **Boss**: Vampire (8-10), Vampire Lord (10+)
+**Undead Targets** (See monster-technical-reference.md for complete list):
+- **Low-Level**: Undead Kobold (2), Zombie (1), Rotting Corpse (2)
+- **Mid-Level**: Grave Mist (4), Shade (3), Lifestealer (5), Nightstalker (5)
+- **High-Level**: Murphy's Ghost (10), Vampire (11), Dragon Zombie (12)
+- **Boss**: Maelific (25), Vampire Lord (20)
 
 **Success**:
-- Entire undead group instantly destroyed
-- No counterattack or damage calculation
-- Combat log shows dispell success
+- Each monster in group rolled individually
+- Successful dispell removes that monster
+- **No XP awarded** for dispelled monsters
+- **No treasure drops** from dispelled monsters
 
 **Failure**:
-- Character's turn is wasted (no action)
-- Undead group unaffected
+- Monster remains in combat
+- Character's action complete (not wasted, just unsuccessful)
 - Combat continues normally
 
 **Strategic Trade-offs**:
-- ✅ **Pros**: Instant group removal, no risk, fast combat
-- ❌ **Cons**: No XP awarded, no treasure drops, fails waste turn
-- **Use When**: Party low on resources, dangerous undead (level drain), quick escape needed
-- **Avoid When**: Party needs XP/gold, low success chance (<20%), weak undead
+- ✅ **Pros**: Instant removal, saves resources, avoids level drain
+- ❌ **Cons**: No XP, no treasure, class penalties reduce effectiveness
+- **Use When**: Party low on resources, facing level-draining undead, quick escape needed
+- **Avoid When**: Party needs XP/gold, success chance <20%, weak non-threatening undead
 
 ## Fleeing
 
 ### Flee Mechanics
 
-**Flee Attempt**:
+**Base Run Formula** (Corrected):
 ```
-FleeChance = 50% base
-Modifiers:
-  - Boss fight: 0% (cannot flee)
-  - Party all alive: +0%
-  - Party >50% dead: +20%
-  - Enemy surprised: +30%
+BaseChance = 39% - (MazeLevel × 3%)
 
-Success: Party returns to previous position
-Failure: Lose turn, combat continues
+// Small party bonus (3 or fewer members)
+IF PartySize <= 3:
+    SmallPartyBonus = 20% - (PartySize × 5%)
+    // 1 member = +15%, 2 = +10%, 3 = +5%
+
+// Demoralization bonus
+IF MonstersDemoralized:
+    DemoralBonus = +20%
+
+// Final calculation
+FinalChance = BaseChance + SmallPartyBonus + DemoralBonus
+```
+
+**Flee Chance by Dungeon Level**:
+| Level | Base | With 2-member party | With demoralized monsters |
+|-------|------|---------------------|---------------------------|
+| 1 | 36% | 46% | 56% |
+| 3 | 30% | 40% | 50% |
+| 5 | 24% | 34% | 44% |
+| 7 | 18% | 28% | 38% |
+| 9 | 12% | 22% | 32% |
+| **10** | **0%** | **0%** | **0%** |
+
+**CRITICAL: RUNNING NEVER WORKS ON LEVEL 10!**
+
+**Monster Demoralization Check**:
+```
+TotalPartyLevel = sum(character.level for all OK characters)
+TotalMonsterMorale = sum(monster.level × okCount for each group)
+
+IF TotalPartyLevel > TotalMonsterMorale:
+    Monsters are DEMORALIZED (+20% flee chance)
 ```
 
 **Flee Process**:
-1. All party members select "Flee"
+1. All party members select "RUN"
 2. Roll flee chance
 3. If success:
-   - Combat ends immediately
-   - Party returns to previous tile
+   - Party teleports to random position on same maze level
+   - Random facing direction
    - No XP or treasure
 4. If failure:
-   - Party loses turn (enemies act)
-   - Can retry next round
+   - Monsters get free round of attacks
+   - Party can retry next round
 
 **Flee Restrictions**:
+- **Level 10**: Running NEVER works (Werdna's level)
 - Boss fights: Cannot flee
-- Fixed encounters: Cannot flee
-- First round: Usually can flee
-- Subsequent rounds: Flee chance may decrease
+- Fixed encounters: Usually cannot flee
 
 ## Victory and Rewards
 
@@ -574,57 +681,94 @@ ItemQuality = based on dungeon level
 
 ## Combat Status Effects
 
+### Status Hierarchy
+
+Statuses from best to worst (worse always overwrites better):
+```
+OK → AFRAID → ASLEEP → PARALYZED → STONED → DEAD → ASHES → LOST
+```
+
+**Important**: Only one status at a time. **Poison is NOT a status** and can coexist with any status.
+
+### Status Recovery Rates (Per Round)
+
+**CHARACTERS**:
+| Status | Recovery Formula | Max | Notes |
+|--------|------------------|-----|-------|
+| ASLEEP | Level × 10% | 50% | Also wakes on damage |
+| AFRAID | Level × 5% | 50% | Rare in Wizardry 1 |
+| PARALYZED | **NONE** | 0% | **NO natural recovery in combat!** |
+
+**MONSTERS**:
+| Status | Recovery Formula | Max |
+|--------|------------------|-----|
+| ASLEEP | Level × 20% | 50% |
+| AFRAID | Level × 10% | 50% |
+| PARALYZED | Level × 7% | 50% |
+
+**CRITICAL**: Characters have **NO natural recovery** from PARALYZE in combat! Must use DIALKO spell or wait until combat ends.
+
 ### Poison
 
-**Effect**: -1 HP per turn (even after combat)
-**Cure**: LATUMOFIS spell, temple
+**Activation**: 25% chance per combat round AND per maze step
+**Effect**: -1 HP per activation
+**Stacking**: Does NOT stack from combat (always resets to 1)
+**Exception**: Poison Needle trap CAN stack poison
+**Cure**: LATUMOFIS spell or temple
 **Lethal**: Can kill character if untreated
 
 ### Paralysis
 
-**Effect**: Cannot act, auto-hit by enemies
-**Duration**: Until cured
-**Cure**: LATUMOFIS spell, temple
-
-### Silence
-
-**Effect**: Cannot cast spells
-**Duration**: Rest of combat
-**Cure**: Automatic after combat
+**Effect**: Cannot act, auto-hit by enemies, takes 2× damage
+**Character Recovery**: **NONE in combat** - must use DIALKO spell
+**Monster Recovery**: (Level × 7)% per turn, max 50%
+**Cure**: DIALKO spell or temple (100 gold × Level)
 
 ### Sleep
 
-**Effect**: Cannot act, auto-hit, wakes when hit
-**Duration**: Until hit
+**Effect**: Cannot act, auto-hit by enemies, takes 2× damage
+**Character Recovery**: (Level × 10)% per turn, max 50% OR any damage wakes
+**Monster Recovery**: (Level × 20)% per turn, max 50%
 **Cure**: Any damage wakes character
 
-### Blind
+### Silence
 
-**Effect**: -4 to attack rolls
-**Duration**: Rest of combat
-**Cure**: Automatic after combat
+**Effect**: Cannot cast spells (melee still works)
+**Original Bug**: Characters never recover naturally (missing HEALHEAR routine)
+**Our Implementation**: Recovery using Level × 5% per turn (same as AFRAID)
+**Cure**: Combat ends or recovery roll succeeds
+
+### Afraid
+
+**Effect**: Cannot act normally, may flee
+**Character Recovery**: (Level × 5)% per turn, max 50%
+**Monster Recovery**: (Level × 10)% per turn, max 50%
+**Note**: Rare status in Wizardry 1
+
+### Petrify (Stone)
+
+**Effect**: Character turned to stone, treated as dead
+**Duration**: Permanent (cannot recover in combat)
+**Cure**: MADI spell or temple (200 gold × Level)
 
 ## Related Documentation
 
-**Services**:
+**Research** (Primary Sources):
+- [Combat Formulas](../research/combat-formulas.md) - All validated combat formulas with pseudocode
+- [Monster Technical Reference](../research/monster-technical-reference.md) - Complete monster stats and abilities
+- [Treasure System](../research/treasure-system.md) - Loot generation and distribution
+
+**Game Design**:
+- [Combat Mechanics](../game-design/05-combat.md) - Player-facing guide
+- [Monsters](../game-design/10-monsters.md) - Monster reference
+
+**Services** (Implementation):
 - [CombatService](../services/CombatService.md) - Combat orchestration
 - [InitiativeService](../services/InitiativeService.md) - Turn order
 - [AttackService](../services/AttackService.md) - Attack resolution
-- [DamageService](../services/DamageService.md) - Damage calculation
 - [MonsterService](../services/MonsterService.md) - Monster AI
 
-**Commands**:
-- [AttackCommand](../commands/AttackCommand.md) - Physical attack
-- [CastSpellCommand](../commands/CastSpellCommand.md) - Combat spell
-- [FleeCommand](../commands/FleeCommand.md) - Flee attempt
+---
 
-**Game Design**:
-- [Combat Mechanics](../game-design/05-combat.md) - Player guide
-- [Monsters](../game-design/10-monsters.md) - Monster reference
-
-**Research**:
-- [Combat Formulas](../research/combat-formulas.md) - Validated formulas
-- [Monster Reference](../research/monster-reference.md) - All 96 monsters
-
-**Diagrams**:
-- [Combat Flow](../diagrams/combat-flow.md) - Combat round phases
+**Last Updated**: 2025-11-30
+**Status**: ✅ Validated against authoritative sources (Ewers' Apple II source code)

@@ -52,41 +52,53 @@ Calculate probability of successfully dispelling undead group.
 ```typescript
 function calculateDispellChance(
   casterLevel: number,
-  undeadLevel: number
+  undeadLevel: number,
+  casterClass: 'PRIEST' | 'BISHOP' | 'LORD'
 ): number
 ```
 
 **Parameters**:
 - `casterLevel`: Level of Priest/Bishop/Lord attempting dispell
 - `undeadLevel`: Average level of undead group being targeted
+- `casterClass`: Class of the caster (affects penalty)
 
 **Returns**: Success probability as percentage (5-95 range)
 
-**Formula**:
+**Formula** (Validated from Apple II source):
 ```typescript
-baseChance = (casterLevel - undeadLevel) × 10
+// Base formula
+baseChance = 50 + (5 × casterLevel) - (10 × undeadLevel)
+
+// Class penalties (NOT level restrictions!)
+classPenalty = {
+  PRIEST: 0,     // Full effectiveness
+  BISHOP: -20,   // Hybrid class penalty
+  LORD:   -40    // Fighter primary, divine secondary
+}
+
+adjustedChance = baseChance + classPenalty[casterClass]
 
 // Clamp to 5% - 95% range
-finalChance = Math.max(5, Math.min(95, baseChance))
+finalChance = Math.max(5, Math.min(95, adjustedChance))
 ```
 
 **Example**:
 ```typescript
 // Level 5 Priest vs Level 3 Zombies
-const chance1 = DispellService.calculateDispellChance(5, 3)
-// chance1 === 20 (20%)
+const chance1 = DispellService.calculateDispellChance(5, 3, 'PRIEST')
+// 50 + 25 - 30 - 0 = 45%
 
-// Level 10 Lord vs Level 5 Ghouls
-const chance2 = DispellService.calculateDispellChance(10, 5)
-// chance2 === 50 (50%)
+// Level 10 Priest vs Level 5 Ghouls
+const chance2 = DispellService.calculateDispellChance(10, 5, 'PRIEST')
+// 50 + 50 - 50 - 0 = 50%
 
-// Level 8 Priest vs Level 12 Vampire
-const chance3 = DispellService.calculateDispellChance(8, 12)
-// chance3 === 5 (minimum 5%, undead is higher level)
+// Level 8 Bishop vs Level 4 Wraiths
+const chance3 = DispellService.calculateDispellChance(8, 4, 'BISHOP')
+// 50 + 40 - 40 - 20 = 30%
 
-// Level 20 Bishop vs Level 2 Zombies
-const chance4 = DispellService.calculateDispellChance(20, 2)
-// chance4 === 95 (maximum 95%, capped)
+// Level 12 Lord vs Level 6 Vampire
+const chance4 = DispellService.calculateDispellChance(12, 6, 'LORD')
+// 50 + 60 - 60 - 40 = 10%
 ```
 
 ### attemptDispell
@@ -216,17 +228,28 @@ export function isUndeadGroup(group: EnemyGroup): boolean {
 ### Dispell Chance Calculation
 
 ```typescript
+// Class penalties for DISPELL
+const CLASS_PENALTIES: Record<string, number> = {
+  PRIEST: 0,    // Full divine caster
+  BISHOP: -20,  // Hybrid mage/priest
+  LORD: -40     // Fighter with divine abilities
+}
+
 export function calculateDispellChance(
   casterLevel: number,
-  undeadLevel: number
+  undeadLevel: number,
+  casterClass: 'PRIEST' | 'BISHOP' | 'LORD'
 ): number {
-  // Base formula: (Caster - Undead) × 10%
-  const baseChance = (casterLevel - undeadLevel) * 10
+  // Base formula (validated from Apple II source):
+  // 50% + (5 × Level) - (10 × Undead Level) - Class Penalty
+  const baseChance = 50 + (5 * casterLevel) - (10 * undeadLevel)
+  const penalty = CLASS_PENALTIES[casterClass] || 0
+  const adjustedChance = baseChance + penalty
 
   // Clamp to 5% - 95% range
   // Never 0% (always a small chance)
   // Never 100% (always a small chance of failure)
-  return Math.max(5, Math.min(95, baseChance))
+  return Math.max(5, Math.min(95, adjustedChance))
 }
 ```
 
@@ -379,17 +402,30 @@ No dependencies on other combat services (pure calculation).
    })
    ```
 
-2. **Dispell chance calculation**
+2. **Dispell chance calculation (50 + 5×Level - 10×Undead - ClassPenalty)**
    ```typescript
-   test('calculateDispellChance uses level difference × 10', () => {
-     expect(DispellService.calculateDispellChance(10, 5)).toBe(50)
-     expect(DispellService.calculateDispellChance(7, 3)).toBe(40)
-     expect(DispellService.calculateDispellChance(5, 8)).toBe(5) // Minimum
+   test('Priest uses base formula with no penalty', () => {
+     // 50 + (5×5) - (10×3) - 0 = 45%
+     expect(DispellService.calculateDispellChance(5, 3, 'PRIEST')).toBe(45)
+     // 50 + (5×10) - (10×5) - 0 = 50%
+     expect(DispellService.calculateDispellChance(10, 5, 'PRIEST')).toBe(50)
+   })
+
+   test('Bishop has -20% penalty', () => {
+     // 50 + (5×8) - (10×4) - 20 = 30%
+     expect(DispellService.calculateDispellChance(8, 4, 'BISHOP')).toBe(30)
+   })
+
+   test('Lord has -40% penalty', () => {
+     // 50 + (5×12) - (10×6) - 40 = 10%
+     expect(DispellService.calculateDispellChance(12, 6, 'LORD')).toBe(10)
    })
 
    test('calculateDispellChance clamps to 5-95 range', () => {
-     expect(DispellService.calculateDispellChance(20, 1)).toBe(95) // Max
-     expect(DispellService.calculateDispellChance(1, 20)).toBe(5)  // Min
+     // High level priest vs weak undead = capped at 95%
+     expect(DispellService.calculateDispellChance(20, 1, 'PRIEST')).toBe(95)
+     // Low level vs strong undead = minimum 5%
+     expect(DispellService.calculateDispellChance(1, 20, 'PRIEST')).toBe(5)
    })
    ```
 

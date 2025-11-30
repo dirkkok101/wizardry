@@ -49,14 +49,19 @@ function calculateInitiative(combatState: CombatState): Combatant[]
 **Parameters**:
 - `combatState`: Current combat state
 
-**Returns**: Array of combatants sorted by initiative (fastest first)
+**Returns**: Array of combatants sorted by initiative (**lowest first** = fastest)
 
-**Formula**: `random(0-9) + AGI_modifier`, minimum 1
+**Formula**:
+- Characters: `1d10 + AGI_modifier`, clamped to 1-10
+- Monsters: `1d8 + 1` (range 2-9, no AGI modifiers)
+
+**CRITICAL**: Lower initiative acts FIRST (like D&D)
 
 **Example**:
 ```typescript
 const order = CombatService.calculateInitiative(combat)
-// order[0] has highest initiative, acts first
+// order[0] has LOWEST initiative, acts first
+// Characters act before monsters on ties
 ```
 
 ### resolveAttack

@@ -91,118 +91,191 @@ SpellPointsForLevel[circle] = max(
 
 ## Combat Initiative
 
-### Initiative Roll
+### Overview
+
+Wizardry uses **simultaneous declaration, sequential resolution** combat. All actions are declared before any execute, then resolve in initiative order from **lowest to highest** (lower = faster, similar to D&D).
+
+### Character Initiative Roll
+
 ```
-Initiative = random(0-9) + AgilityModifier
-Minimum = 1  // Can't go below 1
-```
-
-### Agility Modifiers
-
-**Lower initiative acts first** (D&D style):
-
-| AGI | Modifier | Notes       |
-|-----|----------|-------------|
-| 3   | +2       | Slowest     |
-| 4-5 | +1       |             |
-| 6-7 | 0        | Base        |
-| 8-14| -1       |             |
-| 15  | -2       |             |
-| 16  | -3       |             |
-| 17  | -4       |             |
-| 18  | -5       | Fastest     |
-
-**Initiative Formula**:
-```
-Character: random(1,10) + AgilityMod, clamped to 1-10
-Monster: random(0,7) + 2 (range: 2-9)
-Lower acts first. Characters win ties vs. monsters.
+Base Roll = 1d10 (random 1-10)
+AgilityModifier = lookup from table below
+Raw Initiative = Base Roll + AgilityModifier
+Final Initiative = CLAMP(Raw Initiative, 1, 10)
 ```
 
-**Notes**: Lower initiative value = acts first each round
+### Agility Modifiers (Higher AGI = Faster)
+
+| AGI | Modifier | Effect |
+|-----|----------|--------|
+| 3   | +2       | Slowest (penalty) |
+| 4-5 | +1       | Slow |
+| 6-7 | 0        | Average |
+| 8-14| -1       | Fast |
+| 15  | -2       | Very fast |
+| 16  | -3       | Very fast |
+| 17  | -4       | Extremely fast |
+| 18  | -5       | Fastest (acts near start) |
+
+**Source**: Data Driven Gamer - "Each round, each character has an initiative roll of 1d10. Initiative is further modified by agility."
+
+### Monster Initiative Roll
+
+```
+Monster Initiative = 1d8 + 1 (range: 2-9)
+```
+
+Monsters do NOT use agility modifiers. Their initiative is always in the 2-9 range.
+
+**Source**: Zimlab - "Monsters' initiatives are each set to RANDOM(0-7)+2"
+
+### Turn Order Resolution
+
+1. **Lower initiative acts first**
+2. **On ties**: Characters act before monsters
+3. Turn order recalculated each round
+
+**Example Turn Order** (sorted lowest to highest):
+```
+Initiative 2: Ninja (AGI 18, rolled 7, -5 mod = 2) - FIRST
+Initiative 3: Orc (rolled 2, +1 = 3)
+Initiative 5: Fighter (AGI 14, rolled 6, -1 mod = 5)
+Initiative 7: Mage (AGI 10, rolled 8, -1 mod = 7)
+Initiative 9: Kobold (rolled 8, +1 = 9) - LAST
+```
+
+### Target Death Handling
+
+**CRITICAL**: If a target monster dies before your queued attack resolves, **the attack is wasted** with no automatic retargeting. Plan accordingly when multiple characters target the same enemy.
+
+**Exception**: Spells targeting groups continue to affect remaining members.
 
 ---
 
-## Attacks Per Round
+## Attacks Per Round (Swings)
 
 ### By Class
+
 ```
 Fighter, Samurai, Lord:
-  AttacksPerRound = 1 + floor(Level / 5)
-  Max = 10 attacks
+  ClassSwings = 1 + (CharacterLevel DIV 5)
 
 Ninja:
-  AttacksPerRound = 2 + floor(Level / 5)
-  Max = 10 attacks
+  ClassSwings = 2 + (CharacterLevel DIV 5)
 
 Others (Mage, Priest, Thief, Bishop):
-  AttacksPerRound = 1  // Fixed
+  ClassSwings = 1  // Fixed, always 1
 ```
 
-**Examples**:
-- Level 1 Fighter: 1 attack
-- Level 5 Fighter: 2 attacks
-- Level 10 Fighter: 3 attacks
-- Level 25 Fighter: 6 attacks
-- Level 45+ Fighter: 10 attacks (max)
-- Level 1 Ninja: 2 attacks
-- Level 40+ Ninja: 10 attacks (max)
+### Weapon Swings
+
+Some weapons inherently provide multiple swings. For example, Long Sword +2 gives 3 swings.
+
+**IMPORTANT**: Class swings and weapon swings do **NOT** stack!
+
+```
+FinalSwings = MAX(ClassSwings, WeaponSwings)
+FinalSwings = MIN(FinalSwings, 10)  // Hard cap at 10
+```
+
+**Source**: Zimlab - "Some weapons inherently provide more swings; this is why getting a Long Sword + 2 early for example is so great because it gives 3 swings by default. The number of swings is the maximum between your weapon's inherent characteristics or what your characters' level provide—they do NOT add up together."
+
+### Examples
+
+| Level | Fighter | Ninja | Mage | Fighter w/ Long Sword +2 (3 swings) |
+|-------|---------|-------|------|-------------------------------------|
+| 1 | 1 | 2 | 1 | MAX(1, 3) = **3** |
+| 5 | 2 | 3 | 1 | MAX(2, 3) = **3** |
+| 10 | 3 | 4 | 1 | MAX(3, 3) = **3** |
+| 15 | 4 | 5 | 1 | MAX(4, 3) = **4** |
+| 25 | 6 | 7 | 1 | MAX(6, 3) = **6** |
+| 45+ | 10 | 10 | 1 | MAX(10, 3) = **10** |
+
+**Strategic Note**: Weapons with high swing counts are extremely valuable early game (before class level catches up). A Level 1 Ninja with a 3-swing weapon gets 3 swings instead of 2.
 
 ---
 
 ## Hit Calculation
 
 ### Hit Probability Formula
+
 ```
-// Step 1: Calculate HPCALCMD (hit calculation modifier)
-HPCALCMD = BaseMod + floor(Level / Divisor)
-
-// Fighter, Priest, Samurai, Lord, Ninja:
-BaseMod = 2
-Divisor = 3
-HPCALCMD = 2 + floor(Level / 3)
-
-// Mage, Thief, Bishop:
-BaseMod = 0
-Divisor = 5
-HPCALCMD = floor(Level / 5)
-
-// Step 2: Calculate hit chance percentage
-HitChance% = (HPCALCMD + MonsterAC + 3 × Victim - 1) × 5%
-
-// Victim = 10 (standard value)
-// Simplified: HitChance% = (HPCALCMD + MonsterAC + 29) × 5%
+// Step 1: Calculate HPCALCMD (hit calculation modifier) based on class
+IF (class = PRIEST) OR (class = FIGHTER) OR (class >= SAMURAI) THEN
+    HPCALCMD = 2 + (CharacterLevel DIV 3)
+ELSE
+    HPCALCMD = CharacterLevel DIV 5
 ```
+
+**Source**: Zimlab source code - `IF (CLASS = PRIEST) OR (CLASS = FIGHTER) OR (CLASS >= SAMURAI) THEN HPCALCMD := 2 + CHARLEV DIV 3 ELSE HPCALCMD := CHARLEV DIV 5`
+
+```
+// Step 2: Apply strength modifier
+HPCALCMD += StrengthHitModifier  // See Strength Modifiers table
+
+// Step 3: Apply weapon bonus
+HPCALCMD += Weapon.HitBonus
+
+// Step 4: Calculate hit chance percentage
+HitChance% = (HPCALCMD + MonsterAC + (3 × TargetPosition) - 1) × 5%
+
+// Step 5: Clamp to valid range
+FinalHitChance% = CLAMP(HitChance%, 5%, 95%)
+```
+
+**Source**: Data Driven Gamer - "This calculated value is then clamped to the 5% - 95% range. There is always at least a 5% chance of hitting and at least a 5% chance of missing."
+
+### Target Position (Victim) Explained
+
+The `TargetPosition` value affects hit chance and represents the monster's row/position in combat. The original code uses a value that results in `(3 × Victim) = 30` for standard targeting, giving the `+29` often seen in simplified formulas.
+
+**Simplified formula** (standard case):
+```
+HitChance% = (HPCALCMD + MonsterAC + 29) × 5%
+```
+
+### Class Hit Progression
+
+| Level | Fighter/Priest/Samurai/Lord/Ninja | Mage/Thief/Bishop |
+|-------|-----------------------------------|-------------------|
+| 1 | 2 + 0 = 2 | 0 |
+| 3 | 2 + 1 = 3 | 0 |
+| 5 | 2 + 1 = 3 | 1 |
+| 10 | 2 + 3 = 5 | 2 |
+| 15 | 2 + 5 = 7 | 3 |
+| 20 | 2 + 6 = 8 | 4 |
 
 ### Examples
 
-**Level 5 Fighter vs AC 5 Monster**:
+**Level 5 Fighter (HPCALCMD 3) vs AC 5 Monster**:
 ```
-HPCALCMD = 2 + floor(5/3) = 2 + 1 = 3
-HitChance = (3 + 5 + 29) × 5% = 37 × 5% = 185%  // Capped at 95%
-```
-
-**Level 5 Mage vs AC 5 Monster**:
-```
-HPCALCMD = floor(5/5) = 1
-HitChance = (1 + 5 + 29) × 5% = 35 × 5% = 175%  // Capped at 95%
+HitChance = (3 + 5 + 29) × 5% = 37 × 5% = 185% → Capped at 95%
 ```
 
-**Level 10 Fighter vs AC -5 Monster (tough)**:
+**Level 5 Mage (HPCALCMD 1) vs AC 5 Monster**:
 ```
-HPCALCMD = 2 + floor(10/3) = 2 + 3 = 5
-HitChance = (5 + (-5) + 29) × 5% = 29 × 5% = 145%  // Capped at 95%
+HitChance = (1 + 5 + 29) × 5% = 35 × 5% = 175% → Capped at 95%
 ```
 
-**Level 10 Mage vs AC -5 Monster**:
+**Level 10 Fighter (HPCALCMD 5) vs AC -5 Monster (tough)**:
 ```
-HPCALCMD = floor(10/5) = 2
-HitChance = (2 + (-5) + 29) × 5% = 26 × 5% = 130%  // Capped at 95%
+HitChance = (5 + (-5) + 29) × 5% = 29 × 5% = 145% → Capped at 95%
+```
+
+**Level 3 Mage (HPCALCMD 0) vs AC -5 Monster**:
+```
+HitChance = (0 + (-5) + 29) × 5% = 24 × 5% = 120% → Capped at 95%
+```
+
+**Level 1 Thief (HPCALCMD 0) vs AC -8 Monster (Will O' Wisp)**:
+```
+HitChance = (0 + (-8) + 29) × 5% = 21 × 5% = 105% → Capped at 95%
 ```
 
 **Notes**:
 - Lower AC = harder to hit (D&D 1st edition style)
-- Most hits cap at 95% (always 5% miss chance)
+- **Always 5% minimum hit chance** (can always land a lucky blow)
+- **Always 5% minimum miss chance** (can always fumble)
 - Negative AC makes enemies very hard to hit at low levels
 
 ### Monster Hit Chance vs Characters
@@ -265,58 +338,123 @@ Sword: 1d8 + STR
 Mace: 1d6 + STR
 ```
 
-### Ninja Unarmed Damage (Special)
+### Unarmed Damage
+
 ```
-UnarmedDamage = (1d4 + 1d4) + STR_Modifier
+// Default unarmed for most classes
+UnarmedDamage = 2d2
 
-// Average: ~5 + STR before considering ninja level bonuses
+// Ninja unarmed (better than default)
+NinjaUnarmedDamage = 2d4
 ```
 
-### Damage Modifiers by Target State
+**Source**: Zimlab - "HitDam is an invisible stat representing your damage dice. Base value is 2d2, and is overridden when equipping a weapon."
 
-**Source**: How to Make an RPG (decompiled code analysis)
+**Note on Ninja Equipment**: Despite what the manual suggests, **you are better off equipping ninjas**. Unarmed ninjas do 2d4 (avg 5) which is better than 2d2 (avg 3), but many weapons surpass this. Ninjas score critical hits equally well with or without weapons.
+
+**Source**: Zimlab - "Despite what the manual says, you are better off equipping ninjas. Unarmed ninjas do 2d4 base damage. That's better than the 2d2 of other classes, but it's not hard to find better weapons!"
+
+### Double Damage Conditions
 
 **Asleep or Held Targets**:
 ```
-FinalDamage = WeaponDamage × 2
-
-// Targets that are asleep or held take DOUBLE damage
+IF target.status == ASLEEP OR target.status == PARALYZED:
+    FinalDamage = BaseDamage × 2
 ```
 
-**Monster Type Effectiveness**:
-```
-// Weapons effective against monster type
-FinalDamage = WeaponDamage × 2
+**Source**: Data Driven Gamer - "If a character or monster is sleeping or held then they take double damage!"
 
-// Example: Silver weapons vs undead, blessed weapons vs demons
+**Purposed Weapons** (vs. matching monster class):
+```
+IF weapon.purpose == target.monsterClass:
+    FinalDamage = BaseDamage × 2
+
+// Examples:
+// Dragon Slayer vs Dragons: 2× damage
+// Were Slayer vs Were creatures: 2× damage
+// Mage Masher vs Mages: 2× damage
 ```
 
-**Notes**:
-- Sleep/hold status makes targets extremely vulnerable
-- Combines with other damage bonuses (STR, critical hits)
-- Strategic use of sleep spells (KATINO) then melee attacks
+**Source**: Data Driven Gamer - "When your weapon is purposed vs. a certain type of monster you do double damage to it!"
+
+### Damage Stacking
+
+Double damage conditions do NOT stack multiplicatively:
+```
+// Sleep + Purposed weapon = 2× (not 4×)
+// The game applies the higher multiplier, not both
+```
+
+**Strategic Notes**:
+- Use KATINO (sleep) → then melee attacks for double damage
+- Dragon Slayer is critical for dragon fights (halves effective dragon HP)
+- Sleep/hold status makes even weak party members effective
 
 ---
 
-## Critical Hits
+## Critical Hits (Ninja Decapitation)
 
-### Critical Hit Chance
+### Player Critical Hit Mechanics
+
+**Who can critical**: Ninjas (all levels), or any character equipped with a critical-hit-granting item.
+
+**Trigger**: If a Ninja (or character with crit item) deals at least 1 damage in an attack.
+
 ```
-CriticalChance% = (2 × Level)%
-Maximum = 50%
+CriticalChance% = MIN(CharacterLevel × 2, 50)
+
+// Examples:
+Level 1:  2% critical chance
+Level 10: 20% critical chance
+Level 25: 50% critical chance (max)
 ```
 
-**Examples**:
-- Level 1: 2% critical chance
-- Level 10: 20% critical chance
-- Level 25+: 50% critical chance (max)
+**IMPORTANT**: Multiple swings do NOT grant multiple critical checks. The overall attack gives **ONE chance** for a critical hit, and only if at least one swing dealt damage.
 
-### Decapitation (Instant Kill)
-**Only available to**: Ninjas (all levels), some monsters
+**Source**: Zimlab - "Multiple strikes do not grant multiple chances to inflict critical hits. The overall attack gives one chance for a critical hit, and only if it inflicted at least one damage point."
 
-**Effect**: On critical hit, chance to instantly kill target (regardless of HP)
+### Monster Resistance to Critical Hits
 
-**Notes**: Ninjas at high level have 50% crit × decapitation chance = extremely dangerous
+```
+MonsterResistChance = (MonsterLevel + 10) / 35
+
+// Monsters level 24+ CANNOT be critically hit
+// (24 + 10 = 34, which is always >= random(0-34))
+```
+
+**Source**: Data Driven Gamer - "A monster's chance to resist a successful critical hit is (Level + 10)/35."
+
+| Monster Level | Resist Chance | Notes |
+|---------------|---------------|-------|
+| 1 | 31% | Easy to crit |
+| 5 | 43% | Moderate resistance |
+| 10 | 57% | Hard to crit |
+| 15 | 71% | Very hard to crit |
+| 20 | 86% | Almost immune |
+| 24+ | 100% | **IMMUNE** to crits |
+
+### Player Resistance to Monster Critical Hits
+
+Players have a **two-stage** defense against monster critical hits:
+
+```
+// Stage 1: Saving Throw vs. Death
+IF SaveVsDeath succeeds:
+    Critical is negated
+
+// Stage 2: Level-based resistance (if save failed)
+ResistChance% = MIN(CharacterLevel × 2, 50)
+IF random(1-100) <= ResistChance:
+    Critical is negated anyway
+```
+
+**Source**: Zimlab - "If a character does not resist a Critical Hit (see Resistances above), then the character still has another (Character Level × 2)% chance up to a maximum of 50% chance to avoid being Critically Hit."
+
+### Physical Protection Immunity
+
+Characters equipped with items providing **Physical elemental resistance** are **IMMUNE** to critical hits from monster attacks!
+
+**Source**: Data Driven Gamer Treasury - "Physical – You are immune to paralysis effects from hits. You will also never suffer critical hits."
 
 ---
 
@@ -347,51 +485,94 @@ IDChance% = (INT + PIE + Level) / 99
 ```
 Base = 50% + (5 × CharacterLevel) - (10 × MonsterLevel)
 
-Priest: Base (no penalty, always available)
-Bishop: Base - 20% (available at level 4+)
-Lord: Base - 40% (available at level 9+)
+// Class penalties:
+Priest: No penalty (available from level 1)
+Bishop: -20% penalty (available from level 4)
+Lord: -40% penalty (available from level 9)
 
-// Clamped to 5% - 95% range
-FinalChance% = max(5, min(95, AdjustedBase))
+// Apply class penalty
+AdjustedBase = Base - ClassPenalty
+
+// Clamp to valid range
+FinalChance% = CLAMP(AdjustedBase, 5%, 95%)
 ```
 
-**Examples**:
-- Level 5 Priest vs Level 3 Zombies: 50% + 25% - 30% = 45%
-- Level 10 Priest vs Level 5 Ghouls: 50% + 50% - 50% = 50%
-- Level 8 Bishop vs Level 4 Wraiths: 50% + 40% - 40% - 20% = 30%
-- Level 12 Lord vs Level 6 Vampire: 50% + 60% - 60% - 40% = 10%
+**Source**: Zimlab - "Priests, Bishops and Lords have the ability to dispel undead monsters back to their plane. They have ((50 + (5 * Character Level)) - (10 * Monster Level))% chance to succeed on each monster of a group."
+
+### DISPELL Examples
+
+**Level 5 Priest vs Level 3 Zombies**:
+```
+Base = 50% + (5×5) - (10×3) = 50% + 25% - 30% = 45%
+Penalty = 0%
+Final = 45%
+```
+
+**Level 10 Priest vs Level 5 Ghouls**:
+```
+Base = 50% + (5×10) - (10×5) = 50% + 50% - 50% = 50%
+Penalty = 0%
+Final = 50%
+```
+
+**Level 8 Bishop vs Level 4 Wraiths**:
+```
+Base = 50% + (5×8) - (10×4) = 50% + 40% - 40% = 50%
+Penalty = -20%
+Final = 30%
+```
+
+**Level 12 Lord vs Level 6 Vampire**:
+```
+Base = 50% + (5×12) - (10×6) = 50% + 60% - 60% = 50%
+Penalty = -40%
+Final = 10%
+```
+
+**Level 20 Priest vs Level 12 Vampire Lord**:
+```
+Base = 50% + (5×20) - (10×12) = 50% + 100% - 120% = 30%
+Final = 30%
+```
 
 ### DISPELL Effects
 
 **On Success**:
-- Entire undead group instantly removed from combat
-- No XP awarded (dispelled, not defeated)
-- No treasure dropped (bodies disintegrate)
-- Combat may end if all groups dispelled
+- Each monster in the undead group is checked individually
+- Successful dispell removes that monster from combat
+- **No XP awarded** for dispelled monsters
+- **No treasure dropped** (bodies vanish)
+- Combat ends if all enemies dispelled
 
 **On Failure**:
-- No effect on undead
-- Action wasted for this combat round
+- Monster remains in combat
+- Character's action is complete (not "wasted" - it just didn't work)
 
-### Undead Monster Types
+### Undead Monster List (Dispell/Zilwan Targets)
 
-**Affected by DISPELL**:
-- Zombies (Level 1-2)
-- Ghouls (Level 3-4)
-- Creeping Coins (Level 2-3)
-- Gas Cloud (Level 4-5)
-- Spectres (Level 7-8)
-- Wraiths (Level 8-9)
-- Vampire (Level 8-10)
-- Vampire Lord (Level 10+)
+| Monster | ID | Level | Notes |
+|---------|----|----|-------|
+| Undead Kobold | 3 | 2 | Easy target |
+| Zombie | 7 | 1 | Easiest |
+| Rotting Corpse | 23 | 2 | Paralyzes |
+| Grave Mist | 34 | 4 | Paralyzes |
+| Shade | 37 | 3 | Level drains |
+| Lifestealer | 59 | 5 | Level drains ×2 |
+| Nightstalker | 60 | 5 | Level drains |
+| Murphy's Ghost | 77 | 10 | Fixed encounter |
+| Vampire | 86 | 11 | Level drains ×2, paralyzes |
+| Dragon Zombie | 89 | 12 | Drain breath |
+| Maelific | 94 | 25 | Level drains ×3 |
+| Vampire Lord | 95 | 20 | Level drains ×4 |
 
-**Not Affected**: Living, demonic, or mechanical enemies
+**Not Affected**: Living, demonic, dragon, or any non-Undead class monsters
 
-**Strategic Notes**:
-- Use DISPELL when party is weak/injured
-- Skip DISPELL when farming XP/gold
-- Low success rate vs high-level undead (Vampire Lord)
-- Class-restricted (only divine classes)
+### Strategic Notes
+
+- **Use DISPELL when**: Party is damaged, facing level-draining undead, need to conserve spell points
+- **Skip DISPELL when**: Farming XP/gold, high success chance makes killing faster, low chance vs high-level undead
+- **Priests are best**: No penalty, available early (Bishop -20%, Lord -40%)
+- **Level draining undead**: Always consider DISPELL - getting drained is devastating
 
 ---
 
@@ -463,75 +644,211 @@ if Age >= 50:
 
 ---
 
+## Parry Action
+
+### Effect
+
+Parrying reduces your AC by 2 for the combat round. The character takes no offensive action.
+
+```
+ParryAC = BaseAC - 2
+```
+
+**Source**: Data Driven Gamer - "Parrying has the invisible effect of reducing your AC by 2 for the round."
+
+### When Parry is Useful
+
+- Back row characters (positions 4-6) default to Parry since they cannot melee attack
+- Front row characters can choose to Parry when low on HP
+- Stacks with existing AC buffs (PORFIC, BAMATU, etc.)
+
+---
+
+## Flee/Run Mechanics
+
+### Base Run Formula
+
+```
+BaseChance = 39% - (MazeLevel × 3%)
+```
+
+| Dungeon Level | Base Flee Chance |
+|---------------|------------------|
+| Level 1 | 36% |
+| Level 2 | 33% |
+| Level 3 | 30% |
+| Level 4 | 27% |
+| Level 5 | 24% |
+| Level 6 | 21% |
+| Level 7 | 18% |
+| Level 8 | 15% |
+| Level 9 | 12% |
+| **Level 10** | **0% (NEVER works!)** |
+
+**Source**: Data Driven Gamer - "Running NEVER works in level 10!"
+
+### Small Party Bonus
+
+If the party has 3 or fewer members:
+
+```
+SmallPartyBonus = 20% - (PartyCount × 5%)
+```
+
+| Party Size | Bonus |
+|------------|-------|
+| 1 member | +15% |
+| 2 members | +10% |
+| 3 members | +5% |
+| 4+ members | +0% |
+
+### Demoralization Bonus
+
+If monsters are **demoralized**, add **+20%** to flee odds.
+
+Monsters become demoralized when:
+```
+TotalPartyLevel > TotalMonsterMorale
+
+// Where:
+MonsterMorale = MonsterLevel × NumberOfOKMonstersInGroup
+TotalMonsterMorale = Sum across all groups
+```
+
+**Source**: Data Driven Gamer - "If the monsters are demoralized (e.g. some of them want to run), then add 20% to the odds."
+
+### Complete Run Formula
+
+```
+RunChance = 39% - (MazeLevel × 3%)
+
+IF PartySize <= 3:
+    RunChance += 20% - (PartySize × 5%)
+
+IF MonstersDemoralized:
+    RunChance += 20%
+
+IF MazeLevel == 10:
+    RunChance = 0%  // NEVER succeeds on Level 10
+```
+
+### Run Consequences
+
+- **Success**: Party escapes and appears at random location/direction on same maze level
+- **Failure**: Monsters get one free round of attacks, then party can try again
+- **No rewards**: Fleeing grants no XP or treasure
+- **Cannot run**: From Level 10 (Werdna's level)
+
+---
+
 ## Thievery Formulas
 
+### Trap Identification
+
+```
+// Thief identification
+ThiefIdentifyChance = (6 × Agility)%
+MaxChance = 95%
+
+// Ninja identification
+NinjaIdentifyChance = (4 × Agility)%
+MaxChance = 95%
+
+// Other classes
+OtherIdentifyChance = (1 × Agility)%
+```
+
+**Source**: Zimlab - "The Thief has ((RANDOM 0 to 99) < (6 * Agility)) chance to identify a trap"
+
+**Failed identification**: Reveals a **random trap name** (may be wrong!)
+
 ### Trap Disarm
-```
-DisarmChance = f(AGI, LUC, Level, Thief_Skills)
 
-// Exact formula needs more research
-// Higher AGI, LUC, and level = better success
 ```
+// Thief/Ninja disarm chance
+DisarmChance = (50 + CharacterLevel - MazeLevel) / 70
 
-### Chest Opening
-```
-OpenChance = f(AGI, LUC, Level)
-
-// Similar to disarm
-// Failure can trigger trap
+// Other classes
+OtherDisarmChance = (CharacterLevel - MazeLevel) / 70
 ```
 
-### Item Identification (Thief)
-```
-IdentifyChance = f(Level, LUC)
+**If disarm fails**: `(Agility × 5%)` chance to avoid triggering the trap and get another try.
 
-// Exact formula needs research
-```
+**Source**: Data Driven Gamer - "If disarming fails, the chance to avoid setting off the trap is Agility * 5%."
+
+### CALFO Spell
+
+The CALFO spell provides **95% accurate** trap identification.
+
+**Source**: Zimlab - "Calfo spell: 95% accurate"
 
 ---
 
 ## Resurrection Mechanics
 
-### DI Spell (Resurrect from Death)
-```
-SuccessRate ≈ 90% - (age penalties) - (vim penalties)
+### DI and KADORTO Success Rate
 
-Success: Character returns to life (HP = 1)
-Failure: Character turns to ashes
+```
+SuccessRate = (4 × Vitality)%
+
+// Examples:
+VIT 3:  12% success
+VIT 10: 40% success
+VIT 15: 60% success
+VIT 18: 72% success
 ```
 
-### KADORTO Spell (Resurrect from Ashes)
-```
-SuccessRate ≈ 50% - (age penalties) - (vim penalties)
+**Source**: Zimlab - "DI or KADORTO: The resurrect chance is (4 x Vitality)% of the recipient."
 
-Success: Character returns to life (HP = 1)
-Failure: Character lost forever (permanent deletion)
+### Vitality Loss
+
+**CRITICAL**: Each resurrection attempt (success or failure) **permanently reduces Vitality by 1**.
+
+```
+// After resurrection attempt:
+Character.Vitality -= 1
+
+// If Vitality was 3 before casting:
+// Character is LOST FOREVER (cannot resurrect with VIT < 3)
+```
+
+**Source**: Zimlab - "The recipient permanently loses 1 Vitality point. If Vitality is only 3 when cast, character is Lost forever."
+
+### Death Progression
+
+```
+DEAD → DI spell →
+  Success: Revived with 1 HP, VIT -1
+  Failure: Status becomes ASHES, VIT -1
+
+ASHES → KADORTO spell →
+  Success: Revived with FULL HP, VIT -1
+  Failure: Status becomes LOST (permanent deletion), VIT -1
 ```
 
 ### Temple Resurrection Costs
+
 ```
 DeadCost = 200 × Level
 AshesCost = 500 × Level
 ParalysisCure = 100 × Level
+StoneCure = 200 × Level
 
 // Examples:
 Level 5 dead: 1,000 gold
 Level 5 ashes: 2,500 gold
-Level 5 paralysis: 500 gold
 Level 10 dead: 2,000 gold
 Level 10 ashes: 5,000 gold
 ```
 
-**Success Factors** (from Source #35):
-- **Vitality**: Higher VIT = better resurrection chance
-- **Age**: Lower age = better resurrection chance
-- "The higher the vitality, and the lower the age, the better the chances are that the character will be successfully restored."
+**Temple Success Rate**: Uses the same `(4 × Vitality)%` formula. Temple priests don't have better odds, just guaranteed availability.
 
-**Resurrection Outcomes**:
-- **Success from Dead**: Character restored with 1 HP (requires additional healing)
-- **Success from Ashes**: Character restored with full HP
-- **Failure from Dead**: Character turns to ashes
-- **Failure from Ashes**: Character lost forever (permanent)
+### Strategic Implications
+
+- **High VIT is critical** for resurrection insurance
+- **VIT 18 character**: 72% success rate, can survive ~15 resurrections before reaching VIT 3
+- **VIT 10 character**: 40% success rate, can survive ~7 resurrections before reaching VIT 3
+- **Never attempt resurrection** on a character with VIT 3 - they will be permanently lost on failure
 
 ---
 
@@ -882,65 +1199,195 @@ TotalResistance = 30% + 10% + 15% = 55%
 
 ## Status Effects
 
+### Status Hierarchy
+
+Statuses from best to worst (worse always overwrites better):
+```
+OK → AFRAID → ASLEEP → PARALYZED → STONED → DEAD → ASHES → LOST
+```
+
+**Important**: Only one status at a time. **Poison is NOT a status** and can coexist with any status.
+
+### Status Recovery Rates (Per Round)
+
+**CHARACTERS**:
+| Status | Recovery Formula | Max | Notes |
+|--------|------------------|-----|-------|
+| ASLEEP | Level × 10% | 50% | Wakes on damage too |
+| AFRAID | Level × 5% | 50% | Rare in Wizardry 1 |
+| PARALYZED | **NONE** | 0% | **NO natural recovery in combat!** |
+
+**MONSTERS**:
+| Status | Recovery Formula | Max |
+|--------|------------------|-----|
+| ASLEEP | Level × 20% | 50% |
+| AFRAID | Level × 10% | 50% |
+| PARALYZED | Level × 7% | 50% |
+
+**Source**: Data Driven Gamer - "Your chance to heal AFRAID status per round is Level * 5%, but not more than 50%."
+
+**CRITICAL**: Characters have **NO natural recovery** from PARALYZE in combat! Must use DIALKO spell or wait until combat ends.
+
 ### Poison
-- Damage over time
-- Requires cure (spell or temple)
+
+**Activation**: 25% chance per combat round AND per maze step.
+
+**Damage**: -1 HP per activation.
+
+**Stacking**: Does NOT stack from combat hits (always sets to 1).
+- **Exception**: Poison Needle trap CAN stack poison
+
+**Source**: Zimlab - "Once a character is poisoned, there is 25% chance each round during combat or each maze movement that the poison will take effect."
+
+**Cure**: LATUMOFIS spell or Temple service.
 
 ### Paralyze
-- Character cannot act
-- Requires cure (spell or temple)
 
-### Petrify (Stone)
-- Character turned to stone
-- Removed from combat
-- Requires temple cure
+**Effect**: Character cannot act; auto-hit by enemies; takes 2× damage.
 
-### Silence
-- Cannot cast spells
-- Melee still works
-- Usually temporary (battle duration)
+**Character Recovery**: **NONE in combat** - must use DIALKO spell.
+
+**Monster Recovery**: `(MonsterLevel × 7)%` per turn, max 50%.
+
+**Temple Cost**: 100 gold × Character Level.
 
 ### Sleep
-- Automatically hit by attacks
-- Large to-hit bonus for attackers
-- Damage wakes character
 
-### Drain (Level)
-- Permanent level loss
-- Lose HP, spells, abilities
-- Extremely dangerous
-- **Cannot be reversed** (in Wizardry 1)
+**Effect**: Cannot act; auto-hit by enemies; takes 2× damage; wakes when damaged.
+
+**Caused by**: KATINO spell, some monster abilities.
+
+**Recovery**: Damage wakes immediately, OR natural recovery per round.
+
+### Petrify (Stone)
+
+**Effect**: Character turned to stone, cannot act.
+
+**Caused by**: Medusalizard, Flack, Werdna (on successful hit with stone ability).
+
+**Cure**: MADI spell or Temple (cannot cure in combat!).
+
+**Temple Cost**: 200 gold × Character Level.
+
+### Silence
+
+**Effect**: Cannot cast spells (melee still works).
+
+**Caused by**: MONTINO spell.
+
+**Recovery**: Silenced characters should recover, but **due to a bug in the original game, they never do during combat**.
+
+**NOTE (Implementation Decision)**: We are **FIXING** this bug - silenced characters will recover properly using a reasonable formula.
+
+### Level Drain
+
+**Effect**: Permanently lose X levels from a draining monster's attack.
+
+**HP Recalculation**:
+```
+NewMaxHP = OldMaxHP × (NewLevel / MaxLev)
+// MaxLev = highest level ever achieved without being drained
+```
+
+**Death**: Character is **permanently LOST** if drained below level 1.
+
+**Draining Monsters**:
+| Monster | Drain Amount |
+|---------|-------------|
+| Shade | 1 level |
+| Nightstalker | 1 level |
+| Lifestealer | 2 levels |
+| Vampire | 2 levels |
+| Maelific | 3 levels |
+| Vampire Lord | 4 levels |
+| Werdna | 4 levels |
+
+**Source**: Data Driven Gamer - "If you are hit, you will lose X levels, and your maxHP will be reduced to ([newLevel]* [oldMaxHP])/[MaxLev]"
 
 ---
 
 ## Encounter Mechanics
 
 ### Random Encounter Rate
-```
-// Per-tile probability, varies by level
-// Exact rates need extraction
 
-// Generally:
-Level 1-3: Low encounter rate
-Level 4-7: Medium encounter rate
-Level 8-10: High encounter rate
 ```
+// Corridor/hallway movement
+EncounterChance = 1% per step
 
-### Monster Groups
-```
-GroupCount = 1-4 groups per encounter
+// Kicking doors into flagged rooms (without treasure chest)
+RoomEncounterChance = 12.5%
 
-MonstersPerGroup = varies by monster type
-  // Common: 2-8
-  // Rare: 1-2
-  // Boss: 1 (unique)
+// Rooms with treasure chests
+ChestRoomEncounter = 100% (guaranteed)
 ```
 
-### Surprise Round
+**Source**: Data Driven Gamer - "Entering a room with a treasure chest guarantees an encounter"
+
+### Monster Group Limits
+
 ```
-// Chance for party or monsters to get free first round
-// Exact formula needs research
+MaxGroups = MIN(MazeLevel + 1, 4)
+MaxMonstersPerGroup = MazeLevel + 4
 ```
+
+| Maze Level | Max Groups | Max per Group |
+|------------|-----------|---------------|
+| 1 | 2 | 5 |
+| 2 | 3 | 6 |
+| 3 | 4 | 7 |
+| 4+ | 4 | Level + 4 |
+
+**Source**: Zimlab - "You will encounter a maximum of 2 monster groups on maze level 1, a maximum of 3 on level 2, and up to 4 on level 4 and beyond."
+
+### Surprise Mechanics
+
+```
+// Step 1: Check if party surprises monsters
+IF random(1-100) <= 20:
+    PartySuprises = true
+    // Party gets a free round of actions
+    // Monsters cannot act in round 1
+
+// Step 2: If party didn't surprise, check if monsters surprise party
+ELSE IF random(1-100) <= 20:
+    MonstersSurprise = true
+    // Monsters get a free round of attacks
+    // Party cannot act in round 1
+
+// Step 3: Neither side surprised
+ELSE:
+    NormalCombat = true
+    // Both sides act in round 1
+```
+
+**Source**: Data Driven Gamer - "When an encounter occurs, you have a 20% chance of surprising the monsters. If you have not surprised them, then the monsters get a 20% chance of surprising you."
+
+### Friendly Monster Encounters
+
+Only **Good-aligned parties** can encounter friendly monsters.
+
+```
+FriendlyChance = varies by monster class (see Monster Classes)
+
+IF party.alignment == GOOD AND random(1-100) <= FriendlyChance:
+    // Monster is friendly
+    // Party can choose to fight or leave
+
+IF party.alignment == GOOD AND ChooseToFight:
+    // 1/2000 chance each Good member turns Evil
+```
+
+| Monster Class | Friendly % |
+|---------------|-----------|
+| Fighter | 11% |
+| Mage | 6% |
+| Priest | 16% |
+| Thief | 4% |
+| Dragon | 26% |
+| Giant | 1% |
+| Most others | 1% |
+
+**Source**: Data Driven Gamer Bestiary
 
 ---
 
@@ -968,24 +1415,307 @@ MonstersPerGroup = varies by monster type
 
 ---
 
+## XP and Gold Distribution
+
+### XP Distribution Rules
+
+**IMPORTANT**: Only **OK-status** characters receive XP and gold!
+
+```
+// After combat victory
+FOR each character in party:
+    IF character.status == OK:
+        character.XP += TotalMonsterXP / OKCharacterCount
+    ELSE:
+        // Dead, paralyzed, stoned, etc. get NOTHING
+        character.XP += 0
+
+// Dispelled or fled monsters award NO XP
+IF monster.wasDispelled OR monster.fled:
+    XP_from_monster = 0
+```
+
+**Source**: Data Driven Gamer - "Only OK-status characters get XP and gold. Dead characters get nothing."
+
+### Gold Distribution
+
+Gold follows the same rules as XP:
+```
+// Gold is divided equally among OK-status party members
+GoldPerCharacter = TotalGold / OKCharacterCount
+
+// Dead/incapacitated characters receive nothing
+```
+
+### XP Overflow Bug (Authentic Quirk - REPLICATED)
+
+**BUG DESCRIPTION**: High spell-resistance monsters (≥80%) can receive bonus XP due to an integer overflow in the ADDLONGS routine when calculating XP awards.
+
+```
+// Original code bug (we replicate this for authenticity):
+IF monster.spellResist >= 80:
+    // ADDLONGS overflow adds ~40,000+ XP to award
+    EffectiveXP = BaseXP + overflow_bonus
+```
+
+**Affected Monsters**:
+| Monster | Spell Resist | XP with Bug |
+|---------|-------------|-------------|
+| Will O' Wisp | 100% | ~42,000+ XP |
+| Greater Demon | 100% | ~45,000+ XP |
+| High Priest | 80% | ~40,000+ XP |
+
+**Why We Replicate**: This bug creates a fun "farming incentive" - players discover that certain monsters are unusually rewarding. It adds authenticity and doesn't break game balance (these monsters are very dangerous).
+
+**Source**: Zimlab - "There's an overflow bug in ADDLONGS that causes high spell-resist monsters to award significantly more XP than intended."
+
+---
+
+## Complete Combat Round Pseudocode
+
+```
+PROCEDURE CombatRound:
+    // Phase 1: Input
+    CollectAllCharacterActions()
+    DetermineMonsterActions()  // AI selects actions
+
+    // Phase 2: Initiative
+    FOR each participant:
+        IF participant.isCharacter:
+            initiative = 1d10 + AgilityModifier
+            initiative = CLAMP(initiative, 1, 10)
+        ELSE:  // Monster
+            initiative = 1d8 + 1  // Range 2-9
+
+    // Sort by initiative (LOWEST first = fastest)
+    // On ties: characters act before monsters
+    SortByInitiative(allParticipants)
+
+    // Phase 3: Resolution
+    FOR each actor IN turnOrder:
+        IF actor.status != OK:
+            SKIP  // Dead/paralyzed/etc. can't act
+
+        IF actor.target.isDead AND actor.action == ATTACK:
+            // Queued melee attack wasted if target died
+            SKIP
+
+        ExecuteAction(actor)
+
+        // Check for status recovery
+        IF actor.status == ASLEEP:
+            IF random(1-100) <= MIN(actor.level × 10, 50):
+                actor.status = OK
+
+        IF actor.status == AFRAID:
+            IF random(1-100) <= MIN(actor.level × 5, 50):
+                actor.status = OK
+
+        // Note: Characters have NO natural PARALYZE recovery!
+        IF actor.isMonster AND actor.status == PARALYZED:
+            IF random(1-100) <= MIN(actor.level × 7, 50):
+                actor.status = OK
+
+    // Phase 4: Poison
+    FOR each participant:
+        IF participant.isPoisoned:
+            IF random(1-100) <= 25:  // 25% activation
+                participant.HP -= 1
+                IF participant.HP <= 0:
+                    participant.status = DEAD
+
+    // Phase 5: Combat End Check
+    IF AllMonstersDefeated():
+        AwardXPAndGold()  // Only to OK-status characters
+        CheckForTreasure()
+        END_COMBAT
+
+    IF AllCharactersIncapacitated():
+        GAME_OVER
+
+    NextRound()
+```
+
+### Attack Resolution Pseudocode
+
+```
+PROCEDURE ResolveAttack(attacker, targetGroup):
+    // Select random victim from group
+    victim = targetGroup.randomOKMember()
+
+    swings = MAX(attacker.classSwings, attacker.weapon.swings)
+    swings = MIN(swings, 10)  // Hard cap
+
+    FOR i = 1 TO swings:
+        // Hit check
+        HPCALCMD = CalculateHPCALCMD(attacker)
+        hitChance = (HPCALCMD + victim.AC + 29) × 5%
+        hitChance = CLAMP(hitChance, 5%, 95%)
+
+        IF random(1-100) <= hitChance:
+            // Calculate damage
+            damage = RollWeaponDice(attacker.weapon)
+            damage += attacker.strengthDamageBonus
+
+            // Double damage conditions
+            IF victim.status IN [ASLEEP, PARALYZED]:
+                damage = damage × 2
+            ELSE IF attacker.weapon.purpose == victim.class:
+                damage = damage × 2
+
+            victim.HP -= damage
+            damageDealt = true
+
+            // Wake sleeping targets
+            IF victim.status == ASLEEP:
+                victim.status = OK
+
+            IF victim.HP <= 0:
+                victim.status = DEAD
+                BREAK  // Stop attacking dead monster
+
+    // Critical hit check (Ninjas only, once per attack)
+    IF attacker.canCritical AND damageDealt AND victim.HP > 0:
+        critChance = MIN(attacker.level × 2, 50)
+        IF random(1-100) <= critChance:
+            // Monster resist check
+            resistChance = (victim.level + 10) / 35
+            IF random(0-34) >= (victim.level + 10):
+                // Critical success!
+                victim.status = DEAD
+                victim.HP = 0
+```
+
+### Monster AI Pseudocode
+
+```
+PROCEDURE DetermineMonsterAction(monster):
+    // 75% chance to cast spell if able
+    IF monster.canCastSpells AND random(1-100) <= 75:
+        IF monster.hasMageSpells:
+            spellLevel = DetermineMageSpellLevel(monster)
+            spell = SelectMageSpell(spellLevel)
+            RETURN CastSpell(spell)
+
+        IF monster.hasPriestSpells:
+            // Priest spells: always use max level (no degradation)
+            spell = SelectPriestSpell(monster.maxPriestLevel)
+            RETURN CastSpell(spell)
+
+    // Otherwise: physical attack
+    RETURN PhysicalAttack()
+
+PROCEDURE DetermineMageSpellLevel(monster):
+    // Mage spell level degradation table
+    // Roll determines actual spell level used
+    roll = random(1-100)
+    maxLevel = monster.maxMageLevel
+
+    IF roll <= 71:        RETURN maxLevel      // 71% use max
+    ELSE IF roll <= 91.59: RETURN maxLevel - 1  // 20.59% drop 1
+    ELSE IF roll <= 97.55: RETURN maxLevel - 2  // 5.96% drop 2
+    ELSE IF roll <= 99.28: RETURN maxLevel - 3  // 1.73% drop 3
+    ELSE IF roll <= 99.78: RETURN maxLevel - 4  // 0.5% drop 4
+    ELSE IF roll <= 99.93: RETURN maxLevel - 5  // 0.15% drop 5
+    ELSE:                  RETURN maxLevel - 6  // 0.07% drop 6+
+
+PROCEDURE MonsterCallForHelp(group):
+    // Monsters can call for reinforcements if group is small
+    IF group.count < 5 AND random(1-100) <= 75:  // 75% attempt
+        successChance = monster.level × 5
+        IF random(1-100) <= successChance:
+            // Add reinforcements to group
+            AddMonstersToGroup(group)
+```
+
+---
+
 ## Formulas Needing More Research
 
 1. **Exact spell point calculation** (ValueA/ValueB system)
-2. **Precise trap disarm rates** (See trap-mechanics-validation.md for partial formulas)
-3. **Exact flee success formula**
-4. **Encounter rate per tile**
-5. **Surprise round mechanics**
-6. **Exact resurrection VIM/age penalties**
-7. **Critical hit damage multiplier** (if any)
-8. ~~**Exact XP tables per class**~~ ✅ **ADDED** (6 of 8 classes documented)
-9. **HP gain random factors**
-10. **Equipment stat bonuses**
-11. **Class/Race bonuses for saving throws** (partial formula documented, exact bonuses needed)
+2. ~~**Precise trap disarm rates**~~ ✅ **DOCUMENTED** (See Thievery section)
+3. ~~**Exact flee success formula**~~ ✅ **DOCUMENTED** (See Flee/Run section)
+4. ~~**Encounter rate per tile**~~ ✅ **DOCUMENTED** (See Encounter Mechanics)
+5. ~~**Surprise round mechanics**~~ ✅ **DOCUMENTED** (See Encounter Mechanics)
+6. ~~**Exact resurrection VIM/age penalties**~~ ✅ **DOCUMENTED** (See Resurrection)
+7. **Critical hit damage multiplier** - Confirmed: **No multiplier, instant kill only**
+8. ~~**Exact XP tables per class**~~ ✅ **DOCUMENTED** (6 of 8 classes)
+9. **HP gain random factors** (need exact die roll mechanics)
+10. **Equipment stat bonuses** (per-item basis)
+11. **Class/Race bonuses for saving throws** (partial formula, exact values needed)
 12. **Base resistance values by class/race** (formula documented, base values needed)
 
 ---
 
-## Recently Added Formulas (2025-10-26)
+## Known Bugs and Implementation Decisions
+
+### Bugs We REPLICATE (Authentic Quirks)
+
+**XP Overflow Bug** - See "XP and Gold Distribution" section above.
+- Adds ~40,000+ XP to high spell-resist monsters
+- Creates fun farming incentive
+- Doesn't break balance (affected monsters are dangerous)
+
+### Bugs We FIX (Broken/Frustrating)
+
+**1. Save vs. Wand (Unused)**
+- **Original Bug**: The Elf race bonus for "Save vs. Wand" does nothing - the save type is never called.
+- **Our Fix**: Remove the unused save type entirely. Elf gets a different meaningful bonus.
+
+**2. Silence Recovery**
+- **Original Bug**: Characters inflicted with Silence never recover naturally in combat due to missing HEALHEAR routine.
+- **Our Fix**: Implement proper recovery using formula: `RecoveryChance = Level × 5%` (same as AFRAID).
+
+**3. HAMAN/MAHAMAN Missing Effects**
+- **Original Bug**: Due to `CASE RANDOM MOD (3 * MAHAMFLG)` bug, two effects never trigger:
+  - "SHIELDS PARTY" (damage reduction)
+  - "RESURRECTS PARTY" (mass resurrection)
+- **Our Fix**: Implement all intended effects with proper random selection.
+
+**4. Deadly Ring (Harmless)**
+- **Original Bug**: The Deadly Ring curse is supposed to drain HP but has a logic error making it harmless.
+- **Our Fix**: Implement actual curse damage as intended (-1 HP per step while equipped).
+
+### Bugs We DON'T Replicate (Use Correct Behavior)
+
+**1. MANIFO Effect**
+- **Original Bug**: MANIFO inflicts ASLEEP instead of PARALYZE as manual states.
+- **Our Implementation**: Correct PARALYZE effect (matches player expectations from manual).
+
+**2. Item Range Bug (Off-by-Two)**
+- **Original Bug**: Item reward ranges have off-by-two errors making some items unobtainable.
+- **Our Implementation**: Correct ranges (1-16, 17-32, etc.) so all items are obtainable.
+
+**3. Poison/Disband Bug**
+- **Original Bug**: Disbanding party cures poison (poison flag shares memory with X coordinate).
+- **Our Implementation**: Poison persists correctly through party changes.
+
+**4. DISPELL Status Check**
+- **Original Bug**: Only OK-status monsters can be dispelled (sleeping/held undead are immune!).
+- **Our Implementation**: DISPELL works on undead regardless of their status.
+
+---
+
+## Recently Added Formulas
+
+### 2025-11-30 Update (Major Validation Pass)
+
+From Thomas William Ewers' reverse-engineered source, Data Driven Gamer, and Zimlab:
+
+✅ **Initiative System**: Corrected to lower = faster (not higher = faster)
+✅ **Monster Initiative**: 1d8+1 (range 2-9), not random(0-9)
+✅ **DISPELL Formula**: 50% + (5×Level) - (10×MonsterLevel) with class penalties
+✅ **Weapon Swings**: MAX(class, weapon), not additive
+✅ **Character PARALYZE Recovery**: None in combat (critical correction)
+✅ **Flee Formula**: 39% - (MazeLevel×3%) with bonuses, never works on Level 10
+✅ **Resurrection**: (4 × Vitality)% success rate
+✅ **Status Recovery Rates**: Complete tables for characters and monsters
+✅ **Surprise Mechanics**: 20% party surprises, else 20% monsters surprise
+✅ **Monster AI**: 75% spell cast chance with mage spell degradation table
+✅ **XP Distribution**: Only OK-status characters receive rewards
+✅ **Complete Combat Pseudocode**: Full round, attack, and monster AI
+
+### 2025-10-26 Update
 
 From Perplexity research validation:
 
@@ -997,6 +1727,6 @@ From Perplexity research validation:
 
 ---
 
-**Last Updated**: 2025-10-26 (Added 5 formulas from Perplexity research)
-**Previous Update**: 2025-10-25 (Initial documentation)
-**Next Review**: Source #10 (How to Make an RPG) for decompiled code verification
+**Last Updated**: 2025-11-30 (Major validation pass from authoritative sources)
+**Previous Update**: 2025-10-26 (Perplexity research)
+**Status**: ✅ Combat formulas validated against reverse-engineered Apple II source

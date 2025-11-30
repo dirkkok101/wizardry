@@ -1,7 +1,7 @@
 // src/types/Combat.ts
 import { Character } from './Character'
 
-export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL' | 'ADVANCE'
+export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL' | 'ADVANCE' | 'BREATH'
 export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
 
 /**
@@ -54,6 +54,14 @@ export interface MonsterInstance {
   level: number
   agility?: number  // For initiative calculation
   undead?: boolean  // True if monster is undead (for BADIOS, etc.)
+  // Spell casting properties
+  mageLevel?: number    // 0-7, determines mage spell selection
+  priestLevel?: number  // 0-7, determines priest spell selection
+  // Breath weapon properties
+  breathType?: 'fire' | 'cold' | 'poison' | 'stone' | 'drain'
+  // Special abilities
+  canCall?: boolean     // Can call for help
+  canFlee?: boolean     // Can flee when demoralized
 }
 
 export type Combatant = Character | MonsterInstance

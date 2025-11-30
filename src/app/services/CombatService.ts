@@ -10,6 +10,11 @@ import { RandomService } from './RandomService'
 import { MonsterResistanceService } from './MonsterResistanceService'
 import { CharacterResistanceService } from './CharacterResistanceService'
 import { v4 as uuidv4 } from 'uuid'
+import {
+  selectMonsterMageSpell,
+  selectMonsterPriestSpell,
+  rollSpellLevelDegradation
+} from '@config/MonsterSpellTables'
 
 /**
  * Agility-to-initiative modifier table (Apple II reference)
@@ -445,12 +450,10 @@ export class CombatService {
       }
     }
 
-    // Get alive front row members that can be targeted
+    // Get alive party members for targeting
     const aliveFront = party.filter(c =>
       frontRow.includes(c.id) && this.canCombatantAct(c)
     )
-
-    // If no alive front row, target alive back row
     const targetPool = aliveFront.length > 0
       ? aliveFront
       : party.filter(c => this.canCombatantAct(c))
@@ -460,9 +463,61 @@ export class CombatService {
       return this.createCommand(monster, 'PARRY')
     }
 
-    // Select target using AI strategy based on monster level
-    const target = this.selectMonsterTarget(monster, targetPool)
+    // === MONSTER AI DECISION TREE (Apple II Reference) ===
+    // Priority: 1. Mage spell (75%), 2. Priest spell (75%), 3. Breath (60%), 4. Melee
 
+    // 1. Mage spell check (75% chance if has mage spells)
+    if (monster.mageLevel && monster.mageLevel > 0) {
+      if (RandomService.chance(75)) {
+        // Roll for spell level degradation
+        const degradation = rollSpellLevelDegradation(RandomService.nextRandom())
+        const effectiveLevel = Math.max(1, monster.mageLevel - degradation)
+
+        // Select spell from table
+        const spellChoice = RandomService.nextRandom()
+        const spellId = selectMonsterMageSpell(effectiveLevel, spellChoice)
+
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Monster AI] ${monster.name} casts mage spell ${spellId} (level ${effectiveLevel})`)
+        }
+
+        // Monster spells target all party members (group spell)
+        return this.createCommand(monster, 'CAST_SPELL', targetPool, { spellId })
+      }
+    }
+
+    // 2. Priest spell check (75% chance if has priest spells and didn't cast mage)
+    if (monster.priestLevel && monster.priestLevel > 0) {
+      if (RandomService.chance(75)) {
+        // Priest spells use max level (no degradation)
+        const spellChoice = RandomService.nextRandom()
+        const spellId = selectMonsterPriestSpell(monster.priestLevel, spellChoice)
+
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Monster AI] ${monster.name} casts priest spell ${spellId} (level ${monster.priestLevel})`)
+        }
+
+        return this.createCommand(monster, 'CAST_SPELL', targetPool, { spellId })
+      }
+    }
+
+    // 3. Breath weapon check (60% chance if has breath)
+    if (monster.breathType) {
+      if (RandomService.chance(60)) {
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Monster AI] ${monster.name} uses ${monster.breathType} breath`)
+        }
+
+        // Breath attacks hit all party members
+        return this.createCommand(monster, 'BREATH', party.filter(c => this.canCombatantAct(c)), {
+          breathType: monster.breathType,
+          damage: Math.floor(monster.hp / 2) // Damage = half current HP
+        })
+      }
+    }
+
+    // 4. Fall back to melee attack
+    const target = this.selectMonsterTarget(monster, targetPool)
     return this.createCommand(monster, 'ATTACK', target)
   }
 

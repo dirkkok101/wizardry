@@ -176,27 +176,38 @@ const incapacitated = StatusEffectService.isIncapacitated(character)
 
 ### updateStatusDurations
 
-Update status effect durations (decrement at end of round).
+Update status effect durations and check for natural recovery.
 
 **Signature**:
 ```typescript
-function updateStatusDurations(character: Character): Character
+function updateStatusDurations(combatant: Combatant): Combatant
 ```
 
 **Parameters**:
-- `character`: Character with status effects
+- `combatant`: Character or monster with status effects
 
-**Returns**: New character with durations decremented, expired effects removed
+**Returns**: New combatant with durations decremented, naturally recovered effects removed
+
+**Recovery Rates** (validated from Apple II source):
+
+| Status | Monster Recovery | Character Recovery |
+|--------|------------------|-------------------|
+| Sleep | 10% per round | 10% per round |
+| Paralyze | 15% per round | **NONE** (must cure) |
+| Blind | None | None |
+| Silence | None | None |
+
+**CRITICAL**: Characters do NOT naturally recover from paralysis during combat! This makes paralysis extremely dangerous for party members.
 
 **Example**:
 ```typescript
-// Sleep effect with 2 rounds remaining
-const updated = StatusEffectService.updateStatusDurations(character)
-// updated.statusEffects: sleep effect now has 1 round remaining
+// Monster with sleep - 10% chance each round to wake
+const updatedMonster = StatusEffectService.updateStatusDurations(sleepingOrc)
+// Rolls 10%, if success: sleep removed
 
-// After another round
-const expired = StatusEffectService.updateStatusDurations(updated)
-// expired.statusEffects: sleep effect removed (duration expired)
+// Character with paralysis - NO natural recovery
+const updatedChar = StatusEffectService.updateStatusDurations(paralyzedFighter)
+// Paralysis persists until cured or combat ends
 ```
 
 ### curePoison

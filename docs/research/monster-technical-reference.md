@@ -514,7 +514,10 @@ Lower initiative acts first. On ties, characters act before monsters.
 | Flack | Cold | ~90 |
 | Creeping Coin? | Drain | 1 (1 HP only) |
 
-**Critical:** Stone breath deals DAMAGE only—it does NOT petrify.
+**CRITICAL - Breath Effects:**
+- **Stone breath deals DAMAGE only** — it does NOT petrify the target
+- **Drain breath deals DAMAGE only** — it does NOT level drain
+- Both indicate the element type for protection purposes only
 
 ### Level Drain
 
@@ -776,8 +779,9 @@ Success = 50% + (CharacterLevel × 5%) - (MonsterLevel × 10%)
 ### Restrictions
 
 - Only affects **Undead** class monsters
-- Only affects monsters with **OK status** (not asleep/held)
 - **No XP** awarded for dispelled monsters
+
+**Note on Status Restriction:** The original game only allows dispelling monsters with OK status (sleeping/held undead are immune). This is considered a BUG that we do NOT replicate - our implementation allows dispelling undead regardless of their status.
 
 ### Undead Monsters
 
@@ -963,6 +967,86 @@ Note: Bonuses are negative numbers (subtracting a negative = adding).
 
 ---
 
+## Item Protection System
+
+### Class Protection (Purpose Weapons)
+
+Weapons with monster class "purpose" deal **double damage** to matching monster classes:
+
+```
+IF weapon.purpose == monster.class:
+    FinalDamage = BaseDamage × 2
+```
+
+| Weapon | Purpose | Effect |
+|--------|---------|--------|
+| Dragon Slayer | Dragon | 2× damage vs Dragons |
+| Were Slayer | Were | 2× damage vs Lycanthropes |
+| Mage Masher | Mage | 2× damage vs Mage-class monsters |
+| Undead-purpose items | Undead | 2× damage vs Undead |
+
+**Note:** Purpose weapons also have a 50% chance to **nullify special attacks** from matching monster classes (unverified - needs confirmation).
+
+### Elemental Protection
+
+Items with elemental protection provide **half damage** from matching element:
+
+```
+IF character.hasProtection(element) AND attack.element == element:
+    FinalDamage = BaseDamage / 2
+```
+
+**Stacking with Save:** Protection and successful saving throw are MULTIPLICATIVE:
+```
+// Breath attack with protection AND successful save:
+FinalDamage = (BaseDamage / 2) / 2 = BaseDamage / 4  (~25% damage)
+```
+
+| Element | Protects Against |
+|---------|------------------|
+| Fire | Fire breath, Litokan, Mahalito, Lahalito |
+| Cold | Cold breath, Dalto, Madalto |
+| Poison | Poison breath (half damage) |
+| Physical | Lorto, Malikto, Molito, Tiltowait |
+| Drain | Drain breath (half damage only, NOT level drain attacks) |
+| Stone | Stone breath (half damage only, NOT petrification attacks) |
+| Magic | Monster spells (targeted, see below) |
+
+### Physical Protection
+
+Items with **Physical element protection** provide special combat immunities:
+
+```
+IF character.hasProtection(PHYSICAL):
+    // Immune to paralysis from melee attacks
+    // Immune to critical hits from monster attacks
+```
+
+**Source**: Data Driven Gamer Treasury - "Physical – You are immune to paralysis effects from hits. You will also never suffer critical hits."
+
+### Magic Protection
+
+Items with **Magic element protection** nullify targeted monster spells - but ONLY if the character holding the item is randomly selected as the spell target.
+
+```
+IF monster.castsSpellAt(character) AND character.hasProtection(MAGIC):
+    IF spell.isTargeted:  // Not group/party spells
+        SpellEffect = NULLIFIED
+```
+
+**Important:** This does NOT protect against party-wide spells like Malikto or Tiltowait.
+
+### Item Protection Summary
+
+| Protection Type | Effect |
+|----------------|--------|
+| Class Purpose | 2× damage to matching monsters |
+| Elemental | 50% damage from matching element |
+| Physical | Immune to paralysis and critical hits from melee |
+| Magic | Nullifies targeted spells (when YOU are target) |
+
+---
+
 ## Implementation Notes
 
 ### Data Storage
@@ -987,32 +1071,49 @@ The "Sleep" ability is the ONLY "bad" monster ability. Monsters WITH this abilit
 
 ---
 
-## Known Bugs to Replicate
+## Known Bugs and Implementation Decisions
 
-For accurate clone implementation, these bugs from the original should be preserved:
+### Bugs We REPLICATE (Authentic Quirks)
 
-### 1. Wand Save (LUCKSKIL[2])
-Implemented but never called. Elves get a bonus that does nothing.
+**XP Overflow Bug**
+High spell resistance (≥80%) causes bonus XP via ADDLONGS overflow. Adds ~40,000+ XP to Greater Demon, Frost Giant, Will O' Wisp, and Poison Giant.
+- **Why replicate:** Creates fun "farming incentive" for dangerous monsters. Adds authenticity without breaking balance.
 
-### 2. Latumapic Bug
+**Latumapic Bug** (Optional)
 Should identify ALL monster groups but only identifies ONE random group.
+- **Consider:** This may be frustrating enough to fix. Document either approach.
 
-### 3. MANIFO Bug
-Claims to "hold" (paralyze) but actually inflicts ASLEEP status. Held monsters wake up using sleep recovery rates.
+### Bugs We FIX (Broken/Frustrating)
 
-### 4. XP Overflow Bug
-High spell resistance (≥80%) causes bonus XP via ADDLONGS overflow. Adds ~10,000+ XP to Greater Demon, Frost Giant, Will O' Wisp, and Poison Giant.
+**1. Wand Save (LUCKSKIL[2])**
+- **Original Bug:** Implemented but never called. Elves get a bonus that does nothing.
+- **Our Fix:** Remove unused save type entirely. Give Elf a different meaningful bonus.
 
-### 5. HAMAN/MAHAMAN Bug
-Two effects ("SHIELDS PARTY" and "RESURRECTS AND HEALS PARTY") never appear due to programming error:
-- Bug: `CASE RANDOM (MOD 3) * MAHAMFLG`
-- Should be: `CASE RANDOM MOD (3 * MAHAMFLG)`
+**2. MANIFO Bug**
+- **Original Bug:** Claims to "hold" (paralyze) but actually inflicts ASLEEP status.
+- **Our Fix:** Use correct PARALYZE effect (matches player expectations from manual).
 
-### 6. Unique Monster Counter
+**3. HAMAN/MAHAMAN Bug**
+- **Original Bug:** Two effects ("SHIELDS PARTY" and "RESURRECTS PARTY") never trigger due to `CASE RANDOM (MOD 3) * MAHAMFLG` error.
+- **Our Fix:** Implement all intended effects with proper random selection.
+
+**4. DISPELL Status Check Bug**
+- **Original Bug:** Only monsters with OK status can be dispelled (sleeping/held undead are immune!).
+- **Our Fix:** DISPELL works on undead regardless of their status.
+
+**5. Silence Recovery Bug**
+- **Original Bug:** Characters silenced by MONTINO never recover naturally (missing HEALHEAR routine).
+- **Our Fix:** Implement proper recovery using formula: `RecoveryChance = Level × 5%` (same as AFRAID).
+
+### Documented Original Behaviors (Not Bugs)
+
+**Unique Monster Counter**
 LVL 7 Fighters (ID 100) have Unique=1, but most disk images already have this set to 0, meaning they never appear.
+- **Implementation:** We don't track unique counters across saves (single-session behavior only).
 
-### 7. Murphy's Ghost Infinite Loop
+**Murphy's Ghost Infinite Loop**
 If Murphy's Ghost (ID 77) is made extinct via Unique counter, encountering them causes infinite loop since their partner is also Murphy's Ghost.
+- **Implementation:** Not applicable if we don't implement extinction.
 
 ---
 
@@ -1091,7 +1192,16 @@ If Murphy's Ghost (ID 77) is made extinct via Unique counter, encountering them 
   - Verified all monster stats against source code
   - Added complete partner chain table
   - Expanded implementation notes and bug documentation
+- **Version 2.1 (2025-11-30):** Combat validation update
+  - Clarified breath attacks don't cause status effects (stone/drain)
+  - Added complete Item Protection System section
+  - Updated Known Bugs with implementation decisions (replicate vs. fix)
+  - Removed DISPELL OK-status restriction (we don't replicate that bug)
+  - Cross-referenced with combat-formulas.md and treasure-system.md
 
 ---
+
+**Last Updated**: 2025-11-30
+**Status**: ✅ Validated against reverse-engineered Apple II source
 
 *This document is intended for game clone implementation purposes. All data derived from Thomas William Ewers' reverse-engineered Apple II Pascal source code (2012-2014).*

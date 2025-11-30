@@ -20,29 +20,39 @@ function calculateInitiative(combatant: Combatant): number
 **Parameters**:
 - `combatant`: Character or monster combatant
 
-**Returns**: Initiative value (1-14 range)
+**Returns**: Initiative value (1-10 range for characters, 2-9 for monsters)
+
+**CRITICAL**: Lower initiative acts FIRST (like D&D)
 
 **Formula**:
 ```typescript
-Initiative = random(0-9) + AgilityModifier
-Minimum = 1  // Can't go below 1
+// Characters
+Initiative = 1d10 + AgilityModifier
+Clamped to range 1-10
+
+// Monsters (different formula!)
+Initiative = 1d8 + 1  // Range: 2-9
+// Monsters do NOT use agility modifiers
 ```
 
-**Agility Modifiers**:
-- AGI 3: -2 (min capped to 1)
-- AGI 4-5: -1 (range 1-9)
-- AGI 6-8: 0 (range 1-10)
-- AGI 9-11: +1 (range 2-11)
-- AGI 12-14: +2 (range 3-12)
-- AGI 15-17: +3 (range 4-13)
-- AGI 18+: +4 (range 5-14)
+**Agility Modifiers** (Higher AGI = LOWER initiative = FASTER):
+
+| AGI | Modifier | Range | Effect |
+|-----|----------|-------|--------|
+| 3 | +2 | 3-10 | Slowest (acts late) |
+| 4-5 | +1 | 2-10 | Slow |
+| 6-7 | 0 | 1-10 | Average |
+| 8-14 | -1 | 1-9 | Fast |
+| 15-16 | -2 to -3 | 1-7 | Very fast |
+| 17-18 | -4 to -5 | 1-5 | Fastest (acts early) |
 
 **Example**:
 ```typescript
-const fighter = createCharacter({ stats: { agi: 15 } })
+const ninja = createCharacter({ stats: { agi: 18 } })
 
-const initiative = InitiativeService.calculateInitiative(fighter)
-// Result: 4-13 range (random(0-9) + 3)
+const initiative = InitiativeService.calculateInitiative(ninja)
+// Result: 1-5 range (1d10 - 5, clamped to 1-10)
+// This ninja will almost always act before monsters (who roll 2-9)
 ```
 
 ### calculateRoundOrder
@@ -61,7 +71,9 @@ function calculateRoundOrder(
 - `party`: All party members in combat
 - `enemies`: All monster groups in combat
 
-**Returns**: Array of combatants sorted by initiative (highest first)
+**Returns**: Array of combatants sorted by initiative (**lowest first** = fastest)
+
+**Tie-breaker**: Characters act before monsters on initiative ties
 
 **Example**:
 ```typescript
@@ -69,8 +81,9 @@ const party = [fighter, mage, priest]
 const enemies = [[orc1, orc2], [goblin1, goblin2, goblin3]]
 
 const turnOrder = InitiativeService.calculateRoundOrder(party, enemies)
-// turnOrder[0] = combatant with highest initiative acts first
-// turnOrder[last] = combatant with lowest initiative acts last
+// turnOrder[0] = combatant with LOWEST initiative acts FIRST
+// turnOrder[last] = combatant with HIGHEST initiative acts LAST
+// On ties, party members act before monsters
 ```
 
 ### getAgilityModifier
@@ -85,15 +98,17 @@ function getAgilityModifier(agility: number): number
 **Parameters**:
 - `agility`: Combatant's agility stat (3-18+)
 
-**Returns**: Initiative modifier (-2 to +4)
+**Returns**: Initiative modifier (-5 to +2)
+
+Note: Higher AGI gives NEGATIVE modifiers (which means LOWER initiative = FASTER)
 
 **Example**:
 ```typescript
-const modifier = InitiativeService.getAgilityModifier(18)
-// Result: +4
+const fastModifier = InitiativeService.getAgilityModifier(18)
+// Result: -5 (fast - acts early due to low initiative)
 
-const lowModifier = InitiativeService.getAgilityModifier(3)
-// Result: -2
+const slowModifier = InitiativeService.getAgilityModifier(3)
+// Result: +2 (slow - acts late due to high initiative)
 ```
 
 ## Dependencies
@@ -106,12 +121,13 @@ Uses:
 See [InitiativeService.test.ts](../../tests/services/InitiativeService.test.ts)
 
 **Key test cases**:
-- AGI 3 initiative range (1 only, min capped)
-- AGI 6-8 initiative range (1-10)
-- AGI 15 initiative range (4-13)
-- AGI 18+ initiative range (5-14)
-- Multiple combatants sorted correctly
-- Ties resolved randomly
+- AGI 3 initiative range (3-10, slow)
+- AGI 6-7 initiative range (1-10, average)
+- AGI 15-16 initiative range (1-7, fast)
+- AGI 18 initiative range (1-5, fastest)
+- Monster initiative range (2-9, no AGI modifiers)
+- Multiple combatants sorted correctly (lowest first)
+- Ties resolved: characters before monsters
 - Empty party/enemy handling
 - Turn order includes all combatants
 

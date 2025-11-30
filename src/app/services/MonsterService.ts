@@ -62,7 +62,15 @@ export class MonsterService {
       status: 'ALIVE',
       level: template.level,
       agility: 10,  // Default monster agility
-      undead: template.monsterClass === 'undead'
+      undead: template.monsterClass === 'undead',
+      // Spell casting properties from template
+      mageLevel: template.spellLevels?.mage,
+      priestLevel: template.spellLevels?.priest,
+      // Breath weapon
+      breathType: template.breathWeapon?.type as MonsterInstance['breathType'],
+      // Special abilities
+      canCall: template.specialAbilities.includes('call_for_help'),
+      canFlee: template.canFlee
     }
   }
 

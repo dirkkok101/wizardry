@@ -34,37 +34,50 @@
 ### DISPELL (Turn Undead)
 **Effect**: Attempt to instantly destroy an undead enemy group
 **Who Can Use**: Priest, Bishop, Lord only
-**Success Rate**: Based on your level vs. undead level
+**Success Rate**: Based on your level vs. undead level, with class penalties
 **Range**: Both rows can attempt DISPELL
 
 **How It Works**:
 ```
-Success % = (Your Level - Undead Level) × 10
-Minimum = 5%, Maximum = 95%
+Base = 50% + (5 × Your Level) - (10 × Undead Level)
+
+Class penalties:
+- Priest: No penalty
+- Bishop: -20% (available level 4+)
+- Lord: -40% (available level 9+)
+
+Final = CLAMP(Base - Penalty, 5%, 95%)
 ```
 
 **Examples**:
-- Level 5 Priest vs Level 3 Zombies: 20% chance
-- Level 10 Lord vs Level 5 Ghouls: 50% chance
-- Level 20 Bishop vs Level 2 Zombies: 95% chance (capped)
+- Level 5 Priest vs Level 3 Zombies: 50% + 25% - 30% = **45%**
+- Level 10 Priest vs Level 5 Ghouls: 50% + 50% - 50% = **50%**
+- Level 8 Bishop vs Level 4 Wraiths: 50% + 40% - 40% - 20% = **30%**
+- Level 12 Lord vs Level 6 Vampire: 50% + 60% - 60% - 40% = **10%**
 
-**Pros**: Instantly removes entire group, no damage to party, saves time
-**Cons**: No XP or treasure, wasted turn if it fails
+**Pros**: Instantly removes monsters, avoids level drain, saves resources
+**Cons**: No XP or treasure, Bishops/Lords have significant penalties
 
 **When to Use**:
 - Party is low on HP or spell points
-- Facing dangerous undead (level-draining Vampires, Spectres)
-- Need to escape quickly without wasting resources
+- Facing level-draining undead (Vampires, Shades, etc.)
+- Quick escape needed
 
 **When NOT to Use**:
 - Need XP for leveling up
 - Need gold or treasure
 - Success chance is very low (<20%)
+- You're a Lord (40% penalty makes it rarely worth it)
 
 ### Parry
-**Effect**: Attempt to block incoming attack
-**Success**: AGI-based chance
-**Benefit**: Negate damage from one attack
+**Effect**: Take a defensive stance for the round
+**Benefit**: **-2 AC** for the entire round (makes you harder to hit)
+**Trade-off**: Cannot attack while parrying
+
+**When to Parry**:
+- Front row character with low HP
+- Back row characters default to parry (can't melee anyway)
+- When buffing spells are more important than dealing damage
 
 ### Use Item
 **Effect**: Use consumable item (potion, scroll)
@@ -73,33 +86,53 @@ Minimum = 5%, Maximum = 95%
 
 ### Flee
 **Effect**: Attempt to run from combat
-**Success**: AGI-based, higher level enemies harder to flee
 **Failure**: Lose your turn, combat continues
 **Risk**: Back row turns around, vulnerable to attack
+
+**Success Rate**:
+```
+Base Chance = 39% - (Maze Level × 3%)
+
+Modifiers:
+- Party Size: -(Characters × 5%)
+- Demoralized: +10% (when party low on HP)
+
+Final = CLAMP(Adjusted, 0%, 95%)
+```
+
+**⚠️ CRITICAL: Fleeing NEVER works on Level 10!**
+- Base 39% - 30% = 9%, then party penalties reduce to 0%
+- You cannot escape the deepest level!
+
+**Examples**:
+- Level 1, full party: 39% - 3% - 30% = **6%** (very hard!)
+- Level 5, 3 characters: 39% - 15% - 15% = **9%**
+- Level 10, any party: **0%** (impossible)
 
 ## Initiative
 
 ### Initiative Roll
 ```
-Initiative = random(0-9) + AGI modifier
-Minimum = 1
+Characters: 1d10 + AGI modifier, clamped to 1-10
+Monsters: 1d8 + 1 (range 2-9)
 ```
 
-### AGI Modifiers
+### AGI Modifiers (Higher AGI = FASTER = LOWER Initiative)
 
-| AGI | Modifier | Initiative Range |
-|-----|----------|------------------|
-| 3 | -2 | 1 (min) |
-| 4-5 | -1 | 1-9 |
-| 6-8 | 0 | 1-10 |
-| 9-11 | +1 | 2-11 |
-| 12-14 | +2 | 3-12 |
-| 15-17 | +3 | 4-13 |
-| 18+ | +4 | 5-14 |
+| AGI | Modifier | Effect |
+|-----|----------|--------|
+| 3 | +2 | Slowest (acts late) |
+| 4-5 | +1 | Slow |
+| 6-7 | 0 | Average |
+| 8-14 | -1 | Fast |
+| 15-16 | -2 to -3 | Very fast |
+| 17-18 | -4 to -5 | Fastest (acts early) |
 
-**Fastest goes first**: Higher initiative = acts earlier in round
+**LOWER initiative acts FIRST** (like D&D)
 
-**Strategy**: High AGI characters (Thieves, Ninjas) often act first
+**Tie-breaker**: Characters act before monsters on ties
+
+**Strategy**: High AGI Ninjas/Thieves act early, getting kills before enemies attack
 
 ## Hit Chance
 
@@ -265,19 +298,25 @@ Encounters can have **multiple enemy groups** (1-4 groups)
 - Affected enemies cannot act
 - Takes 2x damage from physical attacks (authentic Wizardry mechanic)
 - Damage may wake them
+- **Monster Recovery**: 10% chance each round to wake naturally
+- **Character Recovery**: Same 10% chance per round
 
 **Paralyze** (MORLIS spell, some monsters):
 - Cannot act
 - Takes 2x damage from physical attacks (authentic Wizardry mechanic)
-- Stays paralyzed until combat ends or cured
+- **Monster Recovery**: 15% chance each round
+- **Character Recovery**: NONE in combat (must cure or wait until combat ends)
+- ⚠️ Paralyzed characters are extremely vulnerable!
 
 **Blind** (DILTO spell):
-- Reduced hit chance
+- Reduced hit chance (-4 to-hit penalty)
 - Less effective in combat
+- **No natural recovery in combat** (must cure)
 
 **Silence** (MANIFO, MONTINO spells):
 - Cannot cast spells
 - Critical vs enemy spellcasters
+- **No natural recovery** (must cure or combat ends)
 
 **Poison**:
 - Takes damage each round
@@ -356,8 +395,14 @@ Encounters can have **multiple enemy groups** (1-4 groups)
 - Encounter too difficult
 - Front row dead/paralyzed
 
-**Flee Success**: Based on AGI and enemy level
+**Flee Success**: See [Flee formula](#flee) above - based on maze level and party size
 **Risk**: Turns back row around (vulnerable)
+
+**⚠️ WARNING**: Fleeing is VERY difficult!
+- Even on Level 1 with a full party: only 6% chance
+- On Level 10: **IMPOSSIBLE** (0% chance)
+- Smaller parties have better flee chances
+- Consider if fleeing is worth the risk vs. fighting
 
 ### Monster Identification
 
