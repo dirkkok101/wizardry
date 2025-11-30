@@ -45,5 +45,5 @@
   "specialAbilities": ["Can use all weapons and armor", "Casts priest spells (all 7 levels, starts at character level 4)", "Can dispel undead"],
   "canIdentifyItems": false,
   "canDispelUndead": true,
-  "canCriticalHit": true
+  "canCriticalHit": false
 }

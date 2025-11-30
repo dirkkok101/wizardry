@@ -1,7 +1,7 @@
 {
   "id": "thief",
   "name": "Thief",
-  "description": "Skilled at disarming traps and opening chests. Can backstab for critical hits.",
+  "description": "Skilled at disarming traps and opening chests. Expert at identifying and disarming traps.",
   "requirements": {
     "agi": 11
   },
@@ -33,5 +33,5 @@
   "specialAbilities": ["Disarm traps", "Open locked chests"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
-  "canCriticalHit": true
+  "canCriticalHit": false
 }

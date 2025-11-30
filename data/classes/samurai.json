@@ -43,5 +43,5 @@
   "specialAbilities": ["Can use all weapons and armor", "Casts mage spells (all 7 levels, starts at character level 4)"],
   "canIdentifyItems": false,
   "canDispelUndead": false,
-  "canCriticalHit": true
+  "canCriticalHit": false
 }
