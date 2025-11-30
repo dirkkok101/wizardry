@@ -23,10 +23,11 @@
 **Equipment**: Any weapon, any armor
 
 **Progression**:
+- Hit dice: 1d10 (highest in game)
 - Attacks per round: 1 + (level / 5), max 10
 - Best front-line tank class
 
-**Notes**: Easiest class to create, most straightforward to play
+**Notes**: Easiest class to create, most straightforward to play. Does NOT have critical hits.
 
 ---
 
@@ -47,9 +48,11 @@
 - Must stay in back row
 
 **Progression**:
+- Hit dice: 1d4 (lowest in game)
 - Learns new spells on level-up
 - Learn chance: INT / 30 per spell
 - Spell points per level: varies by INT
+- Always 1 attack per round
 
 **Notes**: Extremely fragile but devastating offensive magic
 
@@ -72,9 +75,12 @@
 - **Cannot use helmets**
 
 **Progression**:
+- Hit dice: 1d8
 - Learns new spells on level-up
 - Learn chance: PIE / 30 per spell
 - Spell points per level: varies by PIE
+- Always 1 attack per round
+- Can dispel undead
 
 **Notes**: Essential for healing and resurrection
 
@@ -90,7 +96,7 @@
 **Abilities**:
 - Disarm traps
 - Open locks
-- Identify items
+- Identify trap type (AGI × 6%, max 95%)
 - Can run away from combat easily
 
 **Equipment**:
@@ -98,11 +104,11 @@
 - Armor: Leather armor and small shields ONLY
 
 **Progression**:
-- Moderate hit points
-- Multiple attacks at higher levels
+- Hit dice: 1d6
+- Always 1 attack per round
 - Critical to avoid traps
 
-**Notes**: Only class that can disarm traps
+**Notes**: Essential for trap disarmament. Cannot identify items (only Bishop can). Does NOT have critical hits.
 
 ---
 
@@ -113,12 +119,13 @@
 **Requirements**:
 - INT ≥ 12
 - PIE ≥ 12
-- **Alignment**: ⚠️ CONFLICTING DATA - Zimlab says "Any", Strategy Wiki says "Good or Evil only" (not Neutral)
+- **Cannot be Neutral alignment** (Good or Evil only) ✅ CONFIRMED
 
 **Abilities**:
 - Casts BOTH Mage AND Priest spells (levels 1-7)
-- Can identify items
-- Moderate hit points
+- Can identify cursed items (only class with this ability)
+- Can dispel undead (from level 4+, with -20% penalty vs Priest)
+- Hit dice: 1d6
 
 **Equipment**:
 - Similar to Priest (blunt weapons, no helmets)
@@ -145,18 +152,18 @@
 
 **Abilities**:
 - Fights as well as Fighter
-- Casts Mage spells (levels 1-6)
-- High hit points
+- Casts Mage spells (levels 1-7, gains at character level 4+)
 - Multiple attacks per round
 
 **Equipment**: Any weapon, any armor
 
 **Progression**:
+- Hit dice: 1d8 + 1 extra die (bonus)
 - Attacks per round: 1 + (level / 5), max 10
-- Faster spell learning than Bishop
-- Excellent all-around class
+- Mage spells unlock at character level 4
+- Spell level access: L1 at clvl4, L2 at clvl5, L3 at clvl7, etc.
 
-**Notes**: Best hybrid class; very hard to create
+**Notes**: Best hybrid class; very hard to create. Does NOT have critical hits.
 
 ---
 
@@ -173,19 +180,19 @@
 
 **Abilities**:
 - Fights as well as Fighter
-- Casts Priest spells (levels 1-6)
+- Casts Priest spells (levels 1-7, gains at character level 4+)
 - Can dispel undead
-- High hit points
 - Multiple attacks per round
 
 **Equipment**: Any weapon, any armor
 
 **Progression**:
+- Hit dice: 1d10 + 1 extra die (bonus)
 - Attacks per round: 1 + (level / 5), max 10
-- Excellent front-line tank with healing
-- Hardest class to create (requires all six stats high)
+- Priest spells unlock at character level 4
+- Spell level access: L1 at clvl4, L2 at clvl5, L3 at clvl7, etc.
 
-**Notes**: Most stat-demanding class; ultimate paladin
+**Notes**: Most stat-demanding class; ultimate paladin. Does NOT have critical hits.
 
 ---
 
@@ -201,22 +208,23 @@
 - **Must be Evil alignment ONLY**
 
 **Abilities**:
-- **Critical hit: Decapitate** (instant kill chance)
+- **Critical hit: Decapitate** (instant kill chance) - **ONLY CLASS WITH CRITICAL HITS**
 - Very high number of attacks
-- Can use **unarmed combat** effectively
-- Extremely high AC (unarmored AC better than armor)
-- Very fast (high initiative)
+- Unarmed combat damage: 2d4
+- Best AC when unarmored (formula: 10 - (level/3) - 2)
+- Can identify and disarm traps (like Thief)
 
 **Equipment**:
 - Best unarmored (AC bonus for NO armor)
-- Can use any weapon but often goes unarmed
+- Limited weapons: dagger, short sword, shuriken, staff, nunchaku
 
 **Progression**:
+- Hit dice: 1d6
 - Attacks per round: 2 + (level / 5), max 10
-- Unarmed damage: (1d4 + 1d4) + STR modifier
-- Fastest attacks in game
+- Critical hit chance: min(level × 2, 50)%
+- Monsters level 24+ resist critical hits
 
-**Notes**: Rarest class; requires perfect bonus roll; devastating damage dealer
+**Notes**: **IMPOSSIBLE to create at character creation** - requires 52+ bonus points (max is 29). Can only be achieved through class change after leveling up.
 
 ---
 
@@ -228,10 +236,10 @@
 | Mage | - | 11 | - | - | - | - | Any | ⭐ Easy |
 | Priest | - | - | 11 | - | - | - | G/E | ⭐ Easy |
 | Thief | - | - | - | - | 11 | - | N/E | ⭐ Easy |
-| Bishop | - | 12 | 12 | - | - | - | Any | ⭐⭐ Medium |
+| Bishop | - | 12 | 12 | - | - | - | G/E | ⭐⭐ Medium |
 | Samurai | 15 | 11 | 10 | 14 | 10 | - | G/N | ⭐⭐⭐ Hard |
 | Lord | 15 | 12 | 12 | 15 | 14 | 15 | G | ⭐⭐⭐⭐ Very Hard |
-| Ninja | 17 | 17 | 17 | 17 | 17 | 17 | E | ⭐⭐⭐⭐⭐ Extreme |
+| Ninja | 17 | 17 | 17 | 17 | 17 | 17 | E | Impossible* |
 
 ---
 
@@ -300,7 +308,11 @@ Characters can change class if they meet the new class requirements:
 
 ---
 
-**Last Updated**: 2025-10-26
-**Last Validation**: 2025-10-26 against Strategy Wiki - Trebor's Castle
-**Known Issues**: Bishop alignment restriction conflict (Zimlab vs Strategy Wiki)
-**Next Review**: After resolving Bishop alignment discrepancy
+**Last Updated**: 2025-11-30
+**Last Validation**: 2025-11-30 against reverse-engineered Apple II source code
+**Status**: ✅ Complete - all class data validated against source
+
+**Key Findings**:
+- Bishop alignment: Good/Evil only (confirmed from source)
+- Only Ninja has critical hits (Thief, Samurai, Lord do NOT)
+- Ninja is impossible to create at character creation (requires 52+ bonus points, max is 29)

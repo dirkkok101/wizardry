@@ -52,8 +52,8 @@
 - **Lucky Rogue**: Extreme LUC
 - **Strengths**: Highest LUC by far (15), high AGI (10)
 - **Weaknesses**: Lowest STR (5), low VIT (6), low stats overall
-- **Best Classes**: Thief, Ninja (with excellent bonus roll)
-- **Notes**: Hardest race to qualify for elite classes, but LUC advantage
+- **Best Classes**: Thief
+- **Notes**: Highest total stat points (50). Ninja requires 52+ bonus points even for Hobbit, but max bonus is 29, so Ninja is only achievable via class change.
 
 ---
 
@@ -114,26 +114,32 @@ To create elite classes, you need excellent bonus rolls:
 - **Gnome**: Need 8 STR, 7 VIT, 5 INT, 2 PIE, 4 AGI, 8 LUC = **34 points minimum**
 - **Hobbit**: Need 10 STR, 9 VIT, 5 INT, 5 PIE, 4 AGI, 0 LUC = **33 points minimum** ⭐
 
-### Ninja (STR 17, INT 17, PIE 17, VIT 17, AGI 17, LUC 17)
+### Ninja (STR 17, INT 17, PIE 17, VIT 17, AGI 17, LUC 17) - IMPOSSIBLE AT CHARACTER CREATION
 - **Human**: Need 9 STR, 9 INT, 12 PIE, 9 VIT, 9 AGI, 8 LUC = **56 points minimum**
 - **Elf**: Need 10 STR, 7 INT, 7 PIE, 11 VIT, 8 AGI, 11 LUC = **54 points minimum**
 - **Dwarf**: Need 7 STR, 10 INT, 7 PIE, 7 VIT, 12 AGI, 11 LUC = **54 points minimum**
 - **Gnome**: Need 10 STR, 10 INT, 7 PIE, 9 VIT, 7 AGI, 10 LUC = **53 points minimum**
 - **Hobbit**: Need 12 STR, 10 INT, 10 PIE, 11 VIT, 7 AGI, 2 LUC = **52 points minimum** ⭐
 
-**Note**: Maximum bonus roll is 29 points. Elite classes require exceptional rolls and often rerolling for hours.
+**Note**: Maximum bonus roll is 29 points. Since even Hobbit (best case) needs 52 points for Ninja, **Ninja is impossible to create at character creation**. Ninja can only be achieved through class change after leveling up and gaining stats.
 
 ---
 
 ## Saving Throw Bonuses
 
-Each race receives bonuses to saving throws against specific status effects:
+Each race receives bonuses to saving throws against specific effects (negative values are better):
 
-- Exact bonuses not extracted yet
-- Need to research racial resistances
-- Important for survival in late-game
+| Race | Bonus |
+|------|-------|
+| **Human** | Death -1 |
+| **Elf** | Wand -1 |
+| **Dwarf** | *(none)* |
+| **Gnome** | Petrify -2 |
+| **Hobbit** | Spell -3 |
+
+**Note**: These bonuses are applied to the saving throw roll. Lower values mean better resistance. Hobbit's -3 to spell saves makes them particularly resistant to magical effects.
 
 ---
 
-**Last Updated**: 2025-10-25
-**Next Review**: After extracting saving throw data
+**Last Updated**: 2025-11-30
+**Status**: ✅ Complete - all racial data validated

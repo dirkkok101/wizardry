@@ -98,9 +98,9 @@
 
 ### Elite Classes
 
-**Bishop**: INT ≥ 12, PIE ≥ 12, any alignment
+**Bishop**: INT ≥ 12, PIE ≥ 12, Good or Evil only (not Neutral)
 - Both Mage AND Priest spells
-- Identify items
+- Identify cursed items
 - Learns spells slowly (tradeoff)
 
 **Samurai**: STR ≥ 15, VIT ≥ 14, INT ≥ 11, PIE ≥ 10, AGI ≥ 10, not evil
@@ -116,9 +116,10 @@
 
 **Ninja**: STR ≥ 17, VIT ≥ 17, INT ≥ 17, PIE ≥ 17, AGI ≥ 17, LUC ≥ 17, evil only
 - Best AC unarmored
-- Decapitate (instant kill)
+- Decapitate (instant kill, only class with critical hits)
 - 2 base attacks (most in game)
-- Requires near-perfect roll (27-29 points)
+- **IMPOSSIBLE to create at character creation** - requires 52+ bonus points (max is 29)
+- Can only be achieved through class change after leveling up
 
 ## Class Requirements Table
 
@@ -128,10 +129,10 @@
 | Mage | - | 11 | - | - | - | - | Any | Easy |
 | Priest | - | - | 11 | - | - | - | G/E | Easy |
 | Thief | - | - | - | - | 11 | - | N/E | Easy |
-| Bishop | - | 12 | 12 | - | - | - | Any | Medium |
+| Bishop | - | 12 | 12 | - | - | - | G/E | Medium |
 | Samurai | 15 | 11 | 10 | 14 | 10 | - | G/N | Hard |
 | Lord | 15 | 12 | 12 | 15 | 14 | 15 | G | Very Hard |
-| Ninja | 17 | 17 | 17 | 17 | 17 | 17 | E | Extreme |
+| Ninja | 17 | 17 | 17 | 17 | 17 | 17 | E | Impossible* |
 
 ## Alignment
 
@@ -143,7 +144,9 @@
 
 ## Starting Age
 
-**Range**: 14-16 years
+**Formula**: (18 × 52) + random(0, 299) weeks
+
+**Range**: 18 years 0 weeks to ~23 years 39 weeks (936 to 1235 weeks)
 
 **Impact**: Younger = better stat gains on level-up (formula: 130 - age)
 
@@ -184,7 +187,7 @@
 **Bishop**: Elf (INT 10, PIE 10 naturally)
 **Samurai**: Human, Elf, Gnome (need balanced stats)
 **Lord**: Hobbit (LUC 15!), Gnome (balanced)
-**Ninja**: Hobbit (easier with LUC 15), any with perfect roll
+**Ninja**: Cannot be created at character creation (class change only)
 
 ## Bonus Point Allocation
 
@@ -201,18 +204,18 @@
 **Samurai**: Hit all requirements first, then STR
 **Lord**: Hit all requirements (very tight!), then VIT/STR
 
-### Ninja (27-29 points)
+### Ninja (Impossible at Character Creation)
 
-**Must hit 17 in all six stats** - No wiggle room!
+**Cannot be created** - Ninja requires 17 in all 6 stats. Even with the best race (Hobbit with 50 base stat points) and maximum bonus points (29), you can only reach 79 total stat points. Ninja needs 102 points (17 × 6). Ninja can only be achieved through class change after leveling up.
 
 ## Starting Gold
 
-**Formula**: 90 + random(0-100) = **90-190 gold pieces** per character
+**Formula**: 90 + random(0, 99) = **90-189 gold pieces** per character
 
 New characters receive random starting gold upon creation. This is authentic to the original Wizardry 1 (1981) mechanics.
 
 **How Gold Pooling Works**:
-1. Character is created at Training Grounds with starting gold (90-190)
+1. Character is created at Training Grounds with starting gold (90-189)
 2. Character joins party at Tavern
 3. Character's gold is automatically pooled into party gold
 4. Character's individual gold is set to 0

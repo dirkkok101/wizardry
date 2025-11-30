@@ -115,14 +115,14 @@
         "helmets": ["leather"]
       },
       "spellAccess": null,
-      "specialAbilities": ["disarm_traps", "backstab"],
-      "hitDice": "1d8",
+      "specialAbilities": ["disarm_traps"],
+      "hitDice": "1d6",
       "attacksPerLevel": {
         "1+": 1
       },
       "canIdentifyItems": false,
       "canDispelUndead": false,
-      "canCriticalHit": true
+      "canCriticalHit": false
     },
     {
       "id": "bishop",
@@ -130,11 +130,10 @@
       "type": "elite",
       "description": "Master of both divine and arcane magic. Can identify cursed items. Slower spell progression.",
       "requirements": {
-        "str": 12,
         "int": 12,
         "pie": 12
       },
-      "alignmentRestrictions": [],
+      "alignmentRestrictions": ["good", "evil"],
       "equipmentRestrictions": {
         "weapons": ["mace", "flail", "staff"],
         "armor": [],
@@ -181,12 +180,12 @@
       },
       "spellAccess": {
         "mage": {
-          "minLevel": 1,
-          "maxLevel": 6
+          "minLevel": 4,
+          "maxLevel": 7
         }
       },
-      "specialAbilities": ["spellcasting_mage", "critical_hit"],
-      "hitDice": "1d10",
+      "specialAbilities": ["spellcasting_mage"],
+      "hitDice": "1d8",
       "attacksPerLevel": {
         "1-4": 1,
         "5-9": 2,
@@ -195,7 +194,7 @@
       },
       "canIdentifyItems": false,
       "canDispelUndead": false,
-      "canCriticalHit": true
+      "canCriticalHit": false
     },
     {
       "id": "lord",
@@ -219,11 +218,11 @@
       },
       "spellAccess": {
         "priest": {
-          "minLevel": 1,
-          "maxLevel": 6
+          "minLevel": 4,
+          "maxLevel": 7
         }
       },
-      "specialAbilities": ["spellcasting_priest", "dispel_undead", "critical_hit"],
+      "specialAbilities": ["spellcasting_priest", "dispel_undead"],
       "hitDice": "1d10",
       "attacksPerLevel": {
         "1-4": 1,
@@ -233,7 +232,7 @@
       },
       "canIdentifyItems": false,
       "canDispelUndead": true,
-      "canCriticalHit": true
+      "canCriticalHit": false
     },
     {
       "id": "ninja",
@@ -250,16 +249,17 @@
       },
       "alignmentRestrictions": ["evil"],
       "equipmentRestrictions": {
-        "weapons": ["dagger", "short_sword", "shuriken"],
-        "armor": ["leather", "chain", "none"],
-        "shields": ["small"],
-        "helmets": ["leather"]
+        "weapons": ["dagger", "short_sword", "shuriken", "staff", "nunchaku"],
+        "armor": ["none"],
+        "shields": [],
+        "helmets": []
       },
       "spellAccess": null,
       "specialAbilities": ["critical_hit", "decapitate", "disarm_traps"],
-      "hitDice": "1d8",
+      "hitDice": "1d6",
       "attacksPerLevel": {
-        "1+": 2
+        "formula": "(level / 5) + 2",
+        "max": 10
       },
       "canIdentifyItems": false,
       "canDispelUndead": false,
@@ -335,15 +335,14 @@
 - `"identify_items"`: Can identify cursed items (Bishop only)
 - `"dispel_undead"`: Extra effective against undead (Priest, Bishop, Lord)
 - `"disarm_traps"`: Can disarm traps (Thief, Ninja)
-- `"backstab"`: Bonus damage from behind (Thief)
-- `"critical_hit"`: Chance for critical hits (Samurai, Lord, Ninja, Thief)
-- `"decapitate"`: Instant kill chance (Ninja only)
+- `"critical_hit"`: Chance for instant kill hits (**Ninja only**)
+- `"decapitate"`: Same as critical_hit (Ninja only)
 
 **hitDice**: `string` - Hit point die per level
 - `"1d4"`: Mage (lowest HP)
-- `"1d6"`: Bishop
-- `"1d8"`: Priest, Thief, Ninja
-- `"1d10"`: Fighter, Samurai, Lord (highest HP)
+- `"1d6"`: Thief, Bishop, Ninja
+- `"1d8"`: Priest, Samurai (Samurai gets +1 bonus die)
+- `"1d10"`: Fighter, Lord (Lord gets +1 bonus die)
 
 **attacksPerLevel**: `object` - Attacks per round by level range
 - Keys: Level range strings (e.g., "1-4", "5-9", "13+")
@@ -361,9 +360,9 @@
 - `true`: Priest, Bishop, Lord
 - `false`: Fighter, Mage, Thief, Samurai, Ninja
 
-**canCriticalHit**: `boolean` - Can perform critical hits/backstabs?
-- `true`: Thief, Samurai, Lord, Ninja
-- `false`: Fighter, Mage, Priest, Bishop
+**canCriticalHit**: `boolean` - Can perform critical hits (instant kill)?
+- `true`: **Ninja only**
+- `false`: Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord
 
 ## Class Changing Mechanics
 
@@ -401,9 +400,9 @@
 - Classes: Mage (1-7), Priest (1-7), Bishop (1-7 both), Samurai (Mage 1-6), Lord (Priest 1-6)
 
 ### Combat Abilities
-- **critical_hit**: Chance for bonus damage on successful hit
-- **decapitate**: Chance for instant kill (Ninja only, extremely rare)
-- **backstab**: Bonus damage when attacking from behind (Thief only)
+- **critical_hit**: Chance for instant kill (Ninja only). Formula: min(level × 2, 50)%
+- **decapitate**: Same as critical_hit (Ninja only)
+- Note: Thief, Samurai, and Lord do NOT have critical hits
 
 ### Utility Abilities
 - **identify_items**: Detect cursed items before equipping (Bishop only)
@@ -423,7 +422,7 @@
 | Bishop | Mace, Flail, Staff only |
 | Samurai | All |
 | Lord | All |
-| Ninja | Dagger, Short Sword, Shuriken |
+| Ninja | Dagger, Short Sword, Shuriken, Staff, Nunchaku |
 
 ### Armor
 
@@ -436,7 +435,7 @@
 | Bishop | All |
 | Samurai | All |
 | Lord | All |
-| Ninja | Leather, Chain |
+| Ninja | None (best AC unarmored) |
 
 ### Shields
 
@@ -449,7 +448,7 @@
 | Bishop | All |
 | Samurai | All |
 | Lord | All |
-| Ninja | Small only |
+| Ninja | None |
 
 ### Helmets
 
@@ -462,7 +461,7 @@
 | Bishop | None |
 | Samurai | All |
 | Lord | All |
-| Ninja | Leather only |
+| Ninja | None |
 
 ## Class Tier Comparison
 
@@ -502,15 +501,16 @@ All class data validated against:
 ## Notes
 
 - **Easiest to Create**: Fighter (STR ≥ 11 only)
-- **Hardest to Create**: Ninja (all stats ≥ 17)
+- **Hardest to Create**: Ninja (**IMPOSSIBLE at character creation** - requires 52+ bonus points, max is 29)
 - **Most Versatile**: Bishop (both spell types, item identification)
-- **Highest HP**: Fighter, Samurai, Lord (1d10 per level)
+- **Highest HP**: Fighter, Lord (1d10 per level, Lord gets +1 bonus die)
 - **Lowest HP**: Mage (1d4 per level)
-- **Most Attacks**: Fighter at level 13+ (4 attacks per round)
-- **Instant Kill**: Ninja only (decapitate ability)
+- **Most Attacks**: Ninja at high level (formula: 2 + level/5, max 10)
+- **Critical Hits**: **Ninja only** (Thief, Samurai, Lord do NOT have critical hits)
 - **Item Expert**: Bishop only (identify cursed items)
 - **Best Healers**: Priest, Bishop, Lord (priest spells)
 - **Best Damage**: Mage, Bishop (high-level mage spells)
+- **Samurai/Lord Spells**: Unlock at character level 4, not level 1
 
-**Last Updated**: 2025-10-26
-**Next Review**: After implementing character creation and class change systems
+**Last Updated**: 2025-11-30
+**Status**: ✅ Complete - validated against reverse-engineered source code
