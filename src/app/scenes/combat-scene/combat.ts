@@ -1019,22 +1019,17 @@ export class CombatComponent implements OnInit, OnDestroy {
     }
 
     // Create party commands from selected actions
-    // Expand attack commands into multiple attacks for multi-attack classes
-    const partyCommands: CombatCommand[] = []
-    if (DEBUG) console.log('[Combat] Building party commands from', actions.size, 'selected actions')
-    for (const command of actions.values()) {
-      if (command.type === 'ATTACK') {
-        const attacksPerRound = CombatService.getAttacksPerRound(command.actor)
-        if (DEBUG) console.debug(`[Combat] ${command.actor.name} (${command.type}) -> expanding to ${attacksPerRound} attack command(s)`)
-        for (let i = 0; i < attacksPerRound; i++) {
-          partyCommands.push(
-            CombatService.createCommand(command.actor, 'ATTACK', command.target)
-          )
-        }
-      } else {
-        if (DEBUG) console.debug(`[Combat] ${command.actor.name} (${command.type}) -> 1 command`)
-        partyCommands.push(command)
-      }
+    // Use expandAttackCommands to expand ATTACK commands for multi-attack classes
+    // This preserves the original initiative for all attacks (they happen at the same time)
+    const rawPartyCommands = Array.from(actions.values())
+    const partyCommands = CombatService.expandAttackCommands(rawPartyCommands)
+
+    if (DEBUG) {
+      console.log('[Combat] Building party commands from', actions.size, 'selected actions')
+      console.log('[Combat] Expanded to', partyCommands.length, 'total commands')
+      partyCommands.forEach(cmd => {
+        console.debug(`[Combat] ${cmd.actor.name} (${cmd.type}) -> target: ${this.getTargetName(cmd.target)}`)
+      })
     }
 
     if (DEBUG) console.log('[Combat] Total party commands:', partyCommands.length)

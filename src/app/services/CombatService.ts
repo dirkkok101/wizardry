@@ -378,6 +378,36 @@ export class CombatService {
   }
 
   /**
+   * Expand ATTACK commands for characters with multiple attacks per round.
+   * Each character ATTACK command is expanded based on getAttacksPerRound().
+   * Monster ATTACK commands are not expanded (they get 1 attack per group).
+   *
+   * @param commands - Array of combat commands to expand
+   * @returns Array with ATTACK commands expanded for multi-attack characters
+   */
+  static expandAttackCommands(commands: CombatCommand[]): CombatCommand[] {
+    return commands.flatMap(cmd => {
+      // Only expand character ATTACK commands
+      if (cmd.type !== 'ATTACK') return [cmd]
+
+      // Check if actor is a character (not a monster)
+      const isMonster = 'monsterId' in cmd.actor
+      if (isMonster) return [cmd]
+
+      const attacks = CombatService.getAttacksPerRound(cmd.actor)
+
+      // If only 1 attack, return original command unchanged
+      if (attacks <= 1) return [cmd]
+
+      // Create multiple attack commands with unique IDs
+      return Array.from({ length: attacks }, (_, i) => ({
+        ...cmd,
+        id: `${cmd.id}_${i}`
+      }))
+    })
+  }
+
+  /**
    * Select action for a monster during combat
    *
    * @param monster - The monster selecting an action
