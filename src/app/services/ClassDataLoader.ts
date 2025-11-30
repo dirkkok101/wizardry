@@ -1,6 +1,5 @@
 import { ClassData, CharacterClass, getClassId } from '@models/CharacterClass'
 import { ClassDataSchema } from '@models/CharacterClass.schema'
-import { AssetLoadingService } from './AssetLoadingService'
 
 /**
  * Loaded class data with validation metadata
@@ -12,11 +11,12 @@ export interface LoadedClassData extends ClassData {
 
 /**
  * Service for loading and validating class data from JSON files
- * Uses AssetLoadingService for centralized loading infrastructure
- * Implements caching to prevent multiple loads
- * Gracefully handles individual class failures
  *
- * Pattern: Follows the same structure as SpellDataLoader for consistency
+ * Data-driven architecture:
+ * - All class definitions live in data/classes/*.json
+ * - Manifest file (data/classes/index.json) lists all class IDs
+ * - No hardcoded class lists in code
+ * - Zod validates all class data at runtime
  */
 export class ClassDataLoader {
   private static classCache: Map<string, LoadedClassData> | null = null
@@ -50,7 +50,7 @@ export class ClassDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Uses AssetLoadingService for centralized infrastructure
+   * Reads manifest file to discover all classes
    */
   private static async performLoad(): Promise<Map<string, LoadedClassData>> {
     this.loading = true
@@ -61,13 +61,24 @@ export class ClassDataLoader {
     const loadedAt = Date.now()
 
     try {
-      // Use AssetLoadingService to load class JSON files
-      const assetLoader = new AssetLoadingService()
-      const rawClasses = await assetLoader.loadDataFiles<ClassData>('classes')
+      // Load manifest to get list of all class IDs
+      const manifestResponse = await fetch('/assets/classes/index.json')
+      if (!manifestResponse.ok) {
+        throw new Error('Failed to load class manifest')
+      }
+      const classFileNames: string[] = await manifestResponse.json()
 
-      // Validate each class with Zod and convert to LoadedClassData
-      for (const [classId, rawClass] of rawClasses.entries()) {
+      // Load each class file
+      for (const fileName of classFileNames) {
         try {
+          const response = await fetch(`/assets/classes/${fileName}.json`)
+          if (!response.ok) {
+            this.failedClasses.set(fileName, `HTTP ${response.status}`)
+            continue
+          }
+
+          const rawClass = await response.json()
+
           // Validate with Zod
           const validated = ClassDataSchema.parse(rawClass)
 
@@ -78,12 +89,12 @@ export class ClassDataLoader {
             validatedAt: loadedAt
           }
 
-          classes.set(classId, loadedClass)
+          classes.set(validated.id, loadedClass)
         } catch (error) {
           // Track validation failure but continue loading other classes
           const errorMessage = error instanceof Error ? error.message : String(error)
-          this.failedClasses.set(classId, errorMessage)
-          console.warn(`Failed to validate class ${classId}:`, errorMessage)
+          this.failedClasses.set(fileName, errorMessage)
+          console.warn(`Failed to validate class ${fileName}:`, errorMessage)
         }
       }
 
@@ -101,7 +112,7 @@ export class ClassDataLoader {
 
       return classes
     } catch (error) {
-      // Catastrophic failure (e.g., directory not found)
+      // Catastrophic failure (e.g., manifest not found)
       this.loadError = error as Error
       console.error('Failed to load classes:', error)
       throw error

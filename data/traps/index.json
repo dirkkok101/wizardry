@@ -1,14 +1,14 @@
 [
-  "poison_needle",
-  "gas_bomb",
-  "crossbow_bolt",
   "alarm",
-  "teleporter",
-  "stunner",
-  "exploding_box",
-  "splinters",
   "blades",
+  "crossbow_bolt",
+  "exploding_box",
+  "gas_bomb",
   "mage_blaster",
+  "pit",
+  "poison_needle",
   "priest_blaster",
-  "pit"
+  "splinters",
+  "stunner",
+  "teleporter"
 ]

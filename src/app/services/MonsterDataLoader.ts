@@ -1,13 +1,13 @@
 import { MonsterTemplate, validateMonster } from '@validation/MonsterSchema'
-import { AssetLoadingService } from './AssetLoadingService'
 
 /**
  * Service for loading and validating monster data from JSON files
- * Uses AssetLoadingService for centralized loading infrastructure
- * Implements caching to prevent multiple loads
- * Gracefully handles individual monster failures
  *
- * Follows the same pattern as SpellDataLoader for consistency
+ * Data-driven architecture:
+ * - All monster definitions live in data/monsters/*.json
+ * - Manifest file (data/monsters/index.json) lists all monster IDs
+ * - No hardcoded monster lists in code
+ * - Zod validates all monster data at runtime
  */
 export class MonsterDataLoader {
   private static monsterCache: Map<string, MonsterTemplate> | null = null
@@ -41,7 +41,7 @@ export class MonsterDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Uses AssetLoadingService for centralized infrastructure
+   * Reads manifest file to discover all monsters
    */
   private static async performLoad(): Promise<Map<string, MonsterTemplate>> {
     this.loading = true
@@ -49,24 +49,34 @@ export class MonsterDataLoader {
     this.failedMonsters.clear()
 
     const monsters = new Map<string, MonsterTemplate>()
-    const loadedAt = Date.now()
 
     try {
-      // Use AssetLoadingService to load monster JSON files
-      const assetLoader = new AssetLoadingService()
-      const rawMonsters = await assetLoader.loadDataFiles<any>('monsters')
+      // Load manifest to get list of all monster IDs
+      const manifestResponse = await fetch('/assets/monsters/index.json')
+      if (!manifestResponse.ok) {
+        throw new Error('Failed to load monster manifest')
+      }
+      const monsterFileNames: string[] = await manifestResponse.json()
 
-      // Validate each monster with Zod
-      for (const [monsterId, rawMonster] of rawMonsters.entries()) {
+      // Load each monster file
+      for (const fileName of monsterFileNames) {
         try {
+          const response = await fetch(`/assets/monsters/${fileName}.json`)
+          if (!response.ok) {
+            this.failedMonsters.set(fileName, `HTTP ${response.status}`)
+            continue
+          }
+
+          const rawMonster = await response.json()
+
           // Validate with Zod
           const validated = validateMonster(rawMonster)
-          monsters.set(monsterId, validated)
+          monsters.set(validated.id, validated)
         } catch (error) {
           // Track validation failure but continue loading other monsters
           const errorMessage = error instanceof Error ? error.message : String(error)
-          this.failedMonsters.set(monsterId, errorMessage)
-          console.warn(`Failed to validate monster ${monsterId}:`, errorMessage)
+          this.failedMonsters.set(fileName, errorMessage)
+          console.warn(`Failed to validate monster ${fileName}:`, errorMessage)
         }
       }
 
@@ -84,7 +94,7 @@ export class MonsterDataLoader {
 
       return monsters
     } catch (error) {
-      // Catastrophic failure (e.g., directory not found)
+      // Catastrophic failure (e.g., manifest not found)
       this.loadError = error as Error
       console.error('Failed to load monsters:', error)
       throw error

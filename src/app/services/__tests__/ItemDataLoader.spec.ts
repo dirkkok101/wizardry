@@ -1,49 +1,88 @@
 import { ItemDataLoader } from '../ItemDataLoader';
-import { Item } from '@models/Item';
 import { ItemType, ItemSlot } from '@models/ItemType';
-import { AssetLoadingService } from '../AssetLoadingService';
 import * as fs from 'fs';
 import * as path from 'path';
+
+/**
+ * Helper to create fetch mock that handles manifest and item files
+ * @param manifestItems - Array of item IDs to include in manifest
+ * @param itemData - Map of item ID to item data (for custom item data)
+ */
+function createFetchMock(manifestItems?: string[], itemData?: Map<string, any>) {
+  return jest.fn((url: string) => {
+    const urlPath = url.toString();
+
+    // Handle manifest file
+    if (urlPath.includes('/items/index.json')) {
+      if (manifestItems) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(manifestItems)
+        } as Response);
+      }
+      // Load real manifest from file
+      const manifestPath = path.join(__dirname, '../../../../data/items/index.json');
+      try {
+        const content = fs.readFileSync(manifestPath, 'utf-8');
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(JSON.parse(content))
+        } as Response);
+      } catch {
+        return Promise.resolve({
+          ok: false,
+          status: 404,
+          statusText: 'Not Found'
+        } as Response);
+      }
+    }
+
+    // Handle individual item files
+    const match = urlPath.match(/\/items\/([^/]+)\.json$/);
+    if (match) {
+      const itemId = match[1];
+
+      // Check custom item data first
+      if (itemData?.has(itemId)) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(itemData.get(itemId))
+        } as Response);
+      }
+
+      // Load from real data file
+      const dataPath = path.join(__dirname, '../../../../data/items', `${itemId}.json`);
+      try {
+        const fileContent = fs.readFileSync(dataPath, 'utf-8');
+        const jsonData = JSON.parse(fileContent);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(jsonData)
+        } as Response);
+      } catch {
+        return Promise.resolve({
+          ok: false,
+          status: 404,
+          statusText: 'Not Found'
+        } as Response);
+      }
+    }
+
+    // Return 404 for unknown paths
+    return Promise.resolve({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found'
+    } as Response);
+  });
+}
 
 describe('ItemDataLoader', () => {
   beforeEach(() => {
     // Reset service state between tests
     ItemDataLoader.clearCache();
-
-    // Mock fetch to load real data files from data/ directory
-    global.fetch = jest.fn((url: string) => {
-      const urlPath = url.toString();
-
-      // Extract filename from URL
-      const match = urlPath.match(/\/(items)\/([^/]+\.json)$/);
-      if (match) {
-        const [, directory, filename] = match;
-        const dataPath = path.join(__dirname, '../../../../data', directory, filename);
-
-        try {
-          const fileContent = fs.readFileSync(dataPath, 'utf-8');
-          const jsonData = JSON.parse(fileContent);
-
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(jsonData)
-          } as Response);
-        } catch (error) {
-          return Promise.resolve({
-            ok: false,
-            status: 404,
-            statusText: 'Not Found'
-          } as Response);
-        }
-      }
-
-      // Return 404 for unknown paths
-      return Promise.resolve({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
-      } as Response);
-    });
+    // Default fetch mock that loads real data files
+    global.fetch = createFetchMock();
   });
 
   afterEach(() => {
@@ -100,10 +139,10 @@ describe('ItemDataLoader', () => {
 
     it('does not reload on subsequent calls', async () => {
       await ItemDataLoader.loadAllItems();
-      const firstLoadCount = ItemDataLoader['itemsCache'].size;
+      const firstLoadCount = ItemDataLoader['itemsCache']!.size;
 
       await ItemDataLoader.loadAllItems();
-      const secondLoadCount = ItemDataLoader['itemsCache'].size;
+      const secondLoadCount = ItemDataLoader['itemsCache']!.size;
 
       expect(secondLoadCount).toBe(firstLoadCount);
     });
@@ -205,22 +244,24 @@ describe('ItemDataLoader', () => {
     });
 
     it('stores error on catastrophic load failure', async () => {
-      // Mock AssetLoadingService to throw error (simulates catastrophic failure)
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles')
-        .mockRejectedValueOnce(new Error('Catastrophic failure'));
+      // Mock fetch to fail on manifest request
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 500,
+          statusText: 'Internal Server Error'
+        } as Response)
+      );
 
       try {
         await ItemDataLoader.loadAllItems();
-      } catch (error) {
+      } catch {
         // Expected to throw
       }
 
       expect(ItemDataLoader.getError()).toBeInstanceOf(Error);
-      expect(ItemDataLoader.getError()?.message).toBe('Catastrophic failure');
+      expect(ItemDataLoader.getError()?.message).toBe('Failed to load item manifest');
       expect(ItemDataLoader.isLoading()).toBe(false);
-
-      // Restore
-      jest.restoreAllMocks();
     });
 
     it('tracks failed item loads', async () => {
@@ -265,154 +306,150 @@ describe('ItemDataLoader', () => {
     });
 
     it('validates items with Zod schemas during load', async () => {
-      // Mock AssetLoadingService to return valid item data
-      const validItems = new Map([
-        ['test_sword', {
-          id: 'test_sword',
-          name: 'Test Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: '1d8', min: 1, max: 8 },
-          enhancement: 0,
-          cost: 100,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }]
-      ]);
+      // Mock manifest with single test item
+      const testItem = {
+        id: 'test_sword',
+        name: 'Test Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: '1d8', min: 1, max: 8 },
+        enhancement: 0,
+        cost: 100,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
+      global.fetch = createFetchMock(
+        ['test_sword'],
+        new Map([['test_sword', testItem]])
+      );
 
       const items = await ItemDataLoader.loadAllItems();
 
       expect(items.size).toBe(1);
       expect(ItemDataLoader.getFailedItems().size).toBe(0);
-
-      jest.restoreAllMocks();
     });
 
     it('rejects items with invalid damage dice format', async () => {
-      const invalidItems = new Map([
-        ['bad_sword', {
-          id: 'bad_sword',
-          name: 'Bad Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: 'invalid', min: 1, max: 8 }, // Invalid dice format
-          enhancement: 0,
-          cost: 100,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }]
-      ]);
+      const invalidItem = {
+        id: 'bad_sword',
+        name: 'Bad Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: 'invalid', min: 1, max: 8 }, // Invalid dice format
+        enhancement: 0,
+        cost: 100,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+      global.fetch = createFetchMock(
+        ['bad_sword'],
+        new Map([['bad_sword', invalidItem]])
+      );
 
       await ItemDataLoader.loadAllItems();
 
       expect(ItemDataLoader.getLoadedCount()).toBe(0);
       expect(ItemDataLoader.getFailedItems().size).toBe(1);
       expect(ItemDataLoader.getFailedItems().get('bad_sword')).toContain('dice');
-
-      jest.restoreAllMocks();
     });
 
     it('rejects items with min > max damage', async () => {
-      const invalidItems = new Map([
-        ['bad_sword', {
-          id: 'bad_sword',
-          name: 'Bad Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: '1d8', min: 10, max: 5 }, // min > max
-          enhancement: 0,
-          cost: 100,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }]
-      ]);
+      const invalidItem = {
+        id: 'bad_sword',
+        name: 'Bad Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: '1d8', min: 10, max: 5 }, // min > max
+        enhancement: 0,
+        cost: 100,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+      global.fetch = createFetchMock(
+        ['bad_sword'],
+        new Map([['bad_sword', invalidItem]])
+      );
 
       await ItemDataLoader.loadAllItems();
 
       expect(ItemDataLoader.getLoadedCount()).toBe(0);
       expect(ItemDataLoader.getFailedItems().size).toBe(1);
-
-      jest.restoreAllMocks();
     });
 
     it('rejects items with invalid character class', async () => {
-      const invalidItems = new Map([
-        ['bad_sword', {
-          id: 'bad_sword',
-          name: 'Bad Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: '1d8', min: 1, max: 8 },
-          enhancement: 0,
-          cost: 100,
-          usableBy: ['invalid_class'], // Invalid class
-          cursed: false,
-          special: null
-        }]
-      ]);
+      const invalidItem = {
+        id: 'bad_sword',
+        name: 'Bad Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: '1d8', min: 1, max: 8 },
+        enhancement: 0,
+        cost: 100,
+        usableBy: ['invalid_class'], // Invalid class
+        cursed: false,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+      global.fetch = createFetchMock(
+        ['bad_sword'],
+        new Map([['bad_sword', invalidItem]])
+      );
 
       await ItemDataLoader.loadAllItems();
 
       expect(ItemDataLoader.getLoadedCount()).toBe(0);
       expect(ItemDataLoader.getFailedItems().size).toBe(1);
-
-      jest.restoreAllMocks();
     });
 
     it('rejects armor with AC out of range', async () => {
-      const invalidItems = new Map([
-        ['bad_armor', {
-          id: 'bad_armor',
-          name: 'Bad Armor',
-          category: 'armor',
-          armorType: 'body',
-          ac: 15, // Max is 10
-          enhancement: 0,
-          cost: 1000,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }]
-      ]);
+      const invalidItem = {
+        id: 'bad_armor',
+        name: 'Bad Armor',
+        category: 'armor',
+        armorType: 'body',
+        ac: 15, // Max is 10
+        enhancement: 0,
+        cost: 1000,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(invalidItems);
+      global.fetch = createFetchMock(
+        ['bad_armor'],
+        new Map([['bad_armor', invalidItem]])
+      );
 
       await ItemDataLoader.loadAllItems();
 
       expect(ItemDataLoader.getLoadedCount()).toBe(0);
       expect(ItemDataLoader.getFailedItems().size).toBe(1);
-
-      jest.restoreAllMocks();
     });
 
     it('accepts cursed armor with negative AC', async () => {
-      const validItems = new Map([
-        ['cursed_armor', {
-          id: 'cursed_armor',
-          name: 'Cursed Armor',
-          category: 'armor',
-          armorType: 'body',
-          ac: -1, // Negative AC is valid for cursed items
-          enhancement: -1,
-          cost: 0,
-          usableBy: ['fighter', 'mage', 'priest', 'thief', 'bishop', 'samurai', 'lord', 'ninja'],
-          cursed: true,
-          special: null
-        }]
-      ]);
+      const validItem = {
+        id: 'cursed_armor',
+        name: 'Cursed Armor',
+        category: 'armor',
+        armorType: 'body',
+        ac: -1, // Negative AC is valid for cursed items
+        enhancement: -1,
+        cost: 0,
+        usableBy: ['fighter', 'mage', 'priest', 'thief', 'bishop', 'samurai', 'lord', 'ninja'],
+        cursed: true,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
+      global.fetch = createFetchMock(
+        ['cursed_armor'],
+        new Map([['cursed_armor', validItem]])
+      );
 
       const items = await ItemDataLoader.loadAllItems();
 
@@ -422,28 +459,27 @@ describe('ItemDataLoader', () => {
       const cursedArmor = ItemDataLoader.getItem('cursed_armor');
       expect(cursedArmor?.cursed).toBe(true);
       expect(cursedArmor?.defense).toBe(-1);
-
-      jest.restoreAllMocks();
     });
 
     it('validates alignment restrictions', async () => {
-      const validItems = new Map([
-        ['holy_sword', {
-          id: 'holy_sword',
-          name: 'Holy Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: '2d8', min: 2, max: 16 },
-          enhancement: 2,
-          cost: 10000,
-          usableBy: ['fighter', 'lord'],
-          cursed: false,
-          alignmentRequired: 'good',
-          special: null
-        }]
-      ]);
+      const validItem = {
+        id: 'holy_sword',
+        name: 'Holy Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: '2d8', min: 2, max: 16 },
+        enhancement: 2,
+        cost: 10000,
+        usableBy: ['fighter', 'lord'],
+        cursed: false,
+        alignmentRequired: 'good',
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(validItems);
+      global.fetch = createFetchMock(
+        ['holy_sword'],
+        new Map([['holy_sword', validItem]])
+      );
 
       const items = await ItemDataLoader.loadAllItems();
 
@@ -451,51 +487,56 @@ describe('ItemDataLoader', () => {
 
       const holySword = ItemDataLoader.getItem('holy_sword');
       expect(holySword?.alignmentRestrictions).toEqual(['GOOD']);
-
-      jest.restoreAllMocks();
     });
 
     it('continues loading valid items when some items fail validation', async () => {
-      const mixedItems = new Map([
-        ['valid_sword', {
-          id: 'valid_sword',
-          name: 'Valid Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: '1d8', min: 1, max: 8 },
-          enhancement: 0,
-          cost: 100,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }],
-        ['invalid_sword', {
-          id: 'invalid_sword',
-          name: 'Invalid Sword',
-          category: 'weapon',
-          weaponType: 'sword',
-          damage: { dice: 'bad', min: 1, max: 8 }, // Invalid
-          enhancement: 0,
-          cost: 100,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }],
-        ['valid_armor', {
-          id: 'valid_armor',
-          name: 'Valid Armor',
-          category: 'armor',
-          armorType: 'body',
-          ac: 5,
-          enhancement: 0,
-          cost: 500,
-          usableBy: ['fighter'],
-          cursed: false,
-          special: null
-        }]
-      ]);
+      const validSword = {
+        id: 'valid_sword',
+        name: 'Valid Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: '1d8', min: 1, max: 8 },
+        enhancement: 0,
+        cost: 100,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
 
-      jest.spyOn(AssetLoadingService.prototype, 'loadDataFiles').mockResolvedValue(mixedItems);
+      const invalidSword = {
+        id: 'invalid_sword',
+        name: 'Invalid Sword',
+        category: 'weapon',
+        weaponType: 'sword',
+        damage: { dice: 'bad', min: 1, max: 8 }, // Invalid
+        enhancement: 0,
+        cost: 100,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
+
+      const validArmor = {
+        id: 'valid_armor',
+        name: 'Valid Armor',
+        category: 'armor',
+        armorType: 'body',
+        ac: 5,
+        enhancement: 0,
+        cost: 500,
+        usableBy: ['fighter'],
+        cursed: false,
+        special: null
+      };
+
+      global.fetch = createFetchMock(
+        ['valid_sword', 'invalid_sword', 'valid_armor'],
+        new Map([
+          ['valid_sword', validSword],
+          ['invalid_sword', invalidSword],
+          ['valid_armor', validArmor]
+        ])
+      );
 
       await ItemDataLoader.loadAllItems();
 
@@ -507,8 +548,6 @@ describe('ItemDataLoader', () => {
       // Should track 1 failed item
       expect(ItemDataLoader.getFailedItems().size).toBe(1);
       expect(ItemDataLoader.getFailedItems().has('invalid_sword')).toBe(true);
-
-      jest.restoreAllMocks();
     });
   });
 });

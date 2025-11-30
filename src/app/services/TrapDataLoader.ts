@@ -55,7 +55,7 @@ export class TrapDataLoader {
 
     try {
       // Load manifest to get list of all trap IDs
-      const manifestResponse = await fetch('/data/traps/index.json')
+      const manifestResponse = await fetch('/assets/traps/index.json')
       if (!manifestResponse.ok) {
         throw new Error('Failed to load trap manifest')
       }
@@ -64,7 +64,7 @@ export class TrapDataLoader {
       // Load each trap file
       for (const fileName of trapFileNames) {
         try {
-          const response = await fetch(`/data/traps/${fileName}.json`)
+          const response = await fetch(`/assets/traps/${fileName}.json`)
           if (!response.ok) {
             this.failedTraps.set(fileName, `HTTP ${response.status}`)
             continue
