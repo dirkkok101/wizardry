@@ -5,32 +5,33 @@ import { CharacterClass } from '@models/CharacterClass'
 
 describe('CombatService', () => {
   describe('calculateInitiative', () => {
-    it('calculates initiative with AGI modifier', () => {
-      const char = createTestCharacter({ agility: 18 })  // +4 modifier
+    it('calculates initiative with AGI modifier (Apple II table)', () => {
+      const char = createTestCharacter({ agility: 18 })  // -5 modifier (fastest)
 
       const results = Array.from({ length: 100 }, () =>
         CombatService.calculateInitiative(char)
       )
 
-      // Authentic Wizardry 1 formula: random(1-10) + AGI_modifier
-      // AGI 18 = +4 modifier
-      // Range: 5-14 (1+4 to 10+4)
+      // Apple II reference: 1d10 + agility table lookup
+      // AGI 18 = -5 modifier (faster = lower initiative)
+      // Range: 1-10 (clamped from -4 to 5)
       results.forEach(init => {
-        expect(init).toBeGreaterThanOrEqual(5)
-        expect(init).toBeLessThanOrEqual(14)
+        expect(init).toBeGreaterThanOrEqual(1)
+        expect(init).toBeLessThanOrEqual(10)
       })
     })
 
     it('has minimum of 1', () => {
-      const char = createTestCharacter({ agility: 3 })  // -4 modifier
+      const char = createTestCharacter({ agility: 3 })  // +2 modifier (slowest)
 
       const results = Array.from({ length: 100 }, () =>
         CombatService.calculateInitiative(char)
       )
 
-      // Even with negative modifier, minimum is 1
+      // Even with positive modifier, maximum is clamped to 10
       results.forEach(init => {
         expect(init).toBeGreaterThanOrEqual(1)
+        expect(init).toBeLessThanOrEqual(10)
       })
     })
 
@@ -41,10 +42,25 @@ describe('CombatService', () => {
         CombatService.calculateInitiative(char)
       )
 
-      // AGI 10 = +0 modifier, authentic Wizardry 1 range 1-10
+      // AGI 10 = -1 modifier (Apple II table)
+      // Range: 1-9 (clamped to 1-10)
       results.forEach(init => {
         expect(init).toBeGreaterThanOrEqual(1)
         expect(init).toBeLessThanOrEqual(10)
+      })
+    })
+
+    it('monster uses 1d8+1 formula (range 2-9)', () => {
+      const monster = createTestMonster()
+
+      const results = Array.from({ length: 100 }, () =>
+        CombatService.calculateInitiative(monster)
+      )
+
+      // Monsters: 1d8 + 1 (range 2-9)
+      results.forEach(init => {
+        expect(init).toBeGreaterThanOrEqual(2)
+        expect(init).toBeLessThanOrEqual(9)
       })
     })
   })

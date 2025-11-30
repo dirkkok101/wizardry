@@ -11,6 +11,21 @@ import { MonsterResistanceService } from './MonsterResistanceService'
 import { CharacterResistanceService } from './CharacterResistanceService'
 import { v4 as uuidv4 } from 'uuid'
 
+/**
+ * Agility-to-initiative modifier table (Apple II reference)
+ * Lower initiative = faster action
+ */
+function getAgilityModifier(agility: number): number {
+  if (agility <= 3) return 2    // Slowest
+  if (agility <= 5) return 1
+  if (agility <= 7) return 0
+  if (agility <= 14) return -1
+  if (agility === 15) return -2
+  if (agility === 16) return -3
+  if (agility === 17) return -4
+  return -5  // 18+ = Fastest
+}
+
 export class CombatService {
   /**
    * Debug flag to toggle verbose combat logging.
@@ -21,14 +36,26 @@ export class CombatService {
 
   /**
    * Calculate initiative for combatant
-   * Authentic Wizardry 1 formula: random(1-10) + AGI_modifier (minimum 1)
+   * Apple II reference formula:
+   * - Characters: 1d10 + agility table modifier (clamped 1-10)
+   * - Monsters: 1d8 + 1 (range 2-9)
+   * Lower initiative = faster action
    */
   static calculateInitiative(combatant: Combatant): number {
-    const agi = combatant.agility || 10
-    const agiMod = Math.floor((agi - 10) / 2)
-    const roll = RandomService.random(1, 10)  // 1-10 (authentic Wizardry 1)
+    // Check if combatant is a monster (has monsterId property)
+    const isMonster = 'monsterId' in combatant
 
-    return Math.max(1, roll + agiMod)
+    if (isMonster) {
+      // Monster: 1d8 + 1 (range 2-9)
+      return RandomService.random(1, 8) + 1
+    }
+
+    // Character: 1d10 + agility modifier (clamped 1-10)
+    const agi = combatant.agility || 10
+    const agilityMod = getAgilityModifier(agi)
+    const baseRoll = RandomService.random(1, 10)
+
+    return Math.max(1, Math.min(10, baseRoll + agilityMod))
   }
 
   /**
