@@ -33,12 +33,13 @@ const HpRangeSchema = z.object({
 
 const ResistanceSchema = z.object({
   type: z.enum([
-    'fire',    // Half damage from fire spells
-    'cold',    // Half damage from cold spells
-    'magic',   // General magic resistance (for non-elemental)
-    'poison',  // Resistance to poison effects
-    'drain',   // Resistance to level drain
-    'stone'    // Resistance to petrification
+    'physical', // Half damage from Lorto, Malikto, Molito, Tiltowait
+    'fire',     // Half damage from Litokan, Mahalito, Lahalito
+    'cold',     // Half damage from Dalto, Madalto
+    'magic',    // General magic resistance (purpose weapon bonus)
+    'poison',   // Resistance to poison effects
+    'drain',    // Resistance to level drain
+    'stone'     // Resistance to petrification
   ]),
   value: z.number().int().min(0).max(100)
 })
