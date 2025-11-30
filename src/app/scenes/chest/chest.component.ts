@@ -263,6 +263,13 @@ export class ChestComponent implements OnInit, OnDestroy {
    * Initialize the chest from game state (set by combat victory or exploration)
    */
   private async initializeChest(): Promise<void> {
+    // Ensure trap data is loaded before any trap operations
+    // TrapDataLoader.loadAllTraps() is called at app init (GameInitializationService)
+    // and in setup-jest.ts for tests - this check ensures it's ready
+    if (!TrapDataLoader.isLoaded()) {
+      await TrapDataLoader.loadAllTraps();
+    }
+
     const state = this.gameState.state();
 
     // Get chest from game state (set by combat victory or exploration)

@@ -162,11 +162,14 @@ async function generateBossChest(
   position: Position
 ): Promise<Chest> {
   const chest = await generateChest(5, mazeLevel, position, 'boss')
-  // Boss chests are always trapped
+  // Boss chests are always trapped - use immutable update pattern
   if (!chest.trapped) {
-    chest.trapped = true
-    // Select a tier 5 trap for boss chests
-    chest.trapId = await selectTrapId(5)
+    const trapId = await selectTrapId(5)
+    return {
+      ...chest,
+      trapped: true,
+      trapId
+    }
   }
   return chest
 }

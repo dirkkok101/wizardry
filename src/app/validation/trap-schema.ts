@@ -52,14 +52,18 @@ const TrapSpecialEffectSchema = z.enum([
 ])
 
 /**
- * Effect types for data-driven trap handling
- * Code has handlers for each type; JSON defines which type each trap uses
+ * Effect type categories for trap classification
+ *
+ * Note: This field categorizes traps for documentation and future extensibility.
+ * Current trap routing uses specific fields (damageFormula, statusEffect, specialEffect)
+ * rather than effectType. This allows traps to combine multiple effect types
+ * (e.g., a trap that deals damage AND applies a status effect).
  */
 const TrapEffectTypeSchema = z.enum([
-  'damage',      // Direct HP damage
-  'condition',   // Status effect (poison, paralyzed)
-  'teleport',    // Random teleport, loses treasure
-  'alarm'        // Spawns new encounter
+  'damage',      // Primary effect is HP damage (e.g., crossbow_bolt, exploding_box)
+  'condition',   // Primary effect is status (e.g., poison_needle, stunner)
+  'teleport',    // Primary effect is teleportation (e.g., teleporter)
+  'alarm'        // Primary effect is triggering combat (e.g., alarm)
 ])
 
 /**

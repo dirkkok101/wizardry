@@ -73,7 +73,7 @@ export interface TrapEffect {
   specialEffect?: TrapSpecialEffect // For TELEPORTER and ALARM
   hitChance?: number                // 0-1 probability (default 1.0 = always hits)
   description: string               // Human-readable description
-  effectType: string                // Effect type for routing (damage, condition, teleport, alarm)
+  effectType: string                // Category for documentation (damage, condition, teleport, alarm)
   tiers: number[]                   // Which reward tiers this trap can appear in
 }
 
