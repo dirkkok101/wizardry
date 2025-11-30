@@ -1,13 +1,17 @@
 {
   "id": "mogref",
   "name": "MOGREF",
+  "translation": "Body Iron",
   "level": 1,
   "casterType": "mage",
   "category": "buff",
-  "target": "single",
-  "description": "-2 AC to ally (improves armor class)",
-  "castableIn": [
-    "combat"
-  ],
-  "acModifier": -2
+  "target": "caster",
+  "description": "Hardens caster's body, reducing AC by 2",
+  "castableIn": ["combat"],
+  "effect": {
+    "acModifier": -2,
+    "stacks": true
+  },
+  "duration": "Until combat ends",
+  "notes": "Self-only in Wizardry 1 (later games allow targeting allies). Stacks with repeated castings and other AC buffs."
 }

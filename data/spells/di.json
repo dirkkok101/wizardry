@@ -1,16 +1,33 @@
 {
   "id": "di",
   "name": "DI",
-  "level": 7,
+  "translation": "Life",
+  "level": 5,
   "casterType": "priest",
-  "category": "utility",
-  "target": "dead_body",
-  "description": "Resurrect from death (90% success, failure = ashes)",
-  "castableIn": [
-    "town",
-    "dungeon"
-  ],
-  "resurrection": true,
-  "resurrectionSuccessRate": 0.9,
-  "failureResult": "ashes"
+  "category": "resurrection",
+  "target": "dead_ally",
+  "description": "Attempts to resurrect a dead character - success depends on Vitality",
+  "castableIn": ["camp"],
+  "notCastableIn": ["combat"],
+  "resurrection": {
+    "worksOn": ["dead"],
+    "doesNotWorkOn": ["ashes"],
+    "successFormula": "(Vitality × 4)%",
+    "successExamples": {
+      "vitality18": "72%",
+      "vitality10": "40%",
+      "vitality5": "20%"
+    },
+    "onSuccess": {
+      "hp": 1,
+      "vitalityLoss": 1,
+      "notes": "Character returns with 1 HP; Vitality permanently reduced by 1"
+    },
+    "onFailure": {
+      "result": "ashes",
+      "notes": "Character is converted to ASHES status"
+    },
+    "criticalWarning": "If Vitality is 3 or lower when cast, failure results in character being permanently LOST"
+  },
+  "comparison": "Temple of Cant is safer with (50 + 3×Vitality)% success rate"
 }

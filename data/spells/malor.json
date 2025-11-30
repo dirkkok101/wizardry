@@ -1,14 +1,30 @@
 {
   "id": "malor",
   "name": "MALOR",
-  "level": 6,
+  "translation": "Apport",
+  "level": 7,
   "casterType": "mage",
   "category": "utility",
   "target": "party",
-  "description": "Teleport party to any coordinates (DANGEROUS - wrong coordinates = rock = death)",
-  "castableIn": [
-    "dungeon"
-  ],
-  "utility": "teleport",
-  "teleportSuccessRate": 0.75
+  "description": "Teleportation spell - behavior differs between camp and combat",
+  "castableIn": ["combat", "camp"],
+  "campBehavior": {
+    "type": "coordinate_teleport",
+    "input": "Player inputs relative coordinate offsets (North/South, East/West, Up/Down)",
+    "dangers": {
+      "solidRock": "Teleporting into solid rock results in INSTANT PERMANENT PARTY DEATH - characters are LOST FOREVER, cannot be recovered",
+      "outsideBounds": "Teleporting outside dungeon boundaries also kills party"
+    },
+    "restrictions": {
+      "level10": "Cannot teleport INTO Level 10 (Werdna's lair) but CAN teleport out"
+    },
+    "safetyTip": "Use DUMAPIC first to determine safe coordinates. Teleport UP to Level 1 (no rock on ceiling), then MALOR to known-safe coordinates."
+  },
+  "combatBehavior": {
+    "type": "random_escape",
+    "destination": "Random location on current dungeon level",
+    "safe": true,
+    "notes": "Combat escape is SAFE (never into rock) but random destination means you may land in worse situation"
+  },
+  "notes": "Most powerful utility spell but extremely dangerous in camp mode. Always use DUMAPIC first."
 }

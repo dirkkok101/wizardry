@@ -1,13 +1,35 @@
 {
   "id": "montino",
   "name": "MONTINO",
+  "translation": "Still Air",
   "level": 2,
   "casterType": "priest",
   "category": "debuff",
   "target": "group",
-  "description": "Silence enemy group",
-  "statusEffect": "SILENCED",
-  "castableIn": [
-    "combat"
-  ]
+  "description": "Silences all monsters in a group, preventing spellcasting for remainder of combat",
+  "castableIn": ["combat"],
+  "statusEffect": {
+    "type": "silenced",
+    "preventsCasting": true
+  },
+  "resistance": {
+    "formula": "(Monster Level × 10)%",
+    "examples": {
+      "level1": "10% resist",
+      "level5": "50% resist",
+      "level10": "100% immune"
+    }
+  },
+  "duration": {
+    "type": "permanent_until_combat_ends",
+    "recovery": {
+      "formula": "(Monster Level × 10)% per round",
+      "cap": "50%",
+      "notes": "Bug-free implementation - silenced monsters CAN recover (original had bug where recovery never occurred)"
+    }
+  },
+  "bugs": {
+    "originalBug": "In original Apple II code, silence recovery timer was never decremented - silenced monsters NEVER recovered",
+    "implementation": "Bug-free version allows recovery per formula"
+  }
 }

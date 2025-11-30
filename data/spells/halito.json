@@ -1,16 +1,23 @@
 {
   "id": "halito",
   "name": "HALITO",
+  "translation": "Little Fire",
   "level": 1,
   "casterType": "mage",
   "category": "offensive",
-  "target": "group",
-  "description": "1d8 fire damage to enemy group",
-  "castableIn": [
-    "combat"
-  ],
+  "target": "single",
+  "description": "Basic fire damage spell targeting a single monster",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",
+    "min": 1,
+    "max": 8,
+    "average": 4.5,
     "type": "fire"
+  },
+  "resistance": {
+    "type": "fire",
+    "effect": "half_damage",
+    "notes": "Fire-resistant monsters take half damage; no saving throw"
   }
 }

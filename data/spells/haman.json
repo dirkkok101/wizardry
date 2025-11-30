@@ -1,17 +1,50 @@
 {
   "id": "haman",
   "name": "HAMAN",
+  "translation": "Change",
   "level": 6,
   "casterType": "mage",
   "category": "utility",
-  "target": "group",
-  "description": "Transforms monsters (costs 1 experience level, spell must be relearned)",
-  "castableIn": [
-    "combat"
-  ],
-  "transformation": true,
+  "target": "variable",
+  "description": "Desperate spell with random powerful effects - costs 1 experience level",
+  "castableIn": ["combat"],
+  "requirements": {
+    "minCasterLevel": 13
+  },
   "cost": {
     "experienceLevels": 1,
-    "mustRelearn": true
+    "mustRelearn": false,
+    "notes": "Permanently drains 1 level from caster"
+  },
+  "randomEffects": [
+    {
+      "id": 1,
+      "name": "Mass Dialko and Heal",
+      "description": "Cures Afraid, Asleep, Paralyzed, Stoned, and Silenced on all party members AND heals 9-72 HP each",
+      "formula": "9 × random(1-8) HP per character"
+    },
+    {
+      "id": 2,
+      "name": "Strip Magic Resistance",
+      "description": "First 3 monster groups lose all Magic Resistance (set to 0%) and are treated as Level 1 for spell resistance",
+      "target": "first_3_groups"
+    },
+    {
+      "id": 3,
+      "name": "Full Party Heal",
+      "description": "Cures all conditions (except Dead/Ashes) and restores ALL HP to maximum for entire party"
+    }
+  ],
+  "risks": {
+    "spellbookMangling": {
+      "chance": "1 in (CharacterLevel + 1)",
+      "condition": "random(0 to CharacterLevel) equals exactly 5",
+      "effect": "Some spells are unlearned from caster's spellbook"
+    }
+  },
+  "bugs": {
+    "originalBug": "Two additional effects were coded but never trigger due to CASE statement logic error",
+    "missingEffects": ["SHIELDS PARTY (AC=-10)", "RESURRECTS AND HEALS PARTY"],
+    "implementation": "Bug-free version includes all 5 intended effects"
   }
 }

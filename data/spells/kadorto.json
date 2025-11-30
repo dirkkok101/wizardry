@@ -1,16 +1,32 @@
 {
   "id": "kadorto",
   "name": "KADORTO",
-  "level": 5,
+  "translation": "Resurrection",
+  "level": 7,
   "casterType": "priest",
-  "category": "utility",
-  "target": "ashes",
-  "description": "Resurrect from ashes (50% success, failure = lost forever)",
-  "castableIn": [
-    "town",
-    "dungeon"
-  ],
-  "resurrection": true,
-  "resurrectionSuccessRate": 0.5,
-  "failureResult": "lost_forever"
+  "category": "resurrection",
+  "target": "dead_or_ashed_ally",
+  "description": "Ultimate resurrection spell - can resurrect from Dead OR Ashes with full HP",
+  "castableIn": ["camp"],
+  "notCastableIn": ["combat"],
+  "resurrection": {
+    "worksOn": ["dead", "ashes"],
+    "successFormula": "(Vitality × 4)%",
+    "successExamples": {
+      "vitality18": "72%",
+      "vitality10": "40%",
+      "vitality5": "20%"
+    },
+    "onSuccess": {
+      "hp": "full",
+      "vitalityLoss": 1,
+      "notes": "Character returns with FULL HP; Vitality permanently reduced by 1"
+    },
+    "onFailure": {
+      "fromDead": "Character becomes ASHES",
+      "fromAshes": "Character is permanently LOST FOREVER"
+    },
+    "criticalWarning": "If Vitality is 3 or lower, failure = permanent loss"
+  },
+  "comparison": "Strictly superior to DI - works on Ashes and restores full HP instead of 1 HP"
 }

@@ -1,14 +1,21 @@
 {
   "id": "makanito",
   "name": "MAKANITO",
+  "translation": "Deadly Air",
   "level": 5,
   "casterType": "mage",
-  "category": "offensive",
-  "target": "group",
-  "description": "Instant death to all enemies in group (effective on enemies ≤7 HD)",
-  "castableIn": [
-    "combat"
-  ],
-  "instantDeath": true,
-  "hdLimit": 7
+  "category": "instant_death",
+  "target": "all_enemies",
+  "description": "Instantly kills all eligible monsters with NO saving throw - extremely powerful crowd control",
+  "castableIn": ["combat"],
+  "instantDeath": {
+    "type": "suffocation",
+    "killThreshold": {
+      "maxHitDice": 7,
+      "approximateMaxHP": "35-40 HP"
+    },
+    "noSavingThrow": true
+  },
+  "immunities": ["undead", "monsters_level_8_plus"],
+  "notes": "Extremely powerful against weaker monster groups; completely immune if Level 8+ or undead"
 }

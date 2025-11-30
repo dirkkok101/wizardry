@@ -1,16 +1,23 @@
 {
   "id": "malikto",
   "name": "MALIKTO",
+  "translation": "Word of Death",
   "level": 7,
   "casterType": "priest",
   "category": "offensive",
   "target": "all_enemies",
-  "description": "Turn all enemies to stone (permanent removal from combat)",
-  "castableIn": [
-    "combat"
-  ],
+  "description": "Most powerful priest damage spell - deals massive damage to ALL monsters",
+  "castableIn": ["combat"],
   "damage": {
     "dice": "12d6",
-    "type": "magic"
-  }
+    "min": 12,
+    "max": 72,
+    "average": 42,
+    "type": "divine"
+  },
+  "resistance": {
+    "type": "magic_resistance",
+    "notes": "Subject to Spell Resistance"
+  },
+  "comparison": "Priest's equivalent to TILTOWAIT; slightly lower average damage (42 vs 80) but same all-target coverage"
 }
