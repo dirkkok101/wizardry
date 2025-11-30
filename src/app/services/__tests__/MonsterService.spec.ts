@@ -1,6 +1,8 @@
 // src/services/__tests__/MonsterService.spec.ts
 import { MonsterService } from '../MonsterService'
 import { MonsterDataLoader } from '../MonsterDataLoader'
+import { RandomService } from '../RandomService'
+import { MonsterTemplate } from '@validation/MonsterSchema'
 
 describe('MonsterService', () => {
   // Monsters are preloaded in setup-jest.ts via MonsterDataLoader.loadAllMonsters()
@@ -202,6 +204,126 @@ describe('MonsterService', () => {
       expect(dragonZombie?.specialAbilities).toContain('breath_weapon')
       expect(dragonZombie?.specialAbilities).toContain('spellcasting')
       expect(dragonZombie?.breathWeapon).toBeDefined()
+    })
+  })
+
+  describe('generateEncounterWithPartners', () => {
+    // Helper to create minimal template for testing
+    const createTestTemplate = (overrides: Partial<MonsterTemplate>): MonsterTemplate => ({
+      id: 'test_monster',
+      numericId: 0,
+      name: 'Test Monster',
+      level: 1,
+      numberAppearing: { min: 1, max: 1 },
+      hp: { min: 1, max: 10 },
+      ac: 10,
+      damage: [],
+      xp: 100,
+      monsterClass: 'animal',
+      specialAbilities: [],
+      resistances: [],
+      regeneration: 0,
+      isBoss: false,
+      canFlee: false,
+      ...overrides
+    } as MonsterTemplate)
+
+    it('generates primary group when no partner', () => {
+      // Kobold in our data doesn't have partner yet (we'll add it in Task 7)
+      // Use a monster we know exists without partner
+      const groups = MonsterService.generateEncounterWithPartners('kobold')
+
+      expect(groups.length).toBe(1)
+      expect(groups[0].monsterId).toBe('kobold')
+      expect(groups[0].monsters.length).toBeGreaterThan(0)
+    })
+
+    it('generates partner groups when chance succeeds', () => {
+      // Mock monster templates with partner chain for this test
+      const originalGetMonster = MonsterDataLoader.getMonster
+      jest.spyOn(MonsterDataLoader, 'getMonster').mockImplementation((id) => {
+        if (id === 'test_orc') {
+          return createTestTemplate({
+            id: 'test_orc',
+            name: 'Test Orc',
+            numberAppearing: { min: 1, max: 1 },
+            partner: { monsterId: 'test_kobold', chance: 100 }  // 100% for test
+          })
+        }
+        if (id === 'test_kobold') {
+          return createTestTemplate({
+            id: 'test_kobold',
+            name: 'Test Kobold',
+            numberAppearing: { min: 1, max: 1 }
+            // No partner - chain ends
+          })
+        }
+        return originalGetMonster(id)
+      })
+
+      try {
+        RandomService.queueNextValues([0.5])  // For partner chance check
+
+        const groups = MonsterService.generateEncounterWithPartners('test_orc')
+
+        expect(groups.length).toBe(2)
+        expect(groups[0].monsterId).toBe('test_orc')
+        expect(groups[1].monsterId).toBe('test_kobold')
+      } finally {
+        jest.restoreAllMocks()
+      }
+    })
+
+    it('limits to maximum 4 groups', () => {
+      // Set up infinite chain (test_ghost -> test_ghost)
+      jest.spyOn(MonsterDataLoader, 'getMonster').mockReturnValue(
+        createTestTemplate({
+          id: 'test_ghost',
+          name: 'Test Ghost',
+          numberAppearing: { min: 1, max: 1 },
+          partner: { monsterId: 'test_ghost', chance: 100 }
+        })
+      )
+
+      try {
+        // Queue enough random values for 10 attempts
+        RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
+
+        const groups = MonsterService.generateEncounterWithPartners('test_ghost')
+
+        expect(groups.length).toBeLessThanOrEqual(4)
+      } finally {
+        jest.restoreAllMocks()
+      }
+    })
+
+    it('stops when partner chance fails', () => {
+      jest.spyOn(MonsterDataLoader, 'getMonster').mockImplementation((id) => {
+        if (id === 'test_orc') {
+          return createTestTemplate({
+            id: 'test_orc',
+            name: 'Test Orc',
+            numberAppearing: { min: 1, max: 1 },
+            partner: { monsterId: 'test_kobold', chance: 10 }  // 10% chance
+          })
+        }
+        return createTestTemplate({
+          id: 'test_kobold',
+          name: 'Test Kobold',
+          numberAppearing: { min: 1, max: 1 }
+        })
+      })
+
+      try {
+        RandomService.queueNextValues([0.5])  // 50% > 10% = partner fails
+
+        const groups = MonsterService.generateEncounterWithPartners('test_orc')
+
+        expect(groups.length).toBe(1)
+        expect(groups[0].monsterId).toBe('test_orc')
+      } finally {
+        jest.restoreAllMocks()
+      }
     })
   })
 })

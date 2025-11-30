@@ -194,4 +194,42 @@ export class MonsterService {
     const attackRange = this.getAttackRange(template)
     return attackRange === 'ranged' || attackRange === 'both'
   }
+
+  /**
+   * Generate encounter with partner chain spawning
+   * Per Apple II source: each monster has a % chance to spawn partner groups
+   * Chain continues until: partner check fails, max 4 groups, or loop detected
+   *
+   * @param monsterId - Primary monster ID to start chain
+   * @returns Array of monster groups (each with monsterId and monsters array)
+   */
+  static generateEncounterWithPartners(monsterId: string): { monsterId: string; monsters: MonsterInstance[] }[] {
+    const groups: { monsterId: string; monsters: MonsterInstance[] }[] = []
+    const visited = new Set<string>()  // Prevent infinite loops
+
+    let currentId: string | undefined = monsterId
+    while (currentId && groups.length < 4) {
+      // Prevent infinite loops (Murphy's Ghost has 80% chance to spawn itself)
+      if (visited.has(currentId)) {
+        break
+      }
+      visited.add(currentId)
+
+      const template = MonsterDataLoader.getMonster(currentId)
+      if (!template) break
+
+      // Generate this group
+      const monsters = this.generateMonsterGroup(currentId)
+      groups.push({ monsterId: currentId, monsters })
+
+      // Check for partner spawn
+      if (template.partner && RandomService.chance(template.partner.chance)) {
+        currentId = template.partner.monsterId
+      } else {
+        currentId = undefined
+      }
+    }
+
+    return groups
+  }
 }
