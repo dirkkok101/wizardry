@@ -9,7 +9,7 @@ import { RandomService } from '../RandomService'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { TrapType } from '@models/Trap'
+import { TrapId } from '@models/Trap'
 import { Chest, RewardTier } from '@models/Chest'
 
 // Helper to create a test chest
@@ -17,7 +17,7 @@ function createTestChest(overrides: Partial<Chest> = {}): Chest {
   return {
     id: 'test-chest',
     trapped: true,
-    trapType: TrapType.POISON_NEEDLE,
+    trapId: 'POISON_NEEDLE',
     trapIdentified: false,
     trapDisarmed: false,
     rewardTier: 1 as RewardTier,
@@ -203,13 +203,13 @@ describe('TrapService', () => {
       const result = TrapService.attemptInspection(thief, chest)
 
       expect(result.success).toBe(true)
-      expect(result.trapIdentified).toBe(TrapType.POISON_NEEDLE)
+      expect(result.trapIdentified).toBe('POISON_NEEDLE')
       expect(result.triggered).toBe(false)
     })
 
     it('should return random trap name on failed inspection (deception mechanic)', () => {
       const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 18 })
-      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
+      const chest = createTestChest({ trapId: 'POISON_NEEDLE' })
 
       // Queue values: crit check pass, inspection fail, AGI trigger check pass (roll < AGI), random trap pick
       RandomService.queueNextValues([0.5, 0.99, 0.1, 0.3])
@@ -253,7 +253,7 @@ describe('TrapService', () => {
 
     it('should not trigger on untrapped chest even with critical failure', () => {
       const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
-      const chest = createTestChest({ trapped: false, trapType: null })
+      const chest = createTestChest({ trapped: false, trapId: null })
 
       // Queue value for critical failure check
       RandomService.queueNextValues([0.01])
@@ -265,7 +265,7 @@ describe('TrapService', () => {
 
     it('should return random trap on failed inspection of untrapped chest', () => {
       const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 10 })
-      const chest = createTestChest({ trapped: false, trapType: null })
+      const chest = createTestChest({ trapped: false, trapId: null })
 
       // Queue: crit pass, inspect fail, random trap selection
       RandomService.queueNextValues([0.5, 0.99, 0.3])
@@ -381,7 +381,7 @@ describe('TrapService', () => {
       // Queue dice roll for 2d8 damage
       RandomService.queueNextValues([0.5, 0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.CROSSBOW_BOLT, opener, party)
+      const result = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party)
 
       expect(result.damageDealt.has('opener')).toBe(true)
       expect(result.damageDealt.get('opener')).toBeGreaterThan(0)
@@ -395,7 +395,7 @@ describe('TrapService', () => {
       // Queue dice roll for 1d6 damage
       RandomService.queueNextValues([0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.POISON_NEEDLE, opener, party)
+      const result = TrapService.applyTrapEffects('POISON_NEEDLE', opener, party)
 
       expect(result.statusApplied.get('opener')).toBe(CharacterStatus.POISONED)
     })
@@ -409,7 +409,7 @@ describe('TrapService', () => {
       // Queue dice rolls for 2d6 damage for each party member (2 dice × 3 members = 6 rolls)
       RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.GAS_BOMB, opener, party)
+      const result = TrapService.applyTrapEffects('GAS_BOMB', opener, party)
 
       expect(result.damageDealt.size).toBe(3)
       expect(result.statusApplied.size).toBe(3)
@@ -425,7 +425,7 @@ describe('TrapService', () => {
       // Queue dice rolls for 4d6 damage for each affected target (4 dice × 2 targets = 8 rolls)
       RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      const result = TrapService.applyTrapEffects(TrapType.MAGE_BLASTER, opener, party)
+      const result = TrapService.applyTrapEffects('MAGE_BLASTER', opener, party)
 
       expect(result.damageDealt.has('mage')).toBe(true)
       expect(result.damageDealt.has('bishop')).toBe(true)
@@ -437,7 +437,7 @@ describe('TrapService', () => {
       const opener = createTestCharacter({ id: 'opener' })
       const party = [opener]
 
-      const result = TrapService.applyTrapEffects(TrapType.TELEPORTER, opener, party)
+      const result = TrapService.applyTrapEffects('TELEPORTER', opener, party)
 
       expect(result.specialEffect).toBe('teleport')
       expect(result.damageDealt.size).toBe(0)
@@ -447,7 +447,7 @@ describe('TrapService', () => {
       const opener = createTestCharacter({ id: 'opener' })
       const party = [opener]
 
-      const result = TrapService.applyTrapEffects(TrapType.ALARM, opener, party)
+      const result = TrapService.applyTrapEffects('ALARM', opener, party)
 
       expect(result.specialEffect).toBe('combat')
     })
@@ -460,7 +460,7 @@ describe('TrapService', () => {
         // Queue: hit roll (0.5 < 0.7 = hit), then damage roll for 1d6
         RandomService.queueNextValues([0.5, 0.5])
 
-        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, opener, party)
+        const result = TrapService.applyTrapEffects('SPLINTERS', opener, party)
 
         expect(result.damageDealt.has('opener')).toBe(true)
         expect(result.message).toContain('takes')
@@ -473,7 +473,7 @@ describe('TrapService', () => {
         // Queue: hit roll (0.8 > 0.3 = miss)
         RandomService.queueNextValues([0.8])
 
-        const result = TrapService.applyTrapEffects(TrapType.BLADES, opener, party)
+        const result = TrapService.applyTrapEffects('BLADES', opener, party)
 
         expect(result.damageDealt.has('opener')).toBe(false)
         expect(result.message).toContain('avoids')
@@ -487,7 +487,7 @@ describe('TrapService', () => {
         // Queue damage roll only (2d8)
         RandomService.queueNextValues([0.5, 0.5])
 
-        const result = TrapService.applyTrapEffects(TrapType.CROSSBOW_BOLT, opener, party)
+        const result = TrapService.applyTrapEffects('CROSSBOW_BOLT', opener, party)
 
         expect(result.damageDealt.has('opener')).toBe(true)
       })
@@ -500,7 +500,7 @@ describe('TrapService', () => {
         // SPLINTERS (70% hit) - queue: char1 hits (0.5 < 0.7), damage, char2 misses (0.8 > 0.7)
         RandomService.queueNextValues([0.5, 0.5, 0.8])
 
-        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, member1, party)
+        const result = TrapService.applyTrapEffects('SPLINTERS', member1, party)
 
         expect(result.damageDealt.has('char1')).toBe(true)
         expect(result.damageDealt.has('char2')).toBe(false)
@@ -610,13 +610,13 @@ describe('TrapService', () => {
       const result = TrapService.castCalfo(priest, chest)
 
       expect(result.success).toBe(true)
-      expect(result.trapIdentified).toBe(TrapType.POISON_NEEDLE)
+      expect(result.trapIdentified).toBe('POISON_NEEDLE')
       expect(result.triggered).toBe(false)
     })
 
     it('should return random trap name on 5% failure (deception mechanic)', () => {
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
+      const chest = createTestChest({ trapId: 'POISON_NEEDLE' })
 
       // Queue failure roll (> 95% = fail), then random trap selection
       RandomService.queueNextValues([0.99, 0.3])
@@ -643,7 +643,7 @@ describe('TrapService', () => {
 
     it('should return null trap on success for untrapped chest', () => {
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const chest = createTestChest({ trapped: false, trapType: null })
+      const chest = createTestChest({ trapped: false, trapId: null })
 
       // Queue success roll
       RandomService.queueNextValues([0.5])
@@ -761,9 +761,9 @@ describe('TrapService', () => {
   describe('createScrambledState', () => {
     it('should create initial scrambled state for a trap', () => {
       RandomService.setSeed(12345)
-      const state = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+      const state = TrapService.createScrambledState('POISON_NEEDLE')
 
-      expect(state.actualTrapType).toBe(TrapType.POISON_NEEDLE)
+      expect(state.actualTrapId).toBe('POISON_NEEDLE')
       expect(state.fullyRevealed).toBe(false)
       expect(state.inspectionCount).toBe(0)
       expect(state.letters.length).toBe(13)  // "POISON NEEDLE"
@@ -772,7 +772,7 @@ describe('TrapService', () => {
 
     it('should use trap name from TrapDataLoader', () => {
       RandomService.setSeed(12345)
-      const state = TrapService.createScrambledState(TrapType.GAS_BOMB)
+      const state = TrapService.createScrambledState('GAS_BOMB')
 
       // Letters should contain all characters from "GAS BOMB"
       const chars = state.letters.map(l => l.char).sort().join('')
@@ -806,7 +806,7 @@ describe('TrapService', () => {
     it('should update scrambled state with revealed letters', () => {
       RandomService.setSeed(12345)
       const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
-      const initialState = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+      const initialState = TrapService.createScrambledState('POISON_NEEDLE')
 
       const result = TrapService.performInspection(thief, initialState)
 
@@ -820,7 +820,7 @@ describe('TrapService', () => {
     it('should stack inspections', () => {
       RandomService.setSeed(12345)
       const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 12 })
-      let state = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+      let state = TrapService.createScrambledState('POISON_NEEDLE')
 
       state = TrapService.performInspection(thief, state)
       const firstRevealCount = state.letters.filter(l => l.state !== 'hidden').length
@@ -832,14 +832,14 @@ describe('TrapService', () => {
       expect(state.inspectionCount).toBe(2)
     })
 
-    it('should preserve actualTrapType', () => {
+    it('should preserve actualTrapId', () => {
       RandomService.setSeed(12345)
       const thief = createTestCharacter({ class: CharacterClass.THIEF, agility: 16 })
-      const initialState = TrapService.createScrambledState(TrapType.GAS_BOMB)
+      const initialState = TrapService.createScrambledState('GAS_BOMB')
 
       const result = TrapService.performInspection(thief, initialState)
 
-      expect(result.actualTrapType).toBe(TrapType.GAS_BOMB)
+      expect(result.actualTrapId).toBe('GAS_BOMB')
     })
   })
 
@@ -847,7 +847,7 @@ describe('TrapService', () => {
     it('should reveal all letters as green', () => {
       RandomService.setSeed(12345)
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const initialState = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+      const initialState = TrapService.createScrambledState('POISON_NEEDLE')
 
       const result = TrapService.performCalfo(priest, initialState)
 
@@ -858,7 +858,7 @@ describe('TrapService', () => {
     it('should keep letters scrambled (not in original order)', () => {
       RandomService.setSeed(12345)
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const initialState = TrapService.createScrambledState(TrapType.POISON_NEEDLE)
+      const initialState = TrapService.createScrambledState('POISON_NEEDLE')
 
       const result = TrapService.performCalfo(priest, initialState)
       const displayText = result.letters.map(l => l.char).join('')
@@ -867,14 +867,14 @@ describe('TrapService', () => {
       expect(displayText).not.toBe('POISON NEEDLE')
     })
 
-    it('should preserve actualTrapType', () => {
+    it('should preserve actualTrapId', () => {
       RandomService.setSeed(12345)
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const initialState = TrapService.createScrambledState(TrapType.GAS_BOMB)
+      const initialState = TrapService.createScrambledState('GAS_BOMB')
 
       const result = TrapService.performCalfo(priest, initialState)
 
-      expect(result.actualTrapType).toBe(TrapType.GAS_BOMB)
+      expect(result.actualTrapId).toBe('GAS_BOMB')
     })
   })
 

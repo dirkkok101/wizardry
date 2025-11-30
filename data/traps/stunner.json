@@ -1,6 +1,8 @@
 {
   "id": "STUNNER",
   "name": "STUNNER",
+  "effectType": "condition",
+  "tiers": [3],
   "targetMode": "opener",
   "damageFormula": "1d4",
   "statusEffect": "PARALYZED",

@@ -1,4 +1,4 @@
-import { TrapType } from './Trap'
+import { TrapId } from './Trap'
 import { Item } from './Item'
 import { Position } from './Dungeon'
 
@@ -31,7 +31,7 @@ export interface TreasureContents {
 export interface Chest {
   id: string
   trapped: boolean
-  trapType: TrapType | null
+  trapId: TrapId | null
   trapIdentified: boolean
   trapDisarmed: boolean
   rewardTier: RewardTier

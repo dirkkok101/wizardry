@@ -11,7 +11,7 @@ import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { Race } from '@models/Race'
 import { Alignment } from '@models/Alignment'
-import { TrapType } from '@models/Trap'
+import { TrapId } from '@models/Trap'
 import { Chest, RewardTier } from '@models/Chest'
 import { createTestCharacter } from '@testing/test-factories'
 
@@ -63,7 +63,7 @@ describe('ChestComponent', () => {
   const testChest: Chest = {
     id: 'test-chest-1',
     trapped: true,
-    trapType: TrapType.POISON_NEEDLE,
+    trapId: 'POISON_NEEDLE',
     trapIdentified: false,
     trapDisarmed: false,
     rewardTier: 3 as RewardTier,
@@ -215,7 +215,7 @@ describe('ChestComponent', () => {
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.POISON_NEEDLE,
+        trapId: 'POISON_NEEDLE',
         trapIdentified: true
       } : c)
 
@@ -240,19 +240,23 @@ describe('ChestComponent', () => {
       expect(component.chest()?.trapIdentified).toBe(true)
     })
 
-    it('shows trap type in message on success', () => {
+    it('transitions to TRAP_DISPLAY with scrambled letters on success', () => {
       RandomService.queueNextValues([0.5, 0.3])
 
       // Set a specific trap type
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.POISON_NEEDLE
+        trapId: 'POISON_NEEDLE'
       } : c)
 
       component.handleFooterAction('inspect')
 
-      expect(component.lastActionMessage()).toContain('POISON NEEDLE')
+      // Should transition to TRAP_DISPLAY with scrambled state
+      expect(component.mode()).toBe('TRAP_DISPLAY')
+      expect(component.scrambledTrapState()).not.toBeNull()
+      expect(component.scrambledTrapState()?.actualTrapId).toBe('POISON_NEEDLE')
+      expect(component.lastActionMessage()).toContain('detects something')
     })
   })
 
@@ -295,7 +299,7 @@ describe('ChestComponent', () => {
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.GAS_BOMB
+        trapId: 'GAS_BOMB'
       } : c)
 
       component.handleFooterAction('calfo')
@@ -326,7 +330,7 @@ describe('ChestComponent', () => {
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.POISON_NEEDLE,
+        trapId: 'POISON_NEEDLE',
         trapIdentified: true
       } : c)
     })
@@ -398,14 +402,14 @@ describe('ChestComponent', () => {
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.POISON_NEEDLE,
+        trapId: 'POISON_NEEDLE',
         trapDisarmed: false,
         contents: { gold: 50, items: [] }  // Simplify contents
       } : c)
 
       // Verify update took effect
       expect(component.chest()?.trapped).toBe(true)
-      expect(component.chest()?.trapType).toBe(TrapType.POISON_NEEDLE)
+      expect(component.chest()?.trapId).toBe('POISON_NEEDLE')
 
       component.handleFooterAction('open')
 
@@ -478,10 +482,9 @@ describe('ChestComponent', () => {
       component.selectCharacter(0)
     })
 
-    it('shows confirmation prompt when leaving', () => {
+    it('navigates to maze immediately when leaving (no confirmation)', () => {
       component.handleFooterAction('leave')
-      expect(component.mode()).toBe('LEAVE_CONFIRM')
-      expect(component.lastActionMessage()).toContain('Leave chest unopened')
+      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
     })
   })
 
@@ -498,15 +501,14 @@ describe('ChestComponent', () => {
       expect(component.mode()).toBe('ACTION_SELECT')
     })
 
-    it('handles ESC key to show leave confirmation', () => {
+    it('handles ESC key to leave immediately (no confirmation)', () => {
       component.selectCharacter(0)
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' })
       component.handleKeyboard(event)
 
-      // ESC calls handleCancel which calls handleLeave, showing LEAVE_CONFIRM
-      expect(component.mode()).toBe('LEAVE_CONFIRM')
-      expect(component.lastActionMessage()).toContain('Leave chest unopened')
+      // ESC calls handleCancel which calls handleLeave, navigating directly
+      expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
     })
 
     it('handles action shortcuts in ACTION_SELECT mode', () => {
@@ -524,7 +526,7 @@ describe('ChestComponent', () => {
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.GAS_BOMB,
+        trapId: 'GAS_BOMB',
         trapIdentified: true
       } : c)
 
@@ -571,7 +573,7 @@ describe('ChestComponent', () => {
       component.chest.update(c => c ? {
         ...c,
         trapped: true,
-        trapType: TrapType.EXPLODING_BOX,
+        trapId: 'EXPLODING_BOX',
         trapIdentified: true
       } : c)
 
@@ -632,7 +634,7 @@ describe('ChestComponent', () => {
       component.chest.set({
         id: 'test-chest',
         trapped: true,
-        trapType: TrapType.POISON_NEEDLE,
+        trapId: 'POISON_NEEDLE',
         trapIdentified: false,
         trapDisarmed: false,
         rewardTier: 1 as any,
@@ -645,7 +647,7 @@ describe('ChestComponent', () => {
       component['triggerTrap'](component.chest()!, opener)
 
       expect(component.chestResults()?.trapTriggered).toBe(true)
-      expect(component.chestResults()?.trapType).toBe(TrapType.POISON_NEEDLE)
+      expect(component.chestResults()?.trapId).toBe('POISON_NEEDLE')
       expect(component.chestResults()?.trapMessage).toBeDefined()
     })
   })
@@ -662,7 +664,7 @@ describe('ChestComponent', () => {
       component.chest.set({
         id: 'test-chest',
         trapped: false,
-        trapType: null,
+        trapId: null,
         trapIdentified: true,
         trapDisarmed: false,
         rewardTier: 1 as any,
@@ -685,16 +687,7 @@ describe('ChestComponent', () => {
       component.ngOnInit()
     })
 
-    it('shows confirmation prompt before leaving', () => {
-      component.mode.set('ACTION_SELECT')
-
-      component['handleLeave']()
-
-      expect(component.mode()).toBe('LEAVE_CONFIRM')
-      expect(component.lastActionMessage()).toContain('Leave chest unopened')
-    })
-
-    it('shows victory summary when confirming leave from combat', () => {
+    it('shows victory summary when leaving from combat chest', () => {
       gameState.updateState(s => ({
         ...s,
         pendingCombatRewards: {
@@ -704,32 +697,22 @@ describe('ChestComponent', () => {
           monstersDefeated: 3
         }
       }))
-      component.mode.set('LEAVE_CONFIRM')
+      component.mode.set('ACTION_SELECT')
 
-      component['confirmLeave']()
+      component['handleLeave']()
 
       expect(component.mode()).toBe('VICTORY_SUMMARY')
       expect(component.chestResults()?.goldObtained).toBe(0)
       expect(navigationService.navigateTo).not.toHaveBeenCalled()
     })
 
-    it('navigates to maze when confirming leave from non-combat chest', () => {
+    it('navigates to maze immediately when leaving from non-combat chest', () => {
       // No pendingCombatRewards
-      component.mode.set('LEAVE_CONFIRM')
+      component.mode.set('ACTION_SELECT')
 
-      component['confirmLeave']()
+      component['handleLeave']()
 
       expect(navigationService.navigateTo).toHaveBeenCalledWith('maze')
-    })
-
-    it('returns to action select when canceling leave', () => {
-      component.mode.set('LEAVE_CONFIRM')
-      component.lastActionMessage.set('Leave chest unopened? (Y/N)')
-
-      component.handleFooterAction('cancel-leave')
-
-      expect(component.mode()).toBe('ACTION_SELECT')
-      expect(component.lastActionMessage()).toBe('')
     })
   })
 
@@ -754,7 +737,7 @@ describe('ChestComponent', () => {
       component.chest.set({
         id: 'test',
         trapped: false,
-        trapType: null,
+        trapId: null,
         trapIdentified: true,
         trapDisarmed: false,
         rewardTier: 1 as any,
@@ -859,7 +842,7 @@ describe('ChestComponent', () => {
         goldObtained: 50,
         itemsObtained: [],
         trapTriggered: true,
-        trapType: TrapType.GAS_BOMB,
+        trapId: 'GAS_BOMB',
         trapMessage: 'Everyone is poisoned!'
       })
 

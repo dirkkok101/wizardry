@@ -52,6 +52,22 @@ const TrapSpecialEffectSchema = z.enum([
 ])
 
 /**
+ * Effect types for data-driven trap handling
+ * Code has handlers for each type; JSON defines which type each trap uses
+ */
+const TrapEffectTypeSchema = z.enum([
+  'damage',      // Direct HP damage
+  'condition',   // Status effect (poison, paralyzed)
+  'teleport',    // Random teleport, loses treasure
+  'alarm'        // Spawns new encounter
+])
+
+/**
+ * Reward tiers (1-5) that a trap can appear in
+ */
+const TrapTiersSchema = z.array(z.number().int().min(1).max(5)).min(1)
+
+/**
  * Damage formula pattern (e.g., "1d6", "2d8", "3d6")
  */
 const DamageFormulaSchema = z.string().regex(
@@ -65,6 +81,8 @@ const DamageFormulaSchema = z.string().regex(
 export const TrapSchema = z.object({
   id: z.string().min(1, 'Trap ID is required'),
   name: z.string().min(1, 'Trap name is required'),
+  effectType: TrapEffectTypeSchema,
+  tiers: TrapTiersSchema,
   targetMode: TrapTargetModeSchema,
   targetClasses: z.array(CharacterClassSchema).optional(),
   damageFormula: DamageFormulaSchema.optional(),
@@ -108,11 +126,18 @@ export const TrapSchema = z.object({
 export type ValidatedTrap = z.infer<typeof TrapSchema>
 
 /**
+ * TypeScript types inferred from schemas
+ */
+export type TrapEffectType = z.infer<typeof TrapEffectTypeSchema>
+
+/**
  * Export individual schemas for testing
  */
 export const TrapSchemas = {
   TrapTargetMode: TrapTargetModeSchema,
   TrapSpecialEffect: TrapSpecialEffectSchema,
+  TrapEffectType: TrapEffectTypeSchema,
+  TrapTiers: TrapTiersSchema,
   CharacterClass: CharacterClassSchema,
   CharacterStatus: CharacterStatusSchema,
   DamageFormula: DamageFormulaSchema

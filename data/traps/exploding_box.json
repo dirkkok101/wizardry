@@ -1,6 +1,8 @@
 {
   "id": "EXPLODING_BOX",
   "name": "EXPLODING BOX",
+  "effectType": "damage",
+  "tiers": [3, 4],
   "targetMode": "party",
   "damageFormula": "3d6",
   "description": "Explodes, damaging entire party"

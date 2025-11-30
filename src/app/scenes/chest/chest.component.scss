@@ -211,7 +211,122 @@
 }
 
 // ============================================
-// LEAVE CONFIRMATION MODE
+// TRAP DISPLAY MODE (Scrambled Letters)
+// ============================================
+.trap-display {
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+
+  .instruction {
+    font-family: var(--font-display);
+    color: var(--color-gold-primary);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-2);
+    letter-spacing: 0.05em;
+  }
+
+  .hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-4);
+  }
+
+  .scrambled-letters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1);
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-gold-primary);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-3);
+    box-shadow: var(--glow-gold-sm);
+    min-height: 3rem;
+
+    .letter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      font-family: var(--font-body);
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      border-radius: 4px;
+      text-transform: uppercase;
+      transition: all var(--transition-fast);
+
+      &.green {
+        color: var(--color-status-ok);
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid var(--color-status-ok);
+      }
+
+      &.red {
+        color: var(--color-danger);
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid var(--color-danger);
+      }
+
+      &.hidden {
+        color: var(--color-text-muted);
+        background: var(--color-bg-dark);
+        border: 1px solid var(--color-border);
+      }
+
+      &.excluded {
+        color: var(--color-text-muted);
+        background: transparent;
+        border: 1px dashed var(--color-border);
+        text-decoration: line-through;
+      }
+
+      &.space {
+        width: 1rem;
+        background: transparent;
+        border: none;
+      }
+    }
+  }
+
+  .inspection-info {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    font-size: var(--font-size-sm);
+
+    .inspection-count {
+      color: var(--color-text-secondary);
+    }
+
+    .fully-revealed {
+      color: var(--color-status-ok);
+      font-weight: 600;
+    }
+  }
+
+  .action-message {
+    background: var(--color-bg-dark);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+  }
+
+  .trap-hint {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-2);
+  }
+}
+
+// ============================================
+// LEAVE CONFIRMATION MODE (Legacy - kept for reference)
 // ============================================
 .leave-confirm {
   width: 100%;

@@ -13,7 +13,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { Chest } from '@models/Chest'
 import { canAct } from '@utils/CharacterStatusHelpers'
 import {
-  TrapType,
+  TrapId,
   TrapEffect,
   TrapInspectionResult,
   TrapDisarmResult,
@@ -58,19 +58,33 @@ const INSPECT_CRITICAL_FAILURE_CHANCE = 2
 /**
  * Get trap effect from TrapDataLoader
  * Trap data must be loaded via TrapDataLoader.loadAllTraps() before use
- * @throws Error if traps are not loaded or trap type is not found
+ * @throws Error if traps are not loaded or trap ID is not found
  */
-function getTrapEffect(trapType: TrapType): TrapEffect {
+function getTrapEffect(trapId: TrapId): TrapEffect {
   if (!TrapDataLoader.isLoaded()) {
     throw new Error('Trap data not loaded. Call TrapDataLoader.loadAllTraps() first.')
   }
 
-  const effect = TrapDataLoader.getTrapEffect(trapType)
+  const effect = TrapDataLoader.getTrapEffect(trapId)
   if (!effect) {
-    throw new Error(`Unknown trap type: ${trapType}`)
+    throw new Error(`Unknown trap ID: ${trapId}`)
   }
 
   return effect
+}
+
+/**
+ * Get a random trap ID from loaded trap data
+ * Used for deception mechanics when inspection/CALFO fails
+ */
+function getRandomTrapId(): TrapId {
+  if (!TrapDataLoader.isLoaded()) {
+    throw new Error('Trap data not loaded. Call TrapDataLoader.loadAllTraps() first.')
+  }
+
+  const allTraps = TrapDataLoader.getAllTrapEffects()
+  const trapIds = Array.from(allTraps.keys())
+  return RandomService.pickRandom(trapIds)
 }
 
 /**
@@ -118,7 +132,7 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   if (success) {
     return {
       success: true,
-      trapIdentified: chest.trapped ? chest.trapType : null,
+      trapIdentified: chest.trapped ? chest.trapId : null,
       triggered: false
     }
   }
@@ -140,12 +154,11 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
 
   // Stage 2: Return RANDOM trap name (misleading!)
   // This is a core deception mechanic - player cannot tell if result is real
-  const allTraps = Object.values(TrapType)
-  const randomTrap = RandomService.pickRandom(allTraps)
+  const randomTrapId = getRandomTrapId()
 
   return {
     success: false,
-    trapIdentified: randomTrap,
+    trapIdentified: randomTrapId,
     triggered: false
   }
 }
@@ -211,8 +224,20 @@ function attemptDisarm(
   chest: Chest,
   enteredTrapName: string
 ): TrapDisarmResult {
+  // Get the actual trap name from loaded data
+  if (!chest.trapId) {
+    return {
+      success: false,
+      triggered: false,
+      wrongName: true
+    }
+  }
+
+  const trapEffect = getTrapEffect(chest.trapId)
+  const actualTrapName = trapEffect.name
+
   // Check if trap name matches
-  if (!chest.trapType || !trapNameMatches(enteredTrapName, chest.trapType)) {
+  if (!trapNameMatches(enteredTrapName, actualTrapName)) {
     // Wrong trap name - check if it triggers
     // Original formula uses character level (higher level = tiny chance to avoid trigger)
     const triggerChance = calculateWrongNameTriggerChance(character.level)
@@ -250,17 +275,17 @@ function attemptDisarm(
 /**
  * Apply trap effects when triggered
  *
- * @param trapType The type of trap that triggered
+ * @param trapId The ID of the trap that triggered
  * @param opener The character who triggered the trap
  * @param partyMembers The party members (resolved Character objects)
  * @returns TrapTriggerResult with damage, status effects, and special outcomes
  */
 function applyTrapEffects(
-  trapType: TrapType,
+  trapId: TrapId,
   opener: Character,
   partyMembers: Character[]
 ): TrapTriggerResult {
-  const effect = getTrapEffect(trapType)
+  const effect = getTrapEffect(trapId)
   const damageDealt = new Map<string, number>()
   const statusApplied = new Map<string, CharacterStatus>()
   const messages: string[] = []
@@ -331,7 +356,8 @@ function applyTrapEffects(
   }
 
   return {
-    trapType,
+    trapId,
+    trapName: effect.name,
     damageDealt,
     statusApplied,
     specialEffect: effect.specialEffect,
@@ -386,19 +412,18 @@ function castCalfo(caster: Character, chest: Chest): TrapInspectionResult {
   if (success) {
     return {
       success: true,
-      trapIdentified: chest.trapped ? chest.trapType : null,
+      trapIdentified: chest.trapped ? chest.trapId : null,
       triggered: false
     }
   }
 
   // Failed CALFO (5%) - return RANDOM trap name (deception mechanic)
   // Same as failed inspection - player cannot tell if result is real
-  const allTraps = Object.values(TrapType)
-  const randomTrap = RandomService.pickRandom(allTraps)
+  const randomTrapId = getRandomTrapId()
 
   return {
     success: false,
-    trapIdentified: randomTrap,
+    trapIdentified: randomTrapId,
     triggered: false  // CALFO never triggers traps
   }
 }
@@ -514,17 +539,18 @@ function revealLetters(
 }
 
 /**
- * Create initial scrambled trap state from a trap type
+ * Create initial scrambled trap state from a trap ID
  * Gets the display name from TrapDataLoader (data-driven)
  *
- * @param trapType The trap type enum value
+ * @param trapId The trap ID string
  * @returns Complete scrambled state with all letters hidden
  */
-function createScrambledState(trapType: TrapType): ScrambledTrapState {
-  const trapEffect = getTrapEffect(trapType)
+function createScrambledState(trapId: TrapId): ScrambledTrapState {
+  const trapEffect = getTrapEffect(trapId)
   return {
     letters: scrambleLetters(trapEffect.name),
-    actualTrapType: trapType,
+    actualTrapId: trapId,
+    trapName: trapEffect.name,
     fullyRevealed: false,
     inspectionCount: 0
   }

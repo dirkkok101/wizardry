@@ -1,6 +1,8 @@
 {
   "id": "MAGE_BLASTER",
   "name": "MAGE BLASTER",
+  "effectType": "damage",
+  "tiers": [4, 5],
   "targetMode": "class_specific",
   "targetClasses": ["MAGE", "BISHOP"],
   "damageFormula": "4d6",

@@ -5,6 +5,7 @@ import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { LoggerService } from '@services/LoggerService';
 import { TrapService } from '@services/TrapService';
+import { TrapDataLoader } from '@services/TrapDataLoader';
 import { ChestService } from '@services/ChestService';
 import { RandomService } from '@services/RandomService';
 import { GameStateQueries } from '@utils/GameStateQueries';
@@ -17,7 +18,7 @@ import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { SceneType } from '@models/SceneType';
 import { Chest, TreasureDistributionResult } from '@models/Chest';
-import { TrapType, TrapInspectionResult, TrapDisarmResult, TrapTriggerResult } from '@models/Trap';
+import { TrapId, TrapInspectionResult, TrapDisarmResult, TrapTriggerResult, ScrambledTrapState } from '@models/Trap';
 import { Item } from '@models/Item';
 
 /**
@@ -27,11 +28,11 @@ type ChestMode =
   | 'CHARACTER_SELECT'  // Initial: pick who handles chest
   | 'ACTION_SELECT'     // Main menu: O/I/C/D/L
   | 'CASTER_SELECT'     // Choosing CALFO caster
+  | 'TRAP_DISPLAY'      // Showing scrambled trap letters
   | 'TRAP_NAME_INPUT'   // Entering trap name for disarm
   | 'INVENTORY_WARNING' // Confirmation when inventory could overflow
   | 'RESULT_DISPLAY'    // Showing trap/treasure outcome
-  | 'VICTORY_SUMMARY'   // Showing combined combat + chest rewards
-  | 'LEAVE_CONFIRM';    // Confirmation before leaving unopened chest
+  | 'VICTORY_SUMMARY';  // Showing combined combat + chest rewards
 
 /**
  * Chest Component
@@ -85,6 +86,9 @@ export class ChestComponent implements OnInit, OnDestroy {
   // Last action result message
   readonly lastActionMessage = signal<string>('');
 
+  // Scrambled trap state for letter puzzle
+  readonly scrambledTrapState = signal<ScrambledTrapState | null>(null);
+
   // Inventory warning data
   readonly inventoryWarning = signal<string | null>(null);
 
@@ -93,7 +97,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     goldObtained: number
     itemsObtained: Item[]
     trapTriggered: boolean
-    trapType: TrapType | null
+    trapId: TrapId | null
     trapMessage: string | null
   } | null>(null)
 
@@ -105,7 +109,7 @@ export class ChestComponent implements OnInit, OnDestroy {
   // Pending trap info to merge with chest results in distributeTreasure
   private readonly pendingTrapInfo = signal<{
     trapTriggered: boolean
-    trapType: TrapType | null
+    trapId: TrapId | null
     trapMessage: string | null
   } | null>(null)
 
@@ -132,6 +136,14 @@ export class ChestComponent implements OnInit, OnDestroy {
     return TrapService.getRecommendedHandler(this.partyMembers(), chest.mazeLevel);
   });
 
+  /**
+   * Get display name for a trap ID (template helper)
+   */
+  getTrapDisplayName(trapId: string | null | undefined): string {
+    if (!trapId) return 'Unknown Trap';
+    return TrapDataLoader.getTrapDisplayName(trapId);
+  }
+
   // Dynamic footer menu based on current state
   readonly footerMenuItems = computed((): MenuItem[] => {
     const chest = this.chest();
@@ -150,6 +162,21 @@ export class ChestComponent implements OnInit, OnDestroy {
       return [
         { id: 'cancel', label: 'Cancel', shortcut: 'ESC', enabled: true }
       ];
+    }
+
+    // In trap display mode (scrambled letters)
+    if (mode === 'TRAP_DISPLAY') {
+      const canInspectMore = !this.scrambledTrapState()?.fullyRevealed;
+      const items: MenuItem[] = [
+        { id: 'continue', label: 'Done', shortcut: 'ENTER', enabled: true }
+      ];
+      if (canInspectMore) {
+        items.unshift({ id: 'inspect-more', label: 'Inspect Again', shortcut: 'I', enabled: true });
+      }
+      if (this.calfoEligibleCasters().length > 0 && !this.scrambledTrapState()?.fullyRevealed) {
+        items.splice(1, 0, { id: 'calfo', label: 'CALFO', shortcut: 'C', enabled: true });
+      }
+      return items;
     }
 
     // In trap name input mode
@@ -178,14 +205,6 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (mode === 'VICTORY_SUMMARY') {
       return [
         { id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
-      ];
-    }
-
-    // In leave confirmation mode
-    if (mode === 'LEAVE_CONFIRM') {
-      return [
-        { id: 'confirm-leave', label: 'Yes, Leave', shortcut: 'Y', enabled: true },
-        { id: 'cancel-leave', label: 'No, Stay', shortcut: 'N', enabled: true }
       ];
     }
 
@@ -243,7 +262,7 @@ export class ChestComponent implements OnInit, OnDestroy {
   /**
    * Initialize the chest from game state (set by combat victory or exploration)
    */
-  private initializeChest(): void {
+  private async initializeChest(): Promise<void> {
     const state = this.gameState.state();
 
     // Get chest from game state (set by combat victory or exploration)
@@ -261,7 +280,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     const position = state.dungeon?.position ?? { x: 0, y: 0, facing: 'NORTH' as const };
     const mazeLevel = state.dungeon?.currentLevel ?? 1;
 
-    const chest = ChestService.generateChest(
+    const chest = await ChestService.generateChest(
       3,  // Reward tier
       mazeLevel,
       { x: position.x, y: position.y, facing: position.facing },
@@ -285,8 +304,8 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Handle Enter for continue
-    if (key === 'ENTER' && (mode === 'RESULT_DISPLAY' || mode === 'VICTORY_SUMMARY')) {
+    // Handle Enter for continue (from trap display, result display, or victory summary)
+    if (key === 'ENTER' && (mode === 'TRAP_DISPLAY' || mode === 'RESULT_DISPLAY' || mode === 'VICTORY_SUMMARY')) {
       this.handleContinue();
       return;
     }
@@ -333,13 +352,12 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Leave confirmation mode - Y/N
-    if (mode === 'LEAVE_CONFIRM') {
-      if (key === 'Y') {
-        this.confirmLeave();
-      } else if (key === 'N') {
-        this.mode.set('ACTION_SELECT');
-        this.lastActionMessage.set('');
+    // Trap display mode - inspect more, CALFO, or continue
+    if (mode === 'TRAP_DISPLAY') {
+      if (key === 'I') {
+        this.handleInspectMore();
+      } else if (key === 'C') {
+        this.handleCalfoFromTrapDisplay();
       }
       return;
     }
@@ -364,17 +382,20 @@ export class ChestComponent implements OnInit, OnDestroy {
     switch (itemId) {
       case 'open': this.handleOpen(); break;
       case 'inspect': this.handleInspect(); break;
-      case 'calfo': this.handleCalfo(); break;
+      case 'inspect-more': this.handleInspectMore(); break;
+      case 'calfo':
+        // CALFO can be called from ACTION_SELECT or TRAP_DISPLAY
+        if (this.mode() === 'TRAP_DISPLAY') {
+          this.handleCalfoFromTrapDisplay();
+        } else {
+          this.handleCalfo();
+        }
+        break;
       case 'disarm': this.handleDisarm(); break;
       case 'leave': this.handleLeave(); break;
       case 'cancel': this.handleCancel(); break;
       case 'continue': this.handleContinue(); break;
       case 'confirm-open': this.openChest(true); break;
-      case 'confirm-leave': this.confirmLeave(); break;
-      case 'cancel-leave':
-        this.mode.set('ACTION_SELECT');
-        this.lastActionMessage.set('');
-        break;
     }
   }
 
@@ -454,12 +475,12 @@ export class ChestComponent implements OnInit, OnDestroy {
    * Trigger trap effects
    */
   private triggerTrap(chest: Chest, opener: Character): void {
-    if (!chest.trapType) {
+    if (!chest.trapId) {
       return;
     }
 
     const result = TrapService.applyTrapEffects(
-      chest.trapType,
+      chest.trapId,
       opener,
       this.partyMembers()
     );
@@ -482,7 +503,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     // Store trap info for victory summary (will be merged with treasure results)
     this.pendingTrapInfo.set({
       trapTriggered: true,
-      trapType: chest.trapType,
+      trapId: chest.trapId,
       trapMessage: result.message
     })
 
@@ -555,7 +576,7 @@ export class ChestComponent implements OnInit, OnDestroy {
       goldObtained: 0,
       itemsObtained: [],
       trapTriggered: true,
-      trapType: this.chest()?.trapType || null,
+      trapId: this.chest()?.trapId || null,
       trapMessage: this.lastActionMessage()
     });
 
@@ -574,7 +595,7 @@ export class ChestComponent implements OnInit, OnDestroy {
       goldObtained: 0,
       itemsObtained: [],
       trapTriggered: true,
-      trapType: this.chest()?.trapType || null,
+      trapId: this.chest()?.trapId || null,
       trapMessage: this.lastActionMessage()
     });
 
@@ -627,7 +648,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     // Store results for victory summary (merge with any pending trap info)
     const trapInfo = this.pendingTrapInfo() ?? {
       trapTriggered: false,
-      trapType: null,
+      trapId: null,
       trapMessage: null
     }
 
@@ -648,6 +669,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Handle Inspect action
+   * Creates scrambled state on first successful inspection and shows TRAP_DISPLAY
    */
   private handleInspect(): void {
     const chest = this.chest();
@@ -662,13 +684,23 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (result.success && result.trapIdentified) {
-      this.chest.update(c => c ? { ...c, trapIdentified: true } : c);
-      this.lastActionMessage.set(`${opener.name} detects a ${result.trapIdentified} trap!`);
-    } else if (result.success && !chest.trapped) {
-      this.chest.update(c => c ? { ...c, trapIdentified: true } : c);
-      this.lastActionMessage.set(`${opener.name} finds no trap.`);
+    // Success - trap was found (or confirmed no trap)
+    if (result.success) {
+      if (result.trapIdentified && chest.trapped && chest.trapId) {
+        // Create scrambled state and reveal letters based on skill
+        const scrambledState = TrapService.createScrambledState(chest.trapId);
+        const updatedState = TrapService.performInspection(opener, scrambledState);
+        this.scrambledTrapState.set(updatedState);
+        this.chest.update(c => c ? { ...c, trapIdentified: true } : c);
+        this.lastActionMessage.set(`${opener.name} detects something...`);
+        this.mode.set('TRAP_DISPLAY');
+      } else {
+        // No trap found
+        this.chest.update(c => c ? { ...c, trapIdentified: true } : c);
+        this.lastActionMessage.set(`${opener.name} finds no trap.`);
+      }
     } else {
+      // Failed inspection - show message, stay in ACTION_SELECT
       this.lastActionMessage.set(`${opener.name} cannot determine if there's a trap.`);
     }
 
@@ -676,30 +708,45 @@ export class ChestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle CALFO action
+   * Handle additional inspection from TRAP_DISPLAY mode
+   * Reveals more letters using the current opener's skill
    */
-  private handleCalfo(): void {
+  private handleInspectMore(): void {
+    const opener = this.selectedOpener();
+    const currentState = this.scrambledTrapState();
+    if (!opener || !currentState || currentState.fullyRevealed) return;
+
+    const updatedState = TrapService.performInspection(opener, currentState);
+    this.scrambledTrapState.set(updatedState);
+    this.lastActionMessage.set(`${opener.name} inspects again...`);
+    this.logger.debug('[Chest] Additional inspection, count:', updatedState.inspectionCount);
+  }
+
+  /**
+   * Handle CALFO spell from TRAP_DISPLAY mode
+   * Reveals all letters as green (but still scrambled)
+   */
+  private handleCalfoFromTrapDisplay(): void {
     const casters = this.calfoEligibleCasters();
     if (casters.length === 0) return;
 
-    if (casters.length === 1) {
-      // Auto-select single caster
-      this.castCalfo(casters[0]);
-    } else {
-      // Show caster selection
-      this.mode.set('CASTER_SELECT');
-      this.lastActionMessage.set('Select who will cast CALFO (1-' + casters.length + ')');
+    // For TRAP_DISPLAY, we go directly to casting (no caster select)
+    // Use the first available caster for simplicity
+    const caster = casters[0];
+    this.consumeCalfoSpellPoint(caster);
+
+    const currentState = this.scrambledTrapState();
+    if (currentState) {
+      const updatedState = TrapService.performCalfo(caster, currentState);
+      this.scrambledTrapState.set(updatedState);
+      this.lastActionMessage.set(`${caster.name} casts CALFO! All letters revealed.`);
     }
   }
 
   /**
-   * Cast CALFO spell
+   * Consume spell point for CALFO (shared by both CALFO flows)
    */
-  private castCalfo(caster: Character): void {
-    const chest = this.chest();
-    if (!chest) return;
-
-    // Consume spell point
+  private consumeCalfoSpellPoint(caster: Character): void {
     this.gameState.updateState(state => {
       const newRoster = new Map(state.roster);
       const char = newRoster.get(caster.id);
@@ -721,20 +768,55 @@ export class ChestComponent implements OnInit, OnDestroy {
       }
       return { ...state, roster: newRoster };
     });
+  }
+
+  /**
+   * Handle CALFO action
+   */
+  private handleCalfo(): void {
+    const casters = this.calfoEligibleCasters();
+    if (casters.length === 0) return;
+
+    if (casters.length === 1) {
+      // Auto-select single caster
+      this.castCalfo(casters[0]);
+    } else {
+      // Show caster selection
+      this.mode.set('CASTER_SELECT');
+      this.lastActionMessage.set('Select who will cast CALFO (1-' + casters.length + ')');
+    }
+  }
+
+  /**
+   * Cast CALFO spell
+   * Creates scrambled state with all letters revealed as green
+   */
+  private castCalfo(caster: Character): void {
+    const chest = this.chest();
+    if (!chest) return;
+
+    // Consume spell point
+    this.consumeCalfoSpellPoint(caster);
 
     const result = TrapService.castCalfo(caster, chest);
 
-    if (result.success && result.trapIdentified) {
+    if (result.success && result.trapIdentified && chest.trapped && chest.trapId) {
+      // Create scrambled state with full reveal (all green)
+      const scrambledState = TrapService.createScrambledState(chest.trapId);
+      const revealedState = TrapService.performCalfo(caster, scrambledState);
+      this.scrambledTrapState.set(revealedState);
       this.chest.update(c => c ? { ...c, trapIdentified: true } : c);
-      this.lastActionMessage.set(`CALFO reveals a ${result.trapIdentified} trap!`);
+      this.lastActionMessage.set(`${caster.name} casts CALFO! All letters revealed.`);
+      this.mode.set('TRAP_DISPLAY');
     } else if (result.success && !chest.trapped) {
       this.chest.update(c => c ? { ...c, trapIdentified: true } : c);
       this.lastActionMessage.set('CALFO reveals the chest is not trapped.');
+      this.mode.set('ACTION_SELECT');
     } else {
       this.lastActionMessage.set('CALFO fails to reveal the trap type.');
+      this.mode.set('ACTION_SELECT');
     }
 
-    this.mode.set('ACTION_SELECT');
     this.selectedCaster.set(null);
     this.logger.debug('[Chest] CALFO result:', result);
   }
@@ -748,7 +830,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
     this.mode.set('TRAP_NAME_INPUT');
     this.trapNameInput.set('');
-    this.lastActionMessage.set(`Enter trap name to disarm: ${chest.trapType}`);
+    this.lastActionMessage.set(`Enter trap name to disarm: ${chest.trapId}`);
   }
 
   /**
@@ -786,17 +868,9 @@ export class ChestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle Leave action - show confirmation before leaving
+   * Handle Leave action - immediately leave (no confirmation per design doc)
    */
   private handleLeave(): void {
-    this.mode.set('LEAVE_CONFIRM');
-    this.lastActionMessage.set('Leave chest unopened? (Y/N)');
-  }
-
-  /**
-   * Confirm leaving chest - actually navigate away
-   */
-  private confirmLeave(): void {
     const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
     if (hasCombatRewards) {
       // From combat - show victory summary even if chest abandoned
@@ -804,7 +878,7 @@ export class ChestComponent implements OnInit, OnDestroy {
         goldObtained: 0,
         itemsObtained: [],
         trapTriggered: false,
-        trapType: null,
+        trapId: null,
         trapMessage: null
       });
       this.mode.set('VICTORY_SUMMARY');
@@ -823,6 +897,9 @@ export class ChestComponent implements OnInit, OnDestroy {
       this.mode.set('ACTION_SELECT');
       this.trapNameInput.set('');
       this.selectedCaster.set(null);
+    } else if (mode === 'TRAP_DISPLAY') {
+      // Return to action select with trap identified
+      this.mode.set('ACTION_SELECT');
     } else if (mode === 'INVENTORY_WARNING') {
       this.mode.set('ACTION_SELECT');
       this.inventoryWarning.set(null);
@@ -834,12 +911,19 @@ export class ChestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle Continue action (after result display)
+   * Handle Continue action (after trap display, result display, or victory summary)
    */
   private handleContinue(): void {
     const chest = this.chest();
     const currentMode = this.mode();
     const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
+
+    // From trap display - return to action select to allow disarm
+    if (currentMode === 'TRAP_DISPLAY') {
+      this.mode.set('ACTION_SELECT');
+      return;
+    }
+
     if (currentMode === 'RESULT_DISPLAY' && hasCombatRewards) {
       // From combat - show victory summary before maze
       this.mode.set('VICTORY_SUMMARY');
@@ -855,7 +939,6 @@ export class ChestComponent implements OnInit, OnDestroy {
     // Non-combat chest or exploration - go directly to maze
     if (chest && currentMode === 'RESULT_DISPLAY') {
       this.navigation.navigateTo('maze');
-    } else {
     }
   }
 
@@ -879,8 +962,9 @@ export class ChestComponent implements OnInit, OnDestroy {
     }
 
     if (chest.trapIdentified) {
-      if (chest.trapped && chest.trapType) {
-        return `Trap detected: ${chest.trapType}`;
+      if (chest.trapped && chest.trapId) {
+        const trapName = TrapDataLoader.getTrapDisplayName(chest.trapId);
+        return `Trap detected: ${trapName}`;
       }
       return 'No trap detected';
     }

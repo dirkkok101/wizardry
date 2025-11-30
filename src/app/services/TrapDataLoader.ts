@@ -1,19 +1,20 @@
-import { TrapType, TrapEffect, TrapTargetMode, TrapSpecialEffect } from '@models/Trap'
+import { TrapId, TrapEffect, TrapTargetMode, TrapSpecialEffect } from '@models/Trap'
 import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { TrapSchema, ValidatedTrap } from '@validation/trap-schema'
-import { AssetLoadingService } from './AssetLoadingService'
+import { TrapSchema, ValidatedTrap, TrapEffectType } from '@validation/trap-schema'
 
 /**
  * Service for loading and validating trap data from JSON files
- * Uses AssetLoadingService for centralized loading infrastructure
- * Implements caching to prevent multiple loads
- * Gracefully handles individual trap failures
- * Validates all traps with Zod schemas at runtime
+ *
+ * Data-driven architecture:
+ * - All trap definitions live in data/traps/*.json
+ * - Manifest file (data/traps/index.json) lists all trap IDs
+ * - No hardcoded trap types in code
+ * - Zod validates all trap data at runtime
  */
 export class TrapDataLoader {
-  private static trapsCache: Map<TrapType, TrapEffect> | null = null
-  private static loadPromise: Promise<Map<TrapType, TrapEffect>> | null = null
+  private static trapsCache: Map<TrapId, TrapEffect> | null = null
+  private static loadPromise: Promise<Map<TrapId, TrapEffect>> | null = null
   private static loading = false
   private static loaded = false
   private static loadError: Error | null = null
@@ -24,7 +25,7 @@ export class TrapDataLoader {
    * Returns cached results on subsequent calls
    * Gracefully handles individual trap failures
    */
-  static async loadAllTraps(): Promise<Map<TrapType, TrapEffect>> {
+  static async loadAllTraps(): Promise<Map<TrapId, TrapEffect>> {
     // Return cached result if available
     if (this.trapsCache) {
       return this.trapsCache
@@ -43,35 +44,46 @@ export class TrapDataLoader {
 
   /**
    * Internal method to perform the actual loading
-   * Uses AssetLoadingService for centralized infrastructure
+   * Reads manifest file to discover all traps
    */
-  private static async performLoad(): Promise<Map<TrapType, TrapEffect>> {
+  private static async performLoad(): Promise<Map<TrapId, TrapEffect>> {
     this.loading = true
     this.loadError = null
     this.failedTraps.clear()
 
-    const traps = new Map<TrapType, TrapEffect>()
+    const traps = new Map<TrapId, TrapEffect>()
 
     try {
-      // Use AssetLoadingService to load trap JSON files
-      const assetLoader = new AssetLoadingService()
-      const rawTraps = await assetLoader.loadDataFiles<any>('traps')
+      // Load manifest to get list of all trap IDs
+      const manifestResponse = await fetch('/data/traps/index.json')
+      if (!manifestResponse.ok) {
+        throw new Error('Failed to load trap manifest')
+      }
+      const trapFileNames: string[] = await manifestResponse.json()
 
-      // Validate each trap with Zod and convert to runtime TrapEffect format
-      for (const [trapId, rawTrap] of rawTraps.entries()) {
+      // Load each trap file
+      for (const fileName of trapFileNames) {
         try {
+          const response = await fetch(`/data/traps/${fileName}.json`)
+          if (!response.ok) {
+            this.failedTraps.set(fileName, `HTTP ${response.status}`)
+            continue
+          }
+
+          const rawTrap = await response.json()
+
           // Validate with Zod
           const validated: ValidatedTrap = TrapSchema.parse(rawTrap)
 
           // Transform to runtime TrapEffect format
           const trapEffect = this.transformValidatedToTrapEffect(validated)
 
-          traps.set(trapEffect.type, trapEffect)
+          traps.set(trapEffect.id, trapEffect)
         } catch (error) {
           // Track validation failure but continue loading other traps
           const errorMessage = error instanceof Error ? error.message : String(error)
-          this.failedTraps.set(trapId, errorMessage)
-          console.warn(`Failed to validate trap ${trapId}:`, errorMessage)
+          this.failedTraps.set(fileName, errorMessage)
+          console.warn(`Failed to validate trap ${fileName}:`, errorMessage)
         }
       }
 
@@ -89,7 +101,7 @@ export class TrapDataLoader {
 
       return traps
     } catch (error) {
-      // Catastrophic failure (e.g., directory not found)
+      // Catastrophic failure (e.g., manifest not found)
       this.loadError = error as Error
       console.error('Failed to load traps:', error)
       throw error
@@ -100,15 +112,8 @@ export class TrapDataLoader {
 
   /**
    * Transform validated JSON trap to runtime TrapEffect format
-   * Maps JSON schema to TrapEffect interface
    */
   private static transformValidatedToTrapEffect(validated: ValidatedTrap): TrapEffect {
-    // Map trap ID to TrapType enum
-    const type = this.mapIdToTrapType(validated.id)
-
-    // Map target mode
-    const targetMode = validated.targetMode as TrapTargetMode
-
     // Map target classes if present
     const targetClasses = validated.targetClasses?.map(cls => this.mapClassString(cls))
 
@@ -121,41 +126,18 @@ export class TrapDataLoader {
     const specialEffect = validated.specialEffect as TrapSpecialEffect | undefined
 
     return {
-      type,
-      name: validated.name,  // Display name for scrambled letters
-      targetMode,
+      id: validated.id,
+      name: validated.name,
+      targetMode: validated.targetMode as TrapTargetMode,
       targetClasses,
       damageFormula: validated.damageFormula,
       statusEffect,
       specialEffect,
       hitChance: validated.hitChance,
-      description: validated.description
+      description: validated.description,
+      effectType: validated.effectType,
+      tiers: validated.tiers
     }
-  }
-
-  /**
-   * Map trap ID string to TrapType enum
-   */
-  private static mapIdToTrapType(id: string): TrapType {
-    const mapping: Record<string, TrapType> = {
-      'POISON_NEEDLE': TrapType.POISON_NEEDLE,
-      'GAS_BOMB': TrapType.GAS_BOMB,
-      'CROSSBOW_BOLT': TrapType.CROSSBOW_BOLT,
-      'EXPLODING_BOX': TrapType.EXPLODING_BOX,
-      'STUNNER': TrapType.STUNNER,
-      'TELEPORTER': TrapType.TELEPORTER,
-      'MAGE_BLASTER': TrapType.MAGE_BLASTER,
-      'PRIEST_BLASTER': TrapType.PRIEST_BLASTER,
-      'ALARM': TrapType.ALARM,
-      'SPLINTERS': TrapType.SPLINTERS,
-      'BLADES': TrapType.BLADES
-    }
-
-    const trapType = mapping[id.toUpperCase()]
-    if (!trapType) {
-      throw new Error(`Unknown trap ID: ${id}`)
-    }
-    return trapType
   }
 
   /**
@@ -195,24 +177,47 @@ export class TrapDataLoader {
   }
 
   /**
-   * Get a specific trap effect by type
+   * Get a specific trap effect by ID
    * Must call loadAllTraps first
    */
-  static getTrapEffect(trapType: TrapType): TrapEffect | null {
+  static getTrapEffect(trapId: TrapId): TrapEffect | null {
     if (!this.trapsCache) {
       throw new Error('Traps not loaded. Call loadAllTraps() first.')
     }
-    return this.trapsCache.get(trapType) ?? null
+    return this.trapsCache.get(trapId) ?? null
   }
 
   /**
    * Get all loaded trap effects
    */
-  static getAllTrapEffects(): Map<TrapType, TrapEffect> {
+  static getAllTrapEffects(): Map<TrapId, TrapEffect> {
     if (!this.trapsCache) {
       throw new Error('Traps not loaded. Call loadAllTraps() first.')
     }
     return this.trapsCache
+  }
+
+  /**
+   * Get traps available for a specific reward tier
+   * @param tier Reward tier (1-5)
+   * @returns Array of TrapEffect objects available for that tier
+   */
+  static async getTrapsForTier(tier: number): Promise<TrapEffect[]> {
+    const allTraps = await this.loadAllTraps()
+    return Array.from(allTraps.values()).filter(trap => trap.tiers.includes(tier))
+  }
+
+  /**
+   * Get trap display name from ID
+   * Returns cached name if available, otherwise formats the ID
+   */
+  static getTrapDisplayName(trapId: TrapId): string {
+    if (this.trapsCache) {
+      const trap = this.trapsCache.get(trapId)
+      if (trap) return trap.name
+    }
+    // Fallback: format ID as display name
+    return trapId.toUpperCase().replace(/_/g, ' ')
   }
 
   /**
@@ -266,6 +271,19 @@ export class TrapDataLoader {
     this.loadPromise = null
     this.loading = false
     this.loaded = false
+    this.loadError = null
+    this.failedTraps.clear()
+  }
+
+  /**
+   * Set cache directly (for testing only)
+   * Allows tests to pre-populate trap data without fetch
+   */
+  static setTestCache(traps: Map<TrapId, TrapEffect>): void {
+    this.trapsCache = traps
+    this.loadPromise = null
+    this.loading = false
+    this.loaded = true
     this.loadError = null
     this.failedTraps.clear()
   }

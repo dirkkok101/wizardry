@@ -1,6 +1,8 @@
 {
   "id": "BLADES",
   "name": "BLADES",
+  "effectType": "damage",
+  "tiers": [3],
   "targetMode": "party",
   "hitChance": 0.30,
   "damageFormula": "1d12",

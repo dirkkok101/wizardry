@@ -70,7 +70,7 @@
     @if (mode() === 'TRAP_NAME_INPUT') {
       <div class="trap-input">
         <p class="instruction">Enter the trap name to disarm:</p>
-        <p class="hint">Trap identified as: {{ chest()?.trapType }}</p>
+        <p class="hint">Trap identified as: {{ getTrapDisplayName(chest()?.trapId) }}</p>
 
         <div class="input-display">
           <span class="input-text">{{ trapNameInput() }}</span>
@@ -87,12 +87,45 @@
       </div>
     }
 
-    <!-- Leave Confirmation Mode -->
-    @if (mode() === 'LEAVE_CONFIRM') {
-      <div class="leave-confirm">
-        <p class="warning-icon">?</p>
-        <p class="warning-text">Leave this chest unopened?</p>
-        <p class="warning-detail">Any treasure inside will be LOST FOREVER!</p>
+    <!-- Trap Display Mode (Scrambled Letters) -->
+    @if (mode() === 'TRAP_DISPLAY') {
+      <div class="trap-display">
+        <p class="instruction">Trap Detected!</p>
+        <p class="hint">Unscramble the letters to identify the trap:</p>
+
+        <div class="scrambled-letters">
+          @for (letter of scrambledTrapState()?.letters; track $index) {
+            <span class="letter"
+                  [class.green]="letter.state === 'green'"
+                  [class.red]="letter.state === 'red'"
+                  [class.hidden]="letter.state === 'hidden'"
+                  [class.excluded]="letter.state === 'excluded'"
+                  [class.space]="letter.char === ' '">
+              @if (letter.state === 'hidden') {
+                _
+              } @else if (letter.state === 'excluded') {
+                *
+              } @else {
+                {{ letter.char }}
+              }
+            </span>
+          }
+        </div>
+
+        <div class="inspection-info">
+          <span class="inspection-count">Inspections: {{ scrambledTrapState()?.inspectionCount || 0 }}</span>
+          @if (scrambledTrapState()?.fullyRevealed) {
+            <span class="fully-revealed">All letters revealed!</span>
+          }
+        </div>
+
+        @if (lastActionMessage()) {
+          <div class="action-message">
+            {{ lastActionMessage() }}
+          </div>
+        }
+
+        <p class="trap-hint">Press (I) to inspect again, (C) for CALFO, or ENTER when ready to disarm</p>
       </div>
     }
 
@@ -180,7 +213,7 @@
           @if (results.trapTriggered) {
             <div class="trap-section">
               <div class="section-header warning">Trap Triggered!</div>
-              <div class="trap-type">{{ results.trapType }}</div>
+              <div class="trap-type">{{ getTrapDisplayName(results.trapId) }}</div>
               <div class="trap-effects">{{ results.trapMessage }}</div>
             </div>
           }

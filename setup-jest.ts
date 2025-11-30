@@ -10,17 +10,21 @@ import * as path from 'path';
 
 setupZoneTestEnv();
 
-// Use real spell data from data/ directory
+// Use real data from data/ directory
 // This approach follows the project's testing philosophy: "No mocks for services - test with real data"
 global.fetch = jest.fn(async (url: string) => {
   const urlPath = url.toString();
 
-  // Convert /assets/... URLs to data/ directory paths
-  // Example: /assets/spells/halito.json -> data/spells/halito.json
+  // Convert URLs to data/ directory paths
   let filePath: string;
   if (urlPath.includes('/assets/')) {
+    // Example: /assets/spells/halito.json -> data/spells/halito.json
     const assetsIndex = urlPath.indexOf('/assets/');
     const relativePath = urlPath.substring(assetsIndex + '/assets/'.length);
+    filePath = path.join(__dirname, 'data', relativePath);
+  } else if (urlPath.startsWith('/data/')) {
+    // Example: /data/traps/index.json -> data/traps/index.json
+    const relativePath = urlPath.substring('/data/'.length);
     filePath = path.join(__dirname, 'data', relativePath);
   } else {
     // Fallback for other paths
