@@ -1,7 +1,9 @@
 {
   "id": "major_daimyo",
+  "numericId": 51,
   "name": "Major Daimyo",
   "level": 7,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 5
@@ -13,24 +15,20 @@
   "ac": 0,
   "damage": [
     {
-      "dice": "2d10",
-      "min": 2,
-      "max": 20
+      "dice": "1d10",
+      "min": 1,
+      "max": 10
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     }
   ],
   "xp": 2340,
-  "gold": 436,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [
-    "magic_resistance"
-  ],
-  "resistances": [
-    {
-      "type": "magic",
-      "value": 50
-    }
-  ],
+  "spellResist": 20,
+  "specialAbilities": ["multiple_attacks", "call_help"],
+  "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false

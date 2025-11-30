@@ -1,7 +1,9 @@
 {
   "id": "will_o_wisp",
+  "numericId": 78,
   "name": "Will O' Wisp",
   "level": 10,
+  "monsterClass": "enchanted",
   "numberAppearing": {
     "min": 1,
     "max": 2
@@ -13,25 +15,16 @@
   "ac": -8,
   "damage": [
     {
-      "dice": "2d10",
+      "dice": "2d8",
       "min": 2,
-      "max": 20
+      "max": 16
     }
   ],
-  "xp": 43320,
-  "gold": 8220,
-  "type": "mythical",
-  "class": null,
-  "specialAbilities": [
-    "magic_resistance"
-  ],
-  "resistances": [
-    {
-      "type": "magic",
-      "value": 95
-    }
-  ],
+  "xp": 42840,
+  "spellResist": 95,
+  "specialAbilities": [],
+  "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

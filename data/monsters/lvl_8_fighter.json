@@ -1,7 +1,9 @@
 {
   "id": "lvl_8_fighter",
+  "numericId": 73,
   "name": "Lvl 8 Fighter",
-  "level": 7,
+  "level": 8,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,23 +15,18 @@
   "ac": -1,
   "damage": [
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d12+2",
+      "min": 3,
+      "max": 14
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d12+2",
+      "min": 3,
+      "max": 14
     }
   ],
   "xp": 2140,
-  "gold": 422,
-  "type": "humanoid",
-  "class": "fighter",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

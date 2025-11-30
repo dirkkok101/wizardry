@@ -1,7 +1,9 @@
 {
   "id": "chimera",
+  "numericId": 69,
   "name": "Chimera",
-  "level": 6,
+  "level": 9,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 1,
     "max": 4
@@ -13,56 +15,45 @@
   "ac": 2,
   "damage": [
     {
-      "dice": "1d8",
+      "dice": "1d3",
       "min": 1,
+      "max": 3
+    },
+    {
+      "dice": "1d3",
+      "min": 1,
+      "max": 3
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "2d4",
+      "min": 2,
       "max": 8
     },
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
-    },
-    {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
-    },
-    {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
-    },
-    {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
-    },
-    {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "3d4",
+      "min": 3,
+      "max": 12
     }
   ],
   "xp": 3515,
-  "gold": 1185,
-  "type": "mythical",
-  "class": null,
-  "specialAbilities": [
-    "breath_weapon",
-    "multiple_attacks"
-  ],
   "breathWeapon": {
-    "type": "fire",
-    "damage": "6d6",
-    "target": "party"
+    "type": "fire"
   },
+  "specialAbilities": ["multiple_attacks", "breath_weapon"],
   "resistances": [
-    {
-      "type": "fire",
-      "value": 100
-    }
+    { "type": "fire", "value": 100 }
   ],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

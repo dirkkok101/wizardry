@@ -1,7 +1,9 @@
 {
   "id": "bushwacker",
+  "numericId": 5,
   "name": "Bushwacker",
-  "level": 1,
+  "level": 3,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 2,
     "max": 5
@@ -13,25 +15,20 @@
   "ac": 8,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d6+1",
       "min": 2,
       "max": 7
     },
     {
-      "dice": "1d7",
+      "dice": "2d4+1",
       "min": 3,
       "max": 9
     }
   ],
   "xp": 620,
-  "gold": 81,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

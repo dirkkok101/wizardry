@@ -1,7 +1,9 @@
 {
   "id": "bishop",
+  "numericId": 38,
   "name": "Bishop",
   "level": 4,
+  "monsterClass": "priest",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,28 +15,18 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d10",
       "min": 1,
-      "max": 6
+      "max": 10
     }
   ],
   "xp": 1135,
-  "gold": 235,
-  "type": "humanoid",
-  "class": "bishop",
   "spellLevels": {
-    "mage": 2,
-    "priest": 2
+    "mage": 1,
+    "priest": 3
   },
-  "spells": [
-    "badios",
-    "milwa",
-    "dilto",
-    "sopic"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["halito", "badios", "montino", "matu"],
+  "specialAbilities": ["spellcasting", "can_sleep"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

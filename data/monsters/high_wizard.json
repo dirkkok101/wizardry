@@ -1,7 +1,9 @@
 {
   "id": "high_wizard",
+  "numericId": 83,
   "name": "High Wizard",
-  "level": 6,
+  "level": 12,
+  "monsterClass": "mage",
   "numberAppearing": {
     "min": 1,
     "max": 1
@@ -11,27 +13,23 @@
     "max": 48
   },
   "ac": 4,
-  "damage": [],
+  "damage": [
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    }
+  ],
   "xp": 2395,
-  "gold": 997,
-  "type": "humanoid",
-  "class": "mage",
   "spellLevels": {
     "mage": 6
   },
-  "spells": [
-    "tiltowait"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["tiltowait", "zilwan", "lakanito"],
+  "specialAbilities": ["spellcasting", "can_sleep"],
   "resistances": [
-    {
-      "type": "fire",
-      "value": 100
-    }
+    { "type": "fire", "value": 100 }
   ],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

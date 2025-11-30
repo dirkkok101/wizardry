@@ -1,7 +1,9 @@
 {
   "id": "master_ninja",
+  "numericId": 76,
   "name": "Master Ninja",
   "level": 10,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 5
@@ -13,31 +15,25 @@
   "ac": 3,
   "damage": [
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d10+3",
+      "min": 4,
+      "max": 13
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d10+3",
+      "min": 4,
+      "max": 13
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d10+3",
+      "min": 4,
+      "max": 13
     }
   ],
   "xp": 1280,
-  "gold": 1212,
-  "type": "humanoid",
-  "class": "ninja",
-  "specialAbilities": [
-    "multiple_attacks",
-    "decapitate"
-  ],
+  "specialAbilities": ["multiple_attacks", "critical_hit"],
   "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

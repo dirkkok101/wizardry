@@ -69,10 +69,20 @@ describe('CombatService - Monster Positioning', () => {
       expect(MonsterService.getAttackRange(kobold)).toBe('melee')
     })
 
-    it('returns ranged for spellcasting monsters with no melee', () => {
+    it('returns ranged for spellcasting monsters with no melee (synthetic)', () => {
+      // In authentic Wizardry 1, ALL monsters have melee attacks
+      // Use a synthetic template to test the ranged-only logic
+      const rangedOnlyTemplate = {
+        ...MonsterDataLoader.getMonster('lvl_1_mage')!,
+        damage: [] // Remove melee damage
+      }
+      expect(MonsterService.getAttackRange(rangedOnlyTemplate)).toBe('ranged')
+    })
+
+    it('returns both for spellcasting monsters with melee (authentic data)', () => {
       const mage = MonsterDataLoader.getMonster('lvl_1_mage')!
-      // Mages have no damage array (empty)
-      expect(MonsterService.getAttackRange(mage)).toBe('ranged')
+      // Authentic Wizardry 1 mages have both spellcasting AND melee damage
+      expect(MonsterService.getAttackRange(mage)).toBe('both')
     })
 
     it('returns both for monsters with spellcasting and melee damage', () => {
@@ -98,9 +108,20 @@ describe('CombatService - Monster Positioning', () => {
   })
 
   describe('MonsterService.prefersBackRow', () => {
-    it('returns true for ranged-only monsters', () => {
+    it('returns true for ranged-only monsters (synthetic)', () => {
+      // In authentic Wizardry 1, ALL monsters have melee attacks
+      // Use a synthetic template to test the ranged-only preference logic
+      const rangedOnlyTemplate = {
+        ...MonsterDataLoader.getMonster('lvl_1_mage')!,
+        damage: [] // Remove melee damage to make it ranged-only
+      }
+      expect(MonsterService.prefersBackRow(rangedOnlyTemplate)).toBe(true)
+    })
+
+    it('returns false for spellcaster with melee (authentic data)', () => {
       const mage = MonsterDataLoader.getMonster('lvl_1_mage')!
-      expect(MonsterService.prefersBackRow(mage)).toBe(true)
+      // Authentic mages have both, so prefersBackRow is false
+      expect(MonsterService.prefersBackRow(mage)).toBe(false)
     })
 
     it('returns false for melee monsters', () => {
@@ -150,19 +171,22 @@ describe('CombatService - Monster Positioning', () => {
       expect(frontCount).toBeLessThanOrEqual(100)
     })
 
-    it('places spellcasters in back row most of the time', () => {
+    it('places authentic spellcasters in front row (they have melee)', () => {
+      // In authentic Wizardry 1, mages have both spellcasting AND melee
+      // So they get attackRange='both' which means prefersBackRow=false
       const mages = MonsterService.generateMonsterGroup('lvl_1_mage')
-      let backCount = 0
+      let frontCount = 0
       const iterations = 100
 
       for (let i = 0; i < iterations; i++) {
         const formation = EncounterService.determineFormation(mages)
-        if (formation === 'back') backCount++
+        if (formation === 'front') frontCount++
       }
 
-      // Should be around 80% back row for spellcasters
-      expect(backCount).toBeGreaterThan(60)
-      expect(backCount).toBeLessThanOrEqual(100)
+      // Authentic mages with melee = attackRange 'both' = 60% front chance
+      // Use 50 threshold for statistical stability
+      expect(frontCount).toBeGreaterThan(50)
+      expect(frontCount).toBeLessThanOrEqual(100)
     })
 
     it('returns front for empty array', () => {

@@ -1,7 +1,9 @@
 {
   "id": "bubbly_slime",
+  "numericId": 0,
   "name": "Bubbly Slime",
   "level": 1,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 2,
     "max": 4
@@ -19,11 +21,11 @@
     }
   ],
   "xp": 55,
-  "gold": 43,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [],
-  "resistances": [],
+  "specialAbilities": ["can_sleep"],
+  "resistances": [
+    { "type": "physical", "value": 100 },
+    { "type": "magic", "value": 100 }
+  ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false

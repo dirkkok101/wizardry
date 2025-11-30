@@ -1,7 +1,9 @@
 {
   "id": "coyote",
+  "numericId": 17,
   "name": "Coyote",
-  "level": 3,
+  "level": 4,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 4,
     "max": 8
@@ -13,17 +15,18 @@
   "ac": 8,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "4d4",
+      "min": 4,
+      "max": 16
     }
   ],
   "xp": 780,
-  "gold": 172,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [],
-  "resistances": [],
+  "specialAbilities": ["can_run"],
+  "resistances": [
+    { "type": "poison", "value": 100 },
+    { "type": "drain", "value": 100 },
+    { "type": "stone", "value": 100 }
+  ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true

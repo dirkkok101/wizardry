@@ -1,7 +1,9 @@
 {
   "id": "poison_giant",
+  "numericId": 88,
   "name": "Poison Giant",
-  "level": 10,
+  "level": 1,
+  "monsterClass": "giant",
   "numberAppearing": {
     "min": 1,
     "max": 4
@@ -18,26 +20,14 @@
       "max": 40
     }
   ],
-  "xp": 41320,
-  "gold": 7885,
-  "type": "mythical",
-  "class": null,
-  "specialAbilities": [
-    "breath_weapon",
-    "magic_resistance"
-  ],
+  "xp": 40840,
+  "spellResist": 95,
   "breathWeapon": {
-    "type": "poison",
-    "damage": "10d6",
-    "target": "party"
+    "type": "poison"
   },
-  "resistances": [
-    {
-      "type": "magic",
-      "value": 95
-    }
-  ],
+  "specialAbilities": ["breath_weapon"],
+  "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

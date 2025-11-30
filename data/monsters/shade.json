@@ -1,7 +1,9 @@
 {
   "id": "shade",
+  "numericId": 37,
   "name": "Shade",
-  "level": 4,
+  "level": 3,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,20 +15,17 @@
   "ac": 7,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "1d4+1",
+      "min": 2,
+      "max": 5
     }
   ],
   "xp": 875,
-  "gold": 218,
-  "type": "undead",
-  "class": null,
-  "specialAbilities": [
-    "level_drain"
-  ],
+  "specialAbilities": ["level_drain"],
   "levelDrain": 1,
-  "resistances": [],
+  "resistances": [
+    { "type": "magic", "value": 100 }
+  ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false

@@ -1,7 +1,9 @@
 {
   "id": "bleeb",
+  "numericId": 79,
   "name": "Bleeb",
   "level": 10,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 1,
     "max": 8
@@ -13,35 +15,28 @@
   "ac": 0,
   "damage": [
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d8+1",
+      "min": 2,
+      "max": 9
     },
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d8+1",
+      "min": 2,
+      "max": 9
     }
   ],
   "xp": 3300,
-  "gold": 1550,
-  "type": "mythical",
-  "class": null,
-  "specialAbilities": [
-    "multiple_attacks",
-    "summon_reinforcements"
-  ],
+  "specialAbilities": ["multiple_attacks", "can_run", "call_help"],
   "resistances": [
-    {
-      "type": "fire",
-      "value": 100
-    },
-    {
-      "type": "cold",
-      "value": 100
-    }
+    { "type": "physical", "value": 100 },
+    { "type": "fire", "value": 100 },
+    { "type": "cold", "value": 100 },
+    { "type": "poison", "value": 100 },
+    { "type": "drain", "value": 100 },
+    { "type": "stone", "value": 100 },
+    { "type": "magic", "value": 100 }
   ],
   "regeneration": 0,
-  "isBoss": true,
-  "canFlee": false
+  "isBoss": false,
+  "canFlee": true
 }

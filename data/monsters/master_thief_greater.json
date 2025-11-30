@@ -1,7 +1,9 @@
 {
   "id": "master_thief_greater",
-  "name": "Master Thief (Greater)",
-  "level": 10,
+  "numericId": 55,
+  "name": "Master Thief",
+  "level": 6,
+  "monsterClass": "thief",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,23 +15,18 @@
   "ac": 3,
   "damage": [
     {
-      "dice": "1d10",
+      "dice": "1d8",
       "min": 1,
-      "max": 10
+      "max": 8
     },
     {
-      "dice": "1d10",
-      "min": 1,
-      "max": 10
+      "dice": "3d8",
+      "min": 3,
+      "max": 24
     }
   ],
   "xp": 1140,
-  "gold": 476,
-  "type": "humanoid",
-  "class": "thief",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

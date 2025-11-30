@@ -1,7 +1,9 @@
 {
   "id": "lvl_4_thief",
+  "numericId": 41,
   "name": "Lvl 4 Thief",
   "level": 4,
+  "monsterClass": "thief",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -18,18 +20,13 @@
       "max": 6
     },
     {
-      "dice": "1d6",
-      "min": 1,
-      "max": 6
+      "dice": "2d6",
+      "min": 2,
+      "max": 12
     }
   ],
   "xp": 740,
-  "gold": 209,
-  "type": "humanoid",
-  "class": "thief",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

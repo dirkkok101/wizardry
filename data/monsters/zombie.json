@@ -1,7 +1,9 @@
 {
   "id": "zombie",
+  "numericId": 7,
   "name": "Zombie",
   "level": 1,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 2,
     "max": 7
@@ -19,12 +21,7 @@
     }
   ],
   "xp": 520,
-  "gold": 74,
-  "type": "undead",
-  "class": null,
-  "specialAbilities": [
-    "paralyze"
-  ],
+  "specialAbilities": ["paralyze"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

@@ -1,7 +1,9 @@
 {
   "id": "ogre",
+  "numericId": 24,
   "name": "Ogre",
   "level": 4,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 8
@@ -13,16 +15,13 @@
   "ac": 5,
   "damage": [
     {
-      "dice": "1d10",
-      "min": 1,
-      "max": 10
+      "dice": "2d6",
+      "min": 2,
+      "max": 12
     }
   ],
   "xp": 960,
-  "gold": 224,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["can_sleep", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

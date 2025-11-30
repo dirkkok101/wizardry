@@ -1,7 +1,9 @@
 {
   "id": "undead_kobold",
+  "numericId": 3,
   "name": "Undead Kobold",
-  "level": 1,
+  "level": 2,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 2,
     "max": 7
@@ -13,21 +15,16 @@
   "ac": 10,
   "damage": [
     {
-      "dice": "1d4",
-      "min": 1,
-      "max": 4
+      "dice": "1d4+1",
+      "min": 2,
+      "max": 5
     }
   ],
   "xp": 230,
-  "gold": 55,
-  "type": "undead",
-  "class": null,
   "specialAbilities": [],
   "resistances": [
-    {
-      "type": "fire",
-      "value": 100
-    }
+    { "type": "fire", "value": 100 },
+    { "type": "cold", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,

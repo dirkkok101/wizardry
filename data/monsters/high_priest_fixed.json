@@ -1,0 +1,40 @@
+{
+  "id": "high_priest_fixed",
+  "numericId": 98,
+  "name": "High Priest",
+  "level": 8,
+  "monsterClass": "priest",
+  "numberAppearing": {
+    "min": 2,
+    "max": 2
+  },
+  "hp": {
+    "min": 8,
+    "max": 64
+  },
+  "ac": 2,
+  "damage": [
+    {
+      "dice": "1d8+4",
+      "min": 5,
+      "max": 12
+    }
+  ],
+  "xp": 2200,
+  "specialAbilities": ["spellcasting"],
+  "spellLevels": {
+    "mage": 0,
+    "priest": 5
+  },
+  "spells": ["badios", "montino", "badial", "badialma", "badi"],
+  "resistances": [],
+  "regeneration": 0,
+  "isBoss": false,
+  "fixedEncounter": true,
+  "location": {
+    "level": 4,
+    "x": 10,
+    "y": 10
+  },
+  "canFlee": false
+}

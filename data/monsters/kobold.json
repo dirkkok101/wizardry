@@ -1,7 +1,9 @@
 {
   "id": "kobold",
+  "numericId": 2,
   "name": "Kobold",
-  "level": 1,
+  "level": 2,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 3,
     "max": 5
@@ -13,23 +15,23 @@
   "ac": 8,
   "damage": [
     {
-      "dice": "1d4",
-      "min": 1,
-      "max": 4
+      "dice": "1d2+1",
+      "min": 2,
+      "max": 3
+    },
+    {
+      "dice": "1d2+1",
+      "min": 2,
+      "max": 3
     }
   ],
   "xp": 415,
-  "gold": 67,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
   "resistances": [
-    {
-      "type": "cold",
-      "value": 100
-    }
+    { "type": "physical", "value": 100 },
+    { "type": "cold", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

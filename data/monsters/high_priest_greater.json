@@ -1,7 +1,9 @@
 {
   "id": "high_priest_greater",
-  "name": "High Priest (Greater)",
-  "level": 10,
+  "numericId": 82,
+  "name": "High Priest",
+  "level": 11,
+  "monsterClass": "priest",
   "numberAppearing": {
     "min": 1,
     "max": 1
@@ -13,33 +15,24 @@
   "ac": 2,
   "damage": [
     {
-      "dice": "2d10",
-      "min": 2,
-      "max": 20
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
     },
     {
-      "dice": "2d10",
-      "min": 2,
-      "max": 20
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
     }
   ],
   "xp": 3300,
-  "gold": 1550,
-  "type": "humanoid",
-  "class": "priest",
   "spellLevels": {
     "priest": 6
   },
-  "spells": [
-    "malikto",
-    "lorto"
-  ],
-  "specialAbilities": [
-    "spellcasting",
-    "multiple_attacks"
-  ],
+  "spells": ["malikto", "lorto", "mabadi"],
+  "specialAbilities": ["multiple_attacks", "spellcasting"],
   "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

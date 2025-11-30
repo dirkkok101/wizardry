@@ -62,7 +62,7 @@ export class MonsterService {
       status: 'ALIVE',
       level: template.level,
       agility: 10,  // Default monster agility
-      undead: template.type === 'undead'
+      undead: template.monsterClass === 'undead'
     }
   }
 

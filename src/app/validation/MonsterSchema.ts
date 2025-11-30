@@ -7,7 +7,7 @@ import { z } from 'zod'
  */
 
 const DiceRollSchema = z.object({
-  dice: z.string().regex(/^\d+d\d+$/, 'Dice must be in format "NdM" (e.g., "1d8", "3d6")'),
+  dice: z.string().regex(/^\d+d\d+(\+\d+)?$/, 'Dice must be in format "NdM" or "NdM+X" (e.g., "1d8", "3d6+2")'),
   min: z.number().int().min(1),
   max: z.number().int().min(1)
 }).refine(
@@ -86,7 +86,7 @@ export const MonsterSchema = z.object({
   // Original game monster ID (0-100) for reference/sorting
   numericId: z.number().int().min(0).max(100),
   name: z.string().min(1),
-  level: z.number().int().min(1).max(10),
+  level: z.number().int().min(1).max(25), // Max 25 for Maelific (25d4 HP)
   numberAppearing: NumberAppearingSchema,
   hp: HpRangeSchema,
   ac: z.number().int().min(-10).max(20),

@@ -1,7 +1,9 @@
 {
   "id": "spirit",
+  "numericId": 43,
   "name": "Spirit",
-  "level": 5,
+  "level": 7,
+  "monsterClass": "mythical",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,28 +15,21 @@
   "ac": 2,
   "damage": [
     {
-      "dice": "1d8",
+      "dice": "1d4",
       "min": 1,
-      "max": 8
+      "max": 4
     }
   ],
-  "xp": 1405,
-  "gold": 293,
-  "type": "undead",
-  "class": "mage",
+  "xp": 1245,
+  "spellResist": 25,
   "spellLevels": {
-    "mage": 2
+    "mage": 3
   },
-  "spells": [
-    "dilto",
-    "sopic"
+  "spells": ["mahalito", "molito"],
+  "specialAbilities": ["spellcasting", "poison", "regeneration"],
+  "resistances": [
+    { "type": "magic", "value": 100 }
   ],
-  "specialAbilities": [
-    "poison",
-    "regeneration",
-    "spellcasting"
-  ],
-  "resistances": [],
   "regeneration": 1,
   "isBoss": false,
   "canFlee": false

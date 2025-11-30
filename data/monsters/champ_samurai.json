@@ -1,7 +1,9 @@
 {
   "id": "champ_samurai",
+  "numericId": 53,
   "name": "Champ Samurai",
-  "level": 5,
+  "level": 10,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,25 +15,17 @@
   "ac": 2,
   "damage": [
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d12+2",
+      "min": 3,
+      "max": 14
     }
   ],
   "xp": 2395,
-  "gold": 359,
-  "type": "humanoid",
-  "class": "samurai",
   "spellLevels": {
     "mage": 1
   },
-  "spells": [
-    "katino",
-    "halito"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["katino", "halito"],
+  "specialAbilities": ["spellcasting"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

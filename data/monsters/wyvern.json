@@ -1,7 +1,9 @@
 {
   "id": "wyvern",
+  "numericId": 61,
   "name": "Wyvern",
   "level": 7,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -18,19 +20,13 @@
       "max": 16
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d6",
+      "min": 1,
+      "max": 6
     }
   ],
   "xp": 1540,
-  "gold": 382,
-  "type": "dragon",
-  "class": null,
-  "specialAbilities": [
-    "poison",
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks", "poison"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

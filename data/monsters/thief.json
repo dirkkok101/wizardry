@@ -1,10 +1,12 @@
 {
   "id": "thief",
+  "numericId": 75,
   "name": "Thief",
-  "level": 10,
+  "level": 9,
+  "monsterClass": "thief",
   "numberAppearing": {
     "min": 1,
-    "max": 1
+    "max": 5
   },
   "hp": {
     "min": 9,
@@ -13,33 +15,28 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "2d6",
-      "min": 2,
-      "max": 12
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
     },
     {
-      "dice": "2d6",
-      "min": 2,
-      "max": 12
+      "dice": "1d3",
+      "min": 1,
+      "max": 3
     },
     {
-      "dice": "2d6",
-      "min": 2,
-      "max": 12
+      "dice": "3d8",
+      "min": 3,
+      "max": 24
     },
     {
-      "dice": "2d6",
+      "dice": "2d10",
       "min": 2,
-      "max": 12
+      "max": 20
     }
   ],
   "xp": 1640,
-  "gold": 509,
-  "type": "humanoid",
-  "class": "thief",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

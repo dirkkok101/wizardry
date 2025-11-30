@@ -204,7 +204,7 @@ export class MonsterResistanceService {
 
       // Check for non-breathing creatures (constructs, etc.)
       if (template && spell.immunities) {
-        const isConstruct = template.type === 'demon' // Simplified - expand as needed
+        const isConstruct = template.monsterClass === 'demon' // Simplified - expand as needed
         if (spell.immunities.includes('constructs') && isConstruct) {
           return { immune: true, resisted: false, resistChance: 0, reason: 'Construct does not breathe' }
         }

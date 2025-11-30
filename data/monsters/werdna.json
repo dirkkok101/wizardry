@@ -1,56 +1,43 @@
 {
   "id": "werdna",
-  "name": "W*E*R*D*N*A",
+  "numericId": 96,
+  "name": "W E R D N A",
   "level": 10,
+  "monsterClass": "mage",
   "numberAppearing": {
     "min": 1,
     "max": 1
   },
   "hp": {
-    "min": 210,
-    "max": 300
+    "min": 30,
+    "max": 120
   },
   "ac": -7,
   "damage": [
     {
-      "dice": "4d10",
-      "min": 4,
+      "dice": "8d5",
+      "min": 8,
       "max": 40
     },
     {
-      "dice": "4d10",
-      "min": 4,
+      "dice": "8d5",
+      "min": 8,
       "max": 40
     }
   ],
   "xp": 15880,
-  "gold": 3645,
-  "type": "humanoid",
-  "class": "mage",
+  "spellResist": 70,
   "spellLevels": {
-    "mage": 7
+    "mage": 7,
+    "priest": 7
   },
-  "spells": [
-    "tiltowait",
-    "mahaman",
-    "haman",
-    "malor"
-  ],
-  "specialAbilities": [
-    "spellcasting",
-    "multiple_attacks",
-    "poison",
-    "paralyze",
-    "petrify",
-    "decapitate",
-    "regeneration",
-    "magic_resistance"
-  ],
+  "spells": ["tiltowait", "mahaman", "haman", "malor", "malikto"],
+  "levelDrain": 4,
+  "specialAbilities": ["multiple_attacks", "petrify", "poison", "paralyze", "critical_hit", "level_drain", "spellcasting", "regeneration"],
   "resistances": [
-    {
-      "type": "magic",
-      "value": 70
-    }
+    { "type": "fire", "value": 100 },
+    { "type": "cold", "value": 100 },
+    { "type": "poison", "value": 100 }
   ],
   "regeneration": 5,
   "isBoss": true,
@@ -63,7 +50,5 @@
     "x": 17,
     "y": 3
   },
-  "dropItems": [
-    "werdna_amulet"
-  ]
+  "dropItems": ["werdna_amulet"]
 }

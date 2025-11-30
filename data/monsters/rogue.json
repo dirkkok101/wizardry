@@ -1,7 +1,9 @@
 {
   "id": "rogue",
+  "numericId": 4,
   "name": "Rogue",
-  "level": 1,
+  "level": 2,
+  "monsterClass": "thief",
   "numberAppearing": {
     "min": 2,
     "max": 5
@@ -13,16 +15,18 @@
   "ac": 10,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d4",
       "min": 1,
-      "max": 6
+      "max": 4
+    },
+    {
+      "dice": "2d2+1",
+      "min": 3,
+      "max": 5
     }
   ],
   "xp": 380,
-  "gold": 65,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

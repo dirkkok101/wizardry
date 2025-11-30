@@ -18,7 +18,7 @@ describe('MonsterService', () => {
       expect(instance.maxHp).toBe(instance.hp)
       expect(instance.ac).toBe(8)
       expect(instance.status).toBe('ALIVE')
-      expect(instance.level).toBe(1)
+      expect(instance.level).toBe(2) // Kobold is level 2 based on 2d3+1 HP dice
       expect(instance.undead).toBe(false)
     })
 
@@ -40,9 +40,9 @@ describe('MonsterService', () => {
       const instance = MonsterService.createMonsterInstance('werdna')
 
       expect(instance.monsterId).toBe('werdna')
-      expect(instance.name).toBe('W*E*R*D*N*A')
-      expect(instance.hp).toBeGreaterThanOrEqual(210)
-      expect(instance.hp).toBeLessThanOrEqual(300)
+      expect(instance.name).toBe('W E R D N A')
+      expect(instance.hp).toBeGreaterThanOrEqual(30) // 10d10+20 = min 30
+      expect(instance.hp).toBeLessThanOrEqual(120) // 10d10+20 = max 120
       expect(instance.ac).toBe(-7)
     })
 
@@ -166,31 +166,31 @@ describe('MonsterService', () => {
     })
 
     it('validates Level 9-10 boss monsters match research data', () => {
-      // Frost Giant
+      // Frost Giant - research values from Apple II source
       const frostGiant = MonsterService.getMonsterTemplate('frost_giant')
-      expect(frostGiant?.hp).toEqual({ min: 51, max: 58 })
+      expect(frostGiant?.hp).toEqual({ min: 51, max: 58 }) // 1d8+50
       expect(frostGiant?.ac).toBe(6)
-      expect(frostGiant?.xp).toBe(41355)
-      expect(frostGiant?.resistances).toContainEqual({ type: 'magic', value: 95 })
+      expect(frostGiant?.xp).toBe(40875) // Research-accurate XP
+      expect(frostGiant?.resistances).toContainEqual({ type: 'cold', value: 100 })
 
-      // Poison Giant
+      // Poison Giant - research values
       const poisonGiant = MonsterService.getMonsterTemplate('poison_giant')
-      expect(poisonGiant?.hp).toEqual({ min: 81, max: 81 })
+      expect(poisonGiant?.hp).toEqual({ min: 81, max: 81 }) // 1d1+80
       expect(poisonGiant?.ac).toBe(3)
-      expect(poisonGiant?.xp).toBe(41320)
+      expect(poisonGiant?.xp).toBe(40840) // Research-accurate XP
 
-      // Greater Demon
+      // Greater Demon - research values
       const greaterDemon = MonsterService.getMonsterTemplate('greater_demon')
-      expect(greaterDemon?.hp).toEqual({ min: 11, max: 88 })
+      expect(greaterDemon?.hp).toEqual({ min: 11, max: 88 }) // 11d8
       expect(greaterDemon?.ac).toBe(-3)
-      expect(greaterDemon?.xp).toBe(44570)
+      expect(greaterDemon?.xp).toBe(44090) // Research-accurate XP
       expect(greaterDemon?.damage.length).toBe(5) // 5 attacks
     })
 
     it('validates all special abilities are properly defined', () => {
-      // Vorpal Bunny - decapitate
+      // Vorpal Bunny - critical hit (research calls it "Critical")
       const vorpalBunny = MonsterService.getMonsterTemplate('vorpal_bunny')
-      expect(vorpalBunny?.specialAbilities).toContain('decapitate')
+      expect(vorpalBunny?.specialAbilities).toContain('critical_hit')
 
       // Vampire Lord - level drain
       const vampireLord = MonsterService.getMonsterTemplate('vampire_lord')

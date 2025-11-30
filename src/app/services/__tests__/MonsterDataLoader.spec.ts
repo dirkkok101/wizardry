@@ -208,15 +208,15 @@ describe('MonsterDataLoader', () => {
     })
 
     it('loads key monsters correctly', () => {
-      // Level 1 basic monster
+      // Level 2 basic monster (2d3+1 HP = level 2)
       const kobold = MonsterDataLoader.getMonster('kobold')
-      expect(kobold?.level).toBe(1)
-      expect(kobold?.type).toBe('humanoid')
+      expect(kobold?.level).toBe(2)
+      expect(kobold?.monsterClass).toBe('fighter')
 
       // Level 1 boss
       const murphy = MonsterDataLoader.getMonster('murphy_ghost')
       expect(murphy?.isBoss).toBe(true)
-      expect(murphy?.type).toBe('undead')
+      expect(murphy?.monsterClass).toBe('undead')
 
       // Final boss
       const werdna = MonsterDataLoader.getMonster('werdna')

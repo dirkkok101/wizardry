@@ -1,7 +1,9 @@
 {
   "id": "gas_dragon",
+  "numericId": 28,
   "name": "Gas Dragon",
-  "level": 4,
+  "level": 5,
+  "monsterClass": "dragon",
   "numberAppearing": {
     "min": 1,
     "max": 4
@@ -13,31 +15,30 @@
   "ac": 3,
   "damage": [
     {
-      "dice": "1d10",
+      "dice": "1d4",
       "min": 1,
-      "max": 10
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "3d6",
+      "min": 3,
+      "max": 18
     }
   ],
   "xp": 2075,
-  "gold": 298,
-  "type": "dragon",
-  "class": "mage",
   "spellLevels": {
     "mage": 1
   },
-  "spells": [
-    "katino",
-    "halito"
-  ],
-  "specialAbilities": [
-    "breath_weapon",
-    "spellcasting"
-  ],
+  "spells": ["katino", "halito"],
   "breathWeapon": {
-    "type": "poison",
-    "damage": "3d6",
-    "target": "party"
+    "type": "poison"
   },
+  "specialAbilities": ["multiple_attacks", "breath_weapon", "spellcasting"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

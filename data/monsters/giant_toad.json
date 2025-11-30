@@ -1,7 +1,9 @@
 {
   "id": "giant_toad",
+  "numericId": 16,
   "name": "Giant Toad",
-  "level": 3,
+  "level": 4,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 6,
     "max": 8
@@ -13,25 +15,27 @@
   "ac": 7,
   "damage": [
     {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
       "dice": "1d6",
       "min": 1,
       "max": 6
+    },
+    {
+      "dice": "2d3+2",
+      "min": 4,
+      "max": 8
     }
   ],
   "xp": 795,
-  "gold": 173,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [
-    "poison"
-  ],
+  "specialAbilities": ["multiple_attacks", "poison", "can_run"],
   "resistances": [
-    {
-      "type": "fire",
-      "value": 100
-    }
+    { "type": "fire", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

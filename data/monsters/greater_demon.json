@@ -1,7 +1,9 @@
 {
   "id": "greater_demon",
+  "numericId": 87,
   "name": "Greater Demon",
-  "level": 10,
+  "level": 11,
+  "monsterClass": "demon",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,44 +15,40 @@
   "ac": -3,
   "damage": [
     {
-      "dice": "3d8",
-      "min": 3,
+      "dice": "2d12",
+      "min": 2,
       "max": 24
     },
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d6",
+      "min": 1,
+      "max": 6
     },
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     },
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     },
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     }
   ],
-  "xp": 44570,
-  "gold": 8427,
-  "type": "demon",
-  "class": null,
-  "specialAbilities": [
-    "multiple_attacks",
-    "poison",
-    "paralyze",
-    "summon_reinforcements",
-    "regeneration"
-  ],
+  "xp": 44090,
+  "spellResist": 95,
+  "spellLevels": {
+    "mage": 5
+  },
+  "spells": ["madalto", "lakanito", "makanito"],
+  "specialAbilities": ["multiple_attacks", "poison", "paralyze", "call_help", "spellcasting", "regeneration"],
   "resistances": [],
-  "regeneration": 3,
-  "isBoss": true,
+  "regeneration": 1,
+  "isBoss": false,
   "canFlee": false
 }

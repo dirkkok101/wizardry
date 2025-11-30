@@ -1,12 +1,12 @@
 {
-  "id": "lvl_7_mage",
-  "numericId": 49,
+  "id": "lvl_7_mage_fixed",
+  "numericId": 99,
   "name": "Lvl 7 Mage",
   "level": 7,
   "monsterClass": "mage",
   "numberAppearing": {
-    "min": 1,
-    "max": 6
+    "min": 2,
+    "max": 2
   },
   "hp": {
     "min": 7,
@@ -21,13 +21,20 @@
     }
   ],
   "xp": 1000,
-  "spellLevels": {
-    "mage": 4
-  },
-  "spells": ["dalto", "lahalito"],
   "specialAbilities": ["spellcasting", "can_sleep"],
+  "spellLevels": {
+    "mage": 4,
+    "priest": 0
+  },
+  "spells": ["katino", "dilto", "mahalito", "dalto"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
+  "fixedEncounter": true,
+  "location": {
+    "level": 4,
+    "x": 10,
+    "y": 10
+  },
   "canFlee": false
 }

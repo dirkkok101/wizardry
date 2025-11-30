@@ -1,7 +1,9 @@
 {
   "id": "creeping_crud",
+  "numericId": 8,
   "name": "Creeping Crud",
-  "level": 2,
+  "level": 3,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 2,
     "max": 7
@@ -13,23 +15,16 @@
   "ac": 6,
   "damage": [
     {
-      "dice": "1d6",
-      "min": 1,
-      "max": 6
+      "dice": "1d3+1",
+      "min": 2,
+      "max": 4
     }
   ],
   "xp": 550,
-  "gold": 116,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [
-    "poison"
-  ],
+  "specialAbilities": ["poison"],
   "resistances": [
-    {
-      "type": "cold",
-      "value": 100
-    }
+    { "type": "cold", "value": 100 },
+    { "type": "magic", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,

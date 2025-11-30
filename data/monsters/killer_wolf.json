@@ -1,7 +1,9 @@
 {
   "id": "killer_wolf",
+  "numericId": 42,
   "name": "Killer Wolf",
-  "level": 5,
+  "level": 6,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,23 +15,18 @@
   "ac": 0,
   "damage": [
     {
-      "dice": "1d10",
-      "min": 1,
-      "max": 10
+      "dice": "2d4",
+      "min": 2,
+      "max": 8
     },
     {
-      "dice": "1d10",
-      "min": 1,
-      "max": 10
+      "dice": "2d4",
+      "min": 2,
+      "max": 8
     }
   ],
   "xp": 1460,
-  "gold": 297,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

@@ -1,7 +1,9 @@
 {
   "id": "lvl_8_priest",
+  "numericId": 62,
   "name": "Lvl 8 Priest",
-  "level": 6,
+  "level": 7,
+  "monsterClass": "priest",
   "numberAppearing": {
     "min": 1,
     "max": 5
@@ -19,19 +21,11 @@
     }
   ],
   "xp": 1720,
-  "gold": 354,
-  "type": "humanoid",
-  "class": "priest",
   "spellLevels": {
     "priest": 4
   },
-  "spells": [
-    "badi",
-    "dial"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["badi", "dialma"],
+  "specialAbilities": ["spellcasting"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

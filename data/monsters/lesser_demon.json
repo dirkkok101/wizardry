@@ -1,7 +1,9 @@
 {
   "id": "lesser_demon",
+  "numericId": 68,
   "name": "Lesser Demon",
-  "level": 7,
+  "level": 10,
+  "monsterClass": "demon",
   "numberAppearing": {
     "min": 1,
     "max": 1
@@ -13,49 +15,40 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "2d8",
+      "dice": "2d6",
       "min": 2,
-      "max": 16
+      "max": 12
     },
     {
-      "dice": "2d8",
+      "dice": "2d6",
       "min": 2,
-      "max": 16
+      "max": 12
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d3",
+      "min": 1,
+      "max": 3
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d3",
+      "min": 1,
+      "max": 3
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d4+4",
+      "min": 5,
+      "max": 8
     }
   ],
   "xp": 5100,
-  "gold": 1550,
-  "type": "demon",
-  "class": "mage",
+  "spellResist": 60,
   "spellLevels": {
-    "mage": 4
+    "mage": 3
   },
-  "spells": [
-    "dalto",
-    "lahalito"
-  ],
-  "specialAbilities": [
-    "multiple_attacks",
-    "spellcasting",
-    "summon_reinforcements"
-  ],
+  "spells": ["mahalito", "molito"],
+  "specialAbilities": ["multiple_attacks", "spellcasting", "call_help"],
   "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

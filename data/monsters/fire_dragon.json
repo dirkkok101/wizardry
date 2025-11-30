@@ -1,7 +1,9 @@
 {
   "id": "fire_dragon",
+  "numericId": 81,
   "name": "Fire Dragon",
-  "level": 8,
+  "level": 12,
+  "monsterClass": "dragon",
   "numberAppearing": {
     "min": 1,
     "max": 4
@@ -13,34 +15,32 @@
   "ac": -1,
   "damage": [
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "4d4",
+      "min": 4,
+      "max": 16
     }
   ],
   "xp": 5000,
-  "gold": 1632,
-  "type": "dragon",
-  "class": "mage",
   "spellLevels": {
     "mage": 5
   },
-  "spells": [
-    "madalto",
-    "lakanito",
-    "zilwan"
-  ],
-  "specialAbilities": [
-    "breath_weapon",
-    "spellcasting"
-  ],
+  "spells": ["madalto", "lakanito", "makanito"],
   "breathWeapon": {
-    "type": "fire",
-    "damage": "8d6",
-    "target": "party"
+    "type": "fire"
   },
+  "specialAbilities": ["multiple_attacks", "breath_weapon", "spellcasting"],
   "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

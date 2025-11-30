@@ -1,7 +1,9 @@
 {
   "id": "priestess",
+  "numericId": 29,
   "name": "Priestess",
-  "level": 4,
+  "level": 3,
+  "monsterClass": "priest",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,25 +15,17 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "1d6",
-      "min": 1,
-      "max": 6
+      "dice": "1d6+2",
+      "min": 3,
+      "max": 8
     }
   ],
   "xp": 870,
-  "gold": 218,
-  "type": "humanoid",
-  "class": "priest",
   "spellLevels": {
     "priest": 2
   },
-  "spells": [
-    "badios",
-    "milwa"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["badios", "montino"],
+  "specialAbilities": ["spellcasting", "can_sleep"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

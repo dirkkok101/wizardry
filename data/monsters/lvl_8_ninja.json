@@ -1,7 +1,9 @@
 {
   "id": "lvl_8_ninja",
+  "numericId": 66,
   "name": "Lvl 8 Ninja",
   "level": 8,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 3
@@ -13,18 +15,18 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "1d10",
+      "dice": "2d6",
+      "min": 2,
+      "max": 12
+    },
+    {
+      "dice": "1d6",
       "min": 1,
-      "max": 10
+      "max": 6
     }
   ],
   "xp": 1020,
-  "gold": 388,
-  "type": "humanoid",
-  "class": "ninja",
-  "specialAbilities": [
-    "decapitate"
-  ],
+  "specialAbilities": ["multiple_attacks", "critical_hit"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

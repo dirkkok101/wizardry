@@ -1,7 +1,9 @@
 {
   "id": "lifestealer",
+  "numericId": 59,
   "name": "Lifestealer",
   "level": 5,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 1,
     "max": 1
@@ -13,29 +15,27 @@
   "ac": 3,
   "damage": [
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     }
   ],
   "xp": 2240,
-  "gold": 872,
-  "type": "undead",
-  "class": "mage",
+  "spellResist": 20,
   "spellLevels": {
-    "mage": 3
+    "mage": 3,
+    "priest": 3
   },
-  "spells": [
-    "mahalito",
-    "dalto"
-  ],
-  "specialAbilities": [
-    "level_drain",
-    "spellcasting"
-  ],
+  "spells": ["mahalito", "matu", "dial"],
+  "specialAbilities": ["level_drain", "spellcasting"],
   "levelDrain": 2,
-  "resistances": [],
+  "resistances": [
+    { "type": "poison", "value": 100 },
+    { "type": "drain", "value": 100 },
+    { "type": "stone", "value": 100 },
+    { "type": "magic", "value": 100 }
+  ],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

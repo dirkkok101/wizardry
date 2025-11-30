@@ -1,18 +1,18 @@
 {
-  "id": "lvl_7_thief",
-  "numericId": 65,
-  "name": "Lvl 7 Thief",
-  "level": 7,
+  "id": "master_thief_84",
+  "numericId": 84,
+  "name": "Master Thief",
+  "level": 12,
   "monsterClass": "thief",
   "numberAppearing": {
     "min": 1,
-    "max": 5
+    "max": 1
   },
   "hp": {
-    "min": 7,
-    "max": 42
+    "min": 12,
+    "max": 72
   },
-  "ac": 4,
+  "ac": 2,
   "damage": [
     {
       "dice": "1d8",
@@ -20,14 +20,16 @@
       "max": 8
     },
     {
-      "dice": "3d8",
-      "min": 3,
-      "max": 24
+      "dice": "5d8",
+      "min": 5,
+      "max": 40
     }
   ],
-  "xp": 1220,
+  "xp": 1935,
   "specialAbilities": ["multiple_attacks", "can_run"],
-  "resistances": [],
+  "resistances": [
+    { "type": "poison", "value": 100 }
+  ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true

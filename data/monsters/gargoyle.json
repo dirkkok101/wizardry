@@ -1,7 +1,9 @@
 {
   "id": "gargoyle",
+  "numericId": 33,
   "name": "Gargoyle",
   "level": 4,
+  "monsterClass": "enchanted",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,39 +15,31 @@
   "ac": 5,
   "damage": [
     {
-      "dice": "1d8",
+      "dice": "1d3",
       "min": 1,
-      "max": 8
+      "max": 3
     },
     {
-      "dice": "1d8",
+      "dice": "1d3",
       "min": 1,
-      "max": 8
+      "max": 3
     },
     {
-      "dice": "1d8",
+      "dice": "1d6",
       "min": 1,
-      "max": 8
+      "max": 6
     },
     {
-      "dice": "1d8",
+      "dice": "1d4",
       "min": 1,
-      "max": 8
+      "max": 4
     }
   ],
   "xp": 2435,
-  "gold": 322,
-  "type": "mythical",
-  "class": null,
-  "specialAbilities": [
-    "multiple_attacks",
-    "magic_resistance"
-  ],
+  "spellResist": 50,
+  "specialAbilities": ["multiple_attacks"],
   "resistances": [
-    {
-      "type": "magic",
-      "value": 50
-    }
+    { "type": "magic", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,

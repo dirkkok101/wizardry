@@ -1,7 +1,9 @@
 {
   "id": "minor_daimyo",
+  "numericId": 39,
   "name": "Minor Daimyo",
-  "level": 5,
+  "level": 4,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,16 +15,13 @@
   "ac": 2,
   "damage": [
     {
-      "dice": "1d10",
+      "dice": "1d12",
       "min": 1,
-      "max": 10
+      "max": 12
     }
   ],
   "xp": 1200,
-  "gold": 280,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["can_sleep", "call_help"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

@@ -1,7 +1,9 @@
 {
   "id": "werewolf",
+  "numericId": 36,
   "name": "Werewolf",
-  "level": 6,
+  "level": 4,
+  "monsterClass": "were",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,24 +15,21 @@
   "ac": 5,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
+      "dice": "2d4",
+      "min": 2,
       "max": 8
     },
     {
-      "dice": "1d8",
-      "min": 1,
+      "dice": "2d4",
+      "min": 2,
       "max": 8
     }
   ],
   "xp": 975,
-  "gold": 305,
-  "type": "werebeast",
-  "class": null,
-  "specialAbilities": [
-    "multiple_attacks"
+  "specialAbilities": ["multiple_attacks"],
+  "resistances": [
+    { "type": "magic", "value": 100 }
   ],
-  "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false

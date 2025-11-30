@@ -1,7 +1,9 @@
 {
   "id": "grave_mist",
+  "numericId": 34,
   "name": "Grave Mist",
   "level": 4,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,18 +15,23 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d4",
       "min": 1,
-      "max": 6
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
     }
   ],
   "xp": 1080,
-  "gold": 232,
-  "type": "undead",
-  "class": null,
-  "specialAbilities": [
-    "paralyze"
-  ],
+  "specialAbilities": ["multiple_attacks", "paralyze"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

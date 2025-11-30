@@ -1,7 +1,9 @@
 {
   "id": "swordsman",
+  "numericId": 30,
   "name": "Swordsman",
-  "level": 5,
+  "level": 3,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,16 +15,13 @@
   "ac": 3,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "2d7",
+      "min": 2,
+      "max": 14
     }
   ],
   "xp": 960,
-  "gold": 264,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["can_sleep"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

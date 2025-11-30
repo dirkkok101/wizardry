@@ -1,7 +1,9 @@
 {
   "id": "high_priest_lesser",
-  "name": "High Priest (Lesser)",
-  "level": 6,
+  "numericId": 52,
+  "name": "High Priest",
+  "level": 8,
+  "monsterClass": "priest",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,25 +15,17 @@
   "ac": 3,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "1d8+2",
+      "min": 3,
+      "max": 10
     }
   ],
   "xp": 2160,
-  "gold": 384,
-  "type": "humanoid",
-  "class": "priest",
   "spellLevels": {
     "priest": 5
   },
-  "spells": [
-    "badi",
-    "dial"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["badi", "dialma"],
+  "specialAbilities": ["spellcasting"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

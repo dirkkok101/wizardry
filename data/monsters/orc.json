@@ -1,7 +1,9 @@
 {
   "id": "orc",
+  "numericId": 1,
   "name": "Orc",
   "level": 1,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 3,
     "max": 6
@@ -19,17 +21,11 @@
     }
   ],
   "xp": 235,
-  "gold": 55,
-  "type": "humanoid",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["can_sleep", "can_run"],
   "resistances": [
-    {
-      "type": "fire",
-      "value": 100
-    }
+    { "type": "fire", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

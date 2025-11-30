@@ -1,7 +1,9 @@
 {
   "id": "lvl_10_fighter",
+  "numericId": 63,
   "name": "Lvl 10 Fighter",
-  "level": 8,
+  "level": 7,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,23 +15,18 @@
   "ac": 0,
   "damage": [
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d12",
+      "min": 1,
+      "max": 12
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d12",
+      "min": 1,
+      "max": 12
     }
   ],
   "xp": 1900,
-  "gold": 446,
-  "type": "humanoid",
-  "class": "fighter",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

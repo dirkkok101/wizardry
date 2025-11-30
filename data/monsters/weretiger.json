@@ -1,7 +1,9 @@
 {
   "id": "weretiger",
+  "numericId": 45,
   "name": "Weretiger",
   "level": 5,
+  "monsterClass": "were",
   "numberAppearing": {
     "min": 1,
     "max": 8
@@ -13,32 +15,27 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "2d6",
+      "min": 2,
+      "max": 12
     },
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "2d6",
+      "min": 2,
+      "max": 12
     },
     {
-      "dice": "1d8",
+      "dice": "1d4",
       "min": 1,
-      "max": 8
+      "max": 4
     }
   ],
   "xp": 1405,
-  "gold": 293,
-  "type": "werebeast",
-  "class": null,
-  "specialAbilities": [
-    "poison",
-    "multiple_attacks",
-    "regeneration"
+  "specialAbilities": ["multiple_attacks", "poison", "can_sleep", "regeneration"],
+  "resistances": [
+    { "type": "magic", "value": 100 }
   ],
-  "resistances": [],
-  "regeneration": 2,
+  "regeneration": 1,
   "isBoss": false,
   "canFlee": false
 }

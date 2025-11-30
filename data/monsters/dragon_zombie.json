@@ -1,7 +1,9 @@
 {
   "id": "dragon_zombie",
+  "numericId": 89,
   "name": "Dragon Zombie",
-  "level": 8,
+  "level": 12,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 1,
     "max": 4
@@ -13,45 +15,33 @@
   "ac": -2,
   "damage": [
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "1d8",
+      "min": 1,
+      "max": 8
     },
     {
-      "dice": "2d8",
-      "min": 2,
-      "max": 16
+      "dice": "3d12",
+      "min": 3,
+      "max": 36
     }
   ],
-  "xp": 5360,
-  "gold": 1692,
-  "type": "undead",
-  "class": "mage",
+  "xp": 5200,
+  "spellResist": 25,
   "spellLevels": {
     "mage": 5
   },
-  "spells": [
-    "madalto",
-    "lakanito",
-    "zilwan"
-  ],
-  "specialAbilities": [
-    "breath_weapon",
-    "spellcasting",
-    "multiple_attacks"
-  ],
+  "spells": ["madalto", "lakanito", "makanito"],
   "breathWeapon": {
-    "type": "fire",
-    "damage": "8d6",
-    "target": "party"
+    "type": "drain"
   },
+  "specialAbilities": ["multiple_attacks", "breath_weapon", "spellcasting"],
   "resistances": [],
   "regeneration": 0,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

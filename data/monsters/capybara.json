@@ -1,7 +1,9 @@
 {
   "id": "capybara",
+  "numericId": 15,
   "name": "Capybara",
-  "level": 3,
+  "level": 4,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 3,
     "max": 9
@@ -13,20 +15,15 @@
   "ac": 8,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d10",
       "min": 1,
-      "max": 6
+      "max": 10
     }
   ],
   "xp": 520,
-  "gold": 154,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [
-    "poison"
-  ],
+  "specialAbilities": ["poison", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

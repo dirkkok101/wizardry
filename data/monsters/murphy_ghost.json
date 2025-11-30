@@ -1,7 +1,9 @@
 {
   "id": "murphy_ghost",
+  "numericId": 77,
   "name": "Murphy's Ghost",
-  "level": 1,
+  "level": 10,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 1,
     "max": 1
@@ -13,26 +15,23 @@
   "ac": -3,
   "damage": [
     {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "1d1+1",
+      "min": 2,
+      "max": 2
     }
   ],
   "xp": 4450,
-  "gold": 840,
-  "type": "undead",
-  "class": null,
-  "specialAbilities": [
-    "regeneration"
+  "spellResist": 40,
+  "specialAbilities": ["can_sleep", "regeneration"],
+  "resistances": [
+    { "type": "fire", "value": 100 },
+    { "type": "cold", "value": 100 },
+    { "type": "poison", "value": 100 },
+    { "type": "drain", "value": 100 },
+    { "type": "stone", "value": 100 },
+    { "type": "magic", "value": 100 }
   ],
-  "resistances": [],
   "regeneration": 1,
   "isBoss": true,
-  "canFlee": false,
-  "fixedEncounter": true,
-  "location": {
-    "level": 1,
-    "x": 13,
-    "y": 5
-  }
+  "canFlee": false
 }

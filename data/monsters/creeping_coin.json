@@ -1,7 +1,9 @@
 {
   "id": "creeping_coin",
+  "numericId": 12,
   "name": "Creeping Coin?",
-  "level": 2,
+  "level": 1,
+  "monsterClass": "enchanted",
   "numberAppearing": {
     "min": 9,
     "max": 9
@@ -13,25 +15,23 @@
   "ac": 4,
   "damage": [
     {
-      "dice": "1d2",
+      "dice": "1d1",
       "min": 1,
-      "max": 2
+      "max": 1
     }
   ],
   "xp": 920,
-  "gold": 141,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [
-    "breath_weapon",
-    "summon_reinforcements"
-  ],
   "breathWeapon": {
-    "type": "cold",
-    "damage": "2d6",
-    "target": "party"
+    "type": "drain"
   },
-  "resistances": [],
+  "specialAbilities": ["breath_weapon", "call_help"],
+  "resistances": [
+    { "type": "fire", "value": 100 },
+    { "type": "cold", "value": 100 },
+    { "type": "poison", "value": 100 },
+    { "type": "drain", "value": 100 },
+    { "type": "stone", "value": 100 }
+  ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false

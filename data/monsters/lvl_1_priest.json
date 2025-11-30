@@ -1,7 +1,9 @@
 {
   "id": "lvl_1_priest",
+  "numericId": 11,
   "name": "Lvl 1 Priest",
   "level": 1,
+  "monsterClass": "priest",
   "numberAppearing": {
     "min": 2,
     "max": 5
@@ -13,27 +15,19 @@
   "ac": 5,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d8",
       "min": 1,
-      "max": 6
+      "max": 8
     }
   ],
   "xp": 515,
-  "gold": 74,
-  "type": "humanoid",
-  "class": "priest",
   "spellLevels": {
     "priest": 1
   },
-  "spells": [
-    "dios",
-    "badios"
-  ],
-  "specialAbilities": [
-    "spellcasting"
-  ],
+  "spells": ["dios", "badios"],
+  "specialAbilities": ["spellcasting", "can_sleep", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

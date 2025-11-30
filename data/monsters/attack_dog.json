@@ -1,7 +1,9 @@
 {
   "id": "attack_dog",
+  "numericId": 32,
   "name": "Attack Dog",
   "level": 4,
+  "monsterClass": "animal",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -13,16 +15,13 @@
   "ac": 1,
   "damage": [
     {
-      "dice": "1d8",
+      "dice": "1d6",
       "min": 1,
-      "max": 8
+      "max": 6
     }
   ],
   "xp": 1120,
-  "gold": 234,
-  "type": "normal",
-  "class": null,
-  "specialAbilities": [],
+  "specialAbilities": ["can_sleep", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

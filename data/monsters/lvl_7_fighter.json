@@ -1,7 +1,9 @@
 {
   "id": "lvl_7_fighter",
+  "numericId": 100,
   "name": "Lvl 7 Fighter",
-  "level": 4,
+  "level": 7,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 2,
     "max": 2
@@ -13,25 +15,27 @@
   "ac": 0,
   "damage": [
     {
-      "dice": "1d10",
+      "dice": "1d12",
       "min": 1,
-      "max": 10
+      "max": 12
     },
     {
-      "dice": "1d10",
+      "dice": "1d12",
       "min": 1,
-      "max": 10
+      "max": 12
     }
   ],
   "xp": 1900,
-  "gold": 286,
-  "type": "humanoid",
-  "class": "fighter",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
+  "isUnique": true,
+  "fixedEncounter": true,
+  "location": {
+    "level": 4,
+    "x": 10,
+    "y": 10
+  },
   "canFlee": false
 }

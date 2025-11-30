@@ -1,7 +1,9 @@
 {
   "id": "master_thief_lesser",
-  "name": "Master Thief (Lesser)",
-  "level": 6,
+  "numericId": 50,
+  "name": "Master Thief",
+  "level": 4,
+  "monsterClass": "thief",
   "numberAppearing": {
     "min": 1,
     "max": 6
@@ -23,18 +25,13 @@
       "max": 6
     },
     {
-      "dice": "1d6",
-      "min": 1,
-      "max": 6
+      "dice": "2d6",
+      "min": 2,
+      "max": 12
     }
   ],
   "xp": 960,
-  "gold": 304,
-  "type": "humanoid",
-  "class": "thief",
-  "specialAbilities": [
-    "multiple_attacks"
-  ],
+  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

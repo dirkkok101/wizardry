@@ -1,7 +1,9 @@
 {
   "id": "gas_cloud",
+  "numericId": 9,
   "name": "Gas Cloud",
   "level": 2,
+  "monsterClass": "enchanted",
   "numberAppearing": {
     "min": 2,
     "max": 8
@@ -19,22 +21,13 @@
     }
   ],
   "xp": 350,
-  "gold": 103,
-  "type": "normal",
-  "class": "mage",
   "spellLevels": {
     "mage": 2
   },
-  "spells": [
-    "dilto",
-    "sopic"
-  ],
-  "specialAbilities": [
-    "spellcasting",
-    "paralyze"
-  ],
+  "spells": ["dilto", "halito"],
+  "specialAbilities": ["spellcasting", "paralyze", "can_run"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
-  "canFlee": false
+  "canFlee": true
 }

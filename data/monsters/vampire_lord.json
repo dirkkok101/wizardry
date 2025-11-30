@@ -1,7 +1,9 @@
 {
   "id": "vampire_lord",
+  "numericId": 95,
   "name": "Vampire Lord",
-  "level": 10,
+  "level": 20,
+  "monsterClass": "undead",
   "numberAppearing": {
     "min": 1,
     "max": 1
@@ -13,23 +15,20 @@
   "ac": -5,
   "damage": [
     {
-      "dice": "4d10",
-      "min": 4,
-      "max": 40
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     }
   ],
   "xp": 7320,
-  "gold": 2220,
-  "type": "undead",
-  "class": null,
-  "specialAbilities": [
-    "paralyze",
-    "level_drain",
-    "regeneration"
-  ],
+  "spellLevels": {
+    "mage": 6
+  },
+  "spells": ["tiltowait", "zilwan"],
   "levelDrain": 4,
+  "specialAbilities": ["paralyze", "level_drain", "spellcasting", "regeneration"],
   "resistances": [],
   "regeneration": 4,
-  "isBoss": true,
+  "isBoss": false,
   "canFlee": false
 }

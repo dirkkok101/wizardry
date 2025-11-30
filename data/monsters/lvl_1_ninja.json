@@ -1,7 +1,9 @@
 {
   "id": "lvl_1_ninja",
+  "numericId": 13,
   "name": "Lvl 1 Ninja",
-  "level": 1,
+  "level": 2,
+  "monsterClass": "fighter",
   "numberAppearing": {
     "min": 2,
     "max": 8
@@ -13,18 +15,23 @@
   "ac": 5,
   "damage": [
     {
-      "dice": "1d6",
+      "dice": "1d4",
       "min": 1,
-      "max": 6
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
     }
   ],
   "xp": 600,
-  "gold": 80,
-  "type": "humanoid",
-  "class": "ninja",
-  "specialAbilities": [
-    "decapitate"
-  ],
+  "specialAbilities": ["multiple_attacks", "critical_hit", "can_sleep"],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

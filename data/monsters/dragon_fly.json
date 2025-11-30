@@ -1,7 +1,9 @@
 {
   "id": "dragon_fly",
+  "numericId": 22,
   "name": "Dragon Fly",
-  "level": 3,
+  "level": 2,
+  "monsterClass": "dragon",
   "numberAppearing": {
     "min": 2,
     "max": 4
@@ -13,29 +15,29 @@
   "ac": 4,
   "damage": [
     {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
+      "dice": "1d4",
+      "min": 1,
+      "max": 4
+    },
+    {
       "dice": "1d6",
       "min": 1,
       "max": 6
     }
   ],
   "xp": 1275,
-  "gold": 205,
-  "type": "dragon",
-  "class": null,
-  "specialAbilities": [
-    "breath_weapon",
-    "magic_resistance"
-  ],
+  "spellResist": 20,
   "breathWeapon": {
-    "type": "fire",
-    "damage": "3d6",
-    "target": "party"
+    "type": "fire"
   },
+  "specialAbilities": ["multiple_attacks", "breath_weapon", "can_sleep"],
   "resistances": [
-    {
-      "type": "magic",
-      "value": 50
-    }
+    { "type": "fire", "value": 100 }
   ],
   "regeneration": 0,
   "isBoss": false,
