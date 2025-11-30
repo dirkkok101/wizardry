@@ -341,8 +341,8 @@
 **hitDice**: `string` - Hit point die per level
 - `"1d4"`: Mage (lowest HP)
 - `"1d6"`: Thief, Bishop, Ninja
-- `"1d8"`: Priest, Samurai (Samurai gets +1 bonus die)
-- `"1d10"`: Fighter, Lord (Lord gets +1 bonus die)
+- `"1d8"`: Priest, Samurai (Samurai rolls **Level+1 dice** as bonus)
+- `"1d10"`: Fighter, Lord
 
 **attacksPerLevel**: `object` - Attacks per round by level range
 - Keys: Level range strings (e.g., "1-4", "5-9", "13+")
@@ -503,7 +503,7 @@ All class data validated against:
 - **Easiest to Create**: Fighter (STR ≥ 11 only)
 - **Hardest to Create**: Ninja (**IMPOSSIBLE at character creation** - requires 52+ bonus points, max is 29)
 - **Most Versatile**: Bishop (both spell types, item identification)
-- **Highest HP**: Fighter, Lord (1d10 per level, Lord gets +1 bonus die)
+- **Highest HP**: Fighter, Lord (1d10 per level). Samurai gets +1 bonus die (d8 but Level+1 dice).
 - **Lowest HP**: Mage (1d4 per level)
 - **Most Attacks**: Ninja at high level (formula: 2 + level/5, max 10)
 - **Critical Hits**: **Ninja only** (Thief, Samurai, Lord do NOT have critical hits)

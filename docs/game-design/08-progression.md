@@ -69,35 +69,67 @@
 
 ### Level-Up Changes
 
-**HP Increase**:
-- Roll hit die (varies by class)
-- Add VIT modifier
-- Add to max HP
+**HP Calculation** (reroll entire pool, keep better):
+1. Roll **Level × Class Hit Die** (e.g., Level 8 Fighter rolls 8d10)
+2. Add **Vitality Modifier × Level** to total
+3. If new total > current max HP: max HP becomes new value
+4. If new total ≤ current max HP: gain only **+1 HP** (consolation prize)
+
+**Vitality Modifiers**:
+
+| Vitality | Per-Die Modifier |
+|----------|-----------------|
+| 3 | -2 |
+| 4-5 | -1 |
+| 6-15 | 0 |
+| 16 | +1 |
+| 17 | +2 |
+| 18 | **+3** |
+
+**Hit Dice by Class**:
+
+| Class | Hit Die | Special |
+|-------|---------|---------|
+| Fighter | d10 | — |
+| Lord | d10 | — |
+| Priest | d8 | — |
+| Samurai | d8 | Rolls **Level+1 dice** (bonus) |
+| Thief | d6 | — |
+| Bishop | d6 | — |
+| Ninja | d6 | — |
+| Mage | d4 | Lowest survivability |
 
 **Stat Changes** (75% chance per stat):
 ```
 For each stat:
-  75% chance to roll for change
-    If roll ≤ (130 - Age): Stat +1
-    Else: Stat -1
+  75% chance to evaluate for change
+    If change occurs:
+      Decrease probability = Age in Years / 130
+      Increase probability = 1 - (Age / 130)
 ```
 
-**Age Impact**:
+**Stats at 18 have special protection**: If selected for decrease, 5/6 (83.3%) chance to resist.
 
-| Age | Increase Chance | Decrease Chance |
-|-----|-----------------|-----------------|
-| 15 | 95% (capped) | 5% (min) |
-| 30 | 100% | 0% |
-| 50 | 80% | 20% |
-| 70 | 60% | 40% |
-| 90+ | <40% | >60% |
+**Age Impact on Stat Changes**:
 
-**Younger = Better Growth**
+| Character Age | Decrease Probability | Increase Probability |
+|--------------|---------------------|---------------------|
+| 18 years | 13.8% | 86.2% |
+| 26 years | 20% | 80% |
+| 50 years | 38.5% | 61.5% |
+| 65 years | 50% | 50% |
+| 130+ years | 100% | 0% |
+
+**Younger = Better Growth**. If Vitality drops to 2, character dies permanently ("old age death").
 
 **Spell Learning**:
-- Attempt to learn new spells at current level
-- Learn chance: (INT or PIE) / 30 per spell
-- Success: Spell added to spell book
+- Learn probability: **Relevant Stat / 30** per eligible spell
+  - IQ 18 = 60% per Mage spell
+  - PIE 15 = 50% per Priest spell
+- **First spell of each circle is guaranteed** when you gain access to that spell level
+- **Starting spells**:
+  - Mages/Bishops: HALITO and KATINO
+  - Priests: DIOS and BADIOS
 - Failure: Can retry on next level-up
 
 **Spell Point Pools**:
@@ -127,16 +159,25 @@ For each stat:
 **At Training Grounds**:
 1. Select character
 2. Choose "Change Class"
-3. Select new class
-4. Pay fee (5,000+ gold)
+3. Game displays **only classes you currently qualify for** based on stats and alignment
+4. Select new class
 5. Class changes
 
 **Results**:
-- **Level resets to 1**
-- **All stats kept**
-- **Some spells retained**
-- HP resets to level 1 values
-- New class abilities apply
+- **Level resets to 1, XP resets to 0**
+- **Stats reset to RACIAL MINIMUMS** (not kept!)
+- **All learned spells PERMANENTLY RETAINED** (major benefit)
+- **HP is FULLY PRESERVED** via MaxLev tracking (major benefit)
+- **Equipment unequipped** but remains in inventory
+- New class restrictions apply immediately
+
+**MaxLev System**: The game tracks your highest level ever achieved. HP is calculated against MaxLev, not current level. A Level 13 Fighter who becomes a Mage keeps their massive HP pool. HP can never decrease except through level drain.
+
+**Spell Point Guarantee**: If you know at least one spell in a circle, you get **minimum 1 SP per known spell** in that circle, regardless of formula output.
+
+**Critical Mechanic**: If you learned any spell in a circle, you remain eligible to learn MORE spells in that circle forever—even as non-casting classes. A Fighter who was once a Level 13 Mage can still learn new Level 7 spells when leveling as Fighter!
+
+**Aging Penalty**: Each class change adds **1d3+3 years plus 44 weeks** (~5-7 years total). At age 50+, stat decreases become more likely.
 
 ### Class Change Strategy
 
@@ -199,61 +240,70 @@ For each stat:
 
 ## Spell Progression
 
-### Learning New Spells
+### Spell Level Access by Class
 
-**Spell Access by Level**:
+**Mage/Priest (Pure Casters):**
 
-| Character Level | Spell Levels Accessible |
-|-----------------|-------------------------|
-| 1-2 | 1 |
-| 3-4 | 1-2 |
-| 5-6 | 1-3 |
-| 7-8 | 1-4 |
-| 9-10 | 1-5 |
-| 11-12 | 1-6 |
-| 13+ | 1-7 |
-
-**Learn Attempts**: Each level-up, roll for each unlearned spell
-
-**Retry**: Can attempt again on next level-up if failed
-
-**Bishop Penalty**: Bishops learn slower (both spell types but reduced chance)
-
-### Spell Point Growth
-
-**Formula**: `min(9, characterLevel - reqLevel + 2)` per spell level
-
-**Spell Level Requirements**:
-
-| Spell Level | Character Level Required |
-|-------------|--------------------------|
+| Spell Level | Character Level |
+|-------------|-----------------|
 | 1 | 1 |
-| 2 | 3 |
-| 3 | 5 |
-| 4 | 7 |
-| 5 | 9 |
-| 6 | 11 |
-| 7 | 13 |
+| 2 | 1 |
+| 3 | 3 |
+| 4 | 5 |
+| 5 | 7 |
+| 6 | 9 |
+| 7 | 11 |
 
-**Example Spell Points by Character Level (Mage)**:
+**Hybrid Classes:**
 
-| Char Level | L1 | L2 | L3 | L4 | L5 | L6 | L7 |
-|------------|----|----|----|----|----|----|-----|
-| 1 | 2 | - | - | - | - | - | - |
-| 2 | 3 | - | - | - | - | - | - |
-| 3 | 4 | 2 | - | - | - | - | - |
-| 5 | 6 | 4 | 2 | - | - | - | - |
-| 7 | 8 | 6 | 4 | 2 | - | - | - |
-| 9 | 9 | 8 | 6 | 4 | 2 | - | - |
-| 11 | 9 | 9 | 8 | 6 | 4 | 2 | - |
-| 13 | 9 | 9 | 9 | 8 | 6 | 4 | 2 |
+| Spell Level | Bishop (Mage) | Bishop (Priest) | Samurai | Lord |
+|-------------|---------------|-----------------|---------|------|
+| 1 | 1 | 4 | 4 | 4 |
+| 2 | 5 | 8 | 7 | 6 |
+| 3 | 9 | 12 | 10 | 8 |
+| 4 | 13 | 16 | 13 | 10 |
+| 5 | 17 | 20 | 16 | 12 |
+| 6 | 21 | 24 | 19 | 14 |
+| 7 | 25 | 28 | 22 | **16** |
 
-**Class Restrictions**:
-- **Samurai**: Max spell level 6 (no level 7 mage spells)
-- **Lord**: Max spell level 6 (no level 7 priest spells)
-- **Bishop**: Both mage AND priest spell pools
+**Lords reach 7th-level spells at 16**—faster than Samurai at 22.
 
-**Restoration**: Spell points restore to max on level-up and when resting at inn (Stables only)
+### Spell Point Formula
+
+**Formula**: `SP = Character Level – A + B – (B × Spell Circle)` (clamped 0-9)
+
+**Constants by Class:**
+
+| Class | A | B | Spell Type |
+|-------|---|---|------------|
+| Mage | 0 | 2 | Mage |
+| Priest | 0 | 2 | Priest |
+| Bishop | 0 | 4 | Mage |
+| Bishop | 3 | 4 | Priest |
+| Lord | 3 | 2 | Priest |
+| Samurai | 3 | 3 | Mage |
+
+**Example: Level 9 Mage**
+- Circle 1: 9 - 0 + 2 - (2×1) = **9 SP**
+- Circle 5: 9 - 0 + 2 - (2×5) = **1 SP**
+
+**Mage/Priest Spell Point Progression:**
+
+| Level | L1 | L2 | L3 | L4 | L5 | L6 | L7 |
+|-------|----|----|----|----|----|----|-----|
+| 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 5 | 5 | 3 | 1 | 0 | 0 | 0 | 0 |
+| 9 | 9 | 7 | 5 | 3 | 1 | 0 | 0 |
+| 13 | 9 | 9 | 9 | 7 | 5 | 3 | 1 |
+| 21+ | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
+
+**Maximum 9 SP per spell level**, reached at level 21 for pure casters.
+
+**Spell Point Guarantee**: Known spells guarantee minimum SP. If you know 6 spells in Circle 5, you get at least 6 SP there regardless of formula.
+
+**Restoration**: Spell points restore **only at the Inn**:
+- **Stables (free)**: Restores SP only, no HP recovery
+- **Paid rooms**: Restore both HP and SP
 
 ## Combat Progression
 
@@ -301,43 +351,52 @@ Level 40+: 10 attacks (max)
 
 ### How Characters Age
 
-**Inn Rest**: All characters age each rest
-**Amount**: Small random amount (days/weeks)
-**Cumulative**: Age increases throughout game
+**Age increases from specific activities, NOT from time or leveling:**
+
+| Activity | Age Increase |
+|----------|-------------|
+| Class change | **1d3+3 years + 44 weeks** (~5-7 years) |
+| Temple services | 1-52 weeks per visit |
+| Disbanding party | 25 weeks per character |
+| Inn resting | **0** (Apple II bug—manual says otherwise) |
+
+**Starting Age**: 18 years + 0-299 random weeks (so 18-23+ years)
 
 **Cannot Reverse**: Age only increases (no youth potions)
 
 ### Age Effects
 
-**Young (14-30)**:
+**Young (18-30)**:
 - Excellent stat growth
-- 95-100% chance to increase stats
-- Minimal decrease risk
+- ~80-86% chance to increase stats
+- ~14-20% decrease risk
 
 **Middle Age (31-50)**:
 - Good stat growth
-- 80-90% increase chance
-- 10-20% decrease risk
+- ~60-76% increase chance
+- ~24-40% decrease risk
 
 **Old (51-70)**:
 - Risky stat growth
-- 60-70% increase chance
-- 30-40% decrease risk
+- ~46-60% increase chance
+- ~40-54% decrease risk
 
 **Ancient (71+)**:
 - Very risky
-- <60% increase chance
-- >40% decrease risk
-- May die of old age
+- <46% increase chance
+- >54% decrease risk
+
+**Death Threshold**: If Vitality drops to **2 or below**, the character dies permanently with "YOU HAVE DIED OF OLD AGE."
 
 ### Managing Age
 
-**Trade-off**: Resting restores HP/spells but ages characters
+**Key Insight**: Inn resting is FREE due to Apple II bug. Main aging sources are class changes and Temple visits.
 
 **Strategies**:
-1. **Rest Frequently Early**: Build stats while young
-2. **Limit Resting Late**: Preserve age when stats might decrease
-3. **Camp in Dungeon**: Alternative to inn (still ages but less frequent)
+1. **Minimize class changes**: Each costs 5-7 years
+2. **Use DI/KADORTO spells** instead of Temple for resurrection (costs VIT, not age)
+3. **Level quickly while young**: Best stat growth in early years
+4. **Build high Vitality**: Protects against old age death
 
 ## Power Curves
 

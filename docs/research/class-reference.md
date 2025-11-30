@@ -187,12 +187,12 @@
 **Equipment**: Any weapon, any armor
 
 **Progression**:
-- Hit dice: 1d10 + 1 extra die (bonus)
+- Hit dice: 1d10
 - Attacks per round: 1 + (level / 5), max 10
 - Priest spells unlock at character level 4
-- Spell level access: L1 at clvl4, L2 at clvl5, L3 at clvl7, etc.
+- Spell level access: L1 at clvl4, L2 at clvl6, L3 at clvl8, L4 at clvl10, L5 at clvl12, L6 at clvl14, L7 at clvl16
 
-**Notes**: Most stat-demanding class; ultimate paladin. Does NOT have critical hits.
+**Notes**: Most stat-demanding class; ultimate paladin. Does NOT have critical hits. Reaches 7th-level spells faster than Samurai (level 16 vs 22).
 
 ---
 
