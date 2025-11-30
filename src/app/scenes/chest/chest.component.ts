@@ -22,6 +22,23 @@ import { TrapId, TrapInspectionResult, TrapDisarmResult, TrapTriggerResult, Scra
 import { Item } from '@models/Item';
 
 /**
+ * Summary of chest opening results for display
+ */
+interface ChestSummary {
+  // Treasure
+  goldObtained: number
+  itemsObtained: Item[]
+  itemsLost: Item[]
+  recipientName: string
+
+  // Trap effects (if triggered)
+  trapTriggered: boolean
+  trapName: string | null
+  damageDealt: Map<string, number>
+  statusEffects: Map<string, CharacterStatus>
+}
+
+/**
  * Scene modes for the chest interaction state machine
  */
 type ChestMode =
@@ -31,8 +48,7 @@ type ChestMode =
   | 'TRAP_DISPLAY'      // Showing scrambled trap letters
   | 'TRAP_NAME_INPUT'   // Entering trap name for disarm
   | 'INVENTORY_WARNING' // Confirmation when inventory could overflow
-  | 'RESULT_DISPLAY'    // Showing trap/treasure outcome
-  | 'VICTORY_SUMMARY';  // Showing combined combat + chest rewards
+  | 'RESULT_DISPLAY';   // Showing trap/treasure outcome
 
 /**
  * Chest Component
@@ -92,26 +108,17 @@ export class ChestComponent implements OnInit, OnDestroy {
   // Inventory warning data
   readonly inventoryWarning = signal<string | null>(null);
 
-  // Chest interaction results for victory summary
-  readonly chestResults = signal<{
-    goldObtained: number
-    itemsObtained: Item[]
-    trapTriggered: boolean
-    trapId: TrapId | null
-    trapMessage: string | null
-  } | null>(null)
-
-  // Computed signal for pending combat rewards from game state
-  readonly pendingCombatRewards = computed(() => {
-    return this.gameState.state().pendingCombatRewards
-  })
-
-  // Pending trap info to merge with chest results in distributeTreasure
+  // Pending trap info to merge with results in distributeTreasure
   private readonly pendingTrapInfo = signal<{
     trapTriggered: boolean
     trapId: TrapId | null
     trapMessage: string | null
+    damageDealt: Map<string, number>
+    statusEffects: Map<string, CharacterStatus>
   } | null>(null)
+
+  // Summary of chest opening results for structured display
+  readonly chestSummary = signal<ChestSummary | null>(null)
 
   // Party members (resolved Character objects)
   readonly partyMembers = computed(() => {
@@ -135,6 +142,48 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (!chest) return null;
     return TrapService.getRecommendedHandler(this.partyMembers(), chest.mazeLevel);
   });
+
+  // Convert damage Map to array for template iteration
+  readonly damageEntries = computed(() => {
+    const summary = this.chestSummary()
+    if (!summary?.damageDealt || summary.damageDealt.size === 0) return []
+
+    const roster = this.gameState.roster()
+    return Array.from(summary.damageDealt.entries()).map(([id, damage]) => ({
+      name: roster.get(id)?.name ?? 'Unknown',
+      damage
+    }))
+  })
+
+  // Convert status Map to array for template iteration
+  readonly statusEntries = computed(() => {
+    const summary = this.chestSummary()
+    if (!summary?.statusEffects || summary.statusEffects.size === 0) return []
+
+    const roster = this.gameState.roster()
+    return Array.from(summary.statusEffects.entries()).map(([id, status]) => ({
+      name: roster.get(id)?.name ?? 'Unknown',
+      status: this.formatStatus(status)
+    }))
+  })
+
+  /**
+   * Format status enum to display string
+   */
+  private formatStatus(status: CharacterStatus): string {
+    const statusMap: Record<CharacterStatus, string> = {
+      [CharacterStatus.OK]: 'OK',
+      [CharacterStatus.POISONED]: 'Poisoned',
+      [CharacterStatus.PARALYZED]: 'Paralyzed',
+      [CharacterStatus.STONED]: 'Petrified',
+      [CharacterStatus.DEAD]: 'Dead',
+      [CharacterStatus.ASHES]: 'Ashes',
+      [CharacterStatus.LOST]: 'Lost',
+      [CharacterStatus.INJURED]: 'Injured',
+      [CharacterStatus.ASLEEP]: 'Asleep'
+    }
+    return statusMap[status] ?? status
+  }
 
   /**
    * Get display name for a trap ID (template helper)
@@ -182,6 +231,7 @@ export class ChestComponent implements OnInit, OnDestroy {
     // In trap name input mode
     if (mode === 'TRAP_NAME_INPUT') {
       return [
+        { id: 'submit-disarm', label: 'Disarm', shortcut: 'ENTER', enabled: true },
         { id: 'cancel', label: 'Cancel', shortcut: 'ESC', enabled: true }
       ];
     }
@@ -196,13 +246,6 @@ export class ChestComponent implements OnInit, OnDestroy {
 
     // In result display mode
     if (mode === 'RESULT_DISPLAY') {
-      return [
-        { id: 'continue', label: 'Continue', shortcut: 'ENTER', enabled: true }
-      ];
-    }
-
-    // In victory summary mode
-    if (mode === 'VICTORY_SUMMARY') {
       return [
         { id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
       ];
@@ -311,8 +354,8 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Handle Enter for continue (from trap display, result display, or victory summary)
-    if (key === 'ENTER' && (mode === 'TRAP_DISPLAY' || mode === 'RESULT_DISPLAY' || mode === 'VICTORY_SUMMARY')) {
+    // Handle Enter for continue (from trap display or result display)
+    if (key === 'ENTER' && (mode === 'TRAP_DISPLAY' || mode === 'RESULT_DISPLAY')) {
       this.handleContinue();
       return;
     }
@@ -399,6 +442,7 @@ export class ChestComponent implements OnInit, OnDestroy {
         }
         break;
       case 'disarm': this.handleDisarm(); break;
+      case 'submit-disarm': this.submitTrapName(); break;
       case 'leave': this.handleLeave(); break;
       case 'cancel': this.handleCancel(); break;
       case 'continue': this.handleContinue(); break;
@@ -507,11 +551,13 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Store trap info for victory summary (will be merged with treasure results)
+    // Store trap info for summary display (will be merged with treasure results)
     this.pendingTrapInfo.set({
       trapTriggered: true,
       trapId: chest.trapId,
-      trapMessage: result.message
+      trapMessage: result.message,
+      damageDealt: result.damageDealt,
+      statusEffects: result.statusApplied
     })
 
     // Treasure can still be collected after most traps
@@ -577,16 +623,6 @@ export class ChestComponent implements OnInit, OnDestroy {
     }))
 
     this.lastActionMessage.update(m => m + ` Teleported to (${newX}, ${newY}) facing ${newFacing}!`)
-
-    // Set chest results for victory summary (no treasure, trap triggered)
-    this.chestResults.set({
-      goldObtained: 0,
-      itemsObtained: [],
-      trapTriggered: true,
-      trapId: this.chest()?.trapId || null,
-      trapMessage: this.lastActionMessage()
-    });
-
     this.mode.set('RESULT_DISPLAY');
   }
 
@@ -596,16 +632,6 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleAlarm(): void {
     // TODO: Trigger combat encounter
     this.lastActionMessage.update(m => m + ' Monsters approach!');
-
-    // Set chest results for victory summary (no treasure, trap triggered)
-    this.chestResults.set({
-      goldObtained: 0,
-      itemsObtained: [],
-      trapTriggered: true,
-      trapId: this.chest()?.trapId || null,
-      trapMessage: this.lastActionMessage()
-    });
-
     this.mode.set('RESULT_DISPLAY');
   }
 
@@ -652,20 +678,22 @@ export class ChestComponent implements OnInit, OnDestroy {
       };
     });
 
-    // Store results for victory summary (merge with any pending trap info)
-    const trapInfo = this.pendingTrapInfo() ?? {
-      trapTriggered: false,
-      trapId: null,
-      trapMessage: null
-    }
+    // Get trap info if it was triggered (for summary display)
+    const trapInfo = this.pendingTrapInfo()
 
-    this.chestResults.set({
+    // Build chest summary for structured display
+    this.chestSummary.set({
       goldObtained: result.goldAdded,
       itemsObtained: result.itemsReceived,
-      ...trapInfo
+      itemsLost: result.itemsLost,
+      recipientName: result.recipientName,
+      trapTriggered: trapInfo?.trapTriggered ?? false,
+      trapName: trapInfo?.trapId ? this.getTrapDisplayName(trapInfo.trapId) : null,
+      damageDealt: trapInfo?.damageDealt ?? new Map(),
+      statusEffects: trapInfo?.statusEffects ?? new Map()
     })
 
-    // Clear pending trap info
+    // Clear pending trap info (consumed into summary)
     this.pendingTrapInfo.set(null)
 
     const message = ChestService.getDistributionMessage(result);
@@ -837,7 +865,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
     this.mode.set('TRAP_NAME_INPUT');
     this.trapNameInput.set('');
-    this.lastActionMessage.set(`Enter trap name to disarm: ${chest.trapId}`);
+    this.lastActionMessage.set('Enter the trap name to attempt disarm.');
   }
 
   /**
@@ -878,20 +906,13 @@ export class ChestComponent implements OnInit, OnDestroy {
    * Handle Leave action - immediately leave (no confirmation per design doc)
    */
   private handleLeave(): void {
-    const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
-    if (hasCombatRewards) {
-      // From combat - show victory summary even if chest abandoned
-      this.chestResults.set({
-        goldObtained: 0,
-        itemsObtained: [],
-        trapTriggered: false,
-        trapId: null,
-        trapMessage: null
-      });
-      this.mode.set('VICTORY_SUMMARY');
-      return;
-    }
-    this.logger.debug('[Chest] Leaving chest');
+    this.logger.debug('[Chest] Leaving chest (abandoning treasure)');
+    // Clear summary and pending chest since we're abandoning it
+    this.chestSummary.set(null)
+    this.gameState.updateState(state => ({
+      ...state,
+      pendingChest: undefined
+    }));
     this.navigation.navigateTo('maze');
   }
 
@@ -918,12 +939,10 @@ export class ChestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle Continue action (after trap display, result display, or victory summary)
+   * Handle Continue action (after trap display or result display)
    */
   private handleContinue(): void {
-    const chest = this.chest();
     const currentMode = this.mode();
-    const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
 
     // From trap display - return to action select to allow disarm
     if (currentMode === 'TRAP_DISPLAY') {
@@ -931,30 +950,16 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (currentMode === 'RESULT_DISPLAY' && hasCombatRewards) {
-      // From combat - show victory summary before maze
-      this.mode.set('VICTORY_SUMMARY');
-      return;
-    }
-
-    if (currentMode === 'VICTORY_SUMMARY') {
-      // After victory summary - clear rewards and go to maze
-      this.clearCombatRewardsAndNavigate();
-      return;
-    }
-
-    // Non-combat chest or exploration - go directly to maze
-    if (chest && currentMode === 'RESULT_DISPLAY') {
+    // From result display - return to maze
+    if (currentMode === 'RESULT_DISPLAY') {
+      // Clear summary and pending chest since we're done with it
+      this.chestSummary.set(null)
+      this.gameState.updateState(state => ({
+        ...state,
+        pendingChest: undefined
+      }));
       this.navigation.navigateTo('maze');
     }
-  }
-
-  private clearCombatRewardsAndNavigate(): void {
-    this.gameState.updateState(state => ({
-      ...state,
-      pendingCombatRewards: undefined
-    }));
-    this.navigation.navigateTo('maze');
   }
 
   /**
@@ -970,8 +975,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
     if (chest.trapIdentified) {
       if (chest.trapped && chest.trapId) {
-        const trapName = TrapDataLoader.getTrapDisplayName(chest.trapId);
-        return `Trap detected: ${trapName}`;
+        return 'Trap detected!';
       }
       return 'No trap detected';
     }

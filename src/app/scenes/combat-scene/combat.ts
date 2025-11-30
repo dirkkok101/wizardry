@@ -1353,8 +1353,8 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Store rewards for display
     this.victoryRewards.set(rewards)
 
-    // Navigate to chest scene
-    this.router.navigate(['/chest'])
+    // Navigate to victory scene (shows XP first, then navigates to chest)
+    this.router.navigate(['/victory'])
   }
 
   /**
@@ -1365,7 +1365,11 @@ export class CombatComponent implements OnInit, OnDestroy {
     newRoster: Map<string, Character>,
     rewards: VictoryRewards
   ): void {
+    // Get all monsters for counting
+    const allMonsters = this.combatState()?.monsterGroups.flatMap(g => g.monsters) || []
+
     // Update game state: distribute XP, add gold directly to party, clear combat
+    // Also set pendingCombatRewards for victory display (no pendingChest)
     this.gameState.updateState(state => ({
       ...state,
       roster: newRoster,
@@ -1373,7 +1377,14 @@ export class CombatComponent implements OnInit, OnDestroy {
         ...state.party,
         gold: state.party.gold + rewards.totalGold
       },
-      combat: undefined
+      combat: undefined,
+      pendingCombatRewards: {
+        totalXP: rewards.totalXP,
+        xpPerCharacter: rewards.xpPerCharacter,
+        livingCharacterCount: rewards.livingCharacterCount,
+        monstersDefeated: allMonsters.length
+      }
+      // Note: pendingChest is NOT set, so victory scene knows there's no chest
     }))
 
     // Store rewards for display (gold goes directly to party, no items without chest)
@@ -1383,8 +1394,8 @@ export class CombatComponent implements OnInit, OnDestroy {
     }
     this.victoryRewards.set(looseGoldRewards)
 
-    // Show victory modal
-    this.showVictoryModal.set(true)
+    // Navigate to victory scene (shows XP, then returns to maze since no chest)
+    this.router.navigate(['/victory'])
   }
 
   private handleDefeat(): void {

@@ -1,0 +1,53 @@
+<div class="victory-scene">
+  <app-scene-title title="VICTORY!" [showPartyGold]="true" />
+
+  <div class="victory-content">
+    @if (pendingCombatRewards(); as rewards) {
+      <div class="victory-summary">
+        <div class="xp-section">
+          <div class="section-header">Experience Earned</div>
+          <div class="reward-row">
+            <span class="label">Monsters Defeated:</span>
+            <span class="value">{{ rewards.monstersDefeated }}</span>
+          </div>
+          <div class="reward-row">
+            <span class="label">Total XP:</span>
+            <span class="value highlight">{{ rewards.totalXP }}</span>
+          </div>
+          <div class="reward-row">
+            <span class="label">XP per Character:</span>
+            <span class="value">{{ rewards.xpPerCharacter }}</span>
+          </div>
+          <div class="reward-row muted">
+            <span class="label">Living Characters:</span>
+            <span class="value">{{ rewards.livingCharacterCount }}</span>
+          </div>
+        </div>
+
+        @if (hasPendingChest()) {
+          <div class="chest-notice">
+            <p>A treasure chest awaits...</p>
+          </div>
+        }
+
+        <p class="continue-hint">
+          @if (hasPendingChest()) {
+            Press ENTER to open the treasure chest...
+          } @else {
+            Press ENTER to return to the maze...
+          }
+        </p>
+      </div>
+    } @else {
+      <div class="no-rewards">
+        <p>No victory data available.</p>
+        <p class="continue-hint">Press ENTER to return to the maze...</p>
+      </div>
+    }
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+</div>

@@ -70,7 +70,6 @@
     @if (mode() === 'TRAP_NAME_INPUT') {
       <div class="trap-input">
         <p class="instruction">Enter the trap name to disarm:</p>
-        <p class="hint">Trap identified as: {{ getTrapDisplayName(chest()?.trapId) }}</p>
 
         <div class="input-display">
           <span class="input-text">{{ trapNameInput() }}</span>
@@ -125,7 +124,6 @@
           </div>
         }
 
-        <p class="trap-hint">Press (I) to inspect again, (C) for CALFO, or ENTER when ready to disarm</p>
       </div>
     }
 
@@ -140,86 +138,58 @@
 
     <!-- Result Display Mode -->
     @if (mode() === 'RESULT_DISPLAY') {
-      <div class="result-display">
-        <div class="result-message">
-          {{ lastActionMessage() }}
-        </div>
-        <p class="continue-hint">Press ENTER to continue...</p>
-      </div>
-    }
+      <div class="chest-summary">
+        <h2 class="summary-title">Chest Opened!</h2>
 
-    <!-- Victory Summary Mode -->
-    @if (mode() === 'VICTORY_SUMMARY') {
-      <div class="victory-summary">
-        <h2 class="victory-title">VICTORY!</h2>
-
-        <!-- Combat XP Section -->
-        @if (pendingCombatRewards(); as rewards) {
-          <div class="xp-section">
-            <div class="section-header">Experience Earned</div>
-            <div class="reward-row">
-              <span class="label">Monsters Defeated:</span>
-              <span class="value">{{ rewards.monstersDefeated }}</span>
-            </div>
-            <div class="reward-row">
-              <span class="label">Total XP:</span>
-              <span class="value highlight">{{ rewards.totalXP }}</span>
-            </div>
-            <div class="reward-row">
-              <span class="label">XP per Character:</span>
-              <span class="value">{{ rewards.xpPerCharacter }}</span>
-            </div>
-            <div class="reward-row muted">
-              <span class="label">Living Characters:</span>
-              <span class="value">{{ rewards.livingCharacterCount }}</span>
-            </div>
-          </div>
-        }
-
-        <!-- Chest Rewards Section -->
-        @if (chestResults(); as results) {
-          <div class="treasure-section">
-            <div class="section-header">Treasure Found</div>
-
-            @if (results.goldObtained > 0) {
-              <div class="reward-row">
-                <span class="label">Gold:</span>
-                <span class="value gold">{{ results.goldObtained }}</span>
-              </div>
-            }
-
-            @if (results.itemsObtained.length > 0) {
-              <div class="items-found">
-                <div class="items-header">Items ({{ results.itemsObtained.length }}):</div>
-                @for (item of results.itemsObtained; track item.id) {
-                  <div class="item-row">
-                    <span class="item-name">{{ item.name }}</span>
-                    @if (!item.identified) {
-                      <span class="unidentified">(unidentified)</span>
-                    }
-                  </div>
+        <!-- Trap Effects Section (if triggered) -->
+        @if (chestSummary()?.trapTriggered) {
+          <div class="trap-section">
+            <h3 class="section-title trap-title">{{ chestSummary()?.trapName }} Triggered!</h3>
+            @if (damageEntries().length > 0) {
+              <div class="damage-list">
+                @for (entry of damageEntries(); track entry.name) {
+                  <p class="damage-entry">{{ entry.name }} took {{ entry.damage }} damage</p>
                 }
               </div>
             }
-
-            @if (results.goldObtained === 0 && results.itemsObtained.length === 0) {
-              <div class="reward-row muted">
-                <span class="label">Chest abandoned - no treasure collected</span>
+            @if (statusEntries().length > 0) {
+              <div class="status-list">
+                @for (entry of statusEntries(); track entry.name) {
+                  <p class="status-entry">{{ entry.name }} is now {{ entry.status }}</p>
+                }
               </div>
             }
           </div>
-
-          <!-- Trap Effects Section -->
-          @if (results.trapTriggered) {
-            <div class="trap-section">
-              <div class="section-header warning">Trap Triggered!</div>
-              <div class="trap-type">{{ getTrapDisplayName(results.trapId) }}</div>
-              <div class="trap-effects">{{ results.trapMessage }}</div>
-            </div>
-          }
         }
 
-        <p class="continue-hint">Press ENTER to return to the maze...</p>
+        <!-- Treasure Section -->
+        <div class="treasure-section">
+          <h3 class="section-title">Treasure Found</h3>
+          @if (chestSummary()?.goldObtained) {
+            <p class="gold-amount">{{ chestSummary()?.goldObtained }} Gold</p>
+          }
+          @if (chestSummary()?.itemsObtained?.length) {
+            <div class="items-obtained">
+              <p class="recipient-label">Items obtained by {{ chestSummary()?.recipientName }}:</p>
+              @for (item of chestSummary()?.itemsObtained; track item.id) {
+                <p class="item-entry">{{ item.name }}</p>
+              }
+            </div>
+          }
+          @if (!chestSummary()?.goldObtained && !chestSummary()?.itemsObtained?.length) {
+            <p class="empty-chest">The chest was empty.</p>
+          }
+        </div>
+
+        <!-- Lost Items Section (if any) -->
+        @if (chestSummary()?.itemsLost?.length) {
+          <div class="items-lost-section">
+            <h3 class="section-title warning-title">Items Lost (Inventory Full)</h3>
+            @for (item of chestSummary()?.itemsLost; track item.id) {
+              <p class="item-entry lost">{{ item.name }}</p>
+            }
+          </div>
+        }
       </div>
     }
 

@@ -12,6 +12,7 @@ import { SpellCastingComponent } from '@scenes/spell-casting/spell-casting.compo
 import { MazeComponent } from '@scenes/maze/maze.component';
 import { CombatComponent } from '@scenes/combat-scene/combat';
 import { ChestComponent } from '@scenes/chest/chest.component';
+import { VictoryComponent } from '@scenes/victory/victory.component';
 
 export const routes: Routes = [
   {
@@ -65,6 +66,10 @@ export const routes: Routes = [
   {
     path: 'chest',
     component: ChestComponent
+  },
+  {
+    path: 'victory',
+    component: VictoryComponent
   },
   {
     path: '**',

@@ -791,7 +791,8 @@ describe('CombatComponent', () => {
       const pendingChest = gameState.state().pendingChest
       expect(pendingChest).toBeDefined()
       expect(pendingChest?.contents.gold).toBeGreaterThanOrEqual(0)
-      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
+      // Victory always navigates to /victory first, which then goes to /chest
+      expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
 
     it('adds gold directly to party when no chest (chest roll fails)', () => {
@@ -807,27 +808,28 @@ describe('CombatComponent', () => {
       expect(gameState.party().gold).toBeGreaterThanOrEqual(initialGold)
       // No pending chest
       expect(gameState.state().pendingChest).toBeUndefined()
-      // Victory modal shown instead of navigating to chest
-      expect(component.showVictoryModal()).toBe(true)
+      // Victory navigates to /victory scene which handles display
+      expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
 
-    it('navigates to chest scene when chest roll succeeds', () => {
+    it('navigates to victory scene when chest roll succeeds', () => {
       // Queue values for chest path
       RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
 
       component['handleVictory']()
 
-      expect(router.navigate).toHaveBeenCalledWith(['/chest'])
+      // Victory always goes to /victory first, which then routes to /chest
+      expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
 
-    it('shows victory modal when no chest (loose gold)', () => {
+    it('navigates to victory scene when no chest (loose gold)', () => {
       // Queue values for loose gold path
       RandomService.queueNextValues([0.5, 0.99])
 
       component['handleVictory']()
 
-      expect(component.showVictoryModal()).toBe(true)
-      expect(router.navigate).not.toHaveBeenCalledWith(['/chest'])
+      // Victory scene now handles XP display for both chest and no-chest cases
+      expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
 
     it('includes victory rewards regardless of chest outcome', () => {
