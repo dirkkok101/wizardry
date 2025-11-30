@@ -11,6 +11,7 @@ import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { Chest } from '@models/Chest'
+import { canAct } from '@utils/CharacterStatusHelpers'
 import {
   TrapType,
   TrapEffect,
@@ -86,6 +87,14 @@ function calculateInspectChance(character: Character): number {
 /**
  * Attempt to inspect a chest for traps
  *
+ * Original Wizardry 1 behavior (two-stage resolution):
+ * - Success: Return real trap information
+ * - Failure on trapped chest: AGI check to avoid triggering, then return RANDOM trap name
+ * - Failure on untrapped chest: Return RANDOM trap name (deception mechanic!)
+ *
+ * The random trap name on failure is a core deception mechanic - the player
+ * cannot tell if the inspection result is real or not.
+ *
  * @returns InspectionResult with success status, identified trap, and trigger status
  */
 function attemptInspection(character: Character, chest: Chest): TrapInspectionResult {
@@ -102,19 +111,38 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   const chance = calculateInspectChance(character)
   const success = RandomService.chance(chance)
 
-  if (success && chest.trapped) {
+  // SUCCESS - return real information
+  if (success) {
     return {
       success: true,
-      trapIdentified: chest.trapType,
+      trapIdentified: chest.trapped ? chest.trapType : null,
       triggered: false
     }
   }
 
-  // Failed inspection - may return false positive or nothing
-  // Original game behavior: failed roll returns no information
+  // FAILED INSPECTION - Two-stage resolution per original source code
+
+  // Stage 1: AGI-based trigger check (only if trapped)
+  // Original formula: If (RANDOM MOD 20) >= AGI, trap triggers
+  if (chest.trapped) {
+    const triggerRoll = RandomService.random(0, 19)
+    if (triggerRoll >= character.agility) {
+      return {
+        success: false,
+        trapIdentified: null,
+        triggered: true
+      }
+    }
+  }
+
+  // Stage 2: Return RANDOM trap name (misleading!)
+  // This is a core deception mechanic - player cannot tell if result is real
+  const allTraps = Object.values(TrapType)
+  const randomTrap = RandomService.pickRandom(allTraps)
+
   return {
     success: false,
-    trapIdentified: null,
+    trapIdentified: randomTrap,
     triggered: false
   }
 }
@@ -152,13 +180,19 @@ function calculateTriggerAvoidance(character: Character): number {
 }
 
 /**
- * Determine trigger chance when entering wrong trap name
- * Based on maze level - deeper levels are less forgiving
+ * Calculate trigger chance when entering wrong trap name
+ *
+ * Original formula from Wizardry 1 source code:
+ * - Character level × 0.1% chance to NOT trigger
+ * - This means ~99%+ trigger rate at any reasonable level
+ *
+ * @param characterLevel The level of the character attempting disarm
+ * @returns Percentage chance to trigger trap (0-100)
  */
-function calculateWrongNameTriggerChance(mazeLevel: number): number {
-  // Easy levels (1-4): ~20% trigger chance
-  // Deep levels (5+): ~80% trigger chance
-  return mazeLevel <= 4 ? 20 : 80
+function calculateWrongNameTriggerChance(characterLevel: number): number {
+  // Chance to NOT trigger = level × 0.1%
+  // Chance to TRIGGER = 100 - (level × 0.1)
+  return Math.max(0, 100 - (characterLevel * 0.1))
 }
 
 /**
@@ -174,27 +208,12 @@ function attemptDisarm(
   chest: Chest,
   enteredTrapName: string
 ): TrapDisarmResult {
-  console.log('[TrapService] attemptDisarm called:', {
-    character: character.name,
-    characterClass: character.class,
-    characterLevel: character.level,
-    chestTrapType: chest.trapType,
-    chestMazeLevel: chest.mazeLevel,
-    enteredTrapName,
-    enteredTrapNameLength: enteredTrapName.length
-  })
-
   // Check if trap name matches
   if (!chest.trapType || !trapNameMatches(enteredTrapName, chest.trapType)) {
     // Wrong trap name - check if it triggers
-    const triggerChance = calculateWrongNameTriggerChance(chest.mazeLevel)
+    // Original formula uses character level (higher level = tiny chance to avoid trigger)
+    const triggerChance = calculateWrongNameTriggerChance(character.level)
     const triggered = RandomService.chance(triggerChance)
-    console.log('[TrapService] Wrong trap name detected:', {
-      chestTrapType: chest.trapType,
-      enteredTrapName,
-      triggerChance,
-      triggered
-    })
     return {
       success: false,
       triggered,
@@ -206,15 +225,7 @@ function attemptDisarm(
   const disarmChance = calculateDisarmChance(character, chest.mazeLevel)
   const success = RandomService.chance(disarmChance)
 
-  console.log('[TrapService] Correct trap name, attempting disarm:', {
-    disarmChance,
-    success,
-    characterLevel: character.level,
-    mazeLevel: chest.mazeLevel
-  })
-
   if (success) {
-    console.log('[TrapService] Disarm SUCCESS')
     return {
       success: true,
       triggered: false,
@@ -225,12 +236,6 @@ function attemptDisarm(
   // Failed disarm - check AGI save to avoid triggering
   const avoidChance = calculateTriggerAvoidance(character)
   const avoided = RandomService.chance(avoidChance)
-
-  console.log('[TrapService] Disarm FAILED, checking trigger avoidance:', {
-    avoidChance,
-    avoided,
-    triggered: !avoided
-  })
 
   return {
     success: false,
@@ -278,18 +283,35 @@ function applyTrapEffects(
 
   // Apply damage if applicable
   if (effect.damageFormula && targets.length > 0) {
+    const hitChance = effect.hitChance ?? 1.0  // Default to always hit
+
     for (const target of targets) {
-      const damage = RandomService.rollDiceNotation(effect.damageFormula)
-      damageDealt.set(target.id, damage)
-      messages.push(`${target.name} takes ${damage} damage!`)
+      // Roll for hit (0-1 random vs hitChance threshold)
+      if (RandomService.roll(hitChance)) {
+        const damage = RandomService.rollDiceNotation(effect.damageFormula)
+        damageDealt.set(target.id, damage)
+        messages.push(`${target.name} takes ${damage} damage!`)
+      } else {
+        messages.push(`${target.name} avoids the trap!`)
+      }
     }
   }
 
   // Apply status effect if applicable
   if (effect.statusEffect && targets.length > 0) {
+    const hitChance = effect.hitChance ?? 1.0
+
     for (const target of targets) {
-      statusApplied.set(target.id, effect.statusEffect)
-      messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+      // Only apply status if not already rolled for damage (avoid double roll)
+      // If there's no damageFormula, we need to roll for status
+      const shouldApply = effect.damageFormula
+        ? damageDealt.has(target.id)  // Hit was already determined
+        : RandomService.roll(hitChance)  // Roll now for status-only effects
+
+      if (shouldApply) {
+        statusApplied.set(target.id, effect.statusEffect)
+        messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
+      }
     }
   }
 
@@ -346,24 +368,34 @@ function canCastCalfo(character: Character): boolean {
 /**
  * Cast CALFO spell to identify trap
  *
+ * Original Wizardry 1 behavior:
+ * - 95% success rate
+ * - Success: Returns real trap information (or null if untrapped)
+ * - Failure (5%): Returns RANDOM trap name (deception mechanic!)
+ * - CALFO never triggers traps
+ *
  * @returns InspectionResult (95% success rate, never triggers trap)
  */
 function castCalfo(caster: Character, chest: Chest): TrapInspectionResult {
   // CALFO has 95% success rate
   const success = RandomService.chance(95)
 
-  if (success && chest.trapped) {
+  if (success) {
     return {
       success: true,
-      trapIdentified: chest.trapType,
+      trapIdentified: chest.trapped ? chest.trapType : null,
       triggered: false
     }
   }
 
-  // Failed CALFO - no information revealed
+  // Failed CALFO (5%) - return RANDOM trap name (deception mechanic)
+  // Same as failed inspection - player cannot tell if result is real
+  const allTraps = Object.values(TrapType)
+  const randomTrap = RandomService.pickRandom(allTraps)
+
   return {
     success: false,
-    trapIdentified: null,
+    trapIdentified: randomTrap,
     triggered: false  // CALFO never triggers traps
   }
 }
@@ -382,12 +414,8 @@ function getRecommendedHandler(
   let best: { character: Character; inspectChance: number; disarmChance: number } | null = null
 
   for (const member of partyMembers) {
-    // Skip dead/incapacitated characters
-    if (member.status === CharacterStatus.DEAD ||
-        member.status === CharacterStatus.ASHES ||
-        member.status === CharacterStatus.LOST ||
-        member.status === CharacterStatus.PARALYZED ||
-        member.status === CharacterStatus.STONED) {
+    // Skip characters who cannot act (dead, paralyzed, etc.)
+    if (!canAct(member)) {
       continue
     }
 

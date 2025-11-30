@@ -10,22 +10,11 @@ import { createTestCharacter } from '@testing/test-factories'
 import { TrapType } from '@models/Trap'
 import { RewardTier, TRAP_PROBABILITY_BY_TIER, GOLD_RANGE_BY_TIER, MAX_INVENTORY_SIZE } from '@models/Chest'
 import { Position } from '@models/Dungeon'
-import { Party } from '@models/GameState'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 // Helper to create test position
 function createTestPosition(): Position {
   return { x: 5, y: 5, facing: 'NORTH' }
-}
-
-// Helper to create test party
-function createTestParty(): Party {
-  return {
-    members: ['char1', 'char2'],
-    formation: { frontRow: ['char1'], backRow: ['char2'] },
-    position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
-    light: false,
-    gold: 500
-  }
 }
 
 describe('ChestService', () => {
@@ -181,10 +170,57 @@ describe('ChestService', () => {
     })
   })
 
+  describe('selectRecipient', () => {
+    it('should select a random living party member', () => {
+      const member1 = createTestCharacter({ id: 'char1', name: 'Fighter' })
+      const member2 = createTestCharacter({ id: 'char2', name: 'Thief' })
+      const member3 = createTestCharacter({ id: 'char3', name: 'Mage' })
+
+      // Queue random to select member2 (index 1 out of 3)
+      RandomService.queueNextValues([0.5])  // 0.5 * 3 = 1.5 → floor → 1
+
+      const recipient = ChestService.selectRecipient([member1, member2, member3])
+
+      expect(recipient).not.toBeNull()
+      expect(recipient!.id).toBe('char2')
+    })
+
+    it('should skip dead members', () => {
+      const deadMember = createTestCharacter({
+        id: 'dead1',
+        name: 'DeadGuy',
+        status: CharacterStatus.DEAD
+      })
+      const livingMember = createTestCharacter({
+        id: 'alive1',
+        name: 'AliveGuy'
+      })
+
+      const recipient = ChestService.selectRecipient([deadMember, livingMember])
+
+      expect(recipient).not.toBeNull()
+      expect(recipient!.id).toBe('alive1')
+    })
+
+    it('should return null when all members are dead', () => {
+      const deadMember1 = createTestCharacter({
+        id: 'dead1',
+        status: CharacterStatus.DEAD
+      })
+      const deadMember2 = createTestCharacter({
+        id: 'dead2',
+        status: CharacterStatus.ASHES
+      })
+
+      const recipient = ChestService.selectRecipient([deadMember1, deadMember2])
+
+      expect(recipient).toBeNull()
+    })
+  })
+
   describe('distributeTreasure', () => {
     it('should add gold to result', () => {
-      const opener = createTestCharacter({ inventory: [] })
-      const party = createTestParty()
+      const member = createTestCharacter({ inventory: [] })
       const chest = ChestService.createChestWithContents(
         { gold: 500, items: [] },
         null,
@@ -192,14 +228,93 @@ describe('ChestService', () => {
         createTestPosition()
       )
 
-      const result = ChestService.distributeTreasure(chest, opener, party)
+      const result = ChestService.distributeTreasure(chest, [member])
 
       expect(result.goldAdded).toBe(500)
     })
 
+    it('should select random living party member as recipient', () => {
+      const member1 = createTestCharacter({ id: 'char1', name: 'Fighter', inventory: [] })
+      const member2 = createTestCharacter({ id: 'char2', name: 'Thief', inventory: [] })
+      const member3 = createTestCharacter({ id: 'char3', name: 'Mage', inventory: [] })
+      const item = { id: 'sword', name: 'Sword +1' } as any
+      const chest = ChestService.createChestWithContents(
+        { gold: 100, items: [item] },
+        null,
+        1,
+        createTestPosition()
+      )
+
+      // Queue random to select member2 (index 1 out of 3)
+      // pickRandom uses Math.floor(nextRandom() * length), so 0.5 * 3 = 1.5 → floor → 1
+      RandomService.queueNextValues([0.5])
+
+      const result = ChestService.distributeTreasure(chest, [member1, member2, member3])
+
+      expect(result.recipientId).toBe('char2')
+      expect(result.recipientName).toBe('Thief')
+    })
+
+    it('should skip dead members when selecting recipient', () => {
+      const deadMember = createTestCharacter({
+        id: 'dead1',
+        name: 'DeadGuy',
+        status: CharacterStatus.DEAD,
+        inventory: []
+      })
+      const livingMember = createTestCharacter({
+        id: 'alive1',
+        name: 'AliveGuy',
+        inventory: []
+      })
+      const item = { id: 'sword', name: 'Sword +1' } as any
+      const chest = ChestService.createChestWithContents(
+        { gold: 100, items: [item] },
+        null,
+        1,
+        createTestPosition()
+      )
+
+      const result = ChestService.distributeTreasure(chest, [deadMember, livingMember])
+
+      // Only living member should receive items
+      expect(result.recipientId).toBe('alive1')
+      expect(result.recipientName).toBe('AliveGuy')
+      expect(result.itemsReceived).toHaveLength(1)
+    })
+
+    it('should lose all items when all party members are dead', () => {
+      const deadMember1 = createTestCharacter({
+        id: 'dead1',
+        status: CharacterStatus.DEAD,
+        inventory: []
+      })
+      const deadMember2 = createTestCharacter({
+        id: 'dead2',
+        status: CharacterStatus.ASHES,
+        inventory: []
+      })
+      const item = { id: 'rare', name: 'Rare Item' } as any
+      const chest = ChestService.createChestWithContents(
+        { gold: 100, items: [item] },
+        null,
+        1,
+        createTestPosition()
+      )
+
+      const result = ChestService.distributeTreasure(chest, [deadMember1, deadMember2])
+
+      expect(result.recipientId).toBe('')
+      expect(result.recipientName).toBe('No one')
+      expect(result.itemsReceived).toHaveLength(0)
+      expect(result.itemsLost).toHaveLength(1)
+      expect(result.itemsLost).toContain(item)
+      // Gold still goes to party pool even if all dead
+      expect(result.goldAdded).toBe(100)
+    })
+
     it('should add items to received list when space available', () => {
-      const opener = createTestCharacter({ inventory: [] })
-      const party = createTestParty()
+      const member = createTestCharacter({ inventory: [] })
       const item1 = { id: 'sword', name: 'Sword +1' } as any
       const item2 = { id: 'shield', name: 'Shield' } as any
       const chest = ChestService.createChestWithContents(
@@ -209,7 +324,7 @@ describe('ChestService', () => {
         createTestPosition()
       )
 
-      const result = ChestService.distributeTreasure(chest, opener, party)
+      const result = ChestService.distributeTreasure(chest, [member])
 
       expect(result.itemsReceived).toHaveLength(2)
       expect(result.itemsReceived).toContain(item1)
@@ -217,10 +332,9 @@ describe('ChestService', () => {
       expect(result.itemsLost).toHaveLength(0)
     })
 
-    it('should lose items when inventory is full', () => {
+    it('should lose items when recipient inventory is full', () => {
       const fullInventory = Array(8).fill(null).map((_, i) => ({ id: `item${i}`, name: `Item ${i}` }))
-      const opener = createTestCharacter({ inventory: fullInventory as any })
-      const party = createTestParty()
+      const member = createTestCharacter({ inventory: fullInventory as any })
       const lostItem = { id: 'rare', name: 'Rare Sword +5' } as any
       const chest = ChestService.createChestWithContents(
         { gold: 100, items: [lostItem] },
@@ -229,7 +343,7 @@ describe('ChestService', () => {
         createTestPosition()
       )
 
-      const result = ChestService.distributeTreasure(chest, opener, party)
+      const result = ChestService.distributeTreasure(chest, [member])
 
       expect(result.itemsReceived).toHaveLength(0)
       expect(result.itemsLost).toHaveLength(1)
@@ -238,8 +352,7 @@ describe('ChestService', () => {
 
     it('should partially fill inventory and lose overflow', () => {
       const inventory = Array(7).fill(null).map((_, i) => ({ id: `item${i}`, name: `Item ${i}` }))
-      const opener = createTestCharacter({ inventory: inventory as any })
-      const party = createTestParty()
+      const member = createTestCharacter({ inventory: inventory as any })
       const item1 = { id: 'item7', name: 'Fits' } as any
       const item2 = { id: 'item8', name: 'Lost' } as any
       const chest = ChestService.createChestWithContents(
@@ -249,12 +362,66 @@ describe('ChestService', () => {
         createTestPosition()
       )
 
-      const result = ChestService.distributeTreasure(chest, opener, party)
+      const result = ChestService.distributeTreasure(chest, [member])
 
       expect(result.itemsReceived).toHaveLength(1)
       expect(result.itemsReceived).toContain(item1)
       expect(result.itemsLost).toHaveLength(1)
       expect(result.itemsLost).toContain(item2)
+    })
+
+    it('should use pre-selected recipient when provided', () => {
+      const member1 = createTestCharacter({ id: 'char1', name: 'Fighter', inventory: [] })
+      const member2 = createTestCharacter({ id: 'char2', name: 'Thief', inventory: [] })
+      const item = { id: 'sword', name: 'Sword +1' } as any
+      const chest = ChestService.createChestWithContents(
+        { gold: 100, items: [item] },
+        null,
+        1,
+        createTestPosition()
+      )
+
+      // Pre-select member1 - should use it regardless of random
+      const result = ChestService.distributeTreasure(chest, [member1, member2], member1)
+
+      expect(result.recipientId).toBe('char1')
+      expect(result.recipientName).toBe('Fighter')
+    })
+
+    it('should ensure pre-selected recipient matches inventory warning', () => {
+      // This test verifies the fix for the inventory warning bug:
+      // Warning should show the SAME character who will receive items
+      const member1 = createTestCharacter({ id: 'char1', name: 'Fighter', inventory: [] })
+      const fullMember = createTestCharacter({
+        id: 'char2',
+        name: 'FullGuy',
+        inventory: Array(8).fill(null).map((_, i) => ({ id: `item${i}`, name: `Item ${i}` })) as any
+      })
+      const item = { id: 'sword', name: 'Sword +1' } as any
+      const chest = ChestService.createChestWithContents(
+        { gold: 100, items: [item] },
+        null,
+        1,
+        createTestPosition()
+      )
+
+      // Step 1: Pre-select recipient (simulating what component does)
+      RandomService.queueNextValues([0.8])  // Would select index 1 (fullMember)
+      const recipient = ChestService.selectRecipient([member1, fullMember])
+      expect(recipient).toBe(fullMember)
+
+      // Step 2: Check inventory (with the ACTUAL recipient)
+      const warning = ChestService.checkInventorySpace(recipient!, chest)
+      expect(warning).not.toBeNull()
+      expect(warning!.warning).toContain('FullGuy')  // Warning shows recipient name
+
+      // Step 3: Distribute treasure (using pre-selected recipient)
+      const result = ChestService.distributeTreasure(chest, [member1, fullMember], recipient!)
+
+      // The recipient in warning MATCHES the recipient in distribution
+      expect(result.recipientId).toBe('char2')
+      expect(result.recipientName).toBe('FullGuy')
+      expect(result.itemsLost).toHaveLength(1)  // Item lost because fullMember is full
     })
   })
 
@@ -263,7 +430,9 @@ describe('ChestService', () => {
       const result = {
         goldAdded: 500,
         itemsReceived: [],
-        itemsLost: []
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Fighter'
       }
 
       const message = ChestService.getDistributionMessage(result)
@@ -274,7 +443,9 @@ describe('ChestService', () => {
       const result = {
         goldAdded: 0,
         itemsReceived: [{ id: 'sword', name: 'Sword +1' }] as any,
-        itemsLost: []
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Fighter'
       }
 
       const message = ChestService.getDistributionMessage(result)
@@ -285,7 +456,9 @@ describe('ChestService', () => {
       const result = {
         goldAdded: 0,
         itemsReceived: [],
-        itemsLost: [{ id: 'rare', name: 'Rare Item' }] as any
+        itemsLost: [{ id: 'rare', name: 'Rare Item' }] as any,
+        recipientId: 'char1',
+        recipientName: 'Fighter'
       }
 
       const message = ChestService.getDistributionMessage(result)
@@ -347,6 +520,20 @@ describe('ChestService', () => {
       RandomService.setSeed(12345)
       const tier5Trap = ChestService.selectTrapType(5)
       expect([TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]).toContain(tier5Trap)
+    })
+
+    it('should include SPLINTERS and BLADES in tier 3 traps', () => {
+      RandomService.setSeed(12345)
+      const tier3Traps: TrapType[] = []
+
+      // Generate 100 tier 3 traps to ensure we see the variety
+      for (let i = 0; i < 100; i++) {
+        tier3Traps.push(ChestService.selectTrapType(3))
+      }
+
+      // Both should appear at least once
+      expect(tier3Traps).toContain(TrapType.SPLINTERS)
+      expect(tier3Traps).toContain(TrapType.BLADES)
     })
   })
 

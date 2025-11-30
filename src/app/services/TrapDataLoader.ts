@@ -127,6 +127,7 @@ export class TrapDataLoader {
       damageFormula: validated.damageFormula,
       statusEffect,
       specialEffect,
+      hitChance: validated.hitChance,
       description: validated.description
     }
   }
@@ -144,7 +145,9 @@ export class TrapDataLoader {
       'TELEPORTER': TrapType.TELEPORTER,
       'MAGE_BLASTER': TrapType.MAGE_BLASTER,
       'PRIEST_BLASTER': TrapType.PRIEST_BLASTER,
-      'ALARM': TrapType.ALARM
+      'ALARM': TrapType.ALARM,
+      'SPLINTERS': TrapType.SPLINTERS,
+      'BLADES': TrapType.BLADES
     }
 
     const trapType = mapping[id.toUpperCase()]

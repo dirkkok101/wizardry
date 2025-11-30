@@ -43,11 +43,14 @@ export interface Chest {
 
 /**
  * Result of distributing treasure from a chest
+ * Original Wizardry: items go to random living party member, not opener
  */
 export interface TreasureDistributionResult {
   goldAdded: number
   itemsReceived: Item[]
   itemsLost: Item[]         // Items lost due to full inventory
+  recipientId: string       // ID of character who received items
+  recipientName: string     // Name for display
 }
 
 /**

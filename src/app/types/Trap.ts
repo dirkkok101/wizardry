@@ -14,7 +14,9 @@ export enum TrapType {
   TELEPORTER = 'TELEPORTER',
   MAGE_BLASTER = 'MAGE BLASTER',
   PRIEST_BLASTER = 'PRIEST BLASTER',
-  ALARM = 'ALARM'
+  ALARM = 'ALARM',
+  SPLINTERS = 'SPLINTERS',
+  BLADES = 'BLADES'
 }
 
 /**
@@ -43,6 +45,7 @@ export interface TrapEffect {
   damageFormula?: string            // e.g., "2d6", "3d8"
   statusEffect?: CharacterStatus    // Status to apply (POISONED, PARALYZED)
   specialEffect?: TrapSpecialEffect // For TELEPORTER and ALARM
+  hitChance?: number                // 0-1 probability (default 1.0 = always hits)
   description: string               // Human-readable description
 }
 
@@ -102,19 +105,6 @@ export function parseTrapType(input: string): TrapType | null {
 export function trapNameMatches(input: string, actual: TrapType): boolean {
   const normalizedInput = input.trim().toUpperCase().replace(/[\s\-_]+/g, '')
   const normalizedActual = actual.replace(/[\s\-_]+/g, '')
-  const matches = normalizedInput === normalizedActual
 
-  // Diagnostic logging for trap name matching
-  console.log('[Trap] trapNameMatches diagnostic:', {
-    rawInput: input,
-    rawInputLength: input.length,
-    rawInputChars: Array.from(input).map(c => c.charCodeAt(0)),
-    actualTrap: actual,
-    actualTrapLength: actual.length,
-    normalizedInput,
-    normalizedActual,
-    matches
-  })
-
-  return matches
+  return normalizedInput === normalizedActual
 }

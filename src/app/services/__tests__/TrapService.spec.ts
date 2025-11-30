@@ -170,17 +170,25 @@ describe('TrapService', () => {
   })
 
   describe('calculateWrongNameTriggerChance', () => {
-    it('should return 20% for easy levels (1-4)', () => {
-      expect(TrapService.calculateWrongNameTriggerChance(1)).toBe(20)
-      expect(TrapService.calculateWrongNameTriggerChance(2)).toBe(20)
-      expect(TrapService.calculateWrongNameTriggerChance(3)).toBe(20)
-      expect(TrapService.calculateWrongNameTriggerChance(4)).toBe(20)
+    it('should return ~99% trigger for level 10 character', () => {
+      // Original formula: Level × 0.1% chance to NOT trigger
+      // So trigger chance = 100 - (10 × 0.1) = 99%
+      expect(TrapService.calculateWrongNameTriggerChance(10)).toBeCloseTo(99, 0)
     })
 
-    it('should return 80% for deep levels (5+)', () => {
-      expect(TrapService.calculateWrongNameTriggerChance(5)).toBe(80)
-      expect(TrapService.calculateWrongNameTriggerChance(6)).toBe(80)
-      expect(TrapService.calculateWrongNameTriggerChance(10)).toBe(80)
+    it('should return ~95% trigger for level 50 character', () => {
+      // 100 - (50 × 0.1) = 95%
+      expect(TrapService.calculateWrongNameTriggerChance(50)).toBeCloseTo(95, 0)
+    })
+
+    it('should return ~99.9% trigger for level 1 character', () => {
+      // 100 - (1 × 0.1) = 99.9%
+      expect(TrapService.calculateWrongNameTriggerChance(1)).toBeCloseTo(99.9, 1)
+    })
+
+    it('should not go below 0%', () => {
+      // Even at absurdly high level (1000+), cap at 0%
+      expect(TrapService.calculateWrongNameTriggerChance(1000)).toBe(0)
     })
   })
 
@@ -199,18 +207,35 @@ describe('TrapService', () => {
       expect(result.triggered).toBe(false)
     })
 
-    it('should fail when roll is over inspect chance', () => {
-      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 10 })
-      const chest = createTestChest()
+    it('should return random trap name on failed inspection (deception mechanic)', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 18 })
+      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
 
-      // Queue values: first for critical failure check (> 2 = no crit), second for inspect (> 10% = fail)
-      RandomService.queueNextValues([0.5, 0.5])
+      // Queue values: crit check pass, inspection fail, AGI trigger check pass (roll < AGI), random trap pick
+      RandomService.queueNextValues([0.5, 0.99, 0.1, 0.3])
 
       const result = TrapService.attemptInspection(fighter, chest)
 
       expect(result.success).toBe(false)
-      expect(result.trapIdentified).toBeNull()
       expect(result.triggered).toBe(false)
+      // Should return SOME trap name (deception - could be correct by chance)
+      expect(result.trapIdentified).not.toBeNull()
+    })
+
+    it('should trigger trap if AGI check fails on failed inspection', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 5 })
+      const chest = createTestChest()
+
+      // Queue values: crit check pass, inspection fail, AGI trigger check fail (roll >= 5)
+      // AGI check: RandomService.random(0, 19) - if result >= AGI, trap triggers
+      RandomService.queueNextValues([0.5, 0.99])  // crit pass, inspect fail
+      RandomService.queueNextValues([0.5])  // 0.5 * 20 = 10 >= 5 = fail AGI check
+
+      const result = TrapService.attemptInspection(fighter, chest)
+
+      expect(result.success).toBe(false)
+      expect(result.triggered).toBe(true)
+      expect(result.trapIdentified).toBeNull()
     })
 
     it('should trigger trap on critical failure (1-2%)', () => {
@@ -237,6 +262,21 @@ describe('TrapService', () => {
 
       expect(result.triggered).toBe(false)
     })
+
+    it('should return random trap on failed inspection of untrapped chest', () => {
+      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER, agility: 10 })
+      const chest = createTestChest({ trapped: false, trapType: null })
+
+      // Queue: crit pass, inspect fail, random trap selection
+      RandomService.queueNextValues([0.5, 0.99, 0.3])
+
+      const result = TrapService.attemptInspection(fighter, chest)
+
+      expect(result.success).toBe(false)
+      expect(result.triggered).toBe(false)
+      // Deception: even untrapped chest returns random trap name on failed inspect!
+      expect(result.trapIdentified).not.toBeNull()
+    })
   })
 
   describe('attemptDisarm', () => {
@@ -254,32 +294,34 @@ describe('TrapService', () => {
       expect(result.wrongName).toBe(false)
     })
 
-    it('should handle wrong trap name on easy level (20% trigger)', () => {
+    it('should almost always trigger with wrong trap name (99%+ chance)', () => {
       const thief = createTestCharacter({ class: CharacterClass.THIEF, level: 10 })
       const chest = createTestChest({ mazeLevel: 1 })
 
-      // Queue value for wrong name trigger check (> 20% = no trigger)
-      RandomService.queueNextValues([0.5])
+      // Level 10 = 99% trigger chance
+      // Queue value > 1% avoid chance = trigger
+      RandomService.queueNextValues([0.5])  // 50% > 1% = trigger
 
       const result = TrapService.attemptDisarm(thief, chest, 'WRONG TRAP')
 
       expect(result.success).toBe(false)
       expect(result.wrongName).toBe(true)
-      expect(result.triggered).toBe(false)  // 50% > 20%, so no trigger
+      expect(result.triggered).toBe(true)  // 50% < 99% trigger = trigger
     })
 
-    it('should handle wrong trap name on deep level (80% trigger)', () => {
-      const thief = createTestCharacter({ class: CharacterClass.THIEF, level: 10 })
-      const chest = createTestChest({ mazeLevel: 5 })
+    it('should very rarely avoid trigger with wrong name (based on character level)', () => {
+      // A level 1000 character would have 0% trigger chance (100 - 1000*0.1 = 0%)
+      const godlike = createTestCharacter({ class: CharacterClass.THIEF, level: 1000 })
+      const chest = createTestChest({ mazeLevel: 10 })
 
-      // Queue value for wrong name trigger check (< 80% = trigger)
+      // At level 1000, trigger chance is 0%, so any roll avoids
       RandomService.queueNextValues([0.5])
 
-      const result = TrapService.attemptDisarm(thief, chest, 'WRONG TRAP')
+      const result = TrapService.attemptDisarm(godlike, chest, 'WRONG TRAP')
 
       expect(result.success).toBe(false)
       expect(result.wrongName).toBe(true)
-      expect(result.triggered).toBe(true)  // 50% < 80%, so trigger
+      expect(result.triggered).toBe(false)  // 0% trigger = never triggers
     })
 
     it('should check AGI save on failed disarm', () => {
@@ -409,6 +451,63 @@ describe('TrapService', () => {
 
       expect(result.specialEffect).toBe('combat')
     })
+
+    describe('hitChance', () => {
+      it('should hit when roll is below hitChance (SPLINTERS 70%)', () => {
+        const opener = createTestCharacter({ id: 'opener', name: 'Fighter' })
+        const party = [opener]
+
+        // Queue: hit roll (0.5 < 0.7 = hit), then damage roll for 1d6
+        RandomService.queueNextValues([0.5, 0.5])
+
+        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, opener, party)
+
+        expect(result.damageDealt.has('opener')).toBe(true)
+        expect(result.message).toContain('takes')
+      })
+
+      it('should miss when roll exceeds hitChance (BLADES 30%)', () => {
+        const opener = createTestCharacter({ id: 'opener', name: 'Fighter' })
+        const party = [opener]
+
+        // Queue: hit roll (0.8 > 0.3 = miss)
+        RandomService.queueNextValues([0.8])
+
+        const result = TrapService.applyTrapEffects(TrapType.BLADES, opener, party)
+
+        expect(result.damageDealt.has('opener')).toBe(false)
+        expect(result.message).toContain('avoids')
+      })
+
+      it('should always hit traps without hitChance (default 1.0)', () => {
+        const opener = createTestCharacter({ id: 'opener', name: 'Fighter' })
+        const party = [opener]
+
+        // CROSSBOW_BOLT has no hitChance, should always hit
+        // Queue damage roll only (2d8)
+        RandomService.queueNextValues([0.5, 0.5])
+
+        const result = TrapService.applyTrapEffects(TrapType.CROSSBOW_BOLT, opener, party)
+
+        expect(result.damageDealt.has('opener')).toBe(true)
+      })
+
+      it('should roll hitChance independently for each party member', () => {
+        const member1 = createTestCharacter({ id: 'char1', name: 'Fighter' })
+        const member2 = createTestCharacter({ id: 'char2', name: 'Mage' })
+        const party = [member1, member2]
+
+        // SPLINTERS (70% hit) - queue: char1 hits (0.5 < 0.7), damage, char2 misses (0.8 > 0.7)
+        RandomService.queueNextValues([0.5, 0.5, 0.8])
+
+        const result = TrapService.applyTrapEffects(TrapType.SPLINTERS, member1, party)
+
+        expect(result.damageDealt.has('char1')).toBe(true)
+        expect(result.damageDealt.has('char2')).toBe(false)
+        expect(result.message).toContain('Fighter takes')
+        expect(result.message).toContain('Mage avoids')
+      })
+    })
   })
 
   describe('canCastCalfo', () => {
@@ -515,17 +614,19 @@ describe('TrapService', () => {
       expect(result.triggered).toBe(false)
     })
 
-    it('should fail on 5% roll', () => {
+    it('should return random trap name on 5% failure (deception mechanic)', () => {
       const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const chest = createTestChest()
+      const chest = createTestChest({ trapType: TrapType.POISON_NEEDLE })
 
-      // Queue failure roll (> 95% = fail)
-      RandomService.queueNextValues([0.99])
+      // Queue failure roll (> 95% = fail), then random trap selection
+      RandomService.queueNextValues([0.99, 0.3])
 
       const result = TrapService.castCalfo(priest, chest)
 
       expect(result.success).toBe(false)
-      expect(result.trapIdentified).toBeNull()
+      // Should return random trap, not null (deception mechanic)
+      expect(result.trapIdentified).not.toBeNull()
+      expect(result.triggered).toBe(false)
     })
 
     it('should never trigger trap', () => {
@@ -533,11 +634,24 @@ describe('TrapService', () => {
       const chest = createTestChest()
 
       // Even on failure, CALFO should never trigger
-      RandomService.queueNextValues([0.99])
+      RandomService.queueNextValues([0.99, 0.5])  // fail + random trap
 
       const result = TrapService.castCalfo(priest, chest)
 
       expect(result.triggered).toBe(false)
+    })
+
+    it('should return null trap on success for untrapped chest', () => {
+      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
+      const chest = createTestChest({ trapped: false, trapType: null })
+
+      // Queue success roll
+      RandomService.queueNextValues([0.5])
+
+      const result = TrapService.castCalfo(priest, chest)
+
+      expect(result.success).toBe(true)
+      expect(result.trapIdentified).toBeNull()  // Correctly identifies no trap
     })
   })
 

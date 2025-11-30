@@ -9,7 +9,6 @@
  */
 
 import { Character } from '@models/Character'
-import { Party } from '@models/GameState'
 import { Item } from '@models/Item'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { Position } from '@models/Dungeon'
@@ -27,6 +26,7 @@ import {
 } from '@models/Chest'
 import { TrapType } from '@models/Trap'
 import { RandomService } from './RandomService'
+import { isAlive } from '@utils/CharacterStatusHelpers'
 
 /**
  * Trap types available at each reward tier
@@ -35,7 +35,7 @@ import { RandomService } from './RandomService'
 const TRAP_TYPES_BY_TIER: Record<RewardTier, TrapType[]> = {
   1: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.ALARM],
   2: [TrapType.POISON_NEEDLE, TrapType.GAS_BOMB, TrapType.CROSSBOW_BOLT, TrapType.ALARM],
-  3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.STUNNER, TrapType.TELEPORTER],
+  3: [TrapType.CROSSBOW_BOLT, TrapType.EXPLODING_BOX, TrapType.SPLINTERS, TrapType.BLADES, TrapType.STUNNER, TrapType.TELEPORTER],
   4: [TrapType.EXPLODING_BOX, TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER],
   5: [TrapType.TELEPORTER, TrapType.MAGE_BLASTER, TrapType.PRIEST_BLASTER, TrapType.ALARM]
 }
@@ -177,13 +177,32 @@ function generateBossChest(
 }
 
 /**
- * Check if opener has enough inventory space for chest contents
+ * Select the party member who will receive items from a chest
  *
+ * This pre-selects the recipient using the same logic as distributeTreasure,
+ * allowing inventory warnings to accurately show who will receive items.
+ *
+ * @param partyMembers Array of Character objects in the party
+ * @returns Selected recipient, or null if no living members
+ */
+function selectRecipient(partyMembers: Character[]): Character | null {
+  const livingMembers = partyMembers.filter(isAlive)
+  if (livingMembers.length === 0) {
+    return null
+  }
+  return RandomService.pickRandom(livingMembers)
+}
+
+/**
+ * Check if recipient has enough inventory space for chest contents
+ *
+ * @param recipient The character who will receive items (from selectRecipient)
+ * @param chest The chest being opened
  * @returns InventoryWarning if there's a risk of losing items, null otherwise
  */
-function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning | null {
+function checkInventorySpace(recipient: Character, chest: Chest): InventoryWarning | null {
   const itemCount = chest.contents.items.length
-  const freeSlots = MAX_INVENTORY_SIZE - opener.inventory.length
+  const freeSlots = MAX_INVENTORY_SIZE - recipient.inventory.length
 
   if (itemCount > freeSlots) {
     const itemsAtRisk = itemCount - freeSlots
@@ -191,7 +210,7 @@ function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning 
       itemCount,
       freeSlots,
       itemsAtRisk,
-      warning: `WARNING: ${opener.name} has only ${freeSlots} free slot${freeSlots === 1 ? '' : 's'}. ` +
+      warning: `WARNING: ${recipient.name} has only ${freeSlots} free slot${freeSlots === 1 ? '' : 's'}. ` +
                `${itemsAtRisk} item${itemsAtRisk === 1 ? '' : 's'} will be LOST FOREVER!`
     }
   }
@@ -202,23 +221,49 @@ function checkInventorySpace(opener: Character, chest: Chest): InventoryWarning 
 /**
  * Distribute treasure from an opened chest
  *
- * Gold goes to party pool, items go to opener's inventory.
- * Items that don't fit are LOST (original Wizardry behavior).
+ * Original Wizardry 1 behavior:
+ * - Gold goes to party pool
+ * - Items go to a RANDOM LIVING party member (not the opener!)
+ * - Items that don't fit are LOST forever
  *
  * @param chest The opened chest
- * @param opener Character who opened the chest
- * @param party The party (for gold pool)
- * @returns Distribution result with received and lost items
+ * @param partyMembers Array of Character objects in the party
+ * @param preSelectedRecipient Optional pre-selected recipient (from selectRecipient)
+ * @returns Distribution result with received items, lost items, and recipient info
  */
 function distributeTreasure(
   chest: Chest,
-  opener: Character,
-  party: Party
+  partyMembers: Character[],
+  preSelectedRecipient?: Character
 ): TreasureDistributionResult {
+  // Use pre-selected recipient if provided, otherwise select randomly
+  let recipient: Character | null = preSelectedRecipient ?? null
+
+  if (!recipient) {
+    // Find living party members who can receive items
+    const livingMembers = partyMembers.filter(isAlive)
+
+    // If no living members, all items are lost
+    if (livingMembers.length === 0) {
+      return {
+        goldAdded: chest.contents.gold,
+        itemsReceived: [],
+        itemsLost: [...chest.contents.items],
+        recipientId: '',
+        recipientName: 'No one'
+      }
+    }
+
+    // Select random living member as recipient (original Wizardry behavior)
+    recipient = RandomService.pickRandom(livingMembers)
+  }
+
   const result: TreasureDistributionResult = {
     goldAdded: chest.contents.gold,
     itemsReceived: [],
-    itemsLost: []
+    itemsLost: [],
+    recipientId: recipient.id,
+    recipientName: recipient.name
   }
 
   // Gold always goes to party pool
@@ -226,9 +271,9 @@ function distributeTreasure(
   // This service just calculates the distribution
 
   // Track current inventory count (including items we're adding)
-  let currentInventoryCount = opener.inventory.length
+  let currentInventoryCount = recipient.inventory.length
 
-  // Distribute items to opener
+  // Distribute items to random recipient
   for (const item of chest.contents.items) {
     if (currentInventoryCount < MAX_INVENTORY_SIZE) {
       result.itemsReceived.push(item)
@@ -320,6 +365,7 @@ export const ChestService = {
   generateItems,
 
   // Distribution
+  selectRecipient,
   checkInventorySpace,
   distributeTreasure,
   getDistributionMessage

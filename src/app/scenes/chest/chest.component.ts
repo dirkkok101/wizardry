@@ -8,6 +8,7 @@ import { TrapService } from '@services/TrapService';
 import { ChestService } from '@services/ChestService';
 import { RandomService } from '@services/RandomService';
 import { GameStateQueries } from '@utils/GameStateQueries';
+import { canAct } from '@utils/CharacterStatusHelpers';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterListItemComponent } from '@shared/components/character-list-item/character-list-item.component';
@@ -29,7 +30,8 @@ type ChestMode =
   | 'TRAP_NAME_INPUT'   // Entering trap name for disarm
   | 'INVENTORY_WARNING' // Confirmation when inventory could overflow
   | 'RESULT_DISPLAY'    // Showing trap/treasure outcome
-  | 'VICTORY_SUMMARY';  // Showing combined combat + chest rewards
+  | 'VICTORY_SUMMARY'   // Showing combined combat + chest rewards
+  | 'LEAVE_CONFIRM';    // Confirmation before leaving unopened chest
 
 /**
  * Chest Component
@@ -74,6 +76,9 @@ export class ChestComponent implements OnInit, OnDestroy {
   // Selected CALFO caster (for spell casting)
   readonly selectedCaster = signal<Character | null>(null);
 
+  // Pre-selected item recipient (for accurate inventory warnings)
+  private readonly preSelectedRecipient = signal<Character | null>(null);
+
   // Trap name input for disarm attempt
   readonly trapNameInput = signal<string>('');
 
@@ -112,13 +117,7 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   // Characters who can act (not dead/paralyzed)
   readonly availableCharacters = computed(() => {
-    return this.partyMembers().filter(c =>
-      c.status !== CharacterStatus.DEAD &&
-      c.status !== CharacterStatus.ASHES &&
-      c.status !== CharacterStatus.LOST &&
-      c.status !== CharacterStatus.PARALYZED &&
-      c.status !== CharacterStatus.STONED
-    );
+    return this.partyMembers().filter(canAct);
   });
 
   // Characters who can cast CALFO
@@ -179,6 +178,14 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (mode === 'VICTORY_SUMMARY') {
       return [
         { id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }
+      ];
+    }
+
+    // In leave confirmation mode
+    if (mode === 'LEAVE_CONFIRM') {
+      return [
+        { id: 'confirm-leave', label: 'Yes, Leave', shortcut: 'Y', enabled: true },
+        { id: 'cancel-leave', label: 'No, Stay', shortcut: 'N', enabled: true }
       ];
     }
 
@@ -272,24 +279,14 @@ export class ChestComponent implements OnInit, OnDestroy {
   handleKeyboard(event: KeyboardEvent): void {
     const key = event.key.toUpperCase();
     const mode = this.mode();
-
-    console.log('[Chest] Keyboard event:', {
-      key,
-      rawKey: event.key,
-      mode,
-      trapNameInput: this.trapNameInput()
-    });
-
     // Handle ESC for cancel/leave
     if (key === 'ESCAPE') {
-      console.log('[Chest] ESC pressed - calling handleCancel');
       this.handleCancel();
       return;
     }
 
     // Handle Enter for continue
     if (key === 'ENTER' && (mode === 'RESULT_DISPLAY' || mode === 'VICTORY_SUMMARY')) {
-      console.log('[Chest] ENTER pressed in', mode, '- calling handleContinue');
       this.handleContinue();
       return;
     }
@@ -298,7 +295,6 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (mode === 'CHARACTER_SELECT') {
       const num = parseInt(key);
       if (num >= 1 && num <= 6) {
-        console.log('[Chest] Character selected:', num);
         this.selectCharacter(num - 1);
       }
       return;
@@ -316,16 +312,12 @@ export class ChestComponent implements OnInit, OnDestroy {
     // Trap name input mode - letter keys
     if (mode === 'TRAP_NAME_INPUT') {
       if (key === 'BACKSPACE') {
-        console.log('[Chest] BACKSPACE in TRAP_NAME_INPUT');
         this.trapNameInput.update(v => v.slice(0, -1));
       } else if (key === 'ENTER') {
-        console.log('[Chest] ENTER in TRAP_NAME_INPUT - calling submitTrapName');
         this.submitTrapName();
       } else if (key.length === 1 && /[A-Z ]/.test(key)) {
-        console.log('[Chest] Adding character to trap name:', key);
         this.trapNameInput.update(v => v + key);
       } else {
-        console.log('[Chest] Ignored key in TRAP_NAME_INPUT:', key);
       }
       return;
     }
@@ -341,9 +333,19 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Leave confirmation mode - Y/N
+    if (mode === 'LEAVE_CONFIRM') {
+      if (key === 'Y') {
+        this.confirmLeave();
+      } else if (key === 'N') {
+        this.mode.set('ACTION_SELECT');
+        this.lastActionMessage.set('');
+      }
+      return;
+    }
+
     // Action select mode - action shortcuts
     if (mode === 'ACTION_SELECT') {
-      console.log('[Chest] ACTION_SELECT mode, key:', key);
       switch (key) {
         case 'O': this.handleOpen(); break;
         case 'I': this.handleInspect(); break;
@@ -351,7 +353,6 @@ export class ChestComponent implements OnInit, OnDestroy {
         case 'D': this.handleDisarm(); break;
         case 'L': this.handleLeave(); break;
         default:
-          console.log('[Chest] Unhandled key in ACTION_SELECT:', key);
       }
     }
   }
@@ -369,6 +370,11 @@ export class ChestComponent implements OnInit, OnDestroy {
       case 'cancel': this.handleCancel(); break;
       case 'continue': this.handleContinue(); break;
       case 'confirm-open': this.openChest(true); break;
+      case 'confirm-leave': this.confirmLeave(); break;
+      case 'cancel-leave':
+        this.mode.set('ACTION_SELECT');
+        this.lastActionMessage.set('');
+        break;
     }
   }
 
@@ -402,29 +408,23 @@ export class ChestComponent implements OnInit, OnDestroy {
   private handleOpen(): void {
     const chest = this.chest();
     const opener = this.selectedOpener();
-
-    console.log('[Chest] handleOpen called:', {
-      hasChest: !!chest,
-      hasOpener: !!opener,
-      chestTrapped: chest?.trapped,
-      chestTrapDisarmed: chest?.trapDisarmed
-    });
-
     if (!chest || !opener) {
-      console.log('[Chest] handleOpen early return - missing chest or opener');
       return;
     }
 
-    // Check inventory space
-    const warning = ChestService.checkInventorySpace(opener, chest);
-    if (warning) {
-      console.log('[Chest] Inventory warning shown:', warning.warning);
-      this.inventoryWarning.set(warning.warning);
-      this.mode.set('INVENTORY_WARNING');
-      return;
-    }
+    // Pre-select recipient so inventory warning shows correct name
+    const recipient = ChestService.selectRecipient(this.partyMembers());
+    this.preSelectedRecipient.set(recipient);
 
-    console.log('[Chest] No inventory warning - calling openChest');
+    // Check inventory space for the actual recipient
+    if (recipient) {
+      const warning = ChestService.checkInventorySpace(recipient, chest);
+      if (warning) {
+        this.inventoryWarning.set(warning.warning);
+        this.mode.set('INVENTORY_WARNING');
+        return;
+      }
+    }
     this.openChest(false);
   }
 
@@ -434,18 +434,7 @@ export class ChestComponent implements OnInit, OnDestroy {
   private openChest(skipWarning: boolean): void {
     const chest = this.chest();
     const opener = this.selectedOpener();
-
-    console.log('[Chest] openChest called:', {
-      skipWarning,
-      hasChest: !!chest,
-      hasOpener: !!opener,
-      chestTrapped: chest?.trapped,
-      chestTrapDisarmed: chest?.trapDisarmed,
-      chestTrapType: chest?.trapType
-    });
-
     if (!chest || !opener) {
-      console.log('[Chest] openChest early return - missing chest or opener');
       return;
     }
 
@@ -453,13 +442,11 @@ export class ChestComponent implements OnInit, OnDestroy {
 
     // Check if trapped and not disarmed
     if (chest.trapped && !chest.trapDisarmed) {
-      console.log('[Chest] Chest is trapped and not disarmed - triggering trap');
       this.triggerTrap(chest, opener);
       return;
     }
 
     // Safe to open - distribute treasure
-    console.log('[Chest] Chest is safe - distributing treasure');
     this.distributeTreasure(chest, opener);
   }
 
@@ -467,14 +454,7 @@ export class ChestComponent implements OnInit, OnDestroy {
    * Trigger trap effects
    */
   private triggerTrap(chest: Chest, opener: Character): void {
-    console.log('[Chest] triggerTrap called:', {
-      chestTrapType: chest.trapType,
-      openerName: opener.name,
-      chestContents: chest.contents
-    });
-
     if (!chest.trapType) {
-      console.log('[Chest] triggerTrap early return - no trap type');
       return;
     }
 
@@ -483,15 +463,6 @@ export class ChestComponent implements OnInit, OnDestroy {
       opener,
       this.partyMembers()
     );
-
-    console.log('[Chest] applyTrapEffects result:', {
-      trapType: result.trapType,
-      damageDealtCount: result.damageDealt.size,
-      statusAppliedCount: result.statusApplied.size,
-      specialEffect: result.specialEffect,
-      message: result.message
-    });
-
     this.lastActionMessage.set(result.message);
 
     // Apply damage and status to game state
@@ -499,13 +470,11 @@ export class ChestComponent implements OnInit, OnDestroy {
 
     // Handle special effects
     if (result.specialEffect === 'teleport') {
-      console.log('[Chest] Teleport effect - NOT distributing treasure, going to RESULT_DISPLAY');
       this.handleTeleport();
       return;
     }
 
     if (result.specialEffect === 'combat') {
-      console.log('[Chest] Alarm effect - NOT distributing treasure, going to RESULT_DISPLAY');
       this.handleAlarm();
       return;
     }
@@ -518,7 +487,6 @@ export class ChestComponent implements OnInit, OnDestroy {
     })
 
     // Treasure can still be collected after most traps
-    console.log('[Chest] No special effect - distributing treasure after trap');
     this.distributeTreasure(chest, opener);
   }
 
@@ -556,10 +524,31 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Handle teleporter trap effect
+   * Teleports party to random position on same maze level
    */
   private handleTeleport(): void {
-    // TODO: Implement random teleport
-    this.lastActionMessage.update(m => m + ' You are teleported away!');
+    // Generate random position on same maze level (20x20 dungeon)
+    const maxCoord = 19
+    const newX = RandomService.random(0, maxCoord)
+    const newY = RandomService.random(0, maxCoord)
+    const facings: Array<'NORTH' | 'SOUTH' | 'EAST' | 'WEST'> = ['NORTH', 'SOUTH', 'EAST', 'WEST']
+    const newFacing = RandomService.pickRandom(facings)
+
+    // Update party position in game state
+    this.gameState.updateState(state => ({
+      ...state,
+      party: {
+        ...state.party,
+        position: {
+          ...state.party.position,
+          x: newX,
+          y: newY,
+          facing: newFacing
+        }
+      }
+    }))
+
+    this.lastActionMessage.update(m => m + ` Teleported to (${newX}, ${newY}) facing ${newFacing}!`)
 
     // Set chest results for victory summary (no treasure, trap triggered)
     this.chestResults.set({
@@ -594,37 +583,35 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Distribute treasure from chest
+   * Uses pre-selected recipient if available (for consistent inventory warnings)
    */
-  private distributeTreasure(chest: Chest, opener: Character): void {
-    console.log('[Chest] distributeTreasure called:', {
-      chestId: chest.id,
-      chestContents: chest.contents,
-      openerName: opener.name,
-      openerId: opener.id
-    });
-
+  private distributeTreasure(chest: Chest, _opener: Character): void {
     const state = this.gameState.state();
-    const result = ChestService.distributeTreasure(chest, opener, state.party);
 
-    console.log('[Chest] distributeTreasure result:', {
-      goldAdded: result.goldAdded,
-      itemsReceivedCount: result.itemsReceived.length,
-      itemsReceived: result.itemsReceived.map(i => i.name),
-      itemsLostCount: result.itemsLost.length,
-      itemsLost: result.itemsLost.map(i => i.name)
-    });
+    // Resolve party members to Character objects
+    const partyMembers = state.party.members
+      .map(id => state.roster.get(id))
+      .filter((c): c is Character => c !== undefined);
 
+    // Use pre-selected recipient if available, otherwise service picks randomly
+    const preSelected = this.preSelectedRecipient();
+    const result = ChestService.distributeTreasure(chest, partyMembers, preSelected ?? undefined);
+
+    // Clear pre-selected recipient after use
+    this.preSelectedRecipient.set(null);
     // Update game state with gold and items
     this.gameState.updateState(state => {
       const newRoster = new Map(state.roster);
-      const char = newRoster.get(opener.id);
 
-      if (char) {
-        // Add received items to opener's inventory
-        newRoster.set(opener.id, {
-          ...char,
-          inventory: [...char.inventory, ...result.itemsReceived]
-        });
+      // Add received items to the randomly selected recipient
+      if (result.recipientId && result.itemsReceived.length > 0) {
+        const recipient = newRoster.get(result.recipientId);
+        if (recipient) {
+          newRoster.set(result.recipientId, {
+            ...recipient,
+            inventory: [...recipient.inventory, ...result.itemsReceived]
+          });
+        }
       }
 
       return {
@@ -654,8 +641,6 @@ export class ChestComponent implements OnInit, OnDestroy {
     this.pendingTrapInfo.set(null)
 
     const message = ChestService.getDistributionMessage(result);
-    console.log('[Chest] Distribution message:', message);
-    console.log('[Chest] Setting mode to RESULT_DISPLAY');
     this.lastActionMessage.set(message);
     this.mode.set('RESULT_DISPLAY');
     this.logger.debug('[Chest] Treasure distributed:', result);
@@ -772,68 +757,45 @@ export class ChestComponent implements OnInit, OnDestroy {
   private submitTrapName(): void {
     const chest = this.chest();
     const opener = this.selectedOpener();
-
-    console.log('[Chest] submitTrapName called:', {
-      hasChest: !!chest,
-      hasOpener: !!opener,
-      trapNameInput: this.trapNameInput(),
-      trapNameInputLength: this.trapNameInput().length,
-      chestTrapType: chest?.trapType,
-      chestTrapped: chest?.trapped,
-      chestTrapDisarmed: chest?.trapDisarmed
-    });
-
     if (!chest || !opener) {
-      console.log('[Chest] submitTrapName early return - missing chest or opener');
       return;
     }
 
     const result = TrapService.attemptDisarm(opener, chest, this.trapNameInput());
-
-    console.log('[Chest] attemptDisarm result:', {
-      success: result.success,
-      triggered: result.triggered,
-      wrongName: result.wrongName
-    });
-
     if (result.success) {
-      console.log('[Chest] Disarm SUCCESS - updating chest state');
       this.chest.update(c => c ? { ...c, trapDisarmed: true, trapped: false } : c);
       this.lastActionMessage.set(`${opener.name} successfully disarmed the trap!`);
-      console.log('[Chest] After success - setting mode to ACTION_SELECT');
     } else if (result.triggered) {
       if (result.wrongName) {
-        console.log('[Chest] WRONG NAME - trap will trigger');
         this.lastActionMessage.set('Wrong trap name! The trap triggers!');
       } else {
-        console.log('[Chest] Disarm failed - trap will trigger');
         this.lastActionMessage.set('Disarm failed! The trap triggers!');
       }
-      console.log('[Chest] Calling triggerTrap...');
       this.triggerTrap(chest, opener);
       return;
     } else {
-      console.log('[Chest] Disarm failed but trap NOT triggered - can retry');
       this.lastActionMessage.set(`${opener.name} could not disarm it. Try again?`);
     }
-
-    console.log('[Chest] Setting mode to ACTION_SELECT and clearing input');
     this.mode.set('ACTION_SELECT');
     this.trapNameInput.set('');
     this.logger.debug('[Chest] Disarm result:', result);
   }
 
   /**
-   * Handle Leave action
+   * Handle Leave action - show confirmation before leaving
    */
   private handleLeave(): void {
+    this.mode.set('LEAVE_CONFIRM');
+    this.lastActionMessage.set('Leave chest unopened? (Y/N)');
+  }
+
+  /**
+   * Confirm leaving chest - actually navigate away
+   */
+  private confirmLeave(): void {
     const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
-
-    console.log('[Chest] handleLeave called:', { hasCombatRewards });
-
     if (hasCombatRewards) {
       // From combat - show victory summary even if chest abandoned
-      console.log('[Chest] Showing victory summary (chest abandoned)');
       this.chestResults.set({
         goldObtained: 0,
         itemsObtained: [],
@@ -844,8 +806,6 @@ export class ChestComponent implements OnInit, OnDestroy {
       this.mode.set('VICTORY_SUMMARY');
       return;
     }
-
-    console.log('[Chest] handleLeave - navigating to maze');
     this.logger.debug('[Chest] Leaving chest');
     this.navigation.navigateTo('maze');
   }
@@ -855,23 +815,16 @@ export class ChestComponent implements OnInit, OnDestroy {
    */
   private handleCancel(): void {
     const mode = this.mode();
-
-    console.log('[Chest] handleCancel called:', { mode });
-
     if (mode === 'CASTER_SELECT' || mode === 'TRAP_NAME_INPUT') {
-      console.log('[Chest] Cancel from CASTER_SELECT/TRAP_NAME_INPUT - returning to ACTION_SELECT');
       this.mode.set('ACTION_SELECT');
       this.trapNameInput.set('');
       this.selectedCaster.set(null);
     } else if (mode === 'INVENTORY_WARNING') {
-      console.log('[Chest] Cancel from INVENTORY_WARNING - returning to ACTION_SELECT');
       this.mode.set('ACTION_SELECT');
       this.inventoryWarning.set(null);
     } else if (mode === 'CHARACTER_SELECT') {
-      console.log('[Chest] Cancel from CHARACTER_SELECT - leaving');
       this.handleLeave();
     } else {
-      console.log('[Chest] Cancel from other mode - leaving');
       this.handleLeave();
     }
   }
@@ -883,34 +836,22 @@ export class ChestComponent implements OnInit, OnDestroy {
     const chest = this.chest();
     const currentMode = this.mode();
     const hasCombatRewards = !!this.gameState.state().pendingCombatRewards;
-
-    console.log('[Chest] handleContinue called:', {
-      hasChest: !!chest,
-      currentMode,
-      hasCombatRewards,
-      lastActionMessage: this.lastActionMessage()
-    });
-
     if (currentMode === 'RESULT_DISPLAY' && hasCombatRewards) {
       // From combat - show victory summary before maze
-      console.log('[Chest] Transitioning to VICTORY_SUMMARY');
       this.mode.set('VICTORY_SUMMARY');
       return;
     }
 
     if (currentMode === 'VICTORY_SUMMARY') {
       // After victory summary - clear rewards and go to maze
-      console.log('[Chest] Navigating to maze from VICTORY_SUMMARY');
       this.clearCombatRewardsAndNavigate();
       return;
     }
 
     // Non-combat chest or exploration - go directly to maze
     if (chest && currentMode === 'RESULT_DISPLAY') {
-      console.log('[Chest] Navigating to maze from RESULT_DISPLAY (no combat rewards)');
       this.navigation.navigateTo('maze');
     } else {
-      console.log('[Chest] handleContinue - conditions not met for navigation');
     }
   }
 
