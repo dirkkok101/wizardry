@@ -58,368 +58,385 @@ Wizardry uses **spell points**, not D&D-style memorized slots.
 - Character Level 7: Access spell level 4
 - Etc.
 
-## Mage Spells
+## Mage Spells (21 Total)
 
-### Level 1 Mage Spells
-
-**DUMAPIC** (Coordinates)
-- **Effect**: Shows current coordinates and facing direction
-- **Target**: Party
-- **Use**: Essential for mapping
-- **Cost**: 1 level-1 point
+### Level 1 Mage Spells (4 spells)
 
 **HALITO** (Little Fire)
 - **Effect**: 1d8 fire damage
-- **Target**: Enemy group
-- **Use**: Basic offensive spell
-- **Cost**: 1 level-1 point
-
-**KATINO** (Bad Air)
-- **Effect**: Sleep enemy group
-- **Target**: Enemy group
-- **Use**: Powerful crowd control; sleeping enemies easy to hit
+- **Target**: Single monster
+- **Resistance**: Fire-resistant monsters take half damage
 - **Cost**: 1 level-1 point
 
 **MOGREF** (Body Iron)
-- **Effect**: -2 AC to ally (improves armor class)
-- **Target**: Single ally
-- **Duration**: Battle
+- **Effect**: -2 AC to caster (improves armor class)
+- **Target**: Caster only
+- **Duration**: Until combat ends
+- **Stacking**: Yes
 - **Cost**: 1 level-1 point
 
-### Level 2 Mage Spells
+**KATINO** (Bad Air)
+- **Effect**: Attempts to put all monsters in group to sleep
+- **Target**: Monster group
+- **Resistance**: (20 × Monster Level)% - Level 5+ immune
+- **Critical**: Sleeping monsters take DOUBLE damage
+- **Cost**: 1 level-1 point
+
+**DUMAPIC** (Clarity)
+- **Effect**: Reveals exact party coordinates (X, Y) and dungeon level
+- **Target**: Party (information)
+- **Usable**: Camp only (NOT combat)
+- **Restriction**: Does not function on Level 10
+- **Cost**: 1 level-1 point
+
+### Level 2 Mage Spells (2 spells)
 
 **DILTO** (Darkness)
-- **Effect**: Blinds enemy group
-- **Target**: Enemy group
-- **Use**: Reduces enemy hit chance
-- **Cost**: 1 level-2 point
-
-**MELITO** (Sparks)
-- **Effect**: 1d8 damage to each enemy in group
-- **Target**: Enemy group
-- **Use**: More powerful than HALITO (hits each individually)
+- **Effect**: Increases AC of target group by 2 (easier to hit)
+- **Target**: Monster group
+- **Duration**: Until combat ends
+- **Stacking**: Yes
 - **Cost**: 1 level-2 point
 
 **SOPIC** (Glass)
-- **Effect**: Makes ally invisible
-- **Target**: Single ally
-- **Duration**: Battle
-- **Use**: Enemy attacks miss more often
+- **Effect**: Makes caster transparent, -4 AC
+- **Target**: Caster only
+- **Duration**: Until combat ends
+- **Stacking**: Yes
 - **Cost**: 1 level-2 point
 
-### Level 3 Mage Spells
+### Level 3 Mage Spells (2 spells)
 
 **MAHALITO** (Big Fire)
 - **Effect**: 4d6 fire damage
-- **Target**: Enemy group
-- **Use**: Strong area damage
+- **Target**: Monster group
+- **Resistance**: Fire-resistant take half; Magic Resistance provides save
 - **Cost**: 1 level-3 point
 
-**MOLITO** (Sparks)
-- **Effect**: 3d6 damage to each enemy
-- **Target**: Enemy group
-- **Use**: Stronger version of MELITO
+**MOLITO** (Spark Storm)
+- **Effect**: 3d6 non-elemental damage
+- **Target**: Monster group
+- **Notes**: Not subject to fire/cold resistance
 - **Cost**: 1 level-3 point
 
-### Level 4 Mage Spells
+### Level 4 Mage Spells (3 spells)
+
+**MORLIS** (Fear)
+- **Effect**: Increases monster AC by 3 (fear effect)
+- **Target**: Monster group
+- **Recovery**: (10 × Monster Level)% per round, capped at 50%
+- **Cost**: 1 level-4 point
 
 **DALTO** (Blizzard)
 - **Effect**: 6d6 cold damage
-- **Target**: Enemy group
+- **Target**: Monster group
+- **Resistance**: Cold-resistant take half; Magic Resistance provides save
 - **Cost**: 1 level-4 point
 
-**LAHALITO** (Flame Storm)
+**LAHALITO** (Torch)
 - **Effect**: 6d6 fire damage
-- **Target**: Enemy group
-- **Use**: More powerful than MAHALITO
+- **Target**: Monster group
+- **Resistance**: Fire-resistant take half; Magic Resistance provides save
 - **Cost**: 1 level-4 point
 
-**MORLIS** (Paralyze)
-- **Effect**: Paralyze enemy group
-- **Target**: Enemy group
-- **Use**: Better than sleep; paralyzed enemies cannot act and take 2x damage from physical attacks
-- **Cost**: 1 level-4 point
+### Level 5 Mage Spells (3 spells)
 
-### Level 5 Mage Spells
-
-**MADALTO** (Frost)
-- **Effect**: Party-wide cold attack
-- **Target**: All enemy groups
-- **Use**: Hits every group in encounter
+**MADALTO** (Frost King)
+- **Effect**: 8d8 cold damage (highest single-group cold damage)
+- **Target**: Monster group
+- **Resistance**: Cold-resistant take half
 - **Cost**: 1 level-5 point
+
+**MAKANITO** (Deadly Air)
+- **Effect**: Instantly kills all eligible monsters
+- **Target**: ALL monsters (all groups)
+- **Kill Threshold**: Monsters with ≤7 hit dice
+- **Immunities**: Undead immune; Level 8+ immune
+- **Saving Throw**: NONE for eligible targets
+- **Cost**: 1 level-5 point
+
+**MAMORLIS** (Terror)
+- **Effect**: Increases AC by 3 for all monsters (fear)
+- **Target**: ALL monsters (all groups)
+- **Recovery**: (10 × Monster Level)% per round, capped at 50%
+- **Cost**: 1 level-5 point
+
+### Level 6 Mage Spells (4 spells)
 
 **LAKANITO** (Suffocation)
-- **Effect**: Vacuum attack
-- **Target**: Enemy group
-- **Use**: Ignores some resistances
-- **Cost**: 1 level-5 point
+- **Effect**: Instant death by suffocation (air-breathing only)
+- **Target**: Monster group
+- **Resistance**: (6 × Monster Level)% - Level 17+ immune
+- **Immunities**: Undead, constructs, non-breathing creatures
+- **Cost**: 1 level-6 point
 
 **ZILWAN** (Dispel)
-- **Effect**: Removes magical effects
-- **Target**: Enemy group
-- **Use**: Removes enemy buffs
-- **Cost**: 1 level-5 point
+- **Effect**: 10d200 holy damage (10-2000)
+- **Target**: Single monster
+- **Restriction**: ONLY affects UNDEAD - useless against living
+- **Saving Throw**: None - guaranteed undead destruction
+- **Cost**: 1 level-6 point
 
-### Level 6 Mage Spells
+**MASOPIC** (Big Glass)
+- **Effect**: -4 AC to all party members
+- **Target**: Entire party
+- **Duration**: Until combat ends
+- **Stacking**: Yes
+- **Cost**: 1 level-6 point
 
 **HAMAN** (Change)
-- **Effect**: Transforms monsters
-- **Target**: Enemy group
-- **Use**: Can turn powerful enemies into weaker ones
+- **Effect**: Random powerful effect (5 possibilities)
+- **Target**: Variable
+- **Cost**: 1 level-6 point + 1 experience level permanently drained
+- **Requirement**: Caster must be Level 13+
+- **Effects**: Mass heal, strip magic resistance, full party heal, shield party, resurrect party
+- **Risk**: Spellbook mangling possible
 - **Cost**: 1 level-6 point
 
-**LOMILWA** (Greater Light)
-- **Effect**: Extended light radius
-- **Target**: Party
-- **Duration**: Extended
-- **Use**: Better than MILWA
-- **Cost**: 1 level-6 point
+### Level 7 Mage Spells (3 spells)
 
-**MAHAMAN** (Change All)
-- **Effect**: Transforms all monster groups
-- **Target**: All enemies
-- **Use**: Party-wide version of HAMAN
-- **Cost**: 1 level-6 point
-
-**MALOR** (Teleport)
-- **Effect**: Teleport party to any coordinates
-- **Target**: Party
-- **Use**: DANGEROUS - wrong coordinates = rock = death
-- **Cost**: 1 level-6 point
-
-**TILTOWAIT** (Kaboom)
-- **Effect**: Massive damage to all groups
-- **Target**: All enemy groups
-- **Use**: Most powerful offensive spell
-- **Cost**: 1 level-6 point
-
-### Level 7 Mage Spells
-
-**TILTOWAIT** (Nuclear Blast)
-- **Effect**: Ultimate damage spell
-- **Target**: All enemy groups
-- **Use**: Most devastating spell in game
+**MAHAMAN** (Great Change)
+- **Effect**: Random powerful effect (3 possibilities)
+- **Target**: Variable
+- **Cost**: 1 level-7 point + 1 level + spell forgotten (must relearn)
+- **Requirement**: Caster must be Level 13+
+- **Effects**: Mass heal, mass silence, destroy all monsters
+- **Risk**: Spellbook mangling possible
 - **Cost**: 1 level-7 point
 
-## Priest Spells
+**MALOR** (Apport)
+- **Effect**: Teleport party to specified coordinates
+- **Target**: Party
+- **Usable**: Combat OR Camp (different behavior)
+- **Camp Mode**: Player inputs coordinates - DANGER: solid rock = instant party death
+- **Combat Mode**: Random safe location on current level
+- **Cost**: 1 level-7 point
 
-### Level 1 Priest Spells
+**TILTOWAIT** (Ka-Blam!)
+- **Effect**: 10d15 damage (10-150) - most powerful damage spell
+- **Target**: ALL monsters (all groups)
+- **Element**: Non-elemental/force
+- **Resistance**: Only Magic Resistance provides save
+- **Cost**: 1 level-7 point
 
-**BADIOS** (Harm)
-- **Effect**: 1d8 damage to undead
-- **Target**: Enemy (undead only)
-- **Use**: Extra effective vs undead
-- **Cost**: 1 level-1 point
+## Priest Spells (29 Total)
+
+### Level 1 Priest Spells (5 spells)
 
 **DIOS** (Heal)
 - **Effect**: Restore 1d8 HP
-- **Target**: Single ally
-- **Use**: Basic healing; essential spell
-- **Can Cast**: Combat, Dungeon, Town
+- **Target**: Single party member
+- **Usable**: Combat and Camp
 - **Cost**: 1 level-1 point
 
-**KALKI** (Bless)
+**BADIOS** (Harm)
+- **Effect**: 1d8 damage
+- **Target**: Single monster
+- **Resistance**: Subject to Spell Resistance
+- **Cost**: 1 level-1 point
+
+**KALKI** (Blessings)
 - **Effect**: -1 AC to entire party
 - **Target**: Party
-- **Duration**: Battle
-- **Use**: Party-wide defense buff
+- **Duration**: Until combat ends
+- **Stacking**: Yes
 - **Cost**: 1 level-1 point
 
 **MILWA** (Light)
-- **Effect**: Illuminates dungeon
+- **Effect**: Creates light, extends vision, reveals secret doors
 - **Target**: Party
-- **Duration**: Limited
-- **Use**: Required to see in dark areas
+- **Duration**: 15-29 turns; terminated by darkness zones
 - **Cost**: 1 level-1 point
 
 **PORFIC** (Shield)
-- **Effect**: -4 AC to single ally
-- **Target**: Single ally
-- **Duration**: Battle
-- **Use**: Strong single-target defense buff
+- **Effect**: -4 AC to caster
+- **Target**: Caster only
+- **Duration**: Until combat ends
+- **Stacking**: Yes
 - **Cost**: 1 level-1 point
 
-### Level 2 Priest Spells
+### Level 2 Priest Spells (4 spells)
 
-**CALFO** (X-Ray Vision)
-- **Effect**: Identify trap type
-- **Target**: Chest/Door
-- **Use**: Helps thief disarm; essential for safety
-- **Cost**: 1 level-2 point
-
-**MANIFO** (Silence)
-- **Effect**: Silence enemy group (no spells)
-- **Target**: Enemy group
-- **Use**: Critical vs enemy casters
-- **Cost**: 1 level-2 point
-
-**MATU** (Bless)
+**MATU** (Blessing)
 - **Effect**: -2 AC to entire party
 - **Target**: Party
-- **Duration**: Battle
-- **Use**: Better than KALKI
+- **Duration**: Until combat ends
+- **Stacking**: Yes
+- **Cost**: 1 level-2 point
+
+**CALFO** (X-Ray Vision)
+- **Effect**: Identifies trap type on chest
+- **Target**: Chest
+- **Success Rate**: 95% accurate; 5% wrong trap type
+- **Usable**: Looting only (chest opening)
+- **Cost**: 1 level-2 point
+
+**MANIFO** (Statue)
+- **Effect**: Attempts to paralyze all monsters in group
+- **Target**: Monster group
+- **Resistance**: (50 + Monster Level × 10)% - Level 5+ immune
+- **Critical**: Paralyzed monsters take DOUBLE damage
 - **Cost**: 1 level-2 point
 
 **MONTINO** (Still Air)
-- **Effect**: Silence enemy group
-- **Target**: Enemy group
-- **Use**: Prevents enemy spells
+- **Effect**: Silences all monsters (prevents spellcasting)
+- **Target**: Monster group
+- **Resistance**: (Monster Level × 10)%
+- **Recovery**: (Monster Level × 10)% per round, capped at 50%
 - **Cost**: 1 level-2 point
 
-### Level 3 Priest Spells
+### Level 3 Priest Spells (4 spells)
 
 **BAMATU** (Prayer)
 - **Effect**: -4 AC to entire party
 - **Target**: Party
-- **Duration**: Battle
-- **Use**: Powerful party defense
+- **Duration**: Until combat ends
+- **Stacking**: Yes
 - **Cost**: 1 level-3 point
 
-**BADIAL** (Harm All)
-- **Effect**: 2d8 damage to all enemy groups
-- **Target**: All enemies
-- **Use**: Area damage
+**DIALKO** (Softness)
+- **Effect**: Cures paralysis and sleep status
+- **Target**: Single party member
+- **Usable**: Any time
 - **Cost**: 1 level-3 point
 
-**DIAL** (Heal More)
-- **Effect**: Restore 2d8 HP
-- **Target**: Single ally
-- **Use**: Better than DIOS
-- **Can Cast**: Combat, Dungeon, Town
-- **Cost**: 1 level-3 point
-
-**LATUMAPIC** (Identify Foe)
-- **Effect**: Shows enemy stats and abilities
-- **Target**: Enemy group
-- **Use**: Tactical information; helps plan strategy
+**LATUMAPIC** (Identification)
+- **Effect**: Identifies monsters, revealing true name
+- **Target**: All monster groups
+- **Duration**: Entire expedition
+- **Bug-free**: Identifies ALL groups (original only identified one)
 - **Cost**: 1 level-3 point
 
 **LOMILWA** (More Light)
-- **Effect**: Extended light radius
+- **Effect**: Creates powerful, long-lasting light
 - **Target**: Party
-- **Duration**: Extended
-- **Use**: Better than MILWA
+- **Duration**: 32,000 turns (effectively permanent)
+- **Stacking**: No
 - **Cost**: 1 level-3 point
 
-### Level 4 Priest Spells
+### Level 4 Priest Spells (4 spells)
 
-**BADIALMA** (Dispel Undead)
-- **Effect**: 4d8 damage to all undead
-- **Target**: All undead enemies
-- **Use**: Devastating vs undead encounters
+**DIAL** (More Heal)
+- **Effect**: Restore 2d8 HP
+- **Target**: Single party member
+- **Usable**: Any time
 - **Cost**: 1 level-4 point
 
-**BAMORDI** (Harm Greater)
+**BADIAL** (More Hurt)
+- **Effect**: 2d8 damage
+- **Target**: Single monster
+- **Resistance**: Subject to Spell Resistance
+- **Cost**: 1 level-4 point
+
+**LATUMOFIS** (Cure Poison)
+- **Effect**: Neutralizes poison status
+- **Target**: Single party member
+- **Usable**: Any time
+- **Notes**: Poisoned characters have 25% chance per round/step to lose 1 HP
+- **Cost**: 1 level-4 point
+
+**MAPORFIC** (Big Shield)
+- **Effect**: -2 AC to entire party
+- **Target**: Party
+- **Duration**: Entire expedition
+- **Stacking**: No (with itself), Yes (with other AC effects)
+- **Cost**: 1 level-4 point
+
+### Level 5 Priest Spells (6 spells)
+
+**DIALMA** (Great Heal)
+- **Effect**: Restore 3d8 HP
+- **Target**: Single party member
+- **Usable**: Any time
+- **Cost**: 1 level-5 point
+
+**BADIALMA** (Great Hurt)
 - **Effect**: 3d8 damage
-- **Target**: Single enemy
-- **Use**: Strong single-target damage
-- **Cost**: 1 level-4 point
-
-**DALTO** (Blizzard)
-- **Effect**: 6d6 cold damage
-- **Target**: Enemy group
-- **Use**: Same as Mage version
-- **Cost**: 1 level-4 point
-
-**KANDI** (Locate Person)
-- **Effect**: Find specific character in dungeon
-- **Target**: Dead body
-- **Use**: Helps find bodies after party wipe
-- **Cost**: 1 level-4 point
-
-**KATU** (Talisman)
-- **Effect**: Massive AC reduction to entire party
-- **Target**: Party
-- **Duration**: Battle
-- **Use**: Best defensive buff
-- **Cost**: 1 level-4 point
-
-**LATUMOFIS** (Identify Enemy)
-- **Effect**: Full enemy analysis
-- **Target**: Enemy group
-- **Use**: Better than LATUMAPIC
-- **Cost**: 1 level-4 point
-
-**MAPORFIC** (Shield All)
-- **Effect**: -4 AC to entire party
-- **Target**: Party
-- **Duration**: Battle
-- **Use**: Party-wide PORFIC
-- **Cost**: 1 level-4 point
-
-### Level 5 Priest Spells
+- **Target**: Single monster
+- **Resistance**: Subject to Spell Resistance
+- **Cost**: 1 level-5 point
 
 **BADI** (Death)
-- **Effect**: Instant death to enemy group
-- **Target**: Enemy group
-- **Use**: Save-or-die effect; very powerful
+- **Effect**: Attempts to instantly kill one monster
+- **Target**: Single monster
+- **Resistance**: (Monster Level × 10)% - Level 10+ immune
+- **Notes**: Binary outcome - instant death or no effect
 - **Cost**: 1 level-5 point
 
-**DIAL** (Restore)
-- **Effect**: Full HP restore
-- **Target**: Single ally
-- **Use**: Complete healing
-- **Can Cast**: Combat, Dungeon, Town
+**DI** (Life)
+- **Effect**: Attempts resurrection from DEAD status
+- **Target**: Single dead party member
+- **Usable**: Camp only (NOT combat)
+- **Success**: (Vitality × 4)% - VIT 18 = 72%, VIT 10 = 40%
+- **On Success**: Returns with 1 HP; Vitality permanently -1
+- **On Failure**: Character becomes ASHES
 - **Cost**: 1 level-5 point
 
-**KADORTO** (Resurrection)
-- **Effect**: Resurrect from ashes
-- **Target**: Dead ally (ashes)
-- **Success**: ~50% success rate
-- **Failure**: Lost forever (permanent death)
-- **Use**: High-stakes resurrection; risky
-- **Can Cast**: Town, Dungeon
+**KANDI** (Locate Soul)
+- **Effect**: Reveals coordinates of dead/missing party members
+- **Target**: Caster (information)
+- **Usable**: Camp only
+- **Notes**: Useful for body recovery expeditions
 - **Cost**: 1 level-5 point
 
-**LOKTOFEIT** (Recall)
-- **Effect**: Teleport party to castle entrance
-- **Target**: Party
-- **Success**: Level × 2% chance
-- **Failure**: Nothing happens (can retry)
-- **Use**: Emergency escape; low success rate
+**LITOKAN** (Flame Tower)
+- **Effect**: 3d8 fire damage
+- **Target**: Monster group
+- **Resistance**: Fire-resistant take half; Spell Resistance provides save
+- **Notes**: Priest's primary group damage spell
 - **Cost**: 1 level-5 point
 
-**MABADI** (Death All)
-- **Effect**: Instant death to all enemy groups
-- **Target**: All enemies
-- **Use**: Party-wide instant death
-- **Cost**: 1 level-5 point
+### Level 6 Priest Spells (4 spells)
 
-### Level 6 Priest Spells
+**MADI** (Healing)
+- **Effect**: Fully restores ALL HP + removes all negative status effects
+- **Target**: Single party member
+- **Usable**: Any time
+- **Cures**: Poison, Fear, Sleep, Paralysis, Stone, Silence
+- **Does NOT Cure**: Dead, Ashes
+- **Cost**: 1 level-6 point
+
+**MABADI** (Harming)
+- **Effect**: Reduces monster's HP to 1d8 (1-8) remaining
+- **Target**: Single monster
+- **Saving Throw**: NONE - cannot be resisted
+- **Notes**: Exceptionally powerful against high-HP bosses
+- **Cost**: 1 level-6 point
 
 **LORTO** (Blades)
-- **Effect**: Massive damage
-- **Target**: Enemy group
-- **Use**: Physical damage spell
+- **Effect**: 6d6 physical damage
+- **Target**: Monster group
+- **Resistance**: Subject to Spell Resistance
+- **Notes**: Priest's strongest group damage spell
 - **Cost**: 1 level-6 point
 
-**MALIKTO** (Petrify)
-- **Effect**: Turn enemies to stone
-- **Target**: Enemy group
-- **Use**: Removes from combat (permanent)
+**LOKTOFEIT** (Recall)
+- **Effect**: Attempts to teleport party to Castle
+- **Target**: Party
+- **Success**: (Character Level × 2 + 1)% - Level 13 = 27%
+- **On Success**: Party reaches Castle but ALL EQUIPMENT LOST and MOST GOLD LOST
+- **On Failure**: Nothing happens, spell wasted
+- **Notes**: Absolute last resort - devastating cost
 - **Cost**: 1 level-6 point
 
-### Level 7 Priest Spells
+### Level 7 Priest Spells (2 spells)
 
-**DI** (Resurrection)
-- **Effect**: Resurrect from death
-- **Target**: Dead ally (body)
-- **Success**: ~90% success rate
-- **Failure**: Turns to ashes
-- **Use**: Primary resurrection spell; safer than KADORTO
-- **Can Cast**: Town, Dungeon
+**MALIKTO** (Word of Death)
+- **Effect**: 12d6 divine damage (12-72)
+- **Target**: ALL monsters (all groups)
+- **Resistance**: Subject to Spell Resistance
+- **Comparison**: Priest's TILTOWAIT equivalent; avg 42 vs 80 damage
 - **Cost**: 1 level-7 point
 
-**MABADI** (Extinction)
-- **Effect**: Party-wide death spell
-- **Target**: All enemy groups
-- **Use**: Most powerful priest combat spell
-- **Cost**: 1 level-7 point
-
-**MALIKTO** (Petrification)
-- **Effect**: Turn all enemies to stone
-- **Target**: All enemy groups
-- **Use**: Party-wide petrification
+**KADORTO** (Resurrection)
+- **Effect**: Attempts resurrection from DEAD or ASHES
+- **Target**: Single dead or ashed party member
+- **Usable**: Camp only (NOT combat)
+- **Success**: (Vitality × 4)% - same as DI
+- **On Success**: Returns with FULL HP; Vitality permanently -1
+- **On Failure from DEAD**: Character becomes ASHES
+- **On Failure from ASHES**: Character permanently LOST FOREVER
+- **Comparison**: Superior to DI - works on Ashes and restores full HP
 - **Cost**: 1 level-7 point
 
 ## Spell Strategy
@@ -427,29 +444,34 @@ Wizardry uses **spell points**, not D&D-style memorized slots.
 ### Essential Spells to Learn
 
 **Mage Must-Haves**:
-1. HALITO (damage, level 1)
-2. MAHALITO (area damage, level 3)
-3. LAHALITO (big damage, level 4)
-4. TILTOWAIT (ultimate damage, level 6-7)
-5. DUMAPIC (mapping, level 1)
+1. HALITO (damage, level 1) - basic attack
+2. KATINO (sleep, level 1) - crowd control, double damage setup
+3. MAHALITO (area damage, level 3)
+4. DALTO/LAHALITO (big damage, level 4)
+5. TILTOWAIT (ultimate damage, level 7)
+6. DUMAPIC (mapping, level 1) - essential before MALOR
 
 **Priest Must-Haves**:
 1. DIOS (basic heal, level 1)
-2. DIAL (better heal, level 3 & 5)
-3. DI (resurrect, level 7)
-4. BAMATU (party defense, level 3)
-5. MILWA (light, level 1)
+2. DIAL (better heal, level 4)
+3. DIALMA (great heal, level 5)
+4. DI (resurrect from dead, level 5)
+5. MADI (full heal + cure, level 6)
+6. BAMATU (party defense, level 3)
+7. MILWA/LOMILWA (light, levels 1/3)
 
 ### Spell Combos
 
-**Sleep + Damage**: KATINO (sleep) → MAHALITO (fire damage to sleeping group)
-**Defense Stack**: PORFIC + BAMATU + KATU = massive AC boost
-**Emergency Escape**: LOKTOFEIT (low success) or MALOR (risky teleport)
+**Sleep + Damage**: KATINO (sleep) → MAHALITO/TILTOWAIT (sleeping enemies take 2× damage)
+**Paralyze + Damage**: MANIFO (paralyze) → physical attacks (paralyzed enemies take 2× damage)
+**Defense Stack**: KALKI + MATU + BAMATU + MASOPIC = massive AC boost
+**Boss Killer**: MABADI (reduce HP to 1-8) → any damage finisher
+**Emergency Escape**: LOKTOFEIT (risky, loses equipment) or MALOR (risky, can die in rock)
 
 ### Spell Point Management
 
 **Early Combat**: Use low-level spells to conserve high-level points
-**Boss Fights**: Unload high-level spells for maximum damage
+**Boss Fights**: Unload MABADI + high-level damage spells
 **Exploration**: Save priest spells for healing, not combat
 **Before Returning**: Use remaining spell points before inn rest (they reset anyway)
 
@@ -460,33 +482,34 @@ Wizardry uses **spell points**, not D&D-style memorized slots.
 **Most spells never fail** - if you have the points, the spell works.
 
 **Exceptions**:
-- LOKTOFEIT: Level × 2% success rate (max 26% at level 13)
-- DI: ~90% success, 10% turns body to ashes
-- KADORTO: ~50% success, 50% lost forever
+- LOKTOFEIT: (Level × 2 + 1)% success rate (max 27% at level 13), loses all equipment on success
+- DI: (Vitality × 4)% success - VIT 18 = 72%; failure turns body to ashes
+- KADORTO: (Vitality × 4)% success; failure from ashes = lost forever
 
 ### Castable Locations
 
 **Combat Only**:
-- All offensive spells (HALITO, MAHALITO, etc.)
-- All debuffs (KATINO, MORLIS, etc.)
-- Combat buffs
+- All offensive spells (HALITO, MAHALITO, TILTOWAIT, etc.)
+- All debuffs (KATINO, MORLIS, MANIFO, MONTINO, etc.)
+- Combat buffs (MOGREF, SOPIC, MASOPIC, etc.)
 
-**Anytime** (Combat, Dungeon, Town):
-- DIOS, DIAL (healing)
+**Any time** (Combat and Camp):
+- Healing spells (DIOS, DIAL, DIALMA, MADI)
+- Light spells (MILWA, LOMILWA)
+- Status cures (DIALKO, LATUMOFIS)
+
+**Camp Only**:
 - DUMAPIC (coordinates)
-- MILWA, LOMILWA (light)
-
-**Dungeon/Town Only**:
 - DI, KADORTO (resurrection)
-- LOKTOFEIT (recall to town)
-- MALOR (teleport)
+- MALOR (teleport - can also be used in combat for random escape)
+- LOKTOFEIT (recall to castle)
 
 ### Class Restrictions
 
-**Mage Spells**: Mage, Bishop, Samurai (1-6)
-**Priest Spells**: Priest, Bishop, Lord (1-6)
-**Bishop**: Both spell types, but learns very slowly
-**Samurai/Lord**: Only levels 1-6 (not level 7)
+**Mage Spells**: Mage, Bishop, Samurai
+**Priest Spells**: Priest, Bishop, Lord
+**Bishop**: Both spell types, but learns slower (penalty applied)
+**Samurai/Lord**: Only levels 1-6 (cannot learn level 7 spells)
 
 ## Related
 
