@@ -33,6 +33,20 @@
       "id": 3,
       "name": "Full Party Heal",
       "description": "Cures all conditions (except Dead/Ashes) and restores ALL HP to maximum for entire party"
+    },
+    {
+      "id": 4,
+      "name": "Shield Party",
+      "description": "Sets entire party AC to -10 for remainder of combat",
+      "bugFix": true,
+      "notes": "This effect was coded but never triggered in original due to CASE statement bug"
+    },
+    {
+      "id": 5,
+      "name": "Resurrect and Heal Party",
+      "description": "Resurrects all Dead party members and fully heals entire party",
+      "bugFix": true,
+      "notes": "This effect was coded but never triggered in original due to CASE statement bug"
     }
   ],
   "risks": {
