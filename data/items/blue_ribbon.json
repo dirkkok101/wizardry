@@ -1,10 +1,20 @@
 {
   "id": "blue_ribbon",
   "name": "Blue Ribbon",
+  "unknownName": "RIBBON",
   "category": "special",
   "specialType": "key",
   "cost": 0,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "purpose": "level_4_elevator_access"
 }

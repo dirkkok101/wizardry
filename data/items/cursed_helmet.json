@@ -1,11 +1,17 @@
 {
   "id": "cursed_helmet",
   "name": "Cursed Helmet",
+  "unknownName": "HELM",
   "category": "helmet",
   "ac": -2,
   "enhancement": 0,
   "cost": 50000,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": true,
   "special": null
 }

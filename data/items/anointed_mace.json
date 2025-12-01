@@ -1,12 +1,25 @@
 {
   "id": "anointed_mace",
   "name": "Anointed Mace",
+  "unknownName": "KNOBBED STICK",
   "category": "weapon",
   "weaponType": "mace",
-  "damage": { "dice": "2d3", "min": 2, "max": 6 },
+  "damage": {
+    "dice": "2d3",
+    "min": 2,
+    "max": 6
+  },
   "enhancement": 0,
+  "hitMod": 2,
   "cost": 30,
-  "usableBy": ["fighter", "priest", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

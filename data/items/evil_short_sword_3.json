@@ -1,0 +1,16 @@
+{
+  "id": "evil_short_sword_3",
+  "name": "Evil S-Sword +3",
+  "unknownName": "SWORD",
+  "category": "weapon",
+  "weaponType": "sword",
+  "damage": { "dice": "1d6", "min": 1, "max": 6 },
+  "enhancement": 3,
+  "hitMod": 6,
+  "swingCount": 4,
+  "cost": 50000,
+  "usableBy": ["fighter", "thief", "samurai", "lord", "ninja"],
+  "alignmentRequired": "evil",
+  "cursed": true,
+  "special": null
+}

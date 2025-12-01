@@ -134,6 +134,15 @@ export class ItemDataLoader {
     // Price (cost in JSON)
     const price = validated.cost;
 
+    // Transform swingCount (weapons only)
+    const swings = 'swingCount' in validated ? validated.swingCount : undefined;
+
+    // Transform hitMod (weapons only)
+    const hitMod = 'hitMod' in validated ? validated.hitMod : undefined;
+
+    // Transform unknownName for unidentified display
+    const unidentifiedName = validated.unknownName;
+
     return {
       // Core identity
       id: validated.id,
@@ -145,6 +154,9 @@ export class ItemDataLoader {
       price,
       damage,
       defense,
+      swings,
+      hitMod,
+      unidentifiedName,
       classRestrictions,
 
       // Direct mappings

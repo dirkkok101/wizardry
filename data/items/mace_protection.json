@@ -1,15 +1,32 @@
 {
   "id": "mace_protection",
   "name": "Mace of Protection",
+  "unknownName": "KNOBBED STICK",
   "category": "weapon",
   "weaponType": "mace",
-  "damage": { "dice": "1d8", "min": 1, "max": 8 },
+  "damage": {
+    "dice": "1d8",
+    "min": 1,
+    "max": 8
+  },
   "enhancement": 0,
+  "hitMod": 3,
   "cost": 10000,
-  "usableBy": ["fighter", "priest", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
-  "effectiveAgainst": ["insect"],
+  "effectiveAgainst": [
+    "insect"
+  ],
   "special": {
-    "protections": ["poison"]
+    "protections": [
+      "poison"
+    ]
   }
 }

@@ -1,10 +1,20 @@
 {
   "id": "deadly_ring",
   "name": "Deadly Ring",
+  "unknownName": "RING",
   "category": "accessory",
   "accessoryType": "ring",
   "cost": 500000,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": true,
   "special": {
     "regeneration": -3

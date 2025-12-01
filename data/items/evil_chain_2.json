@@ -1,0 +1,14 @@
+{
+  "id": "evil_chain_2",
+  "name": "Evil Chain +2",
+  "unknownName": "ARMOR",
+  "category": "armor",
+  "armorType": "body",
+  "ac": 5,
+  "enhancement": 2,
+  "cost": 8000,
+  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "alignmentRequired": "evil",
+  "cursed": false,
+  "special": null
+}

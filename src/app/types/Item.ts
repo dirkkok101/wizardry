@@ -44,13 +44,15 @@ export interface Item {
   damage?: number       // Transformed from damageRoll.max
   defense?: number      // Transformed from ac
   swings?: number       // Number of attacks per round (inherent weapon property)
+  hitMod?: number       // To-hit modifier (affects combat accuracy)
 
   // Requirements - runtime format
   classRestrictions?: CharacterClass[]  // Transformed from usableBy
   alignmentRestrictions?: Alignment[]
 
   // Runtime state (not in JSON)
-  cursed: boolean       // From JSON
+  cursed: boolean       // From JSON - intrinsically cursed
+  cursedForOwner?: boolean  // Runtime - becomes cursed due to alignment mismatch
   identified: boolean   // Runtime only - defaults to false
   equipped: boolean     // Runtime only - defaults to false
 

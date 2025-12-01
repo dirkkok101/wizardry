@@ -1,12 +1,23 @@
 {
   "id": "vorpal_blade",
   "name": "Vorpal Blade",
+  "unknownName": "BLADE",
   "category": "weapon",
   "weaponType": "blade",
-  "damage": { "dice": "10d2", "min": 11, "max": 11 },
+  "damage": {
+    "dice": "10d2",
+    "min": 11,
+    "max": 11
+  },
   "enhancement": 0,
+  "hitMod": 6,
   "cost": 15000,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

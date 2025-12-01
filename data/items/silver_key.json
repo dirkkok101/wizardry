@@ -1,10 +1,20 @@
 {
   "id": "silver_key",
   "name": "Silver Key",
+  "unknownName": "KEY",
   "category": "special",
   "specialType": "key",
   "cost": 0,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "purpose": "level_2_checkpoint"
 }

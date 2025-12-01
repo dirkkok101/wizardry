@@ -1,12 +1,21 @@
 {
   "id": "staff_mogref",
   "name": "Staff of Mogref",
+  "unknownName": "STICK",
   "category": "weapon",
   "weaponType": "staff",
-  "damage": { "dice": "1d6", "min": 1, "max": 6 },
+  "damage": {
+    "dice": "1d6",
+    "min": 1,
+    "max": 6
+  },
   "enhancement": 0,
+  "hitMod": 1,
   "cost": 3000,
-  "usableBy": ["mage", "bishop"],
+  "usableBy": [
+    "mage",
+    "bishop"
+  ],
   "cursed": false,
   "depletionChance": 25,
   "transformsTo": "broken_item",

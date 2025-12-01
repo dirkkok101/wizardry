@@ -1,10 +1,20 @@
 {
   "id": "scroll_badial",
   "name": "Scroll/Badial",
+  "unknownName": "SCROLL",
   "category": "consumable",
   "consumableType": "scroll",
   "cost": 8000,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "singleUse": true,
   "depletionChance": 100,

@@ -1,12 +1,26 @@
 {
   "id": "dagger",
   "name": "Dagger",
+  "unknownName": "KNIFE",
   "category": "weapon",
   "weaponType": "dagger",
-  "damage": { "dice": "1d4", "min": 1, "max": 4 },
+  "damage": {
+    "dice": "1d4",
+    "min": 1,
+    "max": 4
+  },
   "enhancement": 0,
+  "hitMod": 1,
   "cost": 5,
-  "usableBy": ["fighter", "mage", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

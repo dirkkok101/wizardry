@@ -1,12 +1,18 @@
 {
   "id": "plate_mail",
   "name": "Plate Mail",
+  "unknownName": "ARMOR",
   "category": "armor",
   "armorType": "body",
   "ac": 5,
   "enhancement": 0,
   "cost": 750,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

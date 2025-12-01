@@ -1,10 +1,20 @@
 {
   "id": "broken_item",
   "name": "Broken Item",
+  "unknownName": "DEBRIS",
   "category": "special",
   "specialType": "broken",
   "cost": 0,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

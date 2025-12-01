@@ -61,13 +61,21 @@ export class ItemCardComponent {
     return SLOT_DISPLAY_LABELS[this.slot] || this.slot
   }
 
+  /**
+   * Get display name for item
+   *
+   * For unidentified items, shows the unknownName (e.g., "SWORD", "RING")
+   * which gives players a hint about item type without revealing true identity.
+   * Falls back to generic "Unknown Item" if unknownName not set.
+   */
   get displayName(): string {
     if (!this.item) {
       return this.slot ? `Empty ${this.slotDisplayLabel}` : 'Empty Slot';
     }
 
     if (!this.item.identified) {
-      return '???Unknown Item???';
+      // Use unknownName if available, otherwise generic label
+      return this.item.unidentifiedName ?? '???Unknown Item???';
     }
 
     return this.item.name;

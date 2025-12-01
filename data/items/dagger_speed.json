@@ -1,10 +1,13 @@
 {
   "id": "dagger_speed",
   "name": "Dagger of Speed",
+  "unknownName": "KNIFE",
   "category": "weapon",
   "weaponType": "dagger",
   "damage": { "dice": "1d4", "min": 1, "max": 4 },
+  "swingCount": 7,
   "enhancement": 0,
+  "hitMod": -1,
   "cost": 30000,
   "usableBy": ["mage", "ninja"],
   "cursed": false,

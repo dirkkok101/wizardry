@@ -1,11 +1,17 @@
 {
   "id": "silver_gloves",
   "name": "Silver Gloves",
+  "unknownName": "GAUNTLETS",
   "category": "gauntlets",
   "ac": 3,
   "enhancement": 0,
   "cost": 60000,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

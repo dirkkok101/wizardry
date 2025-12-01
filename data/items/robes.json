@@ -1,12 +1,22 @@
 {
   "id": "robes",
   "name": "Robes",
+  "unknownName": "ROBES",
   "category": "armor",
   "armorType": "body",
   "ac": 1,
   "enhancement": 0,
   "cost": 15,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

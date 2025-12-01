@@ -1,11 +1,17 @@
 {
   "id": "helm",
   "name": "Helm",
+  "unknownName": "HELM",
   "category": "helmet",
   "ac": 1,
   "enhancement": 0,
   "cost": 100,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

@@ -1,12 +1,25 @@
 {
   "id": "mace_cursed_2",
   "name": "Mace -2",
+  "unknownName": "KNOBBED STICK",
   "category": "weapon",
   "weaponType": "mace",
-  "damage": { "dice": "1d8", "min": 1, "max": 8 },
+  "damage": {
+    "dice": "1d8",
+    "min": 1,
+    "max": 8
+  },
   "enhancement": -2,
+  "hitMod": 0,
   "cost": 2500,
-  "usableBy": ["fighter", "priest", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": true,
   "special": null
 }

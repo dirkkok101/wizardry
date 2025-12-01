@@ -272,9 +272,9 @@ describe('ItemDataLoader', () => {
       const totalCount = ItemDataLoader.getTotalCount();
 
       // Loading real data files - all items should load successfully
-      expect(loadedCount).toBe(102); // All items from real data files
+      expect(loadedCount).toBe(104); // All items from real data files
       expect(failedItems.size).toBe(0); // No failures with real data
-      expect(totalCount).toBe(102); // Total items in manifest
+      expect(totalCount).toBe(104); // Total items in manifest
 
       // Verify failed items map is empty when all items load successfully
       expect(failedItems).toBeInstanceOf(Map);

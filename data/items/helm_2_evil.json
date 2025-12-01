@@ -1,11 +1,17 @@
 {
   "id": "helm_2_evil",
   "name": "Helm +2 (Evil)",
+  "unknownName": "HELM",
   "category": "helmet",
   "ac": 3,
   "enhancement": 2,
   "cost": 8000,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "alignmentRequired": "evil",
   "cursed": false,
   "special": {

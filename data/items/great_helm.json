@@ -1,11 +1,17 @@
 {
   "id": "great_helm",
   "name": "Great Helm",
+  "unknownName": "HELM",
   "category": "helmet",
   "ac": 2,
   "enhancement": 0,
   "cost": 3000,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

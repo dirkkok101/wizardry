@@ -1,10 +1,20 @@
 {
   "id": "scroll_katino",
-  "name": "Scroll/Kanito",
+  "name": "Scroll/Katino",
+  "unknownName": "SCROLL",
   "category": "consumable",
   "consumableType": "scroll",
   "cost": 500,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "singleUse": true,
   "depletionChance": 100,

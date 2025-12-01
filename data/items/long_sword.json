@@ -1,12 +1,23 @@
 {
   "id": "long_sword",
   "name": "Long Sword",
+  "unknownName": "SWORD",
   "category": "weapon",
   "weaponType": "sword",
-  "damage": { "dice": "1d8", "min": 1, "max": 8 },
+  "damage": {
+    "dice": "1d8",
+    "min": 1,
+    "max": 8
+  },
   "enhancement": 0,
+  "hitMod": 4,
   "cost": 25,
-  "usableBy": ["fighter", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

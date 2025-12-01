@@ -1,10 +1,13 @@
 {
   "id": "thieves_dagger",
   "name": "Thieves Dagger",
+  "unknownName": "KNIFE",
   "category": "weapon",
   "weaponType": "dagger",
   "damage": { "dice": "1d6", "min": 1, "max": 6 },
+  "swingCount": 4,
   "enhancement": 0,
+  "hitMod": 5,
   "cost": 50000,
   "usableBy": ["thief", "ninja"],
   "cursed": false,

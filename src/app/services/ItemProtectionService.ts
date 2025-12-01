@@ -61,12 +61,20 @@ const MONSTER_CLASS_TO_PROTECTION: Record<string, string> = {
 export class ItemProtectionService {
   /**
    * Get all protection types from a character's equipped items
+   *
+   * Per Item_System_Reference.md §7.4: cursedForOwner items have all special
+   * powers disabled, including protections.
    */
   static getCharacterProtections(char: Character): Set<string> {
     const protections = new Set<string>()
     const equippedItems = this.getEquippedItems(char)
 
     for (const item of equippedItems) {
+      // Skip cursedForOwner items - their special powers are disabled
+      if (item.cursedForOwner) {
+        continue
+      }
+
       if (item.special?.protection) {
         protections.add(item.special.protection.toLowerCase())
       }

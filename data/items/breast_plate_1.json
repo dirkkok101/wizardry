@@ -1,12 +1,19 @@
 {
   "id": "breast_plate_1",
   "name": "Breast Plate +1",
+  "unknownName": "ARMOR",
   "category": "armor",
   "armorType": "body",
   "ac": 5,
   "enhancement": 1,
   "cost": 1500,
-  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

@@ -1,11 +1,21 @@
 {
   "id": "diadem_malor",
   "name": "Diadem of Malor",
+  "unknownName": "DIADEM",
   "category": "helmet",
   "ac": 2,
   "enhancement": 0,
   "cost": 25000,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "depletionChance": 100,
   "transformsTo": "helm",

@@ -1,12 +1,19 @@
 {
   "id": "chain_pro_fire",
   "name": "Chain Pro Fire",
+  "unknownName": "ARMOR",
   "category": "armor",
   "armorType": "body",
   "ac": 6,
   "enhancement": 0,
   "cost": 150000,
-  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": {
     "protection": "fire"

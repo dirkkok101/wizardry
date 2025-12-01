@@ -1,10 +1,20 @@
 {
   "id": "potion_sopic",
   "name": "Potion of Glass",
+  "unknownName": "POTION",
   "category": "consumable",
   "consumableType": "potion",
   "cost": 1500,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "singleUse": true,
   "depletionChance": 100,

@@ -15,17 +15,20 @@ import { InventoryService } from './InventoryService';
 export class EquipmentService {
   /**
    * Validate if character can equip item
+   *
+   * Note: Alignment-restricted items CAN be equipped (unlike class restrictions),
+   * but become cursedForOwner with penalties. This matches authentic Wizardry 1.
    */
   static canEquipItem(
     character: Character,
     item: Item
-  ): { allowed: boolean; reason?: string } {
+  ): { allowed: boolean; reason?: string; willBecursedForOwner?: boolean } {
     // Must be identified
     if (!item.identified) {
       return { allowed: false, reason: 'Item must be identified first' };
     }
 
-    // Class restrictions
+    // Class restrictions - hard block, cannot equip at all
     if (item.classRestrictions?.length) {
       if (!item.classRestrictions.includes(character.class)) {
         return {
@@ -35,18 +38,21 @@ export class EquipmentService {
       }
     }
 
-    // Alignment restrictions
-    if (item.alignmentRestrictions?.length) {
-      if (!item.alignmentRestrictions.includes(character.alignment)) {
-        return { allowed: false, reason: 'Alignment restriction' };
-      }
-    }
+    // Alignment restrictions - CAN equip but becomes cursedForOwner
+    // Per Item_System_Reference.md §7.4: Alignment mismatch = cursedForOwner
+    const willBecursedForOwner = item.alignmentRestrictions?.length
+      ? !item.alignmentRestrictions.includes(character.alignment)
+      : false;
 
-    return { allowed: true };
+    return { allowed: true, willBecursedForOwner };
   }
 
   /**
    * Equip item from inventory to equipment slot
+   *
+   * Per Item_System_Reference.md §2.4 and §7.4:
+   * - If alignment doesn't match, item becomes cursedForOwner
+   * - cursedForOwner items cannot be unequipped and have severe penalties
    */
   static equipItem(
     character: Character,
@@ -76,6 +82,10 @@ export class EquipmentService {
     // If slot occupied, unequip existing item first (return to inventory)
     const existingItem = updatedChar[slotField] as Item | undefined;
     if (existingItem) {
+      // Cannot unequip cursed or cursedForOwner items
+      if (existingItem.cursed || existingItem.cursedForOwner) {
+        throw new Error('Cannot unequip cursed item');
+      }
       // Move existing item back to inventory
       const unequippedItem: Item = { ...existingItem, equipped: false };
       updatedChar = {
@@ -85,8 +95,12 @@ export class EquipmentService {
       };
     }
 
-    // Mark item as equipped
-    const equippedItem: Item = { ...item, equipped: true };
+    // Mark item as equipped, set cursedForOwner if alignment mismatch
+    const equippedItem: Item = {
+      ...item,
+      equipped: true,
+      cursedForOwner: validation.willBecursedForOwner || false
+    };
 
     // Equip new item (remove from inventory, set in slot with full Item object)
     updatedChar = {
@@ -119,7 +133,9 @@ export class EquipmentService {
    * Calculate AC based on equipment
    * Formula: Base 10 - armor bonus - shield bonus - AGI modifier
    *
-   * Authentic Wizardry 1: Ninjas get AC bonus equal to level when not wearing armor
+   * Per Item_System_Reference.md §3.1:
+   * - cursedForOwner items apply +2 penalty instead of their AC bonus
+   * - Authentic Wizardry 1: Ninjas get AC bonus equal to level when not wearing armor
    */
   static calculateAC(character: Character): number {
     let ac = 10; // Base AC
@@ -141,8 +157,13 @@ export class EquipmentService {
     ];
 
     for (const item of equippedItems) {
-      if (item?.defense) {
-        ac -= item.defense; // Lower is better
+      if (item) {
+        if (item.cursedForOwner) {
+          // Per §3.1: cursedForOwner items apply +2 AC penalty (ignore item's AC bonus)
+          ac += 2;
+        } else if (item.defense) {
+          ac -= item.defense; // Lower is better
+        }
       }
     }
 
@@ -170,8 +191,8 @@ export class EquipmentService {
       throw new Error('No item in slot');
     }
 
-    // Check if cursed
-    if (item.cursed) {
+    // Check if cursed (intrinsic or alignment mismatch)
+    if (item.cursed || item.cursedForOwner) {
       throw new Error('Cannot unequip cursed item');
     }
 

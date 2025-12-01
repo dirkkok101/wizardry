@@ -43,9 +43,10 @@ function generateManifest(dir: string): ManifestResult {
       return { dir, files: [], success: false, error: `Directory not found: ${dirPath}` }
     }
 
-    // Scan directory for JSON files (exclude index.json itself)
+    // Scan directory for JSON files (exclude index.json and config files)
+    const excludedFiles = ['index.json', 'numeric-id-mapping.json']
     const files = fs.readdirSync(dirPath)
-      .filter(f => f.endsWith('.json') && f !== 'index.json')
+      .filter(f => f.endsWith('.json') && !excludedFiles.includes(f))
       .map(f => f.replace('.json', ''))
       .sort()
 

@@ -95,6 +95,129 @@ describe('EquipmentService', () => {
       const result = EquipmentService.canEquipItem(fighter, potion);
       expect(result.allowed).toBe(true);
     });
+
+    it('allows alignment-restricted items but marks willBecursedForOwner', () => {
+      // Per Item_System_Reference.md §7.4: Alignment mismatch allows equipping
+      // but item becomes cursedForOwner
+      const evilSword: Item = {
+        ...longSword,
+        id: 'evil_sword',
+        alignmentRestrictions: ['EVIL']
+      };
+      // Fighter is GOOD, item requires EVIL - allowed but will be cursed
+      const result = EquipmentService.canEquipItem(fighter, evilSword);
+      expect(result.allowed).toBe(true);
+      expect(result.willBecursedForOwner).toBe(true);
+    });
+
+    it('allows item with matching alignment restriction without curse', () => {
+      const evilSword: Item = {
+        ...longSword,
+        id: 'evil_sword',
+        alignmentRestrictions: ['EVIL']
+      };
+      const evilFighter = { ...fighter, alignment: 'EVIL' as const };
+      const result = EquipmentService.canEquipItem(evilFighter, evilSword);
+      expect(result.allowed).toBe(true);
+      expect(result.willBecursedForOwner).toBe(false);
+    });
+
+    it('allows item with no alignment restrictions', () => {
+      // longSword has no alignmentRestrictions, so any alignment can use it
+      const goodFighter = { ...fighter, alignment: 'GOOD' as const };
+      const evilFighter = { ...fighter, alignment: 'EVIL' as const };
+      const neutralFighter = { ...fighter, alignment: 'NEUTRAL' as const };
+
+      expect(EquipmentService.canEquipItem(goodFighter, longSword).allowed).toBe(true);
+      expect(EquipmentService.canEquipItem(evilFighter, longSword).allowed).toBe(true);
+      expect(EquipmentService.canEquipItem(neutralFighter, longSword).allowed).toBe(true);
+    });
+  });
+
+  describe('cursedForOwner mechanics (authentic Wizardry 1)', () => {
+    it('sets cursedForOwner when equipping alignment-restricted item with wrong alignment', () => {
+      const evilSword: Item = {
+        ...longSword,
+        id: 'evil_sword',
+        alignmentRestrictions: ['EVIL']
+      };
+      // Fighter is GOOD, item requires EVIL
+      fighter.inventory = [evilSword];
+
+      const result = EquipmentService.equipItem(fighter, 'evil_sword');
+
+      expect(result.equippedWeapon?.cursedForOwner).toBe(true);
+    });
+
+    it('does not set cursedForOwner when alignment matches', () => {
+      const evilSword: Item = {
+        ...longSword,
+        id: 'evil_sword',
+        alignmentRestrictions: ['EVIL']
+      };
+      const evilFighter = { ...fighter, alignment: 'EVIL' as const, inventory: [evilSword] };
+
+      const result = EquipmentService.equipItem(evilFighter, 'evil_sword');
+
+      expect(result.equippedWeapon?.cursedForOwner).toBe(false);
+    });
+
+    it('prevents unequipping cursedForOwner items', () => {
+      const cursedForOwnerSword: Item = {
+        ...longSword,
+        equipped: true,
+        cursedForOwner: true
+      };
+      fighter.equippedWeapon = cursedForOwnerSword;
+      fighter.inventory = [];
+
+      expect(() => EquipmentService.unequipItem(fighter, ItemSlot.WEAPON))
+        .toThrow('Cannot unequip cursed item');
+    });
+
+    it('applies +2 AC penalty for cursedForOwner armor (instead of AC bonus)', () => {
+      // Per §3.1: cursedForOwner items apply +2 AC penalty
+      const evilArmor: Item = {
+        id: 'evil_armor',
+        name: 'Evil Plate',
+        type: ItemType.ARMOR,
+        slot: ItemSlot.ARMOR,
+        price: 1000,
+        defense: 5,  // Would normally give AC -5
+        alignmentRestrictions: ['EVIL'],
+        cursed: false,
+        identified: true,
+        equipped: false
+      };
+
+      // Good fighter equipping evil armor
+      fighter.inventory = [evilArmor];
+      fighter.agility = 10; // No AGI modifier
+      const result = EquipmentService.equipItem(fighter, 'evil_armor');
+
+      // Base 10 + 2 (curse penalty) = 12 instead of 10 - 5 = 5
+      expect(result.ac).toBe(12);
+      expect(result.equippedArmor?.cursedForOwner).toBe(true);
+    });
+
+    it('prevents equipping over cursedForOwner item in slot', () => {
+      const cursedForOwnerSword: Item = {
+        ...longSword,
+        id: 'cursed_sword',
+        equipped: true,
+        cursedForOwner: true
+      };
+      const normalSword: Item = {
+        ...longSword,
+        id: 'normal_sword'
+      };
+
+      fighter.equippedWeapon = cursedForOwnerSword;
+      fighter.inventory = [normalSword];
+
+      expect(() => EquipmentService.equipItem(fighter, 'normal_sword'))
+        .toThrow('Cannot unequip cursed item');
+    });
   });
 
   describe('equipItem', () => {

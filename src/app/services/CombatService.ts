@@ -208,16 +208,26 @@ export class CombatService {
   }
 
   private static getAttackBonus(combatant: Combatant): number {
-    // Authentic Wizardry 1: HitCalcMod + STR modifier
+    // Authentic Wizardry 1: HitCalcMod + STR modifier + weapon hitMod
     const hitCalcMod = this.getHitCalcMod(combatant)
 
-    // For characters: add STR hit modifier (percentage bonus converted to attack bonus)
+    // For characters: add STR hit modifier + weapon hitMod
     // The STR hit modifier is a percentage (e.g., +5% for STR 16)
     // We convert it to attack bonus by dividing by 5 (since each +1 attack bonus = +5% hit)
     if ('class' in combatant && combatant.class) {
       const strHitPercent = StatModifierService.getStrengthHitModifier(combatant.strength)
       const strMod = strHitPercent / 5
-      return hitCalcMod + strMod
+
+      // Add weapon hitMod if character has a weapon equipped
+      // Per Item_System_Reference.md §3.5: hitCalcMod = hitCalcMod + attacker.weapon.hitMod
+      const character = combatant as Character
+      const weapon = character.equippedWeapon
+      const weaponHitMod = weapon?.hitMod ?? 0
+
+      // Per §7.4: cursedForOwner weapons apply -2 hit penalty
+      const cursedPenalty = weapon?.cursedForOwner ? -2 : 0
+
+      return hitCalcMod + strMod + weaponHitMod + cursedPenalty
     }
 
     // For monsters: just HitCalcMod (which is their level)

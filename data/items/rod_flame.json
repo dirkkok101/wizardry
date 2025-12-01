@@ -1,10 +1,15 @@
 {
   "id": "rod_flame",
   "name": "Rod of Flame",
+  "unknownName": "ROD",
   "category": "accessory",
   "accessoryType": "rod",
   "cost": 25000,
-  "usableBy": ["mage", "bishop", "samurai"],
+  "usableBy": [
+    "mage",
+    "bishop",
+    "samurai"
+  ],
   "cursed": false,
   "special": {
     "protection": "fire",

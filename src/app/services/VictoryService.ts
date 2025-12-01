@@ -5,6 +5,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { Item } from '@models/Item'
 import { RandomService } from './RandomService'
 import { ItemDataLoader } from './ItemDataLoader'
+import { MonsterDropDataLoader } from './MonsterDropDataLoader'
 
 export interface ItemDrop {
   itemId: string
@@ -28,81 +29,7 @@ export class VictoryService {
   private static readonly MAX_DROPS_LOW_LEVEL = 1   // Maximum drops for low level monsters
   private static readonly UNIDENTIFIED_LEVEL_THRESHOLD = 5  // Monsters at this level drop unidentified items
   private static readonly UNIDENTIFIED_CHANCE = 0.7  // 70% chance items are unidentified for high level
-  private static readonly MAX_MONSTER_LEVEL = 10  // Cap monster level for item selection
   private static readonly MAX_INVENTORY_SIZE = 8  // Maximum items per character inventory
-
-  // Item pools by monster level
-  private static readonly ITEM_POOLS = {
-    level1: ['dagger', 'short_sword', 'leather_armor', 'small_shield', 'staff', 'robes'],
-    level2: ['dagger_1', 'short_sword_1', 'leather_1', 'shield_1', 'helm', 'chain_mail'],
-    level3: ['long_sword', 'mace_1', 'chain_1', 'shield_2', 'helm_1', 'breast_plate'],
-    level4: ['long_sword_1', 'staff_2', 'chain_2', 'breast_plate_1', 'shield_3', 'great_helm'],
-    level5: ['long_sword_2', 'mace_2', 'plate_mail', 'plate_mail_1', 'large_shield', 'armor_heroes'],
-    level6: ['anointed_mace', 'blade_cusinart', 'plate_mail_2', 'ring_healing', 'blue_ribbon'],
-    level7: ['were_slayer', 'dragon_slayer', 'staff_mogref', 'chain_pro_fire', 'ring_porfic'],
-    level8: ['vorpal_blade', 'mage_masher', 'evil_plate_3', 'evil_shield_3', 'deadly_ring'],
-    level9: ['murasama_blade', 'thieves_dagger', 'lords_garb', 'jeweled_amulet', 'diadem_malor'],
-    level10: ['werdna_amulet', 'staff_montino', 'shuriken', 'amulet_makanito', 'ring_pro_undead']
-  }
-
-  // Item names for display (simplified - in real game would load from item files)
-  private static readonly ITEM_NAMES: Record<string, string> = {
-    'dagger': 'Dagger',
-    'short_sword': 'Short Sword',
-    'leather_armor': 'Leather Armor',
-    'small_shield': 'Small Shield',
-    'staff': 'Staff',
-    'robes': 'Robes',
-    'dagger_1': 'Dagger +1',
-    'short_sword_1': 'Short Sword +1',
-    'leather_1': 'Leather +1',
-    'shield_1': 'Shield +1',
-    'helm': 'Helm',
-    'chain_mail': 'Chain Mail',
-    'long_sword': 'Long Sword',
-    'mace_1': 'Mace +1',
-    'chain_1': 'Chain +1',
-    'shield_2': 'Shield +2',
-    'helm_1': 'Helm +1',
-    'breast_plate': 'Breast Plate',
-    'long_sword_1': 'Long Sword +1',
-    'staff_2': 'Staff +2',
-    'chain_2': 'Chain +2',
-    'breast_plate_1': 'Breast Plate +1',
-    'shield_3': 'Shield +3',
-    'great_helm': 'Great Helm',
-    'long_sword_2': 'Long Sword +2',
-    'mace_2': 'Mace +2',
-    'plate_mail': 'Plate Mail',
-    'plate_mail_1': 'Plate Mail +1',
-    'large_shield': 'Large Shield',
-    'armor_heroes': 'Armor of Heroes',
-    'anointed_mace': 'Anointed Mace',
-    'blade_cusinart': 'Blade Cusinart',
-    'plate_mail_2': 'Plate Mail +2',
-    'ring_healing': 'Ring of Healing',
-    'blue_ribbon': 'Blue Ribbon',
-    'were_slayer': 'Were Slayer',
-    'dragon_slayer': 'Dragon Slayer',
-    'staff_mogref': 'Staff of MOGREF',
-    'chain_pro_fire': 'Chain Mail Pro Fire',
-    'ring_porfic': 'Ring of PORFIC',
-    'vorpal_blade': 'Vorpal Blade',
-    'mage_masher': 'Mage Masher',
-    'evil_plate_3': 'Evil Plate +3',
-    'evil_shield_3': 'Evil Shield +3',
-    'deadly_ring': 'Deadly Ring',
-    'murasama_blade': 'Murasama Blade',
-    'thieves_dagger': 'Thieves Dagger',
-    'lords_garb': 'Lords Garb',
-    'jeweled_amulet': 'Jeweled Amulet',
-    'diadem_malor': 'Diadem of MALOR',
-    'werdna_amulet': 'Werdnas Amulet',
-    'staff_montino': 'Staff of MONTINO',
-    'shuriken': 'Shuriken',
-    'amulet_makanito': 'Amulet of MAKANITO',
-    'ring_pro_undead': 'Ring vs Undead'
-  }
 
   /**
    * Calculate XP and gold rewards from defeated monsters
@@ -182,14 +109,17 @@ export class VictoryService {
   /**
    * Select a random item appropriate for the monster level
    * Lower level items are identified, higher level items (level 5+) are unidentified
+   *
+   * Item pools are loaded from data/treasure/monster-drop-pools.json
+   * Item names are looked up from ItemDataLoader
    */
   private static selectItemForLevel(monsterLevel: number): ItemDrop | null {
-    // Cap level at maximum
-    const level = Math.min(monsterLevel, this.MAX_MONSTER_LEVEL)
+    // Cap level at maximum defined in data
+    const maxLevel = MonsterDropDataLoader.getMaxLevel()
+    const level = Math.min(monsterLevel, maxLevel)
 
-    // Get appropriate item pool
-    const poolKey = `level${level}` as keyof typeof this.ITEM_POOLS
-    const pool = this.ITEM_POOLS[poolKey]
+    // Get item pool for this level from data file
+    const pool = MonsterDropDataLoader.getPoolForLevel(level)
 
     if (!pool || pool.length === 0) {
       return null
@@ -197,7 +127,10 @@ export class VictoryService {
 
     // Select random item from pool
     const itemId = RandomService.pickRandom(pool)
-    const itemName = this.ITEM_NAMES[itemId] || itemId
+
+    // Look up item name from ItemDataLoader (data-driven, not hardcoded)
+    const item = ItemDataLoader.getItem(itemId)
+    const itemName = item?.name ?? itemId
 
     // Items from high level monsters start unidentified
     const identified = level < this.UNIDENTIFIED_LEVEL_THRESHOLD

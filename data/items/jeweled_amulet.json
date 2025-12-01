@@ -1,10 +1,20 @@
 {
   "id": "jeweled_amulet",
   "name": "Jeweled Amulet",
+  "unknownName": "AMULET",
   "category": "accessory",
   "accessoryType": "amulet",
   "cost": 5000,
-  "usableBy": ["fighter", "mage", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "mage",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": {
     "invoke": "cast_spell",

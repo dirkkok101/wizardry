@@ -1,12 +1,19 @@
 {
   "id": "armor_heroes",
   "name": "Armor of Heroes",
+  "unknownName": "ARMOR",
   "category": "armor",
   "armorType": "body",
   "ac": 7,
   "enhancement": 0,
   "cost": 100000,
-  "usableBy": ["fighter", "priest", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

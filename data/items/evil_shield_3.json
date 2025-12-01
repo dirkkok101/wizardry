@@ -1,11 +1,19 @@
 {
   "id": "evil_shield_3",
   "name": "Evil Shield +3",
+  "unknownName": "SHIELD",
   "category": "shield",
   "ac": 5,
   "enhancement": 3,
   "cost": 25000,
-  "usableBy": ["fighter", "priest", "thief", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "thief",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "alignmentRequired": "evil",
   "cursed": false,
   "special": null

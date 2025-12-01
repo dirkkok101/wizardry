@@ -1,11 +1,20 @@
 {
   "id": "small_shield",
   "name": "Small Shield",
+  "unknownName": "SHIELD",
   "category": "shield",
   "ac": 2,
   "enhancement": 0,
   "cost": 20,
-  "usableBy": ["fighter", "priest", "thief", "bishop", "samurai", "lord", "ninja"],
+  "usableBy": [
+    "fighter",
+    "priest",
+    "thief",
+    "bishop",
+    "samurai",
+    "lord",
+    "ninja"
+  ],
   "cursed": false,
   "special": null
 }

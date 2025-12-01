@@ -25,10 +25,47 @@ const CharacterClassSchema = z.enum([
 const AlignmentSchema = z.enum(['good', 'neutral', 'evil'])
 
 /**
+ * Protection types - per Item_System_Reference.md §11B
+ * - Elemental: fire, cold, lightning, acid (halves breath damage)
+ * - Special: stone, drain, poison (immunity/resistance)
+ * - Defensive: physical (paralysis/crit immunity), magic (spell nullification)
+ * - Monster class: grants 50% attack nullification vs that monster type
+ * - All: universal protection (legendary items like Werdna's Amulet)
+ */
+const ProtectionTypeSchema = z.enum([
+  // Elemental protection
+  'fire', 'cold', 'lightning', 'acid',
+  // Special damage protection
+  'stone', 'drain', 'poison',
+  // Defensive protection
+  'physical', 'magic',
+  // Monster class protection
+  'dragon', 'werebeast', 'mage', 'undead', 'demon', 'giant', 'mythical', 'insect',
+  // Universal protection
+  'all'
+])
+
+/**
+ * Monster class types for effectiveAgainst (purposed weapons)
+ * These weapons deal 2× damage to their target monster class
+ */
+const MonsterClassSchema = z.enum([
+  'dragon',
+  'werebeast',
+  'mage',
+  'undead',
+  'demon',
+  'giant',
+  'mythical',
+  'insect'
+])
+
+/**
  * Damage roll structure
+ * Supports formats: "1d8", "2d6", "1d8+2", "10d5"
  */
 const DamageRollSchema = z.object({
-  dice: z.string().regex(/^\d+d\d+$/, 'Damage dice must be in format "XdY" (e.g., "1d8", "10d50")'),
+  dice: z.string().regex(/^\d+d\d+(\+\d+)?$/, 'Damage dice must be in format "XdY" or "XdY+Z" (e.g., "1d8", "1d8+2", "10d5")'),
   min: z.number().int().min(1),
   max: z.number().int().min(1)
 }).refine(data => data.max >= data.min, {
@@ -46,6 +83,10 @@ const ItemEffectSchema = z.object({
 
 /**
  * Special properties structure
+ *
+ * Per Item_System_Reference.md:
+ * - protection/protections: Use ProtectionTypeSchema enum values
+ * - regeneration: healPoints per tick (can be negative for cursed items)
  */
 const SpecialPropertiesSchema = z.object({
   invoke: z.enum(['cast_spell', 'str_bonus', 'hp_bonus', 'party_heal', 'change_class', 'class_change']).optional(),
@@ -56,8 +97,8 @@ const SpecialPropertiesSchema = z.object({
     bonus: z.number()
   }).optional(),
   regeneration: z.number().optional(), // Can be negative for cursed items
-  protection: z.string().optional(), // Single protection type
-  protections: z.array(z.string()).optional(), // Multiple protection types
+  protection: ProtectionTypeSchema.optional(), // Single protection type
+  protections: z.array(ProtectionTypeSchema).optional(), // Multiple protection types
   ac: z.number().optional(), // AC bonus for accessories
   partyHealing: z.boolean().optional()
 }).nullable().optional()
@@ -68,6 +109,7 @@ const SpecialPropertiesSchema = z.object({
 const BaseItemSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
+  unknownName: z.string().optional(),  // Display name when unidentified (e.g., "SWORD", "POTION")
   category: z.enum(['weapon', 'armor', 'shield', 'helmet', 'gauntlets', 'accessory', 'consumable', 'special']),
   cost: z.number().int().min(0),
   usableBy: z.array(CharacterClassSchema),
@@ -78,13 +120,18 @@ const BaseItemSchema = z.object({
 
 /**
  * Weapon schema
+ *
+ * Per Item_System_Reference.md:
+ * - effectiveAgainst: Purposed weapons deal 2× damage to listed monster classes
  */
 const WeaponSchema = BaseItemSchema.extend({
   category: z.literal('weapon'),
   weaponType: z.enum(['dagger', 'sword', 'mace', 'flail', 'staff', 'blade', 'shuriken']),
   damage: DamageRollSchema,
   enhancement: z.number().int(),
-  effectiveAgainst: z.array(z.string()).optional(), // e.g., ["dragon"], ["werebeast"]
+  hitMod: z.number().int().default(0),  // To-hit modifier (affects combat accuracy)
+  swingCount: z.number().int().min(1).max(10).optional(),  // Attacks per round (default: 1, max: 10)
+  effectiveAgainst: z.array(MonsterClassSchema).optional(), // e.g., ["dragon"], ["werebeast"]
   depletionChance: z.number().int().min(0).max(100).optional(),
   transformsTo: z.string().nullable().optional()
 })
@@ -202,3 +249,9 @@ export const ItemSchemas = {
   Consumable: ConsumableSchema,
   Special: SpecialItemSchema
 }
+
+/**
+ * Export enum types for use in other modules
+ */
+export type ProtectionType = z.infer<typeof ProtectionTypeSchema>
+export type MonsterClass = z.infer<typeof MonsterClassSchema>
