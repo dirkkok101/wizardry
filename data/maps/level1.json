@@ -123,8 +123,8 @@
           "y": 0,
           "walls": {
             "north": "open",
-            "east": "wall",
-            "south": "wall",
+            "east": "door",
+            "south": "open",
             "west": "open"
           },
           "type": "darkness"
@@ -242,8 +242,8 @@
           "x": 1,
           "y": 1,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -253,9 +253,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -263,9 +263,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -273,19 +273,19 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 5,
           "y": 1,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "illusion",
-            "west": "open"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -344,8 +344,8 @@
           "x": 11,
           "y": 1,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -355,9 +355,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -365,9 +365,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -375,9 +375,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -385,9 +385,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -395,9 +395,9 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -405,19 +405,19 @@
           "y": 1,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 18,
           "y": 1,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -444,9 +444,9 @@
           "x": 1,
           "y": 2,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -484,9 +484,9 @@
           "x": 5,
           "y": 2,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -546,9 +546,9 @@
           "x": 11,
           "y": 2,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -556,7 +556,7 @@
           "x": 12,
           "y": 2,
           "walls": {
-            "north": "illusion",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -569,7 +569,7 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "illusion"
+            "west": "door"
           }
         },
         {
@@ -579,7 +579,7 @@
             "north": "door",
             "east": "wall",
             "south": "wall",
-            "west": "illusion"
+            "west": "door"
           }
         },
         {
@@ -589,7 +589,7 @@
             "north": "door",
             "east": "door",
             "south": "wall",
-            "west": "illusion"
+            "west": "door"
           }
         },
         {
@@ -616,9 +616,9 @@
           "x": 18,
           "y": 2,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -646,9 +646,9 @@
           "x": 1,
           "y": 3,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -686,9 +686,9 @@
           "x": 5,
           "y": 3,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -696,30 +696,30 @@
           "x": 6,
           "y": 3,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 7,
           "y": 3,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 8,
           "y": 3,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -748,9 +748,9 @@
           "x": 11,
           "y": 3,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -758,7 +758,7 @@
           "x": 12,
           "y": 3,
           "walls": {
-            "north": "illusion",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -802,7 +802,7 @@
           "x": 16,
           "y": 3,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -822,9 +822,9 @@
           "x": 18,
           "y": 3,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -852,9 +852,9 @@
           "x": 1,
           "y": 4,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -862,10 +862,10 @@
           "x": 2,
           "y": 4,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -882,8 +882,8 @@
           "x": 4,
           "y": 4,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -893,9 +893,9 @@
           "y": 4,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -903,9 +903,9 @@
           "y": 4,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -913,19 +913,19 @@
           "y": 4,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
           "x": 8,
           "y": 4,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -954,9 +954,9 @@
           "x": 11,
           "y": 4,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -964,7 +964,7 @@
           "x": 12,
           "y": 4,
           "walls": {
-            "north": "illusion",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -984,8 +984,7 @@
             "level": 1,
             "x": 15,
             "y": 4
-          },
-          "isOneWay": false
+          }
         },
         {
           "x": 14,
@@ -994,7 +993,7 @@
             "north": "open",
             "east": "open",
             "south": "open",
-            "west": "open"
+            "west": "door"
           }
         },
         {
@@ -1011,10 +1010,10 @@
           "x": 16,
           "y": 4,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "illusion"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -1031,9 +1030,9 @@
           "x": 18,
           "y": 4,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1061,9 +1060,9 @@
           "x": 1,
           "y": 5,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1071,10 +1070,10 @@
           "x": 2,
           "y": 5,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -1091,9 +1090,9 @@
           "x": 4,
           "y": 5,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1131,9 +1130,9 @@
           "x": 8,
           "y": 5,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1163,9 +1162,9 @@
           "x": 11,
           "y": 5,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1173,7 +1172,7 @@
           "x": 12,
           "y": 5,
           "walls": {
-            "north": "illusion",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -1218,9 +1217,9 @@
           "x": 16,
           "y": 5,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1238,9 +1237,9 @@
           "x": 18,
           "y": 5,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1268,9 +1267,9 @@
           "x": 1,
           "y": 6,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1278,10 +1277,10 @@
           "x": 2,
           "y": 6,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -1298,9 +1297,9 @@
           "x": 4,
           "y": 6,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1338,9 +1337,9 @@
           "x": 8,
           "y": 6,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1370,9 +1369,9 @@
           "x": 11,
           "y": 6,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1391,7 +1390,7 @@
           "y": 6,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "door",
             "south": "wall",
             "west": "wall"
           }
@@ -1420,9 +1419,9 @@
           "x": 16,
           "y": 6,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1442,7 +1441,7 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1471,8 +1470,8 @@
           "y": 7,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1482,8 +1481,8 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -1501,8 +1500,8 @@
           "y": 7,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1513,7 +1512,7 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1531,7 +1530,7 @@
           "y": 7,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -1542,7 +1541,7 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1572,9 +1571,9 @@
           "x": 11,
           "y": 7,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1583,7 +1582,7 @@
           "y": 7,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "door",
             "south": "wall",
             "west": "wall"
           }
@@ -1594,7 +1593,7 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "illusion",
+            "south": "door",
             "west": "wall"
           }
         },
@@ -1622,9 +1621,9 @@
           "x": 16,
           "y": 7,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1796,8 +1795,8 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1806,9 +1805,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1816,9 +1815,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1826,9 +1825,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1836,9 +1835,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1846,9 +1845,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -1856,9 +1855,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1866,9 +1865,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1878,7 +1877,7 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1945,8 +1944,7 @@
             "level": 1,
             "x": 15,
             "y": 4
-          },
-          "isOneWay": false
+          }
         },
         {
           "x": 6,
@@ -1966,6 +1964,26 @@
             "east": "open",
             "south": "wall",
             "west": "open"
+          }
+        },
+        {
+          "x": 8,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 9,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
           }
         },
         {
@@ -2063,7 +2081,7 @@
           "y": 9,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "door",
             "south": "wall",
             "west": "open"
           }
@@ -2075,7 +2093,7 @@
             "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "wall"
+            "west": "stairs_down"
           },
           "type": "stairs_down",
           "destination": {
@@ -2179,7 +2197,7 @@
           "y": 10,
           "walls": {
             "north": "open",
-            "east": "open",
+            "east": "wall",
             "south": "open",
             "west": "open"
           }
@@ -2190,7 +2208,7 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "open",
+            "south": "door",
             "west": "wall"
           }
         },
@@ -2198,7 +2216,7 @@
           "x": 12,
           "y": 10,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -2218,7 +2236,7 @@
           "x": 14,
           "y": 10,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -2239,7 +2257,7 @@
           "y": 10,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -2259,7 +2277,7 @@
           "y": 10,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -2268,10 +2286,10 @@
           "x": 19,
           "y": 10,
           "walls": {
-            "north": "illusion",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -2398,9 +2416,9 @@
           "x": 12,
           "y": 11,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -2418,9 +2436,9 @@
           "x": 14,
           "y": 11,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -2458,7 +2476,7 @@
           "x": 18,
           "y": 11,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -2468,7 +2486,7 @@
           "x": 19,
           "y": 11,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -2560,7 +2578,7 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "open",
+            "south": "door",
             "west": "wall"
           }
         },
@@ -2600,9 +2618,9 @@
           "x": 12,
           "y": 12,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -2620,9 +2638,9 @@
           "x": 14,
           "y": 12,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -2662,7 +2680,7 @@
           "walls": {
             "north": "open",
             "east": "open",
-            "south": "secret",
+            "south": "door",
             "west": "wall"
           }
         },
@@ -2672,7 +2690,7 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "secret",
+            "south": "door",
             "west": "open"
           }
         },
@@ -2681,7 +2699,7 @@
           "y": 13,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -2720,7 +2738,7 @@
           "x": 4,
           "y": 13,
           "walls": {
-            "north": "illusion",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -2741,7 +2759,7 @@
           "y": 13,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -2750,10 +2768,10 @@
           "x": 7,
           "y": 13,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -2783,7 +2801,7 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "door",
             "west": "open"
           },
           "type": "darkness"
@@ -2802,9 +2820,9 @@
           "x": 12,
           "y": 13,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -2822,9 +2840,9 @@
           "x": 14,
           "y": 13,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -2952,9 +2970,9 @@
           "x": 7,
           "y": 14,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3004,9 +3022,9 @@
           "x": 12,
           "y": 14,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3024,9 +3042,9 @@
           "x": 14,
           "y": 14,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3045,9 +3063,9 @@
           "y": 14,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "illusion"
+            "west": "wall"
           }
         },
         {
@@ -3057,14 +3075,14 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 18,
           "y": 14,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -3074,7 +3092,7 @@
           "x": 19,
           "y": 14,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -3111,6 +3129,16 @@
           }
         },
         {
+          "x": 3,
+          "y": 15,
+          "walls": {
+            "north": "door",
+            "east": "door",
+            "south": "door",
+            "west": "door"
+          }
+        },
+        {
           "x": 4,
           "y": 15,
           "walls": {
@@ -3144,9 +3172,9 @@
           "x": 7,
           "y": 15,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3196,9 +3224,9 @@
           "x": 12,
           "y": 15,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3216,9 +3244,9 @@
           "x": 14,
           "y": 15,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3258,7 +3286,7 @@
           "walls": {
             "north": "open",
             "east": "open",
-            "south": "secret",
+            "south": "door",
             "west": "door"
           }
         },
@@ -3268,7 +3296,7 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "secret",
+            "south": "door",
             "west": "open"
           }
         },
@@ -3348,15 +3376,15 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "illusion"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
           "x": 8,
           "y": 16,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "open",
             "west": "wall"
@@ -3366,8 +3394,8 @@
           "x": 9,
           "y": 16,
           "walls": {
-            "north": "open",
-            "east": "wall",
+            "north": "wall",
+            "east": "door",
             "south": "wall",
             "west": "wall"
           },
@@ -3380,7 +3408,7 @@
             "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "wall"
+            "west": "door"
           },
           "type": "darkness"
         },
@@ -3398,9 +3426,9 @@
           "x": 12,
           "y": 16,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3419,9 +3447,9 @@
           "y": 16,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "illusion"
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -3431,7 +3459,7 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -3491,7 +3519,7 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "illusion"
+            "west": "wall"
           }
         },
         {
@@ -3519,9 +3547,9 @@
           "y": 17,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "illusion"
+            "west": "wall"
           }
         },
         {
@@ -3531,7 +3559,7 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -3560,7 +3588,7 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "secret",
+            "south": "door",
             "west": "open"
           }
         },
@@ -3570,7 +3598,7 @@
           "walls": {
             "north": "open",
             "east": "open",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           },
           "type": "darkness"
@@ -3602,8 +3630,8 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "illusion"
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -3630,7 +3658,7 @@
           "x": 15,
           "y": 17,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "door",
             "south": "wall",
             "west": "open"
@@ -3691,7 +3719,7 @@
           "y": 18,
           "walls": {
             "north": "wall",
-            "east": "secret",
+            "east": "wall",
             "south": "wall",
             "west": "open"
           }
@@ -3701,9 +3729,9 @@
           "y": 18,
           "walls": {
             "north": "door",
-            "east": "open",
+            "east": "wall",
             "south": "door",
-            "west": "secret"
+            "west": "wall"
           }
         },
         {
@@ -3713,7 +3741,7 @@
             "north": "wall",
             "east": "open",
             "south": "open",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -3802,7 +3830,7 @@
           "x": 12,
           "y": 18,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -3812,7 +3840,7 @@
           "x": 13,
           "y": 18,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -3838,7 +3866,7 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "secret",
+            "south": "door",
             "west": "open"
           }
         },
@@ -3866,7 +3894,7 @@
           "x": 18,
           "y": 18,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "open",
             "south": "open",
             "west": "wall"
@@ -3876,7 +3904,7 @@
           "x": 19,
           "y": 18,
           "walls": {
-            "north": "secret",
+            "north": "door",
             "east": "wall",
             "south": "open",
             "west": "open"
@@ -3887,7 +3915,7 @@
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -3896,10 +3924,10 @@
           "x": 1,
           "y": 19,
           "walls": {
-            "north": "illusion",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -3917,7 +3945,7 @@
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -3937,7 +3965,7 @@
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "illusion",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -3978,12 +4006,10 @@
           "walls": {
             "north": "wall",
             "east": "open",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           },
-          "type": "message",
-          "message": "You see a wizard. He chants 'MAPIRO MAHAMA DIROMAT!!'",
-          "effect": "return_to_castle"
+          "type": "darkness"
         },
         {
           "x": 10,
@@ -4012,7 +4038,7 @@
           "walls": {
             "north": "wall",
             "east": "open",
-            "south": "secret",
+            "south": "door",
             "west": "door"
           }
         },
@@ -4022,7 +4048,7 @@
           "walls": {
             "north": "wall",
             "east": "door",
-            "south": "secret",
+            "south": "door",
             "west": "open"
           }
         },
@@ -4072,7 +4098,7 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "secret",
+            "south": "door",
             "west": "wall"
           }
         },
@@ -4082,7 +4108,7 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "secret",
+            "south": "door",
             "west": "wall"
           }
         }

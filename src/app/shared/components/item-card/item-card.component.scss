@@ -244,11 +244,11 @@
   }
 
   .btn-identify {
-    border-color: var(--color-text-secondary);
-    color: var(--color-text-secondary);
+    border-color: var(--color-gold-dim);
+    color: var(--color-text-gold);
 
     &:hover:not(:disabled) {
-      background: var(--color-text-secondary);
+      background: var(--color-gold-primary);
       color: var(--color-bg-darkest);
     }
   }
