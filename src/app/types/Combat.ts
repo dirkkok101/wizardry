@@ -96,6 +96,7 @@ export interface CombatState {
   acModifiers: CombatAcModifiers  // Temporary AC bonuses (MOGREF, KALKI, etc.)
   statusDurations: StatusDurations  // Track how many rounds each status effect lasts
   monstersDemoralized?: boolean  // True when monsters have lost morale (easier flee)
+  surpriseState?: 'party' | 'monsters' | 'none'  // Surprise mechanics: 20% party, 16% monsters, 64% none
 }
 
 export interface AttackResult {

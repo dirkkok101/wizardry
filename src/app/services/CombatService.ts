@@ -67,11 +67,30 @@ export class CombatService {
   }
 
   /**
+   * Roll for surprise mechanics at combat start
+   *
+   * Apple II reference (Section 18):
+   * "When an encounter occurs, you have a 20% chance of surprising the monsters.
+   * If you have not surprised them, then the monsters get a 20% chance of surprising you."
+   *
+   * @returns Object with partySurprises and monstersSurprise flags
+   */
+  static rollSurprise(): { partySurprises: boolean; monstersSurprise: boolean } {
+    // 20% chance party surprises monsters
+    const partySurprises = RandomService.chance(20)
+
+    // If party didn't surprise, monsters get 20% chance to surprise party
+    const monstersSurprise = !partySurprises && RandomService.chance(20)
+
+    return { partySurprises, monstersSurprise }
+  }
+
+  /**
    * Initiate combat encounter with 1-4 monster groups
    * @param dungeonLevel - Current dungeon level (1-10)
    * @param party - Array of characters in the party
    * @param canFlee - Whether the party can flee from this encounter
-   * @returns Initial combat state with monster groups
+   * @returns Initial combat state with monster groups and surprise state
    */
   static initiateCombat(
     dungeonLevel: number,
@@ -80,6 +99,11 @@ export class CombatService {
   ): CombatState {
     // Generate 1-4 monster groups based on dungeon level
     const monsterGroups = EncounterService.generateEncounter(dungeonLevel)
+
+    // Roll for surprise
+    const { partySurprises, monstersSurprise } = this.rollSurprise()
+    const surpriseState: 'party' | 'monsters' | 'none' =
+      partySurprises ? 'party' : monstersSurprise ? 'monsters' : 'none'
 
     return {
       monsterGroups,
@@ -91,7 +115,8 @@ export class CombatService {
       statusEffects: new Map(),  // Initialize empty status effects
       acModifiers: new Map(),    // Initialize empty AC modifiers
       statusDurations: new Map(), // Initialize empty status durations
-      monstersDemoralized: false  // Calculated during combat
+      monstersDemoralized: false,  // Calculated during combat
+      surpriseState  // Surprise mechanics
     }
   }
 
@@ -2352,9 +2377,21 @@ export class CombatService {
     frontRow: string[] = []
   ): CombatRoundResult {
     // Sort commands by initiative (descending)
-    const sortedQueue = [...state.commandQueue].sort(
+    let sortedQueue = [...state.commandQueue].sort(
       (a, b) => b.initiative - a.initiative
     )
+
+    // Apply surprise mechanics in round 1
+    if (state.roundNumber === 1 && state.surpriseState) {
+      if (state.surpriseState === 'party') {
+        // Party surprised monsters - filter out monster commands
+        sortedQueue = sortedQueue.filter(cmd => !('monsterId' in cmd.actor))
+      } else if (state.surpriseState === 'monsters') {
+        // Monsters surprised party - filter out party commands
+        sortedQueue = sortedQueue.filter(cmd => 'monsterId' in cmd.actor)
+      }
+      // If 'none', all commands proceed normally
+    }
 
     let currentState: CombatState = { ...state, commandQueue: [] }
     const events: CombatRoundEvent[] = []
