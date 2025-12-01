@@ -43,6 +43,7 @@ export interface Item {
   // Combat stats - simplified runtime format
   damage?: number       // Transformed from damageRoll.max
   defense?: number      // Transformed from ac
+  swings?: number       // Number of attacks per round (inherent weapon property)
 
   // Requirements - runtime format
   classRestrictions?: CharacterClass[]  // Transformed from usableBy

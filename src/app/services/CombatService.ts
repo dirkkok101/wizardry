@@ -372,6 +372,7 @@ export class CombatService {
    * - Fighter/Lord/Samurai: 1 + floor(level/5)
    * - Ninja: 2 + floor(level/5)
    * - Others: 1
+   * - Weapon Swings: Use max(class attacks, weapon swings)
    * - Max: 10 attacks
    */
   static getAttacksPerRound(combatant: Combatant): number {
@@ -383,27 +384,40 @@ export class CombatService {
       return 1
     }
 
-    // Characters: check class
+    // Characters: check class and weapon
     if ('class' in combatant) {
       const level = combatant.level || 1
       const levelBonus = Math.floor(level / 5)
-      let attacks: number
+      let classAttacks: number
 
       switch (combatant.class) {
         case 'FIGHTER':
         case 'LORD':
         case 'SAMURAI':
-          attacks = Math.min(10, 1 + levelBonus)
+          classAttacks = 1 + levelBonus
           break
         case 'NINJA':
-          attacks = Math.min(10, 2 + levelBonus)
+          classAttacks = 2 + levelBonus
           break
         default:
-          attacks = 1
+          classAttacks = 1
       }
 
-      if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (${combatant.class}, level ${level}) = ${attacks} attack(s)`)
-      return attacks
+      // Check weapon swings - use maximum of class attacks or weapon swings
+      const weaponSwings = combatant.equippedWeapon?.swings ?? 0
+      const totalAttacks = Math.max(classAttacks, weaponSwings)
+
+      // Cap at 10 attacks maximum
+      const finalAttacks = Math.min(10, totalAttacks)
+
+      if (this.DEBUG_COMBAT) {
+        if (weaponSwings > 0) {
+          console.debug(`[Combat] getAttacksPerRound: ${combatantName} (${combatant.class}, level ${level}) = ${finalAttacks} attack(s) (class: ${classAttacks}, weapon: ${weaponSwings})`)
+        } else {
+          console.debug(`[Combat] getAttacksPerRound: ${combatantName} (${combatant.class}, level ${level}) = ${finalAttacks} attack(s)`)
+        }
+      }
+      return finalAttacks
     }
 
     if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (unknown type) = 1 attack`)
