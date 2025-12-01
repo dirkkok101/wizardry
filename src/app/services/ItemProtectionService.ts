@@ -219,4 +219,28 @@ export class ItemProtectionService {
     const protections = this.getCharacterProtections(char)
     return protections.has('drain') || protections.has('all')
   }
+
+  /**
+   * Check if weapon is purposed against a specific monster class
+   * Purposed weapons deal 2× damage to their target monster class
+   *
+   * Per Apple II reference (Section 11B):
+   * - Dragon Slayer: 2× damage vs dragons
+   * - Were Slayer: 2× damage vs werebeasts
+   * - Mage Masher: 2× damage vs mages
+   *
+   * @param weapon - Weapon to check (can be null/undefined)
+   * @param monsterClass - Monster's class (dragon, mage, etc.)
+   * @returns true if weapon is purposed against this monster class
+   */
+  static isPurposedAgainst(weapon: Item | null | undefined, monsterClass: string): boolean {
+    if (!weapon || !weapon.effectiveAgainst || weapon.effectiveAgainst.length === 0) {
+      return false
+    }
+
+    const classLower = monsterClass.toLowerCase()
+
+    // Check if monster class is in the effectiveAgainst array (case-insensitive)
+    return weapon.effectiveAgainst.some(target => target.toLowerCase() === classLower)
+  }
 }

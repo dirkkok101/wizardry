@@ -222,6 +222,16 @@ export class CombatService {
     }
     let damage = Math.max(1, baseDamage + strDamageMod)
 
+    // Purposed weapon double damage (Section 11B)
+    // Dragon Slayer, Were Slayer, Mage Masher deal 2× damage vs their target type
+    if ('equippedWeapon' in attacker && 'monsterClass' in defender) {
+      const weapon = (attacker as Character).equippedWeapon
+      const monsterClass = (defender as MonsterInstance).monsterClass
+      if (monsterClass && ItemProtectionService.isPurposedAgainst(weapon, monsterClass)) {
+        damage *= 2
+      }
+    }
+
     // Critical hit: (2 × Level)% chance, max 50%
     // Authentic Wizardry 1: Critical hits are instant kills, not 2x damage
     const attackerLevel = attacker.level || 1

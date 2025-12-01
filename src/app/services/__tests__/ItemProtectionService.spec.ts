@@ -328,6 +328,140 @@ describe('ItemProtectionService', () => {
     })
   })
 
+  describe('isPurposedAgainst', () => {
+    it('returns false when weapon has no effectiveAgainst property', () => {
+      const longSword: Item = {
+        id: 'long_sword',
+        name: 'Long Sword',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 25,
+        cursed: false,
+        identified: true,
+        equipped: false
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(longSword, 'dragon')).toBe(false)
+    })
+
+    it('returns false when weapon effectiveAgainst is empty array', () => {
+      const weapon: Item = {
+        id: 'test_weapon',
+        name: 'Test Weapon',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 100,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: []
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(weapon, 'dragon')).toBe(false)
+    })
+
+    it('returns true when weapon is purposed against dragon', () => {
+      const dragonSlayer: Item = {
+        id: 'dragon_slayer',
+        name: 'Dragon Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: ['dragon']
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(dragonSlayer, 'dragon')).toBe(true)
+    })
+
+    it('returns true when weapon is purposed against werebeast', () => {
+      const wereSlayer: Item = {
+        id: 'were_slayer',
+        name: 'Were Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: ['werebeast']
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(wereSlayer, 'werebeast')).toBe(true)
+    })
+
+    it('returns true when weapon is purposed against mage', () => {
+      const mageMasher: Item = {
+        id: 'mage_masher',
+        name: 'Mage Masher',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: ['mage']
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(mageMasher, 'mage')).toBe(true)
+    })
+
+    it('returns false when weapon is purposed against different monster class', () => {
+      const dragonSlayer: Item = {
+        id: 'dragon_slayer',
+        name: 'Dragon Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: ['dragon']
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(dragonSlayer, 'mage')).toBe(false)
+      expect(ItemProtectionService.isPurposedAgainst(dragonSlayer, 'undead')).toBe(false)
+    })
+
+    it('handles case-insensitive matching', () => {
+      const dragonSlayer: Item = {
+        id: 'dragon_slayer',
+        name: 'Dragon Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: ['Dragon']
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(dragonSlayer, 'dragon')).toBe(true)
+      expect(ItemProtectionService.isPurposedAgainst(dragonSlayer, 'DRAGON')).toBe(true)
+    })
+
+    it('supports weapons purposed against multiple monster classes', () => {
+      const universalSlayer: Item = {
+        id: 'universal_slayer',
+        name: 'Universal Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        price: 50000,
+        cursed: false,
+        identified: true,
+        equipped: false,
+        effectiveAgainst: ['dragon', 'mage', 'undead']
+      } as Item
+
+      expect(ItemProtectionService.isPurposedAgainst(universalSlayer, 'dragon')).toBe(true)
+      expect(ItemProtectionService.isPurposedAgainst(universalSlayer, 'mage')).toBe(true)
+      expect(ItemProtectionService.isPurposedAgainst(universalSlayer, 'undead')).toBe(true)
+      expect(ItemProtectionService.isPurposedAgainst(universalSlayer, 'werebeast')).toBe(false)
+    })
+  })
+
   describe('real item integration', () => {
     it('Chain Pro Fire provides fire protection', () => {
       // Simulating the real item from data/items/chain_pro_fire.json

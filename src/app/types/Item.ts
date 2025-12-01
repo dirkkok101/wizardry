@@ -100,4 +100,7 @@ export interface Item {
   depletionChance?: number       // Chance (0-100) item breaks after use
   transformsTo?: string | null   // Item ID to transform into when depleted
   effect?: ItemEffect            // Effect when used (healing, spell, etc.)
+
+  // Purposed weapons (2× damage vs. specific monster classes)
+  effectiveAgainst?: string[]    // Monster classes this weapon is purposed against
 }

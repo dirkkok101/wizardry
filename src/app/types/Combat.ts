@@ -54,6 +54,7 @@ export interface MonsterInstance {
   level: number
   agility?: number  // For initiative calculation
   undead?: boolean  // True if monster is undead (for BADIOS, etc.)
+  monsterClass?: string  // Monster class (dragon, mage, undead, etc.) - for purposed weapons
   // Spell casting properties
   mageLevel?: number    // 0-7, determines mage spell selection
   priestLevel?: number  // 0-7, determines priest spell selection
