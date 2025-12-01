@@ -9,6 +9,7 @@ import { VictoryService } from '@services/VictoryService'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { setCombatMessageDelay, setActionResultDelay } from '@config/CombatSettings'
 import { ItemDataLoader } from '@services/ItemDataLoader'
+import { TreasureDataLoader } from '@services/TreasureDataLoader'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { Item } from '@models/Item'
 import { RandomService } from '@services/RandomService'
@@ -735,7 +736,10 @@ describe('CombatComponent', () => {
   })
 
   describe('Victory Handling', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      // Load treasure data for ChestService.generateChest()
+      await TreasureDataLoader.loadAllRewards()
+
       // Setup victory scenario - all monsters dead
       gameState.updateState(state => {
         const combat = state.combat!
@@ -777,20 +781,25 @@ describe('CombatComponent', () => {
       expect(newXP).toBeGreaterThan(initialXP)
     })
 
-    it('creates pending chest when monsters leave treasure (chest roll succeeds)', () => {
+    it('creates pending chest with authentic treasure when monsters leave treasure', async () => {
       // Queue values:
       // - 0.5 skips item drop (> 0.15 threshold)
       // - 0.1 for chest probability (succeeds for 30% threshold)
-      // - 0.5 for trap probability
+      // - 0.5 for trap probability (in ChestService.generateChest)
       // - 0.5 for trap type selection
+      // - 0.5, 0.5 for gold dice rolls (2d5 for tier 10 = 2-10, ×10 = 20-100)
       // - 0.5 for chest ID random
-      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      component['handleVictory']()
+      await component['handleVictory']()
 
       const pendingChest = gameState.state().pendingChest
       expect(pendingChest).toBeDefined()
-      expect(pendingChest?.contents.gold).toBeGreaterThanOrEqual(0)
+      // Reward tier 10 (level 1-2 monsters) uses formula 2d5×10 = 20-100 gold
+      // This verifies ChestService.generateChest() is actually being called
+      // with authentic Wizardry 1 treasure tables, not just returning 0
+      expect(pendingChest?.contents.gold).toBeGreaterThanOrEqual(20)
+      expect(pendingChest?.contents.gold).toBeLessThanOrEqual(100)
       // Victory always navigates to /victory first, which then goes to /chest
       expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
@@ -812,11 +821,11 @@ describe('CombatComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
 
-    it('navigates to victory scene when chest roll succeeds', () => {
-      // Queue values for chest path
-      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
+    it('navigates to victory scene when chest roll succeeds', async () => {
+      // Queue values for chest path (needs extra values for ChestService.generateChest)
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      component['handleVictory']()
+      await component['handleVictory']()
 
       // Victory always goes to /victory first, which then routes to /chest
       expect(router.navigate).toHaveBeenCalledWith(['/victory'])
@@ -832,27 +841,28 @@ describe('CombatComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/victory'])
     })
 
-    it('includes victory rewards regardless of chest outcome', () => {
-      // Queue values (doesn't matter which path for this test)
-      RandomService.queueNextValues([0.5, 0.5, 0.5, 0.5, 0.5])
+    it('includes victory rewards regardless of chest outcome', async () => {
+      // Queue values for chest path (needs extra values for ChestService.generateChest)
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      component['handleVictory']()
+      await component['handleVictory']()
 
       const rewards = component.victoryRewards()
       expect(rewards).toBeDefined()
       expect(rewards?.totalXP).toBeGreaterThan(0)
     })
 
-    it('stores pendingCombatRewards in game state when victory with chest', () => {
+    it('stores pendingCombatRewards in game state when victory with chest', async () => {
       // Queue values:
       // - 0.5 skips item drop (> 0.15 threshold)
       // - 0.1 for chest probability (succeeds for 30% threshold)
-      // - 0.5 for trap probability
+      // - 0.5 for trap probability (in ChestService.generateChest)
       // - 0.5 for trap type selection
+      // - 0.5, 0.5 for gold dice rolls
       // - 0.5 for chest ID random
-      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5])
+      RandomService.queueNextValues([0.5, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5])
 
-      component['handleVictory']()
+      await component['handleVictory']()
 
       const state = gameState.state()
       expect(state.pendingCombatRewards).toBeDefined()

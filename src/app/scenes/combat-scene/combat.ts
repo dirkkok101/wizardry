@@ -8,10 +8,8 @@ import { RandomService } from '@services/RandomService'
 import { SpellCastingService } from '@services/SpellCastingService'
 import { VictoryService, VictoryRewards } from '@services/VictoryService'
 import { ChestService } from '@services/ChestService'
-import { ItemDataLoader } from '@services/ItemDataLoader'
 import { SceneType } from '@models/SceneType'
-import { Chest, RewardTier, TRAP_PROBABILITY_BY_TIER } from '@models/Chest'
-import { Item } from '@models/Item'
+import { RewardTier } from '@models/Chest'
 import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
 import { Character } from '@models/Character'
 import { MenuItem } from '@shared/components/menu/menu.component'
@@ -1224,7 +1222,7 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.router.navigate(['/maze'])
   }
 
-  private handleVictory(): void {
+  private async handleVictory(): Promise<void> {
     const combat = this.combatState()
     if (!combat) return
 
@@ -1258,7 +1256,7 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     if (hasChest) {
       // Monsters left behind a treasure chest - navigate to chest scene
-      this.handleVictoryWithChest(newRoster, rewards, party, maxMonsterLevel, allMonsters)
+      await this.handleVictoryWithChest(newRoster, rewards, party, maxMonsterLevel, allMonsters)
     } else {
       // Monsters dropped loose gold - distribute directly and show victory modal
       this.handleVictoryWithLooseGold(newRoster, rewards)
@@ -1280,57 +1278,26 @@ export class CombatComponent implements OnInit, OnDestroy {
 
   /**
    * Handle victory when monsters leave behind a treasure chest
-   * Items are only available through chests (like original Wizardry)
+   * Uses authentic Wizardry 1 treasure tables via ChestService
    */
-  private handleVictoryWithChest(
+  private async handleVictoryWithChest(
     newRoster: Map<string, Character>,
     rewards: VictoryRewards,
     party: { position: { x: number; y: number; level: number; facing: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' }; members: string[]; gold: number },
     maxMonsterLevel: number,
     allMonsters: MonsterInstance[]
-  ): void {
-    // Convert ItemDrop[] to Item[] for the chest
-    const chestItems: Item[] = rewards.items
-      .map(itemDrop => {
-        const baseItem = ItemDataLoader.getItem(itemDrop.itemId)
-        if (!baseItem) return null
-        return {
-          ...baseItem,
-          identified: itemDrop.identified,
-          equipped: false
-        }
-      })
-      .filter((item): item is Item => item !== null)
-
+  ): Promise<void> {
     // Determine reward tier based on monster level (Reward 2 system: 10-19)
     // Level 1-2 = tier 10, Level 3-4 = tier 11, etc.
     const rewardTier = Math.min(19, Math.max(10, 10 + Math.floor((maxMonsterLevel - 1) / 2))) as RewardTier
 
-    // Create chest with gold and items from victory
-    const chest: Chest = {
-      id: `chest_combat_${Date.now()}_${RandomService.random(1000, 9999)}`,
-      trapped: RandomService.roll(TRAP_PROBABILITY_BY_TIER[rewardTier]),
-      trapId: null,
-      trapIdentified: false,
-      trapDisarmed: false,
+    // Generate chest using authentic Wizardry 1 treasure tables
+    const chest = await ChestService.generateChest(
       rewardTier,
-      contents: {
-        gold: rewards.totalGold,
-        items: chestItems
-      },
-      sourcePosition: { x: party.position.x, y: party.position.y, facing: party.position.facing },
-      mazeLevel: party.position.level,
-      source: 'combat_victory'
-    }
-
-    // Set trap id if trapped (using ChestService for consistency)
-    // Note: selectTrapId is async but we fire-and-forget for simplicity
-    // The trap ID will be set before the chest is opened
-    if (chest.trapped) {
-      ChestService.selectTrapId(rewardTier).then(trapId => {
-        chest.trapId = trapId
-      })
-    }
+      party.position.level,
+      { x: party.position.x, y: party.position.y, facing: party.position.facing },
+      'combat_victory'
+    )
 
     // Update game state: distribute XP, clear combat, set pending chest and combat rewards
     this.gameState.updateState(state => ({
