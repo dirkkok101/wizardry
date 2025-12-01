@@ -4,7 +4,7 @@
   "translation": "Great Change",
   "level": 7,
   "casterType": "mage",
-  "category": "utility",
+  "category": "buff",
   "target": "variable",
   "description": "Most powerful random effect spell - costs 1 level AND spell is forgotten after casting",
   "castableIn": ["combat"],

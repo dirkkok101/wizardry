@@ -8,6 +8,7 @@
   "target": "party",
   "description": "Teleportation spell - behavior differs between camp and combat",
   "castableIn": ["combat", "camp"],
+  "utility": "teleport",
   "campBehavior": {
     "type": "coordinate_teleport",
     "input": "Player inputs relative coordinate offsets (North/South, East/West, Up/Down)",

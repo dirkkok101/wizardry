@@ -8,6 +8,7 @@
   "target": "all_enemies",
   "description": "Identifies ALL monster groups, revealing their true names",
   "castableIn": ["combat", "camp"],
+  "utility": "identify_foe",
   "effect": {
     "type": "identify_monsters",
     "reveals": ["monster_name", "monster_type"]

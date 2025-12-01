@@ -4,7 +4,7 @@
   "translation": "Change",
   "level": 6,
   "casterType": "mage",
-  "category": "utility",
+  "category": "buff",
   "target": "variable",
   "description": "Desperate spell with random powerful effects - costs 1 experience level",
   "castableIn": ["combat"],

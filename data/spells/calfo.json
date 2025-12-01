@@ -8,6 +8,7 @@
   "target": "caster",
   "description": "Identifies trap type on a chest before opening",
   "castableIn": ["looting"],
+  "utility": "identify_trap",
   "effect": {
     "type": "identify_trap",
     "successRate": 95,

@@ -143,6 +143,10 @@ function validateSpellObject(spell: SpellData, filePath: string): string[] {
   if (spell.category === 'healing' && !spell.healing) {
     errors.push(`${filePath}: Healing spell missing 'healing' field`);
   }
+  // Utility spells need 'utility' field to specify what type of utility (show_coordinates, teleport, etc.)
+  if (spell.category === 'utility' && !(spell as any).utility) {
+    errors.push(`${filePath}: Utility spell missing 'utility' field`);
+  }
 
   return errors;
 }

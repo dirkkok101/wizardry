@@ -8,6 +8,7 @@
   "target": "party",
   "description": "Creates powerful, long-lasting light that persists for the entire expedition",
   "castableIn": ["combat", "camp"],
+  "utility": "extended_light",
   "effect": {
     "type": "illumination",
     "power": "enhanced"

@@ -8,6 +8,7 @@
   "target": "party",
   "description": "Creates light, extends vision range, and reveals secret doors",
   "castableIn": ["combat", "camp"],
+  "utility": "extended_light",
   "effect": {
     "type": "illumination",
     "reveals": ["secret_doors"]

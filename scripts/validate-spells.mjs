@@ -107,6 +107,10 @@ function validateSpellObject(spell, filePath) {
   if (spell.category === 'healing' && !spell.healing) {
     errors.push(`${filePath}: Healing spell missing 'healing' field`);
   }
+  // Utility spells need 'utility' field to specify what type of utility (show_coordinates, teleport, etc.)
+  if (spell.category === 'utility' && !spell.utility) {
+    errors.push(`${filePath}: Utility spell missing 'utility' field`);
+  }
 
   return errors;
 }

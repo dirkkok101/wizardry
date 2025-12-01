@@ -8,6 +8,7 @@
   "target": "party",
   "description": "Emergency teleport to Castle - low success rate AND devastating cost on success",
   "castableIn": ["combat", "camp"],
+  "utility": "recall",
   "escape": {
     "destination": "Castle/town",
     "successFormula": "(Character Level × 2 + 1)%",

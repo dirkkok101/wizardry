@@ -8,6 +8,7 @@
   "target": "caster",
   "description": "Reveals coordinates of dead or missing party members - essential for body recovery expeditions",
   "castableIn": ["camp"],
+  "utility": "locate_person",
   "effect": {
     "type": "locate_dead",
     "reveals": ["x_position", "y_position", "dungeon_level"]
