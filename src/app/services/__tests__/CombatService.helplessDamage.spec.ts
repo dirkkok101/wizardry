@@ -119,24 +119,25 @@ describe('CombatService.resolveAttack - Helpless Target Damage', () => {
     expect(paralyzedResult.message).toContain('helpless target')
   })
 
-  it('stacks helpless multiplier with critical hit', () => {
+  it('critical hit on helpless target is instant kill (not damage multiplier)', () => {
     const attacker = createTestAttacker({ strength: 14, level: 50 })  // High level = high crit chance
     const defender = createTestMonster({ status: 'ASLEEP' })
 
-    // Try multiple seeds to find one that produces a critical hit
+    // Try multiple seeds to find one that produces a critical hit that monster doesn't resist
     let criticalResult = null
     for (let seed = 1; seed < 100; seed++) {
       RandomService.setSeed(seed)
       const result = CombatService.resolveAttack(attacker, defender, 0, 0)
-      if (result.hit && result.critical) {
+      if (result.hit && result.critical && result.instantKill) {
         criticalResult = result
         break
       }
     }
 
-    // If we got a critical on helpless target, verify the message
+    // If we got a critical on helpless target, verify it's an instant kill
     if (criticalResult) {
-      expect(criticalResult.message).toContain('Critical Hit on helpless target')
+      expect(criticalResult.instantKill).toBe(true)
+      expect(criticalResult.message).toContain('slain')
     }
   })
 

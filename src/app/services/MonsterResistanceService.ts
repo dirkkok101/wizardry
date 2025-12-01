@@ -281,14 +281,15 @@ export class MonsterResistanceService {
   }
 
   /**
-   * Roll for status recovery using default formulas
+   * Roll for MONSTER status recovery using Apple II reference formulas
    *
-   * Per Apple II source code:
-   * - PARALYZED: (MonsterLevel × 7)%, maximum 50%
-   * - ASLEEP: Higher level monsters wake easier (50 + 5×level)%, cap 95%
-   * - SILENCED/FEAR: Moderate recovery (level × 5)%, cap 50%
+   * Per technical reference (Section 15: Status Effects):
+   * Monster Recovery:
+   * - ASLEEP: Level × 20% (max 50%)
+   * - AFRAID: Level × 10% (max 50%)
+   * - PARALYZED: Level × 7% (max 50%)
    *
-   * Higher level monsters recover FASTER from status effects
+   * Note: Characters have DIFFERENT recovery rates (see CharacterStatusRecoveryService)
    */
   static rollRecovery(
     monsterLevel: number,
@@ -298,21 +299,62 @@ export class MonsterResistanceService {
 
     switch (statusType) {
       case 'ASLEEP':
-        // Sleep recovery: easier for higher level monsters to wake
-        // Per Apple II source: monsters recover quickly from sleep
-        chance = Math.min(50 + (monsterLevel * 5), 95)
+        // Monster sleep recovery: Level × 20%, max 50%
+        chance = Math.min(monsterLevel * 20, 50)
         break
       case 'PARALYZED':
-        // Paralysis recovery: (MonsterLevel × 7)%, maximum 50%
-        // Per Apple II source code (line 570 of technical reference)
+        // Monster paralysis recovery: Level × 7%, max 50%
         chance = Math.min(monsterLevel * 7, 50)
         break
-      case 'SILENCED':
       case 'FEAR':
-      default:
-        // Other status: moderate recovery
-        chance = Math.min(monsterLevel * 5, 50)
+        // Monster fear/afraid recovery: Level × 10%, max 50%
+        chance = Math.min(monsterLevel * 10, 50)
         break
+      case 'SILENCED':
+      default:
+        // Silenced: No natural recovery (MONTINO bug - broken in original)
+        // Short-circuit to avoid consuming random values
+        return false
+    }
+
+    return RandomService.chance(chance)
+  }
+
+  /**
+   * Roll for CHARACTER status recovery using Apple II reference formulas
+   *
+   * Per technical reference (Section 15: Status Effects):
+   * Character Recovery:
+   * - ASLEEP: Level × 10% (max 50%)
+   * - AFRAID: Level × 5% (max 50%)
+   * - PARALYZED: NO natural recovery in combat! (critical bug)
+   * - SILENCED: NEVER recovers in battle (MONTINO bug)
+   */
+  static rollCharacterRecovery(
+    characterLevel: number,
+    statusType: 'ASLEEP' | 'PARALYZED' | 'AFRAID' | 'SILENCED'
+  ): boolean {
+    let chance: number
+
+    switch (statusType) {
+      case 'ASLEEP':
+        // Character sleep recovery: Level × 10%, max 50%
+        chance = Math.min(characterLevel * 10, 50)
+        break
+      case 'AFRAID':
+        // Character fear recovery: Level × 5%, max 50%
+        chance = Math.min(characterLevel * 5, 50)
+        break
+      case 'PARALYZED':
+        // Characters have NO natural paralysis recovery in combat!
+        // This is a critical difference from monster recovery
+        // Short-circuit to avoid consuming random values
+        return false
+      case 'SILENCED':
+      default:
+        // Silenced characters NEVER recover during battle (broken code in original)
+        // Short-circuit to avoid consuming random values
+        return false
     }
 
     return RandomService.chance(chance)

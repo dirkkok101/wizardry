@@ -164,11 +164,14 @@ describe('SpellCastingService', () => {
 
       const combatSpells = SpellCastingService.getSpellsByContext(mage, 'combat')
 
-      // Should include halito (combat-only), dios (all contexts), and dumapic (combat/dungeon)
+      // Based on actual spell data:
+      // halito: combat only - YES
+      // dios: combat, camp - YES
+      // dumapic: camp only - NO
       const spellIds = combatSpells.map(s => s.id)
       expect(spellIds).toContain('halito')
       expect(spellIds).toContain('dios')
-      expect(spellIds).toContain('dumapic')
+      expect(spellIds).not.toContain('dumapic') // dumapic is camp-only
     })
 
     it('excludes combat-only spells from dungeon context', () => {

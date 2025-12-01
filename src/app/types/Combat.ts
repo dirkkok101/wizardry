@@ -1,7 +1,7 @@
 // src/types/Combat.ts
 import { Character } from './Character'
 
-export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL' | 'ADVANCE' | 'BREATH'
+export type CombatActionType = 'ATTACK' | 'CAST_SPELL' | 'USE_ITEM' | 'PARRY' | 'RUN' | 'DISPEL' | 'ADVANCE' | 'BREATH' | 'CALL_FOR_HELP' | 'MONSTER_FLEE'
 export type CombatantStatus = 'ALIVE' | 'DEAD' | 'ASLEEP' | 'PARALYZED'
 
 /**
@@ -89,15 +89,18 @@ export interface CombatState {
   roundNumber: number
   combatLog: string[]
   canFlee: boolean
+  dungeonLevel: number  // Current dungeon level (1-10), affects flee chance
   statusEffects: CombatStatusEffects  // Temporary status effects (blind, silenced)
   acModifiers: CombatAcModifiers  // Temporary AC bonuses (MOGREF, KALKI, etc.)
   statusDurations: StatusDurations  // Track how many rounds each status effect lasts
+  monstersDemoralized?: boolean  // True when monsters have lost morale (easier flee)
 }
 
 export interface AttackResult {
   hit: boolean
   damage: number
   critical: boolean
+  instantKill?: boolean
   message: string
 }
 

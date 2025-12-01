@@ -69,7 +69,7 @@ export class MonsterService {
       // Breath weapon
       breathType: template.breathWeapon?.type as MonsterInstance['breathType'],
       // Special abilities
-      canCall: template.specialAbilities.includes('call_for_help'),
+      canCall: template.specialAbilities.includes('call_help'),
       canFlee: template.canFlee
     }
   }

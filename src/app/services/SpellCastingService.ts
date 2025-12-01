@@ -559,9 +559,14 @@ export class SpellCastingService {
   ): SpellData[] {
     const availableSpells = this.getAvailableSpells(character)
 
+    // Map UI contexts to spell data contexts
+    // Spell data uses 'combat' and 'camp', while UI uses 'combat', 'dungeon', 'town'
+    // 'dungeon' and 'town' both map to 'camp' (non-combat spell casting)
+    const spellDataContext = context === 'combat' ? 'combat' : 'camp'
+
     // Filter by context
     const contextFiltered = availableSpells.filter(spell =>
-      spell.castableIn.includes(context)
+      spell.castableIn.includes(spellDataContext)
     )
 
     // For dungeon/town context, also filter out combat-only target types

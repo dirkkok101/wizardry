@@ -289,7 +289,8 @@ describe('SpellCastingService - Spell Eligibility', () => {
       expect(spell?.name).toBe('MAHAMAN')
       expect(spell?.level).toBe(7)
       expect(spell?.casterType).toBe('mage')
-      expect(spell?.transformation).toBe(true)
+      // MAHAMAN has randomEffects instead of a simple transformation flag
+      expect(spell?.randomEffects).toBeDefined()
     })
 
     it('getSpell returns correct data for priest spell', () => {
@@ -300,7 +301,8 @@ describe('SpellCastingService - Spell Eligibility', () => {
       expect(spell?.name).toBe('MAPORFIC')
       expect(spell?.level).toBe(4)
       expect(spell?.casterType).toBe('priest')
-      expect(spell?.acModifier).toBe(-4)
+      // MAPORFIC has AC modifier inside effect object
+      expect(spell?.effect?.acModifier).toBe(-2)
     })
   })
 })

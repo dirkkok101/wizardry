@@ -165,7 +165,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 10
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 5, name: 'Zombie' })
+      const zombie = createTestMonster({ id: 'z1', level: 5, name: 'Zombie', undead: true })
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -174,18 +174,14 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         }]
       })
 
-      // Mock random to always succeed
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.3) // 30% < 50% expected chance
+      // Queue random value to succeed - RandomService.chance(50) succeeds if roll < 0.50
+      RandomService.queueNextValues([0.30]) // 30% < 50% = success
 
       const cmd = CombatService.createCommand(priest, 'DISPEL', zombie, { groupId: 'A' })
-      const parryingCombatants = new Set<string>()
-      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+      const result = CombatService.executeCommand(state, cmd)
 
       // 50 + (10×5) - (10×5) = 50% chance, 30% roll < 50% = success
-      expect(result.messages.join(' ')).toContain('undead destroyed')
-
-      Math.random = originalRandom
+      expect(result.messages.join(' ')).toContain('undead dispelled')
     })
 
     it('destroys entire group on successful dispel', () => {
@@ -195,9 +191,9 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 20 // High level for guaranteed success
       })
 
-      const zombie1 = createTestMonster({ id: 'z1', level: 2, hp: 50 })
-      const zombie2 = createTestMonster({ id: 'z2', level: 2, hp: 50 })
-      const zombie3 = createTestMonster({ id: 'z3', level: 2, hp: 50 })
+      const zombie1 = createTestMonster({ id: 'z1', level: 2, hp: 50, undead: true })
+      const zombie2 = createTestMonster({ id: 'z2', level: 2, hp: 50, undead: true })
+      const zombie3 = createTestMonster({ id: 'z3', level: 2, hp: 50, undead: true })
 
       const state = createTestCombatState({
         monsterGroups: [{
@@ -231,7 +227,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 5
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 3 })
+      const zombie = createTestMonster({ id: 'z1', level: 3, undead: true })
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -267,7 +263,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 1 // Low level
       })
 
-      const vampire = createTestMonster({ id: 'v1', level: 10 }) // High level undead
+      const vampire = createTestMonster({ id: 'v1', level: 10, undead: true }) // High level undead
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -276,19 +272,17 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         }]
       })
 
-      // Mock random to succeed at 4% (below 5% minimum)
-      const originalRandom = Math.random
-      Math.random = jest.fn(() => 0.04) // 4% < 5% minimum
+      // Queue very low random value to succeed at minimum 5%
+      // RandomService.chance(5) succeeds if nextRandom() * 100 < 5
+      // Queue multiple low values to cover any intermediate random calls
+      RandomService.queueNextValues([0.01, 0.01, 0.01]) // 1% always succeeds
 
       const cmd = CombatService.createCommand(priest, 'DISPEL', vampire, { groupId: 'A' })
-      const parryingCombatants = new Set<string>()
-      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+      const result = CombatService.executeCommand(state, cmd)
 
       // 50 + 5 - 100 = -45% → clamped to 5%
-      // 4% roll < 5% = success
-      expect(result.messages.join(' ')).toContain('undead destroyed')
-
-      Math.random = originalRandom
+      // 1% roll < 5% = success
+      expect(result.messages.join(' ')).toContain('undead dispelled')
     })
 
     it('clamps dispel chance to maximum 95%', () => {
@@ -299,7 +293,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 50 // Very high level
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 1 }) // Low level undead
+      const zombie = createTestMonster({ id: 'z1', level: 1, undead: true }) // Low level undead
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -331,7 +325,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 10
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 5 })
+      const zombie = createTestMonster({ id: 'z1', level: 5, undead: true })
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -340,16 +334,16 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         }]
       })
 
-      // Queue random value - 35% > 30% = failure (with penalty)
-      // RandomService.chance(30) returns true if random < 0.30
-      RandomService.queueNextValues([0.35]) // 35% > 30% = failure
+      // Queue high random values to ensure failure
+      // RandomService.chance(30) fails if nextRandom() * 100 >= 30
+      // Queue multiple high values to cover any intermediate random calls
+      RandomService.queueNextValues([0.99, 0.99, 0.99]) // 99% > 30% = failure
 
       const cmd = CombatService.createCommand(bishop, 'DISPEL', zombie, { groupId: 'A' })
-      const parryingCombatants = new Set<string>()
-      const result = CombatService.executeCommand(state, cmd, parryingCombatants)
+      const result = CombatService.executeCommand(state, cmd)
 
       // Bishop gets -20% penalty: 50 + 50 - 50 - 20 = 30%
-      // 35% roll > 30% = failure
+      // 99% roll > 30% = failure
       expect(result.messages.join(' ')).toContain('undead resist')
     })
 
@@ -361,7 +355,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 10
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 5 })
+      const zombie = createTestMonster({ id: 'z1', level: 5, undead: true })
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -392,7 +386,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 3
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 1 })
+      const zombie = createTestMonster({ id: 'z1', level: 1, undead: true })
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -410,7 +404,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
       // No penalty at level 3: 50 + 15 - 10 = 55%
-      expect(result.messages.join(' ')).toContain('undead destroyed')
+      expect(result.messages.join(' ')).toContain('undead dispelled')
     })
 
     it('does not apply Lord penalty below level 9', () => {
@@ -422,7 +416,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         level: 8
       })
 
-      const zombie = createTestMonster({ id: 'z1', level: 1 })
+      const zombie = createTestMonster({ id: 'z1', level: 1, undead: true })
       const state = createTestCombatState({
         monsterGroups: [{
           id: 'A',
@@ -439,7 +433,7 @@ describe('CombatService - Phase 3: Spell Casting', () => {
       const result = CombatService.executeCommand(state, cmd, parryingCombatants)
 
       // No penalty at level 8: 50 + 40 - 10 = 80%
-      expect(result.messages.join(' ')).toContain('undead destroyed')
+      expect(result.messages.join(' ')).toContain('undead dispelled')
     })
 
     it('requires groupId in command data', () => {

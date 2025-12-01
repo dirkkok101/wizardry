@@ -208,6 +208,7 @@ export class CombatService {
         hit: false,
         damage: 0,
         critical: false,
+        instantKill: false,
         message: 'Miss!'
       }
     }
@@ -222,22 +223,33 @@ export class CombatService {
     let damage = Math.max(1, baseDamage + strDamageMod)
 
     // Critical hit: (2 × Level)% chance, max 50%
-    // Authentic Wizardry 1: Boss/unique monsters resist critical hits
+    // Authentic Wizardry 1: Critical hits are instant kills, not 2x damage
     const attackerLevel = attacker.level || 1
     const critChance = Math.min(50, attackerLevel * 2)
     let critical = RandomService.chance(critChance)
+    let instantKill = false
 
-    // Check if defender is a monster that resists critical hits
+    // Monster resistance to critical hits (Apple II reference)
+    // Formula: (MonsterLevel + 10) must be < random(0, 34)
+    // Level 24+ always resists: 24+10=34, never < random(0,34)
     if (critical && 'monsterId' in defender) {
-      const template = MonsterDataLoader.getMonster(defender.monsterId)
-      if (template && (template.isBoss || template.isUnique)) {
-        critical = false  // Boss/unique monsters resist decapitation/criticals
+      const monsterLevel = defender.level || 1
+      const resistRoll = RandomService.random(0, 34)
+      if ((monsterLevel + 10) >= resistRoll) {
+        critical = false  // Monster resists decapitation
+      } else {
+        instantKill = true  // Critical = instant kill
       }
     }
 
-    if (critical) {
-      damage *= 2
+    // Critical hits on characters checked elsewhere (CharacterResistanceService)
+    if (critical && !('monsterId' in defender)) {
+      // Character crit resistance handled in executeAttackCommand
+      instantKill = true
     }
+
+    // Note: Critical no longer multiplies damage - it's instant kill
+    // Only apply helpless multiplier
 
     // Helpless target multiplier: sleeping/paralyzed targets take 2× damage
     // Research: Per Wizardry 1 mechanics, helpless targets are automatically hit
@@ -251,10 +263,9 @@ export class CombatService {
 
     // Build appropriate message
     let message = `${finalDamage} damage!`
-    if (critical && isHelpless) {
-      message = `Critical Hit on helpless target! ${finalDamage} damage!`
-    } else if (critical) {
-      message = `Critical Hit! ${finalDamage} damage!`
+    if (instantKill) {
+      const defenderName = this.getCombatantName(defender)
+      message = `Critical hit! ${defenderName} is slain!`
     } else if (isHelpless) {
       message = `Strikes helpless target! ${finalDamage} damage!`
     }
@@ -263,6 +274,7 @@ export class CombatService {
       hit: true,
       damage: finalDamage,
       critical,
+      instantKill,
       message
     }
   }
@@ -858,6 +870,38 @@ export class CombatService {
     }
 
     /**
+     * Authentic Wizardry 1 Critical Hit - Instant Kill
+     * Critical hits are instant kills (decapitation), not damage multipliers.
+     * Monster resistance checked in resolveAttack().
+     * Character resistance checked below via CharacterResistanceService.
+     */
+    if (attackResult.instantKill && 'monsterId' in target) {
+      // Monster instant kill - set HP to 0, status to DEAD
+      const newMonsterGroups = state.monsterGroups.map(group => ({
+        ...group,
+        monsters: group.monsters.map(m => {
+          if (m.id !== target.id) return m
+          return {
+            ...m,
+            hp: 0,
+            status: 'DEAD' as const
+          }
+        })
+      }))
+      const resultMessage = `${this.RESULT_MARKER}${attackResult.message}`
+      return {
+        newState: { ...state, monsterGroups: newMonsterGroups },
+        messages: [actionMessage, resultMessage],
+        targetDamage: {
+          targetId: target.id,
+          damage: target.hp, // Show full HP as damage for display
+          newHp: 0,
+          newStatus: 'DEAD'
+        }
+      }
+    }
+
+    /**
      * Authentic Wizardry Damage Multiplier
      * Helpless targets (ASLEEP or PARALYZED) take double damage from physical attacks.
      * This represents the attacker taking advantage of a defenseless opponent.
@@ -899,9 +943,9 @@ export class CombatService {
     }
 
     /**
-     * Authentic Wizardry 1 Critical Hit Resistance
+     * Authentic Wizardry 1 Critical Hit Resistance (Characters Only)
      * Characters can resist critical hits based on class, race, level, and luck.
-     * If resisted, the attack still hits but deals normal damage (not critical).
+     * If resisted, the attack still hits but deals normal damage (not instant kill).
      *
      * Physical Protection: Characters with physical elemental protection items
      * are IMMUNE to critical hits (decapitation).
@@ -909,9 +953,9 @@ export class CombatService {
      * Fighters, Ninjas have inherent critical resistance (15%).
      * Higher level and luck provide additional resistance.
      */
-    let criticalResisted = false
-    if (attackResult.critical && 'monsterId' in command.actor && 'class' in target) {
+    if (attackResult.instantKill && 'class' in target) {
       const character = target as Character
+      let criticalResisted = false
 
       // Physical protection grants immunity to critical hits
       if (ItemProtectionService.hasPhysicalProtection(character)) {
@@ -932,13 +976,27 @@ export class CombatService {
           }
         }
       }
+
+      // If not resisted, instant kill the character
+      if (!criticalResisted) {
+        // Character instant kill - handled via characterUpdates (not state.monsterGroups)
+        const resultMessage = `${this.RESULT_MARKER}${attackResult.message}`
+        return {
+          newState: state,
+          messages: [actionMessage, resultMessage],
+          characterUpdates: new Map([[
+            target.id,
+            { ...character, hp: 0, status: CharacterStatus.DEAD }
+          ]])
+        }
+      }
+      // If resisted, fall through to normal damage handling
     }
 
     // Build result message
     let resultText: string
-    if (attackResult.critical && !criticalResisted) {
-      resultText = `${actorName} scores a CRITICAL HIT for ${finalDamage} damage!`
-    } else if (attackResult.critical && criticalResisted) {
+    if (attackResult.critical) {
+      // Critical was resisted (if we got here), so normal damage
       resultText = `${actorName} scores a critical hit, but ${targetName} resists! ${finalDamage} damage!`
     } else {
       resultText = `${actorName} hits for ${finalDamage} damage!`

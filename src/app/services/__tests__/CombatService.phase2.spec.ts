@@ -12,8 +12,8 @@ describe('CombatService - Phase 2 Features', () => {
       const attacker = createTestCharacter({ level: 1 })
       const defender = createTestMonster()
 
-      // Queue random values: hit roll, damage roll, crit roll
-      RandomService.queueNextValues([0.5, 0.5, 0.01])
+      // Queue random values: hit roll, damage roll, crit roll, monster resist roll
+      RandomService.queueNextValues([0.5, 0.5, 0.01, 0.4])
 
       const result = CombatService.resolveAttack(attacker, defender)
 
@@ -24,8 +24,9 @@ describe('CombatService - Phase 2 Features', () => {
       const attacker = createTestCharacter({ level: 10 })
       const defender = createTestMonster()
 
-      // Queue random values: hit roll, damage roll, crit roll
-      RandomService.queueNextValues([0.5, 0.5, 0.15])
+      // Queue random values: hit roll, damage roll, crit roll, monster resist roll
+      // Monster resist: level 1 kobold: (1+10)=11, need resistRoll > 11 for crit to land
+      RandomService.queueNextValues([0.5, 0.5, 0.15, 0.4]) // 0.4 gives resistRoll ~14
 
       const result = CombatService.resolveAttack(attacker, defender)
 
@@ -36,8 +37,8 @@ describe('CombatService - Phase 2 Features', () => {
       const attacker = createTestCharacter({ level: 50 })
       const defender = createTestMonster()
 
-      // Queue random values: hit roll, damage roll, crit roll
-      RandomService.queueNextValues([0.5, 0.5, 0.49])
+      // Queue random values: hit roll, damage roll, crit roll, monster resist roll
+      RandomService.queueNextValues([0.5, 0.5, 0.49, 0.4])
 
       const result = CombatService.resolveAttack(attacker, defender)
 
@@ -48,7 +49,7 @@ describe('CombatService - Phase 2 Features', () => {
       const attacker = createTestCharacter({ level: 10 })
       const defender = createTestMonster()
 
-      // Queue random values: hit roll, damage roll, crit roll
+      // Queue random values: hit roll, damage roll, crit roll (no resist roll needed - crit fails)
       RandomService.queueNextValues([0.5, 0.5, 0.25])
 
       const result = CombatService.resolveAttack(attacker, defender)
@@ -157,21 +158,22 @@ describe('CombatService - Phase 2 Features', () => {
   })
 
   describe('RUN/Flee Mechanics', () => {
-    it('calculates 50% base flee chance when AGI and Luck are neutral', () => {
-      // Create monster with AGI 10 (neutral)
-      const monster = createTestMonster({ agility: 10 })
+    it('calculates flee chance using authentic Apple II formula', () => {
+      // Authentic formula: 39% - (MazeLevel × 3%) + small party bonus
+      const monster = createTestMonster()
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster],
         formation: 'front'
       }]
+      // Default dungeonLevel = 1
       const state = createTestCombatState({ canFlee: true, monsterGroups })
-      // Character with AGI 10, Luck 10 (neutral)
-      const party = [createTestCharacter({ id: 'c1', agility: 10, luck: 10 })]
+      const party = [createTestCharacter({ id: 'c1' })]
       const fleeingIds = new Set<string>(['c1'])
 
       const chance = CombatService.calculateFleeChance(state, party, fleeingIds)
-      expect(chance).toBe(50) // 50% base, no modifiers
+      // Level 1: 39 - 3 = 36% + 15% small party (1 member) = 51%
+      expect(chance).toBe(51)
     })
 
     it('returns 0% flee chance for boss fights', () => {
@@ -183,84 +185,82 @@ describe('CombatService - Phase 2 Features', () => {
       expect(chance).toBe(0)
     })
 
-    it('increases flee chance when party AGI is higher than monsters', () => {
-      // Fast party (AGI 15) vs slow monsters (AGI 8)
-      const monster = createTestMonster({ agility: 8 })
+    // Note: Tests updated to authentic Apple II formula: 39% - (MazeLevel × 3%)
+    // with small party bonus. Comprehensive flee tests in CombatService.flee.spec.ts
+
+    it('calculates flee chance based on dungeon level (authentic formula)', () => {
+      // Level 1: 39% - (1 × 3) = 36% + small party bonus 15% = 51%
+      const monster = createTestMonster()
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster],
         formation: 'front'
       }]
-      const state = createTestCombatState({ canFlee: true, monsterGroups })
-      const party = [createTestCharacter({ id: 'c1', agility: 15, luck: 10 })]
+      const state = createTestCombatState({ canFlee: true, monsterGroups, dungeonLevel: 1 })
+      const party = [createTestCharacter({ id: 'c1' })]
       const fleeingIds = new Set<string>(['c1'])
 
       const chance = CombatService.calculateFleeChance(state, party, fleeingIds)
-      // 50% base + (15-8)*5 = 50 + 35 = 85%
-      expect(chance).toBe(85)
+      // 36% base + 15% small party (1 member) = 51%
+      expect(chance).toBe(51)
     })
 
-    it('decreases flee chance when party AGI is lower than monsters', () => {
-      // Slow party (AGI 8) vs fast monsters (AGI 15)
-      const monster = createTestMonster({ agility: 15 })
+    it('reduces flee chance on deeper dungeon levels', () => {
+      const monster = createTestMonster()
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster],
         formation: 'front'
       }]
-      const state = createTestCombatState({ canFlee: true, monsterGroups })
-      const party = [createTestCharacter({ id: 'c1', agility: 8, luck: 10 })]
+      const state = createTestCombatState({ canFlee: true, monsterGroups, dungeonLevel: 5 })
+      const party = [createTestCharacter({ id: 'c1' })]
       const fleeingIds = new Set<string>(['c1'])
 
       const chance = CombatService.calculateFleeChance(state, party, fleeingIds)
-      // 50% base + (8-15)*5 = 50 - 35 = 15%
-      expect(chance).toBe(15)
+      // Level 5: 39 - (5 × 3) = 24% + 15% small party = 39%
+      expect(chance).toBe(39)
     })
 
-    it('adds luck modifier to flee chance', () => {
-      const monster = createTestMonster({ agility: 10 })
+    it('adds small party bonus for <= 3 members', () => {
+      const monster = createTestMonster()
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster],
         formation: 'front'
       }]
-      const state = createTestCombatState({ canFlee: true, monsterGroups })
-      // High luck (18) adds +16%: (18-10)*2 = 16
-      const party = [createTestCharacter({ id: 'c1', agility: 10, luck: 18 })]
-      const fleeingIds = new Set<string>(['c1'])
+      const state = createTestCombatState({ canFlee: true, monsterGroups, dungeonLevel: 1 })
 
-      const chance = CombatService.calculateFleeChance(state, party, fleeingIds)
-      // 50% base + 0 AGI + 16% luck = 66%
-      expect(chance).toBe(66)
+      // 2 members: +10% bonus
+      const party2 = [
+        createTestCharacter({ id: 'c1' }),
+        createTestCharacter({ id: 'c2' })
+      ]
+      const fleeingIds = new Set<string>(['c1', 'c2'])
+      const chance2 = CombatService.calculateFleeChance(state, party2, fleeingIds)
+      // 36% base + 10% small party (2 members) = 46%
+      expect(chance2).toBe(46)
     })
 
-    it('clamps flee chance to 10-90% range', () => {
-      // Very fast party should cap at 90%
-      const slowMonster = createTestMonster({ agility: 5 })
-      const slowMonsterGroups: MonsterGroup[] = [{
+    it('no small party bonus for > 3 members', () => {
+      const monster = createTestMonster()
+      const monsterGroups: MonsterGroup[] = [{
         id: 'A',
-        monsters: [slowMonster],
+        monsters: [monster],
         formation: 'front'
       }]
-      const stateHighChance = createTestCombatState({ canFlee: true, monsterGroups: slowMonsterGroups })
-      const fastParty = [createTestCharacter({ id: 'c1', agility: 18, luck: 18 })]
-      const fleeingIds = new Set<string>(['c1'])
+      const state = createTestCombatState({ canFlee: true, monsterGroups, dungeonLevel: 1 })
 
-      const highChance = CombatService.calculateFleeChance(stateHighChance, fastParty, fleeingIds)
-      expect(highChance).toBe(90) // Capped at 90%
-
-      // Very slow party should floor at 10%
-      const fastMonster = createTestMonster({ agility: 18 })
-      const fastMonsterGroups: MonsterGroup[] = [{
-        id: 'A',
-        monsters: [fastMonster],
-        formation: 'front'
-      }]
-      const stateLowChance = createTestCombatState({ canFlee: true, monsterGroups: fastMonsterGroups })
-      const slowParty = [createTestCharacter({ id: 'c1', agility: 5, luck: 5 })]
-
-      const lowChance = CombatService.calculateFleeChance(stateLowChance, slowParty, fleeingIds)
-      expect(lowChance).toBe(10) // Floored at 10%
+      // 4 members: no bonus
+      const party4 = [
+        createTestCharacter({ id: 'c1' }),
+        createTestCharacter({ id: 'c2' }),
+        createTestCharacter({ id: 'c3' }),
+        createTestCharacter({ id: 'c4' })
+      ]
+      const fleeingIds = new Set<string>(['c1', 'c2', 'c3', 'c4'])
+      const chance4 = CombatService.calculateFleeChance(state, party4, fleeingIds)
+      // 36% base only, no small party bonus
+      expect(chance4).toBe(36)
     })
 
     it('returns 0% if no characters fleeing', () => {
