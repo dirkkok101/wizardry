@@ -227,9 +227,12 @@ export class SpellPanelComponent {
     const sp = this.getSPForLevel(spell.casterType as CasterType, spell.level as SpellLevel)
     if (sp.current < 1) return false
 
-    // Check context
+    // Check context - map UI contexts to spell data contexts
+    // Spell data uses 'combat' and 'camp', UI uses 'combat', 'dungeon', 'town'
+    // Both 'dungeon' and 'town' map to 'camp' (non-combat spell casting)
     const ctx = this.context()
-    if (!spell.castableIn.includes(ctx === 'camp' ? 'town' : ctx)) {
+    const spellContext = ctx === 'combat' ? 'combat' : 'camp'
+    if (!spell.castableIn.includes(spellContext)) {
       return false
     }
 

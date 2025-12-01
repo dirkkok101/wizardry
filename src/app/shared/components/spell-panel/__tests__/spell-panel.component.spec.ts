@@ -368,18 +368,33 @@ describe('SpellPanelComponent', () => {
       expect(spellCards.length).toBe(0)
     })
 
+    it('shows camp spells when context is dungeon', () => {
+      // DIOS has castableIn: ['combat', 'camp'] - should appear in dungeon context
+      // because 'dungeon' maps to 'camp' in spell data
+      setInputs({ visible: true, character: createPriestWithSpells(), mode: 'casting', context: 'dungeon' })
+      fixture.detectChanges()
+
+      // Should have spells visible (DIOS is a camp spell)
+      const spellCards = fixture.nativeElement.querySelectorAll('.spell-card')
+      expect(spellCards.length).toBeGreaterThan(0)
+
+      // Verify DIOS specifically is shown
+      const spellNames = fixture.nativeElement.querySelectorAll('.spell-name')
+      const names = Array.from(spellNames).map((el: any) => el.textContent.trim().toUpperCase())
+      expect(names).toContain('DIOS')
+    })
+
     it('emits spellSelected when spell clicked', () => {
       const spy = jest.fn()
       component.spellSelected.subscribe(spy)
       setInputs({ visible: true, character: createPriestWithSpells(), mode: 'casting', context: 'dungeon' })
       fixture.detectChanges()
 
-      // Find a castable spell (DIOS is castable in dungeon)
+      // Find a castable spell (DIOS is castable in dungeon via camp mapping)
       const spellCard = fixture.nativeElement.querySelector('.spell-card.clickable')
-      if (spellCard) {
-        spellCard.click()
-        expect(spy).toHaveBeenCalled()
-      }
+      expect(spellCard).toBeTruthy()  // Ensure spell exists
+      spellCard.click()
+      expect(spy).toHaveBeenCalled()
     })
   })
 
