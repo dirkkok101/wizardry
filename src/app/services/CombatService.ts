@@ -40,7 +40,7 @@ export class CombatService {
    * Set to true to enable detailed console output for debugging attack frequency issues.
    * TODO: Remove or set to false after debugging is complete.
    */
-  static DEBUG_COMBAT = true
+  static DEBUG_COMBAT = false
 
   /**
    * Calculate initiative for combatant
