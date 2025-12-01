@@ -1,6 +1,7 @@
 // Phase 5 Status Effect Spells Tests
 import { CombatService } from '../CombatService'
 import { SpellCastingService } from '../SpellCastingService'
+import { RandomService } from '../RandomService'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
 
 describe('CombatService - Phase 5: Status Effect Spells', () => {
@@ -30,6 +31,9 @@ describe('CombatService - Phase 5: Status Effect Spells', () => {
           formation: 'front'
         }]
       })
+
+      // Queue value to bypass resistance (20% for L1 monster, 0.5 > 0.2 = no resist)
+      RandomService.queueNextValues([0.5])
 
       const cmd = CombatService.createCommand(mage, 'CAST_SPELL', monster, { spellId: 'katino' })
       const parryingCombatants = new Set<string>()

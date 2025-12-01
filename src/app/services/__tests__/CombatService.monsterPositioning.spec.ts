@@ -3,6 +3,7 @@ import { CombatService } from '../CombatService'
 import { MonsterService } from '../MonsterService'
 import { MonsterDataLoader } from '../MonsterDataLoader'
 import { EncounterService } from '../EncounterService'
+import { RandomService } from '../RandomService'
 import { CombatState, MonsterGroup, MonsterInstance } from '@models/Combat'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
@@ -266,6 +267,10 @@ describe('CombatService - Monster Positioning', () => {
         monsters: mages,
         formation: 'back'
       }
+
+      // Queue values to bypass spell casting (75% check fails when random > 0.75)
+      // This test is about positioning, not spell selection
+      RandomService.queueNextValues([0.8]) // 80% > 75% = skip mage spell
 
       const command = CombatService.selectMonsterAction(
         mages[0],

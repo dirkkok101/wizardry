@@ -15,8 +15,7 @@ import { StatModifierService } from './StatModifierService'
 import { v4 as uuidv4 } from 'uuid'
 import {
   selectMonsterMageSpell,
-  selectMonsterPriestSpell,
-  rollSpellLevelDegradation
+  selectMonsterPriestSpell
 } from '@config/MonsterSpellTables'
 
 /**
@@ -100,13 +99,20 @@ export class CombatService {
     // Generate 1-4 monster groups based on dungeon level
     const monsterGroups = EncounterService.generateEncounter(dungeonLevel)
 
+    // Initialize currentMageLevel for each group (for spell degradation tracking)
+    // Per Apple II reference (Section 10): Mage spell level degrades permanently during encounter
+    const groupsWithMageLevel = monsterGroups.map(group => ({
+      ...group,
+      currentMageLevel: group.monsters[0]?.mageLevel ?? 0
+    }))
+
     // Roll for surprise
     const { partySurprises, monstersSurprise } = this.rollSurprise()
     const surpriseState: 'party' | 'monsters' | 'none' =
       partySurprises ? 'party' : monstersSurprise ? 'monsters' : 'none'
 
     return {
-      monsterGroups,
+      monsterGroups: groupsWithMageLevel,
       commandQueue: [],
       roundNumber: 1,
       combatLog: [],
@@ -566,26 +572,31 @@ export class CombatService {
     }
 
     // 1. Mage spell check (75% chance if has mage spells)
-    if (monster.mageLevel && monster.mageLevel > 0) {
+    // Per Apple II reference (Section 10): Use group's currentMageLevel for spell selection
+    // Level degrades PERMANENTLY after casting (handled in execution)
+    const groupMageLevel = monsterGroup?.currentMageLevel ?? monster.mageLevel ?? 0
+    if (groupMageLevel > 0) {
       if (RandomService.chance(75)) {
-        // Roll for spell level degradation
-        const degradation = rollSpellLevelDegradation(RandomService.nextRandom())
-        const effectiveLevel = Math.max(1, monster.mageLevel - degradation)
-
-        // Select spell from table
+        // Select spell from table using group's current mage level
         const spellChoice = RandomService.nextRandom()
-        const spellId = selectMonsterMageSpell(effectiveLevel, spellChoice)
+        const spellId = selectMonsterMageSpell(groupMageLevel, spellChoice)
 
         if (this.DEBUG_COMBAT) {
-          console.debug(`[Monster AI] ${monster.name} casts mage spell ${spellId} (level ${effectiveLevel})`)
+          console.debug(`[Monster AI] ${monster.name} casts mage spell ${spellId} (group level ${groupMageLevel})`)
         }
 
         // Monster spells target all party members (group spell)
-        return this.createCommand(monster, 'CAST_SPELL', targetPool, { spellId })
+        // Include groupId and spellType for degradation tracking
+        return this.createCommand(monster, 'CAST_SPELL', targetPool, {
+          spellId,
+          groupId: monsterGroup?.id,
+          spellType: 'mage'
+        })
       }
     }
 
     // 2. Priest spell check (75% chance if has priest spells and didn't cast mage)
+    // Per Apple II reference (Section 10): Priest spells do NOT degrade
     if (monster.priestLevel && monster.priestLevel > 0) {
       if (RandomService.chance(75)) {
         // Priest spells use max level (no degradation)
@@ -596,7 +607,11 @@ export class CombatService {
           console.debug(`[Monster AI] ${monster.name} casts priest spell ${spellId} (level ${monster.priestLevel})`)
         }
 
-        return this.createCommand(monster, 'CAST_SPELL', targetPool, { spellId })
+        return this.createCommand(monster, 'CAST_SPELL', targetPool, {
+          spellId,
+          groupId: monsterGroup?.id,
+          spellType: 'priest'
+        })
       }
     }
 
@@ -1270,8 +1285,8 @@ export class CombatService {
     command: CombatCommand,
     existingCharacterUpdates?: Map<string, Character>
   ): CommandExecutionResult {
-    const caster = command.actor as Character
-    const actorName = this.getCombatantName(caster)
+    const isMonsterCaster = 'monsterId' in command.actor
+    const actorName = this.getCombatantName(command.actor)
     const spellId = command.data?.spellId
     const characterUpdates = new Map<string, Character>()
 
@@ -1280,19 +1295,22 @@ export class CombatService {
     }
 
     // Check if silenced
-    if (this.hasStatusEffect(state, caster.id, 'SILENCED')) {
+    if (this.hasStatusEffect(state, command.actor.id, 'SILENCED')) {
       return {
         newState: state,
         messages: [`${actorName} is silenced and cannot cast spells!`]
       }
     }
 
-    // Check if can cast
-    const canCastResult = SpellCastingService.canCastSpell(caster, spellId)
-    if (!canCastResult.canCast) {
-      return {
-        newState: state,
-        messages: [`${actorName} cannot cast spell: ${canCastResult.reason}`]
+    // Character-only validation: spell points and known spells
+    if (!isMonsterCaster) {
+      const caster = command.actor as Character
+      const canCastResult = SpellCastingService.canCastSpell(caster, spellId)
+      if (!canCastResult.canCast) {
+        return {
+          newState: state,
+          messages: [`${actorName} cannot cast spell: ${canCastResult.reason}`]
+        }
       }
     }
 
@@ -1317,7 +1335,9 @@ export class CombatService {
     }
 
     // Resolve spell effect
-    const spellEffect = SpellCastingService.resolveSpellEffect(spellId, caster, targets)
+    // For monsters, we pass the actor cast as Character - the level property is used for scaling
+    const spellCaster = isMonsterCaster ? (command.actor as unknown as Character) : (command.actor as Character)
+    const spellEffect = SpellCastingService.resolveSpellEffect(spellId, spellCaster, targets)
 
     if (this.DEBUG_COMBAT) {
       console.log(`[Combat] Spell ${spellId} resolved:`, {
@@ -1345,11 +1365,12 @@ export class CombatService {
     // Apply status effects to targets
     if (spellEffect.statusEffects && spellEffect.statusEffects.length > 0) {
       for (const statusEffect of spellEffect.statusEffects) {
-        const effect = statusEffect.effect
+        // Normalize effect name to uppercase for comparison
+        const effect = statusEffect.effect.toUpperCase()
 
         // Handle combat-only status effects (BLIND, SILENCED)
         if (effect === 'BLIND' || effect === 'SILENCED') {
-          newState = this.applyStatusEffect(newState, statusEffect.target, effect)
+          newState = this.applyStatusEffect(newState, statusEffect.target, effect as 'BLIND' | 'SILENCED')
         }
         // Handle CombatantStatus effects (ASLEEP, PARALYZED)
         else if (effect === 'ASLEEP') {
@@ -1450,6 +1471,47 @@ export class CombatService {
 
     // Build result message (spell effect)
     const resultMessage = `${this.RESULT_MARKER}${spellEffect.message}`
+
+    // Monster mage spell degradation (Apple II reference Section 10)
+    // After a mage spell is cast, there's a 1/(aliveInGroup+2) chance the group's mage level degrades
+    // Priest spells do NOT degrade
+    if (this.DEBUG_COMBAT) {
+      console.debug(`[Spell Degradation] Check: isMonsterCaster=${isMonsterCaster}, spellType=${command.data?.spellType}, groupId=${command.data?.groupId}`)
+    }
+    if (isMonsterCaster && command.data?.spellType === 'mage' && command.data?.groupId) {
+      const groupId = command.data.groupId as 'A' | 'B' | 'C' | 'D'
+      const group = newState.monsterGroups.find(g => g.id === groupId)
+
+      if (this.DEBUG_COMBAT) {
+        console.debug(`[Spell Degradation] Found group: ${!!group}, currentMageLevel=${group?.currentMageLevel}`)
+      }
+
+      if (group && group.currentMageLevel && group.currentMageLevel > 1) {
+        const aliveInGroup = group.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD').length
+        // Degradation chance: 1 / (aliveInGroup + 2)
+        // Example: 3 alive = 1/5 = 20%, 1 alive = 1/3 = 33%
+        const degradeChance = 100 / (aliveInGroup + 2)
+
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Spell Degradation] aliveInGroup=${aliveInGroup}, degradeChance=${degradeChance}%`)
+        }
+
+        if (RandomService.chance(degradeChance)) {
+          // Degrade the group's mage level permanently
+          const newMageLevel = group.currentMageLevel - 1
+          const updatedGroups = newState.monsterGroups.map(g =>
+            g.id === groupId ? { ...g, currentMageLevel: newMageLevel } : g
+          )
+          newState = { ...newState, monsterGroups: updatedGroups }
+
+          if (this.DEBUG_COMBAT) {
+            console.debug(`[Spell Degradation] Group ${groupId} mage level degraded: ${group.currentMageLevel} -> ${newMageLevel}`)
+          }
+        } else if (this.DEBUG_COMBAT) {
+          console.debug(`[Spell Degradation] Group ${groupId} did NOT degrade (roll failed)`)
+        }
+      }
+    }
 
     return {
       newState,

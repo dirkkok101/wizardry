@@ -83,6 +83,15 @@ export interface MonsterGroup {
   monsters: MonsterInstance[]
   formation: 'front' | 'back'  // Row position
   identified: boolean  // True if LATUMAPIC has revealed monster names (expedition-long)
+  /**
+   * Current mage spell level for the group (degrades during combat)
+   *
+   * Per Apple II reference (Section 10): After casting a mage spell, there is
+   * 1 / (group size + 2) chance the group's mage level decreases by 1.
+   * This is PERMANENT for the encounter, affecting all monsters in the group.
+   * Priest spells do NOT degrade.
+   */
+  currentMageLevel?: number
 }
 
 export interface CombatState {
