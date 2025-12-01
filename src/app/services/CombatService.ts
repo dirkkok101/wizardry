@@ -198,7 +198,8 @@ export class CombatService {
     defender: Combatant,
     defenderAcModifier: number = 0,
     attackerPenalty: number = 0,
-    victimPosition: number = 0
+    victimPosition: number = 0,
+    attackIndex: number = 0
   ): AttackResult {
     const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty, victimPosition)
     const hitRoll = RandomService.randomFloat(0, 100)
@@ -213,8 +214,8 @@ export class CombatService {
       }
     }
 
-    // Roll damage
-    const baseDamage = this.rollDamage(attacker)
+    // Roll damage with attackIndex for multi-attack monsters
+    const baseDamage = this.rollDamage(attacker, attackIndex)
     // Use authentic Wizardry 1 STR damage modifier from StatModifierService
     let strDamageMod = 0
     if ('strength' in attacker) {
@@ -305,7 +306,7 @@ export class CombatService {
     NINJA: { die: 4, bonus: true }  // Ninja gets level bonus
   }
 
-  private static rollDamage(combatant: Combatant): number {
+  private static rollDamage(combatant: Combatant, attackIndex: number = 0): number {
     // For characters: use equipped weapon or unarmed damage
     if ('class' in combatant) {
       const char = combatant as Character
@@ -336,9 +337,11 @@ export class CombatService {
       return damage
     }
 
-    // For monsters: roll from damage array
+    // For monsters: roll from damage array using attackIndex
     if ('damage' in combatant && combatant.damage && combatant.damage.length > 0) {
-      const dice = combatant.damage[0]
+      // Use attackIndex to select damage entry, with fallback to last entry if index exceeds array
+      const damageIndex = Math.min(attackIndex, combatant.damage.length - 1)
+      const dice = combatant.damage[damageIndex]
       return RandomService.random(dice.min, dice.max)
     }
     return 1
@@ -378,10 +381,11 @@ export class CombatService {
   static getAttacksPerRound(combatant: Combatant): number {
     const combatantName = combatant.name || 'Unknown'
 
-    // Monsters always get 1 attack
+    // Monsters: attack count = length of damage array
     if ('monsterId' in combatant) {
-      if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (monster) = 1 attack`)
-      return 1
+      const attackCount = combatant.damage?.length || 1
+      if (this.DEBUG_COMBAT) console.debug(`[Combat] getAttacksPerRound: ${combatantName} (monster) = ${attackCount} attack(s)`)
+      return attackCount
     }
 
     // Characters: check class and weapon
@@ -425,31 +429,28 @@ export class CombatService {
   }
 
   /**
-   * Expand ATTACK commands for characters with multiple attacks per round.
-   * Each character ATTACK command is expanded based on getAttacksPerRound().
-   * Monster ATTACK commands are not expanded (they get 1 attack per group).
+   * Expand ATTACK commands for combatants with multiple attacks per round.
+   * Each ATTACK command is expanded based on getAttacksPerRound().
+   * Supports both character and monster multiple attacks.
    *
    * @param commands - Array of combat commands to expand
-   * @returns Array with ATTACK commands expanded for multi-attack characters
+   * @returns Array with ATTACK commands expanded for multi-attack combatants
    */
   static expandAttackCommands(commands: CombatCommand[]): CombatCommand[] {
     return commands.flatMap(cmd => {
-      // Only expand character ATTACK commands
+      // Only expand ATTACK commands
       if (cmd.type !== 'ATTACK') return [cmd]
-
-      // Check if actor is a character (not a monster)
-      const isMonster = 'monsterId' in cmd.actor
-      if (isMonster) return [cmd]
 
       const attacks = CombatService.getAttacksPerRound(cmd.actor)
 
       // If only 1 attack, return original command unchanged
       if (attacks <= 1) return [cmd]
 
-      // Create multiple attack commands with unique IDs
+      // Create multiple attack commands with unique IDs and attack index
       return Array.from({ length: attacks }, (_, i) => ({
         ...cmd,
-        id: `${cmd.id}_${i}`
+        id: `${cmd.id}_${i}`,
+        attackIndex: i
       }))
     })
   }
@@ -863,7 +864,8 @@ export class CombatService {
       }
     }
 
-    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty, victimPosition)
+    const attackIndex = command.attackIndex ?? 0
+    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty, victimPosition, attackIndex)
     const actorName = this.getCombatantName(command.actor)
     const targetName = this.getCombatantName(target)
 

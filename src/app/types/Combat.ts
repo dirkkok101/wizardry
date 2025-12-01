@@ -75,6 +75,7 @@ export interface CombatCommand {
   target?: Combatant | Combatant[]
   targetGroupId?: 'A' | 'B' | 'C' | 'D'  // For group-based targeting (DISPEL, group spells)
   data?: any  // spell ID, item ID, etc.
+  attackIndex?: number  // For multi-attack combatants: which attack (0-based) this command represents
 }
 
 export interface MonsterGroup {

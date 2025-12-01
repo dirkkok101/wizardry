@@ -119,9 +119,19 @@ describe('CombatService - Phase 2 Features', () => {
       expect(CombatService.getAttacksPerRound(fighter)).toBe(10)
     })
 
-    it('monsters always get 1 attack', () => {
-      const monster = createTestMonster()
-      expect(CombatService.getAttacksPerRound(monster)).toBe(1)
+    it('monsters get attacks based on damage array length', () => {
+      // Default test monster has 1 damage entry
+      const monsterOneAttack = createTestMonster()
+      expect(CombatService.getAttacksPerRound(monsterOneAttack)).toBe(1)
+
+      // Monster with multiple damage entries gets multiple attacks
+      const monsterTwoAttacks = createTestMonster({
+        damage: [
+          { dice: '1d4', min: 1, max: 4 },
+          { dice: '1d4', min: 1, max: 4 }
+        ]
+      })
+      expect(CombatService.getAttacksPerRound(monsterTwoAttacks)).toBe(2)
     })
   })
 
