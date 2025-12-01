@@ -8,6 +8,7 @@
   "target": "party",
   "description": "Reveals exact party coordinates (X, Y) and current dungeon level",
   "castableIn": ["camp"],
+  "utility": "show_coordinates",
   "effect": {
     "type": "reveal_coordinates",
     "reveals": ["x_position", "y_position", "dungeon_level", "facing_direction"]
