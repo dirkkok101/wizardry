@@ -601,45 +601,35 @@ export class WebGLRenderingService {
   /**
    * Gets the grid coordinates of all visible tiles based on player position and wall occlusion
    *
-   * Delegates to VisibilityService for proper wall-based occlusion instead of using
-   * naive rectangular grid. Ensures floors/ceilings only render where walls are visible.
+   * Delegates to VisibilityService.getVisibleTiles() for proper tile-based visibility.
+   * This includes empty tiles (all walls open) that were previously missed when deriving
+   * tiles from walls.
    *
    * @param level - Level data for wall checking
    * @param position - Player position
    * @param config - Viewport configuration
-   * @returns Array of [gridX, gridY] coordinates for tiles with visible walls
+   * @returns Array of [gridX, gridY] coordinates for all visible tiles
    */
   private getVisibleTiles(
     level: LevelData,
     position: Position,
     config: ViewportConfig
   ): Array<[number, number]> {
-    // Delegate to VisibilityService for proper wall occlusion
-    const walls = VisibilityService.getVisibleWalls(
+    // Delegate to VisibilityService for proper tile visibility
+    // This correctly handles empty tiles (all walls open) unlike deriving from walls
+    const tiles = VisibilityService.getVisibleTiles(
       level,
       position,
       config.tileDepth || 5,
       config.peripheralColumns || 3
     );
 
-    // Extract unique tile coordinates from visible walls
-    const tileSet = new Set<string>();
-    for (const wall of walls) {
-      tileSet.add(`${wall.gridX},${wall.gridY}`);
-    }
-
-    // Convert to array of coordinate tuples
-    const tiles = Array.from(tileSet).map(key => {
-      const [x, y] = key.split(',').map(Number);
-      return [x, y] as [number, number];
-    });
-
     if (this.debugMode) {
       console.log('[WebGL] Visible tiles for floor/ceiling:', {
         count: tiles.length,
         depth: config.tileDepth,
         peripheralColumns: config.peripheralColumns,
-        derivedFrom: 'VisibilityService.getVisibleWalls()',
+        source: 'VisibilityService.getVisibleTiles()',
         first15Tiles: tiles.slice(0, 15).map(([x, y]) => `(${x},${y})`).join(', ')
       });
     }

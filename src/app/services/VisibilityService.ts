@@ -7,6 +7,142 @@ import { DungeonService } from './DungeonService'
  */
 export const VisibilityService = {
   /**
+   * Get visible tile coordinates from player's perspective.
+   * Returns all tiles that would be visible, including empty tiles (all walls open).
+   *
+   * Uses the same traversal logic as getVisibleWalls but returns tile coordinates
+   * instead of wall segments.
+   *
+   * @param level - Level data including tiles and size
+   * @param position - Player position and facing direction
+   * @param maxDepth - Maximum viewing distance (typically 5 tiles)
+   * @param peripheralColumns - Number of columns in peripheral vision (3 = left, center, right)
+   * @returns Array of [gridX, gridY] coordinates for all visible tiles
+   */
+  getVisibleTiles(
+    level: LevelData,
+    position: Position,
+    maxDepth: number = 5,
+    peripheralColumns: number = 3
+  ): Array<[number, number]> {
+    const visited = new Set<string>()
+
+    // Calculate perpendicular direction based on facing
+    let perpX = 0, perpY = 0
+    let forwardX = 0, forwardY = 0
+
+    switch (position.facing) {
+      case 'NORTH':
+        forwardX = 0; forwardY = 1
+        perpX = 1; perpY = 0
+        break
+      case 'EAST':
+        forwardX = 1; forwardY = 0
+        perpX = 0; perpY = -1
+        break
+      case 'SOUTH':
+        forwardX = 0; forwardY = -1
+        perpX = -1; perpY = 0
+        break
+      case 'WEST':
+        forwardX = -1; forwardY = 0
+        perpX = 0; perpY = 1
+        break
+    }
+
+    // Helper function to get perpendicular wall direction
+    const getPerpendicularWall = (offset: number): 'north' | 'south' | 'east' | 'west' => {
+      switch (position.facing) {
+        case 'NORTH':
+          return offset < 0 ? 'west' : 'east'
+        case 'EAST':
+          return offset < 0 ? 'north' : 'south'
+        case 'SOUTH':
+          return offset < 0 ? 'east' : 'west'
+        case 'WEST':
+          return offset < 0 ? 'south' : 'north'
+      }
+    }
+
+    // Iterate through depth levels
+    for (let depth = 0; depth < maxDepth; depth++) {
+      const centerX = position.x + forwardX * depth
+      const centerY = position.y + forwardY * depth
+
+      // Skip if center is out of bounds
+      if (centerX < 0 || centerX >= level.size.width ||
+          centerY < 0 || centerY >= level.size.height) {
+        break
+      }
+
+      const centerKey = `${centerX},${centerY}`
+      const centerTile = DungeonService.getTile(level, centerX, centerY)
+
+      // Always add center column tile
+      if (!visited.has(centerKey)) {
+        visited.add(centerKey)
+      }
+
+      // Add peripheral tiles
+      if (peripheralColumns >= 3) {
+        const halfWidth = Math.floor(peripheralColumns / 2)
+
+        for (const direction of [-1, 1]) {
+          let canSeeNext = true
+
+          for (let offset = 1; offset <= halfWidth && canSeeNext; offset++) {
+            const actualOffset = direction * offset
+            const tileX = centerX + perpX * actualOffset
+            const tileY = centerY + perpY * actualOffset
+            const tileKey = `${tileX},${tileY}`
+
+            if (tileX < 0 || tileX >= level.size.width ||
+                tileY < 0 || tileY >= level.size.height) {
+              canSeeNext = false
+              continue
+            }
+
+            const prevTileX = centerX + perpX * (actualOffset - direction)
+            const prevTileY = centerY + perpY * (actualOffset - direction)
+            const prevTile = DungeonService.getTile(level, prevTileX, prevTileY)
+            const wallDir = getPerpendicularWall(direction)
+            const wallOpen = prevTile.walls[wallDir] === 'open'
+
+            if (visited.has(tileKey)) {
+              canSeeNext = wallOpen
+              continue
+            }
+
+            if (wallOpen) {
+              visited.add(tileKey)
+            } else {
+              canSeeNext = false
+            }
+          }
+        }
+      }
+
+      // Check forward wall to determine if we continue deeper
+      // For TILE visibility (unlike wall visibility), we stop immediately when blocked
+      // because we can't see the floor/ceiling of tiles beyond a wall
+      const facingWall = position.facing === 'NORTH' ? centerTile.walls.north :
+                        position.facing === 'EAST' ? centerTile.walls.east :
+                        position.facing === 'SOUTH' ? centerTile.walls.south :
+                        centerTile.walls.west
+
+      if (facingWall !== 'open') {
+        break
+      }
+    }
+
+    // Convert visited Set to array of coordinate tuples
+    return Array.from(visited).map(key => {
+      const [x, y] = key.split(',').map(Number)
+      return [x, y] as [number, number]
+    })
+  },
+
+  /**
    * Get visible wall segments from player's perspective.
    *
    * Uses hybrid grid-based traversal with early stopping for Wizardry-style

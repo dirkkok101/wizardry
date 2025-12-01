@@ -533,6 +533,91 @@ describe('VisibilityService', () => {
     })
   })
 
+  describe('getVisibleTiles', () => {
+    it('returns all visible tiles including empty tiles (all walls open)', () => {
+      // Create a level with an empty tile (all walls open) in view
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level with Empty Tile',
+        size: { width: 5, height: 5 },
+        startPosition: { x: 2, y: 0, facing: 'NORTH' },
+        edgeWrapping: false,
+        encounterRate: 0,
+        encounterTable: '',
+        tiles: [
+          // Player starts at (2, 0), facing north
+          { x: 2, y: 0, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },
+          // Empty tile directly ahead at (2, 1) - ALL walls open
+          { x: 2, y: 1, walls: { north: 'open', east: 'open', south: 'open', west: 'open' } },
+          // Tile ahead at (2, 2) with a wall to stop visibility
+          { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' } },
+        ]
+      }
+
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+      const tiles = VisibilityService.getVisibleTiles(level, position, 3, 1)
+
+      // Should include all 3 tiles, INCLUDING the empty tile at (2, 1)
+      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+
+      expect(tileSet.has('2,0')).toBe(true)  // Player tile
+      expect(tileSet.has('2,1')).toBe(true)  // Empty tile - THIS IS THE KEY TEST
+      expect(tileSet.has('2,2')).toBe(true)  // Tile with north wall
+    })
+
+    it('returns visible tiles matching the visited set from traversal', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 5, height: 5 },
+        startPosition: { x: 2, y: 2, facing: 'NORTH' },
+        edgeWrapping: false,
+        encounterRate: 0,
+        encounterTable: '',
+        tiles: [
+          // Create corridor with walls on sides
+          { x: 2, y: 2, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 3, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' } },
+          { x: 2, y: 4, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' } },
+        ]
+      }
+
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const tiles = VisibilityService.getVisibleTiles(level, position, 3, 1)
+
+      expect(tiles.length).toBe(3)
+
+      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      expect(tileSet.has('2,2')).toBe(true)
+      expect(tileSet.has('2,3')).toBe(true)
+      expect(tileSet.has('2,4')).toBe(true)
+    })
+
+    it('respects wall occlusion when returning visible tiles', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 5, height: 5 },
+        startPosition: { x: 2, y: 2, facing: 'NORTH' },
+        edgeWrapping: false,
+        encounterRate: 0,
+        encounterTable: '',
+        tiles: [
+          // Blocking wall ahead
+          { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 3, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' } },
+        ]
+      }
+
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const tiles = VisibilityService.getVisibleTiles(level, position, 3, 1)
+
+      // Should only see player tile due to blocking wall
+      expect(tiles.length).toBe(1)
+      expect(tiles[0]).toEqual([2, 2])
+    })
+  })
+
   describe('createWallSegment', () => {
     const levelSize = { width: 20, height: 20 }
 
