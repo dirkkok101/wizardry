@@ -289,15 +289,18 @@ describe('CombatService', () => {
         const fighter = createTestCharacter({
           class: CharacterClass.FIGHTER,
           level: 1,
-          strength: 16 // +3 STR mod
+          strength: 16 // +5% hit modifier (authentic Wizardry 1)
         })
         const defender = createTestMonster({ ac: 0 })
 
         const hitChance = CombatService.calculateHitChance(fighter, defender)
 
-        // hitCalcMod = 2, strMod = 3, attackBonus = 5
-        // (5 + 0 + 10) × 5% = 75%
-        expect(hitChance).toBe(75)
+        // Authentic Wizardry 1:
+        // hitCalcMod = 2, STR 16 = +5% hit modifier
+        // STR hit modifier is percentage, converted to attack bonus: +5% / 5 = +1
+        // attackBonus = 2 + 1 = 3
+        // (3 + 0 + 10) × 5% = 65%
+        expect(hitChance).toBe(65)
       })
     })
 

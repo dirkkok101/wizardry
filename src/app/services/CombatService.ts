@@ -1,6 +1,7 @@
 // src/services/CombatService.ts
 import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate, CommandExecutionResult, CombatantStatus } from '@models/Combat'
 import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { CharacterStatus } from '@models/CharacterStatus'
@@ -9,6 +10,8 @@ import { EncounterService } from './EncounterService'
 import { RandomService } from './RandomService'
 import { MonsterResistanceService } from './MonsterResistanceService'
 import { CharacterResistanceService } from './CharacterResistanceService'
+import { ItemProtectionService } from './ItemProtectionService'
+import { StatModifierService } from './StatModifierService'
 import { v4 as uuidv4 } from 'uuid'
 import {
   selectMonsterMageSpell,
@@ -84,9 +87,11 @@ export class CombatService {
       roundNumber: 1,
       combatLog: [],
       canFlee,
+      dungeonLevel,  // Store for flee chance calculation
       statusEffects: new Map(),  // Initialize empty status effects
       acModifiers: new Map(),    // Initialize empty AC modifiers
-      statusDurations: new Map() // Initialize empty status durations
+      statusDurations: new Map(), // Initialize empty status durations
+      monstersDemoralized: false  // Calculated during combat
     }
   }
 
@@ -175,9 +180,12 @@ export class CombatService {
     // Authentic Wizardry 1: HitCalcMod + STR modifier
     const hitCalcMod = this.getHitCalcMod(combatant)
 
-    // For characters: add STR modifier
+    // For characters: add STR hit modifier (percentage bonus converted to attack bonus)
+    // The STR hit modifier is a percentage (e.g., +5% for STR 16)
+    // We convert it to attack bonus by dividing by 5 (since each +1 attack bonus = +5% hit)
     if ('class' in combatant && combatant.class) {
-      const strMod = Math.floor((combatant.strength - 10) / 2)
+      const strHitPercent = StatModifierService.getStrengthHitModifier(combatant.strength)
+      const strMod = strHitPercent / 5
       return hitCalcMod + strMod
     }
 
@@ -206,8 +214,12 @@ export class CombatService {
 
     // Roll damage
     const baseDamage = this.rollDamage(attacker)
-    const strMod = this.getStrengthModifier(attacker)
-    let damage = Math.max(1, baseDamage + strMod)
+    // Use authentic Wizardry 1 STR damage modifier from StatModifierService
+    let strDamageMod = 0
+    if ('strength' in attacker) {
+      strDamageMod = StatModifierService.getStrengthDamageModifier(attacker.strength)
+    }
+    let damage = Math.max(1, baseDamage + strDamageMod)
 
     // Critical hit: (2 × Level)% chance, max 50%
     // Authentic Wizardry 1: Boss/unique monsters resist critical hits
@@ -310,12 +322,6 @@ export class CombatService {
     return 1
   }
 
-  private static getStrengthModifier(combatant: Combatant): number {
-    if ('strength' in combatant) {
-      return Math.floor((combatant.strength - 10) / 2)
-    }
-    return 0
-  }
 
   /**
    * Check if target is helpless (sleeping or paralyzed)
@@ -464,7 +470,38 @@ export class CombatService {
     }
 
     // === MONSTER AI DECISION TREE (Apple II Reference) ===
-    // Priority: 1. Mage spell (75%), 2. Priest spell (75%), 3. Breath (60%), 4. Melee
+    // Priority: -1. Flee (if demoralized), 0. Call for Help, 1. Mage spell (75%), 2. Priest spell (75%), 3. Breath (60%), 4. Melee
+
+    // -1. Flee check (for demoralized monsters with Run ability)
+    // Per Apple II reference: Monsters with Run ability have 65% chance to flee when demoralized
+    if (monster.canFlee && allGroups) {
+      const isDemoralized = this.calculateDemoralization(party, allGroups)
+      if (isDemoralized && RandomService.chance(65)) {
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Monster AI] ${monster.name} flees! (demoralized)`)
+        }
+        return this.createCommand(monster, 'MONSTER_FLEE', undefined, {
+          groupId: monsterGroup?.id
+        })
+      }
+    }
+
+    // 0. Call for Help check
+    // Per Apple II reference: Monsters with Call ability have 75% chance to call
+    // if their group count drops below 5. Help arrives with (Level × 5)% chance.
+    if (monster.canCall && monsterGroup) {
+      const aliveInGroup = monsterGroup.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD').length
+      if (aliveInGroup < 5 && RandomService.chance(75)) {
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Monster AI] ${monster.name} calls for help! (group has ${aliveInGroup} alive)`)
+        }
+        return this.createCommand(monster, 'CALL_FOR_HELP', undefined, {
+          monsterId: monster.monsterId,
+          monsterLevel: monster.level,
+          groupId: monsterGroup.id
+        })
+      }
+    }
 
     // 1. Mage spell check (75% chance if has mage spells)
     if (monster.mageLevel && monster.mageLevel > 0) {
@@ -628,6 +665,14 @@ export class CombatService {
       return this.executeBreathCommand(state, command, existingCharacterUpdates)
     }
 
+    if (command.type === 'CALL_FOR_HELP') {
+      return this.executeCallForHelpCommand(state, command)
+    }
+
+    if (command.type === 'MONSTER_FLEE') {
+      return this.executeMonsterFleeCommand(state, command)
+    }
+
     // TODO: Handle other command types (USE_ITEM)
     return { newState: state, messages: ['Unknown command type'] }
   }
@@ -666,8 +711,8 @@ export class CombatService {
       }
 
       // Check for save vs breath (halves damage, rounded up)
-      const saveChance = CharacterResistanceService.getSaveChance(char, 'breath')
-      const madeSave = RandomService.chance(saveChance)
+      const resistResult = CharacterResistanceService.calculateResistance(char, 'breath')
+      const madeSave = RandomService.chance(resistResult.resistChance)
       if (madeSave) {
         finalDamage = Math.ceil(finalDamage / 2)
       }
@@ -697,11 +742,10 @@ export class CombatService {
 
   /**
    * Check if character has elemental resistance to breath type
+   * Uses ItemProtectionService to check equipped items for elemental protection
    */
   private static hasElementalResistance(char: Character, breathType: string): boolean {
-    // TODO: Check equipped items for elemental resistance
-    // For now, always return false (will be implemented in Task 10)
-    return false
+    return ItemProtectionService.hasElementalResistance(char, breathType)
   }
 
   /**
@@ -739,6 +783,30 @@ export class CombatService {
     const target = command.target as Combatant
     if (!target) {
       return { newState: state, messages: ['No target specified'] }
+    }
+
+    // ========== Class Protection Check (Monster → Character) ==========
+    // Per Apple II reference: Certain items grant 50% chance to nullify attacks
+    // from specific monster classes. Does NOT affect spells or breath weapons.
+    if ('monsterId' in command.actor && 'class' in target) {
+      const monster = command.actor as MonsterInstance
+      const character = target as Character
+      const monsterTemplate = MonsterDataLoader.getMonster(monster.monsterId)
+
+      if (monsterTemplate?.monsterClass) {
+        const hasProtection = ItemProtectionService.hasClassProtection(character, monsterTemplate.monsterClass)
+        if (hasProtection && RandomService.chance(50)) {
+          const actorName = this.getCombatantName(command.actor)
+          const targetName = this.getCombatantName(target)
+          return {
+            newState: state,
+            messages: [
+              `${actorName} attacks ${targetName}`,
+              `${this.RESULT_MARKER}${targetName}'s protection nullifies the attack!`
+            ]
+          }
+        }
+      }
     }
 
     // Check if target is parrying (apply -2 AC bonus)
@@ -835,21 +903,33 @@ export class CombatService {
      * Characters can resist critical hits based on class, race, level, and luck.
      * If resisted, the attack still hits but deals normal damage (not critical).
      *
+     * Physical Protection: Characters with physical elemental protection items
+     * are IMMUNE to critical hits (decapitation).
+     *
      * Fighters, Ninjas have inherent critical resistance (15%).
      * Higher level and luck provide additional resistance.
      */
     let criticalResisted = false
     if (attackResult.critical && 'monsterId' in command.actor && 'class' in target) {
       const character = target as Character
-      const resistResult = CharacterResistanceService.checkResistance(character, 'critical')
 
-      if (resistResult.resisted) {
+      // Physical protection grants immunity to critical hits
+      if (ItemProtectionService.hasPhysicalProtection(character)) {
         criticalResisted = true
         if (this.DEBUG_COMBAT) {
-          console.debug(`[Combat] ${character.name} resists critical hit!`, {
-            resistChance: resistResult.resistChance,
-            breakdown: resistResult.breakdown
-          })
+          console.debug(`[Combat] ${character.name} is immune to critical hits (physical protection)!`)
+        }
+      } else {
+        // Fall back to normal resistance check
+        const resistResult = CharacterResistanceService.checkResistance(character, 'critical')
+        if (resistResult.resisted) {
+          criticalResisted = true
+          if (this.DEBUG_COMBAT) {
+            console.debug(`[Combat] ${character.name} resists critical hit!`, {
+              resistChance: resistResult.resistChance,
+              breakdown: resistResult.breakdown
+            })
+          }
         }
       }
     }
@@ -959,6 +1039,120 @@ export class CombatService {
         monsterGroups: newMonsterGroups
       },
       messages: [message]
+    }
+  }
+
+  /**
+   * Execute a call for help action (Apple II reference)
+   *
+   * Per reference: Monsters with Call ability have 75% chance to call if
+   * group count < 5. Help arrives with (MonsterLevel × 5)% chance.
+   *
+   * When help arrives, 1-4 new monsters of the same type join the group.
+   */
+  private static executeCallForHelpCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): CommandExecutionResult {
+    const monster = command.actor as MonsterInstance
+    const { monsterId, monsterLevel, groupId } = command.data
+
+    const messages: string[] = []
+    messages.push(`${monster.name} calls for help!`)
+
+    // Roll for help to actually arrive: (Level × 5)%
+    const successChance = Math.min(monsterLevel * 5, 100)
+    const helpArrives = RandomService.chance(successChance)
+
+    if (!helpArrives) {
+      messages.push(`${this.RESULT_MARKER}No help arrives!`)
+      return { newState: state, messages }
+    }
+
+    // Help arrives! Generate 1-4 new monsters of the same type
+    const template = MonsterDataLoader.getMonster(monsterId)
+    if (!template) {
+      messages.push(`${this.RESULT_MARKER}Help arrives, but something went wrong!`)
+      return { newState: state, messages }
+    }
+
+    // Generate 1-4 reinforcements
+    const reinforcementCount = RandomService.random(1, 4)
+    const newMonsters: MonsterInstance[] = []
+
+    for (let i = 0; i < reinforcementCount; i++) {
+      const newMonster = MonsterService.createMonsterInstanceFromTemplate(template)
+      newMonsters.push(newMonster)
+    }
+
+    // Find the target group and add monsters
+    const newMonsterGroups = state.monsterGroups.map(g => {
+      if (g.id === groupId) {
+        return {
+          ...g,
+          monsters: [...g.monsters, ...newMonsters]
+        }
+      }
+      return g
+    })
+
+    const reinforcementMsg = reinforcementCount === 1
+      ? `${this.RESULT_MARKER}A ${template.name} joins the battle!`
+      : `${this.RESULT_MARKER}${reinforcementCount} ${template.name}s join the battle!`
+    messages.push(reinforcementMsg)
+
+    if (this.DEBUG_COMBAT) {
+      console.debug(`[Call for Help] ${reinforcementCount} ${template.name}(s) arrived!`)
+    }
+
+    return {
+      newState: {
+        ...state,
+        monsterGroups: newMonsterGroups
+      },
+      messages
+    }
+  }
+
+  /**
+   * Execute monster flee command (Apple II Reference)
+   *
+   * When a monster with Run ability is demoralized and passes the 65% flee check,
+   * it flees from combat. The monster is removed from its group.
+   *
+   * Note: Monster flee doesn't grant XP - they got away!
+   */
+  private static executeMonsterFleeCommand(
+    state: CombatState,
+    command: CombatCommand
+  ): CommandExecutionResult {
+    const monster = command.actor as MonsterInstance
+    const { groupId } = command.data || {}
+
+    const messages: string[] = []
+    messages.push(`${monster.name} flees in terror!`)
+
+    // Remove the fleeing monster from its group
+    const newMonsterGroups = state.monsterGroups.map(g => {
+      if (g.id === groupId) {
+        return {
+          ...g,
+          monsters: g.monsters.filter(m => m.id !== monster.id)
+        }
+      }
+      return g
+    }).filter(g => g.monsters.length > 0) // Remove empty groups
+
+    if (this.DEBUG_COMBAT) {
+      console.debug(`[Monster Flee] ${monster.name} fled from group ${groupId}`)
+    }
+
+    return {
+      newState: {
+        ...state,
+        monsterGroups: newMonsterGroups
+      },
+      messages
     }
   }
 
@@ -1155,6 +1349,16 @@ export class CombatService {
     }
   }
 
+  /**
+   * Execute DISPEL (Turn Undead) command
+   *
+   * Apple II Wizardry 1 mechanics:
+   * - Only works on UNDEAD monsters
+   * - Rolls INDIVIDUALLY for each monster: ((50 + 5×CharLevel) - (10×MonsterLevel))%
+   * - Class penalties: Bishop -20%, Lord -40%
+   * - CRITICAL BUG: Only OK-status undead can be dispelled (sleeping undead immune!)
+   * - Dispelled monsters grant NO XP
+   */
   private static executeDispelCommand(
     state: CombatState,
     command: CombatCommand
@@ -1179,7 +1383,7 @@ export class CombatService {
       }
     }
 
-    // Get first alive monster to determine level for dispel chance
+    // Get alive monsters
     const aliveMonsters = group.monsters.filter(m => m.hp > 0)
     if (aliveMonsters.length === 0) {
       return {
@@ -1191,79 +1395,148 @@ export class CombatService {
     // Action message
     const actionMessage = `${actorName} attempts to DISPEL Group ${groupId}`
 
-    // KNOWN LIMITATION: Undead check not implemented
-    // In authentic Wizardry 1, DISPEL only works on undead monsters.
-    // Currently applies to ALL monsters which makes it overpowered.
-    //
-    // TODO: Implement proper undead classification:
-    // 1. Add 'undead: boolean' property to MonsterTemplate and MonsterInstance
-    // 2. Filter monsters by undead property before applying dispel
-    // 3. Return "has no effect" message for non-undead groups
-    //
-    // See: docs/research/spell-reference.md for authentic mechanics
-
-    // Calculate dispel chance - Authentic Wizardry 1 formula:
-    // Base: 50% + (5 × CharLevel) - (10 × MonsterLevel)
-    // Class penalties:
-    //   - Priest: no penalty (always available)
-    //   - Bishop (level 4+): -20%
-    //   - Lord (level 9+): -40%
-    const casterLevel = caster.level || 1
-    const undeadLevel = aliveMonsters[0].level || 1
-
-    // Base formula
-    let rawChance = 50 + (5 * casterLevel) - (10 * undeadLevel)
-
-    // Apply class penalties
-    const casterClass = caster.class
-    if (casterClass === 'BISHOP' && casterLevel >= 4) {
-      rawChance -= 20
-    } else if (casterClass === 'LORD' && casterLevel >= 9) {
-      rawChance -= 40
-    }
-
-    const dispelChance = Math.max(5, Math.min(95, rawChance))
-
-    // Roll for success
-    const success = RandomService.chance(dispelChance)
-
-    if (success) {
-      // Success! Destroy entire group
-      const newMonsterGroups = state.monsterGroups.map(g =>
-        g.id === groupId
-          ? {
-              ...g,
-              monsters: g.monsters.map(m => ({
-                ...m,
-                hp: 0,
-                status: 'DEAD' as const
-              }))
-            }
-          : g
-      )
-
-      const resultMessage = `${this.RESULT_MARKER}${aliveMonsters.length} undead destroyed!`
-      return {
-        newState: { ...state, monsterGroups: newMonsterGroups },
-        messages: [actionMessage, resultMessage]
-      }
-    } else {
-      // Failure
-      const resultMessage = `${this.RESULT_MARKER}The undead resist! (${dispelChance}% chance)`
+    // Check if any monsters are undead
+    const undeadMonsters = aliveMonsters.filter(m => m.undead === true)
+    if (undeadMonsters.length === 0) {
+      const resultMessage = `${this.RESULT_MARKER}Dispel has no effect on non-undead!`
       return {
         newState: state,
         messages: [actionMessage, resultMessage]
       }
     }
+
+    // CRITICAL BUG TO REPLICATE: Only OK-status undead can be dispelled
+    // Sleeping/held undead are IMMUNE to dispel!
+    const eligibleUndead = undeadMonsters.filter(m => m.status === 'ALIVE')
+    if (eligibleUndead.length === 0) {
+      const resultMessage = `${this.RESULT_MARKER}The undead are held and immune to dispel!`
+      return {
+        newState: state,
+        messages: [actionMessage, resultMessage]
+      }
+    }
+
+    // Calculate base dispel chance
+    const casterLevel = caster.level || 1
+
+    // Apply class penalties (Priest: none, Bishop: -20%, Lord: -40%)
+    let classPenalty = 0
+    const casterClass = caster.class
+    if (casterClass === CharacterClass.BISHOP) {
+      classPenalty = 20
+    } else if (casterClass === CharacterClass.LORD) {
+      classPenalty = 40
+    }
+
+    // Roll individually for each eligible undead
+    let dispelledCount = 0
+    const newMonsterGroups = state.monsterGroups.map(g => {
+      if (g.id !== groupId) return g
+
+      return {
+        ...g,
+        monsters: g.monsters.map(m => {
+          // Skip non-eligible monsters (dead, not undead, or not OK status)
+          if (m.hp <= 0 || !m.undead || m.status !== 'ALIVE') {
+            return m
+          }
+
+          // Calculate per-monster dispel chance
+          // Formula: ((50 + 5×CharLevel) - (10×MonsterLevel))% - ClassPenalty
+          const monsterLevel = m.level || 1
+          const rawChance = 50 + (5 * casterLevel) - (10 * monsterLevel) - classPenalty
+
+          // Clamp to 5-95% range
+          const dispelChance = Math.max(5, Math.min(95, rawChance))
+
+          // Roll for this monster
+          if (RandomService.chance(dispelChance)) {
+            dispelledCount++
+            return {
+              ...m,
+              hp: 0,
+              status: 'DEAD' as const
+            }
+          }
+          return m
+        })
+      }
+    })
+
+    // Build result message
+    let resultMessage: string
+    if (dispelledCount > 0) {
+      resultMessage = dispelledCount === 1
+        ? `${this.RESULT_MARKER}1 undead dispelled!`
+        : `${this.RESULT_MARKER}${dispelledCount} undead dispelled!`
+    } else {
+      resultMessage = `${this.RESULT_MARKER}The undead resist!`
+    }
+
+    return {
+      newState: { ...state, monsterGroups: newMonsterGroups },
+      messages: [actionMessage, resultMessage]
+    }
   }
 
   /**
-   * Calculate flee chance percentage
-   * Formula based on Wizardry 1 research (docs/commands/combat/FleeCommand.md):
-   * - Base chance: 50%
-   * - Speed difference: ±5% per AGI point difference (party avg vs monster avg)
-   * - Luck factor: ±2% per LUC point above/below 10
-   * - Clamped to 10-90% (always some chance to succeed/fail)
+   * Calculate if monsters are demoralized (Apple II Reference)
+   *
+   * Formula: Total Party Level > Total Monster Morale
+   * Where Monster Morale = sum of (Monster Level × Alive Count) for each group
+   *
+   * When demoralized:
+   * - Party gets +20% flee bonus
+   * - Monsters with Run ability have 65% chance to flee each turn
+   *
+   * @param party - Current party members
+   * @param monsterGroups - All monster groups in combat
+   * @param characterUpdates - Optional character updates for accurate HP/status
+   * @returns true if monsters are demoralized
+   */
+  static calculateDemoralization(
+    party: Character[],
+    monsterGroups: MonsterGroup[],
+    characterUpdates?: Map<string, Character>
+  ): boolean {
+    // Calculate total party level (alive members only)
+    const totalPartyLevel = party.reduce((sum, char) => {
+      const current = characterUpdates?.get(char.id) || char
+      // Only count living characters
+      if (current.status === 'DEAD' || current.status === 'ASHES' || current.status === 'LOST') {
+        return sum
+      }
+      return sum + (current.level || 1)
+    }, 0)
+
+    // Calculate total monster morale
+    // Morale = sum of (Monster Level × Alive Count) for each group
+    const totalMonsterMorale = monsterGroups.reduce((sum, group) => {
+      const aliveMonsters = group.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD')
+      if (aliveMonsters.length === 0) return sum
+      // Use the first monster's level as representative for the group
+      const groupLevel = aliveMonsters[0]?.level || 1
+      return sum + (groupLevel * aliveMonsters.length)
+    }, 0)
+
+    if (this.DEBUG_COMBAT) {
+      console.debug(`[Demoralization] Party Level: ${totalPartyLevel}, Monster Morale: ${totalMonsterMorale}`)
+    }
+
+    return totalPartyLevel > totalMonsterMorale
+  }
+
+  /**
+   * Calculate flee chance based on Apple II Wizardry reference
+   *
+   * Formula (from Data Driven Gamer):
+   * - Base: 39% - (MazeLevel × 3%)
+   * - Small party bonus (if 3 or fewer): 20% - (PartyCount × 5%)
+   * - Demoralization bonus: +20% if monsters are demoralized
+   * - Level 10: ALWAYS 0% (running NEVER works on level 10!)
+   *
+   * Example base chances by level:
+   * Level 1: 36%, Level 5: 24%, Level 9: 12%, Level 10: 0%
    */
   static calculateFleeChance(
     state: CombatState,
@@ -1281,10 +1554,12 @@ export class CombatService {
       return 0
     }
 
-    let chance = 50 // Base 50%
+    // Level 10: Running NEVER works!
+    if (state.dungeonLevel === 10) {
+      return 0
+    }
 
-    // Calculate party average AGI (only alive members)
-    // Use characterUpdates to check current HP (after damage this round)
+    // Count alive party members
     const aliveParty = party.filter(c => {
       const updated = characterUpdates?.get(c.id) || c
       return updated.status !== CharacterStatus.DEAD && updated.hp > 0
@@ -1293,28 +1568,22 @@ export class CombatService {
       return 0
     }
 
-    // Use updated agility values if available
-    const partyAvgAgi = aliveParty.reduce((sum, c) => {
-      const updated = characterUpdates?.get(c.id) || c
-      return sum + updated.agility
-    }, 0) / aliveParty.length
+    // Base formula: 39% - (MazeLevel × 3%)
+    let chance = 39 - (state.dungeonLevel * 3)
 
-    // Calculate monster average AGI (only alive monsters)
-    const aliveMonsters = this.getAllAliveMonsters(state)
-    const monsterAvgAgi = aliveMonsters.length > 0
-      ? aliveMonsters.reduce((sum, m) => sum + (m.agility || 10), 0) / aliveMonsters.length
-      : 10
+    // Small party bonus: if party size <= 3, add 20% - (PartySize × 5%)
+    // 1 member: +15%, 2 members: +10%, 3 members: +5%
+    if (aliveParty.length <= 3) {
+      chance += 20 - (aliveParty.length * 5)
+    }
 
-    // Speed difference modifier: ±5% per AGI point
-    const speedDifference = partyAvgAgi - monsterAvgAgi
-    chance += speedDifference * 5
+    // Demoralization bonus: +20% if monsters are demoralized
+    if (state.monstersDemoralized) {
+      chance += 20
+    }
 
-    // Luck factor: average party LUC, ±2% per point above/below 10
-    const partyAvgLuck = aliveParty.reduce((sum, c) => sum + c.luck, 0) / aliveParty.length
-    chance += (partyAvgLuck - 10) * 2
-
-    // Clamp to 10-90% (always some chance to succeed/fail)
-    return Math.max(10, Math.min(90, chance))
+    // Clamp to 0-100% range (no clamping in original, but ensure valid percentage)
+    return Math.max(0, Math.min(100, chance))
   }
 
   /**
@@ -1944,6 +2213,15 @@ export class CombatService {
     currentState = monsterRecoveryResult.newState
     messages.push(...monsterRecoveryResult.messages)
 
+    // Process character status effect recovery
+    // Note: Characters have DIFFERENT recovery rates than monsters!
+    // Paralyzed characters do NOT recover naturally in combat (critical bug)
+    const charRecoveryResult = this.processCharacterStatusRecovery(party, currentState)
+    messages.push(...charRecoveryResult.messages)
+    for (const [id, curedChar] of charRecoveryResult.curedCharacters) {
+      curedCharacters.set(id, curedChar)
+    }
+
     // Tick down status effect durations at end of round
     const durationResult = this.tickStatusDurations(currentState, party)
     currentState = durationResult.newState
@@ -2264,6 +2542,25 @@ export class CombatService {
         type: 'status',
         messages: monsterRecoveryResult.messages,
         monsterGroupsSnapshot: currentState.monsterGroups
+      })
+    }
+
+    // Process character status effect recovery
+    // Note: Characters have DIFFERENT recovery rates than monsters!
+    // Paralyzed characters do NOT recover naturally in combat (critical bug)
+    const charRecoveryResult = this.processCharacterStatusRecovery(party, currentState)
+
+    // Create character recovery event if any characters recovered
+    if (charRecoveryResult.messages.length > 0) {
+      const charRecoveryUpdates = new Map<string, CharacterUpdate>()
+      for (const [id, curedChar] of charRecoveryResult.curedCharacters) {
+        curedCharacters.set(id, curedChar)
+        charRecoveryUpdates.set(id, { status: CharacterStatus.OK })
+      }
+      events.push({
+        type: 'status',
+        messages: charRecoveryResult.messages,
+        ...(charRecoveryUpdates.size > 0 && { characterUpdates: charRecoveryUpdates })
       })
     }
 
@@ -2709,6 +3006,48 @@ export class CombatService {
       },
       messages
     }
+  }
+
+  /**
+   * Process character status effect recovery per round
+   *
+   * Per Apple II reference (Section 15: Status Effects):
+   * Character Recovery:
+   * - ASLEEP: Level × 10% (max 50%)
+   * - AFRAID: Level × 5% (max 50%)
+   * - PARALYZED: NO natural recovery in combat!
+   * - SILENCED: NEVER recovers during battle (MONTINO bug)
+   *
+   * Note: Characters have DIFFERENT recovery rates than monsters!
+   */
+  static processCharacterStatusRecovery(
+    party: Character[],
+    state: CombatState
+  ): { curedCharacters: Map<string, Character>; messages: string[] } {
+    const curedCharacters = new Map<string, Character>()
+    const messages: string[] = []
+
+    for (const char of party) {
+      // Skip dead characters
+      if (char.hp <= 0 || char.status === CharacterStatus.DEAD) continue
+
+      // Check for ASLEEP recovery (Level × 10%, max 50%)
+      if (char.status === CharacterStatus.ASLEEP) {
+        if (MonsterResistanceService.rollCharacterRecovery(char.level, 'ASLEEP')) {
+          const curedChar = { ...char, status: CharacterStatus.OK }
+          curedCharacters.set(char.id, curedChar)
+          messages.push(`${char.name} wakes up!`)
+        }
+      }
+
+      // PARALYZED: Characters have NO natural recovery in combat!
+      // This is a critical difference from monsters - intentionally not processing
+
+      // Check statusEffects for SILENCED (which NEVER recovers per MONTINO bug)
+      // Intentionally not processing SILENCED recovery
+    }
+
+    return { curedCharacters, messages }
   }
 
   /**

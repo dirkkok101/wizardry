@@ -6,6 +6,7 @@ import { ItemDataLoader } from '@services/ItemDataLoader';
 import { TrapDataLoader } from '@services/TrapDataLoader';
 import { RaceService } from '@services/RaceService';
 import { RandomService } from '@services/RandomService';
+import { StatModifierService } from '@services/StatModifierService';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -54,7 +55,7 @@ global.fetch = jest.fn(async (url: string) => {
   }
 }) as jest.Mock;
 
-// Pre-load classes, spells, monsters, items, traps, and races for all tests using real data
+// Pre-load classes, spells, monsters, items, traps, races, and stat modifiers for all tests using real data
 beforeAll(async () => {
   await Promise.all([
     ClassDataLoader.loadAllClasses(),
@@ -62,7 +63,8 @@ beforeAll(async () => {
     MonsterDataLoader.loadAllMonsters(),
     ItemDataLoader.loadAllItems(),
     TrapDataLoader.loadAllTraps(),
-    RaceService.initialize()
+    RaceService.initialize(),
+    StatModifierService.initialize()
   ]);
 });
 
