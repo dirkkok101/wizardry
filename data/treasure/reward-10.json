@@ -1,0 +1,9 @@
+{
+  "rewardType": 10,
+  "description": "Basic treasure - early dungeon levels",
+  "goldDice": { "count": 2, "sides": 5, "multiplier": 10 },
+  "traps": ["none", "poison_needle", "type3"],
+  "tiers": [
+    { "chance": 10, "minItemId": 3, "maxItemId": 17 }
+  ]
+}

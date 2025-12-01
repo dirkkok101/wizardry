@@ -1,0 +1,16 @@
+{
+  "rewardType": 17,
+  "description": "Excellent treasure - levels 7-8",
+  "goldDice": {
+    "count": 10,
+    "sides": 10,
+    "multiplier": 10,
+    "bonusRoll": { "count": 1, "sides": 2 }
+  },
+  "traps": ["none", "poison_needle", "gas_bomb", "teleporter", "alarm"],
+  "tiers": [
+    { "chance": 100, "minItemId": 19, "maxItemId": 33 },
+    { "chance": 50, "minItemId": 35, "maxItemId": 52 },
+    { "chance": 15, "minItemId": 54, "maxItemId": 80 }
+  ]
+}

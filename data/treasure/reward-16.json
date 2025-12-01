@@ -1,0 +1,11 @@
+{
+  "rewardType": 16,
+  "description": "Superior treasure - levels 6-7",
+  "goldDice": { "count": 10, "sides": 10, "multiplier": 10 },
+  "traps": ["none", "type3", "teleporter", "anti_mage", "anti_priest"],
+  "tiers": [
+    { "chance": 75, "minItemId": 19, "maxItemId": 33 },
+    { "chance": 25, "minItemId": 35, "maxItemId": 52 },
+    { "chance": 10, "minItemId": 54, "maxItemId": 80 }
+  ]
+}

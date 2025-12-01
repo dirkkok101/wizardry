@@ -10,7 +10,6 @@
 
 import { Character } from '@models/Character'
 import { Item } from '@models/Item'
-import { ItemType, ItemSlot } from '@models/ItemType'
 import { Position } from '@models/Dungeon'
 import {
   Chest,
@@ -20,13 +19,11 @@ import {
   TreasureDistributionResult,
   InventoryWarning,
   TRAP_PROBABILITY_BY_TIER,
-  GOLD_RANGE_BY_TIER,
-  ITEM_CHANCE_BY_TIER,
   MAX_INVENTORY_SIZE
 } from '@models/Chest'
 import { TrapId } from '@models/Trap'
 import { RandomService } from './RandomService'
-import { TrapDataLoader } from './TrapDataLoader'
+import { TreasureService } from './TreasureService'
 import { isAlive } from '@utils/CharacterStatusHelpers'
 
 /**
@@ -116,57 +113,13 @@ async function selectTrapId(rewardTier: RewardTier): Promise<TrapId> {
 }
 
 /**
- * Generate gold amount based on reward tier
- */
-function generateGold(rewardTier: RewardTier): number {
-  const range = GOLD_RANGE_BY_TIER[rewardTier]
-  return RandomService.random(range.min, range.max)
-}
-
-/**
- * Generate items for a chest (placeholder - actual items would come from item tables)
- * In full implementation, this would use ItemService to select appropriate items
- */
-function generateItems(rewardTier: RewardTier, mazeLevel: number): Item[] {
-  const items: Item[] = []
-  const chances = ITEM_CHANCE_BY_TIER[rewardTier]
-
-  // First item slot
-  if (RandomService.roll(chances.first)) {
-    // Placeholder - in real implementation, would select from item tables
-    // based on rewardTier and mazeLevel
-    items.push(createPlaceholderItem(rewardTier, mazeLevel, 1))
-  }
-
-  // Second item slot
-  if (RandomService.roll(chances.second)) {
-    items.push(createPlaceholderItem(rewardTier, mazeLevel, 2))
-  }
-
-  return items
-}
-
-/**
- * Create a placeholder item (to be replaced with real item generation)
- */
-function createPlaceholderItem(rewardTier: RewardTier, mazeLevel: number, slot: number): Item {
-  // This is a placeholder - real implementation would query item tables
-  return {
-    id: `item_${rewardTier}_${mazeLevel}_${slot}_${RandomService.random(1000, 9999)}`,
-    name: `Treasure Item (Tier ${rewardTier})`,
-    type: ItemType.MISC,
-    slot: ItemSlot.NONE,
-    price: rewardTier * 100 * RandomService.random(1, 5),
-    cursed: false,
-    identified: false,
-    equipped: false
-  }
-}
-
-/**
- * Generate a treasure chest
+ * Generate a treasure chest using authentic Wizardry 1 treasure formulas
  *
- * @param rewardTier Quality tier (1-5) affecting trap chance and loot
+ * Uses TreasureService for gold/item generation with authentic dice-based formulas:
+ * - Gold: reward-type-specific dice rolls (e.g., 10d5×10 for type 14 = 100-500 gold)
+ * - Items: tier-based percentage chances with real item lookups from JSON data
+ *
+ * @param rewardTier Quality tier (10-19) affecting trap chance and loot
  * @param mazeLevel Dungeon level (affects disarm difficulty)
  * @param position Where the chest was found
  * @param source How the chest was discovered
@@ -178,15 +131,20 @@ async function generateChest(
   position: Position,
   source: ChestSource
 ): Promise<Chest> {
-  // Determine if trapped
+  // Use TreasureService for authentic treasure generation
+  const treasureChest = TreasureService.generateChest(rewardTier)
+
+  // Convert TreasureItem[] to Item[]
+  const items: Item[] = treasureChest.items.map(ti => ti.item)
+
+  const contents: TreasureContents = {
+    gold: treasureChest.gold,
+    items
+  }
+
+  // Determine if trapped (keep existing logic for authentic trap selection)
   const trapProbability = TRAP_PROBABILITY_BY_TIER[rewardTier]
   const trapped = RandomService.roll(trapProbability)
-
-  // Generate contents
-  const contents: TreasureContents = {
-    gold: generateGold(rewardTier),
-    items: generateItems(rewardTier, mazeLevel)
-  }
 
   return {
     id: generateChestId(),
@@ -441,10 +399,8 @@ export const ChestService = {
   createEmptyChest,
   createChestWithContents,
 
-  // Content generation (internal, exposed for testing)
+  // Trap selection (internal, exposed for testing)
   selectTrapId,
-  generateGold,
-  generateItems,
 
   // Distribution
   selectRecipient,

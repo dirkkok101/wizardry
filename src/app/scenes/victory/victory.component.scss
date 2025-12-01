@@ -88,22 +88,13 @@
     border: 1px solid var(--color-gold-primary);
     border-radius: var(--card-border-radius);
     padding: var(--space-3);
-    margin-bottom: var(--space-3);
 
     p {
       color: var(--color-gold-primary);
       font-family: var(--font-display);
       font-size: var(--font-size-base);
       margin: 0;
-      animation: pulse 2s ease-in-out infinite;
     }
-  }
-
-  .continue-hint {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-    margin-top: var(--space-4);
-    animation: blink 2s ease-in-out infinite;
   }
 }
 
@@ -112,31 +103,6 @@
 
   p {
     color: var(--color-text-secondary);
-    margin-bottom: var(--space-3);
-  }
-
-  .continue-hint {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-    animation: blink 2s ease-in-out infinite;
-  }
-}
-
-@keyframes blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
   }
 }
 

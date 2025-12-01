@@ -1,0 +1,15 @@
+{
+  "description": "Item pools for monster drops by level. Each level has a list of item IDs that can drop.",
+  "pools": {
+    "1": ["dagger", "short_sword", "leather_armor", "small_shield", "staff", "robes"],
+    "2": ["dagger_1", "short_sword_1", "leather_1", "shield_1", "helm", "chain_mail"],
+    "3": ["long_sword", "mace_1", "chain_1", "shield_2", "helm_1", "breast_plate"],
+    "4": ["long_sword_1", "staff_2", "chain_2", "breast_plate_1", "shield_3", "great_helm"],
+    "5": ["long_sword_2", "mace_2", "plate_mail", "plate_mail_1", "large_shield", "armor_heroes"],
+    "6": ["anointed_mace", "blade_cusinart", "plate_mail_2", "ring_healing", "blue_ribbon"],
+    "7": ["were_slayer", "dragon_slayer", "staff_mogref", "chain_pro_fire", "ring_porfic"],
+    "8": ["vorpal_blade", "mage_masher", "evil_plate_3", "evil_shield_3", "deadly_ring"],
+    "9": ["murasama_blade", "thieves_dagger", "lords_garb", "jeweled_amulet", "diadem_malor"],
+    "10": ["werdna_amulet", "staff_montino", "shuriken", "amulet_makanito", "ring_pro_undead"]
+  }
+}

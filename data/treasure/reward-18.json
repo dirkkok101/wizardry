@@ -1,0 +1,16 @@
+{
+  "rewardType": 18,
+  "description": "Exceptional treasure - levels 8-9",
+  "goldDice": {
+    "count": 10,
+    "sides": 10,
+    "multiplier": 10,
+    "bonusRoll": { "count": 1, "sides": 4 }
+  },
+  "traps": ["poison_needle", "gas_bomb", "anti_mage", "anti_priest"],
+  "tiers": [
+    { "chance": 70, "minItemId": 35, "maxItemId": 52 },
+    { "chance": 25, "minItemId": 54, "maxItemId": 80 },
+    { "chance": 5, "minItemId": 81, "maxItemId": 93 }
+  ]
+}

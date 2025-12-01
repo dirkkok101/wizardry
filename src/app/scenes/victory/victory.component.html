@@ -29,19 +29,10 @@
             <p>A treasure chest awaits...</p>
           </div>
         }
-
-        <p class="continue-hint">
-          @if (hasPendingChest()) {
-            Press ENTER to open the treasure chest...
-          } @else {
-            Press ENTER to return to the maze...
-          }
-        </p>
       </div>
     } @else {
       <div class="no-rewards">
         <p>No victory data available.</p>
-        <p class="continue-hint">Press ENTER to return to the maze...</p>
       </div>
     }
   </div>

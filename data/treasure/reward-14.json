@@ -1,0 +1,11 @@
+{
+  "rewardType": 14,
+  "description": "Good treasure - levels 4-5",
+  "goldDice": { "count": 10, "sides": 5, "multiplier": 10 },
+  "traps": ["none", "poison_needle", "gas_bomb", "type3", "anti_mage"],
+  "tiers": [
+    { "chance": 50, "minItemId": 3, "maxItemId": 17 },
+    { "chance": 30, "minItemId": 19, "maxItemId": 33 },
+    { "chance": 10, "minItemId": 35, "maxItemId": 52 }
+  ]
+}
