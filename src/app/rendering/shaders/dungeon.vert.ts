@@ -1,12 +1,14 @@
 export const VERTEX_SHADER = `
   attribute vec3 aPosition;
   attribute vec2 aTexCoord;
+  attribute float aDarknessFactor;
 
   uniform mat4 uProjectionMatrix;
   uniform mat4 uViewMatrix;
 
   varying vec2 vTexCoord;
   varying float vDistance;
+  varying float vDarknessFactor;
 
   void main() {
     // Transform position to view space
@@ -20,5 +22,8 @@ export const VERTEX_SHADER = `
 
     // Pass distance for fog calculation
     vDistance = length(viewPos.xyz);
+
+    // Pass per-tile darkness factor to fragment shader
+    vDarknessFactor = aDarknessFactor;
   }
 `;

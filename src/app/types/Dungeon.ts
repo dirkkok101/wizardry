@@ -158,12 +158,22 @@ export interface Vector2 {
 }
 
 /**
+ * Information about a visible tile including darkness state.
+ * Used when rendering tiles with variable brightness based on darkness depth.
+ */
+export interface VisibleTileInfo {
+  x: number
+  y: number
+  darknessDepth: number  // 0 = normal tile, 1+ = tiles deep into darkness zone
+}
+
+/**
  * Combined visibility result containing both walls and tiles.
  * Single traversal produces both, ensuring they're always in sync.
  */
 export interface VisibleGeometry {
   walls: WallSegment[]
-  tiles: Array<[number, number]>
+  tiles: Array<VisibleTileInfo>
 }
 
 /**
@@ -187,6 +197,9 @@ export interface WallSegment {
   gridX: number        // Map X coordinate
   gridY: number        // Map Y coordinate
   side: 'north' | 'south' | 'east' | 'west'  // Wall orientation
+
+  // Darkness state
+  darknessDepth: number  // 0 = normal tile, 1+ = tiles deep into darkness zone
 }
 
 /**

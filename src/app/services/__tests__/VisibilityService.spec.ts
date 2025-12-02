@@ -464,7 +464,7 @@ describe('VisibilityService', () => {
       const position: Position = { x: 9, y: 9, facing: 'EAST' }
       const { tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
 
-      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      const tileSet = new Set(tiles.map(t => `${t.x},${t.y}`))
 
       // Verify peripheral tiles at depth=0
       expect(tileSet.has('9,9')).toBe(true)   // Current position
@@ -481,7 +481,7 @@ describe('VisibilityService', () => {
       const { walls, tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
 
       // Verify tile is in tiles array
-      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      const tileSet = new Set(tiles.map(t => `${t.x},${t.y}`))
       expect(tileSet.has('10,11')).toBe(true)
 
       // Verify east wall of (10, 11) is in walls array
@@ -707,7 +707,7 @@ describe('VisibilityService', () => {
       expect(walls.length).toBeGreaterThan(0)
       expect(tiles.length).toBe(2)
 
-      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      const tileSet = new Set(tiles.map(t => `${t.x},${t.y}`))
       expect(tileSet.has('2,2')).toBe(true)
       expect(tileSet.has('2,3')).toBe(true)
     })
@@ -746,7 +746,7 @@ describe('VisibilityService', () => {
       })
 
       // Extract tile coordinates from tiles array
-      const floorTiles = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      const floorTiles = new Set(tiles.map(t => `${t.x},${t.y}`))
 
       // Critical: every tile with walls should also have floor/ceiling
       wallTiles.forEach(tile => {
@@ -774,7 +774,7 @@ describe('VisibilityService', () => {
         })
 
         // Extract tile coordinates from tiles array
-        const floorTiles = new Set(tiles.map(([x, y]) => `${x},${y}`))
+        const floorTiles = new Set(tiles.map(t => `${t.x},${t.y}`))
 
         // Critical assertion: every tile with walls must have floor/ceiling
         // This was the bug - tiles like (1,0) had walls but no floor/ceiling
@@ -797,7 +797,7 @@ describe('VisibilityService', () => {
         const position: Position = { x: 0, y: 1, facing: 'EAST' }
         const { tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
 
-        const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+        const tileSet = new Set(tiles.map(t => `${t.x},${t.y}`))
 
         // Expected visible tiles
         expect(tileSet.has('0,1')).toBe(true)  // Current tile
@@ -935,6 +935,139 @@ describe('VisibilityService', () => {
         expect(wall.z1).toBe(11)
         expect(wall.z2).toBe(11)
       })
+    })
+  })
+
+  describe('darkness tile visibility limiting', () => {
+    // Create a test level with darkness tiles starting at y=2
+    const createLevelWithDarkness = (): LevelData => ({
+      level: 1,
+      name: 'Darkness Test Level',
+      size: { width: 5, height: 10 },
+      startPosition: { x: 2, y: 0, facing: 'north' },
+      edgeWrapping: false,
+      encounterRate: 0,
+      encounterTable: '',
+      tiles: [
+        // Normal tiles at y=0, y=1
+        { x: 2, y: 0, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },
+        { x: 2, y: 1, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' } },
+        // Darkness tiles starting at y=2
+        { x: 2, y: 2, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
+        { x: 2, y: 3, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
+        { x: 2, y: 4, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
+        { x: 2, y: 5, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
+        { x: 2, y: 6, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
+      ]
+    })
+
+    it('returns darknessDepth property for each visible tile', () => {
+      const level = createLevelWithDarkness()
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+
+      const { tiles } = VisibilityService.getVisibleGeometry(level, position, 5, 1)
+
+      // All tiles should have darknessDepth property (now using VisibleTileInfo)
+      tiles.forEach(tile => {
+        expect(tile).toHaveProperty('darknessDepth')
+        expect(typeof tile.darknessDepth).toBe('number')
+      })
+    })
+
+    it('returns darknessDepth 0 for normal tiles', () => {
+      const level = createLevelWithDarkness()
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+
+      const { tiles } = VisibilityService.getVisibleGeometry(level, position, 5, 1)
+
+      // Tiles at y=0 and y=1 are normal - should have darknessDepth 0
+      const tile0 = tiles.find(t => t.x === 2 && t.y === 0)
+      const tile1 = tiles.find(t => t.x === 2 && t.y === 1)
+
+      expect(tile0?.darknessDepth).toBe(0)
+      expect(tile1?.darknessDepth).toBe(0)
+    })
+
+    it('returns incrementing darknessDepth when entering darkness zone', () => {
+      const level = createLevelWithDarkness()
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+
+      const { tiles } = VisibilityService.getVisibleGeometry(level, position, 6, 1)
+
+      // Darkness starts at y=2
+      const tile2 = tiles.find(t => t.x === 2 && t.y === 2)
+      const tile3 = tiles.find(t => t.x === 2 && t.y === 3)
+
+      expect(tile2?.darknessDepth).toBe(1)  // First darkness tile
+      expect(tile3?.darknessDepth).toBe(2)  // Second darkness tile
+    })
+
+    it('limits visibility to 2 tiles into darkness zone', () => {
+      const level = createLevelWithDarkness()
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+
+      // Request 6 tiles deep - but should stop after 2 tiles into darkness
+      const { tiles } = VisibilityService.getVisibleGeometry(level, position, 6, 1)
+
+      const tileCoords = tiles.map(t => `${t.x},${t.y}`)
+
+      // Should see: (2,0), (2,1) normal + (2,2), (2,3) darkness = 4 tiles
+      expect(tileCoords).toContain('2,0')  // Normal
+      expect(tileCoords).toContain('2,1')  // Normal
+      expect(tileCoords).toContain('2,2')  // Darkness depth 1
+      expect(tileCoords).toContain('2,3')  // Darkness depth 2
+
+      // Should NOT see tiles beyond 2 into darkness
+      expect(tileCoords).not.toContain('2,4')  // Beyond darkness limit
+      expect(tileCoords).not.toContain('2,5')  // Beyond darkness limit
+    })
+
+    it('includes darknessDepth on wall segments', () => {
+      const level = createLevelWithDarkness()
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+
+      const { walls } = VisibilityService.getVisibleGeometry(level, position, 5, 1)
+
+      // All walls should have darknessDepth property
+      walls.forEach(wall => {
+        expect(wall).toHaveProperty('darknessDepth')
+        expect(typeof wall.darknessDepth).toBe('number')
+      })
+
+      // Walls at darkness tiles should have matching darknessDepth
+      const wallsAtY2 = walls.filter(w => w.gridY === 2)
+      wallsAtY2.forEach(wall => {
+        expect(wall.darknessDepth).toBe(1)  // First darkness tile
+      })
+    })
+
+    it('resets darknessDepth when exiting darkness zone', () => {
+      // Create level: normal -> darkness -> normal
+      const level: LevelData = {
+        level: 1,
+        name: 'Darkness Exit Test',
+        size: { width: 5, height: 6 },
+        startPosition: { x: 2, y: 0, facing: 'north' },
+        edgeWrapping: false,
+        encounterRate: 0,
+        encounterTable: '',
+        tiles: [
+          { x: 2, y: 0, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },  // Normal
+          { x: 2, y: 1, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },  // Darkness
+          { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' } },  // Normal again
+        ]
+      }
+
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' }
+      const { tiles } = VisibilityService.getVisibleGeometry(level, position, 5, 1)
+
+      const tile0 = tiles.find(t => t.x === 2 && t.y === 0)
+      const tile1 = tiles.find(t => t.x === 2 && t.y === 1)
+      const tile2 = tiles.find(t => t.x === 2 && t.y === 2)
+
+      expect(tile0?.darknessDepth).toBe(0)  // Normal
+      expect(tile1?.darknessDepth).toBe(1)  // Darkness
+      expect(tile2?.darknessDepth).toBe(0)  // Back to normal - depth resets
     })
   })
 })

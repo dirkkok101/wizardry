@@ -31,6 +31,13 @@ const SPELL_DURATION = {
 // Warning threshold for expiring light
 const LIGHT_WARNING_THRESHOLD = 5
 
+// Darkness visibility when looking INTO darkness from outside
+const DARKNESS_LOOK_IN = {
+  MAX_DEPTH: 2,           // Can only see 2 tiles into darkness
+  DEPTH_1_FACTOR: 0.3,    // First darkness tile brightness factor
+  DEPTH_2_FACTOR: 0.1     // Second darkness tile brightness factor
+}
+
 /**
  * Result from processing light duration decrement
  */
@@ -89,6 +96,20 @@ function getAmbientLightLevel(state: DungeonState): number {
     return 0.05  // Nearly pitch black in darkness zones without light
   }
   return 0.15  // Dim in normal zones without spell
+}
+
+/**
+ * Calculate darkness factor for a tile based on its depth into a darkness zone.
+ * Used when player is OUTSIDE darkness looking IN.
+ *
+ * @param darknessDepth - How many tiles deep into darkness (0 = not in darkness)
+ * @returns Brightness multiplier (0.0 to 1.0)
+ */
+function getDarknessFactorForDepth(darknessDepth: number): number {
+  if (darknessDepth === 0) return 1.0
+  if (darknessDepth === 1) return DARKNESS_LOOK_IN.DEPTH_1_FACTOR
+  if (darknessDepth === 2) return DARKNESS_LOOK_IN.DEPTH_2_FACTOR
+  return 0.0  // Beyond max depth
 }
 
 /**
@@ -302,6 +323,7 @@ export const LightService = {
   // View distance
   getEffectiveViewDistance,
   getAmbientLightLevel,
+  getDarknessFactorForDepth,
 
   // Duration
   rollMilwaDuration,
@@ -328,5 +350,6 @@ export const LightService = {
   // Constants (exposed for tests)
   VIEW_DISTANCE,
   SPELL_DURATION,
-  LIGHT_WARNING_THRESHOLD
+  LIGHT_WARNING_THRESHOLD,
+  DARKNESS_LOOK_IN
 }

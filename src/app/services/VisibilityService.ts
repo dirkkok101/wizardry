@@ -1,5 +1,6 @@
-import { LevelData, Position, WallSegment, WallType, VisibleGeometry } from '@models/Dungeon'
+import { LevelData, Position, WallSegment, WallType, VisibleGeometry, VisibleTileInfo } from '@models/Dungeon'
 import { DungeonService } from './DungeonService'
+import { LightService } from './LightService'
 
 /**
  * Service for determining visible walls using flood-fill algorithm
@@ -26,7 +27,8 @@ export const VisibilityService = {
     peripheralColumns: number = 3
   ): VisibleGeometry {
     const walls: WallSegment[] = []
-    const visited = new Set<string>()
+    // Track visited tiles with their darkness depth
+    const visited = new Map<string, { darknessDepth: number }>()
 
     // Helper to wrap coordinates if edge wrapping is enabled
     const wrapCoords = (x: number, y: number): { x: number; y: number } => {
@@ -39,23 +41,36 @@ export const VisibilityService = {
       }
     }
 
-    // Helper to add walls from a tile
-    const addTileWalls = (tileX: number, tileY: number) => {
+    // Helper to calculate darkness depth for a tile
+    const calcDarknessDepth = (tileX: number, tileY: number, parentDarknessDepth: number): number => {
+      const wrapped = wrapCoords(tileX, tileY)
+      const tile = DungeonService.getTile(level, wrapped.x, wrapped.y)
+      const isDarkness = LightService.isDarknessTile(tile.type)
+
+      if (!isDarkness) {
+        return 0  // Not in darkness - reset depth
+      }
+      // In darkness - increment depth from parent
+      return parentDarknessDepth + 1
+    }
+
+    // Helper to add walls from a tile with darkness depth
+    const addTileWalls = (tileX: number, tileY: number, darknessDepth: number) => {
       const wrapped = wrapCoords(tileX, tileY)
       const tile = DungeonService.getTile(level, wrapped.x, wrapped.y)
 
       // Add all 4 walls if they're not open
       if (tile.walls.north !== 'open') {
-        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'north', position, tile.walls.north, level.size))
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'north', position, tile.walls.north, level.size, darknessDepth))
       }
       if (tile.walls.south !== 'open') {
-        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'south', position, tile.walls.south, level.size))
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'south', position, tile.walls.south, level.size, darknessDepth))
       }
       if (tile.walls.east !== 'open') {
-        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'east', position, tile.walls.east, level.size))
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'east', position, tile.walls.east, level.size, darknessDepth))
       }
       if (tile.walls.west !== 'open') {
-        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'west', position, tile.walls.west, level.size))
+        walls.push(this.createWallSegment(wrapped.x, wrapped.y, 'west', position, tile.walls.west, level.size, darknessDepth))
       }
     }
 
@@ -98,6 +113,9 @@ export const VisibilityService = {
       }
     }
 
+    // Track darkness depth along center column
+    let centerDarknessDepth = 0
+
     // Iterate through depth levels (0 = player tile, 1 = one ahead, etc.)
     for (let depth = 0; depth < maxDepth; depth++) {
       // Calculate center column position at this depth
@@ -113,10 +131,21 @@ export const VisibilityService = {
       const centerKey = `${centerX},${centerY}`
       const centerTile = DungeonService.getTile(level, centerX, centerY)
 
+      // Calculate darkness depth for this tile
+      const tileDarknessDepth = calcDarknessDepth(centerX, centerY, centerDarknessDepth)
+
+      // Stop if we've exceeded max darkness view depth
+      if (tileDarknessDepth > LightService.DARKNESS_LOOK_IN.MAX_DEPTH) {
+        break
+      }
+
+      // Update center darkness depth for next iteration
+      centerDarknessDepth = tileDarknessDepth
+
       // Always add center column tile (both walls and to visited set)
       if (!visited.has(centerKey)) {
-        addTileWalls(centerX, centerY)
-        visited.add(centerKey)
+        addTileWalls(centerX, centerY, tileDarknessDepth)
+        visited.set(centerKey, { darknessDepth: tileDarknessDepth })
       }
 
       // Add peripheral tiles only if there's an opening connecting them to center
@@ -155,8 +184,17 @@ export const VisibilityService = {
             }
 
             if (wallOpen) {
-              addTileWalls(tileX, tileY)
-              visited.add(tileKey)
+              // Calculate darkness depth for peripheral tile (inherit from center)
+              const peripheralDarknessDepth = calcDarknessDepth(tileX, tileY, tileDarknessDepth)
+
+              // Skip if darkness depth exceeds limit
+              if (peripheralDarknessDepth > LightService.DARKNESS_LOOK_IN.MAX_DEPTH) {
+                canSeeNext = false
+                continue
+              }
+
+              addTileWalls(tileX, tileY, peripheralDarknessDepth)
+              visited.set(tileKey, { darknessDepth: peripheralDarknessDepth })
 
               // NEW: Trace forward through this peripheral tile if it has an open forward wall
               // This allows visibility through passages in peripheral tiles
@@ -164,6 +202,9 @@ export const VisibilityService = {
               const forwardWallDir = position.facing.toLowerCase() as 'north' | 'south' | 'east' | 'west'
 
               if (peripheralTile.walls[forwardWallDir] === 'open') {
+                // Track darkness depth for forward tracing
+                let fwdDarknessDepth = peripheralDarknessDepth
+
                 // Add tiles ahead of this peripheral (up to maxDepth)
                 for (let fwdDepth = 1; fwdDepth < maxDepth - depth; fwdDepth++) {
                   const aheadX = tileX + forwardX * fwdDepth
@@ -176,9 +217,19 @@ export const VisibilityService = {
                     break
                   }
 
+                  // Calculate darkness depth for ahead tile
+                  const aheadDarknessDepth = calcDarknessDepth(aheadX, aheadY, fwdDarknessDepth)
+
+                  // Stop if darkness depth exceeds limit
+                  if (aheadDarknessDepth > LightService.DARKNESS_LOOK_IN.MAX_DEPTH) {
+                    break
+                  }
+
+                  fwdDarknessDepth = aheadDarknessDepth
+
                   if (!visited.has(aheadKey)) {
-                    addTileWalls(aheadX, aheadY)
-                    visited.add(aheadKey)
+                    addTileWalls(aheadX, aheadY, aheadDarknessDepth)
+                    visited.set(aheadKey, { darknessDepth: aheadDarknessDepth })
                   }
 
                   // Check if this tile blocks further forward
@@ -209,10 +260,10 @@ export const VisibilityService = {
       }
     }
 
-    // Convert visited set to tiles array
-    const tiles = Array.from(visited).map(key => {
+    // Convert visited map to tiles array with darknessDepth
+    const tiles: VisibleTileInfo[] = Array.from(visited.entries()).map(([key, info]) => {
       const [x, y] = key.split(',').map(Number)
-      return [x, y] as [number, number]
+      return { x, y, darknessDepth: info.darknessDepth }
     })
 
     // Sort walls by distance (back-to-front for painter's algorithm)
@@ -239,7 +290,9 @@ export const VisibilityService = {
     maxDepth: number = 5,
     peripheralColumns: number = 3
   ): Array<[number, number]> {
+    // For backward compatibility, convert VisibleTileInfo to [x, y] tuples
     return this.getVisibleGeometry(level, position, maxDepth, peripheralColumns).tiles
+      .map(t => [t.x, t.y] as [number, number])
   },
 
   /**
@@ -274,7 +327,8 @@ export const VisibilityService = {
     side: 'north' | 'south' | 'east' | 'west',
     playerPos: Position,
     wallType: WallType,
-    levelSize: { width: number; height: number }
+    levelSize: { width: number; height: number },
+    darknessDepth: number = 0
   ): WallSegment {
     // Unwrap coordinates if edge wrapping creates a shorter path
     // If distance > mapSize/2, the coordinate is wrapped and should be unwrapped
@@ -348,7 +402,8 @@ export const VisibilityService = {
       wallType,
       gridX,
       gridY,
-      side
+      side,
+      darknessDepth
     }
   }
 }

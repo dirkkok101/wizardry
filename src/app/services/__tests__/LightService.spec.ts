@@ -63,9 +63,9 @@ describe('LightService', () => {
       expect(LightService.getAmbientLightLevel(state)).toBe(0.05)
     })
 
-    it('returns 0.3 in normal zone without light (dim)', () => {
+    it('returns 0.15 in normal zone without light (dim)', () => {
       const state = createDungeonState({ lightActive: false, inDarknessZone: false })
-      expect(LightService.getAmbientLightLevel(state)).toBe(0.3)
+      expect(LightService.getAmbientLightLevel(state)).toBe(0.15)
     })
   })
 
@@ -341,6 +341,25 @@ describe('LightService', () => {
       const result = LightService.processLightOnMovement(state, undefined, 'darkness_zone_start')
 
       expect(result.state.inDarknessZone).toBe(true)
+    })
+  })
+
+  describe('getDarknessFactorForDepth', () => {
+    it('returns 1.0 for darknessDepth 0 (normal tile)', () => {
+      expect(LightService.getDarknessFactorForDepth(0)).toBe(1.0)
+    })
+
+    it('returns 0.3 for darknessDepth 1 (first darkness tile)', () => {
+      expect(LightService.getDarknessFactorForDepth(1)).toBe(0.3)
+    })
+
+    it('returns 0.1 for darknessDepth 2 (second darkness tile)', () => {
+      expect(LightService.getDarknessFactorForDepth(2)).toBe(0.1)
+    })
+
+    it('returns 0.0 for darknessDepth > 2 (beyond visibility)', () => {
+      expect(LightService.getDarknessFactorForDepth(3)).toBe(0.0)
+      expect(LightService.getDarknessFactorForDepth(10)).toBe(0.0)
     })
   })
 

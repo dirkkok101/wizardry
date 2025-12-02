@@ -17,6 +17,7 @@ export interface UniformLocations {
 export interface AttributeLocations {
   aPosition: number;
   aTexCoord: number;
+  aDarknessFactor: number;
 }
 
 /**

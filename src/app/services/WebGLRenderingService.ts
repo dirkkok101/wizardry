@@ -102,7 +102,8 @@ export class WebGLRenderingService {
 
     this.attributes = {
       aPosition: this.gl.getAttribLocation(this.program, 'aPosition'),
-      aTexCoord: this.gl.getAttribLocation(this.program, 'aTexCoord')
+      aTexCoord: this.gl.getAttribLocation(this.program, 'aTexCoord'),
+      aDarknessFactor: this.gl.getAttribLocation(this.program, 'aDarknessFactor')
     };
 
     // Create buffers
@@ -383,10 +384,11 @@ export class WebGLRenderingService {
       this.renderWall(level, wall, dungeonState);
     }
 
-    // Render floor and ceiling for all visible tiles
-    for (const [gridX, gridY] of visibleTiles) {
-      this.renderFloor(gridX, gridY);
-      this.renderCeiling(gridX, gridY);
+    // Render floor and ceiling for all visible tiles with per-tile darkness
+    for (const tile of visibleTiles) {
+      const darknessFactor = LightService.getDarknessFactorForDepth(tile.darknessDepth);
+      this.renderFloor(tile.x, tile.y, darknessFactor);
+      this.renderCeiling(tile.x, tile.y, darknessFactor);
     }
 
     // Flush remaining quads in batch
@@ -506,6 +508,9 @@ export class WebGLRenderingService {
     const [texX, texY, texW, texH] = this.selectWallTexture(level, wall, dungeonState);
     const [u1, v1, u2, v2] = this.calculateUVs(texX, texY, texW, texH);
 
+    // Calculate darkness factor from wall's darknessDepth
+    const darknessFactor = LightService.getDarknessFactorForDepth(wall.darknessDepth);
+
     // Create quad vertices from wall endpoints
     // Bottom-left, bottom-right, top-right, top-left
     const vertices = this.createQuadVertices(
@@ -514,7 +519,8 @@ export class WebGLRenderingService {
       wall.x2, y2, wall.z2,  // Top-right
       wall.x1, y2, wall.z1,  // Top-left
       u1, v1,                // UV min from atlas
-      u2, v2                 // UV max from atlas
+      u2, v2,                // UV max from atlas
+      darknessFactor
     );
 
     this.addQuadToBatch(vertices);
@@ -524,8 +530,9 @@ export class WebGLRenderingService {
    * Renders a floor quad for a single tile
    * @param gridX - Grid X coordinate
    * @param gridY - Grid Y coordinate
+   * @param darknessFactor - Per-tile darkness factor (1.0 = normal, 0.3 = first darkness tile, etc.)
    */
-  private renderFloor(gridX: number, gridY: number): void {
+  private renderFloor(gridX: number, gridY: number, darknessFactor: number = 1.0): void {
     if (!this.gl) return;
 
     const floorTexture = this.getTextureById('floor_stone');
@@ -560,7 +567,8 @@ export class WebGLRenderingService {
       worldX2, 0, worldZ2,  // Top-right corner
       worldX1, 0, worldZ2,  // Top-left corner
       u1, v1,
-      u2, v2
+      u2, v2,
+      darknessFactor
     );
 
     this.addQuadToBatch(vertices);
@@ -570,8 +578,9 @@ export class WebGLRenderingService {
    * Renders a ceiling quad for a single tile
    * @param gridX - Grid X coordinate
    * @param gridY - Grid Y coordinate
+   * @param darknessFactor - Per-tile darkness factor (1.0 = normal, 0.3 = first darkness tile, etc.)
    */
-  private renderCeiling(gridX: number, gridY: number): void {
+  private renderCeiling(gridX: number, gridY: number, darknessFactor: number = 1.0): void {
     if (!this.gl) return;
 
     const ceilingTexture = this.getTextureById('ceiling_stone');
@@ -605,7 +614,8 @@ export class WebGLRenderingService {
       worldX2, 1, worldZ2,  // Top-right corner
       worldX2, 1, worldZ1,  // Bottom-right corner
       u1, v1,
-      u2, v2
+      u2, v2,
+      darknessFactor
     );
 
     this.addQuadToBatch(vertices);
@@ -618,7 +628,8 @@ export class WebGLRenderingService {
    * @param x3, y3, z3 - Top-right corner
    * @param x4, y4, z4 - Top-left corner
    * @param u1, v1, u2, v2 - UV coordinates (min/max)
-   * @returns Float32Array with interleaved position + UV data
+   * @param darknessFactor - Per-tile darkness factor (1.0 = normal, 0.3 = first darkness tile, etc.)
+   * @returns Float32Array with interleaved position + UV + darkness data
    */
   private createQuadVertices(
     x1: number, y1: number, z1: number,
@@ -626,25 +637,26 @@ export class WebGLRenderingService {
     x3: number, y3: number, z3: number,
     x4: number, y4: number, z4: number,
     u1: number, v1: number,
-    u2: number, v2: number
+    u2: number, v2: number,
+    darknessFactor: number = 1.0
   ): Float32Array {
-    // Interleaved format: [x, y, z, u, v] per vertex
+    // Interleaved format: [x, y, z, u, v, darknessFactor] per vertex
     // Two triangles: (v1, v2, v3) and (v1, v3, v4)
     return new Float32Array([
       // Triangle 1: bottom-left, bottom-right, top-right
-      x1, y1, z1, u1, v2,
-      x2, y2, z2, u2, v2,
-      x3, y3, z3, u2, v1,
+      x1, y1, z1, u1, v2, darknessFactor,
+      x2, y2, z2, u2, v2, darknessFactor,
+      x3, y3, z3, u2, v1, darknessFactor,
       // Triangle 2: bottom-left, top-right, top-left
-      x1, y1, z1, u1, v2,
-      x3, y3, z3, u2, v1,
-      x4, y4, z4, u1, v1
+      x1, y1, z1, u1, v2, darknessFactor,
+      x3, y3, z3, u2, v1, darknessFactor,
+      x4, y4, z4, u1, v1, darknessFactor
     ]);
   }
 
   /**
    * Uploads quad vertex data to GPU and configures attributes
-   * @param vertices - Interleaved vertex data [x,y,z,u,v,...]
+   * @param vertices - Interleaved vertex data [x,y,z,u,v,darknessFactor,...]
    */
   private uploadQuadVertices(vertices: Float32Array): void {
     if (!this.gl || !this.vertexBuffer || !this.attributes) return;
@@ -652,9 +664,10 @@ export class WebGLRenderingService {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, vertices, this.gl.DYNAMIC_DRAW);
 
-    const stride = 5 * Float32Array.BYTES_PER_ELEMENT; // 5 floats per vertex
+    const stride = 6 * Float32Array.BYTES_PER_ELEMENT; // 6 floats per vertex
     const posOffset = 0;
     const uvOffset = 3 * Float32Array.BYTES_PER_ELEMENT;
+    const darknessOffset = 5 * Float32Array.BYTES_PER_ELEMENT;
 
     // Position attribute (3 floats)
     this.gl.vertexAttribPointer(
@@ -677,6 +690,17 @@ export class WebGLRenderingService {
       uvOffset
     );
     this.gl.enableVertexAttribArray(this.attributes.aTexCoord);
+
+    // Darkness factor attribute (1 float)
+    this.gl.vertexAttribPointer(
+      this.attributes.aDarknessFactor,
+      1,
+      this.gl.FLOAT,
+      false,
+      stride,
+      darknessOffset
+    );
+    this.gl.enableVertexAttribArray(this.attributes.aDarknessFactor);
   }
 
   /**
@@ -697,7 +721,7 @@ export class WebGLRenderingService {
 
   /**
    * Adds a quad to the current batch instead of rendering immediately
-   * @param vertices - Quad vertex data (30 floats)
+   * @param vertices - Quad vertex data (36 floats: 6 vertices * 6 floats each)
    */
   private addQuadToBatch(vertices: Float32Array): void {
     // Add all vertex data to batch array
@@ -705,8 +729,8 @@ export class WebGLRenderingService {
       this.batchVertices.push(vertices[i]);
     }
 
-    // If batch is full, flush it
-    if (this.batchVertices.length >= this.maxBatchSize * 30) {
+    // If batch is full, flush it (36 floats per quad: 6 vertices * 6 floats)
+    if (this.batchVertices.length >= this.maxBatchSize * 36) {
       this.flushBatch();
     }
   }
@@ -725,11 +749,13 @@ export class WebGLRenderingService {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, batchData, this.gl.DYNAMIC_DRAW);
 
-    // Configure vertex attributes
-    const stride = 5 * Float32Array.BYTES_PER_ELEMENT;
+    // Configure vertex attributes (6 floats per vertex: x, y, z, u, v, darknessFactor)
+    const stride = 6 * Float32Array.BYTES_PER_ELEMENT;
     const posOffset = 0;
     const uvOffset = 3 * Float32Array.BYTES_PER_ELEMENT;
+    const darknessOffset = 5 * Float32Array.BYTES_PER_ELEMENT;
 
+    // Position attribute (3 floats)
     this.gl.vertexAttribPointer(
       this.attributes.aPosition,
       3,
@@ -740,6 +766,7 @@ export class WebGLRenderingService {
     );
     this.gl.enableVertexAttribArray(this.attributes.aPosition);
 
+    // Texture coordinate attribute (2 floats)
     this.gl.vertexAttribPointer(
       this.attributes.aTexCoord,
       2,
@@ -750,8 +777,19 @@ export class WebGLRenderingService {
     );
     this.gl.enableVertexAttribArray(this.attributes.aTexCoord);
 
+    // Darkness factor attribute (1 float)
+    this.gl.vertexAttribPointer(
+      this.attributes.aDarknessFactor,
+      1,
+      this.gl.FLOAT,
+      false,
+      stride,
+      darknessOffset
+    );
+    this.gl.enableVertexAttribArray(this.attributes.aDarknessFactor);
+
     // Draw entire batch in one call
-    const vertexCount = this.batchVertices.length / 5; // 5 floats per vertex
+    const vertexCount = this.batchVertices.length / 6; // 6 floats per vertex
     this.gl.drawArrays(this.gl.TRIANGLES, 0, vertexCount);
 
     // Check for WebGL errors
