@@ -44,27 +44,28 @@
       </div>
     </header>
 
-    <!-- Loading indicator -->
-    @if (isLoading() && !errorMessage()) {
+    <!-- Loading indicator with progress bar -->
+    @if (isLoading() && !hasError()) {
       <div class="loading-status">
-        <div class="loading-dots">
-          <span></span>
-          <span></span>
-          <span></span>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="percentage()"></div>
+          </div>
+          <p class="progress-percent">{{ percentage() }}%</p>
         </div>
-        <p>Entering the dungeon...</p>
+        <p class="loading-text">{{ currentAsset() }}</p>
       </div>
     }
 
     <!-- Error state -->
-    @if (errorMessage()) {
+    @if (hasError()) {
       <div class="error-status">
         <p class="error-message">{{ errorMessage() }}</p>
       </div>
     }
 
     <!-- Ready state -->
-    @if (!isLoading() && !errorMessage()) {
+    @if (isComplete() && !hasError()) {
       <div class="ready-prompt" appKeystrokeInput (keystroke)="handleKeyPress($event)">
         <p class="press-key">Press any key to continue</p>
 
