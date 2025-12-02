@@ -8,6 +8,13 @@
       }
     </app-scene-title>
 
+    <!-- Surprise Banner -->
+    @if (isSurpriseRound()) {
+      <div class="surprise-banner">
+        YOUR PARTY IS SURPRISED!
+      </div>
+    }
+
     <div class="combat-layout">
       <!-- Left Column: Monsters + Combat Log (stacked) -->
       <section class="left-column">

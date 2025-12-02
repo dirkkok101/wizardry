@@ -86,6 +86,7 @@ export class CombatComponent implements OnInit, OnDestroy {
   readonly selectedGroupId = signal<'A' | 'B' | 'C' | 'D' | null>(null)
   readonly showCharacterSelectionDialog = signal<boolean>(false)
   readonly selectedTargetCharacterId = signal<string | null>(null)
+  readonly isSurpriseRound = signal<boolean>(false)
 
   // Computed party characters - applies display overrides during animation for sync with messages
   readonly partyCharacters = computed(() => {
@@ -500,6 +501,18 @@ export class CombatComponent implements OnInit, OnDestroy {
       ...state,
       currentScene: SceneType.COMBAT
     }))
+
+    // Check for surprise after component initialization
+    queueMicrotask(() => {
+      const combat = this.combatState()
+      if (combat?.surpriseState === 'party' && combat.roundNumber === 1) {
+        console.log('[Combat] Party is surprised! Auto-executing monster round.')
+        this.handlePartySurprise()
+      } else if (combat?.surpriseState === 'monsters' && combat.roundNumber === 1) {
+        console.log('[Combat] Monsters are surprised! Party gets free round.')
+        this.addCombatMessage('You surprised the monsters!')
+      }
+    })
   }
 
   ngOnDestroy(): void {
@@ -763,6 +776,23 @@ export class CombatComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Add a single message to the combat log immediately
+   * Used for surprise announcements and other immediate messages
+   */
+  private addCombatMessage(message: string): void {
+    this.gameState.updateState(state => {
+      if (!state.combat) return state
+      return {
+        ...state,
+        combat: {
+          ...state.combat,
+          combatLog: [...state.combat.combatLog, message]
+        }
+      }
+    })
+  }
+
+  /**
    * Handle action menu selection (new footer menu pattern)
    */
   handleActionSelection(itemId: string): void {
@@ -1004,6 +1034,87 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.showCharacterSelectionDialog.set(false)
   }
 
+  // ============= SURPRISE ROUND HANDLING =============
+
+  /**
+   * Handle party being surprised - show message and auto-execute monster round
+   */
+  private async handlePartySurprise(): Promise<void> {
+    // 1. Set surprise flag and disable menus
+    this.isSurpriseRound.set(true)
+    this.isExecutingRound.set(true)
+
+    // 2. Show surprise message in combat log
+    this.addCombatMessage('Your party is SURPRISED!')
+    await this.delay(1500)
+
+    // 3. Execute monster-only round
+    this.executeMonsterSurpriseRound()
+  }
+
+  /**
+   * Helper to create a delay promise
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Execute monster actions only for surprise round (party cannot act)
+   */
+  private executeMonsterSurpriseRound(): void {
+    const state = this.gameState.state()
+    const combat = state.combat
+    if (!combat) return
+
+    console.log('[Combat] ===== EXECUTING SURPRISE ROUND (Monsters Only) =====')
+
+    // Get characters from roster
+    const roster = this.roster()
+    const partyMembers = this.party().members
+    const chars = partyMembers
+      .map(id => roster.get(id))
+      .filter((char): char is Character => char !== undefined)
+
+    const frontRow = this.party().formation.frontRow
+
+    // Generate monster commands (party has none due to surprise)
+    const actingMonsters = CombatService.getAllActingMonsters(combat)
+    console.log('[Combat] Acting monsters in surprise round:', actingMonsters.length)
+
+    const monsterCommands = actingMonsters.map(m => {
+      const cmd = CombatService.selectMonsterAction(m, chars, frontRow)
+      console.log(`[Combat] Monster ${m.name} -> ${cmd.type} command`)
+      return cmd
+    })
+
+    // Create state with monster commands only
+    const stateWithCommands: CombatState = {
+      ...combat,
+      commandQueue: monsterCommands
+    }
+
+    // Execute round with events
+    const result = CombatService.executeRoundWithEvents(stateWithCommands, chars, frontRow)
+    console.log('[Combat] Surprise round result:', {
+      events: result.events.length,
+      victory: result.victory,
+      defeat: result.defeat
+    })
+
+    // Setup animation (reuse existing pattern)
+    this.displayMonsterGroups.set([...combat.monsterGroups])
+    this.displayCharacterOverrides.set(new Map())
+    this.pendingRoundResult = result
+    this.pendingEvents = result.events
+    this.currentEventIndex = 0
+
+    // Start event-based animation
+    this.startEventAnimation()
+  }
+
+  // ============= NORMAL ROUND EXECUTION =============
+
   executeRound(): void {
     const combat = this.combatState()
     if (!combat) return
@@ -1229,6 +1340,11 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // Clear display state signals - game state is now the source of truth
     this.clearAnimationState()
+
+    // Clear surprise round flag if it was set
+    if (this.isSurpriseRound()) {
+      this.isSurpriseRound.set(false)
+    }
 
     // Mark round execution as complete
     this.isExecutingRound.set(false)
