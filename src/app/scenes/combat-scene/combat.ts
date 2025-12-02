@@ -1,5 +1,5 @@
 // src/app/scenes/combat/combat.ts
-import { Component, computed, signal, OnInit, OnDestroy, ViewChild, ElementRef, effect } from '@angular/core'
+import { Component, computed, signal, OnInit, OnDestroy, ViewChild, ElementRef, effect, HostListener } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '@services/GameStateService'
@@ -353,12 +353,19 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Disable all actions while round is executing
     const isExecuting = this.isExecutingRound()
 
-    return [
+    const items: MenuItem[] = [
       { id: 'attack', label: 'Attack', shortcut: 'A', enabled: !isExecuting },
       { id: 'cast', label: 'Cast Spell', shortcut: 'C', enabled: hasSpells && !isExecuting },
       { id: 'parry', label: 'Parry', shortcut: 'P', enabled: !isExecuting },
       { id: 'flee', label: 'Flee', shortcut: 'F', enabled: (combat?.canFlee ?? false) && !isExecuting }
     ]
+
+    // Add Back option for character 2 onwards
+    if (this.activeCharacterIndex() > 0 && !isExecuting) {
+      items.push({ id: 'back', label: 'Back', shortcut: 'ESC', enabled: true })
+    }
+
+    return items
   })
 
   // Round execution menu
@@ -368,6 +375,12 @@ export class CombatComponent implements OnInit, OnDestroy {
       label: `Execute Round ${this.roundNumber()}`,
       shortcut: 'ENTER',
       enabled: this.allActionsSelected() && !this.isExecutingRound()
+    },
+    {
+      id: 'back',
+      label: 'Back',
+      shortcut: 'ESC',
+      enabled: !this.isExecutingRound()
     }
   ])
 
@@ -801,6 +814,11 @@ export class CombatComponent implements OnInit, OnDestroy {
       return
     }
 
+    if (itemId === 'back') {
+      this.goToPreviousCharacter()
+      return
+    }
+
     if (itemId === 'return') {
       this.returnToMaze()
       return
@@ -1032,6 +1050,72 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.showSpellMenu.set(false)
     this.showGroupSelectionDialog.set(false)
     this.showCharacterSelectionDialog.set(false)
+  }
+
+  /**
+   * Go back to previous character's action selection
+   * Removes their committed action so they can re-select
+   */
+  goToPreviousCharacter(): void {
+    // If all actions selected (at execute screen), go to last character
+    if (this.allActionsSelected()) {
+      const lastIndex = this.alivePartyMembers().length - 1
+      const lastChar = this.alivePartyMembers()[lastIndex]
+      if (lastChar) {
+        this.selectedActions.update(map => {
+          const newMap = new Map(map)
+          newMap.delete(lastChar.id)
+          return newMap
+        })
+      }
+      this.activeCharacterIndex.set(lastIndex)
+      return
+    }
+
+    // Otherwise, go to previous character
+    const currentIndex = this.activeCharacterIndex()
+    if (currentIndex <= 0) return
+
+    const prevIndex = currentIndex - 1
+    const prevChar = this.alivePartyMembers()[prevIndex]
+    if (prevChar) {
+      this.selectedActions.update(map => {
+        const newMap = new Map(map)
+        newMap.delete(prevChar.id)
+        return newMap
+      })
+    }
+    this.activeCharacterIndex.set(prevIndex)
+
+    // Clear any partial selection state
+    this.cancelActionSelection()
+  }
+
+  /**
+   * Handle ESC key for back navigation during action selection
+   */
+  @HostListener('window:keydown.escape')
+  handleEscapeKey(): void {
+    // If a dialog is open, let the dialog handle ESC (they have their own handlers)
+    if (this.showSpellMenu() || this.showGroupSelectionDialog() ||
+        this.showCharacterSelectionDialog()) {
+      return
+    }
+
+    // If executing round, ignore
+    if (this.isExecutingRound()) {
+      return
+    }
+
+    // If victory or defeat modal is showing, ignore
+    if (this.showVictoryModal() || this.showDefeatModal()) {
+      return
+    }
+
+    // Go back to previous character (if not first character, or if all selected)
+    if (this.activeCharacterIndex() > 0 || this.allActionsSelected()) {
+      this.goToPreviousCharacter()
+    }
   }
 
   // ============= SURPRISE ROUND HANDLING =============
