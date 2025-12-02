@@ -720,6 +720,48 @@ describe('VisibilityService', () => {
         expect(floorTiles.has('0,1')).toBe(true)  // Current tile
         expect(floorTiles.has('0,0')).toBe(true)  // Right peripheral
       })
+
+      it('should see tiles through peripheral passages (forward-peripheral visibility)', () => {
+        // Bug: Tile (1,0) is NOT visible even though there's a clear passage through (0,0)
+        // Map layout:
+        //   (0,1): east=WALL (blocks center), south=open → can see (0,0)
+        //   (0,0): east=open → leads to (1,0)
+        //   (1,0): west=open → accessible from (0,0)
+        // Expected: Should see (0,0), (1,0), (0,1), (0,2)
+        const position: Position = { x: 0, y: 1, facing: 'EAST' }
+        const { tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
+
+        const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+
+        // Expected visible tiles
+        expect(tileSet.has('0,1')).toBe(true)  // Current tile
+        expect(tileSet.has('0,0')).toBe(true)  // Right peripheral (south of player)
+        expect(tileSet.has('0,2')).toBe(true)  // Left peripheral (north of player)
+        expect(tileSet.has('1,0')).toBe(true)  // Through (0,0) - THE FIX
+
+        // Should NOT see tiles blocked by walls
+        expect(tileSet.has('1,1')).toBe(false) // Blocked by (0,1).east = wall
+      })
+
+      it('should NOT create north wall for (0,0) since north is open', () => {
+        const position: Position = { x: 0, y: 1, facing: 'EAST' }
+        const { walls } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
+
+        const tile00NorthWall = walls.find(w =>
+          w.gridX === 0 && w.gridY === 0 && w.side === 'north'
+        )
+        expect(tile00NorthWall).toBeUndefined()
+
+        // Should have south and west walls for (0,0)
+        const tile00SouthWall = walls.find(w =>
+          w.gridX === 0 && w.gridY === 0 && w.side === 'south'
+        )
+        const tile00WestWall = walls.find(w =>
+          w.gridX === 0 && w.gridY === 0 && w.side === 'west'
+        )
+        expect(tile00SouthWall).toBeDefined()
+        expect(tile00WestWall).toBeDefined()
+      })
     })
   })
 

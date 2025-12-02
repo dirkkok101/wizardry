@@ -157,6 +157,37 @@ export const VisibilityService = {
             if (wallOpen) {
               addTileWalls(tileX, tileY)
               visited.add(tileKey)
+
+              // NEW: Trace forward through this peripheral tile if it has an open forward wall
+              // This allows visibility through passages in peripheral tiles
+              const peripheralTile = DungeonService.getTile(level, tileX, tileY)
+              const forwardWallDir = position.facing.toLowerCase() as 'north' | 'south' | 'east' | 'west'
+
+              if (peripheralTile.walls[forwardWallDir] === 'open') {
+                // Add tiles ahead of this peripheral (up to maxDepth)
+                for (let fwdDepth = 1; fwdDepth < maxDepth - depth; fwdDepth++) {
+                  const aheadX = tileX + forwardX * fwdDepth
+                  const aheadY = tileY + forwardY * fwdDepth
+                  const aheadKey = `${aheadX},${aheadY}`
+
+                  // Bounds check
+                  if (aheadX < 0 || aheadX >= level.size.width ||
+                      aheadY < 0 || aheadY >= level.size.height) {
+                    break
+                  }
+
+                  if (!visited.has(aheadKey)) {
+                    addTileWalls(aheadX, aheadY)
+                    visited.add(aheadKey)
+                  }
+
+                  // Check if this tile blocks further forward
+                  const aheadTile = DungeonService.getTile(level, aheadX, aheadY)
+                  if (aheadTile.walls[forwardWallDir] !== 'open') {
+                    break
+                  }
+                }
+              }
             } else {
               // Wall blocks further visibility in this direction
               canSeeNext = false
