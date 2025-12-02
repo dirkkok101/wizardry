@@ -1,17 +1,13 @@
 {
   "id": "dialma",
   "name": "DIALMA",
-  "translation": "Great Heal",
   "level": 5,
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Greater healing spell - significant HP restoration",
+  "description": "Greater healing spell - restores 3-24 HP",
   "castableIn": ["combat", "camp"],
   "healing": {
-    "dice": "3d8",
-    "min": 3,
-    "max": 24,
-    "average": 13.5
+    "dice": "3d8"
   }
 }

@@ -292,7 +292,19 @@ export const SpellDefinitionSchema = z.object({
   bugFix: z.boolean().optional(),
   stacking: z.boolean().optional(),
   /** Creature types immune to this spell (e.g., 'undead', 'constructs') */
-  immunities: z.array(z.string()).optional()
+  immunities: z.array(z.string()).optional(),
+  /** MALOR camp mode behavior (coordinate teleport with rock death danger) */
+  campBehavior: z.object({
+    type: z.string().optional(),
+    dangers: z.record(z.string(), z.string()).optional(),
+    restrictions: z.record(z.string(), z.string()).optional()
+  }).passthrough().optional(),
+  /** MALOR combat mode behavior (safe random escape) */
+  combatBehavior: z.object({
+    type: z.string().optional(),
+    destination: z.string().optional(),
+    safe: z.boolean().optional()
+  }).passthrough().optional()
 }).transform((data) => {
   // Migrate legacy acBonus to acModifier
   if (data.acBonus !== undefined && data.acModifier === undefined) {

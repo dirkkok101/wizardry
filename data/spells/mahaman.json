@@ -1,7 +1,6 @@
 {
   "id": "mahaman",
   "name": "MAHAMAN",
-  "translation": "Great Change",
   "level": 7,
   "casterType": "mage",
   "category": "buff",
@@ -13,34 +12,32 @@
   },
   "cost": {
     "experienceLevels": 1,
-    "mustRelearn": true,
-    "notes": "Permanently drains 1 level AND spell must be relearned after casting"
+    "mustRelearn": true
   },
   "randomEffects": [
     {
       "id": 1,
       "name": "Mass Dialko and Heal",
-      "description": "Same as HAMAN effect - cures conditions and heals 9-72 HP each"
+      "effect": "cure_and_heal",
+      "healDice": "9d8"
     },
     {
       "id": 2,
       "name": "Mass Silence",
-      "description": "First 3 monster groups are silenced for 5-9 rounds",
-      "duration": "5 + random(0-4) rounds"
+      "effect": "mass_silence",
+      "target": "first_3_groups",
+      "durationDice": "1d5+4"
     },
     {
       "id": 3,
       "name": "Destroy All Monsters",
-      "description": "ALL monsters in combat are instantly killed (HP set to 0, status set to Dead)",
-      "notes": "Essentially an instant-win condition"
+      "effect": "instant_kill_all"
     }
   ],
   "risks": {
     "spellbookMangling": {
-      "chance": "1 in (CharacterLevel + 1)",
-      "condition": "random(0 to CharacterLevel) equals exactly 5",
-      "effect": "Some spells are unlearned from caster's spellbook"
+      "checkFormula": "random(0, casterLevel) === 5",
+      "effect": "unlearn_spells"
     }
-  },
-  "comparison": "More powerful than HAMAN - effect #3 is essentially an instant-win"
+  }
 }

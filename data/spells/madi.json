@@ -1,7 +1,6 @@
 {
   "id": "madi",
   "name": "MADI",
-  "translation": "Healing",
   "level": 6,
   "casterType": "priest",
   "category": "healing",
@@ -9,10 +8,8 @@
   "description": "Ultimate healing spell - fully restores HP and removes all negative status effects",
   "castableIn": ["combat", "camp"],
   "healing": {
-    "type": "full",
-    "effect": "Restores ALL HP to maximum"
+    "type": "full"
   },
   "curesConditions": ["poison", "afraid", "asleep", "paralyzed", "stoned", "silenced"],
-  "doesNotCure": ["dead", "ashes"],
-  "notes": "The ultimate healing spell - full HP restoration makes dice rolls irrelevant"
+  "doesNotCure": ["dead", "ashes"]
 }

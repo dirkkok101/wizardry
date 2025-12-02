@@ -1,7 +1,6 @@
 {
   "id": "madalto",
   "name": "MADALTO",
-  "translation": "Frost King",
   "level": 5,
   "casterType": "mage",
   "category": "offensive",
@@ -10,14 +9,10 @@
   "castableIn": ["combat"],
   "damage": {
     "dice": "8d8",
-    "min": 8,
-    "max": 64,
-    "average": 36,
     "type": "cold"
   },
   "resistance": {
     "type": "cold",
-    "effect": "half_damage",
-    "notes": "Cold-resistant monsters take half damage"
+    "effect": "half_damage"
   }
 }

@@ -1,7 +1,6 @@
 {
   "id": "di",
   "name": "DI",
-  "translation": "Life",
   "level": 5,
   "casterType": "priest",
   "category": "resurrection",
@@ -12,22 +11,13 @@
   "resurrection": {
     "worksOn": ["dead"],
     "doesNotWorkOn": ["ashes"],
-    "successFormula": "(Vitality × 4)%",
-    "successExamples": {
-      "vitality18": "72%",
-      "vitality10": "40%",
-      "vitality5": "20%"
-    },
     "onSuccess": {
       "hp": 1,
-      "vitalityLoss": 1,
-      "notes": "Character returns with 1 HP; Vitality permanently reduced by 1"
+      "vitalityLoss": 1
     },
     "onFailure": {
-      "result": "ashes",
-      "notes": "Character is converted to ASHES status"
+      "result": "ashes"
     },
-    "criticalWarning": "If Vitality is 3 or lower when cast, failure results in character being permanently LOST",
     "typed": {
       "type": "level_scaled",
       "variable": "vitality",
@@ -35,6 +25,5 @@
       "base": 0,
       "cap": 100
     }
-  },
-  "comparison": "Temple of Cant is safer with (50 + 3×Vitality)% success rate"
+  }
 }

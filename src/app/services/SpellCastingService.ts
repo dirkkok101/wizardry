@@ -128,7 +128,8 @@ export class SpellCastingService {
   static resolveSpellEffect(
     spellId: string,
     caster: Character,
-    targets: Combatant[]
+    targets: Combatant[],
+    context?: 'combat' | 'camp'
   ): SpellEffect {
     const spell = SpellDataLoader.getSpell(spellId)
     if (!spell) {
@@ -344,45 +345,93 @@ export class SpellCastingService {
     if (spell.utility) {
       /**
        * Handle teleportation (MALOR)
-       * Teleports party to a specific dungeon location
-       * Success rate: 75% (SPELL_SUCCESS_RATES.MALOR_TELEPORT)
-       * Failure: Party is scattered to random locations
-       * Target coordinates provided by dungeon navigation UI
+       * Behavior differs based on context:
+       * - COMBAT: random_escape - always succeeds, teleports to random safe spot on current level
+       * - CAMP: coordinate_teleport - user specifies coordinates, risk of rock death
+       *
+       * Coordinates and rock-death validation are handled by MazeScene/TeleportService
        */
       if (spell.utility === 'teleport') {
-        // Success rate from spell data, default 75%
-        const success = RandomService.roll(spell.teleportSuccessRate || 0.75)
+        // Determine behavior based on context
+        const isCombat = context === 'combat'
+        const behavior = isCombat ? spell.combatBehavior : spell.campBehavior
+
+        // Combat mode: always safe, random escape
+        if (isCombat && spell.combatBehavior?.safe) {
+          return {
+            teleport: {
+              success: true,
+              mode: 'random_escape',
+              safe: true
+            },
+            message: `${spell.name} teleports the party to safety!`
+          }
+        }
+
+        // Camp mode: coordinate teleport with rock death danger
+        // Success determined by teleportSuccessRate (default 100% for MALOR)
+        const success = RandomService.roll(spell.teleportSuccessRate ?? 1.0)
+
         return {
           teleport: {
-            success
-            // Coordinates will be provided by dungeon navigation UI
+            success,
+            mode: behavior?.type === 'coordinate_teleport' ? 'coordinate_teleport' : 'random_escape',
+            dangers: spell.campBehavior?.dangers as { solidRock?: 'instant_party_death'; outsideBounds?: 'instant_party_death' },
+            safe: spell.combatBehavior?.safe ?? false,
+            restrictions: spell.campBehavior?.restrictions as { level10?: 'cannot_teleport_in' }
           },
           message: success
-            ? `${spell.name} teleports the party!`
-            : `${spell.name} fails! The party is scattered!`
+            ? `${spell.name} begins teleportation... choose coordinates carefully!`
+            : `${spell.name} fails! The spell fizzles.`
         }
       }
 
       /**
        * Handle recall to town (LOKTOFEIT)
        * Returns party to town from dungeon
-       * Success rate: (caster level × 2 + 1)%, maximum 95%
-       * Research: Original was Level×2%, corrected to (Level×2+1)%
-       * Failure: Party remains in dungeon
+       * Success rate: Uses typed formula from spell data (base + multiplier × level, capped)
+       * On success: Party escapes BUT loses all equipment and 90% gold
+       * Failure: Party remains in dungeon (no penalty)
        */
       if (spell.utility === 'recall') {
-        // Success rate: (caster level × 2 + 1)%, max 95%
         const casterLevel = caster.level || 1
-        const successRate = Math.min(
-          (casterLevel * SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER) + 1,
-          SPELL_SUCCESS_RATES.LOKTOFEIT_MAX_RATE
-        )
+
+        // Use typed formula from spell data if available
+        let successRate: number
+        if (spell.escape?.typed?.type === 'level_scaled') {
+          const { base = 0, multiplier, cap = 100 } = spell.escape.typed
+          successRate = Math.min(base + (multiplier * casterLevel), cap)
+        } else {
+          // Fallback to hardcoded formula
+          successRate = Math.min(
+            (casterLevel * SPELL_SUCCESS_RATES.LOKTOFEIT_LEVEL_MULTIPLIER) + 1,
+            SPELL_SUCCESS_RATES.LOKTOFEIT_MAX_RATE
+          )
+        }
+
         const success = RandomService.chance(successRate)
+
+        // Get consequences from spell data (equipment/gold loss on success)
+        const equipmentLost = spell.escape?.onSuccess?.equipmentLost ?? false
+        const goldLostPercent = spell.escape?.onSuccess?.goldLostPercent ?? 0
+
+        let message: string
+        if (success) {
+          message = `${spell.name} recalls the party to town!`
+          if (equipmentLost || goldLostPercent > 0) {
+            message += ' All equipment is lost and most gold vanishes!'
+          }
+        } else {
+          message = `${spell.name} fails! The party remains in the dungeon!`
+        }
+
         return {
-          recall: { success },
-          message: success
-            ? `${spell.name} recalls the party to town!`
-            : `${spell.name} fails! The party remains in the dungeon!`
+          recall: {
+            success,
+            equipmentLost: success ? equipmentLost : undefined,
+            goldLostPercent: success ? goldLostPercent : undefined
+          },
+          message
         }
       }
 
@@ -438,6 +487,79 @@ export class SpellCastingService {
           groupIds: Array.from(groupIds)
         },
         message: `${spell.name} reveals the identity of all monsters!`
+      }
+    }
+
+    /**
+     * Handle HP reduction spells (MABADI)
+     * Reduces target's HP to a dice roll result (1d8 = 1-8 HP remaining)
+     * CANNOT be resisted - no saving throw
+     */
+    if (spell.effect?.type === 'hp_reduction' && spell.effect.remainingHP?.dice) {
+      const hpReduction: { targetId: string; newHp: number }[] = []
+
+      for (const target of targets) {
+        // Roll dice to determine new HP (MABADI uses 1d8)
+        const newHp = this.rollDice(spell.effect.remainingHP.dice)
+        hpReduction.push({
+          targetId: target.id,
+          newHp
+        })
+      }
+
+      const totalTargets = hpReduction.length
+      return {
+        hpReduction,
+        message: totalTargets > 0
+          ? `${spell.name} reduces ${totalTargets > 1 ? 'enemies\'' : 'enemy\'s'} HP to near death!`
+          : `${spell.name} has no targets!`
+      }
+    }
+
+    /**
+     * Handle random effect spells (HAMAN, MAHAMAN)
+     * Selects a random effect from the spell's randomEffects array
+     * Costs 1 experience level and has spellbook mangling risk
+     */
+    if (spell.randomEffects && spell.randomEffects.length > 0) {
+      // Select random effect
+      const effectIndex = RandomService.random(0, spell.randomEffects.length - 1)
+      const selectedEffect = spell.randomEffects[effectIndex] as {
+        id: number
+        name: string
+        effect: string
+        healDice?: string
+        acValue?: number
+        durationDice?: string
+      }
+
+      // Check for spellbook mangling: random(0, casterLevel) === 5
+      const manglingRoll = RandomService.random(0, caster.level)
+      const spellbookMangled = manglingRoll === 5
+
+      // Get cost info from spell
+      const levelDrain = spell.cost?.experienceLevels ?? 1
+      const mustRelearn = spell.cost?.mustRelearn ?? false
+
+      // Build result message based on effect
+      let message = `${spell.name} invokes ${selectedEffect.name}!`
+      if (spellbookMangled) {
+        message += ' Warning: Some spells have been forgotten!'
+      }
+
+      return {
+        randomEffect: {
+          effectId: selectedEffect.id,
+          effectName: selectedEffect.name,
+          effect: selectedEffect.effect,
+          healDice: selectedEffect.healDice,
+          acValue: selectedEffect.acValue,
+          durationDice: selectedEffect.durationDice,
+          levelDrain,
+          mustRelearn,
+          spellbookMangled
+        },
+        message
       }
     }
 

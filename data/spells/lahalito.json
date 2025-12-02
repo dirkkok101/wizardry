@@ -1,23 +1,18 @@
 {
   "id": "lahalito",
   "name": "LAHALITO",
-  "translation": "Torch",
   "level": 4,
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "Powerful fire-based attack against a monster group",
+  "description": "Powerful fire attack against a monster group",
   "castableIn": ["combat"],
   "damage": {
     "dice": "6d6",
-    "min": 6,
-    "max": 36,
-    "average": 21,
     "type": "fire"
   },
   "resistance": {
     "type": "fire",
-    "effect": "half_damage",
-    "additionalResistance": "Magic Resistance provides save"
+    "effect": "half_damage"
   }
 }

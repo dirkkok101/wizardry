@@ -1,24 +1,16 @@
 {
   "id": "montino",
   "name": "MONTINO",
-  "translation": "Still Air",
   "level": 2,
   "casterType": "priest",
   "category": "debuff",
   "target": "group",
-  "description": "Silences all monsters in a group, preventing spellcasting for remainder of combat",
+  "description": "Silences all monsters in a group, preventing spellcasting",
   "castableIn": ["combat"],
   "statusEffect": {
-    "type": "silenced",
-    "preventsCasting": true
+    "type": "silenced"
   },
   "resistance": {
-    "formula": "(Monster Level × 10)%",
-    "examples": {
-      "level1": "10% resist",
-      "level5": "50% resist",
-      "level10": "100% immune"
-    },
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -28,8 +20,6 @@
     }
   },
   "recovery": {
-    "formula": "(Monster Level × 10)% per round",
-    "cap": "50%",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -37,9 +27,5 @@
       "base": 0,
       "cap": 50
     }
-  },
-  "duration": {
-    "type": "permanent_until_combat_ends"
-  },
-  "notes": "Bug-free version allows recovery (see known-bugs.md for original bug details)"
+  }
 }

@@ -1,7 +1,6 @@
 {
   "id": "mahalito",
   "name": "MAHALITO",
-  "translation": "Big Fire",
   "level": 3,
   "casterType": "mage",
   "category": "offensive",
@@ -10,14 +9,10 @@
   "castableIn": ["combat"],
   "damage": {
     "dice": "4d6",
-    "min": 4,
-    "max": 24,
-    "average": 14,
     "type": "fire"
   },
   "resistance": {
     "type": "fire",
-    "effect": "half_damage",
-    "additionalResistance": "Magic Resistance provides save to negate"
+    "effect": "half_damage"
   }
 }

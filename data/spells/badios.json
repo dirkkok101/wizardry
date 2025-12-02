@@ -1,7 +1,6 @@
 {
   "id": "badios",
   "name": "BADIOS",
-  "translation": "Harm",
   "level": 1,
   "casterType": "priest",
   "category": "offensive",
@@ -10,13 +9,9 @@
   "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",
-    "min": 1,
-    "max": 8,
-    "average": 4.5,
     "type": "divine"
   },
   "resistance": {
-    "type": "magic_resistance",
-    "notes": "Subject to Spell Resistance"
+    "type": "magic_resistance"
   }
 }

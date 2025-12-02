@@ -1,16 +1,11 @@
 {
   "id": "porfic",
   "name": "PORFIC",
-  "translation": "Shield",
   "level": 1,
   "casterType": "priest",
   "category": "buff",
   "target": "caster",
-  "description": "Creates magical shield around caster, significantly reducing AC",
+  "description": "Creates magical shield around caster, reducing AC by 4",
   "castableIn": ["combat"],
-  "effect": {
-    "acModifier": -4,
-    "stacks": true
-  },
-  "duration": "Until combat ends"
+  "acModifier": -4
 }

@@ -1,22 +1,11 @@
 {
   "id": "lomilwa",
   "name": "LOMILWA",
-  "translation": "More Light",
   "level": 3,
   "casterType": "priest",
   "category": "utility",
   "target": "party",
   "description": "Creates powerful, long-lasting light that persists for the entire expedition",
   "castableIn": ["combat", "camp"],
-  "utility": "extended_light",
-  "effect": {
-    "type": "illumination",
-    "power": "enhanced"
-  },
-  "duration": {
-    "turns": 32000,
-    "notes": "Effectively permanent for the expedition"
-  },
-  "stacking": false,
-  "comparison": "Longer lasting than MILWA but does not stack"
+  "utility": "extended_light"
 }

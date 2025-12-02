@@ -1,7 +1,6 @@
 {
   "id": "badialma",
   "name": "BADIALMA",
-  "translation": "Great Hurt",
   "level": 5,
   "casterType": "priest",
   "category": "offensive",
@@ -10,13 +9,9 @@
   "castableIn": ["combat"],
   "damage": {
     "dice": "3d8",
-    "min": 3,
-    "max": 24,
-    "average": 13.5,
     "type": "divine"
   },
   "resistance": {
-    "type": "magic_resistance",
-    "notes": "Subject to Spell Resistance"
+    "type": "magic_resistance"
   }
 }

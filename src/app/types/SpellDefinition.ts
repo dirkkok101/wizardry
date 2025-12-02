@@ -37,6 +37,8 @@ export interface SpellEffect {
   acModifier?: number
   type?: string
   noSavingThrow?: boolean
+  /** MABADI - HP reduced to dice roll result */
+  remainingHP?: { dice: string }
   stacks?: boolean | {
     withSelf?: boolean
     withOthers?: boolean
@@ -170,7 +172,11 @@ export interface SpellDefinition {
     destination?: string
     successFormula?: string
     successExamples?: Record<string, string>
-    onSuccess?: Record<string, unknown>
+    /** Consequences of successful escape (LOKTOFEIT strips equipment/gold) */
+    onSuccess?: {
+      equipmentLost?: boolean
+      goldLostPercent?: number
+    }
     onFailure?: Record<string, unknown>
     typed?: TypedFormula
   }
@@ -178,6 +184,18 @@ export interface SpellDefinition {
   bugFix?: boolean
   stacking?: boolean
   immunities?: string[]
+
+  // MALOR teleport behaviors
+  campBehavior?: {
+    type?: string
+    dangers?: Record<string, string>
+    restrictions?: Record<string, string>
+  }
+  combatBehavior?: {
+    type?: string
+    destination?: string
+    safe?: boolean
+  }
 }
 
 /**

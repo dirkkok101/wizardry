@@ -1,21 +1,17 @@
 {
   "id": "mamorlis",
   "name": "MAMORLIS",
-  "translation": "Terror",
   "level": 5,
   "casterType": "mage",
   "category": "debuff",
   "target": "all_enemies",
-  "description": "Causes terror in ALL enemy groups, making them easier to hit",
+  "description": "Causes terror in ALL enemy groups, making them easier to hit (+3 AC)",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "fear",
     "acModifier": 3
   },
   "resistance": {
-    "type": "level_based",
-    "formula": "(Monster Level × 10)%",
-    "notes": "Subject to monster level-based resistance",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -25,8 +21,6 @@
     }
   },
   "recovery": {
-    "formula": "(Monster Level × 10)% per round",
-    "cap": "50%",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -34,6 +28,5 @@
       "base": 0,
       "cap": 50
     }
-  },
-  "duration": "Until combat ends or recovered"
+  }
 }

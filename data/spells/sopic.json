@@ -1,16 +1,11 @@
 {
   "id": "sopic",
   "name": "SOPIC",
-  "translation": "Glass",
   "level": 2,
   "casterType": "mage",
   "category": "buff",
   "target": "caster",
-  "description": "Makes caster transparent, significantly reducing AC",
+  "description": "Makes caster transparent, reducing AC by 4",
   "castableIn": ["combat"],
-  "effect": {
-    "acModifier": -4,
-    "stacks": true
-  },
-  "duration": "Until combat ends"
+  "acModifier": -4
 }

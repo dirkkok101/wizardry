@@ -1,25 +1,16 @@
 {
   "id": "manifo",
   "name": "MANIFO",
-  "translation": "Statue",
   "level": 2,
   "casterType": "priest",
   "category": "debuff",
   "target": "group",
-  "description": "Attempts to paralyze all monsters in a group - paralyzed monsters cannot act and take double damage",
+  "description": "Attempts to paralyze all monsters in a group - paralyzed monsters take double damage",
   "castableIn": ["combat"],
   "statusEffect": {
-    "type": "paralyzed",
-    "preventAction": true,
-    "damageMultiplier": 2
+    "type": "paralyzed"
   },
   "resistance": {
-    "formula": "(50 + Monster Level × 10)%",
-    "examples": {
-      "level1": "60% resist",
-      "level5": "100% immune"
-    },
-    "notes": "Level 5+ monsters are effectively immune",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -29,8 +20,6 @@
     }
   },
   "recovery": {
-    "formula": "(Monster Level × 7)% per round",
-    "cap": "50%",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",

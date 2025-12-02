@@ -1,7 +1,6 @@
 {
   "id": "haman",
   "name": "HAMAN",
-  "translation": "Change",
   "level": 6,
   "casterType": "mage",
   "category": "buff",
@@ -13,48 +12,42 @@
   },
   "cost": {
     "experienceLevels": 1,
-    "mustRelearn": false,
-    "notes": "Permanently drains 1 level from caster"
+    "mustRelearn": false
   },
   "randomEffects": [
     {
       "id": 1,
       "name": "Mass Dialko and Heal",
-      "description": "Cures Afraid, Asleep, Paralyzed, Stoned, and Silenced on all party members AND heals 9-72 HP each",
-      "formula": "9 × random(1-8) HP per character"
+      "effect": "cure_and_heal",
+      "healDice": "9d8"
     },
     {
       "id": 2,
       "name": "Strip Magic Resistance",
-      "description": "First 3 monster groups lose all Magic Resistance (set to 0%) and are treated as Level 1 for spell resistance",
+      "effect": "strip_resistance",
       "target": "first_3_groups"
     },
     {
       "id": 3,
       "name": "Full Party Heal",
-      "description": "Cures all conditions (except Dead/Ashes) and restores ALL HP to maximum for entire party"
+      "effect": "full_heal"
     },
     {
       "id": 4,
       "name": "Shield Party",
-      "description": "Sets entire party AC to -10 for remainder of combat",
-      "bugFix": true,
-      "notes": "This effect was coded but never triggered in original due to CASE statement bug"
+      "effect": "set_party_ac",
+      "acValue": -10
     },
     {
       "id": 5,
       "name": "Resurrect and Heal Party",
-      "description": "Resurrects all Dead party members and fully heals entire party",
-      "bugFix": true,
-      "notes": "This effect was coded but never triggered in original due to CASE statement bug"
+      "effect": "resurrect_and_heal"
     }
   ],
   "risks": {
     "spellbookMangling": {
-      "chance": "1 in (CharacterLevel + 1)",
-      "condition": "random(0 to CharacterLevel) equals exactly 5",
-      "effect": "Some spells are unlearned from caster's spellbook"
+      "checkFormula": "random(0, casterLevel) === 5",
+      "effect": "unlearn_spells"
     }
-  },
-  "notes": "Bug-free version includes all 5 intended effects (see known-bugs.md for original bug details)"
+  }
 }

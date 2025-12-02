@@ -1,16 +1,11 @@
 {
   "id": "bamatu",
   "name": "BAMATU",
-  "translation": "Prayer",
   "level": 3,
   "casterType": "priest",
   "category": "buff",
   "target": "party",
   "description": "Powerful prayer - maximum party AC buff per cast",
   "castableIn": ["combat"],
-  "effect": {
-    "acModifier": -4,
-    "stacks": true
-  },
-  "duration": "Until combat ends"
+  "acModifier": -4
 }

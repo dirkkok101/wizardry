@@ -1,7 +1,6 @@
 {
   "id": "loktofeit",
   "name": "LOKTOFEIT",
-  "translation": "Recall",
   "level": 6,
   "casterType": "priest",
   "category": "utility",
@@ -10,20 +9,10 @@
   "castableIn": ["combat", "camp"],
   "utility": "recall",
   "escape": {
-    "destination": "Castle/town",
-    "successFormula": "(Character Level × 2 + 1)%",
-    "successExamples": {
-      "level13": "27%",
-      "level20": "41%"
-    },
+    "destination": "castle",
     "onSuccess": {
-      "equipment": "ALL EQUIPMENT IS LOST",
-      "gold": "MOST GOLD IS LOST",
-      "notes": "The cost is devastating even on success"
-    },
-    "onFailure": {
-      "effect": "Nothing happens",
-      "notes": "Spell slot wasted, can retry"
+      "equipmentLost": true,
+      "goldLostPercent": 90
     },
     "typed": {
       "type": "level_scaled",
@@ -32,6 +21,5 @@
       "base": 1,
       "cap": 100
     }
-  },
-  "notes": "Absolute last resort only - low success rate and devastating cost. Use MALOR instead if available."
+  }
 }

@@ -1,22 +1,17 @@
 {
   "id": "mabadi",
   "name": "MABADI",
-  "translation": "Harming",
   "level": 6,
   "casterType": "priest",
   "category": "offensive",
   "target": "single",
-  "description": "Reduces target monster's HP to near-death regardless of current HP - CANNOT be resisted",
+  "description": "Reduces target monster's HP to 1-8 regardless of current HP - CANNOT be resisted",
   "castableIn": ["combat"],
   "effect": {
     "type": "hp_reduction",
     "remainingHP": {
-      "dice": "1d8",
-      "min": 1,
-      "max": 8
+      "dice": "1d8"
     },
-    "noSavingThrow": true,
-    "notes": "Guaranteed to work on ANY monster - reduces any enemy to near-death"
-  },
-  "notes": "Exceptionally powerful against high-HP boss monsters; reduces any enemy to 1-8 HP remaining"
+    "noSavingThrow": true
+  }
 }

@@ -1,16 +1,11 @@
 {
   "id": "kalki",
   "name": "KALKI",
-  "translation": "Blessings",
   "level": 1,
   "casterType": "priest",
   "category": "buff",
   "target": "party",
   "description": "Blesses entire party, slightly reducing AC",
   "castableIn": ["combat"],
-  "effect": {
-    "acModifier": -1,
-    "stacks": true
-  },
-  "duration": "Until combat ends"
+  "acModifier": -1
 }

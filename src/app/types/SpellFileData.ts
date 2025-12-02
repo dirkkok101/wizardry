@@ -1,3 +1,5 @@
+import { TypedFormula } from '@validation/spell-schema'
+
 /**
  * Spell JSON file format
  * Supports multi-level spells (e.g., BADI at levels 5 and 6)
@@ -31,8 +33,10 @@ export interface SpellLevelData {
 
   // Effects (for instant death, petrification, etc.)
   effect?: {
-    type: 'instant_death' | 'petrification' | 'transformation' | 'dispel' | 'fear' | 'sleep' | 'silence' | 'blind' | 'invisible' | 'paralysis'
+    type: 'instant_death' | 'petrification' | 'transformation' | 'dispel' | 'fear' | 'sleep' | 'silence' | 'blind' | 'invisible' | 'paralysis' | 'hp_reduction' | 'identify_monsters'
     power?: string  // Optional power level descriptor
+    noSavingThrow?: boolean  // MABADI - cannot be resisted
+    remainingHP?: { dice: string }  // MABADI - HP reduced to dice roll result
   }
 
   // AC Modification (PORFIC, MATU, etc.)
@@ -63,6 +67,53 @@ export interface SpellLevelData {
 
   // Failure (from JSON)
   failureResult?: string  // What happens on failure
+
+  // MALOR teleport behaviors
+  campBehavior?: {
+    type?: string
+    dangers?: Record<string, string>
+    restrictions?: Record<string, string>
+  }
+  combatBehavior?: {
+    type?: string
+    destination?: string
+    safe?: boolean
+  }
+
+  // HAMAN/MAHAMAN random effects
+  randomEffects?: Array<{
+    id: number
+    name: string
+    effect: string
+    healDice?: string
+    acValue?: number
+    durationDice?: string
+  }>
+
+  // Cost (experience levels for HAMAN/MAHAMAN)
+  cost?: {
+    experienceLevels?: number
+    mustRelearn?: boolean
+    notes?: string
+  }
+
+  // Requirements (minimum caster level)
+  requirements?: {
+    minCasterLevel?: number
+  }
+
+  // LOKTOFEIT escape mechanics
+  escape?: {
+    destination?: string
+    onSuccess?: {
+      equipmentLost?: boolean
+      goldLostPercent?: number
+    }
+    typed?: TypedFormula
+  }
+
+  // Risks for dangerous spells
+  risks?: Record<string, unknown>
 }
 
 /**

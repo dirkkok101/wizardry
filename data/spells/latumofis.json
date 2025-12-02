@@ -1,16 +1,11 @@
 {
   "id": "latumofis",
   "name": "LATUMOFIS",
-  "translation": "Cure Poison",
   "level": 4,
   "casterType": "priest",
-  "category": "healing",
+  "category": "support",
   "target": "single",
   "description": "Neutralizes poison status from a party member",
   "castableIn": ["combat", "camp"],
-  "effect": {
-    "type": "cure_status",
-    "cures": ["poison"]
-  },
-  "notes": "Poisoned characters have 25% chance per round/step to lose 1 HP. Use immediately on poisoned allies."
+  "statusCure": "poison"
 }

@@ -1,7 +1,6 @@
 {
   "id": "kadorto",
   "name": "KADORTO",
-  "translation": "Resurrection",
   "level": 7,
   "casterType": "priest",
   "category": "resurrection",
@@ -11,22 +10,14 @@
   "notCastableIn": ["combat"],
   "resurrection": {
     "worksOn": ["dead", "ashes"],
-    "successFormula": "(Vitality × 4)%",
-    "successExamples": {
-      "vitality18": "72%",
-      "vitality10": "40%",
-      "vitality5": "20%"
-    },
     "onSuccess": {
       "hp": "full",
-      "vitalityLoss": 1,
-      "notes": "Character returns with FULL HP; Vitality permanently reduced by 1"
+      "vitalityLoss": 1
     },
     "onFailure": {
-      "fromDead": "Character becomes ASHES",
-      "fromAshes": "Character is permanently LOST FOREVER"
+      "fromDead": "ashes",
+      "fromAshes": "lost"
     },
-    "criticalWarning": "If Vitality is 3 or lower, failure = permanent loss",
     "typed": {
       "type": "level_scaled",
       "variable": "vitality",
@@ -34,6 +25,5 @@
       "base": 0,
       "cap": 100
     }
-  },
-  "comparison": "Strictly superior to DI - works on Ashes and restores full HP instead of 1 HP"
+  }
 }

@@ -1,18 +1,11 @@
 {
   "id": "latumapic",
   "name": "LATUMAPIC",
-  "translation": "Identification",
   "level": 3,
   "casterType": "priest",
   "category": "utility",
   "target": "all_enemies",
   "description": "Identifies ALL monster groups, revealing their true names",
   "castableIn": ["combat", "camp"],
-  "utility": "identify_foe",
-  "effect": {
-    "type": "identify_monsters",
-    "reveals": ["monster_name", "monster_type"]
-  },
-  "duration": "Entire expedition",
-  "notes": "Bug-free version identifies ALL groups (see known-bugs.md for original bug details)"
+  "utility": "identify_foe"
 }

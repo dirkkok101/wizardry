@@ -167,12 +167,44 @@ export interface SpellEffect {
     targetX?: number
     targetY?: number
     targetLevel?: number
+    /** Behavior mode from spell data (coordinate_teleport or random_escape) */
+    mode?: 'coordinate_teleport' | 'random_escape'
+    /** Dangers if teleporting into invalid location (camp mode only) */
+    dangers?: {
+      solidRock?: 'instant_party_death'
+      outsideBounds?: 'instant_party_death'
+    }
+    /** Whether this mode is safe (combat mode = true, camp mode = false) */
+    safe?: boolean
+    /** Restrictions on teleport destination */
+    restrictions?: {
+      level10?: 'cannot_teleport_in'
+    }
   }
   recall?: {  // Recall to town (LOKTOFEIT)
     success: boolean
+    /** Equipment lost on success (LOKTOFEIT strips all equipment) */
+    equipmentLost?: boolean
+    /** Percentage of gold lost on success (LOKTOFEIT = 90%) */
+    goldLostPercent?: number
   }
   monsterIdentification?: {  // LATUMAPIC - identifies ALL monster groups (bug-fixed)
     groupIds: Array<'A' | 'B' | 'C' | 'D'>  // All groups that are now identified
+  }
+  hpReduction?: {  // MABADI - reduces target HP to dice roll (cannot be resisted)
+    targetId: string
+    newHp: number  // Result of dice roll (e.g., 1d8 = 1-8)
+  }[]
+  randomEffect?: {  // HAMAN/MAHAMAN - random powerful effect
+    effectId: number  // Which effect was selected (1-5 for HAMAN, 1-3 for MAHAMAN)
+    effectName: string  // Human-readable effect name
+    effect: string  // Effect type for processing
+    healDice?: string  // For healing effects
+    acValue?: number  // For AC buff effects
+    durationDice?: string  // For duration-based effects
+    levelDrain: number  // XP levels lost (always 1)
+    mustRelearn: boolean  // Whether spell must be relearned (MAHAMAN only)
+    spellbookMangled: boolean  // Whether spellbook was mangled
   }
   message: string
 }

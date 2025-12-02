@@ -1,24 +1,16 @@
 {
   "id": "katino",
   "name": "KATINO",
-  "translation": "Bad Air",
   "level": 1,
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Attempts to put all monsters in a group to sleep - exceptionally powerful crowd control",
+  "description": "Attempts to put all monsters in a group to sleep",
   "castableIn": ["combat"],
   "statusEffect": {
-    "type": "asleep",
-    "criticalMechanic": "Sleeping monsters take DOUBLE DAMAGE from all attacks"
+    "type": "asleep"
   },
   "resistance": {
-    "formula": "(20 × Monster Level)%",
-    "examples": {
-      "level1": "20% resist",
-      "level3": "60% resist",
-      "level5plus": "100% immune"
-    },
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -28,9 +20,6 @@
     }
   },
   "recovery": {
-    "formula": "(20 × Monster Level)% per round",
-    "cap": "50%",
-    "notes": "Higher level monsters wake faster",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -38,6 +27,5 @@
       "base": 0,
       "cap": 50
     }
-  },
-  "notes": "Exceptionally powerful against low-level monster groups; ineffective against Level 5+ monsters"
+  }
 }

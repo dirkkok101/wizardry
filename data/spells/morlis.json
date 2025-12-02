@@ -1,21 +1,17 @@
 {
   "id": "morlis",
   "name": "MORLIS",
-  "translation": "Fear",
   "level": 4,
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Causes fear in an enemy group, making them easier to hit",
+  "description": "Causes fear in an enemy group, making them easier to hit (+3 AC)",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "fear",
     "acModifier": 3
   },
   "resistance": {
-    "type": "level_based",
-    "formula": "(Monster Level × 10)%",
-    "notes": "Subject to monster level-based resistance",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -25,8 +21,6 @@
     }
   },
   "recovery": {
-    "formula": "(Monster Level × 10)% per round",
-    "cap": "50%",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",
@@ -34,6 +28,5 @@
       "base": 0,
       "cap": 50
     }
-  },
-  "duration": "Until combat ends or recovered"
+  }
 }

@@ -301,8 +301,8 @@ describe('SpellCastingService - Spell Eligibility', () => {
       expect(spell?.name).toBe('MAPORFIC')
       expect(spell?.level).toBe(4)
       expect(spell?.casterType).toBe('priest')
-      // MAPORFIC has AC modifier inside effect object
-      expect(spell?.effect?.acModifier).toBe(-2)
+      // MAPORFIC has AC modifier at root level
+      expect(spell?.acModifier).toBe(-2)
     })
   })
 })

@@ -1,7 +1,6 @@
 {
   "id": "badi",
   "name": "BADI",
-  "translation": "Death",
   "level": 5,
   "casterType": "priest",
   "category": "instant_death",
@@ -13,12 +12,6 @@
     "savingThrow": true
   },
   "resistance": {
-    "formula": "(Monster Level × 10)%",
-    "examples": {
-      "level5": "50% resist",
-      "level10": "100% immune"
-    },
-    "notes": "Level 10+ monsters are immune",
     "typed": {
       "type": "level_scaled",
       "variable": "monster_level",

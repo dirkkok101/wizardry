@@ -124,6 +124,10 @@ export class SpellDataLoader {
           // Fear could be handled as a status effect or special mechanic
           // For now, treating it as a debuff without a specific status
           break
+        default:
+          // Pass through unknown effect types (like hp_reduction for MABADI)
+          fields.effect = levelData.effect
+          break
       }
     }
 
@@ -142,6 +146,15 @@ export class SpellDataLoader {
     if (levelData.recallSuccessRate) fields.recallSuccessRate = levelData.recallSuccessRate
     if (levelData.statusCure) fields.statusCure = levelData.statusCure
     if (levelData.failureResult) fields.failureResult = levelData.failureResult
+
+    // New spell data fields for Phase 3-6 implementations
+    if (levelData.campBehavior) fields.campBehavior = levelData.campBehavior
+    if (levelData.combatBehavior) fields.combatBehavior = levelData.combatBehavior
+    if (levelData.randomEffects) fields.randomEffects = levelData.randomEffects
+    if (levelData.cost) fields.cost = levelData.cost
+    if (levelData.requirements) fields.requirements = levelData.requirements
+    if (levelData.escape) fields.escape = levelData.escape
+    if (levelData.risks) fields.risks = levelData.risks
 
     return fields
   }

@@ -1,7 +1,6 @@
 {
   "id": "malikto",
   "name": "MALIKTO",
-  "translation": "Word of Death",
   "level": 7,
   "casterType": "priest",
   "category": "offensive",
@@ -10,14 +9,9 @@
   "castableIn": ["combat"],
   "damage": {
     "dice": "12d6",
-    "min": 12,
-    "max": 72,
-    "average": 42,
     "type": "divine"
   },
   "resistance": {
-    "type": "magic_resistance",
-    "notes": "Subject to Spell Resistance"
-  },
-  "comparison": "Priest's equivalent to TILTOWAIT; slightly lower average damage (42 vs 80) but same all-target coverage"
+    "type": "magic_resistance"
+  }
 }

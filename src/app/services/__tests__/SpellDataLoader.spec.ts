@@ -8,8 +8,17 @@ import { SpellDefinition } from '@models/SpellDefinition'
 const spellIndex = require('@data/spells/index.json') as string[]
 const EXPECTED_SPELL_COUNT = spellIndex.length
 
-afterEach(() => {
+// SpellDataLoader tests need to clear cache for isolation
+// Use beforeEach to ensure fresh state for each test
+beforeEach(() => {
   SpellDataLoader.clearCache()
+  // Each test in this file will call loadAllSpells() explicitly if needed
+})
+
+// After all SpellDataLoader tests complete, reload spells so other test files have them
+afterAll(async () => {
+  SpellDataLoader.clearCache()
+  await SpellDataLoader.loadAllSpells()
 })
 
 describe('SpellDataLoader', () => {

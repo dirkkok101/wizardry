@@ -1,20 +1,11 @@
 {
   "id": "maporfic",
   "name": "MAPORFIC",
-  "translation": "Big Shield",
   "level": 4,
   "casterType": "priest",
   "category": "buff",
   "target": "party",
   "description": "Protective aura that lasts entire expedition - reduces AC for all party members",
   "castableIn": ["combat", "camp"],
-  "effect": {
-    "acModifier": -2,
-    "stacks": {
-      "withSelf": false,
-      "withOthers": true,
-      "notes": "Does not stack with itself but stacks with other AC effects"
-    }
-  },
-  "duration": "Entire expedition"
+  "acModifier": -2
 }

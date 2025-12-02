@@ -1,23 +1,17 @@
 {
   "id": "tiltowait",
   "name": "TILTOWAIT",
-  "translation": "Ka-Blam!",
   "level": 7,
   "casterType": "mage",
   "category": "offensive",
   "target": "all_enemies",
-  "description": "Most powerful damage spell - deals massive non-elemental damage to ALL monsters",
+  "description": "Most powerful damage spell - deals massive damage to ALL monsters",
   "castableIn": ["combat"],
   "damage": {
     "dice": "10d15",
-    "min": 10,
-    "max": 150,
-    "average": 80,
-    "type": "force",
-    "notes": "Non-elemental - only Magic Resistance provides saving throw. Original manual incorrectly stated 10d10."
+    "type": "force"
   },
   "resistance": {
-    "type": "magic_resistance",
-    "notes": "No elemental resistances apply"
+    "type": "magic_resistance"
   }
 }
