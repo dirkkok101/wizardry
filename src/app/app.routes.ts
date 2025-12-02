@@ -13,6 +13,7 @@ import { MazeComponent } from '@scenes/maze/maze.component';
 import { CombatComponent } from '@scenes/combat-scene/combat';
 import { ChestComponent } from '@scenes/chest/chest.component';
 import { VictoryComponent } from '@scenes/victory/victory.component';
+import { gameLoadedGuard } from '@core/guards/game-loaded.guard';
 
 export const routes: Routes = [
   {
@@ -21,55 +22,68 @@ export const routes: Routes = [
   },
   {
     path: 'castle-menu',
-    component: CastleMenuComponent
+    component: CastleMenuComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'tavern',
-    component: TavernComponent
+    component: TavernComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'inn',
-    component: InnComponent
+    component: InnComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'temple',
-    component: TempleComponent
+    component: TempleComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'shop',
-    component: ShopComponent
+    component: ShopComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'training-grounds',
-    component: TrainingGroundsComponent
+    component: TrainingGroundsComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'character-creation',
-    component: CharacterCreationComponent
+    component: CharacterCreationComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'character-inspection',
-    component: CharacterInspectionComponent
+    component: CharacterInspectionComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'spell-casting',
-    component: SpellCastingComponent
+    component: SpellCastingComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'maze',
-    component: MazeComponent
+    component: MazeComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'combat',
-    component: CombatComponent
+    component: CombatComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'chest',
-    component: ChestComponent
+    component: ChestComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: 'victory',
-    component: VictoryComponent
+    component: VictoryComponent,
+    canActivate: [gameLoadedGuard]
   },
   {
     path: '**',
