@@ -17,6 +17,12 @@ export interface CombatDisplaySettings {
    * Recommended: 600-1000ms for suspense
    */
   actionResultDelayMs: number
+
+  /**
+   * Enable combat audit logging to console
+   * Shows real-time action execution synchronized with UI
+   */
+  auditEnabled: boolean
 }
 
 /**
@@ -25,7 +31,8 @@ export interface CombatDisplaySettings {
  */
 export const DEFAULT_COMBAT_SETTINGS: CombatDisplaySettings = {
   messageDelayMs: 1000,      // 1000ms delay between different actions for readability
-  actionResultDelayMs: 600   // 600ms delay between action and its result for suspense
+  actionResultDelayMs: 600,  // 600ms delay between action and its result for suspense
+  auditEnabled: true         // Combat audit logging enabled by default
 }
 
 /**
@@ -57,4 +64,20 @@ export function setCombatMessageDelay(delayMs: number): void {
  */
 export function setActionResultDelay(delayMs: number): void {
   DEFAULT_COMBAT_SETTINGS.actionResultDelayMs = Math.max(0, delayMs)
+}
+
+/**
+ * Check if combat audit logging is enabled
+ */
+export function isCombatAuditEnabled(): boolean {
+  return DEFAULT_COMBAT_SETTINGS.auditEnabled
+}
+
+/**
+ * Enable or disable combat audit logging
+ * When enabled, logs action execution to console in real-time
+ * @param enabled Whether to enable audit logging
+ */
+export function setCombatAuditEnabled(enabled: boolean): void {
+  DEFAULT_COMBAT_SETTINGS.auditEnabled = enabled
 }

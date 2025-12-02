@@ -347,4 +347,77 @@ export interface CombatRoundResult {
 
   /** Party successfully fled */
   fled: boolean
+
+  /** Optional round audit for debugging (only populated when auditing enabled) */
+  audit?: CombatRoundAudit
+}
+
+/**
+ * Skip reasons for combat actions
+ */
+export type ActionSkipReason =
+  | 'DIED_BEFORE_TURN'      // Actor died earlier in this round
+  | 'ALREADY_DEAD'          // Actor was dead at round start
+  | 'ASLEEP'                // Actor is asleep
+  | 'PARALYZED'             // Actor is paralyzed
+  | 'SILENCED'              // Actor is silenced (spell only)
+  | 'SURPRISED'             // Actor surprised (round 1 only)
+  | 'NO_LONGER_EXISTS'      // Monster removed from combat
+  | 'TARGET_DEAD'           // Target died before this action
+
+/**
+ * Audit entry for a single queued action
+ */
+export interface ActionAuditEntry {
+  /** Command ID for correlation */
+  commandId: string
+
+  /** Actor name for display */
+  actorName: string
+
+  /** Actor ID for correlation */
+  actorId: string
+
+  /** Whether this is a monster or character */
+  actorType: 'character' | 'monster'
+
+  /** The action type queued */
+  actionType: CombatActionType
+
+  /** Target name(s) if applicable */
+  targetName?: string
+
+  /** Initiative value (higher = acts first) */
+  initiative: number
+
+  /** Execution status */
+  status: 'pending' | 'executed' | 'skipped'
+
+  /** Reason if skipped */
+  skipReason?: ActionSkipReason
+
+  /** Optional additional details (spell name, etc.) */
+  details?: string
+}
+
+/**
+ * Complete audit of a combat round
+ */
+export interface CombatRoundAudit {
+  /** Round number */
+  roundNumber: number
+
+  /** Surprise state for this round (round 1 only) */
+  surpriseState?: 'party' | 'monsters' | 'none'
+
+  /** All queued actions in initiative order */
+  actions: ActionAuditEntry[]
+
+  /** Summary statistics */
+  summary: {
+    totalActions: number
+    executed: number
+    skipped: number
+    skipReasons: Record<ActionSkipReason, number>
+  }
 }

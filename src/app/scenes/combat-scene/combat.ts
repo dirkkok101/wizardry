@@ -22,7 +22,7 @@ import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/comp
 import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component'
 import { getGroupDisplayText } from '@utils/MonsterNameUtils'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { getCombatMessageDelay, getActionResultDelay } from '@config/CombatSettings'
+import { getCombatMessageDelay, getActionResultDelay, isCombatAuditEnabled, setCombatAuditEnabled } from '@config/CombatSettings'
 
 interface SelectedAction {
   characterId: string
@@ -491,6 +491,11 @@ export class CombatComponent implements OnInit, OnDestroy {
     console.log('[Combat] Party members:', state.party.members)
     console.log('[Combat] Monster groups:', state.combat?.monsterGroups.length || 0)
 
+    // Expose audit setter for debugging from browser console
+    const win = window as unknown as { setCombatAuditEnabled: typeof setCombatAuditEnabled }
+    win.setCombatAuditEnabled = setCombatAuditEnabled
+    console.log('[Combat] To enable action audit: setCombatAuditEnabled(true)')
+
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.COMBAT
@@ -666,6 +671,16 @@ export class CombatComponent implements OnInit, OnDestroy {
       }
 
       this.displayedAnimatingMessages.update(displayed => [...displayed, displayMessage])
+
+      // Real-time audit logging - log message as it appears in UI
+      if (isCombatAuditEnabled()) {
+        if (isResultMessage) {
+          console.log(`    -> ${displayMessage}`)
+        } else {
+          console.log(`  ${displayMessage}`)
+        }
+      }
+
       eventMessageIndex++
 
       // Determine delay for NEXT message
@@ -1078,6 +1093,19 @@ export class CombatComponent implements OnInit, OnDestroy {
       })
     }
 
+    // Log round start with queued actions (audit)
+    if (isCombatAuditEnabled() && result.audit) {
+      console.log(`\n===== COMBAT ROUND ${combat.roundNumber} =====`)
+      console.log(`Queued Actions (by initiative):`)
+      for (const action of result.audit.actions) {
+        const target = action.targetName ? ` -> ${action.targetName}` : ''
+        const details = action.details ? ` [${action.details}]` : ''
+        const status = action.status === 'skipped' ? ` (${action.skipReason})` : ''
+        console.log(`  ${action.actorName} ${action.actionType}${target}${details} [init: ${action.initiative}]${status}`)
+      }
+      console.log(`\n--- Executing ---`)
+    }
+
     // Initialize display state from current state (before animation changes anything)
     this.displayMonsterGroups.set([...combat.monsterGroups])
     this.displayCharacterOverrides.set(new Map())
@@ -1107,6 +1135,50 @@ export class CombatComponent implements OnInit, OnDestroy {
       console.error('[Combat] No pending round result!')
       this.clearAnimationState()
       return
+    }
+
+    // Log round end summary (audit)
+    if (isCombatAuditEnabled()) {
+      console.log(`\n--- Round Complete ---`)
+
+      // Party summary
+      console.log(`Party:`)
+      const roster = this.roster()
+      for (const charId of this.party().members) {
+        const char = roster.get(charId)
+        if (char) {
+          const updated = result.finalCharacterUpdates.get(charId)
+          const hp = updated?.hp ?? char.hp
+          const status = updated?.status ?? char.status
+          console.log(`  ${char.name}: ${hp}/${char.maxHp} HP (${status})`)
+        }
+      }
+
+      // Monster summary
+      console.log(`Monsters:`)
+      const remainingMonsters = result.finalState.monsterGroups.flatMap(g => g.monsters.filter(m => m.status !== 'DEAD'))
+      if (remainingMonsters.length === 0) {
+        console.log(`  (none remaining)`)
+      } else {
+        for (const m of remainingMonsters) {
+          console.log(`  ${m.name}: ${m.hp}/${m.maxHp} HP (${m.status})`)
+        }
+      }
+
+      // Action summary
+      if (result.audit) {
+        console.log(`\nActions: ${result.audit.summary.executed} executed, ${result.audit.summary.skipped} skipped`)
+
+        // Show skipped actions if any
+        if (result.audit.summary.skipped > 0) {
+          console.log(`Skipped:`)
+          for (const action of result.audit.actions.filter(a => a.status === 'skipped')) {
+            const target = action.targetName ? ` -> ${action.targetName}` : ''
+            console.log(`  ${action.actorName} ${action.actionType}${target} (${action.skipReason})`)
+          }
+        }
+      }
+      console.log(`=====================================\n`)
     }
 
     // Commit final state to game state (this is where actual state changes happen)

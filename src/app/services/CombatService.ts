@@ -1,5 +1,5 @@
 // src/services/CombatService.ts
-import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate, CommandExecutionResult, CombatantStatus } from '@models/Combat'
+import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate, CommandExecutionResult, CombatantStatus, ActionSkipReason, ActionAuditEntry, CombatRoundAudit } from '@models/Combat'
 import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
 import { MonsterService } from './MonsterService'
@@ -40,6 +40,7 @@ export class CombatService {
    * TODO: Remove or set to false after debugging is complete.
    */
   static DEBUG_COMBAT = false
+
 
   /**
    * Calculate initiative for combatant
@@ -2448,6 +2449,12 @@ export class CombatService {
     party: Character[],
     frontRow: string[] = []
   ): CombatRoundResult {
+    // Audit tracking (must be initialized early, used throughout)
+    // Always generate audit data so component can use it for logging
+    const auditEnabled = true
+    const auditEntries: ActionAuditEntry[] = []
+    const skipReasonCounts = this.createEmptySkipReasonCounts()
+
     // Sort commands by initiative (descending)
     let sortedQueue = [...state.commandQueue].sort(
       (a, b) => b.initiative - a.initiative
@@ -2456,13 +2463,43 @@ export class CombatService {
     // Apply surprise mechanics in round 1
     if (state.roundNumber === 1 && state.surpriseState) {
       if (state.surpriseState === 'party') {
-        // Party surprised monsters - filter out monster commands
+        // Party surprised monsters - mark monster commands as skipped in audit
+        if (auditEnabled) {
+          for (const cmd of sortedQueue) {
+            if ('monsterId' in cmd.actor) {
+              const entry = this.createAuditEntry(cmd)
+              entry.status = 'skipped'
+              entry.skipReason = 'SURPRISED'
+              auditEntries.push(entry)
+              skipReasonCounts['SURPRISED']++
+            }
+          }
+        }
         sortedQueue = sortedQueue.filter(cmd => !('monsterId' in cmd.actor))
       } else if (state.surpriseState === 'monsters') {
-        // Monsters surprised party - filter out party commands
+        // Monsters surprised party - mark party commands as skipped in audit
+        if (auditEnabled) {
+          for (const cmd of sortedQueue) {
+            if (!('monsterId' in cmd.actor)) {
+              const entry = this.createAuditEntry(cmd)
+              entry.status = 'skipped'
+              entry.skipReason = 'SURPRISED'
+              auditEntries.push(entry)
+              skipReasonCounts['SURPRISED']++
+            }
+          }
+        }
         sortedQueue = sortedQueue.filter(cmd => 'monsterId' in cmd.actor)
       }
       // If 'none', all commands proceed normally
+    }
+
+    // Create audit entries for remaining commands (in initiative order)
+    // Create audit entries for all queued commands
+    if (auditEnabled) {
+      for (const cmd of sortedQueue) {
+        auditEntries.push(this.createAuditEntry(cmd))
+      }
     }
 
     let currentState: CombatState = { ...state, commandQueue: [] }
@@ -2478,6 +2515,39 @@ export class CombatService {
       hp: newHp,
       status: newHp <= 0 ? CharacterStatus.DEAD : char.status
     })
+
+    // Helper to mark remaining pending commands as skipped (called before early returns)
+    const markRemainingCommandsSkipped = () => {
+      if (!auditEnabled) return
+      for (const cmd of sortedQueue) {
+        const entry = auditEntries.find(e => e.commandId === cmd.id && e.status === 'pending')
+        if (entry) {
+          const skipReason = CombatService.getActionSkipReason(cmd, currentState, accumulatedCharacterUpdates)
+          entry.status = 'skipped'
+          entry.skipReason = skipReason || 'DIED_BEFORE_TURN'
+          if (skipReason) skipReasonCounts[skipReason]++
+          else skipReasonCounts['DIED_BEFORE_TURN']++
+        }
+      }
+    }
+
+    // Helper to build audit for returns
+    const buildAudit = (): CombatRoundAudit | undefined => {
+      if (!auditEnabled) return undefined
+      // Mark any remaining pending commands as skipped before building
+      markRemainingCommandsSkipped()
+      return {
+        roundNumber: state.roundNumber,
+        surpriseState: state.surpriseState,
+        actions: auditEntries,
+        summary: {
+          totalActions: auditEntries.length,
+          executed: auditEntries.filter(e => e.status === 'executed').length,
+          skipped: auditEntries.filter(e => e.status === 'skipped').length,
+          skipReasons: skipReasonCounts
+        }
+      }
+    }
 
     // Apply poison damage at start of round
     const poisonResult = this.applyPoisonDamage(currentState, party)
@@ -2509,19 +2579,55 @@ export class CombatService {
         curedCharacters,
         victory: false,
         defeat: true,
-        fled: false
+        fled: false,
+        audit: buildAudit()
       }
     }
 
     // Execute each command
     for (const command of sortedQueue) {
-      // Skip if actor cannot act (dead, asleep, paralyzed, or died this round)
-      if (!this.getCurrentActorIfCanAct(command, currentState, accumulatedCharacterUpdates)) continue
+      // Check if actor can act and track skip reasons for audit
+      const skipReason = this.getActionSkipReason(command, currentState, accumulatedCharacterUpdates)
+
+      if (skipReason) {
+        // Update audit entry with skip reason
+        if (auditEnabled) {
+          const entry = auditEntries.find(e => e.commandId === command.id)
+          if (entry) {
+            entry.status = 'skipped'
+            entry.skipReason = skipReason
+            skipReasonCounts[skipReason]++
+          }
+        }
+        continue
+      }
+
+      // Check silenced for spell casting
+      if (command.type === 'CAST_SPELL' &&
+          this.hasStatusEffect(currentState, command.actor.id, 'SILENCED')) {
+        if (auditEnabled) {
+          const entry = auditEntries.find(e => e.commandId === command.id)
+          if (entry) {
+            entry.status = 'skipped'
+            entry.skipReason = 'SILENCED'
+            skipReasonCounts['SILENCED']++
+          }
+        }
+        // Still execute to get the "silenced" message
+      }
 
       // Capture state before command for comparison
       const stateBefore = currentState
 
       const result = this.executeCommand(currentState, command, parryingCombatants, accumulatedCharacterUpdates)
+
+      // Mark action as executed in audit (if not already marked as skipped)
+      if (auditEnabled) {
+        const entry = auditEntries.find(e => e.commandId === command.id)
+        if (entry && entry.status === 'pending') {
+          entry.status = 'executed'
+        }
+      }
       currentState = result.newState
 
       // Merge character updates from spell effects (healing, resurrection, etc.)
@@ -2604,7 +2710,8 @@ export class CombatService {
           curedCharacters,
           victory: true,
           defeat: false,
-          fled: false
+          fled: false,
+          audit: buildAudit()
         }
       }
 
@@ -2618,7 +2725,8 @@ export class CombatService {
           curedCharacters,
           victory: false,
           defeat: true,
-          fled: false
+          fled: false,
+          audit: buildAudit()
         }
       }
     }
@@ -2633,7 +2741,8 @@ export class CombatService {
         curedCharacters,
         victory: true,
         defeat: false,
-        fled: false
+        fled: false,
+        audit: buildAudit()
       }
     }
 
@@ -2646,7 +2755,8 @@ export class CombatService {
         curedCharacters,
         victory: false,
         defeat: true,
-        fled: false
+        fled: false,
+        audit: buildAudit()
       }
     }
 
@@ -2677,7 +2787,8 @@ export class CombatService {
           curedCharacters,
           victory: false,
           defeat: false,
-          fled: true
+          fled: true,
+          audit: buildAudit()
         }
       } else {
         events.push({
@@ -2719,7 +2830,8 @@ export class CombatService {
             curedCharacters,
             victory: false,
             defeat: true,
-            fled: false
+            fled: false,
+            audit: buildAudit()
           }
         }
       }
@@ -2791,7 +2903,8 @@ export class CombatService {
       curedCharacters,
       victory: false,
       defeat: false,
-      fled: false
+      fled: false,
+      audit: buildAudit()
     }
   }
 
@@ -3013,6 +3126,117 @@ export class CombatService {
     }
 
     return false
+  }
+
+  /**
+   * Determine why a combatant cannot act
+   * Returns the skip reason or null if they can act
+   */
+  private static getActionSkipReason(
+    command: CombatCommand,
+    currentState: CombatState,
+    characterUpdates: Map<string, Character>
+  ): ActionSkipReason | null {
+    const actor = command.actor
+
+    if ('monsterId' in actor) {
+      // Monster checks
+      const currentMonster = this.getCurrentMonsterState(currentState, actor.id)
+      if (!currentMonster) return 'NO_LONGER_EXISTS'
+      if (currentMonster.status === 'DEAD' || currentMonster.hp <= 0) {
+        // Check if died this round vs was already dead
+        const originalHp = actor.hp
+        return originalHp > 0 ? 'DIED_BEFORE_TURN' : 'ALREADY_DEAD'
+      }
+      if (currentMonster.status === 'ASLEEP') return 'ASLEEP'
+      if (currentMonster.status === 'PARALYZED') return 'PARALYZED'
+    } else {
+      // Character checks
+      const existingUpdate = characterUpdates.get(actor.id)
+      const currentChar = existingUpdate || actor as Character
+
+      if (currentChar.hp <= 0 || currentChar.status === CharacterStatus.DEAD) {
+        const originalHp = (actor as Character).hp
+        return originalHp > 0 ? 'DIED_BEFORE_TURN' : 'ALREADY_DEAD'
+      }
+      if (currentChar.status === CharacterStatus.ASLEEP) return 'ASLEEP'
+      if (currentChar.status === CharacterStatus.PARALYZED) return 'PARALYZED'
+    }
+
+    // Check if single target is dead (for ATTACK actions)
+    // Group-targeting actions (spells) should still execute even if some targets died
+    if (command.type === 'ATTACK' && command.target && !Array.isArray(command.target)) {
+      const target = command.target
+      if ('monsterId' in target) {
+        // Target is a monster
+        const currentMonster = this.getCurrentMonsterState(currentState, target.id)
+        if (!currentMonster || currentMonster.status === 'DEAD' || currentMonster.hp <= 0) {
+          return 'TARGET_DEAD'
+        }
+      } else {
+        // Target is a character
+        const existingUpdate = characterUpdates.get(target.id)
+        const currentTarget = existingUpdate || target as Character
+        if (currentTarget.hp <= 0 || currentTarget.status === CharacterStatus.DEAD) {
+          return 'TARGET_DEAD'
+        }
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Create an audit entry for a combat command
+   */
+  private static createAuditEntry(command: CombatCommand): ActionAuditEntry {
+    const isMonster = 'monsterId' in command.actor
+
+    let targetName: string | undefined
+    if (command.target) {
+      if (Array.isArray(command.target)) {
+        targetName = command.target.map(t => t.name).join(', ')
+      } else {
+        targetName = command.target.name
+      }
+    } else if (command.targetGroupId) {
+      targetName = `Group ${command.targetGroupId}`
+    }
+
+    let details: string | undefined
+    if (command.type === 'CAST_SPELL' && command.data?.spellId) {
+      details = `Spell: ${command.data.spellId}`
+    } else if (command.type === 'BREATH' && command.data?.breathType) {
+      details = `Breath: ${command.data.breathType}`
+    }
+
+    return {
+      commandId: command.id,
+      actorName: command.actor.name,
+      actorId: command.actor.id,
+      actorType: isMonster ? 'monster' : 'character',
+      actionType: command.type,
+      targetName,
+      initiative: command.initiative,
+      status: 'pending',
+      details
+    }
+  }
+
+  /**
+   * Initialize empty skip reason counts
+   */
+  private static createEmptySkipReasonCounts(): Record<ActionSkipReason, number> {
+    return {
+      'DIED_BEFORE_TURN': 0,
+      'ALREADY_DEAD': 0,
+      'ASLEEP': 0,
+      'PARALYZED': 0,
+      'SILENCED': 0,
+      'SURPRISED': 0,
+      'NO_LONGER_EXISTS': 0,
+      'TARGET_DEAD': 0
+    }
   }
 
   /**
