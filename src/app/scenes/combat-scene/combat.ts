@@ -505,10 +505,10 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Check for surprise after component initialization
     queueMicrotask(() => {
       const combat = this.combatState()
-      if (combat?.surpriseState === 'party' && combat.roundNumber === 1) {
+      if (combat?.surpriseState === 'monsters' && combat.roundNumber === 1) {
         console.log('[Combat] Party is surprised! Auto-executing monster round.')
         this.handlePartySurprise()
-      } else if (combat?.surpriseState === 'monsters' && combat.roundNumber === 1) {
+      } else if (combat?.surpriseState === 'party' && combat.roundNumber === 1) {
         console.log('[Combat] Monsters are surprised! Party gets free round.')
         this.addCombatMessage('You surprised the monsters!')
       }
