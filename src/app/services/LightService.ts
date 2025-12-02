@@ -88,7 +88,7 @@ function getAmbientLightLevel(state: DungeonState): number {
   if (state.inDarknessZone) {
     return 0.05  // Nearly pitch black in darkness zones without light
   }
-  return 0.3  // Dim in normal zones without spell
+  return 0.15  // Dim in normal zones without spell
 }
 
 /**
