@@ -134,7 +134,7 @@ describe('DungeonMovementService', () => {
   })
 
   describe('enterDungeon', () => {
-    it('initializes dungeon state with default position {x: 0, y: 0, facing: NORTH}', () => {
+    it('initializes dungeon state with default position {x: 0, y: 0, facing: NORTH} on first entry', () => {
       const state = createTestGameStateHelper()
 
       const result = DungeonMovementService.enterDungeon(state, 1)
@@ -142,8 +142,64 @@ describe('DungeonMovementService', () => {
       expect(result.dungeon!.position).toEqual({ x: 0, y: 0, facing: 'NORTH' })
     })
 
-    it('enables torch light with radius 3 and lightActive true', () => {
-      const state = createTestGameStateHelper()
+    it('preserves position when re-entering the same dungeon level', () => {
+      const existingState: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 5, y: 10, facing: 'EAST' },
+          lightRadius: 3,
+          lightActive: true,
+          teleportCount: 0,
+          visitedTiles: new Set(['5,10']),
+          defeatedEncounters: [],
+          unlockedDoors: new Set<string>(),
+          openDoors: new Set<string>()
+        }
+      }
+
+      const result = DungeonMovementService.enterDungeon(existingState, 1)
+
+      // Position should be preserved
+      expect(result.dungeon!.position).toEqual({ x: 5, y: 10, facing: 'EAST' })
+      // Visited tiles should be preserved
+      expect(result.dungeon!.visitedTiles.has('5,10')).toBe(true)
+      // Other dungeon state should be preserved
+      expect(result.dungeon!.lightActive).toBe(true)
+      expect(result.dungeon!.lightRadius).toBe(3)
+    })
+
+    it('resets position when entering a different dungeon level', () => {
+      const existingState: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 5, y: 10, facing: 'EAST' },
+          lightRadius: 3,
+          lightActive: true,
+          teleportCount: 0,
+          visitedTiles: new Set(['5,10']),
+          defeatedEncounters: [],
+          unlockedDoors: new Set<string>(),
+          openDoors: new Set<string>()
+        }
+      }
+
+      const result = DungeonMovementService.enterDungeon(existingState, 2)
+
+      // Position should reset for new level
+      expect(result.dungeon!.position).toEqual({ x: 0, y: 0, facing: 'NORTH' })
+      expect(result.dungeon!.currentLevel).toBe(2)
+      // Visited tiles should be reset for new level
+      expect(result.dungeon!.visitedTiles.size).toBe(0)
+    })
+
+    it('enables torch light with radius 3 and lightActive true on first entry', () => {
+      // Use state without existing dungeon to test first entry behavior
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: null
+      }
 
       const result = DungeonMovementService.enterDungeon(state, 1)
 
@@ -151,8 +207,12 @@ describe('DungeonMovementService', () => {
       expect(result.dungeon!.lightActive).toBe(true)
     })
 
-    it('initializes all tracking sets as empty', () => {
-      const state = createTestGameStateHelper()
+    it('initializes all tracking sets as empty on first entry', () => {
+      // Use state without existing dungeon to test first entry behavior
+      const state: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: null
+      }
 
       const result = DungeonMovementService.enterDungeon(state, 1)
 

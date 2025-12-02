@@ -63,6 +63,11 @@ export class GameStateService {
         }, 500);
       }
     });
+
+    // Save on page unload to preserve maze position on browser reload
+    window.addEventListener('beforeunload', () => {
+      this.saveService.saveGame(this.state());
+    });
   }
 
   /**

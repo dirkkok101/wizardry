@@ -36,11 +36,20 @@ export const DungeonMovementService = {
   /**
    * Initialize dungeon state when entering from camp
    * Sets default position and enables torch light
+   * Preserves existing position and progress when re-entering the same level
    */
   enterDungeon(state: GameState, level: number): GameState {
+    const existingDungeon = state.dungeon;
+    const isReEntry = existingDungeon && existingDungeon.currentLevel === level;
+
     const newState: GameState = {
       ...state,
-      dungeon: {
+      dungeon: isReEntry ? {
+        // Re-entry to same level: preserve position and progress
+        ...existingDungeon,
+        currentLevel: level
+      } : {
+        // First entry or level change: initialize fresh
         currentLevel: level,
         position: { x: 0, y: 0, facing: 'NORTH' },  // Default start position
         lightRadius: 3,  // Default torch light
