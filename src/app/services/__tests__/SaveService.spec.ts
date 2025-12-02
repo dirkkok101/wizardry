@@ -332,4 +332,154 @@ describe('SaveService', () => {
       expect(loaded?.settings.encountersEnabled).toBe(true)
     })
   })
+
+  describe('combat state serialization', () => {
+    it('should serialize and deserialize combat state Maps correctly', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Create a mock combat state with populated Maps
+      const combatState = {
+        monsterGroups: [],
+        commandQueue: [],
+        roundNumber: 1,
+        combatLog: [],
+        canFlee: true,
+        dungeonLevel: 1,
+        statusEffects: new Map<string, Set<string>>([
+          ['monster-1', new Set(['ASLEEP', 'POISONED'])],
+          ['char-1', new Set(['SILENCED'])]
+        ]),
+        acModifiers: new Map<string, number>([
+          ['monster-1', -2],
+          ['char-1', 3]
+        ]),
+        statusDurations: new Map<string, Map<string, number>>([
+          ['monster-1', new Map([['ASLEEP', 3], ['POISONED', -1]])],
+          ['char-1', new Map([['SILENCED', 2]])]
+        ]),
+        monstersDemoralized: false,
+        surpriseState: 'party' as const
+      }
+
+      const stateWithCombat = {
+        ...gameState,
+        combat: combatState
+      }
+
+      // Save and load
+      await service.saveGame(stateWithCombat, 1)
+      const loaded = await service.loadGame(1)
+
+      // Verify combat state Maps are properly reconstructed
+      expect(loaded?.combat).toBeDefined()
+      expect(loaded?.combat?.statusDurations).toBeInstanceOf(Map)
+      expect(loaded?.combat?.statusEffects).toBeInstanceOf(Map)
+      expect(loaded?.combat?.acModifiers).toBeInstanceOf(Map)
+
+      // Verify nested Map values
+      expect(loaded?.combat?.statusDurations.get('monster-1')).toBeInstanceOf(Map)
+      expect(loaded?.combat?.statusDurations.get('monster-1')?.get('ASLEEP')).toBe(3)
+      expect(loaded?.combat?.statusDurations.get('monster-1')?.get('POISONED')).toBe(-1)
+      expect(loaded?.combat?.statusDurations.get('char-1')?.get('SILENCED')).toBe(2)
+
+      // Verify Set values
+      expect(loaded?.combat?.statusEffects.get('monster-1')).toBeInstanceOf(Set)
+      expect(loaded?.combat?.statusEffects.get('monster-1')?.has('ASLEEP')).toBe(true)
+      expect(loaded?.combat?.statusEffects.get('monster-1')?.has('POISONED')).toBe(true)
+      expect(loaded?.combat?.statusEffects.get('char-1')?.has('SILENCED')).toBe(true)
+
+      // Verify acModifiers
+      expect(loaded?.combat?.acModifiers.get('monster-1')).toBe(-2)
+      expect(loaded?.combat?.acModifiers.get('char-1')).toBe(3)
+    })
+
+    it('should handle undefined combat state', async () => {
+      const gameState = GameInitializationService.createNewGame()
+      // Ensure no combat state
+      const stateWithoutCombat = { ...gameState, combat: undefined }
+
+      await service.saveGame(stateWithoutCombat, 1)
+      const loaded = await service.loadGame(1)
+
+      expect(loaded?.combat).toBeUndefined()
+    })
+
+    it('should handle empty combat Maps', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      const combatState = {
+        monsterGroups: [],
+        commandQueue: [],
+        roundNumber: 1,
+        combatLog: [],
+        canFlee: true,
+        dungeonLevel: 1,
+        statusEffects: new Map<string, Set<string>>(),
+        acModifiers: new Map<string, number>(),
+        statusDurations: new Map<string, Map<string, number>>(),
+        monstersDemoralized: false,
+        surpriseState: 'none' as const
+      }
+
+      const stateWithCombat = {
+        ...gameState,
+        combat: combatState
+      }
+
+      await service.saveGame(stateWithCombat, 1)
+      const loaded = await service.loadGame(1)
+
+      expect(loaded?.combat?.statusDurations).toBeInstanceOf(Map)
+      expect(loaded?.combat?.statusDurations.size).toBe(0)
+      expect(loaded?.combat?.statusEffects).toBeInstanceOf(Map)
+      expect(loaded?.combat?.statusEffects.size).toBe(0)
+      expect(loaded?.combat?.acModifiers).toBeInstanceOf(Map)
+      expect(loaded?.combat?.acModifiers.size).toBe(0)
+    })
+
+    it('should handle old format combat state (plain objects instead of arrays)', async () => {
+      // This tests backward compatibility with saves created before the Map serialization fix
+      // Old saves had Maps serialized as plain objects {} instead of arrays
+      const gameState = GameInitializationService.createNewGame()
+      const saveData = {
+        version: '1.0.0',
+        schemaVersion: 2,
+        timestamp: Date.now(),
+        state: {
+          ...gameState,
+          roster: Array.from(gameState.roster.entries()),
+          dungeon: gameState.dungeon ? {
+            ...gameState.dungeon,
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles),
+            unlockedDoors: Array.from(gameState.dungeon.unlockedDoors || []),
+            openDoors: Array.from(gameState.dungeon.openDoors || [])
+          } : undefined,
+          // Old format: Maps became plain objects when JSON.stringify was called
+          combat: {
+            monsterGroups: [],
+            commandQueue: [],
+            roundNumber: 1,
+            combatLog: [],
+            canFlee: true,
+            dungeonLevel: 1,
+            statusEffects: {},      // Plain object, not array
+            acModifiers: {},        // Plain object, not array
+            statusDurations: {},    // Plain object, not array
+            monstersDemoralized: false,
+            surpriseState: 'none'
+          }
+        }
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(saveData))
+
+      // Should NOT throw - should handle gracefully
+      const loaded = await service.loadGame(1)
+
+      // Should have loaded successfully with empty Maps
+      expect(loaded).not.toBeNull()
+      expect(loaded?.combat?.statusDurations).toBeInstanceOf(Map)
+      expect(loaded?.combat?.statusEffects).toBeInstanceOf(Map)
+      expect(loaded?.combat?.acModifiers).toBeInstanceOf(Map)
+    })
+  })
 })

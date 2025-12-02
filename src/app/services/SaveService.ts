@@ -55,11 +55,27 @@ export class SaveService {
    * Serialize GameState to JSON-compatible format
    */
   private serializeGameState(state: GameState): any {
+    // Serialize combat state Maps (if combat exists)
+    const serializedCombat = state.combat ? {
+      ...state.combat,
+      // statusDurations is Map<string, Map<status, number>> - nested Map
+      statusDurations: Array.from(state.combat.statusDurations.entries()).map(
+        ([id, innerMap]) => [id, Array.from(innerMap.entries())]
+      ),
+      // statusEffects is Map<string, Set<status>>
+      statusEffects: Array.from(state.combat.statusEffects.entries()).map(
+        ([id, set]) => [id, Array.from(set)]
+      ),
+      // acModifiers is Map<string, number>
+      acModifiers: Array.from(state.combat.acModifiers.entries())
+    } : undefined
+
     // Handle optional dungeon state
     if (!state.dungeon) {
       return {
         ...state,
         roster: Array.from(state.roster.entries()),
+        combat: serializedCombat,
         dungeon: undefined
       }
     }
@@ -82,6 +98,7 @@ export class SaveService {
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
+      combat: serializedCombat,
       dungeon: {
         ...state.dungeon,
         visitedTiles: visitedTilesArray,
@@ -106,11 +123,39 @@ export class SaveService {
       encountersEnabled: true // Always enabled by default
     }
 
+    // Deserialize combat state Maps (if combat exists)
+    // Handle both new format (arrays) and old format (plain objects from broken serialization)
+    const deserializedCombat = data.combat ? {
+      ...data.combat,
+      // statusDurations is Map<string, Map<status, number>> - nested Map
+      // If old format (plain object), create empty Map since old serialization was broken
+      statusDurations: Array.isArray(data.combat.statusDurations)
+        ? new Map(
+            data.combat.statusDurations.map(
+              ([id, innerArray]: [string, [string, number][]]) => [id, new Map(innerArray)]
+            )
+          )
+        : new Map(),
+      // statusEffects is Map<string, Set<status>>
+      statusEffects: Array.isArray(data.combat.statusEffects)
+        ? new Map(
+            data.combat.statusEffects.map(
+              ([id, arr]: [string, string[]]) => [id, new Set(arr)]
+            )
+          )
+        : new Map(),
+      // acModifiers is Map<string, number>
+      acModifiers: Array.isArray(data.combat.acModifiers)
+        ? new Map(data.combat.acModifiers)
+        : new Map()
+    } : undefined
+
     // Handle undefined/null dungeon state (castle/town)
     if (!data.dungeon) {
       return {
         ...data,
         roster: new Map(data.roster || []),
+        combat: deserializedCombat,
         dungeon: undefined,
         settings
       }
@@ -141,6 +186,7 @@ export class SaveService {
     return {
       ...data,
       roster: new Map(data.roster || []),
+      combat: deserializedCombat,
       settings,
       dungeon: {
         ...data.dungeon,
