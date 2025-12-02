@@ -41,6 +41,9 @@ export class GameStateService {
   // Debounce timer for auto-save
   private saveDebounceTimer?: ReturnType<typeof setTimeout>;
 
+  // Flag to prevent auto-save until initial load completes
+  private initialLoadComplete = false;
+
   constructor(
     private saveService: SaveService,
     private logger: LoggerService
@@ -51,6 +54,11 @@ export class GameStateService {
     // Auto-save effect (debounced to prevent excessive IndexedDB writes)
     effect(() => {
       const currentState = this.state();
+      // Don't auto-save until initial load completes (prevents overwriting save with empty state)
+      if (!this.initialLoadComplete) {
+        console.log('[GameState] Auto-save skipped - initial load not complete');
+        return;
+      }
       // Only auto-save in safe zones (not in maze/combat)
       if (!this.isInMaze()) {
         // Clear previous timer
@@ -59,6 +67,7 @@ export class GameStateService {
         }
         // Debounce auto-save by 500ms
         this.saveDebounceTimer = setTimeout(() => {
+          console.log('[GameState] Auto-saving...', currentState.roster.size, 'chars, first XP:', currentState.roster.values().next().value?.experience);
           this.saveService.saveGame(currentState);
         }, 500);
       }
@@ -66,7 +75,10 @@ export class GameStateService {
 
     // Save on page unload to preserve maze position on browser reload
     window.addEventListener('beforeunload', () => {
-      this.saveService.saveGame(this.state());
+      // Only save if initial load completed (prevents saving empty state)
+      if (this.initialLoadComplete) {
+        this.saveService.saveGame(this.state());
+      }
     });
   }
 
@@ -92,10 +104,12 @@ export class GameStateService {
         if (savedState) {
           this._state.set(savedState);
         }
-        // If no save exists, keep the initial state (new game)
+        // Mark initial load as complete - enables auto-save
+        this.initialLoadComplete = true;
       }).catch(error => {
         this.logger.error('Failed to load saved game:', error);
-        // Keep initial state on error
+        // Mark initial load as complete even on error - enables auto-save for new game
+        this.initialLoadComplete = true;
       });
     });
   }
