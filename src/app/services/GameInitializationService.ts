@@ -12,6 +12,7 @@ import { SpellDataLoader } from './SpellDataLoader'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { ClassDataLoader } from './ClassDataLoader'
 import { TrapDataLoader } from './TrapDataLoader'
+import { TreasureDataLoader } from './TreasureDataLoader'
 import { StatModifierService } from './StatModifierService'
 
 let gameState: GameState | null = null
@@ -144,10 +145,11 @@ async function initializeGame(): Promise<void> {
   }
 
   // Initialize remaining data services
-  console.log('Loading items and traps...')
+  console.log('Loading items, traps, and treasure...')
   await Promise.all([
     ItemDataLoader.loadAllItems(),
-    TrapDataLoader.loadAllTraps()
+    TrapDataLoader.loadAllTraps(),
+    TreasureDataLoader.loadAllRewards()
   ])
 
   // Report item loading statistics
