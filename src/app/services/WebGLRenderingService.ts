@@ -107,7 +107,7 @@ export class WebGLRenderingService {
     this.vertexBuffer = this.gl.createBuffer();
     this.indexBuffer = this.gl.createBuffer();
 
-    // Enable depth testing
+    // Enable depth testing for proper occlusion
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.depthFunc(this.gl.LEQUAL);
 
@@ -277,7 +277,9 @@ export class WebGLRenderingService {
       return;
     }
 
-    // Clear buffers
+    // Set viewport to match canvas size
+    this.gl.viewport(0, 0, config.width, config.height);
+
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
@@ -287,11 +289,13 @@ export class WebGLRenderingService {
     // Use shader program
     this.gl.useProgram(this.program);
 
-    // Create projection matrix (90° FOV)
+    // Create perspective projection matrix
     const aspect = config.width / config.height;
+    const vFOV = Math.PI * 90 / 180;  // 90° vertical FOV
     // Far plane at 10 tiles provides depth precision for walls up to 5 tiles away
     const farPlane = 10.0;
-    const projMatrix = MatrixService.perspective(Math.PI / 2, aspect, 0.1, farPlane);
+    // Near plane at 0.1 for close geometry
+    const projMatrix = MatrixService.perspective(vFOV, aspect, 0.1, farPlane);
 
     // Create view matrix from player state
     const playerState = PlayerStateService.fromPosition(position);
@@ -366,20 +370,18 @@ export class WebGLRenderingService {
       }
     }
 
-    // Render each visible wall
+    // Render all visible walls
     for (const wall of walls) {
       this.renderWall(level, wall, dungeonState);
     }
 
+    // Render floor and ceiling for all visible tiles
     for (const [gridX, gridY] of visibleTiles) {
       this.renderFloor(gridX, gridY);
       this.renderCeiling(gridX, gridY);
     }
 
     // Flush remaining quads in batch
-    if (this.debugMode) {
-      console.log(`[WebGL] Flushing batch with ${this.batchVertices.length} floats (${this.batchVertices.length / 30} quads)`);
-    }
     this.flushBatch();
   }
 

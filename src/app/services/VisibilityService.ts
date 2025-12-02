@@ -259,18 +259,7 @@ export const VisibilityService = {
     maxDepth: number = 5,
     peripheralColumns: number = 3
   ): WallSegment[] {
-    const { walls, tiles } = this.getVisibleGeometry(level, position, maxDepth, peripheralColumns)
-
-    // Debug logging (preserved from original)
-    console.log(`[Visibility] Player at (${position.x}, ${position.y}) facing ${position.facing}`)
-    console.log(`[Visibility] Found ${walls.length} walls from ${tiles.length} tiles using ${peripheralColumns}-column grid`)
-    if (walls.length > 0) {
-      const minDist = Math.min(...walls.map(w => w.distance))
-      const maxDist = Math.max(...walls.map(w => w.distance))
-      console.log(`[Visibility] Wall distances: min=${minDist.toFixed(2)} max=${maxDist.toFixed(2)}`)
-    }
-    console.log(`[Visibility] First 10 visited tiles:`, tiles.slice(0, 10).map(([x, y]) => `(${x},${y})`).join(', '))
-
+    const { walls } = this.getVisibleGeometry(level, position, maxDepth, peripheralColumns)
     return walls
   },
 

@@ -452,6 +452,72 @@ describe('VisibilityService', () => {
     })
   })
 
+  describe('level 1 visibility from (9,9) facing EAST', () => {
+    let level1: LevelData
+
+    beforeEach(async () => {
+      const { DungeonService } = await import('../DungeonService')
+      level1 = DungeonService.loadLevel(1)
+    })
+
+    it('should include (10,11) via forward-peripheral tracing from (9,11)', () => {
+      const position: Position = { x: 9, y: 9, facing: 'EAST' }
+      const { tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
+
+      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+
+      // Verify peripheral tiles at depth=0
+      expect(tileSet.has('9,9')).toBe(true)   // Current position
+      expect(tileSet.has('9,10')).toBe(true)  // Left offset=1
+      expect(tileSet.has('9,11')).toBe(true)  // Left offset=2
+
+      // Verify forward-traced tiles
+      expect(tileSet.has('10,10')).toBe(true) // Via forward trace from (9,10)
+      expect(tileSet.has('10,11')).toBe(true) // Via forward trace from (9,11) - THE KEY TEST
+    })
+
+    it('should include (10,11) east wall when visible from (9,9) facing EAST', () => {
+      const position: Position = { x: 9, y: 9, facing: 'EAST' }
+      const { walls, tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
+
+      // Verify tile is in tiles array
+      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      expect(tileSet.has('10,11')).toBe(true)
+
+      // Verify east wall of (10, 11) is in walls array
+      // Map data: (10, 11) has east=wall
+      const eastWall = walls.find(w => w.gridX === 10 && w.gridY === 11 && w.side === 'east')
+      expect(eastWall).toBeDefined()
+      expect(eastWall?.wallType).toBe('wall')
+    })
+
+    it('should include all expected walls for (9,9) facing EAST scenario', () => {
+      const position: Position = { x: 9, y: 9, facing: 'EAST' }
+      const { walls } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
+
+      // Map data for key tiles:
+      // (9, 8):  east=wall, south=wall, west=door
+      // (10, 9): south=wall
+      // (11, 9): north=door, south=wall
+      // (10, 10): east=wall
+      // (10, 11): east=wall
+      // (9, 11): west=wall
+
+      // Helper to find wall
+      const findWall = (gridX: number, gridY: number, side: string) =>
+        walls.find(w => w.gridX === gridX && w.gridY === gridY && w.side === side)
+
+      // Verify key walls that should be visible
+      expect(findWall(9, 8, 'west')).toBeDefined()    // Door on right peripheral
+      expect(findWall(10, 9, 'south')).toBeDefined()  // South wall at depth 1
+      expect(findWall(11, 9, 'north')).toBeDefined()  // North door at depth 2
+      expect(findWall(11, 9, 'south')).toBeDefined()  // South wall at depth 2
+      expect(findWall(10, 10, 'east')).toBeDefined()  // East wall ahead-left
+      expect(findWall(10, 11, 'east')).toBeDefined()  // East wall at forward-traced tile
+      expect(findWall(9, 11, 'west')).toBeDefined()   // West wall at left offset=2
+    })
+  })
+
   describe('level 1 visibility from (0,0)', () => {
     let level1: LevelData
 
