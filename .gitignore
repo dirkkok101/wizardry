@@ -29,3 +29,6 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Large assets (use compressed versions for deployment)
+data/textures/eob-dungeon-highres.png

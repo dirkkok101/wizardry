@@ -35,7 +35,8 @@
               {
                 "glob": "**/*",
                 "input": "data",
-                "output": "/assets"
+                "output": "/assets",
+                "ignore": ["textures/eob-dungeon-highres.png", "textures/eob-dungeon-highres.json"]
               }
             ],
             "styles": [
