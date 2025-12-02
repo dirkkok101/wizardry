@@ -54,9 +54,9 @@ describe('MonsterDataLoader', () => {
       await MonsterDataLoader.loadAllMonsters()
 
       const count = MonsterDataLoader.getLoadedCount()
-      // Should load 96 monsters from Wizardry 1
-      expect(count).toBeGreaterThanOrEqual(90) // Allow for some flexibility
-      expect(count).toBeLessThanOrEqual(100)
+      // Wizardry 1 has exactly 101 monsters (IDs 0-100)
+      expect(count).toBeGreaterThanOrEqual(100)
+      expect(count).toBeLessThanOrEqual(101)
     })
 
     it('gracefully handles validation failures', async () => {

@@ -75,8 +75,8 @@ const PartnerSchema = z.object({
 })
 
 const SpellLevelsSchema = z.object({
-  mage: z.number().int().min(1).max(7).optional(),
-  priest: z.number().int().min(1).max(7).optional()
+  mage: z.number().int().min(0).max(7).optional(),  // 0 = no mage spells
+  priest: z.number().int().min(0).max(7).optional()  // 0 = no priest spells
 }).refine(
   data => data.mage !== undefined || data.priest !== undefined,
   { message: 'At least one spell type (mage or priest) must be defined' }
