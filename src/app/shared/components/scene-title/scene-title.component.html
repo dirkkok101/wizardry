@@ -2,6 +2,15 @@
   <h1>{{ title() }}</h1>
   <div class="scene-header-content">
     <ng-content></ng-content>
+    @if (activeSpells().length > 0) {
+      <div class="active-spells">
+        @for (spell of activeSpells(); track spell.name) {
+          <span class="spell-badge" [title]="spell.description">
+            {{ spell.icon }} {{ spell.name }}
+          </span>
+        }
+      </div>
+    }
     @if (partyGold() !== null) {
       <div class="party-gold">PARTY GOLD: {{ partyGold() }} GP</div>
     }

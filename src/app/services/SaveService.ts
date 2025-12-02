@@ -193,7 +193,11 @@ export class SaveService {
         visitedTiles,
         defeatedEncounters: data.dungeon.defeatedEncounters || [],
         unlockedDoors,
-        openDoors
+        openDoors,
+        // Light system defaults for old saves
+        inDarknessZone: data.dungeon.inDarknessZone ?? false,
+        lightSpellType: data.dungeon.lightSpellType,
+        lightDurationRemaining: data.dungeon.lightDurationRemaining
       }
     }
   }

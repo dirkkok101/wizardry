@@ -1,15 +1,6 @@
 <div class="maze-scene">
-  <!-- Title with Active Spells inline -->
-  <app-scene-title [title]="sceneTitle()">
-    @if (activeSpells().length > 0) {
-      <div class="active-spells-inline">
-        @for (spell of activeSpells(); track spell.name) {
-          <span class="spell-icon">{{ spell.icon }}</span>
-          <span class="spell-text">{{ spell.name }}: {{ spell.description }}</span>
-        }
-      </div>
-    }
-  </app-scene-title>
+  <!-- Title with Active Spells -->
+  <app-scene-title [title]="sceneTitle()" [activeSpells]="activeSpells()"></app-scene-title>
 
   @if (isLoadingLevel()) {
     <div class="loading-overlay">

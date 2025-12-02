@@ -20,6 +20,7 @@ import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
 import { SpellCastingService, SpellData } from '@services/SpellCastingService';
 import { SpellLearningService } from '@services/SpellLearningService';
+import { LightService } from '@services/LightService';
 import { moveCharacterUp, moveCharacterDown } from '@services/PartyService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneType } from '@models/SceneType';
@@ -123,11 +124,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const spells: ActiveSpell[] = [];
     const dungeon = this.dungeonState();
 
-    if (dungeon?.lightActive) {
+    if (dungeon?.lightActive && dungeon.lightSpellType) {
+      const durationDisplay = LightService.getSpellDurationDisplay(dungeon);
+      const durationText = durationDisplay === 'permanent' ? '' : ` (${durationDisplay})`;
       spells.push({
-        name: 'MILWA',
+        name: dungeon.lightSpellType,
         icon: '💡',
-        description: `Light (Radius: ${dungeon.lightRadius})`
+        description: `Light${durationText}`
       });
     }
 
@@ -392,16 +395,22 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Viewport configuration
+    // Get effective view distance based on light state
+    const dungeon = this.dungeonState();
+    const viewDistance = dungeon
+      ? LightService.getEffectiveViewDistance(dungeon)
+      : 5;  // Default to full visibility if no dungeon state
+
+    // Viewport configuration - tileDepth controlled by light state
     const config: ViewportConfig = {
       width: canvas.width,
       height: canvas.height,
-      tileDepth: 5,
-      peripheralColumns: 7
+      tileDepth: viewDistance,
+      peripheralColumns: Math.min(viewDistance + 2, 7)  // Peripheral scales with view
     };
 
     // Render the dungeon with dungeon state for door rendering
-    this.webglRenderer.render(level, position, config, this.dungeonState());
+    this.webglRenderer.render(level, position, config, dungeon);
   }
 
   // ============================================================
@@ -666,6 +675,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Capture light state before movement for comparison
+    const oldDungeon = state.dungeon;
+    const hadLight = oldDungeon?.lightActive;
+    const wasInDarkness = oldDungeon?.inDarknessZone;
+    const oldDuration = oldDungeon?.lightDurationRemaining;
+
     // Execute movement
     const newState = serviceFn(state);
     this.gameState.updateState(() => newState);
@@ -687,6 +702,31 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       'STRAFE_RIGHT': 'You strafe right.'
     };
     this.addMessage(messages[moveType]);
+
+    // Display light-related messages based on state changes
+    const newDungeon = newState.dungeon;
+    if (newDungeon) {
+      // Check if entered darkness zone
+      if (!wasInDarkness && newDungeon.inDarknessZone) {
+        if (hadLight) {
+          this.addMessage('An unnatural darkness engulfs you! Your light spell is extinguished!');
+        } else {
+          this.addMessage('You enter an area of impenetrable darkness.');
+        }
+      }
+      // Check if exited darkness zone
+      else if (wasInDarkness && !newDungeon.inDarknessZone) {
+        this.addMessage('You emerge from the darkness.');
+      }
+      // Check light expiration (had light, now doesn't)
+      else if (hadLight && !newDungeon.lightActive) {
+        this.addMessage('Your light spell has expired! Darkness surrounds you.');
+      }
+      // Check light warning (duration hit warning threshold)
+      else if (newDungeon.lightActive && newDungeon.lightDurationRemaining === 5) {
+        this.addMessage(`Your ${newDungeon.lightSpellType} spell is fading... (5 steps remaining)`);
+      }
+    }
 
     // Re-render after movement
     this.render();
@@ -946,6 +986,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       };
     });
 
+    // Re-render if dungeon state changed (e.g., light spell)
+    if (result.dungeonUpdate) {
+      this.render();
+    }
+
     // Display result message
     this.addMessage(result.message);
 
@@ -1083,13 +1128,33 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // MILWA/LOMILWA - Light
       if (spell.utility === 'extended_light') {
+        const dungeon = this.dungeonState();
+        if (!dungeon) {
+          return { message: `${spell.name} can only be cast in the dungeon.` };
+        }
+
+        // Check if casting is allowed (not in darkness zone)
+        const canCast = LightService.canCastLightSpell(dungeon);
+        if (!canCast.canCast) {
+          return { message: `${caster.name} tries to cast ${spell.name}... ${canCast.reason}` };
+        }
+
+        // Determine spell type and activate with duration tracking
         const isLomilwa = spell.id === 'lomilwa' || spell.id === 'lomilwa_priest';
-        const radius = isLomilwa ? 3 : 2;
+        const spellType = isLomilwa ? 'LOMILWA' : 'MILWA';
+        const newDungeonState = LightService.activateLightSpell(dungeon, spellType);
+
+        // Format duration for message
+        const durationDisplay = LightService.getSpellDurationDisplay(newDungeonState);
+        const durationText = durationDisplay === 'permanent' ? '' : ` (${durationDisplay})`;
+
         return {
-          message: `${caster.name} casts ${spell.name}! The area is illuminated.`,
+          message: `${caster.name} casts ${spell.name}! The area is illuminated${durationText}.`,
           dungeonUpdate: {
-            lightActive: true,
-            lightRadius: radius
+            lightActive: newDungeonState.lightActive,
+            lightRadius: newDungeonState.lightRadius,
+            lightSpellType: newDungeonState.lightSpellType,
+            lightDurationRemaining: newDungeonState.lightDurationRemaining
           }
         };
       }

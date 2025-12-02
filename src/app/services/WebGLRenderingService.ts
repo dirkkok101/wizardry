@@ -8,6 +8,7 @@ import { MatrixService } from './MatrixService';
 import { PlayerStateService } from './PlayerStateService';
 import { VisibilityService } from './VisibilityService';
 import { DungeonService } from './DungeonService';
+import { LightService } from './LightService';
 
 /**
  * WebGL-based dungeon renderer with perspective-correct texture mapping.
@@ -95,7 +96,8 @@ export class WebGLRenderingService {
       uTexture: this.gl.getUniformLocation(this.program, 'uTexture'),
       uFogStart: this.gl.getUniformLocation(this.program, 'uFogStart'),
       uFogEnd: this.gl.getUniformLocation(this.program, 'uFogEnd'),
-      uFogColor: this.gl.getUniformLocation(this.program, 'uFogColor')
+      uFogColor: this.gl.getUniformLocation(this.program, 'uFogColor'),
+      uAmbientLight: this.gl.getUniformLocation(this.program, 'uAmbientLight')
     };
 
     this.attributes = {
@@ -333,6 +335,12 @@ export class WebGLRenderingService {
     this.gl.uniform1f(this.uniforms.uFogStart, 2.0);
     this.gl.uniform1f(this.uniforms.uFogEnd, 10.0);
     this.gl.uniform3f(this.uniforms.uFogColor, 0.0, 0.0, 0.0);  // Black fog
+
+    // Set ambient light based on dungeon state (light spell active, darkness zone)
+    const ambientLight = dungeonState
+      ? LightService.getAmbientLightLevel(dungeonState)
+      : 1.0;  // Default to full brightness if no dungeon state
+    this.gl.uniform1f(this.uniforms.uAmbientLight, ambientLight);
 
     // Bind texture
     if (this.currentTexture && this.uniforms.uTexture) {

@@ -2,6 +2,7 @@ import { GameState } from '@models/GameState'
 import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '@models/Dungeon'
 import { DungeonService } from './DungeonService'
 import { RandomService } from './RandomService'
+import { LightService } from './LightService'
 
 /**
  * DungeonMovementService - Pure function service for dungeon navigation logic
@@ -52,8 +53,11 @@ export const DungeonMovementService = {
         // First entry or level change: initialize fresh
         currentLevel: level,
         position: { x: 0, y: 0, facing: 'NORTH' },  // Default start position
-        lightRadius: 3,  // Default torch light
-        lightActive: true,
+        lightRadius: 3,  // Default view distance (no spell active)
+        lightActive: false,  // Party starts in darkness (must cast MILWA)
+        lightSpellType: undefined,
+        lightDurationRemaining: undefined,
+        inDarknessZone: false,
         teleportCount: 0,
         visitedTiles: new Set<string>(),
         defeatedEncounters: [],
@@ -411,26 +415,75 @@ export const DungeonMovementService = {
         return state
 
       case 'darkness':
+      case 'darkness_zone_start':
+        // Handle entering darkness zone
+        return this.processLightState(state, tile.type)
+
       case 'anti_magic':
       case 'message':
         // These tiles don't modify game state directly
         // Their effects are checked by MazeComponent:
-        // - darkness: Override lightRadius in computed signal
         // - anti_magic: Prevent spell casting
         // - message: Display tile.message
-        return state
+        // Process light state for normal movement
+        return this.processLightState(state, tile.type)
 
       case 'searchable':
       case 'fixed_encounter':
         // No auto-action - handled explicitly by MazeComponent
         // searchable: Requires I key press
         // fixed_encounter: MazeComponent checks defeatedEncounters list
-        return state
+        return this.processLightState(state, tile.type)
 
       // More cases will be added in subsequent tasks
       default:
-        return state
+        // Process light state for normal tiles (decrement duration, check darkness exit)
+        return this.processLightState(state, tile.type)
     }
+  },
+
+  /**
+   * Process light state after movement to a tile.
+   * Handles darkness zone transitions and light duration decrement.
+   *
+   * @returns Object with updated state and any messages to display
+   */
+  processLightState(state: GameState, newTileType: TileType | undefined): GameState {
+    const dungeon = this.requireDungeon(state)
+    const isNowInDarkness = LightService.isDarknessTile(newTileType)
+    const wasInDarkness = dungeon.inDarknessZone
+
+    // Case 1: Entering darkness zone
+    if (!wasInDarkness && isNowInDarkness) {
+      const result = LightService.enterDarknessZone(dungeon)
+      return {
+        ...state,
+        dungeon: result.state
+      }
+    }
+
+    // Case 2: Exiting darkness zone
+    if (wasInDarkness && !isNowInDarkness) {
+      const exitedState = LightService.exitDarknessZone(dungeon)
+      // Also decrement light duration after exiting
+      const decrementResult = LightService.decrementLightDuration(exitedState)
+      return {
+        ...state,
+        dungeon: decrementResult.state
+      }
+    }
+
+    // Case 3: Moving in normal zone - decrement light duration
+    if (!isNowInDarkness) {
+      const result = LightService.decrementLightDuration(dungeon)
+      return {
+        ...state,
+        dungeon: result.state
+      }
+    }
+
+    // Case 4: Moving within darkness zone - no change
+    return state
   },
 
   /**

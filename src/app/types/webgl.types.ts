@@ -8,6 +8,7 @@ export interface UniformLocations {
   uFogStart: WebGLUniformLocation | null;
   uFogEnd: WebGLUniformLocation | null;
   uFogColor: WebGLUniformLocation | null;
+  uAmbientLight: WebGLUniformLocation | null;
 }
 
 /**

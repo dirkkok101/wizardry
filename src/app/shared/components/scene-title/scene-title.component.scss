@@ -51,6 +51,29 @@
     gap: var(--space-4);
   }
 
+  .active-spells {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .spell-badge {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    padding: var(--space-1) var(--space-2);
+    background: rgba(100, 149, 237, 0.15);  // Soft blue glow for magic
+    border: 1px solid rgba(100, 149, 237, 0.4);
+    border-radius: var(--card-border-radius);
+    cursor: help;
+
+    &:hover {
+      background: rgba(100, 149, 237, 0.25);
+    }
+  }
+
   .party-gold {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);

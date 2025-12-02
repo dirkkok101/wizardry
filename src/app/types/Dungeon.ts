@@ -82,16 +82,21 @@ export interface LevelData {
   encounterTable: string
 }
 
+export type LightSpellType = 'MILWA' | 'LOMILWA'
+
 export interface DungeonState {
   currentLevel: number
   position: Position
   lightActive: boolean
   lightRadius: number
-  teleportCount: number            // track consecutive teleports (max 3)
-  visitedTiles: Set<string>        // "level-x-y"
-  defeatedEncounters: string[]     // encounter IDs
-  unlockedDoors: Set<string>       // "level_y_x" - doors unlocked by kicking
-  openDoors: Set<string>           // "level_y_x" - doors currently open
+  lightSpellType?: LightSpellType   // Which light spell is active (undefined = no spell)
+  lightDurationRemaining?: number   // Steps remaining until light expires
+  inDarknessZone: boolean           // Currently in a darkness zone tile
+  teleportCount: number             // track consecutive teleports (max 3)
+  visitedTiles: Set<string>         // "level-x-y"
+  defeatedEncounters: string[]      // encounter IDs
+  unlockedDoors: Set<string>        // "level_y_x" - doors unlocked by kicking
+  openDoors: Set<string>            // "level_y_x" - doors currently open
 }
 
 export interface EncounterTable {

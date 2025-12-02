@@ -10,10 +10,15 @@ function createTestGameState(position?: Position): GameState {
       currentLevel: 1,
       position: position || { x: 0, y: 0, facing: 'NORTH' },
       lightActive: false,
-      lightRadius: 1,
+      lightRadius: 3,
+      lightSpellType: undefined,
+      lightDurationRemaining: undefined,
+      inDarknessZone: false,
       teleportCount: 0,
       visitedTiles: new Set(),
-      defeatedEncounters: []
+      defeatedEncounters: [],
+      unlockedDoors: new Set(),
+      openDoors: new Set()
     }
   } as GameState
 }
@@ -194,7 +199,7 @@ describe('DungeonMovementService', () => {
       expect(result.dungeon!.visitedTiles.size).toBe(0)
     })
 
-    it('enables torch light with radius 3 and lightActive true on first entry', () => {
+    it('starts in darkness with default view distance on first entry', () => {
       // Use state without existing dungeon to test first entry behavior
       const state: GameState = {
         ...createTestGameStateHelper(),
@@ -203,8 +208,12 @@ describe('DungeonMovementService', () => {
 
       const result = DungeonMovementService.enterDungeon(state, 1)
 
-      expect(result.dungeon!.lightRadius).toBe(3)
-      expect(result.dungeon!.lightActive).toBe(true)
+      // Party starts in darkness (must cast MILWA to see)
+      expect(result.dungeon!.lightRadius).toBe(3)  // Default view distance
+      expect(result.dungeon!.lightActive).toBe(false)  // No light spell active
+      expect(result.dungeon!.lightSpellType).toBeUndefined()
+      expect(result.dungeon!.lightDurationRemaining).toBeUndefined()
+      expect(result.dungeon!.inDarknessZone).toBe(false)
     })
 
     it('initializes all tracking sets as empty on first entry', () => {
@@ -628,7 +637,7 @@ describe('DungeonMovementService', () => {
     });
 
     describe('darkness', () => {
-      it('sets lightRadius to 0 for current tile', () => {
+      it('extinguishes light and sets inDarknessZone when entering darkness tile', () => {
         const tile = { type: 'darkness' } as TileData;
 
         const state: GameState = {
@@ -638,15 +647,44 @@ describe('DungeonMovementService', () => {
             position: { x: 5, y: 5, facing: 'NORTH' },
             lightActive: true,
             lightRadius: 3,
+            lightSpellType: 'MILWA',
+            lightDurationRemaining: 20,
+            inDarknessZone: false,
             teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: [],
+            unlockedDoors: new Set(),
+            openDoors: new Set()
           },
         };
 
         const result = DungeonMovementService.handleSpecialTile(state, tile);
 
-        // Note: This sets a per-tile flag, actual lightRadius override happens in MazeComponent
-        expect(result.dungeon!.lightActive).toBe(true); // Spell still active
-        // We'll add a tileDarkness flag for UI to check
+        // Darkness zones extinguish active light spells (original Wizardry behavior)
+        expect(result.dungeon!.lightActive).toBe(false);
+        expect(result.dungeon!.inDarknessZone).toBe(true);
+        expect(result.dungeon!.lightSpellType).toBeUndefined();
+        expect(result.dungeon!.lightDurationRemaining).toBeUndefined();
+        expect(result.dungeon!.lightRadius).toBe(1); // Minimum visibility in darkness
+      });
+
+      it('handles darkness_zone_start the same as darkness', () => {
+        const tile = { type: 'darkness_zone_start' } as TileData;
+
+        const state: GameState = {
+          ...createTestGameState(),
+          dungeon: {
+            ...createTestGameState().dungeon!,
+            lightActive: true,
+            lightSpellType: 'LOMILWA',
+            lightDurationRemaining: 32000,
+          },
+        };
+
+        const result = DungeonMovementService.handleSpecialTile(state, tile);
+
+        expect(result.dungeon!.lightActive).toBe(false);
+        expect(result.dungeon!.inDarknessZone).toBe(true);
       });
     });
 

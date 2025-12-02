@@ -42,8 +42,11 @@ function createNewGame(): GameState {
     dungeon: {
       currentLevel: 1,
       position: { x: 0, y: 0, facing: 'NORTH' },
-      lightActive: true,  // Default torch light enabled
-      lightRadius: 3,     // Default torch range
+      lightActive: false,              // Party starts in darkness (must cast MILWA)
+      lightRadius: 3,                  // Default view distance without spell
+      lightSpellType: undefined,       // No active light spell
+      lightDurationRemaining: undefined, // No duration tracking yet
+      inDarknessZone: false,           // Not in a darkness zone tile
       teleportCount: 0,
       visitedTiles: new Set(),
       defeatedEncounters: [],
