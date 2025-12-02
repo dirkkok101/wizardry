@@ -1,4 +1,4 @@
-import { LevelData, Position, WallSegment, WallType } from '@models/Dungeon'
+import { LevelData, Position, WallSegment, WallType, VisibleGeometry } from '@models/Dungeon'
 import { DungeonService } from './DungeonService'
 
 /**
@@ -7,160 +7,24 @@ import { DungeonService } from './DungeonService'
  */
 export const VisibilityService = {
   /**
-   * Get visible tile coordinates from player's perspective.
-   * Returns all tiles that would be visible, including empty tiles (all walls open).
+   * Get all visible geometry (walls and tiles) from player's perspective.
    *
-   * Uses the same traversal logic as getVisibleWalls but returns tile coordinates
-   * instead of wall segments.
-   *
-   * @param level - Level data including tiles and size
-   * @param position - Player position and facing direction
-   * @param maxDepth - Maximum viewing distance (typically 5 tiles)
-   * @param peripheralColumns - Number of columns in peripheral vision (3 = left, center, right)
-   * @returns Array of [gridX, gridY] coordinates for all visible tiles
-   */
-  getVisibleTiles(
-    level: LevelData,
-    position: Position,
-    maxDepth: number = 5,
-    peripheralColumns: number = 3
-  ): Array<[number, number]> {
-    const visited = new Set<string>()
-
-    // Calculate perpendicular direction based on facing
-    let perpX = 0, perpY = 0
-    let forwardX = 0, forwardY = 0
-
-    switch (position.facing) {
-      case 'NORTH':
-        forwardX = 0; forwardY = 1
-        perpX = 1; perpY = 0
-        break
-      case 'EAST':
-        forwardX = 1; forwardY = 0
-        perpX = 0; perpY = -1
-        break
-      case 'SOUTH':
-        forwardX = 0; forwardY = -1
-        perpX = -1; perpY = 0
-        break
-      case 'WEST':
-        forwardX = -1; forwardY = 0
-        perpX = 0; perpY = 1
-        break
-    }
-
-    // Helper function to get perpendicular wall direction
-    const getPerpendicularWall = (offset: number): 'north' | 'south' | 'east' | 'west' => {
-      switch (position.facing) {
-        case 'NORTH':
-          return offset < 0 ? 'west' : 'east'
-        case 'EAST':
-          return offset < 0 ? 'north' : 'south'
-        case 'SOUTH':
-          return offset < 0 ? 'east' : 'west'
-        case 'WEST':
-          return offset < 0 ? 'south' : 'north'
-      }
-    }
-
-    // Iterate through depth levels
-    for (let depth = 0; depth < maxDepth; depth++) {
-      const centerX = position.x + forwardX * depth
-      const centerY = position.y + forwardY * depth
-
-      // Skip if center is out of bounds
-      if (centerX < 0 || centerX >= level.size.width ||
-          centerY < 0 || centerY >= level.size.height) {
-        break
-      }
-
-      const centerKey = `${centerX},${centerY}`
-      const centerTile = DungeonService.getTile(level, centerX, centerY)
-
-      // Always add center column tile
-      if (!visited.has(centerKey)) {
-        visited.add(centerKey)
-      }
-
-      // Add peripheral tiles
-      if (peripheralColumns >= 3) {
-        const halfWidth = Math.floor(peripheralColumns / 2)
-
-        for (const direction of [-1, 1]) {
-          let canSeeNext = true
-
-          for (let offset = 1; offset <= halfWidth && canSeeNext; offset++) {
-            const actualOffset = direction * offset
-            const tileX = centerX + perpX * actualOffset
-            const tileY = centerY + perpY * actualOffset
-            const tileKey = `${tileX},${tileY}`
-
-            if (tileX < 0 || tileX >= level.size.width ||
-                tileY < 0 || tileY >= level.size.height) {
-              canSeeNext = false
-              continue
-            }
-
-            const prevTileX = centerX + perpX * (actualOffset - direction)
-            const prevTileY = centerY + perpY * (actualOffset - direction)
-            const prevTile = DungeonService.getTile(level, prevTileX, prevTileY)
-            const wallDir = getPerpendicularWall(direction)
-            const wallOpen = prevTile.walls[wallDir] === 'open'
-
-            if (visited.has(tileKey)) {
-              canSeeNext = wallOpen
-              continue
-            }
-
-            if (wallOpen) {
-              visited.add(tileKey)
-            } else {
-              canSeeNext = false
-            }
-          }
-        }
-      }
-
-      // Check forward wall to determine if we continue deeper
-      // For TILE visibility (unlike wall visibility), we stop immediately when blocked
-      // because we can't see the floor/ceiling of tiles beyond a wall
-      const facingWall = position.facing === 'NORTH' ? centerTile.walls.north :
-                        position.facing === 'EAST' ? centerTile.walls.east :
-                        position.facing === 'SOUTH' ? centerTile.walls.south :
-                        centerTile.walls.west
-
-      if (facingWall !== 'open') {
-        break
-      }
-    }
-
-    // Convert visited Set to array of coordinate tuples
-    return Array.from(visited).map(key => {
-      const [x, y] = key.split(',').map(Number)
-      return [x, y] as [number, number]
-    })
-  },
-
-  /**
-   * Get visible wall segments from player's perspective.
-   *
-   * Uses hybrid grid-based traversal with early stopping for Wizardry-style
-   * peripheral vision rendering. Only returns walls within map bounds - edge
-   * wrapping is for movement topology, not rendering visibility.
+   * Single traversal produces both wall segments and tile coordinates,
+   * ensuring they're always in sync. This prevents bugs where walls
+   * are rendered but floors/ceilings are not (or vice versa).
    *
    * @param level - Level data including tiles and size
    * @param position - Player position and facing direction
    * @param maxDepth - Maximum viewing distance (typically 5 tiles)
    * @param peripheralColumns - Number of columns in peripheral vision (3 = left, center, right)
-   * @returns Array of wall segments sorted back-to-front for painter's algorithm
+   * @returns VisibleGeometry containing both walls and tile coordinates
    */
-  getVisibleWalls(
+  getVisibleGeometry(
     level: LevelData,
     position: Position,
     maxDepth: number = 5,
     peripheralColumns: number = 3
-  ): WallSegment[] {
+  ): VisibleGeometry {
     const walls: WallSegment[] = []
     const visited = new Set<string>()
 
@@ -249,7 +113,7 @@ export const VisibilityService = {
       const centerKey = `${centerX},${centerY}`
       const centerTile = DungeonService.getTile(level, centerX, centerY)
 
-      // Always add center column tile
+      // Always add center column tile (both walls and to visited set)
       if (!visited.has(centerKey)) {
         addTileWalls(centerX, centerY)
         visited.add(centerKey)
@@ -308,24 +172,73 @@ export const VisibilityService = {
                         centerTile.walls.west
 
       // If facing a wall in center column, don't continue deeper
-      if (depth > 0 && facingWall !== 'open') {
+      // (depth=0 tiles are already processed by this point)
+      if (facingWall !== 'open') {
         break
       }
     }
 
-    // Calculate wall distance range for logging
-    const minDist = walls.length > 0 ? Math.min(...walls.map(w => w.distance)) : 0
-    const maxDist = walls.length > 0 ? Math.max(...walls.map(w => w.distance)) : 0
+    // Convert visited set to tiles array
+    const tiles = Array.from(visited).map(key => {
+      const [x, y] = key.split(',').map(Number)
+      return [x, y] as [number, number]
+    })
 
+    // Sort walls by distance (back-to-front for painter's algorithm)
+    walls.sort((a, b) => b.distance - a.distance)
+
+    return { walls, tiles }
+  },
+
+  /**
+   * Get visible tile coordinates from player's perspective.
+   * Returns all tiles that would be visible, including empty tiles (all walls open).
+   *
+   * This is a thin wrapper around getVisibleGeometry() for backward compatibility.
+   *
+   * @param level - Level data including tiles and size
+   * @param position - Player position and facing direction
+   * @param maxDepth - Maximum viewing distance (typically 5 tiles)
+   * @param peripheralColumns - Number of columns in peripheral vision (3 = left, center, right)
+   * @returns Array of [gridX, gridY] coordinates for all visible tiles
+   */
+  getVisibleTiles(
+    level: LevelData,
+    position: Position,
+    maxDepth: number = 5,
+    peripheralColumns: number = 3
+  ): Array<[number, number]> {
+    return this.getVisibleGeometry(level, position, maxDepth, peripheralColumns).tiles
+  },
+
+  /**
+   * Get visible wall segments from player's perspective.
+   *
+   * This is a thin wrapper around getVisibleGeometry() for backward compatibility.
+   *
+   * @param level - Level data including tiles and size
+   * @param position - Player position and facing direction
+   * @param maxDepth - Maximum viewing distance (typically 5 tiles)
+   * @param peripheralColumns - Number of columns in peripheral vision (3 = left, center, right)
+   * @returns Array of wall segments sorted back-to-front for painter's algorithm
+   */
+  getVisibleWalls(
+    level: LevelData,
+    position: Position,
+    maxDepth: number = 5,
+    peripheralColumns: number = 3
+  ): WallSegment[] {
+    const { walls, tiles } = this.getVisibleGeometry(level, position, maxDepth, peripheralColumns)
+
+    // Debug logging (preserved from original)
     console.log(`[Visibility] Player at (${position.x}, ${position.y}) facing ${position.facing}`)
-    console.log(`[Visibility] Found ${walls.length} walls from ${visited.size} tiles using ${peripheralColumns}-column grid`)
+    console.log(`[Visibility] Found ${walls.length} walls from ${tiles.length} tiles using ${peripheralColumns}-column grid`)
     if (walls.length > 0) {
+      const minDist = Math.min(...walls.map(w => w.distance))
+      const maxDist = Math.max(...walls.map(w => w.distance))
       console.log(`[Visibility] Wall distances: min=${minDist.toFixed(2)} max=${maxDist.toFixed(2)}`)
     }
-    console.log(`[Visibility] First 10 visited tiles:`, Array.from(visited).slice(0, 10).map(t => `(${t})`).join(', '))
-
-    // Sort by distance (back-to-front for painter's algorithm)
-    walls.sort((a, b) => b.distance - a.distance)
+    console.log(`[Visibility] First 10 visited tiles:`, tiles.slice(0, 10).map(([x, y]) => `(${x},${y})`).join(', '))
 
     return walls
   },

@@ -341,11 +341,17 @@ export class WebGLRenderingService {
       console.log('[WebGL] Projection and view matrices configured');
     }
 
-    // Get visible walls from VisibilityService
-    const walls = VisibilityService.getVisibleWalls(level, position, config.tileDepth, config.peripheralColumns);
+    // Get visible geometry (walls and tiles) from single traversal
+    // This ensures walls and floor/ceiling tiles are always in sync
+    const { walls, tiles: visibleTiles } = VisibilityService.getVisibleGeometry(
+      level,
+      position,
+      config.tileDepth || 5,
+      config.peripheralColumns || 5
+    );
 
     if (this.debugMode) {
-      console.log(`[WebGL] Got ${walls.length} walls to render`);
+      console.log(`[WebGL] Got ${walls.length} walls and ${visibleTiles.length} tiles to render`);
       if (walls.length > 0) {
         const firstWall = walls[0];
 
@@ -364,9 +370,6 @@ export class WebGLRenderingService {
     for (const wall of walls) {
       this.renderWall(level, wall, dungeonState);
     }
-
-    // Render floors and ceilings for all visible tiles
-    const visibleTiles = this.getVisibleTiles(level, position, config);
 
     for (const [gridX, gridY] of visibleTiles) {
       this.renderFloor(gridX, gridY);
@@ -596,45 +599,6 @@ export class WebGLRenderingService {
     );
 
     this.addQuadToBatch(vertices);
-  }
-
-  /**
-   * Gets the grid coordinates of all visible tiles based on player position and wall occlusion
-   *
-   * Delegates to VisibilityService.getVisibleTiles() for proper tile-based visibility.
-   * This includes empty tiles (all walls open) that were previously missed when deriving
-   * tiles from walls.
-   *
-   * @param level - Level data for wall checking
-   * @param position - Player position
-   * @param config - Viewport configuration
-   * @returns Array of [gridX, gridY] coordinates for all visible tiles
-   */
-  private getVisibleTiles(
-    level: LevelData,
-    position: Position,
-    config: ViewportConfig
-  ): Array<[number, number]> {
-    // Delegate to VisibilityService for proper tile visibility
-    // This correctly handles empty tiles (all walls open) unlike deriving from walls
-    const tiles = VisibilityService.getVisibleTiles(
-      level,
-      position,
-      config.tileDepth || 5,
-      config.peripheralColumns || 3
-    );
-
-    if (this.debugMode) {
-      console.log('[WebGL] Visible tiles for floor/ceiling:', {
-        count: tiles.length,
-        depth: config.tileDepth,
-        peripheralColumns: config.peripheralColumns,
-        source: 'VisibilityService.getVisibleTiles()',
-        first15Tiles: tiles.slice(0, 15).map(([x, y]) => `(${x},${y})`).join(', ')
-      });
-    }
-
-    return tiles;
   }
 
   /**

@@ -153,6 +153,15 @@ export interface Vector2 {
 }
 
 /**
+ * Combined visibility result containing both walls and tiles.
+ * Single traversal produces both, ensuring they're always in sync.
+ */
+export interface VisibleGeometry {
+  walls: WallSegment[]
+  tiles: Array<[number, number]>
+}
+
+/**
  * Wall segment in world space
  * Represents a quad (4 corners) to be rendered
  */

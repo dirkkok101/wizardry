@@ -618,6 +618,111 @@ describe('VisibilityService', () => {
     })
   })
 
+  describe('getVisibleGeometry', () => {
+    it('returns both walls and tiles from single traversal', () => {
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 5, height: 5 },
+        startPosition: { x: 2, y: 2, facing: 'NORTH' },
+        edgeWrapping: false,
+        encounterRate: 0,
+        encounterTable: '',
+        tiles: [
+          { x: 2, y: 2, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 3, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' } },
+        ]
+      }
+
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const { walls, tiles } = VisibilityService.getVisibleGeometry(level, position, 3, 1)
+
+      // Should have walls and tiles from both visible positions
+      expect(walls.length).toBeGreaterThan(0)
+      expect(tiles.length).toBe(2)
+
+      const tileSet = new Set(tiles.map(([x, y]) => `${x},${y}`))
+      expect(tileSet.has('2,2')).toBe(true)
+      expect(tileSet.has('2,3')).toBe(true)
+    })
+
+    it('ensures walls and tiles are always in sync', () => {
+      // This is the bug scenario: facing a wall at depth=0
+      // Both walls AND tiles should include depth=1 tiles
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 5, height: 5 },
+        startPosition: { x: 2, y: 2, facing: 'NORTH' },
+        edgeWrapping: false,
+        encounterRate: 0,
+        encounterTable: '',
+        tiles: [
+          // Current tile with wall ahead
+          { x: 2, y: 2, walls: { north: 'wall', east: 'open', south: 'wall', west: 'open' } },
+          // Tiles to left and right at depth 0
+          { x: 1, y: 2, walls: { north: 'wall', east: 'open', south: 'wall', west: 'wall' } },
+          { x: 3, y: 2, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'open' } },
+          // Tiles at depth 1 (should be visible due to open side walls)
+          { x: 1, y: 3, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 2, y: 3, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+          { x: 3, y: 3, walls: { north: 'wall', east: 'wall', south: 'wall', west: 'wall' } },
+        ]
+      }
+
+      const position: Position = { x: 2, y: 2, facing: 'NORTH' }
+      const { walls, tiles } = VisibilityService.getVisibleGeometry(level, position, 5, 3)
+
+      // Extract tile coordinates from walls
+      const wallTiles = new Set<string>()
+      walls.forEach(wall => {
+        wallTiles.add(`${wall.gridX},${wall.gridY}`)
+      })
+
+      // Extract tile coordinates from tiles array
+      const floorTiles = new Set(tiles.map(([x, y]) => `${x},${y}`))
+
+      // Critical: every tile with walls should also have floor/ceiling
+      wallTiles.forEach(tile => {
+        expect(floorTiles.has(tile)).toBe(true)
+      })
+    })
+
+    describe('level 1 bug fix: facing EAST from (0,1)', () => {
+      let level1: LevelData
+
+      beforeEach(async () => {
+        const { DungeonService } = await import('../DungeonService')
+        level1 = DungeonService.loadLevel(1)
+      })
+
+      it('returns matching walls and tiles when facing a wall at depth=0', () => {
+        // This is the exact bug scenario reported by the user
+        const position: Position = { x: 0, y: 1, facing: 'EAST' }
+        const { walls, tiles } = VisibilityService.getVisibleGeometry(level1, position, 5, 5)
+
+        // Extract tile coordinates from walls
+        const wallTiles = new Set<string>()
+        walls.forEach(wall => {
+          wallTiles.add(`${wall.gridX},${wall.gridY}`)
+        })
+
+        // Extract tile coordinates from tiles array
+        const floorTiles = new Set(tiles.map(([x, y]) => `${x},${y}`))
+
+        // Critical assertion: every tile with walls must have floor/ceiling
+        // This was the bug - tiles like (1,0) had walls but no floor/ceiling
+        wallTiles.forEach(tile => {
+          expect(floorTiles.has(tile)).toBe(true)
+        })
+
+        // Verify specific tiles are included
+        expect(floorTiles.has('0,1')).toBe(true)  // Current tile
+        expect(floorTiles.has('0,0')).toBe(true)  // Right peripheral
+      })
+    })
+  })
+
   describe('createWallSegment', () => {
     const levelSize = { width: 20, height: 20 }
 
