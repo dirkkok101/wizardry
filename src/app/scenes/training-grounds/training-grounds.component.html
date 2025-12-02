@@ -19,6 +19,9 @@
             [status]="char.status">
             <ng-template #actions>
               <button class="action-btn" (click)="handleInspectCharacter(char.character.id)">Inspect</button>
+              @if (hasAvailableClasses(char.character)) {
+                <button class="action-btn" (click)="handleChangeClass(char.character)">Change Class</button>
+              }
               <button class="action-btn danger" (click)="handleDeleteCharacter(char.character.id)">Delete</button>
             </ng-template>
           </app-character-list-item>
@@ -40,7 +43,7 @@
     (itemSelected)="handleFooterAction($event)"
   />
 
-  <!-- Confirmation Dialog -->
+  <!-- Delete Confirmation Dialog -->
   @if (showDeleteConfirmation()) {
     <app-confirmation-dialog
       [visible]="showDeleteConfirmation()"
@@ -48,5 +51,26 @@
       (confirmed)="confirmDelete()"
       (cancelled)="cancelDelete()">
     </app-confirmation-dialog>
+  }
+
+  <!-- Class Change Dialog -->
+  @if (showClassChangeDialog()) {
+    <div class="dialog-overlay" (click)="cancelClassChange()">
+      <div class="dialog class-change-dialog" (click)="$event.stopPropagation()">
+        <h3>Change Class</h3>
+        <p class="dialog-subtitle">Select new class for {{ classChangeCharacter()?.name }}:</p>
+        <div class="class-list">
+          @for (cls of availableClasses(); track cls) {
+            <button class="class-option" (click)="confirmClassChange(cls)">
+              {{ cls }}
+            </button>
+          }
+        </div>
+        <p class="warning">Warning: Level resets to 1, stats reset to racial base, character ages 4-6 years.</p>
+        <div class="dialog-actions">
+          <button class="cancel-btn" (click)="cancelClassChange()">Cancel</button>
+        </div>
+      </div>
+    </div>
   }
 </div>

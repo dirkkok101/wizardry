@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener, computed, signal, inject } from '@angu
 import { CommonModule } from '@angular/common'
 import { GameStateService } from '@services/GameStateService'
 import { CharacterService } from '@services/CharacterService'
+import { ClassChangeService } from '@services/ClassChangeService'
 import { SceneNavigationService } from '@services/SceneNavigationService'
 import { MessageService } from '@services/MessageService'
 import { GameStateQueries } from '@utils/GameStateQueries'
@@ -12,6 +13,7 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
 import { MenuItem } from '@shared/components/menu/menu.component'
 import { Character } from '@models/Character'
+import { CharacterClass } from '@models/CharacterClass'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { Party } from '@models/GameState'
 import { SceneType } from '@models/SceneType'
@@ -50,10 +52,15 @@ export class TrainingGroundsComponent implements OnInit {
   private readonly navigation = inject(SceneNavigationService)
   readonly messages = inject(MessageService)
 
-  // Confirmation dialog state
+  // Delete confirmation dialog state
   readonly showDeleteConfirmation = signal(false)
   readonly deleteConfirmationMessage = signal('')
   private pendingDeleteId: string | null = null
+
+  // Class change dialog state
+  readonly showClassChangeDialog = signal(false)
+  readonly classChangeCharacter = signal<Character | null>(null)
+  readonly availableClasses = signal<CharacterClass[]>([])
 
   // Computed available characters using GameStateQueries
   readonly availableCharacters = computed<CharacterWithStatus[]>(() => {
@@ -121,6 +128,40 @@ export class TrainingGroundsComponent implements OnInit {
     this.closeDeleteDialog()
   }
 
+  // Class change methods
+  hasAvailableClasses(character: Character): boolean {
+    return ClassChangeService.getAvailableClasses(character).length > 0
+  }
+
+  handleChangeClass(character: Character): void {
+    const available = ClassChangeService.getAvailableClasses(character)
+    this.classChangeCharacter.set(character)
+    this.availableClasses.set(available)
+    this.showClassChangeDialog.set(true)
+  }
+
+  confirmClassChange(newClass: CharacterClass): void {
+    const char = this.classChangeCharacter()
+    if (!char) return
+
+    const result = ClassChangeService.changeClass(char, newClass)
+    if (result.success && result.updatedCharacter) {
+      this.gameState.updateState(state => ({
+        ...state,
+        roster: new Map(state.roster).set(char.id, result.updatedCharacter!)
+      }))
+      const years = Math.floor(result.ageIncrease / 52)
+      this.messages.showSuccess(`${char.name} is now a ${newClass}! (Aged ${years} years)`)
+    } else {
+      this.messages.showError(result.error || 'Class change failed')
+    }
+    this.closeClassChangeDialog()
+  }
+
+  cancelClassChange(): void {
+    this.closeClassChangeDialog()
+  }
+
   handleFooterAction(itemId: string): void {
     switch (itemId) {
       case 'create':
@@ -134,7 +175,9 @@ export class TrainingGroundsComponent implements OnInit {
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    if (!this.showDeleteConfirmation()) {
+    if (this.showClassChangeDialog()) {
+      this.closeClassChangeDialog()
+    } else if (!this.showDeleteConfirmation()) {
       this.navigation.returnToCastle()
     }
   }
@@ -147,5 +190,11 @@ export class TrainingGroundsComponent implements OnInit {
     this.showDeleteConfirmation.set(false)
     this.deleteConfirmationMessage.set('')
     this.pendingDeleteId = null
+  }
+
+  private closeClassChangeDialog(): void {
+    this.showClassChangeDialog.set(false)
+    this.classChangeCharacter.set(null)
+    this.availableClasses.set([])
   }
 }

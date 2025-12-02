@@ -87,3 +87,104 @@
     padding: var(--space-2);
   }
 }
+
+// Class Change Dialog
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 950;
+}
+
+.class-change-dialog {
+  background: var(--color-bg-darkest);
+  border: 2px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  min-width: 350px;
+  max-width: 500px;
+  padding: var(--space-4);
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.2);
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    color: var(--color-gold-primary);
+    margin: 0 0 var(--space-2);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .dialog-subtitle {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin: 0 0 var(--space-3);
+  }
+}
+
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.class-option {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: capitalize;
+
+  &:hover {
+    background: var(--color-bg-dark);
+    border-color: var(--color-gold-primary);
+    color: var(--color-gold-primary);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-gold-primary);
+    box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.25);
+  }
+}
+
+.warning {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-danger-light);
+  text-align: center;
+  margin: 0 0 var(--space-3);
+  font-style: italic;
+}
+
+.dialog-actions {
+  text-align: center;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-primary);
+  }
+}
