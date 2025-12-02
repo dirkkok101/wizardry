@@ -1,0 +1,5 @@
+# Cloudflare Pages configuration
+name = "wizardry"
+
+# Angular 17+ outputs to browser/ subdirectory
+pages_build_output_dir = "dist/wizardry-angular/browser"
