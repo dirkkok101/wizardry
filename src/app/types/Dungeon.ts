@@ -63,10 +63,6 @@ export interface TileData {
   isOneWay?: boolean
   destinations?: Destination[]  // For elevator
   locked?: boolean  // For door tiles (test compatibility)
-  // Fixed encounter AUX values (from original Wizardry)
-  aux0?: number  // Countdown - decrements each visit, inactive at 0
-  aux1?: number  // Random range added to aux2
-  aux2?: number  // Base monster index into encounter table
 }
 
 export interface LevelData {
@@ -102,6 +98,7 @@ export interface DungeonState {
   defeatedEncounters: string[]      // encounter IDs
   unlockedDoors: Set<string>        // "level_y_x" - doors unlocked by kicking
   openDoors: Set<string>            // "level_y_x" - doors currently open
+  lootedTiles: Set<string>          // "level_x_y" - searchable tiles already looted
 }
 
 export interface EncounterTable {

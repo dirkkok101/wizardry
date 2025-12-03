@@ -62,7 +62,8 @@ export const DungeonMovementService = {
         visitedTiles: new Set<string>(),
         defeatedEncounters: [],
         unlockedDoors: new Set<string>(),
-        openDoors: new Set<string>()
+        openDoors: new Set<string>(),
+        lootedTiles: new Set<string>()
       }
     };
 

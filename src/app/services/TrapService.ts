@@ -277,6 +277,7 @@ function attemptDisarm(
     // Original formula uses character level (higher level = tiny chance to avoid trigger)
     const triggerChance = calculateWrongNameTriggerChance(character.level)
     const triggered = RandomService.chance(triggerChance)
+    console.log(`[TrapService] Wrong trap name! Entered "${enteredTrapName}", actual "${actualTrapName}". Trigger chance: ${triggerChance.toFixed(1)}%. Triggered: ${triggered}`)
     return {
       success: false,
       triggered,
@@ -285,8 +286,11 @@ function attemptDisarm(
   }
 
   // Correct trap name - attempt disarm
+  // Formula: (EffectiveLevel - MazeLevel) / 70, Thief/Ninja get +50 level bonus
   const disarmChance = calculateDisarmChance(character, chest.mazeLevel)
   const success = RandomService.chance(disarmChance)
+
+  console.log(`[TrapService] Disarm attempt: ${character.name} (${character.class} L${character.level}) vs maze L${chest.mazeLevel}. Chance: ${disarmChance.toFixed(1)}%. Success: ${success}`)
 
   if (success) {
     return {
@@ -297,8 +301,11 @@ function attemptDisarm(
   }
 
   // Failed disarm - check AGI save to avoid triggering
+  // Formula: AGI × 5%
   const avoidChance = calculateTriggerAvoidance(character)
   const avoided = RandomService.chance(avoidChance)
+
+  console.log(`[TrapService] Disarm failed! AGI save: ${character.agility} AGI × 5% = ${avoidChance}% chance to avoid trigger. Avoided: ${avoided}`)
 
   return {
     success: false,

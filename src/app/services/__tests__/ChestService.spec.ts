@@ -64,6 +64,47 @@ describe('ChestService', () => {
       expect(chest.contents.gold).toBeGreaterThan(0)
     })
 
+    it('should generate items when random values are favorable', async () => {
+      // Tier 19 has: 100% chance for tier 1, 50% for tier 2, 10% for tier 3
+      // TreasureService.generateChest order: gold → trap → items
+      // Queue values in correct consumption order:
+      RandomService.queueNextValues([
+        // Gold dice (10d10 = 10 values)
+        0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+        // Bonus roll d8 (1 value)
+        0.5,
+        // TreasureService trap selection (pickRandom - 1 value)
+        0.5,
+        // Tier 1 (100% chance): chance check, item ID, identified check
+        0.01,  // 1% < 100% = PASS
+        0.5,   // Item ID (middle of range 35-52 = item ~43)
+        0.5,   // Identified (50% < 70% = unidentified)
+        // Tier 2 (50% chance): chance check, item ID, identified check
+        0.01,  // 1% < 50% = PASS
+        0.5,   // Item ID (middle of range 54-80 = item ~67)
+        0.5,   // Identified
+        // Tier 3 (10% chance): chance check, item ID, identified check
+        0.01,  // 1% < 10% = PASS
+        0.5,   // Item ID (middle of range 80-92 = item ~86)
+        0.5,   // Identified
+        // ChestService trap probability (roll - 1 value)
+        0.5,
+        // ChestService trap ID selection if trapped (pickRandom - 1 value)
+        0.5
+      ])
+
+      const chest = await ChestService.generateChest(19, 10, createTestPosition(), 'boss')
+
+      // Should have 3 items (one from each tier)
+      expect(chest.contents.items.length).toBe(3)
+
+      // Each item should be a valid item with name
+      for (const item of chest.contents.items) {
+        expect(item.name).toBeDefined()
+        expect(item.name.length).toBeGreaterThan(0)
+      }
+    })
+
     it('should respect trap probability by tier', async () => {
       const position = createTestPosition()
 

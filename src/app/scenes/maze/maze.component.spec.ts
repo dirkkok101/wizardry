@@ -672,7 +672,9 @@ describe('MazeComponent - Tile Inspection', () => {
         defeatedEncounters: [],
         unlockedDoors: new Set(),
         openDoors: new Set(),
-        visitedTiles: new Set<string>()
+        visitedTiles: new Set<string>(),
+        lootedTiles: new Set<string>(),
+        inDarknessZone: false
       },
     }));
 
@@ -706,7 +708,8 @@ describe('MazeComponent - Tile Inspection', () => {
         unlockedDoors: new Set(),
         openDoors: new Set(),
         visitedTiles: new Set<string>(),
-        searchedTiles: new Set<string>()
+        lootedTiles: new Set<string>(),
+        inDarknessZone: false
       },
     }));
 
@@ -721,7 +724,7 @@ describe('MazeComponent - Tile Inspection', () => {
     // Check that a success message was added (not "Nothing to search here.")
     const messages = component.messages();
     expect(messages).not.toContain('Nothing to search here.');
-    expect(messages.some(m => m.includes('potion'))).toBe(true);
+    expect(messages.some(m => m.includes('Health Potion'))).toBe(true);
 
     const state = gameState.state();
     const charAfter = state.roster.get('char1')!;

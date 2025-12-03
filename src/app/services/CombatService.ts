@@ -93,6 +93,7 @@ export class CombatService {
    * @param canFlee - Whether the party can flee from this encounter
    * @param fixedEncounterConfig - Optional AUX config for fixed encounters
    * @param isFriendlyEncounter - True if party chose to fight friendly monsters
+   * @param encounterReason - Why encounter triggered (for treasure mechanics)
    * @returns Initial combat state with monster groups and surprise state
    */
   static initiateCombat(
@@ -100,10 +101,11 @@ export class CombatService {
     party: Character[],
     canFlee: boolean,
     fixedEncounterConfig?: FixedEncounterConfig,
-    isFriendlyEncounter: boolean = false
+    isFriendlyEncounter: boolean = false,
+    encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
   ): CombatState {
     // Generate monster groups - use fixed encounter config if provided
-    // Fixed encounters use aux2 + random(0, aux1) for deterministic monster selection
+    // Fixed encounters use encounterId for direct monster spawning
     const monsterGroups = fixedEncounterConfig
       ? EncounterService.generateFixedEncounter(dungeonLevel, fixedEncounterConfig)
       : EncounterService.generateEncounter(dungeonLevel)
@@ -132,7 +134,8 @@ export class CombatService {
       statusDurations: new Map(), // Initialize empty status durations
       monstersDemoralized: false,  // Calculated during combat
       surpriseState,  // Surprise mechanics
-      isFriendlyEncounter  // Track for alignment shift mechanic
+      isFriendlyEncounter,  // Track for alignment shift mechanic
+      encounterReason  // Track for treasure mechanics (treasure_room = guaranteed chest)
     }
   }
 

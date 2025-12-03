@@ -1,4 +1,4 @@
-import { LevelData, Position } from '@models/Dungeon';
+import { DungeonState, LevelData, Position } from '@models/Dungeon';
 import { GameState } from '@models/GameState';
 import { Item } from '@models/Item';
 import { DungeonService } from './DungeonService';
@@ -11,13 +11,42 @@ export interface InspectionResult {
   state?: GameState;
 }
 
+/**
+ * Generate unique key for looted tile tracking
+ */
+function getLootedTileKey(level: number, x: number, y: number): string {
+  return `${level}_${x}_${y}`;
+}
+
 export class TileInspectionService {
   /**
-   * Check if current tile has searchable content
+   * Check if current tile has searchable content that hasn't been looted yet
+   *
+   * @param level - The level data
+   * @param position - Current position
+   * @param dungeonState - Optional dungeon state to check lootedTiles
    */
-  static hasSearchableContent(level: LevelData, position: Position): boolean {
+  static hasSearchableContent(
+    level: LevelData,
+    position: Position,
+    dungeonState?: DungeonState
+  ): boolean {
     const tile = DungeonService.getTile(level, position.x, position.y);
-    return (tile.types?.includes('searchable') ?? false) && !!tile.item;
+
+    // Must be searchable with an item defined
+    if (!tile.types?.includes('searchable') || !tile.item) {
+      return false;
+    }
+
+    // If dungeon state provided, check if already looted
+    if (dungeonState) {
+      const key = getLootedTileKey(level.level, position.x, position.y);
+      if (dungeonState.lootedTiles.has(key)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -43,7 +72,12 @@ export class TileInspectionService {
 
   /**
    * Inspect tile with game state integration
-   * Adds item to first party member inventory and clears tile content
+   * Adds item to first party member inventory and marks tile as looted
+   *
+   * Flow:
+   * 1. Check if tile is searchable with an item
+   * 2. Check if tile has already been looted (via lootedTiles)
+   * 3. Look up item data, add to inventory, mark tile as looted
    */
   static inspectTileWithState(state: GameState, level: LevelData): InspectionResult {
     if (!state.dungeon) {
@@ -53,12 +87,22 @@ export class TileInspectionService {
     const position = state.dungeon.position;
     const tile = DungeonService.getTile(level, position.x, position.y);
 
+    // Check if tile is searchable with an item
     if (!tile.types?.includes('searchable') || !tile.item) {
       return { found: false, state };
     }
 
+    // Check if already looted
+    const lootKey = getLootedTileKey(level.level, position.x, position.y);
+    if (state.dungeon.lootedTiles.has(lootKey)) {
+      return {
+        found: false,
+        state,
+        message: 'You have already searched here.'
+      };
+    }
+
     const itemId = tile.item;
-    const message = tile.message || `You found ${itemId}!`;
 
     // Look up the full Item from ItemDataLoader
     const baseItem = ItemDataLoader.getItem(itemId);
@@ -84,17 +128,24 @@ export class TileInspectionService {
       inventory: [...character.inventory, itemInstance],
     });
 
-    // Clear tile content (one-time search)
-    // Find the tile in the 1D array and mutate it
-    const tileIndex = level.tiles.findIndex(t => t.x === position.x && t.y === position.y);
-    if (tileIndex !== -1) {
-      level.tiles[tileIndex] = { ...tile, item: undefined };
-    }
+    // Mark tile as looted (persisted in dungeon state)
+    const newLootedTiles = new Set(state.dungeon.lootedTiles);
+    newLootedTiles.add(lootKey);
 
     const newState: GameState = {
       ...state,
       roster: newRoster,
+      dungeon: {
+        ...state.dungeon,
+        lootedTiles: newLootedTiles
+      }
     };
+
+    // Use item's display name in message, or show tile message if defined
+    const itemName = baseItem.name || itemId;
+    const message = tile.message
+      ? `${tile.message} You found a ${itemName}!`
+      : `You found a ${itemName}!`;
 
     return {
       found: true,

@@ -1570,9 +1570,15 @@ export class CombatComponent implements OnInit, OnDestroy {
     // Determine if monsters leave behind a treasure chest or just loose gold
     // In original Wizardry, not all encounters had chests - some just dropped gold
     // Higher level monsters are more likely to have treasure chests
+    // EXCEPTION: Treasure room encounters ALWAYS have a chest (guaranteed reward)
     const maxMonsterLevel = Math.max(...allMonsters.map(m => m.level || 1), 1)
+    const isTreasureRoom = combat.encounterReason === 'treasure_room'
     const chestProbability = this.getChestProbability(maxMonsterLevel)
-    const hasChest = RandomService.roll(chestProbability)
+    const hasChest = isTreasureRoom || RandomService.roll(chestProbability)
+
+    if (isTreasureRoom) {
+      console.log('[Combat] Treasure room encounter - chest guaranteed!')
+    }
 
     if (hasChest) {
       // Monsters left behind a treasure chest - navigate to chest scene

@@ -158,11 +158,18 @@ export const DungeonService = {
   getRoomTiles(level: LevelData): RoomTileInfo[] {
     return level.tiles
       .filter(tile => tile.types?.includes('room'))
-      .map(tile => ({
-        x: tile.x,
-        y: tile.y,
-        isRoom: true
-      }))
+      .map(tile => {
+        // Check if any wall is a door (for treasure room eligibility)
+        const hasDoor = Object.values(tile.walls).some(
+          wall => wall === 'door' || wall === 'locked_door'
+        )
+        return {
+          x: tile.x,
+          y: tile.y,
+          isRoom: true,
+          hasDoor
+        }
+      })
   },
 
   /**
@@ -179,46 +186,44 @@ export const DungeonService = {
   hasFixedEncounter(level: LevelData, x: number, y: number): boolean {
     const tile = this.getTile(level, x, y)
     return tile.types?.includes('fixed_encounter') === true &&
-      tile.aux0 !== undefined &&
-      tile.aux0 > 0
+      tile.encounterId !== undefined
   },
 
   /**
    * Get fixed encounter configuration from tile data
-   * Returns undefined if tile has no fixed encounter or aux values
+   * Returns undefined if tile has no fixed encounter
    */
-  getFixedEncounterConfig(level: LevelData, x: number, y: number): { aux0: number; aux1: number; aux2: number } | undefined {
+  getFixedEncounterConfig(level: LevelData, x: number, y: number): { encounterId: string; repeatable: boolean; cannotFlee?: boolean } | undefined {
     const tile = this.getTile(level, x, y)
 
-    // Must have fixed_encounter type and aux0 defined
-    if (!tile.types?.includes('fixed_encounter') || tile.aux0 === undefined) {
+    // Must have fixed_encounter type and encounterId defined
+    if (!tile.types?.includes('fixed_encounter') || !tile.encounterId) {
       return undefined
     }
 
     return {
-      aux0: tile.aux0,
-      aux1: tile.aux1 ?? 0,  // Default to 0 (no random range)
-      aux2: tile.aux2 ?? 0   // Default to 0 (first monster in table)
+      encounterId: tile.encounterId,
+      repeatable: tile.repeatable ?? false,  // Default to one-time encounter
+      cannotFlee: tile.cannotFlee
     }
   },
 
   /**
    * Get all tiles with fixed encounter configurations
-   * Used during FIGHTMAP initialization to set up countdown tracking
+   * Used during FIGHTMAP initialization
    */
-  getFixedEncounterTiles(level: LevelData): Array<{ x: number; y: number; aux0: number; aux1: number; aux2: number }> {
+  getFixedEncounterTiles(level: LevelData): Array<{ x: number; y: number; encounterId: string; repeatable: boolean; cannotFlee?: boolean }> {
     return level.tiles
       .filter(tile =>
         tile.types?.includes('fixed_encounter') &&
-        tile.aux0 !== undefined &&
-        tile.aux0 > 0
+        tile.encounterId !== undefined
       )
       .map(tile => ({
         x: tile.x,
         y: tile.y,
-        aux0: tile.aux0!,
-        aux1: tile.aux1 ?? 0,
-        aux2: tile.aux2 ?? 0
+        encounterId: tile.encounterId!,
+        repeatable: tile.repeatable ?? false,
+        cannotFlee: tile.cannotFlee
       }))
   },
 

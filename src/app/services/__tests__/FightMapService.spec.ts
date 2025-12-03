@@ -10,9 +10,9 @@ describe('FightMapService', () => {
   describe('initializeLevel', () => {
     it('should initialize level state with empty cleared tiles', () => {
       const roomTiles = [
-        { x: 5, y: 5, isRoom: true },
-        { x: 6, y: 5, isRoom: true },
-        { x: 5, y: 6, isRoom: true }
+        { x: 5, y: 5, isRoom: true, hasDoor: true },
+        { x: 6, y: 5, isRoom: true, hasDoor: true },
+        { x: 5, y: 6, isRoom: true, hasDoor: true }
       ]
 
       FightMapService.initializeLevel(1, roomTiles)
@@ -24,7 +24,7 @@ describe('FightMapService', () => {
     })
 
     it('should not allow encounters on corridor tiles (tiles not in roomTiles)', () => {
-      const roomTiles = [{ x: 5, y: 5, isRoom: true }]
+      const roomTiles = [{ x: 5, y: 5, isRoom: true, hasDoor: true }]
 
       FightMapService.initializeLevel(1, roomTiles)
 
@@ -33,8 +33,8 @@ describe('FightMapService', () => {
     })
 
     it('should handle multiple levels independently', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
-      FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
+      FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true, hasDoor: true }])
 
       expect(FightMapService.canEncounter(1, 5, 5)).toBe(true)
       expect(FightMapService.canEncounter(1, 10, 10)).toBe(false) // Not a room on level 1
@@ -45,20 +45,20 @@ describe('FightMapService', () => {
 
   describe('canEncounter', () => {
     it('should return true for uncleared room tiles', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
 
       expect(FightMapService.canEncounter(1, 5, 5)).toBe(true)
     })
 
     it('should return false for cleared tiles', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
       FightMapService.markCleared(1, 5, 5)
 
       expect(FightMapService.canEncounter(1, 5, 5)).toBe(false)
     })
 
     it('should return true for alarm tiles regardless of cleared state', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
       FightMapService.markCleared(1, 5, 5)
       FightMapService.setAlarm(1, 5, 5)
 
@@ -73,7 +73,7 @@ describe('FightMapService', () => {
 
   describe('markCleared', () => {
     it('should mark tile as cleared', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
 
       expect(FightMapService.canEncounter(1, 5, 5)).toBe(true)
 
@@ -83,7 +83,7 @@ describe('FightMapService', () => {
     })
 
     it('should clear alarm tile when marked', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
       FightMapService.setAlarm(1, 5, 5)
 
       expect(FightMapService.isAlarmTile(1, 5, 5)).toBe(true)
@@ -96,13 +96,13 @@ describe('FightMapService', () => {
 
   describe('hasTreasure', () => {
     it('should return false for non-treasure tiles', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
 
       expect(FightMapService.hasTreasure(1, 5, 5)).toBe(false)
     })
 
     it('should return true for treasure room tiles', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
       FightMapService.markTreasureRoom(1, 5, 5)
 
       expect(FightMapService.hasTreasure(1, 5, 5)).toBe(true)
@@ -115,7 +115,7 @@ describe('FightMapService', () => {
       const roomTiles = []
       for (let x = 8; x <= 12; x++) {
         for (let y = 8; y <= 12; y++) {
-          roomTiles.push({ x, y, isRoom: true })
+          roomTiles.push({ x, y, isRoom: true, hasDoor: true })
         }
       }
       FightMapService.initializeLevel(1, roomTiles)
@@ -139,7 +139,7 @@ describe('FightMapService', () => {
     })
 
     it('should not set alarm outside map bounds', () => {
-      FightMapService.initializeLevel(1, [{ x: 0, y: 0, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 0, y: 0, isRoom: true, hasDoor: true }])
 
       // Spread alarm at corner - should not crash
       FightMapService.spreadAlarm(1, 0, 0, 2)
@@ -151,8 +151,8 @@ describe('FightMapService', () => {
 
   describe('resetAll', () => {
     it('should clear all level states', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
-      FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
+      FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true, hasDoor: true }])
       FightMapService.markTreasureRoom(1, 5, 5)
       FightMapService.setAlarm(2, 10, 10)
 
@@ -171,7 +171,7 @@ describe('FightMapService', () => {
       const roomTiles = []
       for (let x = 0; x < 10; x++) {
         for (let y = 0; y < 10; y++) {
-          roomTiles.push({ x, y, isRoom: true })
+          roomTiles.push({ x, y, isRoom: true, hasDoor: true })
         }
       }
       FightMapService.initializeLevel(1, roomTiles)
@@ -199,11 +199,11 @@ describe('FightMapService', () => {
     it('should not seed more than available rooms', () => {
       // Only 5 room tiles
       const roomTiles = [
-        { x: 0, y: 0, isRoom: true },
-        { x: 1, y: 0, isRoom: true },
-        { x: 2, y: 0, isRoom: true },
-        { x: 3, y: 0, isRoom: true },
-        { x: 4, y: 0, isRoom: true }
+        { x: 0, y: 0, isRoom: true, hasDoor: true },
+        { x: 1, y: 0, isRoom: true, hasDoor: true },
+        { x: 2, y: 0, isRoom: true, hasDoor: true },
+        { x: 3, y: 0, isRoom: true, hasDoor: true },
+        { x: 4, y: 0, isRoom: true, hasDoor: true }
       ]
       FightMapService.initializeLevel(1, roomTiles)
 
@@ -223,7 +223,7 @@ describe('FightMapService', () => {
 
   describe('door-kick bypass behavior', () => {
     it('canEncounterDoorKick should return true even for cleared tiles', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
       FightMapService.markCleared(1, 5, 5)
 
       // Normal encounter check fails (cleared)
@@ -235,7 +235,7 @@ describe('FightMapService', () => {
 
     it('canEncounterDoorKick should return false for corridor tiles', () => {
       // Tile not in room list
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
 
       // Corridor tile at (0,0) - not eligible even for door kick
       expect(FightMapService.canEncounterDoorKick(1, 0, 0)).toBe(false)
@@ -244,7 +244,7 @@ describe('FightMapService', () => {
 
   describe('getLevelState', () => {
     it('should return level state if initialized', () => {
-      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
 
       const state = FightMapService.getLevelState(1)
 

@@ -347,6 +347,8 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           defeatedEncounters: [],
           unlockedDoors: new Set(),
           openDoors: new Set(),
+          lootedTiles: new Set(),
+          inDarknessZone: false,
         },
       };
 
@@ -382,6 +384,8 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
           defeatedEncounters: [],
           unlockedDoors: new Set(),
           openDoors: new Set(),
+          lootedTiles: new Set(),
+          inDarknessZone: false,
         },
       };
 

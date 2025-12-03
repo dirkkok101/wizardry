@@ -144,33 +144,18 @@ export const EncounterService = {
   },
 
   /**
-   * Generate encounter from fixed encounter config (AUX values)
-   * Uses aux2 as base monster index and aux1 as random range
-   *
-   * Monster index formula: aux2 + random(0, aux1)
-   *
-   * This allows specific encounters like Murphy's Ghost to be deterministic
-   * while still allowing variation when aux1 > 0
+   * Generate encounter from fixed encounter config
+   * Uses encounterId directly to spawn the specified monster
    *
    * @param dungeonLevel - Current dungeon level (1-10)
-   * @param config - Fixed encounter AUX configuration
+   * @param config - Fixed encounter configuration with encounterId
    * @returns Array of MonsterGroups (1 group for fixed encounters)
    */
   generateFixedEncounter(dungeonLevel: number, config: FixedEncounterConfig): MonsterGroup[] {
-    const encounterTable = this.getEncounterTable(dungeonLevel)
     const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
 
-    // Calculate monster index: aux2 + random(0, aux1)
-    let monsterIndex = config.aux2
-    if (config.aux1 > 0) {
-      monsterIndex += Math.floor(RandomService.random(0, config.aux1))
-    }
-
-    // Clamp to valid range
-    const clampedIndex = Math.min(monsterIndex, encounterTable.monsters.length - 1)
-
-    // Get monster ID from encounter table by index
-    const monsterId = encounterTable.monsters[clampedIndex].monsterId
+    // Use encounterId directly - no table lookup needed!
+    const monsterId = config.encounterId
 
     // Generate monster instances (respecting level-based limits)
     let monsters = MonsterService.generateMonsterGroup(monsterId)

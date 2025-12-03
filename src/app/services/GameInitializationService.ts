@@ -13,6 +13,7 @@ import { MonsterDataLoader } from './MonsterDataLoader'
 import { ClassDataLoader } from './ClassDataLoader'
 import { TrapDataLoader } from './TrapDataLoader'
 import { TreasureDataLoader } from './TreasureDataLoader'
+import { NumericIdMappingLoader } from './NumericIdMappingLoader'
 import { StatModifierService } from './StatModifierService'
 import { LoadingProgressService, LoadingStep } from './LoadingProgressService'
 
@@ -52,7 +53,8 @@ function createNewGame(): GameState {
       visitedTiles: new Set(),
       defeatedEncounters: [],
       unlockedDoors: new Set(),
-      openDoors: new Set()
+      openDoors: new Set(),
+      lootedTiles: new Set()
     },
     settings: {
       difficulty: 'NORMAL',
@@ -172,11 +174,12 @@ async function initializeGame(progress?: LoadingProgressService): Promise<void> 
 
   // Initialize remaining data services
   reportStep(progress, 'items')
-  console.log('Loading items, traps, and treasure...')
+  console.log('Loading items, traps, treasure, and numeric ID mapping...')
   await Promise.all([
     ItemDataLoader.loadAllItems().then(() => completeStep(progress, 'items')),
     TrapDataLoader.loadAllTraps().then(() => completeStep(progress, 'traps')),
-    TreasureDataLoader.loadAllRewards().then(() => completeStep(progress, 'treasure'))
+    TreasureDataLoader.loadAllRewards().then(() => completeStep(progress, 'treasure')),
+    NumericIdMappingLoader.loadMapping()  // Required for treasure item lookups
   ])
 
   // Report item loading statistics

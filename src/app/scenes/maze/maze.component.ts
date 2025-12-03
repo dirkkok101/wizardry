@@ -312,8 +312,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeFightMap(level: number): void {
     // Check if already initialized for this level
     if (FightMapService.getLevelState(level)) {
+      console.log(`[Maze] FIGHTMAP already initialized for level ${level}`);
       return;
     }
+
+    console.log(`[Maze] Initializing FIGHTMAP for level ${level}...`);
 
     try {
       const levelData = DungeonService.loadLevel(level);
@@ -325,15 +328,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Seed treasure rooms for the level
       FightMapService.seedTreasureRooms(level, roomTiles);
 
-      // Initialize fixed encounter countdowns (AUX mechanism)
+      // Initialize fixed encounters from tile data
       const fixedEncounters = DungeonService.getFixedEncounterTiles(levelData);
       for (const fe of fixedEncounters) {
         FightMapService.initializeFixedEncounter(level, fe.x, fe.y, {
-          aux0: fe.aux0,
-          aux1: fe.aux1,
-          aux2: fe.aux2
+          encounterId: fe.encounterId,
+          repeatable: fe.repeatable,
+          cannotFlee: fe.cannotFlee
         });
       }
+
+      // Log summary
+      const levelState = FightMapService.getLevelState(level);
+      console.log(`[Maze] FIGHTMAP initialized for level ${level}:`, {
+        roomTiles: levelState?.roomTiles.size || 0,
+        treasureRooms: levelState?.treasureRooms ? [...levelState.treasureRooms] : [],
+        fixedEncounters: fixedEncounters.length
+      });
     } catch (error) {
       console.error(`[MazeComponent] Failed to initialize FIGHTMAP for level ${level}:`, error);
     }
@@ -620,8 +631,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const level = DungeonService.loadLevel(this.currentLevel());
 
-    // Check if current tile has searchable content
-    if (!TileInspectionService.hasSearchableContent(level, state.dungeon.position)) {
+    // Check if current tile has searchable content (not already looted)
+    if (!TileInspectionService.hasSearchableContent(level, state.dungeon.position, state.dungeon)) {
       this.addMessage('Nothing to search here.');
       return;
     }
@@ -631,6 +642,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (result.found && result.state) {
       this.gameState.updateState(() => result.state!);
       this.addMessage(result.message || `You found ${result.itemId}!`);
+    } else if (result.message) {
+      // Already looted or other message
+      this.addMessage(result.message);
     } else {
       this.addMessage('Nothing found.');
     }
@@ -811,26 +825,27 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       FightMapService.markCleared(dungeon.currentLevel, pos.x, pos.y);
     }
 
-    // Decrement fixed encounter countdown after triggering
-    // This makes encounters like Murphy's Ghost finite rather than infinite
+    // Mark fixed encounter as triggered
+    // For repeatable encounters, this resets when re-entering the level
     if (result.reason === 'fixed' && result.fixedEncounterConfig) {
-      FightMapService.decrementFixedEncounter(dungeon.currentLevel, pos.x, pos.y);
+      FightMapService.markFixedEncounterTriggered(dungeon.currentLevel, pos.x, pos.y);
     }
 
     // Initiate encounter - canFlee depends on whether it's a guaranteed fight
     const canFlee = !result.guaranteedFight;
-    this.initiateEncounter(this.currentLevel(), canFlee, result.fixedEncounterConfig);
+    this.initiateEncounter(this.currentLevel(), canFlee, result.fixedEncounterConfig, result.reason);
   }
 
   private handleFixedEncounter(monsterId: string): void {
     // For fixed encounters, still use level-based generation
-    this.initiateEncounter(this.currentLevel(), false);  // false = cannot flee
+    this.initiateEncounter(this.currentLevel(), false, undefined, 'fixed');  // false = cannot flee
   }
 
   private initiateEncounter(
     dungeonLevel: number,
     canFlee: boolean,
-    fixedEncounterConfig?: FixedEncounterConfig
+    fixedEncounterConfig?: FixedEncounterConfig,
+    encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
   ): void {
     this.addMessage(`You encounter monsters!`);
 
@@ -840,11 +855,14 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Initialize combat state with encounter generation
       // Pass fixedEncounterConfig for AUX-based monster selection
+      // Pass encounterReason for treasure mechanics (treasure_room = guaranteed chest)
       const combatState = CombatService.initiateCombat(
         dungeonLevel,
         partyChars,
         canFlee,
-        fixedEncounterConfig
+        fixedEncounterConfig,
+        false,  // isFriendlyEncounter - default to false for monster encounters
+        encounterReason
       );
 
       // Update game state with combat

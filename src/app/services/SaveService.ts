@@ -95,6 +95,11 @@ export class SaveService {
       ? Array.from((state.dungeon as any).openDoors)
       : []
 
+    // Handle lootedTiles Set (convert to array for JSON serialization)
+    const lootedTilesArray = (state.dungeon as any).lootedTiles
+      ? Array.from((state.dungeon as any).lootedTiles)
+      : []
+
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
@@ -103,7 +108,8 @@ export class SaveService {
         ...state.dungeon,
         visitedTiles: visitedTilesArray,
         unlockedDoors: unlockedDoorsArray,
-        openDoors: openDoorsArray
+        openDoors: openDoorsArray,
+        lootedTiles: lootedTilesArray
       }
     }
   }
@@ -183,6 +189,11 @@ export class SaveService {
     const openDoorsData = data.dungeon?.openDoors || []
     const openDoors = new Set(openDoorsData)
 
+    // Deserialize lootedTiles Set (from array)
+    // Handle old saves that don't have lootedTiles or have invalid format
+    const lootedTilesData = data.dungeon?.lootedTiles
+    const lootedTiles = Array.isArray(lootedTilesData) ? new Set(lootedTilesData) : new Set()
+
     return {
       ...data,
       roster: new Map(data.roster || []),
@@ -194,6 +205,7 @@ export class SaveService {
         defeatedEncounters: data.dungeon.defeatedEncounters || [],
         unlockedDoors,
         openDoors,
+        lootedTiles,
         // Light system defaults for old saves
         inDarknessZone: data.dungeon.inDarknessZone ?? false,
         lightSpellType: data.dungeon.lightSpellType,

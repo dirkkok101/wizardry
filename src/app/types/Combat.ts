@@ -113,6 +113,11 @@ export interface CombatState {
    * See: docs/research/door-kicking-encounter-mechanics.md System 10
    */
   isFriendlyEncounter?: boolean
+  /**
+   * Reason the encounter was triggered (for treasure mechanics)
+   * Treasure room encounters guarantee a chest on victory
+   */
+  encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
 }
 
 export interface AttackResult {

@@ -69,12 +69,12 @@ describe('EncounterTriggerService', () => {
     })
 
     describe('Priority 3: Fixed encounter squares', () => {
-      it('should trigger on fixed encounter tiles with countdown > 0', () => {
+      it('should trigger on fixed encounter tiles when not yet triggered', () => {
         FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
 
         const result = EncounterTriggerService.checkForEncounter(
           createContext({
-            fixedEncounterConfig: { aux0: 1, aux1: 0, aux2: 5 }
+            fixedEncounterConfig: { encounterId: 'kobold', repeatable: false, triggered: false }
           })
         )
 
@@ -84,18 +84,34 @@ describe('EncounterTriggerService', () => {
         expect(result.fixedEncounterConfig).toBeDefined()
       })
 
-      it('should NOT trigger on fixed encounter tiles with countdown = 0', () => {
+      it('should NOT trigger on fixed encounter tiles already triggered', () => {
         FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }])
         // Queue random values that won't trigger random encounter
         RandomService.queueNextValues([0.5]) // 50 != 35 (no random trigger)
 
         const result = EncounterTriggerService.checkForEncounter(
           createContext({
-            fixedEncounterConfig: { aux0: 0, aux1: 0, aux2: 5 }
+            fixedEncounterConfig: { encounterId: 'kobold', repeatable: false, triggered: true }
           })
         )
 
         expect(result.trigger).toBe(false)
+      })
+
+      it('should trigger on fixed encounter tiles even in corridors (non-room)', () => {
+        // Initialize without room tiles - this is a corridor
+        FightMapService.initializeLevel(1, [])
+
+        const result = EncounterTriggerService.checkForEncounter(
+          createContext({
+            isRoomTile: false,  // Corridor, not a room
+            fixedEncounterConfig: { encounterId: 'kobold', repeatable: false, triggered: false }
+          })
+        )
+
+        expect(result.trigger).toBe(true)
+        expect(result.reason).toBe('fixed')
+        expect(result.guaranteedFight).toBe(true)
       })
     })
 

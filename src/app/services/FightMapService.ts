@@ -31,18 +31,18 @@ export interface LevelEncounterState {
    */
   alarmTiles: Set<string>
   /**
-   * Fixed encounter countdown tracking
+   * Fixed encounter configurations
    * Key: "x,y" string format
-   * Value: Current aux0 countdown value
-   * Decrements each time encounter triggers, inactive at 0
+   * Value: Config with encounterId, repeatable, triggered state
    */
-  fixedEncounterCountdowns: Map<string, FixedEncounterConfig>
+  fixedEncounters: Map<string, FixedEncounterConfig>
 }
 
 export interface RoomTileInfo {
   x: number
   y: number
   isRoom: boolean
+  hasDoor: boolean  // True if tile has at least one door wall (for treasure room eligibility)
 }
 
 const TREASURE_ROOMS_TO_SEED = 9
@@ -78,7 +78,7 @@ export const FightMapService = {
       roomTiles: new Set(),
       treasureRooms: new Set(),
       alarmTiles: new Set(),
-      fixedEncounterCountdowns: new Map()
+      fixedEncounters: new Map()
     }
 
     // Mark all room tiles as encounter-eligible
@@ -244,8 +244,14 @@ export const FightMapService = {
     const levelState = this._state.get(level)
     if (!levelState) return
 
-    const availableRooms = roomTiles.filter(t => t.isRoom)
-    if (availableRooms.length === 0) return
+    // Treasure rooms must be room tiles WITH a door (you kick the door to enter)
+    const availableRooms = roomTiles.filter(t => t.isRoom && t.hasDoor)
+    if (availableRooms.length === 0) {
+      console.log(`[FightMap] No room tiles with doors found for level ${level}. No treasure rooms seeded.`)
+      return
+    }
+
+    console.log(`[FightMap] Seeding treasure rooms for level ${level}. Eligible rooms (with doors): ${availableRooms.length}`)
 
     const toSeed = Math.min(TREASURE_ROOMS_TO_SEED, availableRooms.length)
     let seeded = 0
@@ -263,8 +269,11 @@ export const FightMapService = {
       if (!levelState.treasureRooms.has(key)) {
         levelState.treasureRooms.add(key)
         seeded++
+        console.log(`[FightMap] Seeded treasure room #${seeded} at (${roomTile.x}, ${roomTile.y})`)
       }
     }
+
+    console.log(`[FightMap] Treasure rooms seeded: ${seeded} rooms`, [...levelState.treasureRooms])
   },
 
   /**
@@ -288,66 +297,81 @@ export const FightMapService = {
    * @param level - Dungeon level
    * @param x - Tile x coordinate
    * @param y - Tile y coordinate
-   * @param config - Fixed encounter AUX values from map data
+   * @param config - Fixed encounter configuration from map data
    */
   initializeFixedEncounter(
     level: number,
     x: number,
     y: number,
-    config: FixedEncounterConfig
+    config: { encounterId: string; repeatable: boolean; cannotFlee?: boolean }
   ): void {
     const levelState = this._state.get(level)
     if (!levelState) return
 
     const key = `${x},${y}`
-    levelState.fixedEncounterCountdowns.set(key, { ...config })
+    levelState.fixedEncounters.set(key, {
+      encounterId: config.encounterId,
+      repeatable: config.repeatable,
+      cannotFlee: config.cannotFlee,
+      triggered: false  // Start as not triggered
+    })
   },
 
   /**
    * Get the fixed encounter config for a tile
-   * Returns undefined if no fixed encounter or countdown exhausted
+   * Returns undefined if no fixed encounter or already triggered (for non-repeatable)
    */
   getFixedEncounterConfig(level: number, x: number, y: number): FixedEncounterConfig | undefined {
     const levelState = this._state.get(level)
     if (!levelState) return undefined
 
     const key = `${x},${y}`
-    const config = levelState.fixedEncounterCountdowns.get(key)
+    const config = levelState.fixedEncounters.get(key)
 
-    // Only return if countdown is still active
-    if (config && config.aux0 > 0) {
-      return config
-    }
+    if (!config) return undefined
 
-    return undefined
+    // For non-repeatable encounters, only return if not triggered
+    // For repeatable encounters, always return (triggered resets on level re-entry)
+    return config
   },
 
   /**
    * Check if a fixed encounter is active at this tile
-   * Active means aux0 > 0 (encounter will trigger)
+   * Active means encounterId exists and not yet triggered
    */
   hasActiveFixedEncounter(level: number, x: number, y: number): boolean {
     const config = this.getFixedEncounterConfig(level, x, y)
-    return config !== undefined && config.aux0 > 0
+    return config !== undefined && !config.triggered
   },
 
   /**
-   * Decrement the fixed encounter countdown after triggering
-   * When aux0 reaches 0, the encounter becomes inactive
-   *
-   * @returns true if countdown was decremented, false if already at 0
+   * Mark a fixed encounter as triggered
+   * For repeatable encounters, this is reset when re-entering the level
    */
-  decrementFixedEncounter(level: number, x: number, y: number): boolean {
+  markFixedEncounterTriggered(level: number, x: number, y: number): void {
     const levelState = this._state.get(level)
-    if (!levelState) return false
+    if (!levelState) return
 
     const key = `${x},${y}`
-    const config = levelState.fixedEncounterCountdowns.get(key)
+    const config = levelState.fixedEncounters.get(key)
 
-    if (!config || config.aux0 <= 0) return false
+    if (config) {
+      config.triggered = true
+    }
+  },
 
-    // Decrement countdown
-    config.aux0--
-    return true
+  /**
+   * Reset repeatable fixed encounters for a level
+   * Called when re-entering a level (e.g., via stairs or recall)
+   */
+  resetRepeatableEncounters(level: number): void {
+    const levelState = this._state.get(level)
+    if (!levelState) return
+
+    for (const config of levelState.fixedEncounters.values()) {
+      if (config.repeatable) {
+        config.triggered = false
+      }
+    }
   }
 }

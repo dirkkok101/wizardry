@@ -122,7 +122,8 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
       visitedTiles: new Set(),
       defeatedEncounters: [],
       unlockedDoors: new Set(),
-      openDoors: new Set()
+      openDoors: new Set(),
+      lootedTiles: new Set()
     },
     settings: {
       difficulty: 'NORMAL',

@@ -55,11 +55,11 @@ export class TreasureService {
       return { gold: 0, trap: 'none', items: [] }
     }
 
-    return {
-      gold: this.calculateGold(rewardConfig),
-      trap: this.generateTrap(rewardConfig),
-      items: this.generateItems(rewardConfig, config)
-    }
+    const gold = this.calculateGold(rewardConfig)
+    const trap = this.generateTrap(rewardConfig)
+    const items = this.generateItems(rewardConfig, config)
+
+    return { gold, trap, items }
   }
 
   /**
