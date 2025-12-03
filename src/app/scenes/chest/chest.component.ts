@@ -380,21 +380,19 @@ export class ChestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Trap name input mode - letter keys
+    // Trap name input mode - handle typing only (letters, spaces, backspace)
+    // ENTER is handled by the footer menu via 'submit-disarm' shortcut
     if (mode === 'TRAP_NAME_INPUT') {
       if (key === 'BACKSPACE') {
         this.trapNameInput.update(v => v.slice(0, -1));
         event.preventDefault();
-      } else if (key === 'ENTER') {
-        this.submitTrapName();
-        // Stop propagation to prevent footer menu from also handling ENTER
-        event.stopPropagation();
-        event.preventDefault();
+        return;
       } else if (key.length === 1 && /[A-Z ]/.test(key)) {
         this.trapNameInput.update(v => v + key);
         event.preventDefault();
+        return;
       }
-      return;
+      // For ENTER and other keys, let menu handle via shortcuts
     }
 
     // Inventory warning mode - Y/N

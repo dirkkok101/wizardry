@@ -346,9 +346,8 @@ describe('ChestComponent', () => {
       component.handleFooterAction('disarm')
       component.trapNameInput.set('POISON NEEDLE')
 
-      // Simulate submitTrapName by calling private method through keyboard
-      const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyboard(enterEvent)
+      // Submit trap name via footer menu action (ENTER is handled by menu, not keyboard handler)
+      component.handleFooterAction('submit-disarm')
 
       expect(component.chest()?.trapDisarmed).toBe(true)
     })
@@ -360,9 +359,8 @@ describe('ChestComponent', () => {
       component.handleFooterAction('disarm')
       component.trapNameInput.set('POISON NEEDLE')
 
-      // Submit trap name
-      const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' })
-      component.handleKeyboard(enterEvent)
+      // Submit trap name via footer menu action (ENTER is handled by menu, not keyboard handler)
+      component.handleFooterAction('submit-disarm')
 
       // Should stay in TRAP_NAME_INPUT for retry
       expect(component.mode()).toBe('TRAP_NAME_INPUT')
