@@ -264,6 +264,23 @@ describe('InventoryService', () => {
       expect(() => InventoryService.dropItem(character, 'unknown'))
         .toThrow('Item not in inventory')
     })
+
+    it('only removes first occurrence when duplicate items exist', () => {
+      // Create character with 3 identical bronze keys
+      const key1 = createItem('bronze_key', 'Bronze Key', { type: ItemType.MISC, slot: ItemSlot.NONE })
+      const key2 = createItem('bronze_key', 'Bronze Key', { type: ItemType.MISC, slot: ItemSlot.NONE })
+      const key3 = createItem('bronze_key', 'Bronze Key', { type: ItemType.MISC, slot: ItemSlot.NONE })
+      const charWithDuplicates = {
+        ...mockCharacter,
+        inventory: [key1, key2, key3]
+      }
+
+      // Drop one key - should only remove ONE, leaving 2
+      const result = InventoryService.dropItem(charWithDuplicates, 'bronze_key')
+
+      expect(result.inventory).toHaveLength(2)
+      expect(result.inventory.filter(i => i.id === 'bronze_key')).toHaveLength(2)
+    })
   })
 
   describe('updateItem', () => {

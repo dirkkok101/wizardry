@@ -136,19 +136,24 @@ export class InventoryService {
 
   /**
    * Drop item from inventory (permanent removal)
+   * Only removes the first occurrence if there are duplicates with the same ID
    */
   static dropItem(
     character: Character,
     itemId: string
   ): Character {
-    const item = character.inventory.find(i => i.id === itemId)
-    if (!item) {
+    const itemIndex = character.inventory.findIndex(i => i.id === itemId)
+    if (itemIndex === -1) {
       throw new Error('Item not in inventory')
     }
 
+    // Remove only the first occurrence (preserve other duplicates)
+    const newInventory = [...character.inventory]
+    newInventory.splice(itemIndex, 1)
+
     return {
       ...character,
-      inventory: character.inventory.filter(i => i.id !== itemId)
+      inventory: newInventory
     }
   }
 
