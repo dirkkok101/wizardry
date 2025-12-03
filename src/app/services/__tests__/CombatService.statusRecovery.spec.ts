@@ -126,22 +126,40 @@ describe('CombatService.processMonsterStatusRecovery', () => {
     })
   })
 
-  describe('SILENCED recovery: NEVER recovers (MONTINO bug)', () => {
-    it('silenced monsters never recover in combat', () => {
-      const monster = createTestMonster({ level: 10 })
+  describe('SILENCED recovery: Level × 10%, max 50% (bug-free version)', () => {
+    it('recovers silenced monster when roll succeeds', () => {
+      const monster = createTestMonster({ level: 4 })
       const statusEffects = new Map<string, Set<CombatStatusEffect>>([
         ['monster-1', new Set(['SILENCED'] as CombatStatusEffect[])]
       ])
       const state = createTestCombatState([monster], statusEffects)
 
-      // Even with lowest possible roll, should not recover
-      // No random value needed since chance is 0%
+      // Level 4: 10 × 4 = 40% recovery chance
+      // Queue roll < 0.4 to succeed
+      RandomService.queueNextValues([0.3])
 
       const result = CombatService.processMonsterStatusRecovery(state)
 
-      // SILENCED should remain - never recovers per MONTINO bug
+      // SILENCED should be removed - bug-free version allows recovery
+      expect(result.newState.statusEffects.has('monster-1')).toBe(false)
+      expect(result.messages).toContain('Kobold recovers from silence!')
+    })
+
+    it('keeps monster silenced when roll fails', () => {
+      const monster = createTestMonster({ level: 4 })
+      const statusEffects = new Map<string, Set<CombatStatusEffect>>([
+        ['monster-1', new Set(['SILENCED'] as CombatStatusEffect[])]
+      ])
+      const state = createTestCombatState([monster], statusEffects)
+
+      // Level 4: 40% recovery chance
+      // Queue roll > 0.4 to fail
+      RandomService.queueNextValues([0.5])
+
+      const result = CombatService.processMonsterStatusRecovery(state)
+
+      // SILENCED should remain - recovery roll failed
       expect(result.newState.statusEffects.get('monster-1')?.has('SILENCED')).toBe(true)
-      expect(result.messages.some(m => m.includes('silence'))).toBe(false)
     })
   })
 
@@ -193,19 +211,20 @@ describe('CombatService.processMonsterStatusRecovery', () => {
       expect(result.newState.monsterGroups[0].monsters[1].status).toBe('DEAD')
     })
 
-    it('preserves SILENCED when BLIND recovers (SILENCED never recovers)', () => {
+    it('both SILENCED and BLIND can recover independently', () => {
       const monster = createTestMonster({ level: 5 })
       const statusEffects = new Map<string, Set<CombatStatusEffect>>([
         ['monster-1', new Set(['SILENCED', 'BLIND'] as CombatStatusEffect[])]
       ])
       const state = createTestCombatState([monster], statusEffects)
 
-      // BLIND recovers (0.4 < 50%), SILENCED never recovers (0% chance)
-      RandomService.queueNextValues([0.4])
+      // Level 5: Both SILENCED and BLIND use 50% recovery
+      // First roll for SILENCED fails (0.55 > 50%), second roll for BLIND succeeds (0.4 < 50%)
+      RandomService.queueNextValues([0.55, 0.4])
 
       const result = CombatService.processMonsterStatusRecovery(state)
 
-      // SILENCED remains (never recovers), BLIND recovers
+      // SILENCED remains (roll failed), BLIND recovers (roll succeeded)
       expect(result.newState.statusEffects.get('monster-1')?.has('SILENCED')).toBe(true)
       expect(result.newState.statusEffects.get('monster-1')?.has('BLIND')).toBe(false)
       expect(result.messages).toContain('Kobold recovers from blindness!')

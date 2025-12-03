@@ -311,9 +311,12 @@ export class MonsterResistanceService {
         chance = Math.min(monsterLevel * 10, 50)
         break
       case 'SILENCED':
+        // Monster silence recovery: Level × 10%, max 50%
+        // BUG FIX: Original Wizardry had broken recovery timer (never decremented)
+        // We implement the intended behavior where monsters can recover from silence
+        chance = Math.min(monsterLevel * 10, 50)
+        break
       default:
-        // Silenced: No natural recovery (MONTINO bug - broken in original)
-        // Short-circuit to avoid consuming random values
         return false
     }
 

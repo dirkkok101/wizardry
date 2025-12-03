@@ -7,6 +7,7 @@ import { MonsterDataLoader } from './MonsterDataLoader'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { SpellCastingService } from './SpellCastingService'
 import { EncounterService } from './EncounterService'
+import { FixedEncounterConfig } from './EncounterTriggerService'
 import { RandomService } from './RandomService'
 import { MonsterResistanceService } from './MonsterResistanceService'
 import { CharacterResistanceService } from './CharacterResistanceService'
@@ -90,15 +91,22 @@ export class CombatService {
    * @param dungeonLevel - Current dungeon level (1-10)
    * @param party - Array of characters in the party
    * @param canFlee - Whether the party can flee from this encounter
+   * @param fixedEncounterConfig - Optional AUX config for fixed encounters
+   * @param isFriendlyEncounter - True if party chose to fight friendly monsters
    * @returns Initial combat state with monster groups and surprise state
    */
   static initiateCombat(
     dungeonLevel: number,
     party: Character[],
-    canFlee: boolean
+    canFlee: boolean,
+    fixedEncounterConfig?: FixedEncounterConfig,
+    isFriendlyEncounter: boolean = false
   ): CombatState {
-    // Generate 1-4 monster groups based on dungeon level
-    const monsterGroups = EncounterService.generateEncounter(dungeonLevel)
+    // Generate monster groups - use fixed encounter config if provided
+    // Fixed encounters use aux2 + random(0, aux1) for deterministic monster selection
+    const monsterGroups = fixedEncounterConfig
+      ? EncounterService.generateFixedEncounter(dungeonLevel, fixedEncounterConfig)
+      : EncounterService.generateEncounter(dungeonLevel)
 
     // Initialize currentMageLevel for each group (for spell degradation tracking)
     // Per Apple II reference (Section 10): Mage spell level degrades permanently during encounter
@@ -123,7 +131,8 @@ export class CombatService {
       acModifiers: new Map(),    // Initialize empty AC modifiers
       statusDurations: new Map(), // Initialize empty status durations
       monstersDemoralized: false,  // Calculated during combat
-      surpriseState  // Surprise mechanics
+      surpriseState,  // Surprise mechanics
+      isFriendlyEncounter  // Track for alignment shift mechanic
     }
   }
 
@@ -398,15 +407,16 @@ export class CombatService {
     // Check status field for characters and monsters
     if ('status' in combatant) {
       const status = combatant.status
-      // Check for sleeping or paralyzed status
+      // Check for sleeping, paralyzed, or stoned status
       // Status can be CharacterStatus enum or CombatantStatus string
       if (typeof status === 'string') {
         const statusStr = status.toUpperCase()
-        return statusStr === 'ASLEEP' || statusStr === 'PARALYZED'
+        return statusStr === 'ASLEEP' || statusStr === 'PARALYZED' || statusStr === 'STONED'
       }
       // For numeric enum values (CharacterStatus)
-      // CharacterStatus.ASLEEP = 3, CharacterStatus.PARALYZED = 4
-      return status === 3 || status === 4
+      return status === CharacterStatus.ASLEEP ||
+             status === CharacterStatus.PARALYZED ||
+             status === CharacterStatus.STONED
     }
     return false
   }
@@ -1070,6 +1080,69 @@ export class CombatService {
       // If resisted, fall through to normal damage handling
     }
 
+    /**
+     * Monster Attack Status Effect Infliction (Wizardry 1)
+     * Monsters with poison/paralyze/petrify abilities can inflict status on hit.
+     * Character gets a resistance check; if failed, status is applied.
+     * Only applies if: monster has ability, target is character, target survived
+     *
+     * Source: docs/research/combat-formulas.md lines 1262-1270
+     */
+    let inflictedStatus: string | null = null
+    let levelDrainResult: { newLevel: number; newMaxHp: number; drainAmount: number } | null = null
+    if ('monsterId' in command.actor && 'class' in target && newHp > 0) {
+      const monster = command.actor as MonsterInstance
+      const character = target as Character
+      const monsterTemplate = MonsterDataLoader.getMonster(monster.monsterId)
+
+      if (monsterTemplate) {
+        // Check for petrify ability (Medusalizard, Flack, Werdna)
+        if (monsterTemplate.specialAbilities.includes('petrify')) {
+          const resistResult = CharacterResistanceService.checkResistance(character, 'stoning')
+          if (!resistResult.resisted) {
+            inflictedStatus = 'STONED'
+          }
+        }
+        // Check for paralyze ability
+        else if (monsterTemplate.specialAbilities.includes('paralyze')) {
+          const resistResult = CharacterResistanceService.checkResistance(character, 'paralysis')
+          if (!resistResult.resisted) {
+            inflictedStatus = 'PARALYZED'
+          }
+        }
+        // Check for poison ability
+        else if (monsterTemplate.specialAbilities.includes('poison')) {
+          const resistResult = CharacterResistanceService.checkResistance(character, 'poison')
+          if (!resistResult.resisted) {
+            inflictedStatus = 'POISONED'
+          }
+        }
+        // Check for level drain ability (Vampire, Vampire Lord, Lifestealer, etc.)
+        // Per Apple II reference: No saving throw, reduces level and recalculates maxHP
+        // Formula: NewMaxHP = OldMaxHP × (NewLevel / OldLevel)
+        // Character is LOST if drained below level 1
+        else if (monsterTemplate.specialAbilities.includes('level_drain') && monsterTemplate.levelDrain) {
+          const drainAmount = monsterTemplate.levelDrain
+          const oldLevel = character.level
+          const newLevel = Math.max(0, oldLevel - drainAmount)
+
+          if (newLevel <= 0) {
+            // Character is LOST - drained below level 1
+            inflictedStatus = 'LOST'
+          } else {
+            // Calculate new maxHP proportionally
+            const newMaxHp = Math.floor(character.maxHp * (newLevel / oldLevel))
+            // Store level drain info for later update
+            levelDrainResult = {
+              newLevel,
+              newMaxHp: Math.max(1, newMaxHp),  // Always at least 1 HP
+              drainAmount
+            }
+          }
+        }
+      }
+    }
+
     // Build result message
     let resultText: string
     if (attackResult.critical) {
@@ -1083,7 +1156,67 @@ export class CombatService {
       resultText += ' (HELPLESS: 2x damage!)'
     }
 
+    // Add status effect message
+    if (inflictedStatus) {
+      resultText += ` - ${targetName} is ${inflictedStatus}!`
+    }
+
+    // Add level drain message
+    if (levelDrainResult) {
+      resultText += ` - ${targetName} loses ${levelDrainResult.drainAmount} level(s)! (Now level ${levelDrainResult.newLevel})`
+    }
+
     const resultMessage = `${this.RESULT_MARKER}${resultText}`
+
+    // If status was inflicted, include character update
+    if (inflictedStatus && 'class' in target) {
+      const character = target as Character
+      const statusMap: Record<string, CharacterStatus> = {
+        'STONED': CharacterStatus.STONED,
+        'PARALYZED': CharacterStatus.PARALYZED,
+        'POISONED': CharacterStatus.POISONED,
+        'LOST': CharacterStatus.LOST  // Character drained below level 1
+      }
+      const newCharStatus = statusMap[inflictedStatus] || character.status
+      return {
+        newState,
+        messages: [actionMessage, resultMessage],
+        targetDamage: {
+          targetId: target.id,
+          damage: finalDamage,
+          newHp,
+          newStatus
+        },
+        characterUpdates: new Map([[
+          target.id,
+          { ...character, hp: newHp, status: newCharStatus }
+        ]])
+      }
+    }
+
+    // If level drain occurred (without LOST status), update character level and maxHP
+    if (levelDrainResult && 'class' in target) {
+      const character = target as Character
+      return {
+        newState,
+        messages: [actionMessage, resultMessage],
+        targetDamage: {
+          targetId: target.id,
+          damage: finalDamage,
+          newHp,
+          newStatus
+        },
+        characterUpdates: new Map([[
+          target.id,
+          {
+            ...character,
+            hp: Math.min(newHp, levelDrainResult.newMaxHp),  // HP can't exceed new maxHP
+            maxHp: levelDrainResult.newMaxHp,
+            level: levelDrainResult.newLevel
+          }
+        ]])
+      }
+    }
 
     return {
       newState,
@@ -1377,7 +1510,12 @@ export class CombatService {
     if (spellEffect.statusEffects && spellEffect.statusEffects.length > 0) {
       for (const statusEffect of spellEffect.statusEffects) {
         // Normalize effect name to uppercase for comparison
-        const effect = statusEffect.effect.toUpperCase()
+        let effect = statusEffect.effect.toUpperCase()
+
+        // Normalize 'BLINDED' (from dilto.json) to 'BLIND'
+        if (effect === 'BLINDED') {
+          effect = 'BLIND'
+        }
 
         // Handle combat-only status effects (BLIND, SILENCED)
         if (effect === 'BLIND' || effect === 'SILENCED') {
@@ -1469,6 +1607,188 @@ export class CombatService {
           characterUpdates.set(targetId, cured)
         }
       }
+    }
+
+    // Apply monster identification (LATUMAPIC)
+    // Bug-fixed: Identifies ALL monster groups, not just one random group
+    if (spellEffect.monsterIdentification) {
+      newState = {
+        ...newState,
+        monsterGroups: newState.monsterGroups.map(group => ({
+          ...group,
+          identified: spellEffect.monsterIdentification!.groupIds.includes(group.id) ? true : group.identified
+        }))
+      }
+    }
+
+    // Handle HAMAN/MAHAMAN random effects
+    // These are powerful spells with random outcomes, level drain, and spellbook mangling risk
+    if (spellEffect.randomEffect) {
+      const re = spellEffect.randomEffect
+      const caster = command.actor as Character
+
+      // Apply level drain cost (both HAMAN and MAHAMAN cost 1 level)
+      if (re.levelDrain && re.levelDrain > 0) {
+        const drainedLevel = Math.max(1, caster.level - re.levelDrain)
+        const drainedCaster = { ...caster, level: drainedLevel }
+        characterUpdates.set(caster.id, existingCharacterUpdates?.get(caster.id)
+          ? { ...existingCharacterUpdates.get(caster.id)!, level: drainedLevel }
+          : drainedCaster)
+      }
+
+      // Execute the random effect based on its type
+      switch (re.effect) {
+        case 'cure_and_heal': {
+          // Mass Dialko + Heal - cure status and heal 9-72 HP for all party members
+          const partyTargets = targets.filter(t => 'class' in t)
+          for (const target of partyTargets) {
+            const char = target as Character
+            const healAmount = re.healDice ? RandomService.rollDiceNotation(re.healDice) : RandomService.rollDice(9, 8)
+            const currentChar = existingCharacterUpdates?.get(char.id) || characterUpdates.get(char.id) || char
+            if (currentChar.status !== CharacterStatus.DEAD && currentChar.status !== CharacterStatus.ASHES) {
+              const healed = {
+                ...currentChar,
+                hp: Math.min(currentChar.maxHp, currentChar.hp + healAmount),
+                status: CharacterStatus.OK
+              }
+              characterUpdates.set(char.id, healed)
+            }
+          }
+          break
+        }
+
+        case 'strip_resistance': {
+          // First 3 monster groups are treated as Level 1 for resistance
+          // This is implemented by reducing their level in the state
+          const affectedGroups = newState.monsterGroups.slice(0, 3)
+          newState = {
+            ...newState,
+            monsterGroups: newState.monsterGroups.map((group, idx) =>
+              idx < 3
+                ? {
+                    ...group,
+                    monsters: group.monsters.map(m => ({ ...m, level: 1 }))
+                  }
+                : group
+            )
+          }
+          break
+        }
+
+        case 'full_heal': {
+          // Full party heal - all HP, cures all conditions except Dead/Ashes
+          const partyTargets = targets.filter(t => 'class' in t)
+          for (const target of partyTargets) {
+            const char = target as Character
+            const currentChar = existingCharacterUpdates?.get(char.id) || characterUpdates.get(char.id) || char
+            if (currentChar.status !== CharacterStatus.DEAD && currentChar.status !== CharacterStatus.ASHES) {
+              const healed = {
+                ...currentChar,
+                hp: currentChar.maxHp,
+                status: CharacterStatus.OK
+              }
+              characterUpdates.set(char.id, healed)
+            }
+          }
+          break
+        }
+
+        case 'set_party_ac': {
+          // Shield Party - set AC to specified value (usually -10) unless already better
+          const acValue = re.acValue ?? -10
+          const partyTargets = targets.filter(t => 'class' in t)
+          for (const target of partyTargets) {
+            // Apply AC buff (negative AC is better)
+            newState = this.applyAcBuff(newState, target.id, acValue)
+          }
+          break
+        }
+
+        case 'resurrect_and_heal': {
+          // Resurrect and Heal Party - cures all conditions including Dead/Ashes and full heal
+          const partyTargets = targets.filter(t => 'class' in t)
+          for (const target of partyTargets) {
+            const char = target as Character
+            const currentChar = existingCharacterUpdates?.get(char.id) || characterUpdates.get(char.id) || char
+            // Resurrect dead/ashes and fully heal
+            const healed = {
+              ...currentChar,
+              hp: currentChar.maxHp,
+              status: CharacterStatus.OK
+            }
+            characterUpdates.set(char.id, healed)
+          }
+          break
+        }
+
+        case 'mass_silence': {
+          // Silence first 3 monster groups for 5-9 rounds
+          const duration = re.durationDice ? RandomService.rollDiceNotation(re.durationDice) : RandomService.random(5, 9)
+          const affectedGroups = newState.monsterGroups.slice(0, 3)
+
+          // Build new statusDurations map with silence effects
+          const newDurations = new Map(newState.statusDurations || [])
+          const newStatusEffects = new Map(newState.statusEffects || [])
+
+          for (const group of affectedGroups) {
+            for (const monster of group.monsters) {
+              if (monster.hp > 0 && monster.status !== 'DEAD') {
+                // Add duration tracking for SILENCED status
+                const monsterDurations = new Map(newDurations.get(monster.id) || [])
+                monsterDurations.set('SILENCED', duration)
+                newDurations.set(monster.id, monsterDurations)
+
+                // Add SILENCED to status effects
+                const monsterEffects = new Set(newStatusEffects.get(monster.id) || [])
+                monsterEffects.add('SILENCED')
+                newStatusEffects.set(monster.id, monsterEffects)
+              }
+            }
+          }
+
+          // Update state with new durations, effects, and monster statuses
+          newState = {
+            ...newState,
+            statusDurations: newDurations,
+            statusEffects: newStatusEffects,
+            monsterGroups: newState.monsterGroups.map(g => {
+              const isAffected = affectedGroups.some(ag => ag.id === g.id)
+              if (!isAffected) return g
+              return {
+                ...g,
+                monsters: g.monsters.map(m =>
+                  m.hp > 0 && m.status !== 'DEAD'
+                    ? { ...m, status: 'SILENCED' as CombatantStatus }
+                    : m
+                )
+              }
+            })
+          }
+          break
+        }
+
+        case 'instant_kill_all': {
+          // Destroy All Monsters - instant win
+          newState = {
+            ...newState,
+            monsterGroups: newState.monsterGroups.map(group => ({
+              ...group,
+              monsters: group.monsters.map(m => ({
+                ...m,
+                hp: 0,
+                status: 'DEAD' as CombatantStatus
+              }))
+            }))
+          }
+          break
+        }
+      }
+
+      // Handle mustRelearn (MAHAMAN) - caster forgets the spell
+      // This should be handled by the component when updating game state
+
+      // Handle spellbook mangling - random chance to forget spells
+      // This should also be handled by the component when updating game state
     }
 
     // Build action message (casting announcement)
@@ -1587,16 +1907,9 @@ export class CombatService {
       }
     }
 
-    // CRITICAL BUG TO REPLICATE: Only OK-status undead can be dispelled
-    // Sleeping/held undead are IMMUNE to dispel!
-    const eligibleUndead = undeadMonsters.filter(m => m.status === 'ALIVE')
-    if (eligibleUndead.length === 0) {
-      const resultMessage = `${this.RESULT_MARKER}The undead are held and immune to dispel!`
-      return {
-        newState: state,
-        messages: [actionMessage, resultMessage]
-      }
-    }
+    // BUG FIX: Original Wizardry had a bug where sleeping/held undead were immune
+    // to dispel. We fix this - all undead can be dispelled regardless of status.
+    const eligibleUndead = undeadMonsters.filter(m => m.status !== 'DEAD')
 
     // Calculate base dispel chance
     const casterLevel = caster.level || 1
@@ -1618,8 +1931,8 @@ export class CombatService {
       return {
         ...g,
         monsters: g.monsters.map(m => {
-          // Skip non-eligible monsters (dead, not undead, or not OK status)
-          if (m.hp <= 0 || !m.undead || m.status !== 'ALIVE') {
+          // Skip dead or non-undead monsters (BUG FIX: all undead regardless of status)
+          if (m.hp <= 0 || !m.undead || m.status === 'DEAD') {
             return m
           }
 
@@ -2395,6 +2708,11 @@ export class CombatService {
     currentState = monsterRecoveryResult.newState
     messages.push(...monsterRecoveryResult.messages)
 
+    // Process monster regeneration (25% chance per round for regenerating monsters)
+    const monsterRegenResult = this.processMonsterRegeneration(currentState)
+    currentState = monsterRegenResult.newState
+    messages.push(...monsterRegenResult.messages)
+
     // Process character status effect recovery
     // Note: Characters have DIFFERENT recovery rates than monsters!
     // Paralyzed characters do NOT recover naturally in combat (critical bug)
@@ -2850,6 +3168,19 @@ export class CombatService {
       })
     }
 
+    // Process monster regeneration (25% chance per round for regenerating monsters)
+    const monsterRegenResult = this.processMonsterRegeneration(currentState)
+    currentState = monsterRegenResult.newState
+
+    // Create monster regeneration event if any monsters regenerated
+    if (monsterRegenResult.messages.length > 0) {
+      events.push({
+        type: 'status',
+        messages: monsterRegenResult.messages,
+        monsterGroupsSnapshot: currentState.monsterGroups
+      })
+    }
+
     // Process character status effect recovery
     // Note: Characters have DIFFERENT recovery rates than monsters!
     // Paralyzed characters do NOT recover naturally in combat (critical bug)
@@ -3122,7 +3453,8 @@ export class CombatService {
       return char.hp > 0 &&
              char.status !== CharacterStatus.DEAD &&
              char.status !== CharacterStatus.ASLEEP &&
-             char.status !== CharacterStatus.PARALYZED
+             char.status !== CharacterStatus.PARALYZED &&
+             char.status !== CharacterStatus.STONED
     }
 
     return false
@@ -3161,6 +3493,7 @@ export class CombatService {
       }
       if (currentChar.status === CharacterStatus.ASLEEP) return 'ASLEEP'
       if (currentChar.status === CharacterStatus.PARALYZED) return 'PARALYZED'
+      if (currentChar.status === CharacterStatus.STONED) return 'STONED'
     }
 
     // Check if single target is dead (for ATTACK actions)
@@ -3232,6 +3565,7 @@ export class CombatService {
       'ALREADY_DEAD': 0,
       'ASLEEP': 0,
       'PARALYZED': 0,
+      'STONED': 0,
       'SILENCED': 0,
       'SURPRISED': 0,
       'NO_LONGER_EXISTS': 0,
@@ -3426,6 +3760,52 @@ export class CombatService {
   }
 
   /**
+   * Process monster regeneration at end of each combat round
+   *
+   * Per Wizardry 1 spec: Monsters with regeneration ability have a 25%
+   * chance per round to heal HP by their regeneration value.
+   * Examples: Troll (3), Vampire (1), Vampire Lord (4), Murphy's Ghost (1), Werdna (5)
+   *
+   * Only affects monsters that are alive and have HP < maxHp
+   */
+  static processMonsterRegeneration(
+    state: CombatState
+  ): { newState: CombatState; messages: string[] } {
+    const messages: string[] = []
+
+    const newMonsterGroups = state.monsterGroups.map(group => ({
+      ...group,
+      monsters: group.monsters.map(monster => {
+        // Skip if dead, no regeneration ability, or already at full HP
+        if (monster.status === 'DEAD' ||
+            !monster.regeneration ||
+            monster.regeneration <= 0 ||
+            monster.hp >= monster.maxHp) {
+          return monster
+        }
+
+        // 25% chance to regenerate each round
+        if (!RandomService.chance(25)) {
+          return monster
+        }
+
+        // Heal by regeneration amount, capped at maxHp
+        const healAmount = Math.min(monster.regeneration, monster.maxHp - monster.hp)
+        const newHp = monster.hp + healAmount
+
+        messages.push(`${monster.name} regenerates ${healAmount} HP!`)
+
+        return { ...monster, hp: newHp }
+      })
+    }))
+
+    return {
+      newState: { ...state, monsterGroups: newMonsterGroups },
+      messages
+    }
+  }
+
+  /**
    * Process character status effect recovery per round
    *
    * Per Apple II reference (Section 15: Status Effects):
@@ -3469,6 +3849,12 @@ export class CombatService {
 
   /**
    * Apply poison damage to all poisoned combatants
+   *
+   * Per Wizardry 1 spec:
+   * - 25% chance per round for poison to activate
+   * - Damage is always 1 HP (does NOT stack)
+   * - Applies to both characters and monsters
+   *
    * Returns new state, damaged characters, and damage messages
    */
   static applyPoisonDamage(
@@ -3486,15 +3872,20 @@ export class CombatService {
     // Check party members for poison
     for (const char of party) {
       if (char.status === CharacterStatus.POISONED && char.hp > 0) {
-        // Poison does 1d4 damage per round
-        const poisonDamage = RandomService.rollDie(4)
+        // 25% chance per round for poison to activate
+        if (!RandomService.chance(25)) {
+          continue
+        }
+
+        // Poison always does 1 HP damage (per spec, does NOT stack)
+        const poisonDamage = 1
         const damagedChar = this.applyDamageToCharacter(char, poisonDamage)
         damagedCharacters.set(char.id, damagedChar)
 
         if (damagedChar.hp <= 0) {
-          messages.push(`${char.name} succumbs to poison! (${poisonDamage} damage)`)
+          messages.push(`${char.name} succumbs to poison!`)
         } else {
-          messages.push(`${char.name} takes ${poisonDamage} poison damage!`)
+          messages.push(`${char.name} takes poison damage!`)
         }
       }
     }
@@ -3504,9 +3895,15 @@ export class CombatService {
       if (monster.status === 'ALIVE' && monster.hp > 0) {
         const duration = this.getStatusDuration(currentState, monster.id, 'POISONED')
         if (duration > 0) {
-          const poisonDamage = RandomService.rollDie(4)
+          // 25% chance per round for poison to activate
+          if (!RandomService.chance(25)) {
+            continue
+          }
+
+          // Poison always does 1 HP damage (per spec)
+          const poisonDamage = 1
           currentState = this.applyDamage(currentState, monster, poisonDamage)
-          messages.push(`${monster.name} takes ${poisonDamage} poison damage!`)
+          messages.push(`${monster.name} takes poison damage!`)
         }
       }
     }

@@ -111,11 +111,23 @@ describe('Status Recovery', () => {
       })
     })
 
-    describe('SILENCED: No recovery (MONTINO bug)', () => {
-      it('monsters never recover from silence', () => {
-        // Even with lowest possible roll
-        RandomService.queueNextValues([0.001])
-        expect(MonsterResistanceService.rollRecovery(10, 'SILENCED')).toBe(false)
+    describe('SILENCED: Level × 10%, max 50% (bug-free version)', () => {
+      it('Level 1 monster has 10% recovery chance', () => {
+        // 1 × 10 = 10%
+        RandomService.queueNextValues([0.08])  // 8% < 10% = success
+        expect(MonsterResistanceService.rollRecovery(1, 'SILENCED')).toBe(true)
+
+        RandomService.queueNextValues([0.15])  // 15% > 10% = failure
+        expect(MonsterResistanceService.rollRecovery(1, 'SILENCED')).toBe(false)
+      })
+
+      it('Level 5+ monster capped at 50%', () => {
+        // 5 × 10 = 50% (exactly at cap)
+        RandomService.queueNextValues([0.45])
+        expect(MonsterResistanceService.rollRecovery(5, 'SILENCED')).toBe(true)
+
+        RandomService.queueNextValues([0.55])
+        expect(MonsterResistanceService.rollRecovery(5, 'SILENCED')).toBe(false)
       })
     })
   })

@@ -32,6 +32,7 @@ describe('LATUMAPIC (Level 3 Priest) - Identify Monsters', () => {
     const effect = SpellCastingService.resolveSpellEffect('latumapic', caster, [caster])
 
     expect(effect.message).toContain('LATUMAPIC')
-    expect(effect.message).toContain('identifies')
+    // Message says "reveals the identity of all monsters!" not "identifies"
+    expect(effect.message).toContain('identity')
   })
 })
