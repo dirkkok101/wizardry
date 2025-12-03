@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   RandomService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('LOKTOFEIT (Level 6 Priest) - Recall to Town', () => {
   it('loads spell data from JSON', () => {

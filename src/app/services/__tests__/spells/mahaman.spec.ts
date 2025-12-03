@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   RandomService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MAHAMAN (Level 7 Mage) - Powerful Random Effect', () => {
   it('loads spell data from JSON', () => {

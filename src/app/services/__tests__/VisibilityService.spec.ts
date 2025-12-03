@@ -953,11 +953,11 @@ describe('VisibilityService', () => {
         { x: 2, y: 0, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },
         { x: 2, y: 1, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' } },
         // Darkness tiles starting at y=2
-        { x: 2, y: 2, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
-        { x: 2, y: 3, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
-        { x: 2, y: 4, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
-        { x: 2, y: 5, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
-        { x: 2, y: 6, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },
+        { x: 2, y: 2, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, types: ['darkness'] },
+        { x: 2, y: 3, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, types: ['darkness'] },
+        { x: 2, y: 4, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, types: ['darkness'] },
+        { x: 2, y: 5, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, types: ['darkness'] },
+        { x: 2, y: 6, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' }, types: ['darkness'] },
       ]
     })
 
@@ -1053,7 +1053,7 @@ describe('VisibilityService', () => {
         encounterTable: '',
         tiles: [
           { x: 2, y: 0, walls: { north: 'open', east: 'wall', south: 'wall', west: 'wall' } },  // Normal
-          { x: 2, y: 1, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, type: 'darkness' },  // Darkness
+          { x: 2, y: 1, walls: { north: 'open', east: 'wall', south: 'open', west: 'wall' }, types: ['darkness'] },  // Darkness
           { x: 2, y: 2, walls: { north: 'wall', east: 'wall', south: 'open', west: 'wall' } },  // Normal again
         ]
       }

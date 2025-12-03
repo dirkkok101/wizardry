@@ -40,7 +40,7 @@ describe('TileInspectionService', () => {
       edgeWrapping: false,
       tiles: [
         { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
-        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key' },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key' },
       ],
       encounterRate: 0.1,
       encounterTable: 'level_1',
@@ -68,7 +68,7 @@ describe('TileInspectionService', () => {
         startPosition: { x: 0, y: 0, facing: 'north' },
         edgeWrapping: false,
         tiles: [
-          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key', message: 'You found a bronze key!' },
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key', message: 'You found a bronze key!' },
         ],
         encounterRate: 0.1,
         encounterTable: 'level_1',
@@ -111,7 +111,7 @@ describe('TileInspectionService', () => {
         startPosition: { x: 0, y: 0, facing: 'north' },
         edgeWrapping: false,
         tiles: [
-          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key', message: 'You found a bronze key!' },
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key', message: 'You found a bronze key!' },
         ],
         encounterRate: 0.1,
         encounterTable: 'level_1',
@@ -159,7 +159,7 @@ describe('TileInspectionService', () => {
         startPosition: { x: 0, y: 0, facing: 'north' },
         edgeWrapping: false,
         tiles: [
-          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'searchable', item: 'bronze_key' },
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key' },
         ],
         encounterRate: 0.1,
         encounterTable: 'level_1',

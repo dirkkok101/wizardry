@@ -100,16 +100,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   /**
-   * Check if a door can be opened at current position
-   */
-  readonly canOpenDoor = computed(() => {
-    const state = this.gameState.state();
-    if (!state.dungeon?.position) return false;
-    const level = DungeonService.loadLevel(this.currentLevel());
-    return DoorService.canOpenDoor(level, state.dungeon.position);
-  });
-
-  /**
    * Check if current tile can be inspected
    */
   readonly canInspectTile = computed(() => {
@@ -150,7 +140,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!pos) return false;
 
     const currentTile = DungeonService.getTile(level, pos.x, pos.y);
-    return currentTile.type === 'elevator';
+    return currentTile.types?.includes('elevator') ?? false;
   });
 
   /**
@@ -172,14 +162,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly sceneTitle = computed(() => `MAZE - LEVEL ${this.currentLevel()}`);
 
   // Footer menu items for SceneFooterComponent
+  // Note: Door button removed - walking into a door moves through it (original Wizardry behavior)
   readonly mazeMenuItems = computed((): MenuItem[] => {
     const state = this.gameState.state();
-    let canOpen = false;
     let canInspect = false;
 
     if (state.dungeon?.position) {
       const level = DungeonService.loadLevel(this.currentLevel());
-      canOpen = DoorService.canOpenDoor(level, state.dungeon.position);
       canInspect = TileInspectionService.hasSearchableContent(level, state.dungeon.position);
     }
 
@@ -190,7 +179,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'right', label: 'Turn R', shortcut: 'D', enabled: true },
       { id: 'strafe_left', label: 'Strafe L', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe R', shortcut: 'E', enabled: true },
-      { id: 'open', label: 'Door', shortcut: 'O', enabled: canOpen },
       { id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: canInspect }
     ];
   });
@@ -518,35 +506,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.executeMovement('STRAFE_RIGHT', (state: GameState) => DungeonMovementService.strafeRight(state));
   }
 
-  openDoor(): void {
-    const state = this.gameState.state();
-    if (!state.dungeon) {
-      return;
-    }
-    const level = DungeonService.loadLevel(this.currentLevel());
-
-    // Check if can open door
-    if (!DoorService.canOpenDoor(level, state.dungeon.position)) {
-      this.addMessage('No door here.');
-      return;
-    }
-
-    console.log('[MazeComponent] Before opening door:', {
-      openDoorsSize: state.dungeon.openDoors.size,
-      allOpenDoors: Array.from(state.dungeon.openDoors)
-    });
-
-    const newState = DoorService.openDoor(state);
-    this.gameState.updateState(() => newState);
-
-    console.log('[MazeComponent] After updateState:', {
-      openDoorsSize: this.dungeonState().openDoors.size,
-      allOpenDoors: Array.from(this.dungeonState().openDoors)
-    });
-
-    this.addMessage('You open the door.');
-    this.render(); // Re-render to show open door
-  }
+  // Note: openDoor() removed - walking through doors is now automatic (original Wizardry behavior)
 
   kickDoor(): void {
     const state = this.gameState.state();
@@ -648,9 +608,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         break;
       case 'strafe_right':
         this.strafeRight();
-        break;
-      case 'open':
-        this.openDoor();
         break;
       case 'inspect':
         this.inspectTile();

@@ -8,7 +8,7 @@ import {
   RandomService,
   createTestCharacter,
   CharacterStatus
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('KADORTO (Level 7 Priest) - Advanced Resurrection', () => {
   it('loads spell data from JSON', () => {

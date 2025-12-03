@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('BAMATU (Level 3 Priest) - Powerful Prayer', () => {
   it('loads spell data from JSON', () => {

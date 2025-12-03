@@ -45,7 +45,7 @@ export const VisibilityService = {
     const calcDarknessDepth = (tileX: number, tileY: number, parentDarknessDepth: number): number => {
       const wrapped = wrapCoords(tileX, tileY)
       const tile = DungeonService.getTile(level, wrapped.x, wrapped.y)
-      const isDarkness = LightService.isDarknessTile(tile.type)
+      const isDarkness = LightService.isDarknessTile(tile.types)
 
       if (!isDarkness) {
         return 0  // Not in darkness - reset depth

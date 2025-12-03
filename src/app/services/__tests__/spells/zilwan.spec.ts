@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('ZILWAN (Level 6 Mage) - Undead Only', () => {
   it('loads spell data from JSON', () => {

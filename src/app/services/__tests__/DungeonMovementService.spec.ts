@@ -307,7 +307,7 @@ describe('DungeonMovementService', () => {
           x: 1,
           y: 0,
           walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: 'teleporter',
+          types: ['teleporter'],
           destination: { x: 5, y: 5 }
         }
 
@@ -336,7 +336,7 @@ describe('DungeonMovementService', () => {
           x: 1,
           y: 0,
           walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: 'teleporter',
+          types: ['teleporter'],
           destination: { x: 5, y: 5 }
         }
 
@@ -393,7 +393,7 @@ describe('DungeonMovementService', () => {
           x: 5,
           y: 5,
           walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: 'spinner'
+          types: ['spinner']
         }
 
         const state: GameState = {
@@ -420,7 +420,7 @@ describe('DungeonMovementService', () => {
           x: 5,
           y: 5,
           walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-          type: 'spinner'
+          types: ['spinner']
         }
 
         const state: GameState = {
@@ -452,7 +452,7 @@ describe('DungeonMovementService', () => {
 
     describe('chute', () => {
       it('causes party to fall 1-3 levels', () => {
-        const tile = { type: 'chute' } as TileData;
+        const tile = { types: ['chute'] } as TileData;
 
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -473,7 +473,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('deals 1d6 damage per level fallen to all party members', () => {
-        const tile = { type: 'chute' } as TileData;
+        const tile = { types: ['chute'] } as TileData;
 
         const character1 = createTestCharacter({ id: 'char1', hp: 50, maxHp: 50 });
         const character2 = createTestCharacter({ id: 'char2', hp: 50, maxHp: 50 });
@@ -513,7 +513,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('does not fall below level 10 (bottom)', () => {
-        const tile = { type: 'chute' } as TileData;
+        const tile = { types: ['chute'] } as TileData;
 
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -534,7 +534,7 @@ describe('DungeonMovementService', () => {
 
     describe('pit', () => {
       it('deals 1d6 damage to characters who fail AGI check', () => {
-        const tile = { type: 'pit' } as TileData;
+        const tile = { types: ['pit'] } as TileData;
 
         const lowAgiChar = createTestCharacter({
           id: 'char1',
@@ -577,7 +577,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('high AGI characters can avoid pit damage', () => {
-        const tile = { type: 'pit' } as TileData;
+        const tile = { types: ['pit'] } as TileData;
 
         const highAgiChar = createTestCharacter({
           id: 'char1',
@@ -617,7 +617,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('does not change current level', () => {
-        const tile = { type: 'pit' } as TileData;
+        const tile = { types: ['pit'] } as TileData;
 
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -638,7 +638,7 @@ describe('DungeonMovementService', () => {
 
     describe('darkness', () => {
       it('extinguishes light and sets inDarknessZone when entering darkness tile', () => {
-        const tile = { type: 'darkness' } as TileData;
+        const tile = { types: ['darkness'] } as TileData;
 
         const state: GameState = {
           ...createTestGameState(),
@@ -669,7 +669,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('handles darkness_zone_start the same as darkness', () => {
-        const tile = { type: 'darkness_zone_start' } as TileData;
+        const tile = { types: ['darkness_zone_start'] } as TileData;
 
         const state: GameState = {
           ...createTestGameState(),
@@ -690,7 +690,7 @@ describe('DungeonMovementService', () => {
 
     describe('stairs', () => {
       it('stairs_down auto-descends to next level', () => {
-        const tile = { type: 'stairs_down' } as TileData;
+        const tile = { types: ['stairs_down'] } as TileData;
 
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -709,7 +709,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('stairs_up auto-ascends to previous level', () => {
-        const tile = { type: 'stairs_up' } as TileData;
+        const tile = { types: ['stairs_up'] } as TileData;
 
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -728,7 +728,7 @@ describe('DungeonMovementService', () => {
       });
 
       it('stairs_up on level 1 does nothing', () => {
-        const tile = { type: 'stairs_up' } as TileData;
+        const tile = { types: ['stairs_up'] } as TileData;
 
         const state: GameState = {
           ...createTestGameStateHelper(),
@@ -831,7 +831,7 @@ describe('DungeonMovementService', () => {
     describe('elevator', () => {
       it('returns state unchanged (UI handles level selection)', () => {
         const tile = {
-          type: 'elevator',
+          types: ['elevator'],
           elevatorDestinations: [1, 2, 3, 4]
         } as TileData;
 
@@ -855,7 +855,7 @@ describe('DungeonMovementService', () => {
 
     describe('anti_magic', () => {
       it('sets anti-magic flag for current tile', () => {
-        const tile = { type: 'anti_magic' } as TileData;
+        const tile = { types: ['anti_magic'] } as TileData;
 
         const state: GameState = {
           ...createTestGameState(),
@@ -878,7 +878,7 @@ describe('DungeonMovementService', () => {
     describe('message', () => {
       it('returns state unchanged (message handled by UI)', () => {
         const tile = {
-          type: 'message',
+          types: ['message'],
           message: 'AREA OUT OF BOUNDS! Cloaked in eternal darkness'
         } as TileData;
 
@@ -903,7 +903,7 @@ describe('DungeonMovementService', () => {
     describe('searchable', () => {
       it('does not auto-trigger search (requires I key)', () => {
         const tile = {
-          type: 'searchable',
+          types: ['searchable'],
           searchContent: { itemId: 'bronze_key' }
         } as TileData;
 
@@ -928,7 +928,7 @@ describe('DungeonMovementService', () => {
     describe('fixed_encounter', () => {
       it('returns state unchanged if encounter not yet defeated', () => {
         const tile = {
-          type: 'fixed_encounter',
+          types: ['fixed_encounter'],
           encounterId: 'murphy_ghost'
         } as TileData;
 
@@ -952,7 +952,7 @@ describe('DungeonMovementService', () => {
 
       it('returns state unchanged if encounter already defeated', () => {
         const tile = {
-          type: 'fixed_encounter',
+          types: ['fixed_encounter'],
           encounterId: 'murphy_ghost'
         } as TileData;
 
@@ -985,7 +985,7 @@ describe('DungeonMovementService', () => {
         edgeWrapping: true,
         tiles: [
           { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } },
-          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'teleporter' as const, destination: { x: 10, y: 10 } }
+          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, types: ['teleporter'], destination: { x: 10, y: 10 } }
         ],
         encounterRate: 10,
         encounterTable: []
@@ -1030,7 +1030,7 @@ describe('DungeonMovementService', () => {
         startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
         edgeWrapping: true,
         tiles: [
-          { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'spinner' as const },
+          { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, types: ['spinner'] },
           { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } }
         ],
         encounterRate: 10,
@@ -1073,7 +1073,7 @@ describe('DungeonMovementService', () => {
         startPosition: { x: 0, y: 0, facing: 'NORTH' as const },
         edgeWrapping: true,
         tiles: [
-          { x: 10, y: 9, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'chute' as const },
+          { x: 10, y: 9, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, types: ['chute'] },
           { x: 10, y: 10, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } }
         ],
         encounterRate: 10,
@@ -1131,7 +1131,7 @@ describe('DungeonMovementService', () => {
         edgeWrapping: true,
         tiles: [
           { x: 0, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' } },
-          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, type: 'pit' as const }
+          { x: 1, y: 0, walls: { north: 'open', south: 'open', east: 'open', west: 'open' }, types: ['pit'] }
         ],
         encounterRate: 10,
         encounterTable: []

@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MOLITO (Level 3 Mage) - Group Non-Elemental', () => {
   it('loads spell data from JSON', () => {

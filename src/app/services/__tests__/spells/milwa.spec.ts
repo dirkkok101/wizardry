@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MILWA (Level 1 Priest) - Light', () => {
   it('loads spell data from JSON', () => {

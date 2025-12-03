@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MAMORLIS (Level 5 Mage) - Mass Fear', () => {
   it('loads spell data from JSON', () => {

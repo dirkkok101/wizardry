@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MAHALITO (Level 3 Mage) - Group Fire', () => {
   it('loads spell data from JSON', () => {

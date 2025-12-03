@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MADALTO (Level 5 Mage) - Group Cold', () => {
   it('loads spell data from JSON', () => {

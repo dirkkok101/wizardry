@@ -13,7 +13,7 @@ describe('DoorService', () => {
       edgeWrapping: false,
       tiles: [
         { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
-        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: true },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['door'], locked: true },
         { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
@@ -40,7 +40,7 @@ describe('DoorService', () => {
         ...level,
         tiles: [
           { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
-          { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: false },
+          { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['door'], locked: false },
           { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
           { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
           { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
@@ -62,7 +62,7 @@ describe('DoorService', () => {
       edgeWrapping: false,
       tiles: [
         { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
-        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, type: 'door', locked: true },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['door'], locked: true },
         { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         { x: 0, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
         { x: 1, y: 1, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },

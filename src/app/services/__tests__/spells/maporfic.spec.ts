@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MAPORFIC (Level 4 Priest) - Shield All', () => {
   it('loads spell data from JSON', () => {

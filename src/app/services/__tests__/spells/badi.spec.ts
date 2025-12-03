@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('BADI (Level 5 Priest) - Single Target Death', () => {
   it('loads spell data from JSON', () => {

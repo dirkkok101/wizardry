@@ -214,7 +214,7 @@ describe('RaycastingService', () => {
             x: 10,
             y: 11,
             walls: { north: 'open', east: 'open', south: 'wall', west: 'open' },
-            type: 'stairs_down'  // Special tile type - wall on south side
+            types: ['stairs_down']  // Special tile type - wall on south side
           }
         ],
         encounterRate: 0,

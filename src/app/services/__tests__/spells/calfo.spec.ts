@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('CALFO (Level 2 Priest) - Identify Trap', () => {
   it('loads spell data from JSON', () => {

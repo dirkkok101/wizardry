@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('DIALKO (Level 3 Priest) - Cure Paralysis', () => {
   it('loads spell data from JSON', () => {

@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('DIALMA (Level 5 Priest) - Greater Healing', () => {
   it('loads spell data from JSON', () => {

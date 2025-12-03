@@ -35,8 +35,8 @@ export class DoorService {
 
     const tile = DungeonService.getTile(level, targetX, targetY);
 
-    // Must be a locked door
-    return tile.type === 'door' && tile.locked === true;
+    // Must be a locked door tile (tile-based legacy check)
+    return (tile.types?.includes('door') ?? false) && tile.locked === true;
   }
 
   /**

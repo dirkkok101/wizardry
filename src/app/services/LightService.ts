@@ -129,8 +129,8 @@ function getLomilwaDuration(): number {
 /**
  * Check if a tile type is a darkness zone
  */
-function isDarknessTile(tileType: TileType | undefined): boolean {
-  return tileType === 'darkness' || tileType === 'darkness_zone_start'
+function isDarknessTile(tileTypes: TileType[] | undefined): boolean {
+  return tileTypes?.some(t => t === 'darkness' || t === 'darkness_zone_start') ?? false
 }
 
 /**
@@ -269,14 +269,14 @@ function exitDarknessZone(state: DungeonState): DungeonState {
  */
 function processLightOnMovement(
   state: DungeonState,
-  previousTileType: TileType | undefined,
-  newTileType: TileType | undefined
+  previousTileTypes: TileType[] | undefined,
+  newTileTypes: TileType[] | undefined
 ): { state: DungeonState; messages: string[] } {
   const messages: string[] = []
   let currentState = state
 
-  const wasInDarkness = isDarknessTile(previousTileType) || state.inDarknessZone
-  const nowInDarkness = isDarknessTile(newTileType)
+  const wasInDarkness = isDarknessTile(previousTileTypes) || state.inDarknessZone
+  const nowInDarkness = isDarknessTile(newTileTypes)
 
   // Entering darkness zone
   if (!wasInDarkness && nowInDarkness) {

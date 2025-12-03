@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('BADIAL (Level 4 Priest) - Single Target Divine', () => {
   it('loads spell data from JSON', () => {

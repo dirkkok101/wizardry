@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('LAKANITO (Level 6 Mage) - Suffocation Group', () => {
   it('loads spell data from JSON', () => {

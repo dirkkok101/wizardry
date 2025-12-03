@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MALOR (Level 7 Mage) - Teleport', () => {
   it('loads spell data from JSON', () => {

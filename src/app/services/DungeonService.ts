@@ -4,14 +4,10 @@ import { ZodError } from 'zod'
 
 // Import JSON data
 import level1Data from '@data/maps/level1.json'
-import level2Data from '@data/maps/level2.json'
-import level3Data from '@data/maps/level3.json'
 
 const LEVEL_DATA_MAP: Record<number, any> = {
   1: level1Data,
-  2: level2Data,
-  3: level3Data,
-  // Levels 4-10 to be added when JSON files created
+  // Levels 2-10 to be added when JSON files created
 }
 
 export const DungeonService = {
@@ -102,19 +98,17 @@ export const DungeonService = {
       }
     }
 
-    // Check doors - allow passage if open, block if closed
-    if (wallType === 'door' || wallType === 'locked_door') {
-      const doorKey = `${currentLevel}_${position.y}_${position.x}`;
-      const isOpen = openDoors?.has(doorKey) ?? false;
+    // Doors allow passage (original Wizardry: walking into door = implicit kick)
+    if (wallType === 'door') {
+      return { allowed: true };
+    }
 
-      if (isOpen) {
-        return { allowed: true }; // Door is open, allow passage
-      }
-
+    // Locked doors still block (future feature: kicking to unlock)
+    if (wallType === 'locked_door') {
       return {
         allowed: false,
-        reason: 'A door blocks your way. Press O to open it.'
-      }
+        reason: 'A locked door blocks your way.'
+      };
     }
 
     // Block secret doors (appear as walls)

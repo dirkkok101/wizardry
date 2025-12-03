@@ -17,7 +17,7 @@ export class TileInspectionService {
    */
   static hasSearchableContent(level: LevelData, position: Position): boolean {
     const tile = DungeonService.getTile(level, position.x, position.y);
-    return tile.type === 'searchable' && !!tile.item;
+    return (tile.types?.includes('searchable') ?? false) && !!tile.item;
   }
 
   /**
@@ -27,7 +27,7 @@ export class TileInspectionService {
   static inspectTile(level: LevelData, position: Position): InspectionResult {
     const tile = DungeonService.getTile(level, position.x, position.y);
 
-    if (tile.type !== 'searchable' || !tile.item) {
+    if (!tile.types?.includes('searchable') || !tile.item) {
       return { found: false };
     }
 
@@ -53,7 +53,7 @@ export class TileInspectionService {
     const position = state.dungeon.position;
     const tile = DungeonService.getTile(level, position.x, position.y);
 
-    if (tile.type !== 'searchable' || !tile.item) {
+    if (!tile.types?.includes('searchable') || !tile.item) {
       return { found: false, state };
     }
 

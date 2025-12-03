@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   RandomService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('HAMAN (Level 6 Mage) - Random Effect', () => {
   it('loads spell data from JSON', () => {

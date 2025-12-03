@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MABADI (Level 6 Priest) - HP Reduction', () => {
   it('loads spell data from JSON', () => {

@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('DILTO (Level 2 Mage) - Blind', () => {
   it('loads spell data from JSON', () => {

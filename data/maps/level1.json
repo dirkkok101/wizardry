@@ -116,7 +116,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -127,7 +127,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -138,7 +138,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 12,
@@ -149,7 +149,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 13,
@@ -160,7 +160,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 14,
@@ -171,7 +171,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 15,
@@ -182,7 +182,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 16,
@@ -193,7 +193,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 17,
@@ -204,7 +204,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 18,
@@ -215,7 +215,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 19,
@@ -226,7 +226,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 0,
@@ -297,7 +297,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -308,7 +308,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -319,7 +319,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 9,
@@ -330,7 +330,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -341,7 +341,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -462,7 +462,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -473,7 +473,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 4,
@@ -484,7 +484,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 5,
@@ -505,7 +505,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -516,7 +516,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -527,7 +527,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 9,
@@ -538,7 +538,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -549,7 +549,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -570,7 +570,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -581,7 +581,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 14,
@@ -592,7 +592,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -603,7 +603,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -674,7 +674,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -685,7 +685,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 4,
@@ -696,7 +696,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 5,
@@ -747,7 +747,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -758,7 +758,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -779,7 +779,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -790,7 +790,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": ["searchable", "room"],
+          "types": ["searchable", "room"],
           "message": "A STATUE OF A MONSTER WITH THE BODY OF A CHICKEN AND THE HEAD OF A CAT. THE STATUE IS MADE OF BRONZE",
           "promptSearch": true,
           "item": "bronze_key"
@@ -804,7 +804,7 @@
             "south": "door",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -815,7 +815,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -956,7 +956,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -967,7 +967,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -988,7 +988,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -999,7 +999,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "teleporter",
+          "types": ["teleporter"],
           "destination": {
             "level": 1,
             "x": 15,
@@ -1015,7 +1015,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -1026,7 +1026,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -1127,7 +1127,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -1138,7 +1138,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -1149,7 +1149,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -1170,7 +1170,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -1181,7 +1181,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -1202,7 +1202,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -1213,7 +1213,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "fixed_encounter",
+          "types": ["fixed_encounter"],
           "encounterId": "murphy_ghost",
           "repeatable": true,
           "cannotFlee": true,
@@ -1228,7 +1228,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -1239,7 +1239,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -1340,7 +1340,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -1351,7 +1351,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -1362,7 +1362,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -1383,7 +1383,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -1394,7 +1394,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -1415,7 +1415,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -1426,7 +1426,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 14,
@@ -1437,7 +1437,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -1448,7 +1448,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -1589,7 +1589,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -1600,7 +1600,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -1621,7 +1621,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -1632,7 +1632,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 14,
@@ -1643,7 +1643,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -1654,7 +1654,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -1805,7 +1805,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "elevator",
+          "types": ["elevator"],
           "destinations": [
             {
               "level": 1,
@@ -1978,7 +1978,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "teleporter",
+          "types": ["teleporter"],
           "destination": {
             "level": 1,
             "x": 15,
@@ -2134,7 +2134,6 @@
             "south": "wall",
             "west": "stairs_down"
           },
-          "type": "stairs_down",
           "destination": {
             "level": 2,
             "x": 0,
@@ -2340,7 +2339,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -2351,7 +2350,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 2,
@@ -2362,7 +2361,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -2393,7 +2392,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -2404,7 +2403,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -2415,7 +2414,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -2426,7 +2425,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 9,
@@ -2507,7 +2506,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -2528,7 +2527,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -2539,7 +2538,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -2550,7 +2549,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -2561,7 +2560,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 2,
@@ -2572,7 +2571,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -2603,7 +2602,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -2614,7 +2613,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -2625,7 +2624,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -2646,7 +2645,6 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness_zone_start",
           "message": "AREA OUT OF BOUNDS! Cloaked in eternal darkness"
         },
         {
@@ -2718,7 +2716,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -2739,7 +2737,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -2750,7 +2748,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -2811,7 +2809,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -2852,7 +2850,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -2863,7 +2861,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -2924,7 +2922,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -2935,7 +2933,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 18,
@@ -2946,7 +2944,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -2957,7 +2955,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -2968,7 +2966,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -2979,7 +2977,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 2,
@@ -2990,7 +2988,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -3011,7 +3009,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 5,
@@ -3022,7 +3020,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -3033,7 +3031,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -3064,7 +3062,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -3075,7 +3073,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -3156,7 +3154,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -3167,7 +3165,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -3178,7 +3176,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -3189,7 +3187,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 2,
@@ -3200,7 +3198,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -3211,7 +3209,7 @@
             "south": "door",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 4,
@@ -3222,7 +3220,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 5,
@@ -3233,7 +3231,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -3244,7 +3242,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -3275,7 +3273,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -3286,7 +3284,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -3347,7 +3345,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -3358,7 +3356,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 18,
@@ -3369,7 +3367,7 @@
             "south": "door",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -3380,7 +3378,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -3391,7 +3389,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -3402,7 +3400,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 2,
@@ -3413,7 +3411,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -3434,7 +3432,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 5,
@@ -3445,7 +3443,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 6,
@@ -3456,7 +3454,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -3487,7 +3485,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 10,
@@ -3498,7 +3496,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -3559,7 +3557,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -3570,7 +3568,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 18,
@@ -3581,7 +3579,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -3592,7 +3590,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -3603,7 +3601,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -3624,7 +3622,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -3665,7 +3663,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -3676,7 +3674,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -3687,7 +3685,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 9,
@@ -3698,7 +3696,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -3709,7 +3707,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -3750,7 +3748,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -3761,7 +3759,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -3772,7 +3770,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -3783,7 +3781,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 18,
@@ -3794,7 +3792,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -3805,7 +3803,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -3816,7 +3814,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 1,
@@ -3827,7 +3825,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 2,
@@ -3838,7 +3836,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -3879,7 +3877,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -3890,7 +3888,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -3901,7 +3899,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 9,
@@ -3912,7 +3910,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -3923,7 +3921,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -3944,7 +3942,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -3955,7 +3953,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": ["searchable", "room"],
+          "types": ["searchable", "room"],
           "message": "A SILVER STATUE OF A BOAR. WITH HORNS AND LONG FANGS",
           "promptSearch": true,
           "item": "silver_key"
@@ -3969,7 +3967,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -3980,7 +3978,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -3991,7 +3989,7 @@
             "south": "wall",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -4002,7 +4000,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 18,
@@ -4013,7 +4011,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -4024,7 +4022,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 0,
@@ -4055,7 +4053,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 3,
@@ -4076,7 +4074,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 5,
@@ -4097,7 +4095,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 7,
@@ -4108,7 +4106,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 8,
@@ -4119,7 +4117,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 9,
@@ -4130,7 +4128,7 @@
             "south": "open",
             "west": "wall"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 10,
@@ -4141,7 +4139,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "darkness"
+          "types": ["darkness"]
         },
         {
           "x": 11,
@@ -4162,7 +4160,7 @@
             "south": "door",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 13,
@@ -4173,7 +4171,7 @@
             "south": "door",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 14,
@@ -4184,7 +4182,7 @@
             "south": "wall",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 15,
@@ -4195,7 +4193,7 @@
             "south": "wall",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 16,
@@ -4206,7 +4204,7 @@
             "south": "open",
             "west": "door"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 17,
@@ -4217,7 +4215,7 @@
             "south": "open",
             "west": "open"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 18,
@@ -4228,7 +4226,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -4239,7 +4237,7 @@
             "south": "door",
             "west": "wall"
           },
-          "type": "room"
+          "types": ["room"]
         }
       ],
       "encounterRate": 0.1,

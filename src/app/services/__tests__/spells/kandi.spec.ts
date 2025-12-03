@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('KANDI (Level 5 Priest) - Locate Person', () => {
   it('loads spell data from JSON', () => {

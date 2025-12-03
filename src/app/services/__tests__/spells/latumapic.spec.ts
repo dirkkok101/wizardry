@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('LATUMAPIC (Level 3 Priest) - Identify Monsters', () => {
   it('loads spell data from JSON', () => {

@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('LORTO (Level 6 Priest) - Group Physical', () => {
   it('loads spell data from JSON', () => {

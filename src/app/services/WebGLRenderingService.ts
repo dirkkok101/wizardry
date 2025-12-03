@@ -455,28 +455,12 @@ export class WebGLRenderingService {
       return [texture.x, texture.y, texture.width, texture.height];
     }
 
-    // Check for doors (check wall type, matching how stairs work)
+    // Doors always render as closed (original Wizardry: no open/closed door state)
     if (wallType === 'door' || wallType === 'locked_door') {
-      // Determine if door is open by checking dungeonState
-      const doorKey = `${dungeonState?.currentLevel}_${wall.gridY}_${wall.gridX}`;
-      const isOpen = dungeonState?.openDoors?.has(doorKey) ?? false;
-
-      console.log('[WebGL] Checking door:', {
-        position: { x: wall.gridX, y: wall.gridY },
-        doorKey,
-        isOpen,
-        openDoorsSize: dungeonState?.openDoors?.size,
-        allOpenDoors: Array.from(dungeonState?.openDoors || [])
-      });
-
-      // Select texture based on door state
-      const textureId = isOpen ? 'door_open' : 'door_closed';
-      const texture = this.getTextureById(textureId);
-
+      const texture = this.getTextureById('door_closed');
       if (!texture) {
-        throw new Error(`[WebGL] Door texture "${textureId}" not found in atlas`);
+        throw new Error('[WebGL] Door texture "door_closed" not found in atlas');
       }
-
       return [texture.x, texture.y, texture.width, texture.height];
     }
 

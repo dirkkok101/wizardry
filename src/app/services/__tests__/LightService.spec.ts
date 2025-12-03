@@ -93,17 +93,22 @@ describe('LightService', () => {
 
   describe('isDarknessTile', () => {
     it('returns true for darkness tile', () => {
-      expect(LightService.isDarknessTile('darkness')).toBe(true)
+      expect(LightService.isDarknessTile(['darkness'])).toBe(true)
     })
 
     it('returns true for darkness_zone_start tile', () => {
-      expect(LightService.isDarknessTile('darkness_zone_start')).toBe(true)
+      expect(LightService.isDarknessTile(['darkness_zone_start'])).toBe(true)
     })
 
     it('returns false for other tile types', () => {
-      expect(LightService.isDarknessTile('stairs_up')).toBe(false)
-      expect(LightService.isDarknessTile('teleporter')).toBe(false)
+      expect(LightService.isDarknessTile(['stairs_up'])).toBe(false)
+      expect(LightService.isDarknessTile(['teleporter'])).toBe(false)
       expect(LightService.isDarknessTile(undefined)).toBe(false)
+    })
+
+    it('returns true when darkness is one of multiple types', () => {
+      expect(LightService.isDarknessTile(['room', 'darkness'])).toBe(true)
+      expect(LightService.isDarknessTile(['darkness', 'searchable'])).toBe(true)
     })
   })
 
@@ -298,7 +303,7 @@ describe('LightService', () => {
         lightSpellType: 'MILWA',
         lightDurationRemaining: 20
       })
-      const result = LightService.processLightOnMovement(state, undefined, 'darkness')
+      const result = LightService.processLightOnMovement(state, undefined, ['darkness'])
 
       expect(result.state.inDarknessZone).toBe(true)
       expect(result.state.lightActive).toBe(false)
@@ -307,7 +312,7 @@ describe('LightService', () => {
 
     it('exits darkness zone when moving out', () => {
       const state = createDungeonState({ inDarknessZone: true })
-      const result = LightService.processLightOnMovement(state, 'darkness', undefined)
+      const result = LightService.processLightOnMovement(state, ['darkness'], undefined)
 
       expect(result.state.inDarknessZone).toBe(false)
       expect(result.messages).toContain('You emerge from the darkness.')
@@ -331,14 +336,14 @@ describe('LightService', () => {
         lightDurationRemaining: 20,
         inDarknessZone: true
       })
-      const result = LightService.processLightOnMovement(state, 'darkness', 'darkness')
+      const result = LightService.processLightOnMovement(state, ['darkness'], ['darkness'])
 
       expect(result.state.lightDurationRemaining).toBe(20)
     })
 
     it('handles darkness_zone_start same as darkness', () => {
       const state = createDungeonState({ lightActive: true, lightSpellType: 'MILWA', lightDurationRemaining: 20 })
-      const result = LightService.processLightOnMovement(state, undefined, 'darkness_zone_start')
+      const result = LightService.processLightOnMovement(state, undefined, ['darkness_zone_start'])
 
       expect(result.state.inDarknessZone).toBe(true)
     })

@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('KALKI (Level 1 Priest) - Party Blessing', () => {
   it('loads spell data from JSON', () => {

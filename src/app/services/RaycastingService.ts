@@ -135,7 +135,7 @@ export class RaycastingService {
       wallX,
       wallState,
       wallDirection,
-      tileType: tileData?.type  // NEW: Include tile type
+      tileType: tileData?.types?.[0]  // First tile type (for stairs, special tiles)
     };
   }
 

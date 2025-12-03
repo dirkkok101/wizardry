@@ -8,7 +8,7 @@ import {
   RandomService,
   createTestCharacter,
   CharacterStatus
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('DI (Level 5 Priest) - Basic Resurrection', () => {
   it('loads spell data from JSON', () => {

@@ -39,6 +39,7 @@ export const TileTypeSchema = z.enum([
   'locked_tile',
   'sliding_wall',
   'chest',
+  'room',  // Room tiles for encounter mechanics (12.5% door-kick encounters)
 ]);
 
 // Complex structures
@@ -60,7 +61,7 @@ export const TileDataSchema = z.object({
   x: z.number().int().min(0).max(19),
   y: z.number().int().min(0).max(19),
   walls: TileWallsSchema,
-  type: TileTypeSchema.optional(),
+  types: z.array(TileTypeSchema).optional(),
   destination: DestinationSchema.optional(),
   message: z.string().optional(),
   item: z.string().optional(),

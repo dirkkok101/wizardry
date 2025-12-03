@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('DIOS (Level 1 Priest) - Basic Healing', () => {
   it('loads spell data from JSON', () => {

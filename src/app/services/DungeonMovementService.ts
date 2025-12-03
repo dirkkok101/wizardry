@@ -363,11 +363,18 @@ export const DungeonMovementService = {
    */
   findTileOfType(level: LevelData, type: TileType): Position | undefined {
     for (const tile of level.tiles) {
-      if (tile.type === type) {
+      if (tile.types?.includes(type)) {
         return { x: tile.x, y: tile.y, facing: 'NORTH' }
       }
     }
     return undefined
+  },
+
+  /**
+   * Helper to check if tile has a specific type
+   */
+  tileHasType(tile: TileData, type: TileType): boolean {
+    return tile.types?.includes(type) ?? false
   },
 
   /**
@@ -378,68 +385,52 @@ export const DungeonMovementService = {
     const dungeon = this.requireDungeon(state)
 
     // Reset teleport count for non-teleporter tiles
-    if (tile.type !== 'teleporter' && dungeon.teleportCount > 0) {
+    if (!this.tileHasType(tile, 'teleporter') && dungeon.teleportCount > 0) {
       state = {
         ...state,
         dungeon: { ...dungeon, teleportCount: 0 }
       }
     }
 
-    switch (tile.type) {
-      case 'teleporter':
-        return this.handleTeleporter(state, tile)
-
-      case 'spinner':
-        return this.handleSpinner(state)
-
-      case 'chute':
-        return this.handleChute(state)
-
-      case 'pit':
-        return this.handlePit(state)
-
-      case 'stairs_up':
-        if (dungeon.currentLevel > 1) {
-          return this.enterLevel(state, dungeon.currentLevel - 1, 'STAIRS_UP')
-        }
-        return state
-
-      case 'stairs_down':
-        if (dungeon.currentLevel < 10) {
-          return this.enterLevel(state, dungeon.currentLevel + 1, 'STAIRS_DOWN')
-        }
-        return state
-
-      case 'elevator':
-        // UI handles level selection, MazeComponent calls enterLevel
-        return state
-
-      case 'darkness':
-      case 'darkness_zone_start':
-        // Handle entering darkness zone
-        return this.processLightState(state, tile.type)
-
-      case 'anti_magic':
-      case 'message':
-        // These tiles don't modify game state directly
-        // Their effects are checked by MazeComponent:
-        // - anti_magic: Prevent spell casting
-        // - message: Display tile.message
-        // Process light state for normal movement
-        return this.processLightState(state, tile.type)
-
-      case 'searchable':
-      case 'fixed_encounter':
-        // No auto-action - handled explicitly by MazeComponent
-        // searchable: Requires I key press
-        // fixed_encounter: MazeComponent checks defeatedEncounters list
-        return this.processLightState(state, tile.type)
-
-      // More cases will be added in subsequent tasks
-      default:
-        // Process light state for normal tiles (decrement duration, check darkness exit)
-        return this.processLightState(state, tile.type)
+    // Handle special tile types (using includes() since tiles can have multiple types)
+    if (this.tileHasType(tile, 'teleporter')) {
+      return this.handleTeleporter(state, tile)
     }
+
+    if (this.tileHasType(tile, 'spinner')) {
+      return this.handleSpinner(state)
+    }
+
+    if (this.tileHasType(tile, 'chute')) {
+      return this.handleChute(state)
+    }
+
+    if (this.tileHasType(tile, 'pit')) {
+      return this.handlePit(state)
+    }
+
+    if (this.tileHasType(tile, 'stairs_up')) {
+      if (dungeon.currentLevel > 1) {
+        return this.enterLevel(state, dungeon.currentLevel - 1, 'STAIRS_UP')
+      }
+      return state
+    }
+
+    if (this.tileHasType(tile, 'stairs_down')) {
+      if (dungeon.currentLevel < 10) {
+        return this.enterLevel(state, dungeon.currentLevel + 1, 'STAIRS_DOWN')
+      }
+      return state
+    }
+
+    if (this.tileHasType(tile, 'elevator')) {
+      // UI handles level selection, MazeComponent calls enterLevel
+      return state
+    }
+
+    // Process light state for all other tiles (handles darkness zones, duration decrement)
+    // Includes: darkness, darkness_zone_start, anti_magic, message, searchable, fixed_encounter
+    return this.processLightState(state, tile.types)
   },
 
   /**
@@ -448,9 +439,9 @@ export const DungeonMovementService = {
    *
    * @returns Object with updated state and any messages to display
    */
-  processLightState(state: GameState, newTileType: TileType | undefined): GameState {
+  processLightState(state: GameState, newTileTypes: TileType[] | undefined): GameState {
     const dungeon = this.requireDungeon(state)
-    const isNowInDarkness = LightService.isDarknessTile(newTileType)
+    const isNowInDarkness = LightService.isDarknessTile(newTileTypes)
     const wasInDarkness = dungeon.inDarknessZone
 
     // Case 1: Entering darkness zone

@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MATU (Level 2 Priest) - Better Blessing', () => {
   it('loads spell data from JSON', () => {

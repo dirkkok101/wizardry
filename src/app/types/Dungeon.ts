@@ -26,6 +26,7 @@ export type TileType =
   | 'elevator'
   | 'door'  // For tile-based door tests
   | 'locked_tile'  // For locked tile areas
+  | 'room'  // Room tiles for encounter mechanics (12.5% door-kick encounters)
 
 export interface Position {
   x: number          // 0-19
@@ -51,7 +52,7 @@ export interface TileData {
   x: number
   y: number
   walls: TileWalls
-  type?: TileType
+  types?: TileType[]
   destination?: Destination
   message?: string
   item?: string
@@ -124,7 +125,7 @@ export interface SpecialTileResult {
 
 // Simplified dungeon representation for testing
 export interface Tile {
-  type?: string
+  types?: string[]
   locked?: boolean
   searchContent?: {
     itemId: string

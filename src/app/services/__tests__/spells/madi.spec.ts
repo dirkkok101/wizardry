@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MADI (Level 6 Priest) - Full Heal + Cure', () => {
   it('loads spell data from JSON', () => {

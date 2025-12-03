@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('KATINO (Level 1 Mage) - Sleep', () => {
   it('loads spell data from JSON', () => {

@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('HALITO (Level 1 Mage) - Single Target Fire', () => {
   it('loads spell data from JSON', () => {

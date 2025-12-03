@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('DIAL (Level 4 Priest) - Improved Healing', () => {
   it('loads spell data from JSON', () => {

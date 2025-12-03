@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MALIKTO (Level 7 Priest) - All Enemies', () => {
   it('loads spell data from JSON', () => {

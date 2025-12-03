@@ -6,7 +6,7 @@ import {
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MOGREF (Level 1 Mage) - Self Hardening', () => {
   it('loads spell data from JSON', () => {

@@ -7,7 +7,7 @@ import {
   SpellCastingService,
   createTestCharacter,
   createTestMonster
-} from '../spell-test-helpers'
+} from '../../spell-test-helpers'
 
 describe('MONTINO (Level 2 Priest) - Silence', () => {
   it('loads spell data from JSON', () => {
