@@ -384,11 +384,15 @@ export class ChestComponent implements OnInit, OnDestroy {
     if (mode === 'TRAP_NAME_INPUT') {
       if (key === 'BACKSPACE') {
         this.trapNameInput.update(v => v.slice(0, -1));
+        event.preventDefault();
       } else if (key === 'ENTER') {
         this.submitTrapName();
+        // Stop propagation to prevent footer menu from also handling ENTER
+        event.stopPropagation();
+        event.preventDefault();
       } else if (key.length === 1 && /[A-Z ]/.test(key)) {
         this.trapNameInput.update(v => v + key);
-      } else {
+        event.preventDefault();
       }
       return;
     }
