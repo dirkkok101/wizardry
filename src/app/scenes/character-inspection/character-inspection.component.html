@@ -69,7 +69,7 @@
         <section class="inventory-section">
           <h3 class="row-title">Inventory ({{ inventoryItems().length }}/8)</h3>
           <div class="inventory-list">
-            @for (item of inventoryItems(); track item.id) {
+            @for (item of inventoryItems(); track $index) {
               <app-item-card
                 [item]="item"
                 [isEquipped]="false"
