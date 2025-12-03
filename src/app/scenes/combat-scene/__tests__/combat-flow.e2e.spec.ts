@@ -12,6 +12,7 @@ import {
 import { setCombatMessageDelay } from '@config/CombatSettings'
 import { RandomService } from '@services/RandomService'
 import { ItemDataLoader } from '@services/ItemDataLoader'
+import { TreasureDataLoader } from '@services/TreasureDataLoader'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { Item } from '@models/Item'
 
@@ -33,6 +34,11 @@ describe('Combat Flow E2E', () => {
   let fixture: ComponentFixture<CombatComponent>
   let gameState: GameStateService
   let router: Router
+
+  // Load treasure data before any tests run (needed for ChestService.generateChest)
+  beforeAll(async () => {
+    await TreasureDataLoader.loadAllRewards()
+  })
 
   beforeEach(() => {
     // Use fake timers to control animation timing
@@ -66,6 +72,13 @@ describe('Combat Flow E2E', () => {
     jest.runAllTimers()
   }
 
+  // Helper to flush all pending timers and promises (needed because handleVictory is async)
+  const flushAll = async () => {
+    jest.runAllTimers()
+    await Promise.resolve()  // Let async victory handling complete
+    jest.runAllTimers()
+  }
+
   // Helper function to select actions for characters using new character-by-character API
   const selectActionsForParty = (actionType: 'ATTACK' | 'PARRY' | 'RUN', groupId?: 'A' | 'B' | 'C' | 'D') => {
     const aliveChars = component.partyCharacters().filter(c => c.hp > 0)
@@ -82,7 +95,7 @@ describe('Combat Flow E2E', () => {
   }
 
   describe('Victory Flow', () => {
-    it('completes full combat encounter: setup → action selection → round execution → victory → maze', () => {
+    it('completes full combat encounter: setup → action selection → round execution → victory → maze', async () => {
       // 1. Setup initial combat state with 2 characters and 1 weak monster
       const char1 = createTestCharacter({
         id: 'c1',
@@ -165,7 +178,7 @@ describe('Combat Flow E2E', () => {
 
       // 5. Execute the round
       component.executeRound()
-      flushMessageAnimation()
+      await flushAll()  // Use flushAll to handle async handleVictory
 
       // 6. Verify round was executed (actions cleared)
       expect(component.selectedActions().size).toBe(0)
@@ -207,7 +220,7 @@ describe('Combat Flow E2E', () => {
       }
     })
 
-    it('distributes rewards from multiple monsters', () => {
+    it('distributes rewards from multiple monsters', async () => {
       // Setup with 3 party members and 2 weak monsters
       const char1 = createTestCharacter({ id: 'c1', experience: 0, strength: 18 })
       const char2 = createTestCharacter({ id: 'c2', experience: 0, strength: 18 })
@@ -258,7 +271,7 @@ describe('Combat Flow E2E', () => {
 
       // Execute round to victory
       component.executeRound()
-      flushMessageAnimation()
+      await flushAll()  // Use flushAll to handle async handleVictory
 
       // Verify victory occurred (should kill both weak monsters)
       // Victory now navigates to /victory scene, check for navigation call
@@ -493,7 +506,7 @@ describe('Combat Flow E2E', () => {
       expect(combatState).toBeDefined()
     })
 
-    it('updates combat log throughout encounter', () => {
+    it('updates combat log throughout encounter', async () => {
       // Queue random values to ensure deterministic combat outcome:
       // All values must be in 0-1 range as they're used by nextRandom()
       // Sequence: char initiative, monster initiative, hit roll, damage roll, crit check
@@ -542,7 +555,7 @@ describe('Combat Flow E2E', () => {
       // Execute round
       selectActionsForParty('ATTACK', 'A')
       component.executeRound()
-      flushMessageAnimation()
+      await flushAll()  // Use flushAll to handle async handleVictory
 
       // After victory, combat state is cleared so log disappears from component
       // But we can verify that combat log was updated during execution

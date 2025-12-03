@@ -11,8 +11,28 @@ describe('GameInitializationService', () => {
     global.fetch = jest.fn((url: string) => {
       const urlPath = url.toString()
 
+      // Handle config files (e.g., '/assets/config/stat-modifiers.json')
+      const configMatch = urlPath.match(/\/assets\/config\/([^/]+\.json)/)
+      if (configMatch) {
+        const [, filename] = configMatch
+        const dataPath = path.join(__dirname, '../../../../data/config', filename)
+
+        try {
+          const fileContent = fs.readFileSync(dataPath, 'utf-8')
+          const jsonData = JSON.parse(fileContent)
+
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(jsonData)
+          } as Response)
+        } catch (error) {
+          return Promise.reject(new Error(`File not found: ${dataPath}`))
+        }
+      }
+
       // Extract filename from URL (e.g., '/assets/races/human.json' -> 'human.json')
-      const match = urlPath.match(/\/(races|classes|spells|monsters|items)\/([^/]+\.json)/)
+      // Supports: races, classes, spells, monsters, items, traps, treasure, encounters, maps
+      const match = urlPath.match(/\/(races|classes|spells|monsters|items|traps|treasure|encounters|maps)\/([^/]+\.json)/)
       if (match) {
         const [, directory, filename] = match
         const dataPath = path.join(__dirname, '../../../../data', directory, filename)

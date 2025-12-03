@@ -247,18 +247,23 @@ describe('ClassService', () => {
   })
 
   describe('getXpForLevel', () => {
+    // XP values from research: docs/research/character-creation-technical-reference.md Section 8
+    // xpTable is indexed as level-2 (level 1 = 0, level 2 = xpTable[0], etc.)
     it('returns correct XP for Fighter level 2', () => {
       const xp = ClassService.getXpForLevel(CharacterClass.FIGHTER, 2)
-      expect(xp).toBe(2000)
+      // Fighter xpTable[0] = 1000 (per research: level 1 row = 1000)
+      expect(xp).toBe(1000)
     })
 
     it('returns correct XP for Fighter level 12', () => {
       const xp = ClassService.getXpForLevel(CharacterClass.FIGHTER, 12)
-      expect(xp).toBe(1500000)
+      // Fighter xpTable[10] = 232044 (per research: level 11 row = 232,044)
+      expect(xp).toBe(232044)
     })
 
     it('returns 0 for level 1', () => {
       const xp = ClassService.getXpForLevel(CharacterClass.FIGHTER, 1)
+      // Level 1 is starting level, no XP required
       expect(xp).toBe(0)
     })
   })

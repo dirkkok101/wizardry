@@ -5,6 +5,7 @@ import { GameStateService } from '@services/GameStateService';
 import { DungeonService } from '@services/DungeonService';
 import { DungeonMovementService } from '@services/DungeonMovementService';
 import { EncounterService } from '@services/EncounterService';
+import { EncounterTriggerService } from '@services/EncounterTriggerService';
 import { CombatService } from '@services/CombatService';
 import { MonsterService } from '@services/MonsterService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
@@ -522,11 +523,11 @@ describe('MazeComponent - Encounter Detection', () => {
   });
 
   it('triggers encounter check after successful movement', () => {
-    const rollSpy = jest.spyOn(EncounterService, 'rollRandomEncounter');
+    const triggerSpy = jest.spyOn(EncounterTriggerService, 'checkForEncounter');
 
     component.moveForward();
 
-    expect(rollSpy).toHaveBeenCalled();
+    expect(triggerSpy).toHaveBeenCalled();
   });
 
   it('navigates to combat when encounter occurs', async () => {
@@ -542,26 +543,12 @@ describe('MazeComponent - Encounter Detection', () => {
       roster: new Map([['char1', testCharacter]]),
     }));
 
-    // Mock encounter to occur
-    jest.spyOn(EncounterService, 'rollRandomEncounter').mockReturnValue(true);
-    jest.spyOn(EncounterService, 'generateEncounter').mockReturnValue([{
-      id: 'A',
-      monsters: [{
-        id: 'orc_1',
-        templateId: 'orc',
-        name: 'Orc',
-        hp: 8,
-        maxHp: 8,
-        ac: 6,
-        status: 'ALIVE',
-        damage: [{ dice: '1d6', min: 1, max: 6 }],
-        xp: 10,
-        gold: 5,
-        specialAbilities: [],
-        resistances: []
-      }],
-      formation: 'front'
-    }]);
+    // Mock encounter to trigger (using new EncounterTriggerService API)
+    jest.spyOn(EncounterTriggerService, 'checkForEncounter').mockReturnValue({
+      trigger: true,
+      reason: 'random',
+      guaranteedFight: false
+    });
 
     const navigateSpy = jest.spyOn(router, 'navigate').mockImplementation(() => Promise.resolve(true));
 
@@ -578,8 +565,8 @@ describe('MazeComponent - Encounter Detection', () => {
   });
 
   it('does not navigate when no encounter occurs', () => {
-    // Mock no encounter
-    jest.spyOn(EncounterService, 'rollRandomEncounter').mockReturnValue(false);
+    // Mock no encounter (using new EncounterTriggerService API)
+    jest.spyOn(EncounterTriggerService, 'checkForEncounter').mockReturnValue({ trigger: false });
 
     const navigateSpy = jest.spyOn(router, 'navigate').mockImplementation(() => Promise.resolve(true));
     const initialMessages = component.messages().length;
@@ -642,7 +629,8 @@ describe('MazeComponent - Tile Inspection', () => {
             x,
             y,
             walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
-            type: (x === 13 && y === 3) ? 'searchable' : 'normal',
+            // Use 'types' array (not 'type') - TileInspectionService checks tile.types?.includes('searchable')
+            types: (x === 13 && y === 3) ? ['searchable'] : undefined,
             item: (x === 13 && y === 3) ? 'potion' : undefined,
             message: (x === 13 && y === 3) ? 'You found a potion!' : undefined
           });
@@ -1025,8 +1013,12 @@ describe('MazeComponent - Combat Integration', () => {
   });
 
   it('initializes combat state on encounter', () => {
-    jest.spyOn(EncounterService, 'rollRandomEncounter').mockReturnValue(true);
-    jest.spyOn(EncounterService, 'selectMonster').mockReturnValue('kobold');
+    // Mock encounter trigger to return true (random encounter)
+    jest.spyOn(EncounterTriggerService, 'checkForEncounter').mockReturnValue({
+      trigger: true,
+      reason: 'random',
+      guaranteedFight: false
+    });
 
     component['checkForEncounter']();
 
@@ -1039,8 +1031,12 @@ describe('MazeComponent - Combat Integration', () => {
   });
 
   it('navigates to /combat on encounter', async () => {
-    jest.spyOn(EncounterService, 'rollRandomEncounter').mockReturnValue(true);
-    jest.spyOn(EncounterService, 'selectMonster').mockReturnValue('kobold');
+    // Mock encounter trigger to return true (random encounter)
+    jest.spyOn(EncounterTriggerService, 'checkForEncounter').mockReturnValue({
+      trigger: true,
+      reason: 'random',
+      guaranteedFight: false
+    });
 
     component['checkForEncounter']();
 

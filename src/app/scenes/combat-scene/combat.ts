@@ -439,12 +439,12 @@ export class CombatComponent implements OnInit, OnDestroy {
     return chars.map((char, idx) => {
       let enabled = true
 
-      if (spell.target === 'dead_body') {
-        // Only dead characters can be targeted
+      if (spell.target === 'dead_ally') {
+        // DI spell: Only dead characters can be targeted (not ashes)
         enabled = char.status === CharacterStatus.DEAD
-      } else if (spell.target === 'ashes') {
-        // Only ashes characters can be targeted
-        enabled = char.status === CharacterStatus.ASHES
+      } else if (spell.target === 'dead_or_ashed_ally') {
+        // KADORTO spell: Both dead and ashes characters can be targeted
+        enabled = char.status === CharacterStatus.DEAD || char.status === CharacterStatus.ASHES
       } else if (spell.target === 'single') {
         // For healing spells, target living characters (or characters that need healing)
         if (spell.category === 'healing') {
@@ -889,7 +889,7 @@ export class CombatComponent implements OnInit, OnDestroy {
     }
 
     // Resurrection spells need dead/ashes character selection
-    if (spell.target === 'dead_body' || spell.target === 'ashes') {
+    if (spell.target === 'dead_ally' || spell.target === 'dead_or_ashed_ally') {
       this.showCharacterSelectionDialog.set(true)
       return
     }

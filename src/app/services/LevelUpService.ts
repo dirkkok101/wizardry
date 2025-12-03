@@ -135,8 +135,9 @@ export class LevelUpService {
     // Minimum HP is maxLev (at least 1 HP per level)
     newRoll = Math.max(newMaxLev, newRoll)
 
-    // Keep higher of current or new roll
-    const newMaxHp = Math.max(character.maxHp, newRoll)
+    // Authentic Wizardry 1: Keep higher of current or new, but ALWAYS gain at least 1 HP
+    // (per research doc Section 6.1: "return character.maxHP + 1" if new roll isn't higher)
+    const newMaxHp = newRoll > character.maxHp ? newRoll : character.maxHp + 1
     const hpIncrease = newMaxHp - character.maxHp
 
     return { newMaxHp, hpIncrease }

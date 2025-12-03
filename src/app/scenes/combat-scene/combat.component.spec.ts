@@ -513,12 +513,12 @@ describe('CombatComponent', () => {
       expect(component.selectedActions().size).toBe(0)
     })
 
-    it('shows character selection for resurrection spells targeting dead_body (DI)', () => {
+    it('shows character selection for resurrection spells targeting dead_ally (DI)', () => {
       const spells = component.availableSpells()
       const diSpell = spells.find(s => s.id === 'di')
 
       expect(diSpell).toBeDefined()
-      expect(diSpell!.target).toBe('dead_body')
+      expect(diSpell!.target).toBe('dead_ally')
 
       component.selectActionType('CAST_SPELL')
       component.selectSpell(diSpell!.id)
@@ -530,17 +530,17 @@ describe('CombatComponent', () => {
       expect(component.selectedActions().size).toBe(0)
     })
 
-    it('shows character selection for resurrection spells targeting ashes (KADORTO)', () => {
+    it('shows character selection for resurrection spells targeting dead_or_ashed_ally (KADORTO)', () => {
       const spells = component.availableSpells()
       const kadortoSpell = spells.find(s => s.id === 'kadorto')
 
       expect(kadortoSpell).toBeDefined()
-      expect(kadortoSpell!.target).toBe('ashes')
+      expect(kadortoSpell!.target).toBe('dead_or_ashed_ally')
 
       component.selectActionType('CAST_SPELL')
       component.selectSpell(kadortoSpell!.id)
 
-      // Should show character selection dialog for ashes resurrection
+      // Should show character selection dialog for resurrection
       expect(component.showCharacterSelectionDialog()).toBe(true)
       expect(component.showGroupSelectionDialog()).toBe(false)
       // Should NOT have created action yet
@@ -569,7 +569,7 @@ describe('CombatComponent', () => {
       expect(ashesOption!.enabled).toBe(false)  // Ashes - needs KADORTO, not DI
     })
 
-    it('enables only ashes characters for KADORTO spell targeting', () => {
+    it('enables dead and ashes characters for KADORTO spell targeting', () => {
       const spells = component.availableSpells()
       const kadortoSpell = spells.find(s => s.id === 'kadorto')
 
@@ -578,14 +578,14 @@ describe('CombatComponent', () => {
 
       const options = component.characterSelectionOptions()
 
-      // Only the ashes character should be enabled
+      // Both dead and ashes characters should be enabled (per Wizardry research)
       const priestOption = options.find(o => o.character.id === 'priest1')
       const deadOption = options.find(o => o.character.id === 'dead1')
       const ashesOption = options.find(o => o.character.id === 'ashes1')
 
       expect(priestOption!.enabled).toBe(false) // Living - can't resurrect
-      expect(deadOption!.enabled).toBe(false)   // Dead - needs DI, not KADORTO
-      expect(ashesOption!.enabled).toBe(true)   // Ashes - can resurrect with KADORTO
+      expect(deadOption!.enabled).toBe(true)    // Dead - KADORTO works on dead (full HP restore)
+      expect(ashesOption!.enabled).toBe(true)   // Ashes - KADORTO works on ashes too
     })
 
     it('attaches target character ID to spell command', () => {
@@ -772,10 +772,10 @@ describe('CombatComponent', () => {
       expect(spyCalculate).toHaveBeenCalled()
     })
 
-    it('distributes XP to party members', () => {
+    it('distributes XP to party members', async () => {
       const initialXP = gameState.roster().get('c1')!.experience
 
-      component['handleVictory']()
+      await component['handleVictory']()
 
       const newXP = gameState.roster().get('c1')!.experience
       expect(newXP).toBeGreaterThan(initialXP)

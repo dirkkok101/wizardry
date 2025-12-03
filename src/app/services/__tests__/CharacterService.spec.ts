@@ -776,8 +776,10 @@ describe('CharacterService', () => {
         selectedClass: CharacterClass.FIGHTER
       })
 
-      // Fighter uses 1d10 + VIT bonus (+3 for VIT 18), so HP should be 4-13
-      expect(highVitFighter.hp).toBeGreaterThanOrEqual(4)
+      // Fighter uses 1d10 + VIT bonus (+3 for VIT 18)
+      // Base HP: 4-13, but authentic Wizardry has 50% chance for 90% value
+      // Minimum: floor(0.9 * (1 + 3)) = 3, Maximum: 10 + 3 = 13
+      expect(highVitFighter.hp).toBeGreaterThanOrEqual(3)
       expect(highVitFighter.hp).toBeLessThanOrEqual(13)
       expect(highVitFighter.maxHp).toBe(highVitFighter.hp)
     })
