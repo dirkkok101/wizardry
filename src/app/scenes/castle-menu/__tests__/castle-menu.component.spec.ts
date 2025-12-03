@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CastleMenuComponent } from '../castle-menu.component';
 import { provideRouter } from '@angular/router';
 import { SceneNavigationService } from '@services/SceneNavigationService';
+import { FightMapService } from '@services/FightMapService';
 
 describe('CastleMenuComponent', () => {
   let component: CastleMenuComponent;
@@ -150,6 +151,42 @@ describe('CastleMenuComponent', () => {
       component.handleFooterAction('maze');
       await fixture.whenStable();
       expect(navigateSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('FIGHTMAP Reset on Init', () => {
+    it('should reset FIGHTMAP state when component initializes', () => {
+      // Set up some FIGHTMAP state after the initial component was created
+      FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true }]);
+      FightMapService.markCleared(1, 5, 5);
+      FightMapService.setAlarm(1, 5, 5);
+
+      // Verify state exists
+      const levelState = FightMapService.getLevelState(1);
+      expect(levelState).toBeDefined();
+      expect(levelState!.alarmTiles.size).toBe(1);
+
+      // Create a new component (which calls ngOnInit → resetAll)
+      const newFixture = TestBed.createComponent(CastleMenuComponent);
+      newFixture.detectChanges();
+
+      // After ngOnInit, FIGHTMAP state should be reset (no level state)
+      expect(FightMapService.getLevelState(1)).toBeUndefined();
+    });
+
+    it('should clear treasure room markers on init', () => {
+      // Set up state after initial component
+      FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true }]);
+      FightMapService.markTreasureRoom(2, 10, 10);
+
+      expect(FightMapService.hasTreasure(2, 10, 10)).toBe(true);
+
+      // Create a new component
+      const newFixture = TestBed.createComponent(CastleMenuComponent);
+      newFixture.detectChanges();
+
+      // Treasure room markers should be cleared (no level state)
+      expect(FightMapService.getLevelState(2)).toBeUndefined();
     });
   });
 });

@@ -293,8 +293,11 @@ describe('CombatService - Dispel Command', () => {
     })
   })
 
-  describe('status bug: sleeping undead immune', () => {
-    it('does not affect sleeping undead', () => {
+  describe('status bug FIX: all undead can be dispelled', () => {
+    // Original Wizardry had a bug where sleeping/held undead were immune.
+    // We fixed this - all undead can be dispelled regardless of status.
+
+    it('CAN dispel sleeping undead (bug fixed)', () => {
       const state = createCombatState([{
         id: 'A',
         monsters: [createUndeadMonster('m1', 1, { status: 'ASLEEP' })],
@@ -311,13 +314,16 @@ describe('CombatService - Dispel Command', () => {
         targetGroupId: 'A'
       }
 
+      // Queue success roll
+      RandomService.queueNextValues([0.01])
+
       const result = CombatService.executeCommand(state, command)
-      expect(result.messages.some(m => m.includes('held and immune'))).toBe(true)
-      // Monster should still be alive
-      expect(result.newState.monsterGroups[0].monsters[0].hp).toBeGreaterThan(0)
+      expect(result.messages.some(m => m.includes('dispelled'))).toBe(true)
+      // Monster should be destroyed
+      expect(result.newState.monsterGroups[0].monsters[0].hp).toBe(0)
     })
 
-    it('does not affect paralyzed undead', () => {
+    it('CAN dispel paralyzed undead (bug fixed)', () => {
       const state = createCombatState([{
         id: 'A',
         monsters: [createUndeadMonster('m1', 1, { status: 'PARALYZED' })],
@@ -334,16 +340,20 @@ describe('CombatService - Dispel Command', () => {
         targetGroupId: 'A'
       }
 
+      // Queue success roll
+      RandomService.queueNextValues([0.01])
+
       const result = CombatService.executeCommand(state, command)
-      expect(result.messages.some(m => m.includes('held and immune'))).toBe(true)
+      expect(result.messages.some(m => m.includes('dispelled'))).toBe(true)
+      expect(result.newState.monsterGroups[0].monsters[0].hp).toBe(0)
     })
 
-    it('only affects OK-status undead in mixed status group', () => {
+    it('affects ALL undead in mixed status group (bug fixed)', () => {
       const state = createCombatState([{
         id: 'A',
         monsters: [
-          createUndeadMonster('m1', 1, { status: 'ALIVE' }),  // Can be dispelled
-          createUndeadMonster('m2', 1, { status: 'ASLEEP' }) // Immune
+          createUndeadMonster('m1', 1, { status: 'ALIVE' }),
+          createUndeadMonster('m2', 1, { status: 'ASLEEP' })
         ],
         formation: 'front',
         identified: true
@@ -358,14 +368,13 @@ describe('CombatService - Dispel Command', () => {
         targetGroupId: 'A'
       }
 
-      // Queue success for the eligible undead
-      RandomService.queueNextValues([0.01])
+      // Queue success for BOTH undead
+      RandomService.queueNextValues([0.01, 0.01])
 
       const result = CombatService.executeCommand(state, command)
-      // OK-status undead should be destroyed
+      // Both undead should be destroyed
       expect(result.newState.monsterGroups[0].monsters[0].hp).toBe(0)
-      // Sleeping undead should be unaffected
-      expect(result.newState.monsterGroups[0].monsters[1].hp).toBeGreaterThan(0)
+      expect(result.newState.monsterGroups[0].monsters[1].hp).toBe(0)
     })
   })
 

@@ -443,7 +443,15 @@ export class SpellCastingService {
       if (spell.utility === 'reveal_stats') {
         message = `${spell.name} reveals the monsters' vital signs!`
       } else if (spell.utility === 'identify_foe') {
-        message = `${spell.name} identifies the enemy!`
+        // LATUMAPIC bug fix: identifies ALL monster groups, not just those passed
+        // Original bug only identified one random group
+        // Return monsterIdentification with all four possible group IDs
+        return {
+          monsterIdentification: {
+            groupIds: ['A', 'B', 'C', 'D']  // Identify ALL groups
+          },
+          message: `${spell.name} reveals the identity of all monsters!`
+        }
       } else if (spell.utility === 'identify_trap') {
         message = `${spell.name} reveals any traps nearby!`
       } else if (spell.utility === 'extended_light') {

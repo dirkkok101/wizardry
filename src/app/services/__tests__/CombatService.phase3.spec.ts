@@ -174,8 +174,9 @@ describe('CombatService - Phase 3: Spell Casting', () => {
         }]
       })
 
-      // Queue random value to succeed - RandomService.chance(50) succeeds if roll < 0.50
-      RandomService.queueNextValues([0.30]) // 30% < 50% = success
+      // Queue random values: first for initiative roll, second for dispel chance
+      // RandomService.chance(50) succeeds if roll < 0.50
+      RandomService.queueNextValues([0.5, 0.30]) // initiative, then 30% < 50% = success
 
       const cmd = CombatService.createCommand(priest, 'DISPEL', zombie, { groupId: 'A' })
       const result = CombatService.executeCommand(state, cmd)

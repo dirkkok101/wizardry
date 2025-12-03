@@ -70,7 +70,9 @@ export class MonsterService {
       breathType: template.breathWeapon?.type as MonsterInstance['breathType'],
       // Special abilities
       canCall: template.specialAbilities.includes('call_help'),
-      canFlee: template.canFlee
+      canFlee: template.canFlee,
+      // Regeneration (only if monster has the ability and value > 0)
+      regeneration: template.specialAbilities.includes('regeneration') ? template.regeneration : undefined
     }
   }
 

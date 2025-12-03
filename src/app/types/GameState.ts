@@ -73,6 +73,12 @@ export interface GameState {
   bodies?: Map<string, Body> // Dead character bodies left in dungeon (characterId -> body location)
   pendingChest?: Chest // Chest awaiting player interaction (from combat victory or exploration)
   pendingCombatRewards?: PendingCombatRewards // Combat rewards awaiting victory summary display
+  /**
+   * Chest alarm flag - set when an ALARM trap is triggered.
+   * When player returns to maze, triggers immediate combat encounter.
+   * Per Apple II reference: Alarm triggers combat with new monster group.
+   */
+  chestAlarmActive?: boolean
 }
 
 export interface SaveData {

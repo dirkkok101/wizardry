@@ -15,6 +15,8 @@ import { DungeonMovementService } from '@services/DungeonMovementService';
 import { DungeonService } from '@services/DungeonService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { EncounterService } from '@services/EncounterService';
+import { EncounterTriggerService, EncounterContext, EncounterCheckResult, FixedEncounterConfig } from '@services/EncounterTriggerService';
+import { FightMapService } from '@services/FightMapService';
 import { CombatService } from '@services/CombatService';
 import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
@@ -272,8 +274,69 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Initialize FIGHTMAP for the current level
+    this.initializeFightMap(dungeon.currentLevel);
+
     // Add welcome message
     this.addMessage(`Entering Level ${this.currentLevel()}...`);
+
+    // Check for chest alarm - triggers immediate combat encounter
+    this.checkForChestAlarm();
+  }
+
+  /**
+   * Check for pending chest alarm and trigger combat if active.
+   * Alarm traps set this flag and navigate to maze - encounter triggers on entry.
+   * Per Apple II reference: Party fights new monsters from alarm, gets Reward 2 from new encounter.
+   */
+  private checkForChestAlarm(): void {
+    const state = this.gameState.state();
+    if (!state.chestAlarmActive) return;
+
+    // Clear the flag first
+    this.gameState.updateState(s => ({
+      ...s,
+      chestAlarmActive: false
+    }));
+
+    this.addMessage('An alarm sounds! Monsters rush to attack!');
+
+    // Trigger encounter with cannot flee (alarm fights are guaranteed)
+    this.initiateEncounter(this.currentLevel(), false);
+  }
+
+  /**
+   * Initialize FIGHTMAP for a dungeon level
+   * Sets up encounter state tracking, seeds treasure rooms, and initializes fixed encounters
+   */
+  private initializeFightMap(level: number): void {
+    // Check if already initialized for this level
+    if (FightMapService.getLevelState(level)) {
+      return;
+    }
+
+    try {
+      const levelData = DungeonService.loadLevel(level);
+      const roomTiles = DungeonService.getRoomTiles(levelData);
+
+      // Initialize level state
+      FightMapService.initializeLevel(level, roomTiles);
+
+      // Seed treasure rooms for the level
+      FightMapService.seedTreasureRooms(level, roomTiles);
+
+      // Initialize fixed encounter countdowns (AUX mechanism)
+      const fixedEncounters = DungeonService.getFixedEncounterTiles(levelData);
+      for (const fe of fixedEncounters) {
+        FightMapService.initializeFixedEncounter(level, fe.x, fe.y, {
+          aux0: fe.aux0,
+          aux1: fe.aux1,
+          aux2: fe.aux2
+        });
+      }
+    } catch (error) {
+      console.error(`[MazeComponent] Failed to initialize FIGHTMAP for level ${level}:`, error);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -632,6 +695,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Check if movement is through a door (door-kick mechanic)
+    // In original Wizardry, moving through a door = implicit kick
+    const tile = DungeonService.getTile(level, position.x, position.y);
+    const wallDirection = DungeonService.getWallDirectionForMovement(position.facing, moveType);
+    const wallType = tile.walls[wallDirection];
+    const isDoorKick = wallType === 'door';
+
     // Capture light state before movement for comparison
     const oldDungeon = state.dungeon;
     const hadLight = oldDungeon?.lightActive;
@@ -653,7 +723,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Dynamic messages based on moveType
     const messages = {
-      'FORWARD': 'You move forward.',
+      'FORWARD': isDoorKick ? 'You kick open the door and move forward.' : 'You move forward.',
       'BACKWARD': 'You move backward.',
       'STRAFE_LEFT': 'You strafe left.',
       'STRAFE_RIGHT': 'You strafe right.'
@@ -689,20 +759,67 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.render();
 
     // Check for encounter after successful movement
-    this.checkForEncounter();
+    // Pass isDoorKick flag for 12.5% door-kick encounter mechanic
+    this.checkForEncounter(isDoorKick);
   }
 
-  private checkForEncounter(): void {
+  /**
+   * Check for encounter using the full priority chain
+   * @param isDoorKick - Whether movement was through a door (12.5% encounter chance)
+   */
+  private checkForEncounter(isDoorKick: boolean = false): void {
     // Skip encounter check if disabled in settings (useful for testing)
     if (!this.gameState.state().settings.encountersEnabled) {
       return;
     }
 
-    const encounterOccurs = EncounterService.rollRandomEncounter();
-    if (!encounterOccurs) return;
+    const dungeon = this.dungeonState();
+    if (!dungeon) return;
 
-    // Initiate random encounter for current dungeon level
-    this.initiateEncounter(this.currentLevel(), true);  // true = can flee
+    const level = DungeonService.loadLevel(dungeon.currentLevel);
+    const pos = dungeon.position;
+
+    // Get fixed encounter config from FIGHTMAP if present
+    const fixedEncounterConfig = FightMapService.getFixedEncounterConfig(
+      dungeon.currentLevel,
+      pos.x,
+      pos.y
+    );
+
+    // Build encounter context for the priority chain
+    // Note: chestAlarmActive is handled separately in checkForChestAlarm() on scene entry
+    const context: EncounterContext = {
+      level: dungeon.currentLevel,
+      x: pos.x,
+      y: pos.y,
+      isDoorKick,
+      chestAlarmActive: false,  // Alarm encounters trigger via checkForChestAlarm(), not during movement
+      isRoomTile: DungeonService.isRoomTile(level, pos.x, pos.y),
+      fixedEncounterConfig
+    }
+
+    // Check for encounter using full priority chain
+    const result = EncounterTriggerService.checkForEncounter(context);
+
+    if (!result.trigger) return;
+
+    // Log encounter reason for debugging
+    console.log(`[MazeComponent] Encounter triggered: ${result.reason}`);
+
+    // Mark tile as cleared after encounter (prevents immediate re-trigger)
+    if (result.reason !== 'random' && result.reason !== 'door_kick') {
+      FightMapService.markCleared(dungeon.currentLevel, pos.x, pos.y);
+    }
+
+    // Decrement fixed encounter countdown after triggering
+    // This makes encounters like Murphy's Ghost finite rather than infinite
+    if (result.reason === 'fixed' && result.fixedEncounterConfig) {
+      FightMapService.decrementFixedEncounter(dungeon.currentLevel, pos.x, pos.y);
+    }
+
+    // Initiate encounter - canFlee depends on whether it's a guaranteed fight
+    const canFlee = !result.guaranteedFight;
+    this.initiateEncounter(this.currentLevel(), canFlee, result.fixedEncounterConfig);
   }
 
   private handleFixedEncounter(monsterId: string): void {
@@ -710,7 +827,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initiateEncounter(this.currentLevel(), false);  // false = cannot flee
   }
 
-  private initiateEncounter(dungeonLevel: number, canFlee: boolean): void {
+  private initiateEncounter(
+    dungeonLevel: number,
+    canFlee: boolean,
+    fixedEncounterConfig?: FixedEncounterConfig
+  ): void {
     this.addMessage(`You encounter monsters!`);
 
     try {
@@ -718,7 +839,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       const partyChars = this.partyCharacters();
 
       // Initialize combat state with encounter generation
-      const combatState = CombatService.initiateCombat(dungeonLevel, partyChars, canFlee);
+      // Pass fixedEncounterConfig for AUX-based monster selection
+      const combatState = CombatService.initiateCombat(
+        dungeonLevel,
+        partyChars,
+        canFlee,
+        fixedEncounterConfig
+      );
 
       // Update game state with combat
       this.gameState.updateState(state => ({

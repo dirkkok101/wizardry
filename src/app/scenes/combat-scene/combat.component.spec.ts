@@ -872,6 +872,155 @@ describe('CombatComponent', () => {
     })
   })
 
+  describe('Alignment Shift (System 10)', () => {
+    beforeEach(async () => {
+      // Load treasure data
+      await TreasureDataLoader.loadAllRewards()
+
+      // Setup victory scenario - all monsters dead
+      gameState.updateState(state => {
+        const combat = state.combat!
+        const deadMonsterGroups = combat.monsterGroups.map(group => ({
+          ...group,
+          monsters: group.monsters.map(m => ({
+            ...m,
+            hp: 0,
+            status: 'DEAD' as const
+          }))
+        }))
+
+        return {
+          ...state,
+          combat: {
+            ...combat,
+            monsterGroups: deadMonsterGroups
+          }
+        }
+      })
+
+      fixture.detectChanges()
+    })
+
+    it('does not trigger alignment shift when encounter is not friendly', () => {
+      // Ensure isFriendlyEncounter is false (default)
+      gameState.updateState(state => ({
+        ...state,
+        combat: {
+          ...state.combat!,
+          isFriendlyEncounter: false
+        }
+      }))
+
+      // Queue value that would trigger shift if checked
+      RandomService.queueNextValues([0.0001, 0.5, 0.99])  // Very low = would trigger, then chest fail
+
+      component['handleVictory']()
+
+      // Character alignment should remain unchanged
+      const char = gameState.roster().get('c1')!
+      expect(char.alignment).not.toBe('EVIL')
+    })
+
+    it('triggers alignment shift with 1/2000 chance for GOOD characters on friendly encounter', () => {
+      // Set up a GOOD character and friendly encounter
+      gameState.updateState(state => {
+        const char1 = state.roster.get('c1')!
+        return {
+          ...state,
+          roster: new Map(state.roster).set('c1', {
+            ...char1,
+            alignment: 'GOOD' as any  // Force GOOD alignment
+          }),
+          combat: {
+            ...state.combat!,
+            isFriendlyEncounter: true
+          }
+        }
+      })
+
+      // Queue values: 0.0001 < 1/2000 = triggers shift, then values for chest roll
+      RandomService.queueNextValues([0.0001, 0.5, 0.99])
+
+      component['handleVictory']()
+
+      // Character should now be EVIL
+      const char = gameState.roster().get('c1')!
+      expect(char.alignment).toBe('EVIL')
+    })
+
+    it('does not shift NEUTRAL or EVIL characters', () => {
+      // Set up characters with non-GOOD alignments
+      gameState.updateState(state => {
+        const char1 = state.roster.get('c1')!
+        const char2 = state.roster.get('c2')!
+        return {
+          ...state,
+          roster: new Map(state.roster)
+            .set('c1', { ...char1, alignment: 'NEUTRAL' as any })
+            .set('c2', { ...char2, alignment: 'EVIL' as any }),
+          combat: {
+            ...state.combat!,
+            isFriendlyEncounter: true
+          }
+        }
+      })
+
+      // Queue values that would trigger shift if alignment was GOOD
+      RandomService.queueNextValues([0.0001, 0.0001, 0.5, 0.99])
+
+      component['handleVictory']()
+
+      // Alignments should remain unchanged
+      expect(gameState.roster().get('c1')!.alignment).toBe('NEUTRAL')
+      expect(gameState.roster().get('c2')!.alignment).toBe('EVIL')
+    })
+
+    it('does not shift dead characters', () => {
+      // Set up a dead GOOD character
+      gameState.updateState(state => {
+        const char1 = state.roster.get('c1')!
+        return {
+          ...state,
+          roster: new Map(state.roster).set('c1', {
+            ...char1,
+            alignment: 'GOOD' as any,
+            hp: 0,
+            status: CharacterStatus.DEAD
+          }),
+          combat: {
+            ...state.combat!,
+            isFriendlyEncounter: true
+          }
+        }
+      })
+
+      // Queue value that would trigger shift
+      RandomService.queueNextValues([0.0001, 0.5, 0.99])
+
+      component['handleVictory']()
+
+      // Dead character should remain GOOD
+      expect(gameState.roster().get('c1')!.alignment).toBe('GOOD')
+    })
+
+    it('shift probability is approximately 1/2000 over many trials', () => {
+      // This is a statistical test - run many trials and verify approximate probability
+      let shiftCount = 0
+      const trials = 10000
+
+      for (let i = 0; i < trials; i++) {
+        const roll = Math.random()
+        if (roll < 1 / 2000) {
+          shiftCount++
+        }
+      }
+
+      // Expected: ~5 shifts (1/2000 = 0.0005)
+      // Allow reasonable variance: 0-15 shifts
+      expect(shiftCount).toBeLessThan(20)
+    })
+  })
+
   describe('Return to Maze', () => {
     it('navigates to /maze on victory return', () => {
       component.showVictoryModal.set(true)

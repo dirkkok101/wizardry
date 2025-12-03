@@ -12,15 +12,16 @@ beforeAll(async () => {
 
 describe('EncounterService', () => {
   describe('rollRandomEncounter', () => {
-    it('returns true approximately 10% of the time', () => {
-      const rolls = Array.from({ length: 1000 }, () =>
+    it('returns true approximately 1% of the time (authentic Wizardry 1)', () => {
+      const rolls = Array.from({ length: 10000 }, () =>
         EncounterService.rollRandomEncounter()
       )
       const trueCount = rolls.filter(Boolean).length
 
-      // Expect ~100 true results ± 50 (statistical variance)
+      // Expect ~101 true results (1/99 = 1.01%) with reasonable variance
+      // Over 10000 rolls, expect approximately 101 triggers
       expect(trueCount).toBeGreaterThan(50)
-      expect(trueCount).toBeLessThan(150)
+      expect(trueCount).toBeLessThan(200)
     })
 
     it('returns boolean value', () => {
@@ -165,9 +166,10 @@ describe('EncounterService', () => {
         expect(weights).toEqual([60, 30, 10])
       })
 
-      it('returns correct weights for level 3', () => {
+      it('returns correct weights for level 3 (same as level 2 per spec)', () => {
         const weights = ENCOUNTER_CONFIG.getGroupCountWeights(3)
-        expect(weights).toEqual([40, 35, 20, 5])
+        // Level 3 has max 3 groups per Wizardry 1 spec, same as level 2
+        expect(weights).toEqual([60, 30, 10])
       })
 
       it('returns correct weights for level 4+', () => {

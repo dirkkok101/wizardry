@@ -5,6 +5,7 @@ import { SaveService } from '@services/SaveService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { DungeonMovementService } from '@services/DungeonMovementService';
 import { MessageService } from '@services/MessageService';
+import { FightMapService } from '@services/FightMapService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
@@ -80,6 +81,10 @@ export class CastleMenuComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Reset FIGHTMAP state when returning to castle
+    // (covers both stair exit from level 1 and LOKTOFEIT spell recall)
+    FightMapService.resetAll();
+
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.CASTLE_MENU

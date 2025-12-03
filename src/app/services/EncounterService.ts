@@ -3,6 +3,7 @@ import { MonsterGroup, MonsterInstance, ENCOUNTER_CONFIG } from '@models/Combat'
 import { MonsterService } from './MonsterService'
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { RandomService } from './RandomService'
+import { FixedEncounterConfig } from './EncounterTriggerService'
 
 type Alignment = 'good' | 'neutral' | 'evil'
 type MonsterClass = 'fighter' | 'mage' | 'priest' | 'thief' | 'giant' | 'mythical' |
@@ -56,10 +57,17 @@ const ENCOUNTER_TABLES: Record<number, EncounterTable> = {
 
 export const EncounterService = {
   /**
-   * Roll for random encounter (10% chance)
+   * Roll for random encounter (1% chance - authentic Wizardry 1)
+   *
+   * Original formula: (RANDOM MOD 99) === 35
+   * This gives exactly 1/99 = ~1.01% chance
+   *
+   * See: docs/research/door-kicking-encounter-mechanics.md Section 4
    */
   rollRandomEncounter(): boolean {
-    return RandomService.roll(0.10)
+    // Use EncounterTriggerService for authentic 1% rate
+    const roll = Math.floor(RandomService.random(0, 98)) // 0-98 (99 values)
+    return roll === 35 // Target value from original source
   },
 
   /**
@@ -133,6 +141,52 @@ export const EncounterService = {
     }
 
     return groups
+  },
+
+  /**
+   * Generate encounter from fixed encounter config (AUX values)
+   * Uses aux2 as base monster index and aux1 as random range
+   *
+   * Monster index formula: aux2 + random(0, aux1)
+   *
+   * This allows specific encounters like Murphy's Ghost to be deterministic
+   * while still allowing variation when aux1 > 0
+   *
+   * @param dungeonLevel - Current dungeon level (1-10)
+   * @param config - Fixed encounter AUX configuration
+   * @returns Array of MonsterGroups (1 group for fixed encounters)
+   */
+  generateFixedEncounter(dungeonLevel: number, config: FixedEncounterConfig): MonsterGroup[] {
+    const encounterTable = this.getEncounterTable(dungeonLevel)
+    const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
+
+    // Calculate monster index: aux2 + random(0, aux1)
+    let monsterIndex = config.aux2
+    if (config.aux1 > 0) {
+      monsterIndex += Math.floor(RandomService.random(0, config.aux1))
+    }
+
+    // Clamp to valid range
+    const clampedIndex = Math.min(monsterIndex, encounterTable.monsters.length - 1)
+
+    // Get monster ID from encounter table by index
+    const monsterId = encounterTable.monsters[clampedIndex].monsterId
+
+    // Generate monster instances (respecting level-based limits)
+    let monsters = MonsterService.generateMonsterGroup(monsterId)
+    if (monsters.length > maxMonstersPerGroup) {
+      monsters = monsters.slice(0, maxMonstersPerGroup)
+    }
+
+    // Fixed encounters are always a single group
+    const group: MonsterGroup = {
+      id: 'A',
+      monsters: monsters,
+      formation: this.determineFormation(monsters),
+      identified: false
+    }
+
+    return [group]
   },
 
   /**

@@ -72,6 +72,11 @@ export const TileDataSchema = z.object({
   isOneWay: z.boolean().optional(),
   destinations: z.array(DestinationSchema).optional(),
   locked: z.boolean().optional(),
+  // Fixed encounter AUX values (from original Wizardry)
+  // These control countdown-based fixed encounters
+  aux0: z.number().int().min(0).optional(),  // Countdown - decrements each visit, inactive at 0
+  aux1: z.number().int().min(0).optional(),  // Random range added to aux2
+  aux2: z.number().int().min(0).optional(),  // Base monster index into encounter table
 });
 
 export const StartPositionSchema = z.object({

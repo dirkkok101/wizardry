@@ -63,6 +63,7 @@ export interface MonsterInstance {
   // Special abilities
   canCall?: boolean     // Can call for help
   canFlee?: boolean     // Can flee when demoralized
+  regeneration?: number // HP healed per round (25% chance)
 }
 
 export type Combatant = Character | MonsterInstance
@@ -106,6 +107,12 @@ export interface CombatState {
   statusDurations: StatusDurations  // Track how many rounds each status effect lasts
   monstersDemoralized?: boolean  // True when monsters have lost morale (easier flee)
   surpriseState?: 'party' | 'monsters' | 'none'  // Surprise mechanics: 20% party, 16% monsters, 64% none
+  /**
+   * Track if party attacked a friendly encounter (per Apple II source)
+   * Used for alignment shift mechanic: 1/2000 chance GOOD→EVIL on victory
+   * See: docs/research/door-kicking-encounter-mechanics.md System 10
+   */
+  isFriendlyEncounter?: boolean
 }
 
 export interface AttackResult {
@@ -232,28 +239,26 @@ export const ENCOUNTER_CONFIG = {
   /**
    * Maximum number of monster groups by dungeon level
    * Level 1: 1-2 groups
-   * Level 2: 1-3 groups
-   * Level 3+: 1-4 groups
+   * Level 2-3: 1-3 groups
+   * Level 4+: 1-4 groups
    */
   getMaxGroupsForLevel(level: number): number {
     if (level === 1) return 2
-    if (level === 2) return 3
+    if (level <= 3) return 3
     return 4
   },
 
   /**
    * Get weighted probabilities for number of groups by dungeon level
-   * Returns array of weights for [1 group, 2 groups, 3 groups, 4 groups]
+   * Returns array of weights for [1 group, 2 groups, ...]
    *
    * Level 1: 85% single group, 15% two groups (multi-group is "rare")
-   * Level 2: 60% single, 30% two, 10% three groups
-   * Level 3: 40% single, 35% two, 20% three, 5% four groups
+   * Level 2-3: 60% single, 30% two, 10% three groups
    * Level 4+: 25% single, 35% two, 25% three, 15% four groups
    */
   getGroupCountWeights(level: number): number[] {
     if (level === 1) return [85, 15]  // Heavily favor single groups
-    if (level === 2) return [60, 30, 10]
-    if (level === 3) return [40, 35, 20, 5]
+    if (level <= 3) return [60, 30, 10]  // Max 3 groups for levels 2-3
     return [25, 35, 25, 15]  // Deeper levels have more multi-group encounters
   },
 
@@ -360,6 +365,7 @@ export type ActionSkipReason =
   | 'ALREADY_DEAD'          // Actor was dead at round start
   | 'ASLEEP'                // Actor is asleep
   | 'PARALYZED'             // Actor is paralyzed
+  | 'STONED'                // Actor is petrified
   | 'SILENCED'              // Actor is silenced (spell only)
   | 'SURPRISED'             // Actor surprised (round 1 only)
   | 'NO_LONGER_EXISTS'      // Monster removed from combat

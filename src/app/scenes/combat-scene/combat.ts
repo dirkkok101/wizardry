@@ -12,6 +12,7 @@ import { SceneType } from '@models/SceneType'
 import { RewardTier } from '@models/Chest'
 import { CombatState, CombatCommand, Combatant, CombatActionType, MonsterGroup, MonsterInstance, CombatRoundEvent, CombatRoundResult, CharacterUpdate } from '@models/Combat'
 import { Character } from '@models/Character'
+import { Alignment } from '@models/Alignment'
 import { MenuItem } from '@shared/components/menu/menu.component'
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
@@ -1481,6 +1482,47 @@ export class CombatComponent implements OnInit, OnDestroy {
     this.displayedAnimatingMessages.set([])
   }
 
+  /**
+   * Apply alignment shift for attacking friendly monsters (System 10)
+   * Per Apple II source: 1/2000 chance GOOD→EVIL on victory
+   * See: docs/research/door-kicking-encounter-mechanics.md
+   *
+   * @param roster - Current character roster
+   * @param partyMembers - IDs of characters in the party
+   * @returns Updated roster with any alignment shifts applied
+   */
+  private applyAlignmentShift(
+    roster: Map<string, Character>,
+    partyMembers: string[]
+  ): Map<string, Character> {
+    const ALIGNMENT_SHIFT_CHANCE = 1 / 2000  // 0.05% chance
+
+    let newRoster = new Map(roster)
+
+    for (const charId of partyMembers) {
+      const character = roster.get(charId)
+      if (!character) continue
+
+      // Only GOOD characters can shift (NEUTRAL and EVIL are already non-good)
+      if (character.alignment !== Alignment.GOOD) continue
+
+      // Only living characters can have their soul darkened
+      if (character.status !== CharacterStatus.OK) continue
+
+      // Roll for alignment shift
+      if (RandomService.roll(ALIGNMENT_SHIFT_CHANCE)) {
+        // Shift from GOOD to EVIL
+        newRoster.set(charId, {
+          ...character,
+          alignment: Alignment.EVIL
+        })
+        console.log(`[Combat] ${character.name}'s soul has darkened (GOOD → EVIL)`)
+      }
+    }
+
+    return newRoster
+  }
+
   private handleFlee(): void {
     console.log('[Combat] handleFlee() called - returning to maze')
 
@@ -1499,8 +1541,14 @@ export class CombatComponent implements OnInit, OnDestroy {
     if (!combat) return
 
     const party = this.party()
-    const roster = this.roster()
+    let roster = this.roster()
     const partyMembers = party.members
+
+    // Process alignment shift for friendly encounters (System 10)
+    // 1/2000 chance for GOOD characters to shift to EVIL
+    if (combat.isFriendlyEncounter) {
+      roster = this.applyAlignmentShift(roster, partyMembers)
+    }
 
     // Get all defeated monsters from all groups
     const allMonsters = CombatService.getAllMonsters(combat)

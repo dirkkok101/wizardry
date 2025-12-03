@@ -1,4 +1,5 @@
-import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls } from '@models/Dungeon'
+import { LevelData, TileData, Position, Direction, WallType, MovementValidation, TileWalls, TileType } from '@models/Dungeon'
+import { RoomTileInfo } from './FightMapService'
 import { ValidatedLevelDataSchema } from '@validation/dungeon-schemas'
 import { ZodError } from 'zod'
 
@@ -148,6 +149,77 @@ export const DungeonService = {
     }
 
     return directionMap[facing][moveDirection]
+  },
+
+  /**
+   * Get all room tiles from a level for FIGHTMAP initialization
+   * Room tiles are tiles with 'room' in their types array
+   */
+  getRoomTiles(level: LevelData): RoomTileInfo[] {
+    return level.tiles
+      .filter(tile => tile.types?.includes('room'))
+      .map(tile => ({
+        x: tile.x,
+        y: tile.y,
+        isRoom: true
+      }))
+  },
+
+  /**
+   * Check if a specific tile is a room tile
+   */
+  isRoomTile(level: LevelData, x: number, y: number): boolean {
+    const tile = this.getTile(level, x, y)
+    return tile.types?.includes('room') ?? false
+  },
+
+  /**
+   * Check if a tile has a fixed encounter configuration
+   */
+  hasFixedEncounter(level: LevelData, x: number, y: number): boolean {
+    const tile = this.getTile(level, x, y)
+    return tile.types?.includes('fixed_encounter') === true &&
+      tile.aux0 !== undefined &&
+      tile.aux0 > 0
+  },
+
+  /**
+   * Get fixed encounter configuration from tile data
+   * Returns undefined if tile has no fixed encounter or aux values
+   */
+  getFixedEncounterConfig(level: LevelData, x: number, y: number): { aux0: number; aux1: number; aux2: number } | undefined {
+    const tile = this.getTile(level, x, y)
+
+    // Must have fixed_encounter type and aux0 defined
+    if (!tile.types?.includes('fixed_encounter') || tile.aux0 === undefined) {
+      return undefined
+    }
+
+    return {
+      aux0: tile.aux0,
+      aux1: tile.aux1 ?? 0,  // Default to 0 (no random range)
+      aux2: tile.aux2 ?? 0   // Default to 0 (first monster in table)
+    }
+  },
+
+  /**
+   * Get all tiles with fixed encounter configurations
+   * Used during FIGHTMAP initialization to set up countdown tracking
+   */
+  getFixedEncounterTiles(level: LevelData): Array<{ x: number; y: number; aux0: number; aux1: number; aux2: number }> {
+    return level.tiles
+      .filter(tile =>
+        tile.types?.includes('fixed_encounter') &&
+        tile.aux0 !== undefined &&
+        tile.aux0 > 0
+      )
+      .map(tile => ({
+        x: tile.x,
+        y: tile.y,
+        aux0: tile.aux0!,
+        aux1: tile.aux1 ?? 0,
+        aux2: tile.aux2 ?? 0
+      }))
   },
 
   /**

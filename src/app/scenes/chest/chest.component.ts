@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
@@ -79,6 +80,7 @@ export class ChestComponent implements OnInit, OnDestroy {
   private readonly gameState = inject(GameStateService);
   private readonly navigation = inject(SceneNavigationService);
   private readonly logger = inject(LoggerService);
+  private readonly router = inject(Router);
   readonly messages = inject(MessageService);
 
   // Current mode in the state machine
@@ -628,11 +630,23 @@ export class ChestComponent implements OnInit, OnDestroy {
 
   /**
    * Handle alarm trap effect (triggers combat)
+   * Per Apple II reference: Alarm traps trigger combat encounter when returning to maze.
+   * Note: Original chest treasure is NOT retrieved - party gets Reward 2 from NEW encounter.
    */
   private handleAlarm(): void {
-    // TODO: Trigger combat encounter
+    // Set chest alarm flag - maze component will trigger encounter on return
+    this.gameState.updateState(state => ({
+      ...state,
+      chestAlarmActive: true,
+      pendingChest: undefined  // Clear chest - alarm means no treasure retrieval
+    }));
+
     this.lastActionMessage.update(m => m + ' Monsters approach!');
-    this.mode.set('RESULT_DISPLAY');
+
+    // Navigate back to maze after brief delay (for message display)
+    queueMicrotask(() => {
+      this.router.navigate(['/maze']);
+    });
   }
 
   /**

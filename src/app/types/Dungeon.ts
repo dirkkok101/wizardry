@@ -63,6 +63,10 @@ export interface TileData {
   isOneWay?: boolean
   destinations?: Destination[]  // For elevator
   locked?: boolean  // For door tiles (test compatibility)
+  // Fixed encounter AUX values (from original Wizardry)
+  aux0?: number  // Countdown - decrements each visit, inactive at 0
+  aux1?: number  // Random range added to aux2
+  aux2?: number  // Base monster index into encounter table
 }
 
 export interface LevelData {
