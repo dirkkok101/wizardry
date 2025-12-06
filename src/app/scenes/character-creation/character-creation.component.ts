@@ -518,6 +518,8 @@ export class CharacterCreationComponent implements OnInit {
     this.successMessage.set(null);
     this.errorMessage.set(null);
     this.isLocked.set(false);
+    // Reset first roll flag so next character gets max bonus points
+    CharacterCreationService.resetFirstRollFlag();
   }
 
   // Navigation: Advance to next step
@@ -589,6 +591,8 @@ export class CharacterCreationComponent implements OnInit {
   }
 
   cancelToTrainingGrounds() {
+    // Reset first roll flag so next character creation gets max bonus points
+    CharacterCreationService.resetFirstRollFlag();
     // Navigate back to training grounds scene
     this.router.navigate(['/training-grounds']);
   }
