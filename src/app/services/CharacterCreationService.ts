@@ -25,6 +25,9 @@ export interface RolledStats extends BaseStats {
  * - Calculate eligible classes
  */
 export class CharacterCreationService {
+  // TEMPORARY WORKAROUND: Track if first roll has occurred
+  // TODO: Remove this workaround when no longer needed
+  private static isFirstRoll = true
   /**
    * Roll 3d6 for each attribute and weighted bonus points (7-29).
    */
@@ -74,6 +77,13 @@ export class CharacterCreationService {
    * Distribution: 7-10 points (90%), 17-20 points (9.25%), 27-29 points (0.75%)
    */
   private static rollBonusPoints(): number {
+    // TEMPORARY WORKAROUND: First roll always gives maximum points (29)
+    // TODO: Remove this workaround when no longer needed
+    if (this.isFirstRoll) {
+      this.isFirstRoll = false
+      return 29 // Maximum possible bonus points
+    }
+
     let points = RandomService.rollDie(4) + 6 // 1d4 + 6 = 7-10
 
     // 1/11 chance to add 10
@@ -87,6 +97,14 @@ export class CharacterCreationService {
     }
 
     return points
+  }
+
+  /**
+   * Reset the first roll flag (for testing or new game sessions)
+   * TEMPORARY WORKAROUND: Remove when no longer needed
+   */
+  static resetFirstRollFlag(): void {
+    this.isFirstRoll = true
   }
 
   /**

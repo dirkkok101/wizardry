@@ -5,6 +5,12 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 describe('CharacterCreationService', () => {
+  beforeEach(() => {
+    // Reset the first roll workaround flag before each test
+    // This ensures tests get normal rolling behavior
+    CharacterCreationService.resetFirstRollFlag()
+  })
+
   beforeAll(async () => {
     // Mock fetch to load real data files from data/ directory
     global.fetch = jest.fn((url: string) => {
