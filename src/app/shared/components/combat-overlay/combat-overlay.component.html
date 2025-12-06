@@ -67,45 +67,66 @@
       </div>
     }
 
-    <!-- Victory Overlay -->
+    <!-- Victory Overlay (Full-Bleed Sprite with Overlay Content) -->
     @if (showVictoryOverlay()) {
       <div
-        class="victory-overlay"
+        class="victory-fullbleed"
+        [class.pyrrhic]="isPyrrhicVictory()"
         role="dialog"
         aria-labelledby="victory-heading"
         aria-modal="true"
       >
-        <span id="victory-heading" class="victory-text">VICTORY!</span>
+        <!-- Full-bleed sprite background -->
+        @if (!victorySpriteError()) {
+          <img
+            [src]="victorySpriteUrl()"
+            [alt]="isPyrrhicVictory() ? 'A costly victory' : 'Triumphant victory'"
+            class="victory-sprite-bg"
+            (error)="onVictorySpriteError()"
+          />
+        }
 
-        @if (victoryRewards(); as rewards) {
-          <div class="rewards-panel" role="status" aria-live="polite" aria-atomic="true">
-            <div class="rewards-grid">
-              <div class="reward-item xp">
-                <span class="reward-label">XP GAINED</span>
-                <span class="reward-value">{{ rewards.totalXP | number }}</span>
-                <span class="reward-detail">{{ rewards.xpPerCharacter | number }} per character</span>
+        <!-- Gradient overlay for text readability -->
+        <div class="victory-gradient-overlay"></div>
+
+        <!-- Content layer (title at top, rewards at bottom) -->
+        <div class="victory-content">
+          <!-- Title at top -->
+          <div class="victory-title-area">
+            <span id="victory-heading" class="victory-title">
+              {{ isPyrrhicVictory() ? 'V I C T O R Y . . .' : 'V I C T O R Y !' }}
+            </span>
+          </div>
+
+          <!-- Spacer to push rewards to bottom -->
+          <div class="victory-spacer"></div>
+
+          <!-- Rewards at bottom -->
+          @if (victoryRewards(); as rewards) {
+            <div class="victory-rewards-area" role="status" aria-live="polite" aria-atomic="true">
+              <div class="rewards-row">
+                <div class="reward-badge xp">
+                  <span class="reward-value">{{ rewards.totalXP | number }}</span>
+                  <span class="reward-label">XP</span>
+                </div>
+                <div class="reward-badge gold">
+                  <span class="reward-value">{{ rewards.totalGold | number }}</span>
+                  <span class="reward-label">GOLD</span>
+                </div>
               </div>
 
-              <div class="reward-item gold">
-                <span class="reward-label">GOLD FOUND</span>
-                <span class="reward-value">{{ rewards.totalGold | number }}</span>
-              </div>
-            </div>
-
-            @if (rewards.items.length > 0) {
-              <div class="items-section">
-                <span class="items-label">ITEMS FOUND</span>
-                <div class="items-list">
+              @if (rewards.items.length > 0) {
+                <div class="items-row">
                   @for (item of rewards.items; track item.itemId) {
-                    <span class="item-entry" [class.unidentified]="!item.identified">
-                      {{ item.identified ? item.itemName : '??? (Unidentified)' }}
+                    <span class="item-tag" [class.unidentified]="!item.identified">
+                      {{ item.identified ? item.itemName : '???' }}
                     </span>
                   }
                 </div>
-              </div>
-            }
-          </div>
-        }
+              }
+            </div>
+          }
+        </div>
       </div>
     }
 

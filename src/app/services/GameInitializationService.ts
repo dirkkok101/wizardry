@@ -16,6 +16,7 @@ import { TreasureDataLoader } from './TreasureDataLoader'
 import { NumericIdMappingLoader } from './NumericIdMappingLoader'
 import { StatModifierService } from './StatModifierService'
 import { LoadingProgressService, LoadingStep } from './LoadingProgressService'
+import { SpritePreloadService } from './SpritePreloadService'
 
 let gameState: GameState | null = null
 
@@ -209,6 +210,21 @@ async function initializeGame(progress?: LoadingProgressService): Promise<void> 
     }
   } else {
     console.log(`Loaded ${trapCount} traps successfully`)
+  }
+
+  // Preload sprites (after monster data is loaded so we know which sprites to load)
+  reportStep(progress, 'sprites')
+  console.log('Preloading sprites...')
+  await SpritePreloadService.preloadAllSprites()
+  completeStep(progress, 'sprites')
+
+  // Report sprite loading statistics
+  const spriteCount = SpritePreloadService.getPreloadedCount()
+  const failedSpriteCount = SpritePreloadService.getFailedCount()
+  if (failedSpriteCount > 0) {
+    console.warn(`Preloaded ${spriteCount} sprites (${failedSpriteCount} failed)`)
+  } else {
+    console.log(`Preloaded ${spriteCount} sprites successfully`)
   }
 
   console.log('Game data initialized successfully')

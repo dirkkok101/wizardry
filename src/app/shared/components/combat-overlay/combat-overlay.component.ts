@@ -8,6 +8,8 @@ import {
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { MonsterGroup } from '@models/Combat'
+import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { VictoryRewards, ItemDrop } from '@services/VictoryService'
 import {
   MonsterSpriteOverlayComponent,
@@ -65,6 +67,30 @@ export class CombatOverlayComponent {
   readonly showVictoryOverlay = input(false)
   readonly showDefeatOverlay = input(false)
   readonly victoryRewards = input<VictoryRewards | null>(null)
+  readonly partyCharacters = input<Character[]>([])
+
+  // Pyrrhic victory detection - statuses that indicate costly victory
+  private readonly PYRRHIC_STATUSES = [
+    CharacterStatus.DEAD,
+    CharacterStatus.ASHES,
+    CharacterStatus.LOST,
+    CharacterStatus.STONED
+  ]
+
+  // Computed: is this a pyrrhic victory (party member dead/stoned/ashes/lost)?
+  readonly isPyrrhicVictory = computed(() => {
+    return this.partyCharacters().some(char =>
+      this.PYRRHIC_STATUSES.includes(char.status)
+    )
+  })
+
+  // Computed: sprite path based on victory type
+  // Note: Angular serves data/ as /assets/ (configured in angular.json)
+  readonly victorySpriteUrl = computed(() => {
+    return this.isPyrrhicVictory()
+      ? '/assets/sprites/victory-pyrrhic.png'
+      : '/assets/sprites/victory-clean.png'
+  })
 
   // Outputs
   readonly groupClicked = output<'A' | 'B' | 'C' | 'D'>()
@@ -74,6 +100,7 @@ export class CombatOverlayComponent {
   readonly isAnimatingOut = signal(false)
   readonly spriteAnimations = signal<SpriteAnimationState[]>([])
   readonly damageEntries = signal<FloatingDamageEntry[]>([])
+  readonly victorySpriteError = signal(false)
 
   // Computed states
   readonly hasMonsters = computed(() => this.monsterGroups().length > 0)
@@ -83,6 +110,13 @@ export class CombatOverlayComponent {
    */
   onGroupClick(groupId: 'A' | 'B' | 'C' | 'D'): void {
     this.groupClicked.emit(groupId)
+  }
+
+  /**
+   * Handle victory sprite load error - shows fallback icon
+   */
+  onVictorySpriteError(): void {
+    this.victorySpriteError.set(true)
   }
 
   /**

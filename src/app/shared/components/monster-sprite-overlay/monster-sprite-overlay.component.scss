@@ -1,40 +1,59 @@
 // ============================================
-// MONSTER SPRITE OVERLAY - Theater Stage Style
+// MONSTER SPRITE OVERLAY - Dungeon Perspective
 // ============================================
-// Renders monster groups with dramatic positioning and animations.
-// Back row (depth) appears smaller/higher, front row appears larger/lower.
+// Renders monster groups with visual depth WITHOUT overlap:
+// - Back row: smaller, higher (further away), dimmer
+// - Front row: larger, lower (closer), brighter
+//
+// Both rows must remain fully visible and clickable!
 
 .monster-sprite-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 0.5rem;
+  padding-top: 3%;
+  gap: 1rem;
   pointer-events: none;
 }
 
 // ============================================
-// ROW CONTAINERS
+// ROW CONTAINERS - Vertical Stack (No Overlap)
 // ============================================
 
-.front-row,
-.back-row {
+.back-row,
+.front-row {
   display: flex;
   justify-content: center;
-  gap: 2rem;
-  width: 100%;
+  gap: 1.5rem;
   pointer-events: auto;
 }
 
+// Back row: Further away (top, smaller, dimmer)
 .back-row {
-  margin-top: -15%;
-  opacity: 0.85;
+  // Depth visual cues - appear "further down the corridor"
+  filter: brightness(0.8) contrast(0.95);
+
+  // Subtle shadow suggesting distance
+  .monster-card {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
 }
 
+// Front row: Closer (larger, brighter, more prominent)
 .front-row {
-  margin-top: 5%;
+  // Full brightness - these are "in your face"
+  filter: brightness(1);
+
+  .monster-card {
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 }
 
 // ============================================
@@ -47,7 +66,7 @@
   align-items: center;
   gap: 0.5rem;
   cursor: default;
-  transition: transform var(--transition-fast), filter var(--transition-fast);
+  transition: transform 0.15s ease, filter 0.15s ease;
   animation: monster-reveal 0.5s ease-out backwards;
 
   &.targetable {
@@ -55,7 +74,7 @@
 
     &:hover {
       transform: scale(1.05);
-      filter: brightness(1.1);
+      filter: brightness(1.2);
 
       .monster-card {
         box-shadow:
@@ -84,9 +103,16 @@
   }
 }
 
-// Back row - smaller cards with depth effect
+// Back row groups: smaller (depth perspective ~70%)
 .back-row-group .monster-card {
-  transform: scale(0.75);
+  width: 140px;
+  height: 140px;
+}
+
+// Front row groups: full size (closer to viewer)
+.front-row-group .monster-card {
+  width: 200px;
+  height: 200px;
 }
 
 // ============================================
@@ -95,16 +121,11 @@
 
 .monster-card {
   position: relative;
-  width: 200px;
-  height: 200px;
   border: 3px solid var(--group-color, var(--color-gold-dim));
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(10, 10, 10, 0.9);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: box-shadow var(--transition-fast);
+  background: rgba(10, 10, 10, 0.95);
+  transition: box-shadow 0.15s ease;
 }
 
 // ============================================
@@ -128,10 +149,15 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 5rem;
+  font-size: 4rem;
   font-weight: bold;
   color: var(--group-color, var(--color-gold-primary));
   text-shadow: 0 0 10px var(--group-color, var(--color-gold-glow));
+}
+
+// Back row placeholder: smaller font to match card size
+.back-row-group .sprite-placeholder {
+  font-size: 3rem;
 }
 
 // ============================================
@@ -145,7 +171,7 @@
   right: 0;
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem;
+  padding: 0.4rem;
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.7) 0%,
@@ -176,14 +202,14 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0.5rem;
+  padding: 0.4rem;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.85) 0%,
     transparent 100%
   );
   font-family: var(--font-body);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -198,7 +224,7 @@
 @keyframes monster-reveal {
   0% {
     opacity: 0;
-    transform: translateY(30px) scale(0.8);
+    transform: translateY(20px) scale(0.9);
   }
   100% {
     opacity: 1;
@@ -224,7 +250,6 @@
 // ============================================
 // DAMAGE FLASH ANIMATION
 // ============================================
-// Applied to .monster-card, uses higher specificity to override base styles
 
 .monster-group .monster-card.damage-flash {
   animation: damage-flash-anim 0.15s ease-out 3;
@@ -238,7 +263,6 @@
 // ============================================
 // DEATH ANIMATION
 // ============================================
-// Applied to .monster-card, uses higher specificity to override base styles
 
 .monster-group .monster-card.dying {
   animation: monster-death 0.6s ease-out forwards;
@@ -255,5 +279,20 @@
   100% {
     opacity: 0;
     transform: scale(0.5) rotate(15deg);
+  }
+}
+
+// ============================================
+// REDUCED MOTION
+// ============================================
+
+@media (prefers-reduced-motion: reduce) {
+  .monster-group {
+    animation: none;
+  }
+
+  .monster-card.damage-flash,
+  .monster-card.dying {
+    animation: none;
   }
 }

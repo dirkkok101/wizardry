@@ -102,6 +102,7 @@
   min-height: 0;
   width: 100%;          // Fill grid cell width
   align-self: start;    // Align to top of grid row
+  transition: opacity 0.2s ease;
 
   // Make character panel fill the entire side column
   app-character-panel {
@@ -110,6 +111,12 @@
     flex: 1;
     width: 100%;        // Fill panel width
     min-height: 0;
+  }
+
+  // Dimmed state during targeting mode (modal)
+  &.dimmed {
+    opacity: 0.3;
+    pointer-events: none;
   }
 
   @media (max-width: 767px) {

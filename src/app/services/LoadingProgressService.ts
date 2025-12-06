@@ -18,13 +18,14 @@ export interface LoadingProgress {
 // Loading steps with their weights (approximate % of total load time)
 export const LOADING_STEPS = {
   classes: { label: 'Loading classes...', weight: 3 },
-  spells: { label: 'Loading spells...', weight: 15 },
-  monsters: { label: 'Loading monsters...', weight: 30 },
+  spells: { label: 'Loading spells...', weight: 12 },
+  monsters: { label: 'Loading monsters...', weight: 25 },
   races: { label: 'Loading races...', weight: 2 },
   statModifiers: { label: 'Loading stat modifiers...', weight: 2 },
-  items: { label: 'Loading items...', weight: 30 },
+  items: { label: 'Loading items...', weight: 25 },
   traps: { label: 'Loading traps...', weight: 5 },
-  treasure: { label: 'Loading treasure...', weight: 10 },
+  treasure: { label: 'Loading treasure...', weight: 8 },
+  sprites: { label: 'Loading sprites...', weight: 15 },
   finalizing: { label: 'Initializing game...', weight: 3 }
 } as const
 

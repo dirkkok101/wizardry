@@ -190,6 +190,10 @@ export class CharacterPanelComponent {
       case 'moveDown': return '↓';
       case 'add': return 'Add';
       case 'buy': return 'Buy';
+      // Combat actions
+      case 'attack': return 'Attack';
+      case 'parry': return 'Parry';
+      case 'flee': return 'Flee';
       default: return actionType;
     }
   }
