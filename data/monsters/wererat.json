@@ -2,6 +2,7 @@
   "id": "wererat",
   "numericId": 26,
   "name": "Wererat",
+  "unidentifiedName": "Wererat",
   "level": 3,
   "monsterClass": "were",
   "numberAppearing": {

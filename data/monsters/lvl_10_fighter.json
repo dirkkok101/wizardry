@@ -2,6 +2,7 @@
   "id": "lvl_10_fighter",
   "numericId": 63,
   "name": "Lvl 10 Fighter",
+  "unidentifiedName": "Man in Armor",
   "level": 7,
   "monsterClass": "fighter",
   "numberAppearing": {

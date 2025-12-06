@@ -2,6 +2,7 @@
   "id": "flack",
   "numericId": 92,
   "name": "Flack",
+  "unidentifiedName": "Strange Animal",
   "level": 15,
   "monsterClass": "animal",
   "numberAppearing": {

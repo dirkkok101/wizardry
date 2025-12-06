@@ -2,6 +2,7 @@
   "id": "highwayman",
   "numericId": 6,
   "name": "Highwayman",
+  "unidentifiedName": "Man in Chain",
   "level": 3,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -36,10 +37,18 @@
     }
   ],
   "xp": 840,
-  "specialAbilities": ["multiple_attacks", "critical_hit", "can_sleep", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "critical_hit",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "zombie", "chance": 20 }
+  "partner": {
+    "monsterId": "zombie",
+    "chance": 20
+  }
 }

@@ -2,6 +2,7 @@
   "id": "lifestealer",
   "numericId": 59,
   "name": "Lifestealer",
+  "unidentifiedName": "Unseen Entity",
   "level": 5,
   "monsterClass": "undead",
   "numberAppearing": {

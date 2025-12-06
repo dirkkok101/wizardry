@@ -2,6 +2,7 @@
   "id": "priestess",
   "numericId": 29,
   "name": "Priestess",
+  "unidentifiedName": "Priest",
   "level": 3,
   "monsterClass": "priest",
   "numberAppearing": {

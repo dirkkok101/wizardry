@@ -2,6 +2,7 @@
   "id": "chimera",
   "numericId": 69,
   "name": "Chimera",
+  "unidentifiedName": "Strange Animal",
   "level": 9,
   "monsterClass": "animal",
   "numberAppearing": {

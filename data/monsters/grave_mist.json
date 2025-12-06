@@ -2,6 +2,7 @@
   "id": "grave_mist",
   "numericId": 34,
   "name": "Grave Mist",
+  "unidentifiedName": "Unseen Entity",
   "level": 4,
   "monsterClass": "undead",
   "numberAppearing": {

@@ -2,6 +2,7 @@
   "id": "troll",
   "numericId": 58,
   "name": "Troll",
+  "unidentifiedName": "Strange Animal",
   "level": 6,
   "monsterClass": "fighter",
   "numberAppearing": {

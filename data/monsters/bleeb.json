@@ -2,6 +2,7 @@
   "id": "bleeb",
   "numericId": 79,
   "name": "Bleeb",
+  "unidentifiedName": "Strange Animal",
   "level": 10,
   "monsterClass": "animal",
   "numberAppearing": {

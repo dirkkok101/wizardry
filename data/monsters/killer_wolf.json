@@ -2,6 +2,7 @@
   "id": "killer_wolf",
   "numericId": 42,
   "name": "Killer Wolf",
+  "unidentifiedName": "Animal",
   "level": 6,
   "monsterClass": "animal",
   "numberAppearing": {

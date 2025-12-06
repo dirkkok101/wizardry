@@ -2,6 +2,7 @@
   "id": "ogre",
   "numericId": 24,
   "name": "Ogre",
+  "unidentifiedName": "Ogre",
   "level": 4,
   "monsterClass": "fighter",
   "numberAppearing": {

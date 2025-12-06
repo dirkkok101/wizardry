@@ -2,6 +2,7 @@
   "id": "greater_demon",
   "numericId": 87,
   "name": "Greater Demon",
+  "unidentifiedName": "Demon",
   "level": 11,
   "monsterClass": "demon",
   "numberAppearing": {

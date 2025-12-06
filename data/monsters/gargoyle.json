@@ -2,6 +2,7 @@
   "id": "gargoyle",
   "numericId": 33,
   "name": "Gargoyle",
+  "unidentifiedName": "Gargoyle",
   "level": 4,
   "monsterClass": "enchanted",
   "numberAppearing": {
@@ -37,9 +38,14 @@
   ],
   "xp": 2435,
   "spellResist": 50,
-  "specialAbilities": ["multiple_attacks"],
+  "specialAbilities": [
+    "multiple_attacks"
+  ],
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,

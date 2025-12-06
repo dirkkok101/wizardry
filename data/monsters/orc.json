@@ -2,6 +2,7 @@
   "id": "orc",
   "numericId": 1,
   "name": "Orc",
+  "unidentifiedName": "Small Humanoid",
   "level": 1,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -21,12 +22,21 @@
     }
   ],
   "xp": 235,
-  "specialAbilities": ["can_sleep", "can_run"],
+  "specialAbilities": [
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "kobold", "chance": 20 }
+  "partner": {
+    "monsterId": "kobold",
+    "chance": 20
+  }
 }

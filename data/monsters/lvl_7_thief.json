@@ -2,6 +2,7 @@
   "id": "lvl_7_thief",
   "numericId": 65,
   "name": "Lvl 7 Thief",
+  "unidentifiedName": "Man in Leather",
   "level": 7,
   "monsterClass": "thief",
   "numberAppearing": {

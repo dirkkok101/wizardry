@@ -2,6 +2,7 @@
   "id": "lvl_8_fighter",
   "numericId": 73,
   "name": "Lvl 8 Fighter",
+  "unidentifiedName": "Man in Armor",
   "level": 8,
   "monsterClass": "fighter",
   "numberAppearing": {

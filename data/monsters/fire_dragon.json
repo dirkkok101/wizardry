@@ -2,6 +2,7 @@
   "id": "fire_dragon",
   "numericId": 81,
   "name": "Fire Dragon",
+  "unidentifiedName": "Dragon",
   "level": 12,
   "monsterClass": "dragon",
   "numberAppearing": {
@@ -34,11 +35,19 @@
   "spellLevels": {
     "mage": 5
   },
-  "spells": ["madalto", "lakanito", "makanito"],
+  "spells": [
+    "madalto",
+    "lakanito",
+    "makanito"
+  ],
   "breathWeapon": {
     "type": "fire"
   },
-  "specialAbilities": ["multiple_attacks", "breath_weapon", "spellcasting"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "breath_weapon",
+    "spellcasting"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

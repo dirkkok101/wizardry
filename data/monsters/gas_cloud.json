@@ -2,6 +2,7 @@
   "id": "gas_cloud",
   "numericId": 9,
   "name": "Gas Cloud",
+  "unidentifiedName": "Gas Cloud",
   "level": 2,
   "monsterClass": "enchanted",
   "numberAppearing": {
@@ -24,11 +25,21 @@
   "spellLevels": {
     "mage": 2
   },
-  "spells": ["dilto", "halito"],
-  "specialAbilities": ["spellcasting", "paralyze", "can_run"],
+  "spells": [
+    "dilto",
+    "halito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "paralyze",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "bubbly_slime", "chance": 15 }
+  "partner": {
+    "monsterId": "bubbly_slime",
+    "chance": 15
+  }
 }

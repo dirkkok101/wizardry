@@ -2,6 +2,7 @@
   "id": "lvl_8_ninja",
   "numericId": 66,
   "name": "Lvl 8 Ninja",
+  "unidentifiedName": "Monk",
   "level": 8,
   "monsterClass": "fighter",
   "numberAppearing": {

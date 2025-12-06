@@ -2,6 +2,7 @@
   "id": "zombie",
   "numericId": 7,
   "name": "Zombie",
+  "unidentifiedName": "Weird Humanoid",
   "level": 1,
   "monsterClass": "undead",
   "numberAppearing": {
@@ -21,10 +22,15 @@
     }
   ],
   "xp": 520,
-  "specialAbilities": ["paralyze"],
+  "specialAbilities": [
+    "paralyze"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false,
-  "partner": { "monsterId": "creeping_crud", "chance": 20 }
+  "partner": {
+    "monsterId": "creeping_crud",
+    "chance": 20
+  }
 }

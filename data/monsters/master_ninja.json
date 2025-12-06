@@ -2,6 +2,7 @@
   "id": "master_ninja",
   "numericId": 76,
   "name": "Master Ninja",
+  "unidentifiedName": "Man in Robes",
   "level": 10,
   "monsterClass": "fighter",
   "numberAppearing": {

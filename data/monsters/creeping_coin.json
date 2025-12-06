@@ -2,6 +2,7 @@
   "id": "creeping_coin",
   "numericId": 12,
   "name": "Creeping Coin?",
+  "unidentifiedName": "Small Object",
   "level": 1,
   "monsterClass": "enchanted",
   "numberAppearing": {
@@ -24,16 +25,37 @@
   "breathWeapon": {
     "type": "drain"
   },
-  "specialAbilities": ["breath_weapon", "call_help"],
+  "specialAbilities": [
+    "breath_weapon",
+    "call_help"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 },
-    { "type": "poison", "value": 100 },
-    { "type": "drain", "value": 100 },
-    { "type": "stone", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "poison",
+      "value": 100
+    },
+    {
+      "type": "drain",
+      "value": 100
+    },
+    {
+      "type": "stone",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false,
-  "partner": { "monsterId": "creeping_coin", "chance": 100 }
+  "partner": {
+    "monsterId": "creeping_coin",
+    "chance": 100
+  }
 }

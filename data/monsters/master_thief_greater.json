@@ -2,6 +2,7 @@
   "id": "master_thief_greater",
   "numericId": 55,
   "name": "Master Thief",
+  "unidentifiedName": "Man in Leather",
   "level": 6,
   "monsterClass": "thief",
   "numberAppearing": {

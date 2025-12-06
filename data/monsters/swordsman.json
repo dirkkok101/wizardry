@@ -2,6 +2,7 @@
   "id": "swordsman",
   "numericId": 30,
   "name": "Swordsman",
+  "unidentifiedName": "Man in Armor",
   "level": 3,
   "monsterClass": "fighter",
   "numberAppearing": {

@@ -2,6 +2,7 @@
   "id": "boring_beetle",
   "numericId": 27,
   "name": "Boring Beetle",
+  "unidentifiedName": "Insect",
   "level": 5,
   "monsterClass": "insect",
   "numberAppearing": {

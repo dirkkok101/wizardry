@@ -2,6 +2,7 @@
   "id": "wyvern",
   "numericId": 61,
   "name": "Wyvern",
+  "unidentifiedName": "Strange Animal",
   "level": 7,
   "monsterClass": "animal",
   "numberAppearing": {

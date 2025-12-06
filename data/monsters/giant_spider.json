@@ -2,6 +2,7 @@
   "id": "giant_spider",
   "numericId": 44,
   "name": "Giant Spider",
+  "unidentifiedName": "Insect",
   "level": 4,
   "monsterClass": "insect",
   "numberAppearing": {

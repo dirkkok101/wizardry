@@ -2,6 +2,7 @@
   "id": "lvl_1_mage",
   "numericId": 10,
   "name": "Lvl 1 Mage",
+  "unidentifiedName": "Man in Robes",
   "level": 1,
   "monsterClass": "mage",
   "numberAppearing": {
@@ -24,11 +25,21 @@
   "spellLevels": {
     "mage": 1
   },
-  "spells": ["katino", "halito"],
-  "specialAbilities": ["spellcasting", "can_sleep", "can_run"],
+  "spells": [
+    "katino",
+    "halito"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "highwayman", "chance": 20 }
+  "partner": {
+    "monsterId": "highwayman",
+    "chance": 20
+  }
 }

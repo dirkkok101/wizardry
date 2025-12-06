@@ -2,6 +2,7 @@
   "id": "gas_dragon",
   "numericId": 28,
   "name": "Gas Dragon",
+  "unidentifiedName": "Dragon",
   "level": 5,
   "monsterClass": "dragon",
   "numberAppearing": {

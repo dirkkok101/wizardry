@@ -2,6 +2,7 @@
   "id": "frost_giant",
   "numericId": 80,
   "name": "Frost Giant",
+  "unidentifiedName": "Giant",
   "level": 1,
   "monsterClass": "giant",
   "numberAppearing": {

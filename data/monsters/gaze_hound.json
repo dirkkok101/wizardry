@@ -2,6 +2,7 @@
   "id": "gaze_hound",
   "numericId": 56,
   "name": "Gaze Hound",
+  "unidentifiedName": "Strange Animal",
   "level": 4,
   "monsterClass": "animal",
   "numberAppearing": {

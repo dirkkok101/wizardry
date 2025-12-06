@@ -2,6 +2,7 @@
   "id": "rogue",
   "numericId": 4,
   "name": "Rogue",
+  "unidentifiedName": "Scruffy Man",
   "level": 2,
   "monsterClass": "thief",
   "numberAppearing": {
@@ -26,10 +27,17 @@
     }
   ],
   "xp": 380,
-  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "orc", "chance": 20 }
+  "partner": {
+    "monsterId": "orc",
+    "chance": 20
+  }
 }

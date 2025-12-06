@@ -2,6 +2,7 @@
   "id": "champ_samurai",
   "numericId": 53,
   "name": "Champ Samurai",
+  "unidentifiedName": "Man in Armor",
   "level": 10,
   "monsterClass": "fighter",
   "numberAppearing": {

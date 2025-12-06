@@ -2,6 +2,7 @@
   "id": "kobold",
   "numericId": 2,
   "name": "Kobold",
+  "unidentifiedName": "Small Humanoid",
   "level": 2,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -26,13 +27,26 @@
     }
   ],
   "xp": 415,
-  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [
-    { "type": "physical", "value": 100 },
-    { "type": "cold", "value": 100 }
+    {
+      "type": "physical",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "orc", "chance": 15 }
+  "partner": {
+    "monsterId": "orc",
+    "chance": 15
+  }
 }

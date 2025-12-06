@@ -2,6 +2,7 @@
   "id": "vampire_lord",
   "numericId": 95,
   "name": "Vampire Lord",
+  "unidentifiedName": "Unseen Entity",
   "level": 20,
   "monsterClass": "undead",
   "numberAppearing": {

@@ -2,6 +2,7 @@
   "id": "poison_giant",
   "numericId": 88,
   "name": "Poison Giant",
+  "unidentifiedName": "Giant",
   "level": 1,
   "monsterClass": "giant",
   "numberAppearing": {
