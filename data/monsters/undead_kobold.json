@@ -2,6 +2,7 @@
   "id": "undead_kobold",
   "numericId": 3,
   "name": "Undead Kobold",
+  "unidentifiedName": "Skeleton",
   "level": 2,
   "monsterClass": "undead",
   "numberAppearing": {
@@ -23,11 +24,20 @@
   "xp": 230,
   "specialAbilities": [],
   "resistances": [
-    { "type": "fire", "value": 100 },
-    { "type": "cold", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    },
+    {
+      "type": "cold",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false,
-  "partner": { "monsterId": "kobold", "chance": 10 }
+  "partner": {
+    "monsterId": "kobold",
+    "chance": 10
+  }
 }

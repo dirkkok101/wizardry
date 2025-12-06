@@ -2,6 +2,7 @@
   "id": "ogre_lord",
   "numericId": 57,
   "name": "Ogre Lord",
+  "unidentifiedName": "Ogre",
   "level": 8,
   "monsterClass": "mage",
   "numberAppearing": {

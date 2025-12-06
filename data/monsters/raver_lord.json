@@ -2,6 +2,7 @@
   "id": "raver_lord",
   "numericId": 90,
   "name": "Raver Lord",
+  "unidentifiedName": "Man in Armor",
   "level": 15,
   "monsterClass": "animal",
   "numberAppearing": {

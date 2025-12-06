@@ -2,6 +2,7 @@
   "id": "murphy_ghost",
   "numericId": 77,
   "name": "Murphy's Ghost",
+  "unidentifiedName": "Unseen Entity",
   "level": 10,
   "monsterClass": "undead",
   "numberAppearing": {

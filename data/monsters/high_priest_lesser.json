@@ -2,6 +2,7 @@
   "id": "high_priest_lesser",
   "numericId": 52,
   "name": "High Priest",
+  "unidentifiedName": "Priest",
   "level": 8,
   "monsterClass": "priest",
   "numberAppearing": {

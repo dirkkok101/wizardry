@@ -2,6 +2,7 @@
   "id": "nightstalker",
   "numericId": 60,
   "name": "Nightstalker",
+  "unidentifiedName": "Unseen Entity",
   "level": 5,
   "monsterClass": "undead",
   "numberAppearing": {

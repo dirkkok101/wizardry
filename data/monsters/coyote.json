@@ -2,6 +2,7 @@
   "id": "coyote",
   "numericId": 17,
   "name": "Coyote",
+  "unidentifiedName": "Mangy Dog",
   "level": 4,
   "monsterClass": "animal",
   "numberAppearing": {

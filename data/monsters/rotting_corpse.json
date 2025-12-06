@@ -2,6 +2,7 @@
   "id": "rotting_corpse",
   "numericId": 23,
   "name": "Rotting Corpse",
+  "unidentifiedName": "Weird Humanoid",
   "level": 2,
   "monsterClass": "undead",
   "numberAppearing": {

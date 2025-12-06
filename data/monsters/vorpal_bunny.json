@@ -2,6 +2,7 @@
   "id": "vorpal_bunny",
   "numericId": 14,
   "name": "Vorpal Bunny",
+  "unidentifiedName": "Rabbit",
   "level": 3,
   "monsterClass": "animal",
   "numberAppearing": {
@@ -26,12 +27,22 @@
     }
   ],
   "xp": 735,
-  "specialAbilities": ["multiple_attacks", "critical_hit", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "critical_hit",
+    "can_run"
+  ],
   "resistances": [
-    { "type": "cold", "value": 100 }
+    {
+      "type": "cold",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "capybara", "chance": 20 }
+  "partner": {
+    "monsterId": "capybara",
+    "chance": 20
+  }
 }

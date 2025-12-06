@@ -2,6 +2,7 @@
   "id": "lesser_demon",
   "numericId": 68,
   "name": "Lesser Demon",
+  "unidentifiedName": "Demon",
   "level": 10,
   "monsterClass": "demon",
   "numberAppearing": {

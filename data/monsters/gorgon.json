@@ -2,6 +2,7 @@
   "id": "gorgon",
   "numericId": 71,
   "name": "Gorgon",
+  "unidentifiedName": "Strange Animal",
   "level": 8,
   "monsterClass": "mythical",
   "numberAppearing": {

@@ -2,6 +2,7 @@
   "id": "attack_dog",
   "numericId": 32,
   "name": "Attack Dog",
+  "unidentifiedName": "Animal",
   "level": 4,
   "monsterClass": "animal",
   "numberAppearing": {

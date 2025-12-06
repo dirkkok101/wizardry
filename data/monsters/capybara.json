@@ -2,6 +2,7 @@
   "id": "capybara",
   "numericId": 15,
   "name": "Capybara",
+  "unidentifiedName": "Giant Rodent",
   "level": 4,
   "monsterClass": "animal",
   "numberAppearing": {

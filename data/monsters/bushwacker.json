@@ -2,6 +2,7 @@
   "id": "bushwacker",
   "numericId": 5,
   "name": "Bushwacker",
+  "unidentifiedName": "Scruffy Man",
   "level": 3,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -26,10 +27,17 @@
     }
   ],
   "xp": 620,
-  "specialAbilities": ["multiple_attacks", "can_sleep", "can_run"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "zombie", "chance": 20 }
+  "partner": {
+    "monsterId": "zombie",
+    "chance": 20
+  }
 }

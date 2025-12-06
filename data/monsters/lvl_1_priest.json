@@ -2,6 +2,7 @@
   "id": "lvl_1_priest",
   "numericId": 11,
   "name": "Lvl 1 Priest",
+  "unidentifiedName": "Priest",
   "level": 1,
   "monsterClass": "priest",
   "numberAppearing": {
@@ -24,11 +25,21 @@
   "spellLevels": {
     "priest": 1
   },
-  "spells": ["dios", "badios"],
-  "specialAbilities": ["spellcasting", "can_sleep", "can_run"],
+  "spells": [
+    "dios",
+    "badios"
+  ],
+  "specialAbilities": [
+    "spellcasting",
+    "can_sleep",
+    "can_run"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": true,
-  "partner": { "monsterId": "rogue", "chance": 25 }
+  "partner": {
+    "monsterId": "rogue",
+    "chance": 25
+  }
 }

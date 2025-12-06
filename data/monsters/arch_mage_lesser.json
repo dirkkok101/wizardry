@@ -2,6 +2,7 @@
   "id": "arch_mage_lesser",
   "numericId": 54,
   "name": "Arch Mage",
+  "unidentifiedName": "Man in Robes",
   "level": 8,
   "monsterClass": "mage",
   "numberAppearing": {

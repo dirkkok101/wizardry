@@ -2,6 +2,7 @@
   "id": "lvl_7_fighter",
   "numericId": 100,
   "name": "Lvl 7 Fighter",
+  "unidentifiedName": "Man in Armor",
   "level": 7,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -26,7 +27,9 @@
     }
   ],
   "xp": 1900,
-  "specialAbilities": ["multiple_attacks"],
+  "specialAbilities": [
+    "multiple_attacks"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

@@ -2,6 +2,7 @@
   "id": "high_ninja",
   "numericId": 97,
   "name": "High Ninja",
+  "unidentifiedName": "Man in Kimono",
   "level": 12,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -31,7 +32,10 @@
     }
   ],
   "xp": 1600,
-  "specialAbilities": ["multiple_attacks", "critical_hit"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "critical_hit"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,

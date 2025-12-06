@@ -2,6 +2,7 @@
   "id": "spirit",
   "numericId": 43,
   "name": "Spirit",
+  "unidentifiedName": "Unseen Entity",
   "level": 7,
   "monsterClass": "mythical",
   "numberAppearing": {

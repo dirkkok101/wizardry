@@ -2,6 +2,7 @@
   "id": "bubbly_slime",
   "numericId": 0,
   "name": "Bubbly Slime",
+  "unidentifiedName": "Slime",
   "level": 1,
   "monsterClass": "animal",
   "numberAppearing": {
@@ -21,13 +22,24 @@
     }
   ],
   "xp": 55,
-  "specialAbilities": ["can_sleep"],
+  "specialAbilities": [
+    "can_sleep"
+  ],
   "resistances": [
-    { "type": "physical", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "physical",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false,
-  "partner": { "monsterId": "orc", "chance": 10 }
+  "partner": {
+    "monsterId": "orc",
+    "chance": 10
+  }
 }

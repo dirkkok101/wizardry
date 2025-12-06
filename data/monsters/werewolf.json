@@ -2,6 +2,7 @@
   "id": "werewolf",
   "numericId": 36,
   "name": "Werewolf",
+  "unidentifiedName": "Wolf",
   "level": 4,
   "monsterClass": "were",
   "numberAppearing": {

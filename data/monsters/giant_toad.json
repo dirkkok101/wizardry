@@ -2,6 +2,7 @@
   "id": "giant_toad",
   "numericId": 16,
   "name": "Giant Toad",
+  "unidentifiedName": "Amphibian",
   "level": 4,
   "monsterClass": "animal",
   "numberAppearing": {

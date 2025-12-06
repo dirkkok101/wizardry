@@ -2,6 +2,7 @@
   "id": "high_wizard",
   "numericId": 83,
   "name": "High Wizard",
+  "unidentifiedName": "Man in Robes",
   "level": 12,
   "monsterClass": "mage",
   "numberAppearing": {

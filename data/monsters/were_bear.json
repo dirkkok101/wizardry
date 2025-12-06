@@ -2,6 +2,7 @@
   "id": "were_bear",
   "numericId": 21,
   "name": "Were Bear",
+  "unidentifiedName": "Bear",
   "level": 5,
   "monsterClass": "animal",
   "numberAppearing": {

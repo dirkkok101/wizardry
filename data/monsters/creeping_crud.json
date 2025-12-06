@@ -2,6 +2,7 @@
   "id": "creeping_crud",
   "numericId": 8,
   "name": "Creeping Crud",
+  "unidentifiedName": "Slime",
   "level": 3,
   "monsterClass": "animal",
   "numberAppearing": {
@@ -21,13 +22,24 @@
     }
   ],
   "xp": 550,
-  "specialAbilities": ["poison"],
+  "specialAbilities": [
+    "poison"
+  ],
   "resistances": [
-    { "type": "cold", "value": 100 },
-    { "type": "magic", "value": 100 }
+    {
+      "type": "cold",
+      "value": 100
+    },
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false,
-  "partner": { "monsterId": "bubbly_slime", "chance": 24 }
+  "partner": {
+    "monsterId": "bubbly_slime",
+    "chance": 24
+  }
 }

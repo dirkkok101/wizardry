@@ -2,6 +2,7 @@
   "id": "earth_giant",
   "numericId": 67,
   "name": "Earth Giant",
+  "unidentifiedName": "Giant",
   "level": 1,
   "monsterClass": "giant",
   "numberAppearing": {
@@ -27,9 +28,14 @@
   ],
   "xp": 20435,
   "spellResist": 85,
-  "specialAbilities": ["multiple_attacks"],
+  "specialAbilities": [
+    "multiple_attacks"
+  ],
   "resistances": [
-    { "type": "magic", "value": 100 }
+    {
+      "type": "magic",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,

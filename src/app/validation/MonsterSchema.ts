@@ -97,6 +97,9 @@ export const MonsterSchema = z.object({
   // Original game monster ID (0-100) for reference/sorting
   numericId: z.number().int().min(0).max(100),
   name: z.string().min(1),
+  // Unidentified name shown before Latumapic spell reveals true identity
+  // Generic category names like "Man in Armor", "Dragon", "Giant", "Undead", etc.
+  unidentifiedName: z.string().min(1),
   level: z.number().int().min(1).max(25), // Max 25 for Maelific (25d4 HP)
   numberAppearing: NumberAppearingSchema,
   hp: HpRangeSchema,

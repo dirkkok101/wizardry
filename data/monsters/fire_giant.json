@@ -2,6 +2,7 @@
   "id": "fire_giant",
   "numericId": 70,
   "name": "Fire Giant",
+  "unidentifiedName": "Giant",
   "level": 11,
   "monsterClass": "giant",
   "numberAppearing": {

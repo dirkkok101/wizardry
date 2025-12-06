@@ -2,6 +2,7 @@
   "id": "lvl_1_ninja",
   "numericId": 13,
   "name": "Lvl 1 Ninja",
+  "unidentifiedName": "Kimonoed Man",
   "level": 2,
   "monsterClass": "fighter",
   "numberAppearing": {
@@ -31,10 +32,17 @@
     }
   ],
   "xp": 600,
-  "specialAbilities": ["multiple_attacks", "critical_hit", "can_sleep"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "critical_hit",
+    "can_sleep"
+  ],
   "resistances": [],
   "regeneration": 0,
   "isBoss": false,
   "canFlee": false,
-  "partner": { "monsterId": "lvl_1_ninja", "chance": 20 }
+  "partner": {
+    "monsterId": "lvl_1_ninja",
+    "chance": 20
+  }
 }

@@ -2,6 +2,7 @@
   "id": "dragon_puppy",
   "numericId": 35,
   "name": "Dragon Puppy",
+  "unidentifiedName": "Animal",
   "level": 5,
   "monsterClass": "dragon",
   "numberAppearing": {

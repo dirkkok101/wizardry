@@ -2,6 +2,7 @@
   "id": "lvl_8_priest",
   "numericId": 62,
   "name": "Lvl 8 Priest",
+  "unidentifiedName": "Priest",
   "level": 7,
   "monsterClass": "priest",
   "numberAppearing": {

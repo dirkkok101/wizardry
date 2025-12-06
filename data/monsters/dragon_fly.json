@@ -2,6 +2,7 @@
   "id": "dragon_fly",
   "numericId": 22,
   "name": "Dragon Fly",
+  "unidentifiedName": "Fly",
   "level": 2,
   "monsterClass": "dragon",
   "numberAppearing": {
@@ -35,9 +36,16 @@
   "breathWeapon": {
     "type": "fire"
   },
-  "specialAbilities": ["multiple_attacks", "breath_weapon", "can_sleep"],
+  "specialAbilities": [
+    "multiple_attacks",
+    "breath_weapon",
+    "can_sleep"
+  ],
   "resistances": [
-    { "type": "fire", "value": 100 }
+    {
+      "type": "fire",
+      "value": 100
+    }
   ],
   "regeneration": 0,
   "isBoss": false,

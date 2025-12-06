@@ -2,6 +2,7 @@
   "id": "weretiger",
   "numericId": 45,
   "name": "Weretiger",
+  "unidentifiedName": "Animal",
   "level": 5,
   "monsterClass": "were",
   "numberAppearing": {

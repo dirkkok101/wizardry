@@ -2,6 +2,7 @@
   "id": "lvl_7_mage_deep",
   "numericId": 64,
   "name": "Lvl 7 Mage",
+  "unidentifiedName": "Man in Robes",
   "level": 7,
   "monsterClass": "mage",
   "numberAppearing": {

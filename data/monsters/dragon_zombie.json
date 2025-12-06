@@ -2,6 +2,7 @@
   "id": "dragon_zombie",
   "numericId": 89,
   "name": "Dragon Zombie",
+  "unidentifiedName": "Dragon",
   "level": 12,
   "monsterClass": "undead",
   "numberAppearing": {
