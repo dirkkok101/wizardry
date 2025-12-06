@@ -1,0 +1,268 @@
+// ============================================
+// MONSTER SPRITE OVERLAY - Theater Stage Style
+// ============================================
+// Renders monster groups with dramatic positioning and animations.
+// Back row (depth) appears smaller/higher, front row appears larger/lower.
+
+.monster-sprite-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+// ============================================
+// ROW CONTAINERS
+// ============================================
+
+.front-row,
+.back-row {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.back-row {
+  margin-top: -15%;
+  opacity: 0.85;
+}
+
+.front-row {
+  margin-top: 5%;
+}
+
+// ============================================
+// MONSTER GROUP - Individual Group Container
+// ============================================
+
+.monster-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+  transition: transform var(--transition-fast), filter var(--transition-fast);
+  animation: monster-reveal 0.5s ease-out backwards;
+
+  &.targetable {
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.1);
+      filter: brightness(1.2);
+
+      .sprite-placeholder {
+        box-shadow: 0 0 20px var(--group-color, var(--color-gold-primary));
+      }
+    }
+  }
+
+  &.selected {
+    transform: scale(1.15);
+
+    .sprite-placeholder {
+      box-shadow:
+        0 0 20px var(--group-color, var(--color-gold-primary)),
+        0 0 40px rgba(244, 196, 48, 0.4);
+      animation: selected-pulse 1s ease-in-out infinite;
+    }
+  }
+
+  &.defeated {
+    opacity: 0.3;
+    filter: grayscale(1);
+    pointer-events: none;
+  }
+}
+
+// Front row - larger sprites
+.front-row-group {
+  .sprite-stack {
+    transform: scale(1);
+  }
+}
+
+// Back row - smaller sprites with depth effect
+.back-row-group {
+  .sprite-stack {
+    transform: scale(0.7);
+  }
+
+  .group-badge {
+    font-size: var(--font-size-xs);
+  }
+}
+
+// ============================================
+// SPRITE STACK - Overlapping Monster Sprites
+// ============================================
+
+.sprite-stack {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+}
+
+.sprite-container {
+  position: relative;
+  margin-left: calc(var(--stack-index, 0) * -20px);
+  z-index: calc(3 - var(--stack-index, 0));
+  transition: opacity 0.3s ease;
+
+  &.dead {
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+}
+
+// ============================================
+// SPRITE PLACEHOLDER - CSS Monster Icon
+// ============================================
+
+.sprite-placeholder {
+  width: 80px;
+  height: 100px;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0.9) 0%,
+    rgba(20, 20, 20, 0.95) 100%
+  );
+  border: 3px solid var(--group-color, var(--color-gold-dim));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--group-color, var(--color-gold-primary));
+  text-shadow: 0 0 10px var(--group-color, var(--color-gold-glow));
+  transition: box-shadow var(--transition-fast);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+// ============================================
+// OVERFLOW INDICATOR - For Large Groups
+// ============================================
+
+.overflow-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-bg-darkest);
+  border: 2px solid var(--group-color, var(--color-gold-dim));
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--group-color, var(--color-gold-primary));
+}
+
+// ============================================
+// GROUP BADGE - ID and Info Display
+// ============================================
+// Wizardry 6-style badge: [A] 3 ORCS
+// Group ID is color-coded, monster name is prominent
+
+.group-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid var(--group-color, var(--color-border));
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  .group-id {
+    color: var(--group-color, var(--color-gold-primary));
+    font-weight: bold;
+    // Add brackets around group ID for clearer visual separation
+    &::before { content: '['; }
+    &::after { content: ']'; }
+  }
+
+  .group-info {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+}
+
+// ============================================
+// ANIMATION KEYFRAMES
+// ============================================
+
+@keyframes monster-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes selected-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px var(--group-color, var(--color-gold-primary)),
+      0 0 40px rgba(244, 196, 48, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 30px var(--group-color, var(--color-gold-primary)),
+      0 0 60px rgba(244, 196, 48, 0.6);
+  }
+}
+
+// ============================================
+// DAMAGE FLASH ANIMATION
+// ============================================
+
+.damage-flash {
+  animation: damage-flash-anim 0.15s ease-out 3 !important;
+}
+
+@keyframes damage-flash-anim {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(2) sepia(1) saturate(2) hue-rotate(-30deg); }
+}
+
+// ============================================
+// DEATH ANIMATION
+// ============================================
+
+.dying {
+  animation: monster-death 0.6s ease-out forwards !important;
+}
+
+@keyframes monster-death {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(15deg);
+  }
+}

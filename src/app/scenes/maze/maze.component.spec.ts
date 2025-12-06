@@ -530,7 +530,7 @@ describe('MazeComponent - Encounter Detection', () => {
     expect(triggerSpy).toHaveBeenCalled();
   });
 
-  it('navigates to combat when encounter occurs', async () => {
+  it('initiates integrated combat when encounter occurs (no navigation)', async () => {
     // Set up party with characters for combat initialization
     const testCharacter = createTestCharacter({ id: 'char1', name: 'Test Hero' });
     gameState.updateState(state => ({
@@ -554,14 +554,26 @@ describe('MazeComponent - Encounter Detection', () => {
 
     component.moveForward();
 
-    // Wait for queueMicrotask to execute
-    await new Promise(resolve => queueMicrotask(resolve));
+    // Wait for setTimeout (encounter banner) to execute
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     // Check that encounter message was added
     const messages = component.messages();
     const hasEncounterMessage = messages.some(msg => msg.includes('encounter'));
     expect(hasEncounterMessage).toBe(true);
-    expect(navigateSpy).toHaveBeenCalledWith(['/combat']);
+
+    // NEW: Combat now happens in maze view (Theater Stage design)
+    // Should NOT navigate to /combat
+    expect(navigateSpy).not.toHaveBeenCalledWith(['/combat']);
+
+    // Should set combat state in GameStateService
+    expect(gameState.state().combat).toBeTruthy();
+
+    // Should be in encounter phase initially
+    expect(component.combatPhase()).toBe('encounter');
+
+    // Should show inCombat as true
+    expect(component.inCombat()).toBe(true);
   });
 
   it('does not navigate when no encounter occurs', () => {
@@ -1033,7 +1045,7 @@ describe('MazeComponent - Combat Integration', () => {
     expect(combat?.canFlee).toBe(true);
   });
 
-  it('navigates to /combat on encounter', async () => {
+  it('stays in maze and shows combat overlay on encounter (integrated combat)', async () => {
     // Mock encounter trigger to return true (random encounter)
     jest.spyOn(EncounterTriggerService, 'checkForEncounter').mockReturnValue({
       trigger: true,
@@ -1043,10 +1055,16 @@ describe('MazeComponent - Combat Integration', () => {
 
     component['checkForEncounter']();
 
-    // Wait for queueMicrotask to complete
-    await Promise.resolve();
+    // Wait for setTimeout (encounter banner animation)
+    await new Promise(resolve => setTimeout(resolve, 50));
 
-    expect(router.navigate).toHaveBeenCalledWith(['/combat']);
+    // NEW: Combat now happens in maze view (Theater Stage design)
+    // Should NOT navigate to /combat
+    expect(router.navigate).not.toHaveBeenCalledWith(['/combat']);
+
+    // Should enter combat phase in maze
+    expect(component.inCombat()).toBe(true);
+    expect(component.combatPhase()).toBe('encounter');
   });
 
   it('sets canFlee to false for fixed encounters', () => {

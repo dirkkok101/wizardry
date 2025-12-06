@@ -136,7 +136,7 @@ export const EncounterService = {
         id: groupIds[i],
         monsters: monsters,
         formation: this.determineFormation(monsters),
-        identified: false
+        identified: true  // Default to identified for better UX (LATUMAPIC system can be added later)
       })
     }
 
@@ -168,7 +168,7 @@ export const EncounterService = {
       id: 'A',
       monsters: monsters,
       formation: this.determineFormation(monsters),
-      identified: false
+      identified: true  // Default to identified for better UX (LATUMAPIC system can be added later)
     }
 
     return [group]

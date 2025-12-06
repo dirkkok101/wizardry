@@ -1,0 +1,91 @@
+<!-- Combat Overlay - Theater Stage Container -->
+@if (visible()) {
+  <div
+    class="combat-overlay"
+    [class.targeting-mode]="isTargetingMode()"
+    [class.animating-in]="isAnimatingIn()"
+    [class.animating-out]="isAnimatingOut()"
+  >
+    <!-- Vignette Effect for Combat Ambiance -->
+    <div class="combat-vignette"></div>
+
+    <!-- Monster Sprite Layer (delegated to child component) -->
+    <div class="monster-layer">
+      <app-monster-sprite-overlay
+        [monsterGroups]="monsterGroups()"
+        [selectedGroupId]="selectedGroupId()"
+        [isTargetingMode]="isTargetingMode()"
+        [animationQueue]="spriteAnimations()"
+        (groupClicked)="onGroupClick($event)"
+        (animationComplete)="onAnimationComplete($event)"
+      />
+    </div>
+
+    <!-- Floating Damage Numbers Layer -->
+    <div class="floating-damage-layer">
+      <app-floating-damage
+        [entries]="damageEntries()"
+        (entryComplete)="onDamageComplete($event)"
+      />
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Encounter Banner -->
+    @if (showEncounterBanner()) {
+      <div class="encounter-banner">
+        <span class="banner-text">ENCOUNTER!</span>
+      </div>
+    }
+
+    <!-- Victory Overlay -->
+    @if (showVictoryOverlay()) {
+      <div
+        class="victory-overlay"
+        role="dialog"
+        aria-labelledby="victory-heading"
+        aria-modal="true"
+      >
+        <span id="victory-heading" class="victory-text">VICTORY!</span>
+
+        @if (victoryRewards(); as rewards) {
+          <div class="rewards-panel" role="status" aria-live="polite" aria-atomic="true">
+            <div class="rewards-grid">
+              <div class="reward-item xp">
+                <span class="reward-label">XP GAINED</span>
+                <span class="reward-value">{{ rewards.totalXP | number }}</span>
+                <span class="reward-detail">{{ rewards.xpPerCharacter | number }} per character</span>
+              </div>
+
+              <div class="reward-item gold">
+                <span class="reward-label">GOLD FOUND</span>
+                <span class="reward-value">{{ rewards.totalGold | number }}</span>
+              </div>
+            </div>
+
+            @if (rewards.items.length > 0) {
+              <div class="items-section">
+                <span class="items-label">ITEMS FOUND</span>
+                <div class="items-list">
+                  @for (item of rewards.items; track item.itemId) {
+                    <span class="item-entry" [class.unidentified]="!item.identified">
+                      {{ item.identified ? item.itemName : '??? (Unidentified)' }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+
+            <span class="continue-hint" role="note">Press ENTER to continue...</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Defeat Overlay -->
+    @if (showDefeatOverlay()) {
+      <div class="defeat-overlay">
+        <span class="defeat-text">DEFEAT</span>
+      </div>
+    }
+  </div>
+}

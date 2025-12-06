@@ -130,6 +130,7 @@
 }
 
 .maze-viewport {
+  position: relative;   // Positioning context for combat overlay
   flex: 1;              // Fill available vertical space
   min-height: 0;        // Allow shrinking below content size
   aspect-ratio: 148 / 75; // 740x375 - Width determined by height
@@ -145,6 +146,13 @@
     height: 100%;
     display: block;
     isolation: isolate;
+  }
+
+  // Combat overlay positions absolutely within viewport
+  app-combat-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
   }
 }
 

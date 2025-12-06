@@ -28,6 +28,20 @@
     <div class="center-panel">
       <div class="maze-viewport">
         <canvas #mazeCanvas width="740" height="375"></canvas>
+
+        <!-- Combat Overlay (Theater Stage) -->
+        <app-combat-overlay
+          [visible]="inCombat()"
+          [monsterGroups]="monsterGroups()"
+          [roundNumber]="combatRoundNumber()"
+          [selectedGroupId]="selectedTargetGroupId()"
+          [isTargetingMode]="isTargetingMode()"
+          [showEncounterBanner]="showEncounterBanner()"
+          [showVictoryOverlay]="combatPhase() === 'victory'"
+          [showDefeatOverlay]="combatPhase() === 'defeat'"
+          [victoryRewards]="victoryRewards()"
+          (groupClicked)="onCombatGroupClicked($event)"
+        />
       </div>
 
       <div class="message-log-section">
@@ -45,11 +59,36 @@
     </div>
   </div>
 
-  <!-- Scene Footer with Navigation Controls -->
-  <app-scene-footer
-    [menuItems]="mazeMenuItems()"
-    (itemSelected)="handleMenuAction($event)"
-  />
+  <!-- Scene Footer with Navigation Controls (hidden during combat) -->
+  @if (!inCombat()) {
+    <app-scene-footer
+      [menuItems]="mazeMenuItems()"
+      (itemSelected)="handleMenuAction($event)"
+    />
+  }
+
+  <!-- Combat Drawer (slides up from bottom during combat) -->
+  @if (inCombat()) {
+    <app-combat-drawer
+      [mode]="combatDrawerMode()"
+      [roundNumber]="combatRoundNumber()"
+      [activeCharacter]="activeCharacter()"
+      [activeCharacterIndex]="activeCharacterIndex()"
+      [totalCharacters]="alivePartyMembers().length"
+      [monsterGroups]="monsterGroups()"
+      [canFlee]="canFlee()"
+      [allActionsSelected]="allActionsSelected()"
+      [hasSpells]="activeCharacterHasSpells()"
+      [selectedActions]="selectedActions()"
+      [isExecuting]="isExecutingRound()"
+      [isTargetingMode]="isTargetingMode()"
+      (actionSelected)="onCombatActionSelected($event)"
+      (targetSelected)="onCombatTargetSelected($event)"
+      (executeRound)="onExecuteRound()"
+      (back)="onCombatBack()"
+      (openSpellMenu)="onOpenCombatSpellMenu()"
+    />
+  }
 
   <!-- Elevator Dialog (if active) -->
   @if (showElevatorDialog()) {
@@ -71,13 +110,13 @@
     </div>
   }
 
-  <!-- Spell Selection Panel -->
+  <!-- Spell Selection Panel (dungeon or combat context) -->
   @if (selectedCaster()) {
     <app-spell-panel
       [visible]="showSpellDialog()"
       [character]="selectedCaster()!"
       [mode]="'casting'"
-      [context]="'dungeon'"
+      [context]="spellContext()"
       [title]="'SELECT SPELL'"
       (spellSelected)="onSpellSelected($event)"
       (closed)="onSpellDialogCancelled()"

@@ -1,0 +1,92 @@
+<!-- Monster Sprite Overlay - Theater Stage Monster Display -->
+<div class="monster-sprite-overlay">
+  <!-- Back Row Groups - Smaller, Higher (depth effect) -->
+  @if (backRowGroups().length > 0) {
+    <div class="back-row">
+      @for (group of backRowGroups(); track group.id; let i = $index) {
+        <div
+          class="monster-group back-row-group"
+          [class.selected]="selectedGroupId() === group.id"
+          [class.defeated]="!hasAliveMonsters(group)"
+          [class.targetable]="isTargetingMode() && hasAliveMonsters(group)"
+          [style.--group-color]="getGroupColor(group.id)"
+          [style.animation-delay]="getRevealDelay(i, true)"
+          (click)="onGroupClick(group.id)"
+        >
+          <!-- Stack of Monster Sprites (show up to 3) -->
+          <div class="sprite-stack">
+            @for (monster of group.monsters.slice(0, 3); track $index; let mi = $index) {
+              <div
+                class="sprite-container"
+                [class.dead]="monster.hp <= 0"
+                [style.--stack-index]="mi"
+                [class.damage-flash]="getSpriteAnimation(group.id, mi) === 'damage-flash'"
+                [class.dying]="getSpriteAnimation(group.id, mi) === 'dying'"
+                (animationend)="onSpriteAnimationEnd(group.id, mi)"
+              >
+                <div class="sprite-placeholder">
+                  {{ getSpriteInitial(group) }}
+                </div>
+              </div>
+            }
+            <!-- Overflow indicator for large groups -->
+            @if (group.monsters.length > 3) {
+              <div class="overflow-indicator">+{{ group.monsters.length - 3 }}</div>
+            }
+          </div>
+
+          <!-- Group Badge -->
+          <div class="group-badge">
+            <span class="group-id">{{ group.id }}</span>
+            <span class="group-info">{{ getGroupDisplayName(group) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Front Row Groups - Larger, Lower -->
+  @if (frontRowGroups().length > 0) {
+    <div class="front-row">
+      @for (group of frontRowGroups(); track group.id; let i = $index) {
+        <div
+          class="monster-group front-row-group"
+          [class.selected]="selectedGroupId() === group.id"
+          [class.defeated]="!hasAliveMonsters(group)"
+          [class.targetable]="isTargetingMode() && hasAliveMonsters(group)"
+          [style.--group-color]="getGroupColor(group.id)"
+          [style.animation-delay]="getRevealDelay(i, false)"
+          (click)="onGroupClick(group.id)"
+        >
+          <!-- Stack of Monster Sprites (show up to 3) -->
+          <div class="sprite-stack">
+            @for (monster of group.monsters.slice(0, 3); track $index; let mi = $index) {
+              <div
+                class="sprite-container"
+                [class.dead]="monster.hp <= 0"
+                [style.--stack-index]="mi"
+                [class.damage-flash]="getSpriteAnimation(group.id, mi) === 'damage-flash'"
+                [class.dying]="getSpriteAnimation(group.id, mi) === 'dying'"
+                (animationend)="onSpriteAnimationEnd(group.id, mi)"
+              >
+                <div class="sprite-placeholder">
+                  {{ getSpriteInitial(group) }}
+                </div>
+              </div>
+            }
+            <!-- Overflow indicator for large groups -->
+            @if (group.monsters.length > 3) {
+              <div class="overflow-indicator">+{{ group.monsters.length - 3 }}</div>
+            }
+          </div>
+
+          <!-- Group Badge -->
+          <div class="group-badge">
+            <span class="group-id">{{ group.id }}</span>
+            <span class="group-info">{{ getGroupDisplayName(group) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

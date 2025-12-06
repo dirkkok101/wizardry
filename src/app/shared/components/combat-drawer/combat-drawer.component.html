@@ -1,0 +1,136 @@
+<!-- Combat Drawer - Theater Stage Bottom Panel -->
+@if (mode() !== 'hidden') {
+  <div
+    class="combat-drawer"
+    [class.minimized]="mode() === 'minimized'"
+    [class.expanded]="mode() === 'action_select' || mode() === 'target_select'"
+    [class.executing]="isExecuting()"
+    [class.ready-to-execute]="allActionsSelected() && !showTargetSelection()"
+  >
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <span class="header-title">{{ headerTitle() }}</span>
+      @if (mode() === 'minimized') {
+        <span class="executing-indicator">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </span>
+      }
+      @if (allActionsSelected() && !showTargetSelection() && !isExecuting()) {
+        <span class="ready-indicator">READY</span>
+      }
+    </div>
+
+    <!-- Action Selection Row (hidden when all actions selected) -->
+    @if (mode() === 'action_select' && !showTargetSelection() && !allActionsSelected()) {
+      <div class="action-row">
+        <button
+          class="action-btn attack"
+          [disabled]="isExecuting()"
+          (click)="selectAction('ATTACK')"
+        >
+          <span class="shortcut">A</span>
+          <span class="label">ATTACK</span>
+        </button>
+
+        <button
+          class="action-btn cast"
+          [disabled]="!hasSpells() || isExecuting()"
+          (click)="selectAction('CAST_SPELL')"
+        >
+          <span class="shortcut">C</span>
+          <span class="label">CAST</span>
+        </button>
+
+        <button
+          class="action-btn parry"
+          [disabled]="isExecuting()"
+          (click)="selectAction('PARRY')"
+        >
+          <span class="shortcut">P</span>
+          <span class="label">PARRY</span>
+        </button>
+
+        <button
+          class="action-btn flee"
+          [disabled]="!canFlee() || isExecuting()"
+          (click)="selectAction('RUN')"
+        >
+          <span class="shortcut">F</span>
+          <span class="label">FLEE</span>
+        </button>
+      </div>
+
+      <!-- Footer with Back button during action selection -->
+      <div class="drawer-footer">
+        @if (!isFirstCharacter()) {
+          <button
+            class="footer-btn back"
+            [disabled]="isExecuting()"
+            (click)="back.emit()"
+          >
+            <span class="shortcut">ESC</span>
+            <span class="label">BACK</span>
+          </button>
+        }
+
+        <div class="footer-spacer"></div>
+
+        @if (currentActionText()) {
+          <span class="action-status">
+            Action: <strong>{{ currentActionText() }}</strong>
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Target Selection Row -->
+    @if (showTargetSelection()) {
+      <div class="target-row">
+        <span class="target-prompt">SELECT TARGET:</span>
+        <div class="target-buttons">
+          @for (group of aliveGroups(); track group.id; let i = $index) {
+            <button
+              class="target-btn"
+              [style.--group-color]="getGroupColor(group.id)"
+              (click)="selectTarget(group.id)"
+            >
+              <span class="shortcut">{{ i + 1 }}</span>
+              <span class="label">{{ getGroupDisplayName(group) }}</span>
+            </button>
+          }
+        </div>
+        <button class="cancel-btn" (click)="cancelTargetSelection()">
+          <span class="shortcut">ESC</span>
+          <span class="label">BACK</span>
+        </button>
+      </div>
+    }
+
+    <!-- Ready to Execute View (when all actions selected) -->
+    @if (mode() === 'action_select' && !showTargetSelection() && allActionsSelected()) {
+      <div class="execute-ready-row">
+        <button
+          class="footer-btn back"
+          [disabled]="isExecuting()"
+          (click)="back.emit()"
+        >
+          <span class="shortcut">ESC</span>
+          <span class="label">BACK</span>
+        </button>
+
+        <div class="ready-spacer"></div>
+
+        <button
+          class="footer-btn execute large"
+          [disabled]="isExecuting()"
+          (click)="executeRound.emit()"
+        >
+          <span class="shortcut">ENTER</span>
+          <span class="label">EXECUTE ROUND</span>
+        </button>
+      </div>
+    }
+  </div>
+}

@@ -8,6 +8,8 @@ import { CharacterPanelComponent } from '@shared/components/character-panel/char
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
+import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
+import { CombatDrawerComponent, CombatDrawerMode } from '@shared/components/combat-drawer/combat-drawer.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
@@ -34,6 +36,8 @@ import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardType
 import { DungeonState } from '@models/Dungeon';
 import { TextureAtlas } from '@models/texture.types';
 import { ViewportConfig } from '@models/rendering.types';
+import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant } from '@models/Combat';
+import { VictoryService, VictoryRewards } from '@services/VictoryService';
 import * as TextureAtlasService from '@services/TextureAtlasService';
 
 @Component({
@@ -46,7 +50,9 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
     CharacterPanelComponent,
     MessageLogComponent,
     SpellPanelComponent,
-    CharacterSelectionDialogComponent
+    CharacterSelectionDialogComponent,
+    CombatOverlayComponent,
+    CombatDrawerComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
@@ -67,6 +73,70 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly selectedCaster = signal<Character | null>(null);
   readonly selectedSpell = signal<SpellData | null>(null);
   readonly targetOptions = signal<CharacterOption[]>([]);
+  readonly spellContext = signal<'dungeon' | 'combat'>('dungeon');
+  readonly pendingCombatSpell = signal<SpellData | null>(null);
+
+  // ============================================================
+  // INTEGRATED COMBAT STATE (Theater Stage Design)
+  // Combat happens IN the maze view, not as a separate scene
+  // ============================================================
+  readonly combatPhase = signal<'idle' | 'encounter' | 'action_select' | 'executing' | 'victory' | 'defeat'>('idle');
+  readonly showEncounterBanner = signal<boolean>(false);
+  readonly selectedTargetGroupId = signal<'A' | 'B' | 'C' | 'D' | null>(null);
+  readonly isTargetingMode = signal<boolean>(false);
+
+  // Computed combat state from GameStateService
+  readonly combatState = computed(() => this.gameState.state().combat);
+  readonly inCombat = computed(() => !!this.combatState());
+  readonly monsterGroups = computed((): MonsterGroup[] => this.combatState()?.monsterGroups ?? []);
+  readonly combatRoundNumber = computed(() => this.combatState()?.roundNumber ?? 1);
+
+  // Combat action selection state
+  readonly activeCharacterIndex = signal<number>(0);
+  readonly selectedActions = signal<Map<string, CombatCommand>>(new Map());
+  readonly isExecutingRound = signal<boolean>(false);
+  readonly showVictoryOverlay = signal<boolean>(false);
+  readonly showDefeatOverlay = signal<boolean>(false);
+  readonly victoryRewards = signal<VictoryRewards | null>(null);
+
+  // Combat drawer mode
+  readonly combatDrawerMode = computed((): CombatDrawerMode => {
+    if (!this.inCombat()) return 'hidden';
+    const phase = this.combatPhase();
+    if (phase === 'executing') return 'minimized';
+    if (phase === 'action_select') return 'action_select';
+    if (phase === 'victory' || phase === 'defeat') return 'hidden';
+    return 'hidden';
+  });
+
+  // Get alive party members for combat
+  readonly alivePartyMembers = computed(() =>
+    this.partyCharacters().filter(c => c.hp > 0)
+  );
+
+  // Current active character for action selection
+  readonly activeCharacter = computed(() => {
+    const alive = this.alivePartyMembers();
+    const idx = this.activeCharacterIndex();
+    return alive[idx] || null;
+  });
+
+  // Check if all actions are selected
+  readonly allActionsSelected = computed(() => {
+    const alive = this.alivePartyMembers();
+    const actions = this.selectedActions();
+    return alive.every(c => actions.has(c.id));
+  });
+
+  // Check if active character has spells
+  readonly activeCharacterHasSpells = computed(() => {
+    const char = this.activeCharacter();
+    if (!char) return false;
+    return SpellCastingService.hasSpellsInContext(char, 'combat');
+  });
+
+  // Can flee from current combat
+  readonly canFlee = computed(() => this.combatState()?.canFlee ?? false);
 
   // WebGL Renderer
   private webglRenderer: WebGLRenderingService | null = null;
@@ -160,8 +230,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     return currentTile.destinations || [];
   });
 
-  // Scene title
-  readonly sceneTitle = computed(() => `MAZE - LEVEL ${this.currentLevel()}`);
+  // Scene title - changes during combat
+  readonly sceneTitle = computed(() => {
+    if (this.inCombat()) {
+      return `COMBAT - ROUND ${this.combatRoundNumber()}`;
+    }
+    return `MAZE - LEVEL ${this.currentLevel()}`;
+  });
 
   // Footer menu items for SceneFooterComponent
   // Note: Door button removed - walking into a door moves through it (original Wizardry behavior)
@@ -280,8 +355,41 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Add welcome message
     this.addMessage(`Entering Level ${this.currentLevel()}...`);
 
+    // Check for existing combat state (resume interrupted combat)
+    this.checkForExistingCombat();
+
     // Check for chest alarm - triggers immediate combat encounter
     this.checkForChestAlarm();
+  }
+
+  /**
+   * Check if there's existing combat state from a save/reload and resume it.
+   * This handles the case where the game was saved mid-combat or the page refreshed.
+   */
+  private checkForExistingCombat(): void {
+    const combat = this.combatState();
+    if (!combat) return;
+
+    // Check if combat is still valid (has alive monsters)
+    const aliveMonsters = combat.monsterGroups.some(g =>
+      g.monsters.some(m => m.hp > 0)
+    );
+
+    if (!aliveMonsters) {
+      // Combat ended (all monsters dead) - clear stale combat state
+      console.log('[Maze] Clearing stale combat state (no alive monsters)');
+      this.gameState.updateState(s => ({ ...s, combat: undefined }));
+      return;
+    }
+
+    // Resume combat - show encounter banner briefly then go to action selection
+    console.log('[Maze] Resuming combat from saved state');
+    this.addMessage('Resuming combat...');
+
+    // Go straight to action selection (skip encounter banner for resume)
+    this.combatPhase.set('action_select');
+    this.activeCharacterIndex.set(0);
+    this.selectedActions.set(new Map());
   }
 
   /**
@@ -483,29 +591,36 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:keydown.arrowup')
   handleArrowUp(): void {
-    if (!this.isDialogOpen()) this.moveForward();
+    if (!this.isMovementLocked()) this.moveForward();
   }
 
   @HostListener('window:keydown.arrowdown')
   handleArrowDown(): void {
-    if (!this.isDialogOpen()) this.moveBackward();
+    if (!this.isMovementLocked()) this.moveBackward();
   }
 
   @HostListener('window:keydown.arrowleft')
   handleArrowLeft(): void {
-    if (!this.isDialogOpen()) this.turnLeft();
+    if (!this.isMovementLocked()) this.turnLeft();
   }
 
   @HostListener('window:keydown.arrowright')
   handleArrowRight(): void {
-    if (!this.isDialogOpen()) this.turnRight();
+    if (!this.isMovementLocked()) this.turnRight();
   }
 
   /**
-   * Check if any dialog is currently open
+   * Check if any dialog is currently open or if combat is active
    */
   private isDialogOpen(): boolean {
     return this.showElevatorDialog() || this.showSpellDialog() || this.showTargetDialog();
+  }
+
+  /**
+   * Check if movement should be locked (during combat or dialogs)
+   */
+  private isMovementLocked(): boolean {
+    return this.inCombat() || this.isDialogOpen();
   }
 
   @HostListener('window:keydown.escape')
@@ -528,7 +643,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Check if in combat targeting mode (for spells or attacks)
+    if (this.isTargetingMode()) {
+      this.cancelCombatTargeting();
+      return;
+    }
+
     // ESC only closes dialogs - to exit the maze, use stairs on level 1 or cast LOKTOFEIT
+  }
+
+  /**
+   * Cancel combat targeting mode (for spells or attacks)
+   */
+  private cancelCombatTargeting(): void {
+    this.isTargetingMode.set(false);
+    this.pendingCombatSpell.set(null);
+    this.selectedSpell.set(null);
+    this.spellContext.set('dungeon');
   }
 
   @HostListener('window:keydown.control.e')
@@ -664,8 +795,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   handleMenuAction(action: string): void {
-    // Ignore menu actions when dialogs are open
-    if (this.isDialogOpen()) return;
+    // Ignore menu actions when movement is locked (dialogs or combat)
+    if (this.isMovementLocked()) return;
 
     switch (action) {
       case 'forward':
@@ -871,14 +1002,420 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         combat: combatState
       }));
 
-      // Navigate to combat
-      queueMicrotask(() => {
-        this.router.navigate(['/combat']);
+      // ============================================================
+      // INTEGRATED COMBAT: Stay in maze view (Theater Stage Design)
+      // Instead of navigating to /combat, trigger in-maze combat UI
+      // ============================================================
+
+      // Show encounter banner briefly
+      this.combatPhase.set('encounter');
+      this.showEncounterBanner.set(true);
+
+      // After banner animation, transition to action selection
+      setTimeout(() => {
+        this.showEncounterBanner.set(false);
+        this.combatPhase.set('action_select');
+      }, 800);  // Match banner animation duration
+
+      // Log monster groups for debugging
+      console.log('[MazeComponent] Combat initiated in maze:', {
+        groups: combatState.monsterGroups.map(g => `${g.id}: ${g.monsters.length}x ${g.monsters[0]?.name}`),
+        canFlee,
+        reason: encounterReason
       });
+
     } catch (error) {
       console.error('[MazeComponent] Failed to initiate encounter:', error);
       this.addMessage(`Error: Failed to create encounter. Please try again.`);
     }
+  }
+
+  /**
+   * Handle group click from combat overlay (targeting)
+   */
+  onCombatGroupClicked(groupId: 'A' | 'B' | 'C' | 'D'): void {
+    if (!this.isTargetingMode()) return;
+
+    this.selectedTargetGroupId.set(groupId);
+    const group = this.monsterGroups().find(g => g.id === groupId);
+    if (group) {
+      this.addMessage(`Targeting: ${group.monsters[0]?.name ?? 'Unknown'} (Group ${groupId})`);
+    }
+  }
+
+  // ============================================================
+  // COMBAT ACTION SELECTION (Theater Stage Design)
+  // ============================================================
+
+  /**
+   * Handle action selection from combat drawer
+   */
+  onCombatActionSelected(actionType: CombatActionType): void {
+    const char = this.activeCharacter();
+    if (!char || this.isExecutingRound()) return;
+
+    // Actions that don't need targeting
+    if (actionType === 'PARRY' || actionType === 'RUN') {
+      this.confirmCombatAction(actionType, undefined);
+      return;
+    }
+
+    // Attack needs target selection - handled by drawer's target row
+    if (actionType === 'ATTACK') {
+      this.isTargetingMode.set(true);
+      return;
+    }
+  }
+
+  /**
+   * Handle target selection from combat drawer
+   * Handles both ATTACK and CAST_SPELL targeting
+   */
+  onCombatTargetSelected(groupId: 'A' | 'B' | 'C' | 'D'): void {
+    const char = this.activeCharacter();
+    if (!char) return;
+
+    const group = this.monsterGroups().find(g => g.id === groupId);
+    if (!group || !group.monsters.some(m => m.hp > 0)) return;
+
+    // Pick random alive monster from group
+    const aliveMonsters = group.monsters.filter(m => m.hp > 0);
+    const target = aliveMonsters[RandomService.random(0, aliveMonsters.length - 1)];
+
+    this.isTargetingMode.set(false);
+
+    // Check if we're targeting for a spell
+    const pendingSpell = this.pendingCombatSpell();
+    if (pendingSpell) {
+      this.confirmCombatSpellAction(pendingSpell, target, groupId);
+      this.pendingCombatSpell.set(null);
+      return;
+    }
+
+    // Default: attack targeting
+    this.confirmCombatAction('ATTACK', target);
+  }
+
+  /**
+   * Confirm a spell action for combat
+   */
+  private confirmCombatSpellAction(spell: SpellData, target: Combatant, groupId: 'A' | 'B' | 'C' | 'D'): void {
+    const char = this.activeCharacter();
+    if (!char) return;
+
+    // Create combat command with spell and target using CombatService
+    // Pass spell ID as data, and include target group info
+    const command = CombatService.createCommand(char, 'CAST_SPELL', target, {
+      spellId: spell.id,
+      groupId: groupId
+    });
+
+    // Store in selected actions
+    this.selectedActions.update(actions => {
+      const newActions = new Map(actions);
+      newActions.set(char.id, command);
+      return newActions;
+    });
+
+    this.addMessage(`${char.name}: CAST ${spell.name} -> Group ${groupId}`);
+
+    // Clear spell selection state
+    this.selectedSpell.set(null);
+    this.selectedCaster.set(null);
+    this.spellContext.set('dungeon');
+
+    // Advance to next character
+    this.advanceToNextCharacter();
+  }
+
+  /**
+   * Confirm an action for the current character
+   */
+  private confirmCombatAction(actionType: CombatActionType, target?: Combatant): void {
+    const char = this.activeCharacter();
+    if (!char) return;
+
+    // Create combat command
+    const command = CombatService.createCommand(char, actionType, target);
+
+    // Store in selected actions
+    this.selectedActions.update(actions => {
+      const newActions = new Map(actions);
+      newActions.set(char.id, command);
+      return newActions;
+    });
+
+    const targetName = target ? ` -> ${(target as any).name}` : '';
+    this.addMessage(`${char.name}: ${actionType}${targetName}`);
+
+    // Advance to next character
+    this.advanceToNextCharacter();
+  }
+
+  /**
+   * Advance to the next character for action selection
+   */
+  private advanceToNextCharacter(): void {
+    const alive = this.alivePartyMembers();
+    const currentIdx = this.activeCharacterIndex();
+
+    if (currentIdx + 1 < alive.length) {
+      this.activeCharacterIndex.set(currentIdx + 1);
+    }
+    // If all selected, drawer will show execute button
+  }
+
+  /**
+   * Go back to previous character
+   */
+  onCombatBack(): void {
+    const currentIdx = this.activeCharacterIndex();
+    if (currentIdx > 0) {
+      // Remove current character's action if any
+      const alive = this.alivePartyMembers();
+      const prevChar = alive[currentIdx - 1];
+      if (prevChar) {
+        this.selectedActions.update(actions => {
+          const newActions = new Map(actions);
+          newActions.delete(prevChar.id);
+          return newActions;
+        });
+      }
+      this.activeCharacterIndex.set(currentIdx - 1);
+    }
+  }
+
+  /**
+   * Execute the combat round
+   */
+  async onExecuteRound(): Promise<void> {
+    if (!this.allActionsSelected() || this.isExecutingRound()) return;
+
+    this.isExecutingRound.set(true);
+    this.combatPhase.set('executing');
+
+    const combat = this.combatState();
+    if (!combat) return;
+
+    // Get front row character IDs and party characters
+    const party = this.gameState.state().party;
+    const frontRow = party.formation.frontRow;
+    const chars = this.partyCharacters();
+
+    // Collect party commands from selected actions
+    const partyCommands = Array.from(this.selectedActions().values());
+
+    // Generate monster commands - get all alive monsters
+    const aliveMonsters = combat.monsterGroups
+      .flatMap(g => g.monsters)
+      .filter(m => m.hp > 0);
+
+    const monsterCommands = aliveMonsters.map(m =>
+      CombatService.selectMonsterAction(m, chars, frontRow)
+    );
+
+    // Create state with all commands in queue
+    const stateWithCommands: CombatState = {
+      ...combat,
+      commandQueue: [...partyCommands, ...monsterCommands]
+    };
+
+    try {
+      // Execute round using CombatService
+      const result = CombatService.executeRoundWithEvents(
+        stateWithCommands,
+        chars,
+        frontRow
+      );
+
+      // Display messages with delays
+      for (const event of result.events) {
+        for (const msg of event.messages) {
+          this.addMessage(msg);
+          await this.delay(300);
+        }
+      }
+
+      // Apply final state
+      this.gameState.updateState(state => ({
+        ...state,
+        combat: result.finalState,
+        roster: this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates)
+      }));
+
+      // Check for victory or defeat
+      if (result.victory) {
+        await this.handleVictory(result.finalState);
+      } else if (result.defeat) {
+        await this.handleDefeat();
+      } else {
+        // Continue to next round
+        this.resetForNextRound();
+      }
+    } catch (error) {
+      console.error('[Maze] Combat execution error:', error);
+      this.addMessage('Error executing combat round!');
+      this.resetForNextRound();
+    }
+  }
+
+  /**
+   * Update roster from combat character updates
+   * finalCharacterUpdates contains full Character objects with updated HP/status
+   */
+  private updateRosterFromCombat(
+    roster: Map<string, Character>,
+    updates: Map<string, Character>
+  ): Map<string, Character> {
+    const newRoster = new Map(roster);
+    for (const [charId, updatedChar] of updates.entries()) {
+      // Use the updated character from combat result
+      newRoster.set(charId, updatedChar);
+    }
+    return newRoster;
+  }
+
+  /**
+   * Reset state for next round
+   */
+  private resetForNextRound(): void {
+    this.selectedActions.set(new Map());
+    this.activeCharacterIndex.set(0);
+    this.isExecutingRound.set(false);
+    this.combatPhase.set('action_select');
+    this.isTargetingMode.set(false);
+    this.pendingCombatSpell.set(null);
+    this.spellContext.set('dungeon');
+  }
+
+  /**
+   * Handle combat victory
+   */
+  private async handleVictory(finalState: CombatState): Promise<void> {
+    this.combatPhase.set('victory');
+    this.showVictoryOverlay.set(true);
+    this.addMessage('VICTORY!');
+
+    // Get all monsters (alive and dead) for reward calculation
+    const allMonsters = finalState.monsterGroups.flatMap(g => g.monsters);
+    const state = this.gameState.state();
+
+    // Calculate rewards using VictoryService
+    const rewards = VictoryService.calculateVictoryRewards(
+      allMonsters,
+      state.roster,
+      state.party.members
+    );
+    this.victoryRewards.set(rewards);
+
+    this.addMessage(`Gained ${rewards.totalXP} XP and ${rewards.totalGold} gold!`);
+
+    // Wait for player to acknowledge
+    await this.delay(2000);
+
+    // Apply rewards and end combat
+    this.applyVictoryRewards(rewards, finalState);
+  }
+
+  /**
+   * Apply victory rewards to party
+   */
+  private applyVictoryRewards(rewards: VictoryRewards, finalState: CombatState): void {
+    this.gameState.updateState(state => {
+      // Use VictoryService to distribute XP (handles dead character exclusion)
+      const rosterWithXP = VictoryService.distributeRewards(
+        state.roster,
+        state.party.members,
+        rewards.xpPerCharacter
+      );
+
+      // Distribute items if any
+      const { roster: finalRoster } = VictoryService.distributeItems(
+        rosterWithXP,
+        state.party.members,
+        rewards.items
+      );
+
+      return {
+        ...state,
+        roster: finalRoster,
+        party: {
+          ...state.party,
+          gold: state.party.gold + rewards.totalGold
+        },
+        combat: undefined  // Clear combat state
+      };
+    });
+
+    // Check if this was a treasure room encounter (guaranteed chest)
+    if (finalState.encounterReason === 'treasure_room') {
+      this.router.navigate(['/chest']);
+    } else {
+      this.endCombat();
+    }
+  }
+
+  /**
+   * Handle combat defeat
+   */
+  private async handleDefeat(): Promise<void> {
+    this.combatPhase.set('defeat');
+    this.showDefeatOverlay.set(true);
+    this.addMessage('DEFEAT! The party has fallen...');
+
+    await this.delay(2000);
+
+    // Clear combat and return to castle
+    this.gameState.updateState(state => ({
+      ...state,
+      combat: undefined,
+      dungeon: undefined  // Party is ejected from dungeon
+    }));
+
+    this.router.navigate(['/castle-menu']);
+  }
+
+  /**
+   * End combat and return to exploration
+   */
+  private endCombat(): void {
+    this.combatPhase.set('idle');
+    this.showVictoryOverlay.set(false);
+    this.showDefeatOverlay.set(false);
+    this.selectedActions.set(new Map());
+    this.activeCharacterIndex.set(0);
+    this.isExecutingRound.set(false);
+    this.isTargetingMode.set(false);
+    this.victoryRewards.set(null);
+    this.pendingCombatSpell.set(null);
+    this.spellContext.set('dungeon');
+  }
+
+  /**
+   * Open spell menu for combat
+   * Sets context to 'combat' so SpellPanel shows combat-eligible spells
+   */
+  onOpenCombatSpellMenu(): void {
+    const char = this.activeCharacter();
+    if (!char) return;
+
+    // Check if character has combat spells
+    if (!SpellCastingService.hasSpellsInContext(char, 'combat')) {
+      this.addMessage(`${char.name} has no combat spells available.`);
+      return;
+    }
+
+    // Set combat context and open spell dialog
+    this.spellContext.set('combat');
+    this.selectedCaster.set(char);
+    this.showSpellDialog.set(true);
+  }
+
+  /**
+   * Utility delay function
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private formatMonsterName(monsterId: string): string {
@@ -925,6 +1462,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Handle spell selection from the dialog
+   * Behavior differs based on context:
+   * - dungeon: Cast spell immediately
+   * - combat: Store as action for round execution
    */
   onSpellSelected(spell: SpellData): void {
     this.showSpellDialog.set(false);
@@ -933,6 +1473,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const caster = this.selectedCaster();
     if (!caster) return;
 
+    // Handle combat spell selection differently
+    if (this.spellContext() === 'combat') {
+      this.handleCombatSpellSelection(spell, caster);
+      return;
+    }
+
+    // Dungeon context: cast immediately
     // Check if spell needs a target
     if (spell.target === 'single' || spell.target === 'dead_body' || spell.target === 'ashes') {
       // Open character selection dialog
@@ -941,6 +1488,50 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Party or self-targeting spell - cast immediately
       this.castSpell(spell, null);
     }
+  }
+
+  /**
+   * Handle spell selection during combat
+   * Stores the spell as the character's action for round execution
+   */
+  private handleCombatSpellSelection(spell: SpellData, caster: Character): void {
+    // Check if spell targets enemies (offensive, instant_death, or debuff targeting monsters)
+    const targetsEnemies = spell.category === 'offensive' ||
+                           spell.category === 'instant_death' ||
+                           spell.category === 'debuff' ||
+                           spell.target === 'all_enemies' ||
+                           spell.target === 'group'
+
+    // For offensive spells that target monsters, show monster target selection
+    // (except for all_enemies which hits everyone automatically)
+    if (targetsEnemies && spell.target !== 'all_enemies') {
+      // Store the spell and show monster targeting
+      this.selectedSpell.set(spell);
+      this.pendingCombatSpell.set(spell);
+      this.isTargetingMode.set(true);
+      this.addMessage(`${caster.name} prepares ${spell.name}... Select a target.`);
+      return;
+    }
+
+    // For party/self targeting spells (buffs, heals) or all-enemy spells,
+    // record action immediately - no targeting needed
+    const command = CombatService.createCommand(caster, 'CAST_SPELL', undefined, spell.id);
+
+    this.selectedActions.update(actions => {
+      const newActions = new Map(actions);
+      newActions.set(caster.id, command);
+      return newActions;
+    });
+
+    this.addMessage(`${caster.name} will cast ${spell.name}.`);
+
+    // Clear spell selection state
+    this.selectedSpell.set(null);
+    this.selectedCaster.set(null);
+    this.spellContext.set('dungeon');
+
+    // Advance to next character
+    this.advanceToNextCharacter();
   }
 
   /**
@@ -1014,6 +1605,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showSpellDialog.set(false);
     this.selectedCaster.set(null);
     this.selectedSpell.set(null);
+    this.spellContext.set('dungeon');
+    this.pendingCombatSpell.set(null);
   }
 
   /**
