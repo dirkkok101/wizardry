@@ -1,9 +1,48 @@
 // src/utils/MonsterNameUtils.ts
 
+import { MonsterInstance } from '@models/Combat'
+
 /**
  * Utility functions for monster name formatting
  * Follows original Wizardry (1981) naming conventions
  */
+
+/**
+ * Get the appropriate monster name based on identification status
+ *
+ * Before LATUMAPIC: Returns unidentifiedName (e.g., "Small Humanoid")
+ * After LATUMAPIC: Returns true name (e.g., "Kobold")
+ *
+ * @param monster - Monster instance with both name fields
+ * @param identified - Whether the monster group is identified (LATUMAPIC active)
+ * @returns Display name based on identification status
+ */
+export function getMonsterDisplayName(
+  monster: MonsterInstance,
+  identified: boolean
+): string {
+  return identified ? monster.name : monster.unidentifiedName
+}
+
+/**
+ * Get formatted group display text with identification support
+ *
+ * Uses unidentifiedName or real name based on LATUMAPIC status,
+ * then formats with count and pluralization.
+ *
+ * @param count - Number of alive monsters in group
+ * @param monster - Monster instance (for name access)
+ * @param identified - Whether the group is identified
+ * @returns Formatted display (e.g., "3 ORCS" or "3 SMALL HUMANOIDS")
+ */
+export function getIdentifiedGroupDisplayText(
+  count: number,
+  monster: MonsterInstance,
+  identified: boolean
+): string {
+  const displayName = getMonsterDisplayName(monster, identified)
+  return getGroupDisplayText(count, displayName)
+}
 
 /**
  * Convert singular monster name to plural form (uppercase)

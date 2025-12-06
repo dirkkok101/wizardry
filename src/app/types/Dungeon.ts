@@ -99,6 +99,7 @@ export interface DungeonState {
   unlockedDoors: Set<string>        // "level_y_x" - doors unlocked by kicking
   openDoors: Set<string>            // "level_y_x" - doors currently open
   lootedTiles: Set<string>          // "level_x_y" - searchable tiles already looted
+  latumapicActive: boolean          // LATUMAPIC active - monsters identified for expedition
 }
 
 export interface EncounterTable {

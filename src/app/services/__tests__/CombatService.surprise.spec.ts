@@ -102,7 +102,7 @@ describe('CombatService - Surprise Mechanics', () => {
       id: 'A',
       monsters: [createTestMonster()],
       formation: 'front',
-      identified: false
+      identified: true  // Identified so tests can check for real monster names
     }]
 
     beforeEach(() => {
@@ -160,7 +160,7 @@ describe('CombatService - Surprise Mechanics', () => {
         id: 'A',
         monsters: [monster],
         formation: 'front',
-        identified: false
+        identified: true
       }
 
       // Create fighter attack command
@@ -202,7 +202,7 @@ describe('CombatService - Surprise Mechanics', () => {
         id: 'A',
         monsters: [monster],
         formation: 'front',
-        identified: false
+        identified: true
       }
 
       // Create fighter attack command
@@ -244,7 +244,7 @@ describe('CombatService - Surprise Mechanics', () => {
         id: 'A',
         monsters: [monster],
         formation: 'front',
-        identified: false
+        identified: true
       }
 
       // Create fighter attack command
@@ -286,7 +286,7 @@ describe('CombatService - Surprise Mechanics', () => {
         id: 'A',
         monsters: [monster],
         formation: 'front',
-        identified: false
+        identified: true
       }
 
       // Create fighter attack command

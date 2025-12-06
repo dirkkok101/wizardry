@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common'
 import { CombatActionType, MonsterGroup, CombatCommand } from '@models/Combat'
 import { Character } from '@models/Character'
 import { SpellCastingService } from '@services/SpellCastingService'
+import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils'
 
 export type CombatDrawerMode = 'hidden' | 'action_select' | 'target_select' | 'minimized'
 
@@ -252,14 +253,17 @@ export class CombatDrawerComponent {
   }
 
   /**
-   * Get group display name
+   * Get group display name with proper identification support
+   * Before LATUMAPIC: "A: 3 SMALL HUMANOIDS"
+   * After LATUMAPIC: "A: 3 KOBOLDS"
    */
   getGroupDisplayName(group: MonsterGroup): string {
     const aliveCount = group.monsters.filter(m => m.hp > 0).length
-    const name = group.identified
-      ? group.monsters[0]?.name ?? 'Unknown'
-      : '???'
-    return `${group.id}: ${aliveCount} ${name}${aliveCount !== 1 ? 'S' : ''}`
+    const firstMonster = group.monsters[0]
+    if (!firstMonster) return `${group.id}: ???`
+
+    const displayText = getIdentifiedGroupDisplayText(aliveCount, firstMonster, group.identified)
+    return `${group.id}: ${displayText}`
   }
 
   /**

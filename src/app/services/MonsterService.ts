@@ -53,6 +53,7 @@ export class MonsterService {
       id: uuidv4(),
       monsterId: template.id,
       name: template.name,
+      unidentifiedName: template.unidentifiedName,
       hp,
       maxHp: hp,
       ac: template.ac,

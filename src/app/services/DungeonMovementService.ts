@@ -63,7 +63,8 @@ export const DungeonMovementService = {
         defeatedEncounters: [],
         unlockedDoors: new Set<string>(),
         openDoors: new Set<string>(),
-        lootedTiles: new Set<string>()
+        lootedTiles: new Set<string>(),
+        latumapicActive: false  // LATUMAPIC not active at expedition start
       }
     };
 

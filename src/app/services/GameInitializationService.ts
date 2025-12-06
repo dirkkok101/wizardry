@@ -54,7 +54,8 @@ function createNewGame(): GameState {
       defeatedEncounters: [],
       unlockedDoors: new Set(),
       openDoors: new Set(),
-      lootedTiles: new Set()
+      lootedTiles: new Set(),
+      latumapicActive: false           // LATUMAPIC not active at expedition start
     },
     settings: {
       difficulty: 'NORMAL',

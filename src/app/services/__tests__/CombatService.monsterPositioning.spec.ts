@@ -350,6 +350,7 @@ describe('CombatService - Monster Positioning', () => {
         id: 'test-1',
         monsterId: 'kobold',
         name: 'Kobold',
+        unidentifiedName: 'Small Humanoid',
         hp: 5,
         maxHp: 5,
         ac: 8,
@@ -363,7 +364,8 @@ describe('CombatService - Monster Positioning', () => {
       const group: MonsterGroup = {
         id: 'A',
         monsters: [monster],
-        formation: 'back'
+        formation: 'back',
+        identified: true  // Set identified to use real monster names
       }
 
       const state = createCombatState([group])
@@ -383,7 +385,8 @@ describe('CombatService - Monster Positioning', () => {
       const group: MonsterGroup = {
         id: 'A',
         monsters: kobolds,
-        formation: 'back'
+        formation: 'back',
+        identified: true  // Set identified to use real monster names
       }
 
       const state = createCombatState([group])

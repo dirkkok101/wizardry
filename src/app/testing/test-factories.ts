@@ -123,7 +123,8 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
       defeatedEncounters: [],
       unlockedDoors: new Set(),
       openDoors: new Set(),
-      lootedTiles: new Set()
+      lootedTiles: new Set(),
+      latumapicActive: false
     },
     settings: {
       difficulty: 'NORMAL',
@@ -148,6 +149,7 @@ export function createTestMonster(overrides: Partial<MonsterInstance> = {}): Mon
     id: `monster-${Math.random().toString(36).substr(2, 9)}`,
     monsterId: 'kobold',
     name: 'Kobold',
+    unidentifiedName: 'Small Humanoid',
     hp: 5,
     maxHp: 5,
     ac: 8,

@@ -1,5 +1,11 @@
 // src/utils/__tests__/MonsterNameUtils.spec.ts
-import { getPluralMonsterName, getGroupDisplayText } from '../MonsterNameUtils'
+import {
+  getPluralMonsterName,
+  getGroupDisplayText,
+  getMonsterDisplayName,
+  getIdentifiedGroupDisplayText
+} from '../MonsterNameUtils'
+import { createTestMonster } from '@testing/test-factories'
 
 describe('MonsterNameUtils', () => {
   describe('getPluralMonsterName', () => {
@@ -65,6 +71,64 @@ describe('MonsterNameUtils', () => {
 
     it('handles large numbers', () => {
       expect(getGroupDisplayText(99, 'Kobold')).toBe('99 KOBOLDS')
+    })
+  })
+
+  describe('getMonsterDisplayName', () => {
+    it('returns real name when identified', () => {
+      const monster = createTestMonster({
+        name: 'Kobold',
+        unidentifiedName: 'Small Humanoid'
+      })
+
+      expect(getMonsterDisplayName(monster, true)).toBe('Kobold')
+    })
+
+    it('returns unidentified name when not identified', () => {
+      const monster = createTestMonster({
+        name: 'Kobold',
+        unidentifiedName: 'Small Humanoid'
+      })
+
+      expect(getMonsterDisplayName(monster, false)).toBe('Small Humanoid')
+    })
+  })
+
+  describe('getIdentifiedGroupDisplayText', () => {
+    it('uses real name when identified and pluralizes correctly', () => {
+      const monster = createTestMonster({
+        name: 'Kobold',
+        unidentifiedName: 'Small Humanoid'
+      })
+
+      expect(getIdentifiedGroupDisplayText(1, monster, true)).toBe('1 KOBOLD')
+      expect(getIdentifiedGroupDisplayText(3, monster, true)).toBe('3 KOBOLDS')
+    })
+
+    it('uses unidentified name when not identified and pluralizes correctly', () => {
+      const monster = createTestMonster({
+        name: 'Kobold',
+        unidentifiedName: 'Small Humanoid'
+      })
+
+      expect(getIdentifiedGroupDisplayText(1, monster, false)).toBe('1 SMALL HUMANOID')
+      expect(getIdentifiedGroupDisplayText(3, monster, false)).toBe('3 SMALL HUMANOIDS')
+    })
+
+    it('handles various unidentified name formats', () => {
+      // Test different unidentified name patterns
+      const undead = createTestMonster({
+        name: 'Vampire',
+        unidentifiedName: 'Undead'
+      })
+      expect(getIdentifiedGroupDisplayText(2, undead, false)).toBe('2 UNDEADS')
+
+      const dragon = createTestMonster({
+        name: 'Fire Dragon',
+        unidentifiedName: 'Large Dragon'
+      })
+      expect(getIdentifiedGroupDisplayText(1, dragon, false)).toBe('1 LARGE DRAGON')
+      expect(getIdentifiedGroupDisplayText(2, dragon, false)).toBe('2 LARGE DRAGONS')
     })
   })
 })

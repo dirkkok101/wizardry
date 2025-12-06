@@ -64,13 +64,35 @@
     font-weight: 500;
     white-space: nowrap;
     padding: var(--space-1) var(--space-2);
-    background: rgba(100, 149, 237, 0.15);  // Soft blue glow for magic
-    border: 1px solid rgba(100, 149, 237, 0.4);
     border-radius: var(--card-border-radius);
     cursor: help;
 
+    // Default styling (fallback)
+    background: color-mix(in srgb, var(--color-info) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-info) 40%, transparent);
+
     &:hover {
-      background: rgba(100, 149, 237, 0.25);
+      background: color-mix(in srgb, var(--color-info) 25%, transparent);
+    }
+
+    // Light spell variant (blue) using --color-info (MILWA/LOMILWA)
+    &.spell-badge--light {
+      background: color-mix(in srgb, var(--color-info) 15%, transparent);
+      border-color: color-mix(in srgb, var(--color-info) 40%, transparent);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-info) 25%, transparent);
+      }
+    }
+
+    // Identification spell variant (purple) using --color-magic (LATUMAPIC)
+    &.spell-badge--identification {
+      background: color-mix(in srgb, var(--color-magic) 15%, transparent);
+      border-color: color-mix(in srgb, var(--color-magic) 40%, transparent);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-magic) 25%, transparent);
+      }
     }
   }
 

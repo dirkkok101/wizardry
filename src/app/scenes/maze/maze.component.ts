@@ -186,13 +186,25 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const spells: ActiveSpell[] = [];
     const dungeon = this.dungeonState();
 
+    // Light spells (MILWA/LOMILWA)
     if (dungeon?.lightActive && dungeon.lightSpellType) {
       const durationDisplay = LightService.getSpellDurationDisplay(dungeon);
       const durationText = durationDisplay === 'permanent' ? '' : ` (${durationDisplay})`;
       spells.push({
         name: dungeon.lightSpellType,
         icon: '💡',
-        description: `Light${durationText}`
+        description: `Light${durationText}`,
+        variant: 'light'
+      });
+    }
+
+    // LATUMAPIC (monster identification) - persists for entire expedition
+    if (dungeon?.latumapicActive) {
+      spells.push({
+        name: 'LATUMAPIC',
+        icon: '👁️',
+        description: 'Monsters Identified',
+        variant: 'identification'
       });
     }
 
@@ -987,13 +999,18 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Initialize combat state with encounter generation
       // Pass fixedEncounterConfig for AUX-based monster selection
       // Pass encounterReason for treasure mechanics (treasure_room = guaranteed chest)
+      // Pass latumapicActive so monsters are pre-identified if spell is active
+      // Note: Optional chaining is defensive - dungeonState should exist here but may be
+      // undefined during edge cases like combat triggered during scene transitions
+      const latumapicActive = this.dungeonState()?.latumapicActive ?? false;
       const combatState = CombatService.initiateCombat(
         dungeonLevel,
         partyChars,
         canFlee,
         fixedEncounterConfig,
         false,  // isFriendlyEncounter - default to false for monster encounters
-        encounterReason
+        encounterReason,
+        latumapicActive
       );
 
       // Update game state with combat
@@ -1889,6 +1906,38 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       if (spell.utility === 'locate_person') {
         return {
           message: `${caster.name} casts ${spell.name}! Lost souls can be sensed...`
+        };
+      }
+
+      // LATUMAPIC - Identify foes (persists for entire expedition)
+      if (spell.utility === 'identify_foe') {
+        const dungeon = this.dungeonState();
+        if (!dungeon) {
+          return { message: `${spell.name} can only be cast in the dungeon.` };
+        }
+
+        // Already active?
+        if (dungeon.latumapicActive) {
+          return { message: `${caster.name} casts ${spell.name}... but monsters are already identified.` };
+        }
+
+        // Also identify any current combat monsters
+        const combat = this.gameState.state().combat;
+        if (combat) {
+          this.gameState.updateState(state => ({
+            ...state,
+            combat: state.combat ? {
+              ...state.combat,
+              monsterGroups: state.combat.monsterGroups.map(g => ({ ...g, identified: true }))
+            } : undefined
+          }));
+        }
+
+        return {
+          message: `${caster.name} casts ${spell.name}! All monsters are now identified for this expedition.`,
+          dungeonUpdate: {
+            latumapicActive: true
+          }
         };
       }
     }

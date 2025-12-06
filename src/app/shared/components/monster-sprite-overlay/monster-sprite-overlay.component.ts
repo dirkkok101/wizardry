@@ -7,13 +7,15 @@ import {
   effect
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { MonsterGroup } from '@models/Combat'
-import { getGroupDisplayText } from '@utils/MonsterNameUtils'
+import { MonsterGroup, MonsterInstance } from '@models/Combat'
+import { getIdentifiedGroupDisplayText, getMonsterDisplayName } from '@utils/MonsterNameUtils'
+
+export type SpriteAnimationType = 'damage-flash' | 'dying'
 
 export interface SpriteAnimationState {
   groupId: 'A' | 'B' | 'C' | 'D'
   monsterIndex: number
-  animation: 'damage-flash' | 'dying' | 'heal'
+  animation: SpriteAnimationType
 }
 
 /**
@@ -61,6 +63,9 @@ export class MonsterSpriteOverlayComponent {
   // Internal animation tracking
   private readonly activeAnimations = signal<Map<string, SpriteAnimationState>>(new Map())
 
+  // Track sprites that failed to load (show fallback letter instead)
+  private readonly spriteErrors = signal<Set<string>>(new Set())
+
   // Computed: Front row groups (A, B typically)
   readonly frontRowGroups = computed(() =>
     this.monsterGroups().filter(g => g.formation === 'front')
@@ -92,17 +97,16 @@ export class MonsterSpriteOverlayComponent {
 
   /**
    * Get display name for a monster group
-   * Shows alive count and properly pluralized monster name (or ??? if unidentified)
-   * Format: "3 ORCS" or "1 ORC" or "2 ???"
+   * Shows alive count and properly pluralized monster name
+   * Before LATUMAPIC: Uses unidentifiedName (e.g., "3 SMALL HUMANOIDS")
+   * After LATUMAPIC: Uses real name (e.g., "3 KOBOLDS")
    */
   getGroupDisplayName(group: MonsterGroup): string {
     const aliveCount = group.monsters.filter(m => m.hp > 0).length
-    const monsterName = group.identified
-      ? group.monsters[0]?.name ?? 'Unknown'
-      : '???'
+    const firstMonster = group.monsters[0]
+    if (!firstMonster) return '???'
 
-    // Use utility for proper pluralization (handles irregular plurals like WEREWOLVES)
-    return getGroupDisplayText(aliveCount, monsterName)
+    return getIdentifiedGroupDisplayText(aliveCount, firstMonster, group.identified)
   }
 
   /**
@@ -119,13 +123,55 @@ export class MonsterSpriteOverlayComponent {
   }
 
   /**
-   * Get sprite initial (first letter of monster name, or ?)
+   * Get sprite initial (first letter of display name)
+   * Uses unidentifiedName if not identified, real name if identified
    */
   getSpriteInitial(group: MonsterGroup): string {
     const monster = group.monsters[0]
     if (!monster) return '?'
-    if (!group.identified) return '?'
-    return monster.name.charAt(0).toUpperCase()
+    const displayName = getMonsterDisplayName(monster, group.identified)
+    return displayName.charAt(0).toUpperCase()
+  }
+
+  /**
+   * Get the first monster in a group safely
+   * Returns undefined if group has no monsters
+   */
+  getFirstMonster(group: MonsterGroup): MonsterInstance | undefined {
+    return group.monsters[0]
+  }
+
+  /**
+   * Get sprite image URL for a monster
+   * Maps monsterId to sprite file path (e.g., 'kobold' → '/assets/monsters/sprites/kobold.png')
+   */
+  getSpriteUrl(monster: MonsterInstance | undefined): string {
+    if (!monster) return '/assets/monsters/sprites/unknown.png'
+    return `/assets/monsters/sprites/${monster.monsterId}.png`
+  }
+
+  /**
+   * Handle sprite image load error - fall back to letter initial
+   * Tracks by monsterId to prevent duplicate load attempts across groups
+   */
+  onSpriteError(monsterId: string): void {
+    this.spriteErrors.update(errors => new Set(errors).add(monsterId))
+  }
+
+  /**
+   * Check if sprite failed to load (show fallback instead)
+   * Uses monsterId for efficient caching across groups
+   */
+  hasSpriteError(monsterId: string | undefined): boolean {
+    if (!monsterId) return true
+    return this.spriteErrors().has(monsterId)
+  }
+
+  /**
+   * Get count of alive monsters in a group
+   */
+  getAliveCount(group: MonsterGroup): number {
+    return group.monsters.filter(m => m.hp > 0).length
   }
 
   /**
@@ -136,26 +182,64 @@ export class MonsterSpriteOverlayComponent {
   }
 
   /**
-   * Check if a specific monster sprite should show an animation
+   * Check if a group has an active animation (any monster in group)
+   * Used for single-card-per-group display
    */
-  getSpriteAnimation(groupId: 'A' | 'B' | 'C' | 'D', monsterIndex: number): string {
-    const key = `${groupId}-${monsterIndex}`
-    const state = this.activeAnimations().get(key)
-    return state?.animation ?? ''
+  hasGroupAnimation(groupId: 'A' | 'B' | 'C' | 'D', animationType: SpriteAnimationType): boolean {
+    const animations = this.activeAnimations()
+    for (const [key, state] of animations) {
+      if (key.startsWith(groupId) && state.animation === animationType) {
+        return true
+      }
+    }
+    return false
   }
 
   /**
-   * Handle animation end event for a sprite
+   * Handle animation end event for a group card
+   * Clears all animations for monsters in this group and emits completion events
    */
-  onSpriteAnimationEnd(groupId: 'A' | 'B' | 'C' | 'D', monsterIndex: number): void {
-    const key = `${groupId}-${monsterIndex}`
-    const state = this.activeAnimations().get(key)
-    if (state) {
-      const newMap = new Map(this.activeAnimations())
-      newMap.delete(key)
-      this.activeAnimations.set(newMap)
-      this.animationComplete.emit(state)
+  onGroupAnimationEnd(groupId: 'A' | 'B' | 'C' | 'D'): void {
+    const animations = this.activeAnimations()
+    const toRemove: string[] = []
+    const toEmit: SpriteAnimationState[] = []
+
+    for (const [key, state] of animations) {
+      if (key.startsWith(groupId)) {
+        toRemove.push(key)
+        toEmit.push(state)
+      }
     }
+
+    if (toRemove.length > 0) {
+      const newMap = new Map(animations)
+      for (const key of toRemove) {
+        newMap.delete(key)
+      }
+      this.activeAnimations.set(newMap)
+
+      // Emit completion for all animations in the group
+      for (const anim of toEmit) {
+        this.animationComplete.emit(anim)
+      }
+    }
+  }
+
+  /**
+   * Get ARIA label for a monster group for accessibility
+   */
+  getGroupAriaLabel(group: MonsterGroup): string {
+    const name = this.getGroupDisplayName(group)
+    const status = this.hasAliveMonsters(group) ? '' : '(defeated)'
+    const selected = this.selectedGroupId() === group.id ? '(selected)' : ''
+    return `Group ${group.id}: ${name} ${status} ${selected}`.replace(/\s+/g, ' ').trim()
+  }
+
+  /**
+   * Get alt text for sprite image
+   */
+  getSpriteAltText(group: MonsterGroup): string {
+    return `Group ${group.id}: ${this.getGroupDisplayName(group)}`
   }
 
   /**

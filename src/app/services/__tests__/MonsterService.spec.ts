@@ -24,6 +24,16 @@ describe('MonsterService', () => {
       expect(instance.undead).toBe(false)
     })
 
+    it('includes unidentifiedName from template', () => {
+      const kobold = MonsterService.createMonsterInstance('kobold')
+      expect(kobold.name).toBe('Kobold')
+      expect(kobold.unidentifiedName).toBe('Small Humanoid')
+
+      const werdna = MonsterService.createMonsterInstance('werdna')
+      expect(werdna.name).toBe('W E R D N A')
+      expect(werdna.unidentifiedName).toBe('Man in Robes')
+    })
+
     it('creates undead monster with undead flag', () => {
       const instance = MonsterService.createMonsterInstance('murphy_ghost')
 

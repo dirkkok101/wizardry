@@ -44,6 +44,7 @@ export interface MonsterInstance {
   id: string
   monsterId: string
   name: string
+  unidentifiedName: string  // Generic name shown before LATUMAPIC identification
   hp: number
   maxHp: number
   ac: number

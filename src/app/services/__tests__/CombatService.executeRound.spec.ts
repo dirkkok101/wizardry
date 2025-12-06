@@ -12,7 +12,8 @@ describe('CombatService.executeRound', () => {
     const monsterGroups: MonsterGroup[] = [{
       id: 'A',
       monsters: [monster],
-      formation: 'front'
+      formation: 'front',
+      identified: true
     }]
     const state = createTestCombatState({ monsterGroups })
 
@@ -49,7 +50,8 @@ describe('CombatService.executeRound', () => {
     const monsterGroups: MonsterGroup[] = [{
       id: 'A',
       monsters: [monster],
-      formation: 'front'
+      formation: 'front',
+      identified: true
     }]
     const state = createTestCombatState({ monsterGroups })
 
@@ -95,7 +97,8 @@ describe('CombatService.executeRound', () => {
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster1, monster2],
-        formation: 'front'
+        formation: 'front',
+        identified: true
       }]
       const state = createTestCombatState({ monsterGroups })
 
@@ -140,7 +143,8 @@ describe('CombatService.executeRound', () => {
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster],
-        formation: 'front'
+        formation: 'front',
+        identified: true
       }]
       const state = createTestCombatState({ monsterGroups })
 
@@ -185,7 +189,8 @@ describe('CombatService.executeRound', () => {
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster1, monster2],
-        formation: 'front'
+        formation: 'front',
+        identified: true
       }]
       const state = createTestCombatState({ monsterGroups })
 

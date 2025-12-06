@@ -111,6 +111,48 @@ describe('CombatService', () => {
 
       expect(state.canFlee).toBe(false)
     })
+
+    describe('LATUMAPIC monster identification', () => {
+      it('creates unidentified monster groups when latumapicActive is false', () => {
+        const party = [createTestCharacter()]
+        const state = CombatService.initiateCombat(1, party, true, undefined, false, undefined, false)
+
+        for (const group of state.monsterGroups) {
+          expect(group.identified).toBe(false)
+        }
+      })
+
+      it('creates identified monster groups when latumapicActive is true', () => {
+        const party = [createTestCharacter()]
+        const state = CombatService.initiateCombat(1, party, true, undefined, false, undefined, true)
+
+        for (const group of state.monsterGroups) {
+          expect(group.identified).toBe(true)
+        }
+      })
+
+      it('defaults to unidentified groups when latumapicActive is not provided', () => {
+        const party = [createTestCharacter()]
+        const state = CombatService.initiateCombat(1, party, true)
+
+        for (const group of state.monsterGroups) {
+          expect(group.identified).toBe(false)
+        }
+      })
+
+      it('passes latumapicActive through to fixed encounters', () => {
+        const party = [createTestCharacter()]
+        const fixedConfig = { encounterId: 'kobold' }
+
+        // Without LATUMAPIC
+        const stateUnidentified = CombatService.initiateCombat(1, party, false, fixedConfig, false, 'fixed', false)
+        expect(stateUnidentified.monsterGroups[0].identified).toBe(false)
+
+        // With LATUMAPIC
+        const stateIdentified = CombatService.initiateCombat(1, party, false, fixedConfig, false, 'fixed', true)
+        expect(stateIdentified.monsterGroups[0].identified).toBe(true)
+      })
+    })
   })
 
   describe('createCommand', () => {

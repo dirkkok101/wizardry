@@ -105,9 +105,10 @@ export const EncounterService = {
    * - Level 3+: Progressively more multi-group encounters
    *
    * @param dungeonLevel - Current dungeon level (1-10)
+   * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
    * @returns Array of MonsterGroups (1-4 groups)
    */
-  generateEncounter(dungeonLevel: number): MonsterGroup[] {
+  generateEncounter(dungeonLevel: number, latumapicActive: boolean = false): MonsterGroup[] {
     const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
 
     // Roll number of groups using weighted probability
@@ -136,7 +137,7 @@ export const EncounterService = {
         id: groupIds[i],
         monsters: monsters,
         formation: this.determineFormation(monsters),
-        identified: true  // Default to identified for better UX (LATUMAPIC system can be added later)
+        identified: latumapicActive  // Monsters identified if LATUMAPIC active for expedition
       })
     }
 
@@ -149,9 +150,10 @@ export const EncounterService = {
    *
    * @param dungeonLevel - Current dungeon level (1-10)
    * @param config - Fixed encounter configuration with encounterId
+   * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
    * @returns Array of MonsterGroups (1 group for fixed encounters)
    */
-  generateFixedEncounter(dungeonLevel: number, config: FixedEncounterConfig): MonsterGroup[] {
+  generateFixedEncounter(dungeonLevel: number, config: FixedEncounterConfig, latumapicActive: boolean = false): MonsterGroup[] {
     const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
 
     // Use encounterId directly - no table lookup needed!
@@ -168,7 +170,7 @@ export const EncounterService = {
       id: 'A',
       monsters: monsters,
       formation: this.determineFormation(monsters),
-      identified: true  // Default to identified for better UX (LATUMAPIC system can be added later)
+      identified: latumapicActive  // Monsters identified if LATUMAPIC active for expedition
     }
 
     return [group]

@@ -355,7 +355,8 @@ describe('CombatService - Phase 2 Features', () => {
       const monsterGroups: MonsterGroup[] = [{
         id: 'A',
         monsters: [monster],
-        formation: 'front'
+        formation: 'front',
+        identified: true
       }]
       const state = createTestCombatState({ monsterGroups, canFlee: true })
 

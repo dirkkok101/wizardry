@@ -1,91 +1,80 @@
-<!-- Monster Sprite Overlay - Theater Stage Monster Display -->
+<!-- Monster Sprite Overlay - Single Card Per Group Display -->
 <div class="monster-sprite-overlay">
+  <!-- Reusable template for monster group card -->
+  <ng-template #monsterGroupCard let-group="group" let-rowClass="rowClass" let-index="index" let-isBackRow="isBackRow">
+    <div
+      class="monster-group"
+      [ngClass]="rowClass"
+      [class.selected]="selectedGroupId() === group.id"
+      [class.defeated]="!hasAliveMonsters(group)"
+      [class.targetable]="isTargetingMode() && hasAliveMonsters(group)"
+      [style.--group-color]="getGroupColor(group.id)"
+      [style.animation-delay]="getRevealDelay(index, isBackRow)"
+      role="button"
+      [tabindex]="isTargetingMode() && hasAliveMonsters(group) ? 0 : -1"
+      [attr.aria-label]="getGroupAriaLabel(group)"
+      [attr.aria-pressed]="selectedGroupId() === group.id"
+      [attr.aria-disabled]="!isTargetingMode() || !hasAliveMonsters(group)"
+      (click)="onGroupClick(group.id)"
+      (keydown.enter)="onGroupClick(group.id)"
+      (keydown.space)="onGroupClick(group.id); $event.preventDefault()"
+    >
+      <div
+        class="monster-card"
+        [class.damage-flash]="hasGroupAnimation(group.id, 'damage-flash')"
+        [class.dying]="hasGroupAnimation(group.id, 'dying')"
+        (animationend)="onGroupAnimationEnd(group.id)"
+      >
+        <!-- Full-bleed sprite -->
+        @if (!hasSpriteError(getFirstMonster(group)?.monsterId)) {
+          <img
+            [src]="getSpriteUrl(getFirstMonster(group))"
+            [alt]="getSpriteAltText(group)"
+            class="monster-sprite"
+            (error)="onSpriteError(getFirstMonster(group)?.monsterId ?? 'unknown')"
+          />
+        } @else {
+          <div class="sprite-placeholder">{{ getSpriteInitial(group) }}</div>
+        }
+
+        <!-- Overlaid labels -->
+        <div class="card-overlay" aria-hidden="true">
+          <span class="group-id">[{{ group.id }}]</span>
+          <span class="monster-count">×{{ getAliveCount(group) }}</span>
+        </div>
+        <div class="monster-name" aria-hidden="true">{{ getGroupDisplayName(group) }}</div>
+      </div>
+    </div>
+  </ng-template>
+
   <!-- Back Row Groups - Smaller, Higher (depth effect) -->
   @if (backRowGroups().length > 0) {
-    <div class="back-row">
+    <div class="back-row" role="group" aria-label="Back row monsters">
       @for (group of backRowGroups(); track group.id; let i = $index) {
-        <div
-          class="monster-group back-row-group"
-          [class.selected]="selectedGroupId() === group.id"
-          [class.defeated]="!hasAliveMonsters(group)"
-          [class.targetable]="isTargetingMode() && hasAliveMonsters(group)"
-          [style.--group-color]="getGroupColor(group.id)"
-          [style.animation-delay]="getRevealDelay(i, true)"
-          (click)="onGroupClick(group.id)"
-        >
-          <!-- Stack of Monster Sprites (show up to 3) -->
-          <div class="sprite-stack">
-            @for (monster of group.monsters.slice(0, 3); track $index; let mi = $index) {
-              <div
-                class="sprite-container"
-                [class.dead]="monster.hp <= 0"
-                [style.--stack-index]="mi"
-                [class.damage-flash]="getSpriteAnimation(group.id, mi) === 'damage-flash'"
-                [class.dying]="getSpriteAnimation(group.id, mi) === 'dying'"
-                (animationend)="onSpriteAnimationEnd(group.id, mi)"
-              >
-                <div class="sprite-placeholder">
-                  {{ getSpriteInitial(group) }}
-                </div>
-              </div>
-            }
-            <!-- Overflow indicator for large groups -->
-            @if (group.monsters.length > 3) {
-              <div class="overflow-indicator">+{{ group.monsters.length - 3 }}</div>
-            }
-          </div>
-
-          <!-- Group Badge -->
-          <div class="group-badge">
-            <span class="group-id">{{ group.id }}</span>
-            <span class="group-info">{{ getGroupDisplayName(group) }}</span>
-          </div>
-        </div>
+        <ng-container
+          *ngTemplateOutlet="monsterGroupCard; context: {
+            group: group,
+            rowClass: 'back-row-group',
+            index: i,
+            isBackRow: true
+          }"
+        ></ng-container>
       }
     </div>
   }
 
   <!-- Front Row Groups - Larger, Lower -->
   @if (frontRowGroups().length > 0) {
-    <div class="front-row">
+    <div class="front-row" role="group" aria-label="Front row monsters">
       @for (group of frontRowGroups(); track group.id; let i = $index) {
-        <div
-          class="monster-group front-row-group"
-          [class.selected]="selectedGroupId() === group.id"
-          [class.defeated]="!hasAliveMonsters(group)"
-          [class.targetable]="isTargetingMode() && hasAliveMonsters(group)"
-          [style.--group-color]="getGroupColor(group.id)"
-          [style.animation-delay]="getRevealDelay(i, false)"
-          (click)="onGroupClick(group.id)"
-        >
-          <!-- Stack of Monster Sprites (show up to 3) -->
-          <div class="sprite-stack">
-            @for (monster of group.monsters.slice(0, 3); track $index; let mi = $index) {
-              <div
-                class="sprite-container"
-                [class.dead]="monster.hp <= 0"
-                [style.--stack-index]="mi"
-                [class.damage-flash]="getSpriteAnimation(group.id, mi) === 'damage-flash'"
-                [class.dying]="getSpriteAnimation(group.id, mi) === 'dying'"
-                (animationend)="onSpriteAnimationEnd(group.id, mi)"
-              >
-                <div class="sprite-placeholder">
-                  {{ getSpriteInitial(group) }}
-                </div>
-              </div>
-            }
-            <!-- Overflow indicator for large groups -->
-            @if (group.monsters.length > 3) {
-              <div class="overflow-indicator">+{{ group.monsters.length - 3 }}</div>
-            }
-          </div>
-
-          <!-- Group Badge -->
-          <div class="group-badge">
-            <span class="group-id">{{ group.id }}</span>
-            <span class="group-info">{{ getGroupDisplayName(group) }}</span>
-          </div>
-        </div>
+        <ng-container
+          *ngTemplateOutlet="monsterGroupCard; context: {
+            group: group,
+            rowClass: 'front-row-group',
+            index: i,
+            isBackRow: false
+          }"
+        ></ng-container>
       }
     </div>
   }

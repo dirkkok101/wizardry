@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { MonsterGroup } from '@models/Combat'
-import { getGroupDisplayText } from '@utils/MonsterNameUtils'
+import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils'
 
 /**
  * Color mapping for monster group IDs (A, B, C, D)
@@ -72,14 +72,16 @@ export class MonsterGroupListItemComponent {
 
   /**
    * Get the display name for the monster group
-   * Format: "{count} {PLURAL_NAME}"
+   * Before LATUMAPIC: Uses unidentifiedName (e.g., "3 SMALL HUMANOIDS")
+   * After LATUMAPIC: Uses real name (e.g., "3 KOBOLDS")
    */
   get displayName(): string {
     if (this.isDefeated || this.totalCount === 0) {
       return 'DEFEATED'
     }
-    const monsterName = this.group.monsters[0]?.name || 'UNKNOWN'
-    return getGroupDisplayText(this.aliveCount, monsterName)
+    const firstMonster = this.group.monsters[0]
+    if (!firstMonster) return 'UNKNOWN'
+    return getIdentifiedGroupDisplayText(this.aliveCount, firstMonster, this.group.identified)
   }
 
   /**

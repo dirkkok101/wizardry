@@ -18,6 +18,7 @@ import {
   selectMonsterMageSpell,
   selectMonsterPriestSpell
 } from '@config/MonsterSpellTables'
+import { getMonsterDisplayName } from '@utils/MonsterNameUtils'
 
 /**
  * Agility-to-initiative modifier table (Apple II reference)
@@ -42,6 +43,24 @@ export class CombatService {
    */
   static DEBUG_COMBAT = false
 
+  /**
+   * Get the display name for a monster based on identification status.
+   *
+   * Before LATUMAPIC: Returns unidentifiedName (e.g., "Small Humanoid")
+   * After LATUMAPIC: Returns true name (e.g., "Kobold")
+   *
+   * @param state - Current combat state (to find the monster's group)
+   * @param monster - The monster instance
+   * @returns Display name based on the group's identified status
+   */
+  private static getDisplayName(state: CombatState, monster: MonsterInstance): string {
+    const group = state.monsterGroups.find(g =>
+      g.monsters.some(m => m.id === monster.id)
+    )
+    // Default to unidentified if group not found (safer, no spoilers)
+    const identified = group?.identified ?? false
+    return getMonsterDisplayName(monster, identified)
+  }
 
   /**
    * Calculate initiative for combatant
@@ -94,6 +113,7 @@ export class CombatService {
    * @param fixedEncounterConfig - Optional AUX config for fixed encounters
    * @param isFriendlyEncounter - True if party chose to fight friendly monsters
    * @param encounterReason - Why encounter triggered (for treasure mechanics)
+   * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
    * @returns Initial combat state with monster groups and surprise state
    */
   static initiateCombat(
@@ -102,13 +122,15 @@ export class CombatService {
     canFlee: boolean,
     fixedEncounterConfig?: FixedEncounterConfig,
     isFriendlyEncounter: boolean = false,
-    encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
+    encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap',
+    latumapicActive: boolean = false
   ): CombatState {
     // Generate monster groups - use fixed encounter config if provided
     // Fixed encounters use encounterId for direct monster spawning
+    // Pass latumapicActive so monsters are pre-identified if spell is active
     const monsterGroups = fixedEncounterConfig
-      ? EncounterService.generateFixedEncounter(dungeonLevel, fixedEncounterConfig)
-      : EncounterService.generateEncounter(dungeonLevel)
+      ? EncounterService.generateFixedEncounter(dungeonLevel, fixedEncounterConfig, latumapicActive)
+      : EncounterService.generateEncounter(dungeonLevel, latumapicActive)
 
     // Initialize currentMageLevel for each group (for spell degradation tracking)
     // Per Apple II reference (Section 10): Mage spell level degrades permanently during encounter
@@ -253,7 +275,8 @@ export class CombatService {
     defenderAcModifier: number = 0,
     attackerPenalty: number = 0,
     victimPosition: number = 0,
-    attackIndex: number = 0
+    attackIndex: number = 0,
+    state?: CombatState
   ): AttackResult {
     const hitChance = this.calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty, victimPosition)
     const hitRoll = RandomService.randomFloat(0, 100)
@@ -329,7 +352,7 @@ export class CombatService {
     // Build appropriate message
     let message = `${finalDamage} damage!`
     if (instantKill) {
-      const defenderName = this.getCombatantName(defender)
+      const defenderName = this.getCombatantName(defender, state)
       message = `Critical hit! ${defenderName} is slain!`
     } else if (isHelpless) {
       message = `Strikes helpless target! ${finalDamage} damage!`
@@ -722,8 +745,8 @@ export class CombatService {
     existingCharacterUpdates?: Map<string, Character>
   ): CommandExecutionResult {
     if (this.DEBUG_COMBAT) {
-      const actorName = this.getCombatantName(command.actor)
-      const targetName = this.getTargetName(command.target)
+      const actorName = this.getCombatantName(command.actor, state)
+      const targetName = this.getTargetName(command.target, state)
       const isMonster = 'monsterId' in command.actor
 
       console.log(`[Combat] Executing command:`, {
@@ -796,7 +819,7 @@ export class CombatService {
     const messages: string[] = []
     const characterUpdates = new Map<string, Character>(existingCharacterUpdates)
 
-    messages.push(`${monster.name} breathes ${breathType}!`)
+    messages.push(`${this.getDisplayName(state, monster)} breathes ${breathType}!`)
 
     for (const target of targets) {
       if (!target || !('id' in target)) continue
@@ -897,8 +920,8 @@ export class CombatService {
       if (monsterTemplate?.monsterClass) {
         const hasProtection = ItemProtectionService.hasClassProtection(character, monsterTemplate.monsterClass)
         if (hasProtection && RandomService.chance(50)) {
-          const actorName = this.getCombatantName(command.actor)
-          const targetName = this.getCombatantName(target)
+          const actorName = this.getCombatantName(command.actor, state)
+          const targetName = this.getCombatantName(target, state)
           return {
             newState: state,
             messages: [
@@ -929,9 +952,9 @@ export class CombatService {
     }
 
     const attackIndex = command.attackIndex ?? 0
-    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty, victimPosition, attackIndex)
-    const actorName = this.getCombatantName(command.actor)
-    const targetName = this.getCombatantName(target)
+    const attackResult = this.resolveAttack(command.actor, target, acModifier, attackerPenalty, victimPosition, attackIndex, state)
+    const actorName = this.getCombatantName(command.actor, state)
+    const targetName = this.getCombatantName(target, state)
 
     if (this.DEBUG_COMBAT) {
       console.debug(`[Combat] Attack resolution:`, {
@@ -1241,7 +1264,7 @@ export class CombatService {
     // Add actor to parrying set
     parryingCombatants.add(command.actor.id)
 
-    const actorName = this.getCombatantName(command.actor)
+    const actorName = this.getCombatantName(command.actor, state)
     return {
       newState: state, // State doesn't change for PARRY, return as-is
       messages: [`${actorName} assumes a defensive stance! (AC -2)`]
@@ -1252,7 +1275,7 @@ export class CombatService {
     state: CombatState,
     command: CombatCommand
   ): CommandExecutionResult {
-    const actorName = this.getCombatantName(command.actor)
+    const actorName = this.getCombatantName(command.actor, state)
     return {
       newState: state, // State doesn't change, flee is checked at end of round
       messages: [`${actorName} attempts to flee!`]
@@ -1278,15 +1301,18 @@ export class CombatService {
     if (!group) {
       return {
         newState: state,
-        messages: [`${monster.name} tries to advance but can't find their group!`]
+        messages: [`${monster.unidentifiedName} tries to advance but can't find their group!`]
       }
     }
+
+    // Get display name based on identification status
+    const displayName = getMonsterDisplayName(monster, group.identified)
 
     // If already in front row, just return (shouldn't happen)
     if (group.formation === 'front') {
       return {
         newState: state,
-        messages: [`${monster.name} is already in the front row!`]
+        messages: [`${displayName} is already in the front row!`]
       }
     }
 
@@ -1301,8 +1327,8 @@ export class CombatService {
     )
 
     const message = aliveCount > 1
-      ? `The ${monster.name}s advance to the front row!`
-      : `${monster.name} advances to the front row!`
+      ? `The ${displayName}s advance to the front row!`
+      : `${displayName} advances to the front row!`
 
     return {
       newState: {
@@ -1329,7 +1355,7 @@ export class CombatService {
     const { monsterId, monsterLevel, groupId } = command.data
 
     const messages: string[] = []
-    messages.push(`${monster.name} calls for help!`)
+    messages.push(`${this.getDisplayName(state, monster)} calls for help!`)
 
     // Roll for help to actually arrive: (Level × 5)%
     const successChance = Math.min(monsterLevel * 5, 100)
@@ -1401,7 +1427,7 @@ export class CombatService {
     const { groupId } = command.data || {}
 
     const messages: string[] = []
-    messages.push(`${monster.name} flees in terror!`)
+    messages.push(`${this.getDisplayName(state, monster)} flees in terror!`)
 
     // Remove the fleeing monster from its group
     const newMonsterGroups = state.monsterGroups.map(g => {
@@ -1433,7 +1459,7 @@ export class CombatService {
     existingCharacterUpdates?: Map<string, Character>
   ): CommandExecutionResult {
     const isMonsterCaster = 'monsterId' in command.actor
-    const actorName = this.getCombatantName(command.actor)
+    const actorName = this.getCombatantName(command.actor, state)
     const spellId = command.data?.spellId
     const characterUpdates = new Map<string, Character>()
 
@@ -1869,7 +1895,7 @@ export class CombatService {
     command: CombatCommand
   ): CommandExecutionResult {
     const caster = command.actor as Character
-    const actorName = this.getCombatantName(caster)
+    const actorName = this.getCombatantName(caster, state)
 
     // Must have a target group specified
     const groupId = command.targetGroupId
@@ -2140,7 +2166,7 @@ export class CombatService {
       const effectiveTarget = getEffectiveChar(target)
 
       // Resolve attack (no parrying during penalty round)
-      const attackResult = this.resolveAttack(monster, effectiveTarget, 0, 0)
+      const attackResult = this.resolveAttack(monster, effectiveTarget, 0, 0, 0, 0, state)
 
       if (this.DEBUG_COMBAT) {
         console.debug(`[Combat] BONUS ATTACK: ${monster.name} -> ${target.name}`, {
@@ -2150,12 +2176,13 @@ export class CombatService {
         })
       }
 
+      const displayName = this.getDisplayName(state, monster)
       if (attackResult.hit) {
         const damaged = this.applyDamageToCharacter(effectiveTarget, attackResult.damage)
         damagedCharacters.set(target.id, damaged)
-        messages.push(`${monster.name} attacks ${target.name}: ${attackResult.damage} damage!`)
+        messages.push(`${displayName} attacks ${target.name}: ${attackResult.damage} damage!`)
       } else {
-        messages.push(`${monster.name} attacks ${target.name}: Miss!`)
+        messages.push(`${displayName} attacks ${target.name}: Miss!`)
       }
     }
 
@@ -2475,16 +2502,28 @@ export class CombatService {
     return { ...state, monsterGroups: newMonsterGroups }
   }
 
-  private static getCombatantName(combatant: Combatant): string {
+  /**
+   * Get display name for a combatant, respecting monster identification status.
+   * Characters always show their real name; monsters show based on LATUMAPIC status.
+   */
+  private static getCombatantName(combatant: Combatant, state?: CombatState): string {
+    // If it's a monster and we have combat state, use identification-aware display name
+    if ('monsterId' in combatant && state) {
+      return this.getDisplayName(state, combatant as MonsterInstance)
+    }
+    // Characters always show their real name
     return combatant.name || 'Unknown'
   }
 
-  private static getTargetName(target: Combatant | Combatant[] | undefined): string {
+  /**
+   * Get display name for target(s), respecting monster identification status.
+   */
+  private static getTargetName(target: Combatant | Combatant[] | undefined, state?: CombatState): string {
     if (!target) return 'none'
     if (Array.isArray(target)) {
-      return target.map(t => t.name || 'Unknown').join(', ')
+      return target.map(t => this.getCombatantName(t, state)).join(', ')
     }
-    return target.name || 'Unknown'
+    return this.getCombatantName(target, state)
   }
 
   private static getTargetId(target: Combatant | Combatant[] | undefined): string | undefined {
@@ -3375,7 +3414,8 @@ export class CombatService {
 
     // Advance the group
     const aliveCount = backMeleeGroup.monsters.filter(m => m.hp > 0).length
-    const monsterName = backMeleeGroup.monsters[0].name
+    const firstMonster = backMeleeGroup.monsters[0]
+    const displayName = getMonsterDisplayName(firstMonster, backMeleeGroup.identified)
 
     const newMonsterGroups = state.monsterGroups.map(g =>
       g.id === backMeleeGroup.id
@@ -3384,8 +3424,8 @@ export class CombatService {
     )
 
     const message = aliveCount > 1
-      ? `The ${monsterName}s rush forward to fill the gap!`
-      : `${monsterName} rushes forward to fill the gap!`
+      ? `The ${displayName}s rush forward to fill the gap!`
+      : `${displayName} rushes forward to fill the gap!`
 
     return {
       newState: {
@@ -3652,7 +3692,7 @@ export class CombatService {
           // Find combatant name for message
           const combatant = this.findCombatant(currentState, combatantId, party)
           if (combatant) {
-            messages.push(`${this.getCombatantName(combatant)}'s ${status} effect wears off!`)
+            messages.push(`${this.getCombatantName(combatant, currentState)}'s ${status} effect wears off!`)
           }
         } else {
           // Decrease duration
@@ -3707,7 +3747,8 @@ export class CombatService {
 
         // Roll for recovery using ResistanceService
         if (MonsterResistanceService.rollRecovery(monster.level, statusType)) {
-          messages.push(`${monster.name} recovers from ${statusType.toLowerCase()}!`)
+          const displayName = getMonsterDisplayName(monster, group.identified)
+          messages.push(`${displayName} recovers from ${statusType.toLowerCase()}!`)
           return { ...monster, status: 'ALIVE' as CombatantStatus }
         }
 
@@ -3722,6 +3763,8 @@ export class CombatService {
         const monsterEffects = newStatusEffects.get(monster.id)
         if (!monsterEffects) continue
 
+        const displayName = getMonsterDisplayName(monster, group.identified)
+
         // Check SILENCED recovery
         if (monsterEffects.has('SILENCED')) {
           if (MonsterResistanceService.rollRecovery(monster.level, 'SILENCED')) {
@@ -3732,7 +3775,7 @@ export class CombatService {
             } else {
               newStatusEffects.set(monster.id, updatedEffects)
             }
-            messages.push(`${monster.name} recovers from silence!`)
+            messages.push(`${displayName} recovers from silence!`)
           }
         }
 
@@ -3746,7 +3789,7 @@ export class CombatService {
             } else {
               newStatusEffects.set(monster.id, updatedEffects)
             }
-            messages.push(`${monster.name} recovers from blindness!`)
+            messages.push(`${displayName} recovers from blindness!`)
           }
         }
       }
@@ -3796,7 +3839,8 @@ export class CombatService {
         const healAmount = Math.min(monster.regeneration, monster.maxHp - monster.hp)
         const newHp = monster.hp + healAmount
 
-        messages.push(`${monster.name} regenerates ${healAmount} HP!`)
+        const displayName = getMonsterDisplayName(monster, group.identified)
+        messages.push(`${displayName} regenerates ${healAmount} HP!`)
 
         return { ...monster, hp: newHp }
       })
@@ -3906,7 +3950,7 @@ export class CombatService {
           // Poison always does 1 HP damage (per spec)
           const poisonDamage = 1
           currentState = this.applyDamage(currentState, monster, poisonDamage)
-          messages.push(`${monster.name} takes poison damage!`)
+          messages.push(`${this.getDisplayName(currentState, monster)} takes poison damage!`)
         }
       }
     }

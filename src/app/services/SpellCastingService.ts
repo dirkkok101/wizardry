@@ -1,13 +1,14 @@
 // src/services/SpellCastingService.ts
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { SpellEffect, Combatant, MonsterInstance } from '@models/Combat'
+import { SpellEffect, Combatant, MonsterInstance, CombatState, MonsterGroup } from '@models/Combat'
 import { SpellDataLoader } from './SpellDataLoader'
 import { LoadedSpell } from '@models/SpellDefinition'
 import { RandomService } from './RandomService'
 import { MonsterResistanceService } from './MonsterResistanceService'
 import { CharacterResistanceService } from './CharacterResistanceService'
 import { ResistanceType } from '@models/CharacterResistance'
+import { getMonsterDisplayName } from '@utils/MonsterNameUtils'
 
 // Spell targeting types
 export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self'
@@ -125,11 +126,32 @@ export class SpellCastingService {
     }
   }
 
+  /**
+   * Get display name for a monster based on identification status.
+   * Falls back to unidentified name if combat state is not provided (safer default).
+   */
+  private static getMonsterDisplayName(
+    monster: MonsterInstance,
+    combatState?: CombatState
+  ): string {
+    if (!combatState) {
+      // Without combat state, default to unidentified name (safer, no spoilers)
+      return monster.unidentifiedName
+    }
+    const group = combatState.monsterGroups.find(g =>
+      g.monsters.some(m => m.id === monster.id)
+    )
+    // Default to unidentified if group not found (safer)
+    const identified = group?.identified ?? false
+    return getMonsterDisplayName(monster, identified)
+  }
+
   static resolveSpellEffect(
     spellId: string,
     caster: Character,
     targets: Combatant[],
-    context?: 'combat' | 'camp'
+    context?: 'combat' | 'camp',
+    combatState?: CombatState
   ): SpellEffect {
     const spell = SpellDataLoader.getSpell(spellId)
     if (!spell) {
@@ -195,7 +217,7 @@ export class SpellCastingService {
 
           if (resistResult.resisted) {
             // Fully resisted - no damage
-            resistedTargets.push(monster.name)
+            resistedTargets.push(this.getMonsterDisplayName(monster, combatState))
             damage.push(0)
             continue
           }
@@ -255,7 +277,7 @@ export class SpellCastingService {
           const resistResult = MonsterResistanceService.checkStatusEffectResistance(monster, spell)
 
           if (resistResult.resisted) {
-            resistedTargets.push(monster.name)
+            resistedTargets.push(this.getMonsterDisplayName(monster, combatState))
             continue
           }
         }
@@ -585,12 +607,12 @@ export class SpellCastingService {
           const deathCheck = MonsterResistanceService.checkInstantDeathResistance(monster, spell)
 
           if (deathCheck.immune) {
-            immuneTargets.push(monster.name)
+            immuneTargets.push(this.getMonsterDisplayName(monster, combatState))
             continue
           }
 
           if (deathCheck.resisted) {
-            resistedTargets.push(monster.name)
+            resistedTargets.push(this.getMonsterDisplayName(monster, combatState))
             continue
           }
         }

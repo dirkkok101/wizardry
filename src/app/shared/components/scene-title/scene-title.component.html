@@ -3,9 +3,13 @@
   <div class="scene-header-content">
     <ng-content></ng-content>
     @if (activeSpells().length > 0) {
-      <div class="active-spells">
+      <div class="active-spells" role="status" aria-label="Active spells">
         @for (spell of activeSpells(); track spell.name) {
-          <span class="spell-badge" [title]="spell.description">
+          <span class="spell-badge"
+                [class.spell-badge--light]="spell.variant === 'light'"
+                [class.spell-badge--identification]="spell.variant === 'identification'"
+                [title]="spell.description"
+                [attr.aria-label]="spell.name + ': ' + spell.description">
             {{ spell.icon }} {{ spell.name }}
           </span>
         }

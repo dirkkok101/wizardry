@@ -390,4 +390,55 @@ describe('EncounterService', () => {
       expect(result).toBe(false)
     })
   })
+
+  describe('LATUMAPIC identification', () => {
+    describe('generateEncounter', () => {
+      it('generates unidentified groups when latumapicActive is false', () => {
+        const groups = EncounterService.generateEncounter(1, false)
+
+        for (const group of groups) {
+          expect(group.identified).toBe(false)
+        }
+      })
+
+      it('generates identified groups when latumapicActive is true', () => {
+        const groups = EncounterService.generateEncounter(1, true)
+
+        for (const group of groups) {
+          expect(group.identified).toBe(true)
+        }
+      })
+
+      it('defaults to unidentified when latumapicActive is not provided', () => {
+        const groups = EncounterService.generateEncounter(1)
+
+        for (const group of groups) {
+          expect(group.identified).toBe(false)
+        }
+      })
+    })
+
+    describe('generateFixedEncounter', () => {
+      it('generates unidentified groups when latumapicActive is false', () => {
+        const groups = EncounterService.generateFixedEncounter(1, { encounterId: 'kobold' }, false)
+
+        expect(groups.length).toBe(1)
+        expect(groups[0].identified).toBe(false)
+      })
+
+      it('generates identified groups when latumapicActive is true', () => {
+        const groups = EncounterService.generateFixedEncounter(1, { encounterId: 'kobold' }, true)
+
+        expect(groups.length).toBe(1)
+        expect(groups[0].identified).toBe(true)
+      })
+
+      it('defaults to unidentified when latumapicActive is not provided', () => {
+        const groups = EncounterService.generateFixedEncounter(1, { encounterId: 'kobold' })
+
+        expect(groups.length).toBe(1)
+        expect(groups[0].identified).toBe(false)
+      })
+    })
+  })
 })
