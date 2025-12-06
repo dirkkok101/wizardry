@@ -30,10 +30,40 @@
       <ng-content></ng-content>
     </div>
 
-    <!-- Encounter Banner -->
-    @if (showEncounterBanner()) {
-      <div class="encounter-banner">
-        <span class="banner-text">ENCOUNTER!</span>
+    <!-- Letterbox Cinematic Banner (Encounter, Ambush, or Surprise) -->
+    @if (letterboxType()) {
+      <div
+        class="letterbox-banner"
+        [class.encounter]="letterboxType() === 'encounter'"
+        [class.ambush]="letterboxType() === 'ambush'"
+        [class.surprise]="letterboxType() === 'surprise'"
+      >
+        <!-- Top Bar -->
+        <div class="letterbox-bar top"></div>
+
+        <!-- Center Text Area -->
+        <div class="letterbox-content">
+          @switch (letterboxType()) {
+            @case ('encounter') {
+              <span class="banner-icon">⚔</span>
+              <span class="banner-text">E N C O U N T E R !</span>
+              <span class="banner-icon">⚔</span>
+            }
+            @case ('ambush') {
+              <span class="banner-icon">⚠</span>
+              <span class="banner-text">A M B U S H E D !</span>
+              <span class="banner-icon">⚠</span>
+            }
+            @case ('surprise') {
+              <span class="banner-icon">★</span>
+              <span class="banner-text">S U R P R I S E !</span>
+              <span class="banner-icon">★</span>
+            }
+          }
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="letterbox-bar bottom"></div>
       </div>
     }
 
@@ -74,8 +104,6 @@
                 </div>
               </div>
             }
-
-            <span class="continue-hint" role="note">Press ENTER to continue...</span>
           </div>
         }
       </div>

@@ -59,43 +59,158 @@
 }
 
 // ============================================
-// ENCOUNTER BANNER
+// LETTERBOX BANNER - Cinematic Reveal
 // ============================================
+// Used for: ENCOUNTER!, AMBUSHED!, SURPRISE!
+// Full-screen blackout with cinematic bars
 
-.encounter-banner {
+.letterbox-banner {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: banner-flash 0.5s ease-out forwards;
-  z-index: 20;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 25;
+  pointer-events: none;
+}
 
-  .banner-text {
-    font-family: var(--font-display);
-    font-size: 3rem;
-    font-weight: bold;
-    color: var(--color-gold-bright);
-    text-shadow:
-      0 0 10px var(--color-gold-glow),
-      0 0 30px rgba(244, 196, 48, 0.6),
-      0 4px 8px rgba(0, 0, 0, 0.8);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+// Transparent bars - show maze through them
+.letterbox-bar {
+  flex: 0 0 auto;
+  height: 0;
+  background: transparent;
+
+  &.top {
+    animation: bar-slide-down 0.4s ease-out forwards;
+  }
+
+  &.bottom {
+    animation: bar-slide-up 0.4s ease-out forwards;
   }
 }
 
-@keyframes banner-flash {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
+@keyframes bar-slide-down {
+  0% { height: 0; }
+  100% { height: 100px; }
+}
+
+@keyframes bar-slide-up {
+  0% { height: 0; }
+  100% { height: 100px; }
+}
+
+// Center content area - dark backdrop only here
+.letterbox-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0 2rem;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.95);  // Dark backdrop for text readability
+  opacity: 0;
+  animation: text-fade-in 0.5s ease-out 0.3s forwards;
+}
+
+@keyframes text-fade-in {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.banner-text {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.banner-icon {
+  font-size: 1.5rem;
+  animation: icon-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes icon-pulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.15); }
+}
+
+// ============================================
+// VARIANT: Encounter (Neutral/Gold)
+// ============================================
+
+.letterbox-banner.encounter {
+  .banner-text {
+    color: var(--color-gold-bright);
+    text-shadow:
+      0 0 20px var(--color-gold-glow),
+      0 0 40px rgba(244, 196, 48, 0.5),
+      0 0 60px rgba(244, 196, 48, 0.3);
   }
-  50% {
+  .banner-icon {
+    color: var(--color-gold-primary);
+    text-shadow: 0 0 15px var(--color-gold-glow);
+  }
+  .letterbox-bar {
+    box-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+  }
+}
+
+// ============================================
+// VARIANT: Ambush (Danger/Red)
+// ============================================
+
+.letterbox-banner.ambush {
+  .banner-text {
+    color: #fca5a5;
+    text-shadow:
+      0 0 20px rgba(220, 38, 38, 0.8),
+      0 0 40px rgba(220, 38, 38, 0.5),
+      0 0 60px rgba(220, 38, 38, 0.3);
+  }
+  .banner-icon {
+    color: #dc2626;
+    text-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
+  }
+  .letterbox-bar {
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.4);
+  }
+}
+
+// ============================================
+// VARIANT: Surprise (Advantage/Gold)
+// ============================================
+
+.letterbox-banner.surprise {
+  .banner-text {
+    color: var(--color-gold-bright);
+    text-shadow:
+      0 0 20px var(--color-gold-glow),
+      0 0 40px rgba(244, 196, 48, 0.5),
+      0 0 60px rgba(244, 196, 48, 0.3);
+  }
+  .banner-icon {
+    color: var(--color-gold-primary);
+    text-shadow: 0 0 15px var(--color-gold-glow);
+  }
+  .letterbox-bar {
+    box-shadow: 0 0 30px rgba(212, 165, 116, 0.3);
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .letterbox-bar,
+  .letterbox-content,
+  .banner-icon {
+    animation: none;
+  }
+  .letterbox-bar {
+    height: 80px;
+  }
+  .letterbox-content {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -233,14 +348,6 @@
       font-style: italic;
     }
   }
-
-  .continue-hint {
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-top: 0.5rem;
-    animation: hint-blink 1.5s ease-in-out infinite;
-  }
 }
 
 @keyframes rewards-slide-up {
@@ -252,11 +359,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-@keyframes hint-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
 }
 
 @keyframes victory-pulse {

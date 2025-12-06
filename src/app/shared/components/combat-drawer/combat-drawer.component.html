@@ -22,6 +22,26 @@
       }
     </div>
 
+    <!-- Combat Log Messages (shown during execution) -->
+    @if (mode() === 'minimized' && combatMessages().length > 0) {
+      <div #logContainer class="log-messages" role="log" aria-live="polite">
+        @for (msg of combatMessages(); track $index; let i = $index) {
+          <div
+            class="log-message"
+            [class.current]="i === combatMessages().length - 1"
+            [class.damage]="msg.type === 'damage'"
+            [class.healing]="msg.type === 'healing'"
+            [class.spell]="msg.type === 'spell'"
+            [class.death]="msg.type === 'death'"
+            [class.miss]="msg.type === 'miss'"
+            [class.status]="msg.type === 'status'"
+          >
+            {{ msg.text }}
+          </div>
+        }
+      </div>
+    }
+
     <!-- Action Selection Row (hidden when all actions selected) -->
     @if (mode() === 'action_select' && !showTargetSelection() && !allActionsSelected()) {
       <div class="action-row">

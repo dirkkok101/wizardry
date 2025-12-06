@@ -4,6 +4,9 @@ import {
   output,
   computed,
   signal,
+  effect,
+  ViewChild,
+  ElementRef,
   HostListener
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
@@ -19,6 +22,11 @@ export interface ActionSelection {
   actionType: CombatActionType
   targetGroupId?: 'A' | 'B' | 'C' | 'D'
   spellId?: string
+}
+
+export interface CombatMessage {
+  text: string
+  type: 'action' | 'damage' | 'healing' | 'spell' | 'death' | 'miss' | 'status'
 }
 
 /**
@@ -60,6 +68,9 @@ export interface ActionSelection {
   styleUrls: ['./combat-drawer.component.scss']
 })
 export class CombatDrawerComponent {
+  // ViewChild for auto-scroll
+  @ViewChild('logContainer') logContainer?: ElementRef<HTMLDivElement>;
+
   // Inputs
   readonly mode = input<CombatDrawerMode>('hidden')
   readonly roundNumber = input(1)
@@ -73,6 +84,7 @@ export class CombatDrawerComponent {
   readonly selectedActions = input<Map<string, CombatCommand>>(new Map())
   readonly isExecuting = input(false)
   readonly isTargetingMode = input(false)  // External targeting mode (for spells)
+  readonly combatMessages = input<CombatMessage[]>([])  // Log messages during execution
 
   // Outputs
   readonly actionSelected = output<CombatActionType>()
@@ -119,6 +131,22 @@ export class CombatDrawerComponent {
 
   // Computed: is this the first character (hide back button)
   readonly isFirstCharacter = computed(() => this.activeCharacterIndex() === 0)
+
+  constructor() {
+    // Auto-scroll to bottom when new messages arrive
+    effect(() => {
+      const messages = this.combatMessages();
+      if (messages.length > 0 && this.logContainer?.nativeElement) {
+        // Use setTimeout to ensure DOM has updated
+        setTimeout(() => {
+          const container = this.logContainer?.nativeElement;
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }, 0);
+      }
+    });
+  }
 
   /**
    * Handle keyboard shortcuts for combat actions

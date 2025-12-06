@@ -61,7 +61,7 @@ export class CombatOverlayComponent {
   readonly roundNumber = input(1)
   readonly selectedGroupId = input<'A' | 'B' | 'C' | 'D' | null>(null)
   readonly isTargetingMode = input(false)
-  readonly showEncounterBanner = input(false)
+  readonly letterboxType = input<'encounter' | 'ambush' | 'surprise' | null>(null)
   readonly showVictoryOverlay = input(false)
   readonly showDefeatOverlay = input(false)
   readonly victoryRewards = input<VictoryRewards | null>(null)
