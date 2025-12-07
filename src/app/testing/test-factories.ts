@@ -130,7 +130,8 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
       difficulty: 'NORMAL',
       soundEnabled: true,
       musicEnabled: true,
-      encountersEnabled: true
+      encountersEnabled: true,
+      guaranteedChestDrops: false
     },
     ...overrides
   }

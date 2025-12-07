@@ -1,0 +1,804 @@
+// ============================================
+// CHEST OVERLAY - Theater Stage Container
+// ============================================
+// Immersive treasure chest interaction following combat overlay pattern
+
+.chest-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  background: #000;
+}
+
+// ============================================
+// VIGNETTE EFFECT
+// ============================================
+
+.chest-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 20%,
+    rgba(0, 0, 0, 0.4) 60%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  animation: vignette-pulse 4s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes vignette-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+// ============================================
+// SPRITE LAYER
+// ============================================
+
+.chest-sprite-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.chest-sprite {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  animation: sprite-fade-in 0.8s ease-out;
+}
+
+@keyframes sprite-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Opening animation - crossfade effect
+.chest-sprite.opening-anim {
+  animation: sprite-flash-open 0.6s ease-out;
+}
+
+@keyframes sprite-flash-open {
+  0% {
+    filter: brightness(1);
+  }
+  30% {
+    filter: brightness(1.5);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+// ============================================
+// GRADIENT OVERLAY
+// ============================================
+
+.chest-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.2) 30%,
+    rgba(0, 0, 0, 0.2) 70%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+}
+
+// ============================================
+// LETTERBOX BANNER
+// ============================================
+
+.letterbox-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.letterbox-bar {
+  flex: 0 0 auto;
+  height: 0;
+  background: rgba(0, 0, 0, 0.95);
+
+  &.top {
+    animation: bar-slide-down 0.4s ease-out forwards;
+  }
+
+  &.bottom {
+    animation: bar-slide-up 0.4s ease-out forwards;
+  }
+}
+
+@keyframes bar-slide-down {
+  0% { height: 0; }
+  100% { height: 100px; }
+}
+
+@keyframes bar-slide-up {
+  0% { height: 0; }
+  100% { height: 100px; }
+}
+
+.letterbox-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0 2rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  animation: text-fade-in 0.5s ease-out 0.3s forwards;
+}
+
+@keyframes text-fade-in {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.banner-text {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.banner-icon {
+  font-size: 1.5rem;
+  animation: icon-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes icon-pulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.15); }
+}
+
+// Treasure variant (Gold)
+.letterbox-banner.treasure {
+  .banner-text {
+    color: var(--color-gold-bright);
+    text-shadow:
+      0 0 20px var(--color-gold-glow),
+      0 0 40px rgba(244, 196, 48, 0.5);
+  }
+  .banner-icon {
+    color: var(--color-gold-primary);
+    text-shadow: 0 0 15px var(--color-gold-glow);
+  }
+}
+
+// Trap Detected variant (Amber/Orange)
+.letterbox-banner.trap-detected {
+  .banner-text {
+    color: #f59e0b;
+    text-shadow:
+      0 0 20px rgba(245, 158, 11, 0.8),
+      0 0 40px rgba(245, 158, 11, 0.5);
+  }
+  .banner-icon {
+    color: #fbbf24;
+    text-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+  }
+}
+
+// Disarm Attempt variant (Gold)
+.letterbox-banner.disarm-attempt {
+  .banner-text {
+    color: var(--color-gold-bright);
+    text-shadow:
+      0 0 20px var(--color-gold-glow),
+      0 0 40px rgba(244, 196, 48, 0.5);
+  }
+  .banner-icon {
+    color: var(--color-gold-primary);
+    text-shadow: 0 0 15px var(--color-gold-glow);
+  }
+}
+
+// ============================================
+// TRAP TRIGGERED LETTERBOX (Danger/Crimson)
+// ============================================
+
+.letterbox-banner.trap-triggered {
+  .letterbox-bar {
+    background: rgba(20, 0, 0, 0.95);
+  }
+
+  .letterbox-content {
+    background: linear-gradient(
+      90deg,
+      rgba(20, 0, 0, 0.95) 0%,
+      rgba(60, 10, 10, 0.95) 50%,
+      rgba(20, 0, 0, 0.95) 100%
+    );
+  }
+
+  .trap-announcement {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .trap-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: #fca5a5; // Light red
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  }
+
+  .banner-text {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 0.3em;
+    color: #ef4444; // Bright red
+    text-shadow:
+      0 0 20px rgba(239, 68, 68, 0.8),
+      0 0 40px rgba(239, 68, 68, 0.5);
+    animation: danger-pulse 0.5s ease-in-out infinite alternate;
+  }
+
+  .banner-icon {
+    font-size: 2rem;
+    filter: grayscale(0.3);
+    animation: icon-shake 0.3s ease-in-out infinite;
+  }
+}
+
+@keyframes danger-pulse {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes icon-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-2px) rotate(-3deg); }
+  75% { transform: translateX(2px) rotate(3deg); }
+}
+
+// ============================================
+// CONTENT LAYER
+// ============================================
+
+.chest-content {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 2rem;
+  padding-bottom: var(--space-6);
+  pointer-events: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ============================================
+// PHASE CONTENT SHARED
+// ============================================
+
+.phase-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 500px;
+  width: 100%;
+  animation: content-fade-in 0.4s ease-out;
+}
+
+@keyframes content-fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.phase-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-gold-primary);
+  text-align: center;
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+// ============================================
+// CHARACTER SELECT PHASE
+// ============================================
+
+.character-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.character-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    background: rgba(212, 165, 116, 0.2);
+    border-color: var(--color-gold-primary);
+  }
+
+  &.recommended {
+    border-color: var(--color-gold-primary);
+    box-shadow: 0 0 10px rgba(212, 165, 116, 0.3);
+  }
+
+  .char-index {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-gold-primary);
+    color: var(--color-bg-darkest);
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+  }
+
+  .char-name {
+    flex: 1;
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .char-class {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  .recommended-badge {
+    color: var(--color-gold-bright);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    padding: 2px 6px;
+    background: rgba(212, 165, 116, 0.2);
+    border: 1px solid var(--color-gold-primary);
+    border-radius: 4px;
+  }
+
+  .sp-display {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+}
+
+// ============================================
+// ACTION SELECT PHASE
+// ============================================
+
+.handler-info {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-3) var(--space-4);
+  backdrop-filter: blur(4px);
+  text-align: center;
+
+  .handler-name {
+    font-weight: 600;
+    color: var(--color-gold-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .trap-status {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .chance-info {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+}
+
+.action-message {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  color: var(--color-text-primary);
+  text-align: center;
+  backdrop-filter: blur(4px);
+
+  &.retry-message {
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+  }
+}
+
+// ============================================
+// TRAP INPUT PHASE
+// ============================================
+
+.input-display {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-gold-primary);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: 1.5rem;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+  min-height: 3rem;
+  min-width: 300px;
+  text-align: center;
+
+  .input-text {
+    color: var(--color-gold-bright);
+  }
+
+  .cursor {
+    color: var(--color-gold-primary);
+    animation: blink 1s step-end infinite;
+  }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.input-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-3);
+}
+
+// ============================================
+// INVENTORY WARNING PHASE
+// ============================================
+
+.warning-box {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-warning);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-4);
+  text-align: center;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  max-width: 400px;
+
+  .warning-icon {
+    font-size: 3rem;
+    color: var(--color-warning);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .warning-text {
+    color: var(--color-warning);
+    margin: var(--space-3) 0;
+    line-height: 1.5;
+  }
+
+  .warning-question {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .warning-hint {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-2);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// ============================================
+// RESULT PHASE
+// ============================================
+
+.result-phase {
+  animation: result-slide-up 0.6s ease-out;
+}
+
+@keyframes result-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--color-gold-bright);
+  text-align: center;
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 0 20px var(--color-gold-glow),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+// Trap section
+.trap-section {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--color-hp-critical);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  width: 100%;
+  backdrop-filter: blur(4px);
+
+  .section-title.trap-title {
+    color: var(--color-hp-critical);
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    margin-bottom: var(--space-2);
+  }
+
+  .damage-entry,
+  .status-entry {
+    color: var(--color-text-primary);
+    padding: var(--space-1) 0;
+    font-size: var(--font-size-sm);
+  }
+}
+
+// Treasure rewards (victory-style badges)
+.treasure-rewards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  animation: rewards-fade-in 0.6s ease-out 0.2s both;
+}
+
+@keyframes rewards-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rewards-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.reward-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 6px;
+  min-width: 100px;
+  backdrop-filter: blur(8px);
+
+  &.gold {
+    background: rgba(212, 165, 116, 0.2);
+    border: 1px solid var(--color-gold-primary);
+    box-shadow: 0 0 15px rgba(212, 165, 116, 0.3);
+
+    .reward-value {
+      color: var(--color-gold-primary);
+    }
+  }
+
+  .reward-value {
+    font-family: var(--font-body);
+    font-size: 1.75rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .reward-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--color-text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.items-section {
+  text-align: center;
+
+  .items-header {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-2);
+  }
+}
+
+.items-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+
+  &.lost {
+    .item-tag {
+      color: var(--color-text-muted);
+      border-color: var(--color-text-muted);
+      background: rgba(102, 102, 102, 0.25);
+      text-decoration: line-through;
+      box-shadow: none;
+    }
+  }
+}
+
+.item-tag {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-magic);
+  padding: var(--space-1) var(--space-2);
+  background: rgba(168, 85, 247, 0.25);
+  border: 1px solid var(--color-magic);
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  &.lost {
+    color: var(--color-text-muted);
+    border-color: var(--color-hp-warning);
+    background: rgba(245, 158, 11, 0.15);
+    text-decoration: line-through;
+    box-shadow: none;
+  }
+}
+
+.empty-chest {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+.items-lost-section {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--color-hp-warning);
+  border-radius: var(--card-border-radius);
+  backdrop-filter: blur(4px);
+
+  .section-title.warning-title {
+    color: var(--color-hp-warning);
+    font-family: var(--font-display);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-2);
+    text-align: center;
+  }
+}
+
+.continue-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-4);
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+// ============================================
+// REDUCED MOTION
+// ============================================
+
+@media (prefers-reduced-motion: reduce) {
+  .chest-vignette,
+  .chest-sprite,
+  .letterbox-bar,
+  .letterbox-content,
+  .banner-icon,
+  .phase-content,
+  .result-phase,
+  .treasure-rewards,
+  .warning-box .warning-icon,
+  .cursor,
+  .continue-hint,
+  .letterbox-banner.trap-triggered .banner-text,
+  .letterbox-banner.trap-triggered .banner-icon {
+    animation: none;
+  }
+
+  .letterbox-bar {
+    height: 80px;
+  }
+
+  .letterbox-content {
+    opacity: 1;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@media (max-width: 480px) {
+  .chest-content {
+    padding: var(--space-3);
+  }
+
+  .phase-title {
+    font-size: 1rem;
+  }
+
+  .result-title {
+    font-size: 1.5rem;
+  }
+
+  .input-display {
+    min-width: 250px;
+    font-size: 1.25rem;
+  }
+
+  .banner-text {
+    font-size: 1.5rem;
+  }
+}

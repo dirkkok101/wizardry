@@ -103,9 +103,33 @@ export class CharacterPanelComponent {
   @Input() highlightedCharacterId: string | null = null;
 
   /**
+   * IDs of characters that were just hit by a trap (for damage animation)
+   */
+  @Input() hitCharacterIds: string[] = [];
+
+  /**
+   * Current damage indicator to display on a character card
+   */
+  @Input() damageIndicator: { characterId: string; damage: number; status?: string } | null = null;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
+
+  /**
+   * Check if character was just hit by a trap
+   */
+  isHit(char: Character): boolean {
+    return this.hitCharacterIds.includes(char.id);
+  }
+
+  /**
+   * Check if damage indicator should show for this character
+   */
+  hasDamageIndicator(char: Character): boolean {
+    return this.damageIndicator?.characterId === char.id;
+  }
 
   /**
    * Get status text for a character

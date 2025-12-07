@@ -41,7 +41,7 @@ export class CombatService {
    * Set to true to enable detailed console output for debugging attack frequency issues.
    * TODO: Remove or set to false after debugging is complete.
    */
-  static DEBUG_COMBAT = false
+  static DEBUG_COMBAT = true
 
   /**
    * Get the display name for a monster based on identification status.

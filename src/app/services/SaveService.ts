@@ -125,6 +125,7 @@ export class SaveService {
       difficulty: 'NORMAL' as const,
       soundEnabled: true,
       musicEnabled: true,
+      guaranteedChestDrops: false, // Debug option - never persisted as true
       ...data.settings,
       encountersEnabled: true // Always enabled by default
     }

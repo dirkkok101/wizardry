@@ -5,7 +5,7 @@
 
   <div class="character-stack">
     @for (char of characters; track char.id) {
-      <div class="character-card" [class.incapacitated]="isIncapacitated(char)" [class.highlighted]="isHighlighted(char)">
+      <div class="character-card" [class.incapacitated]="isIncapacitated(char)" [class.highlighted]="isHighlighted(char)" [class.trap-hit]="isHit(char)">
         <!-- Row 1: Name + Status -->
         <div class="card-row name-row">
           <span class="char-name">{{ char.name }}</span>
@@ -65,6 +65,16 @@
             }
           }
         </div>
+
+        <!-- Damage Indicator Overlay (for trap effects) -->
+        @if (hasDamageIndicator(char)) {
+          <div class="damage-indicator">
+            <span class="damage-amount">-{{ damageIndicator!.damage }}</span>
+            @if (damageIndicator!.status) {
+              <span class="damage-status">{{ damageIndicator!.status }}</span>
+            }
+          </div>
+        }
       </div>
     } @empty {
       <div class="empty-slot">Empty</div>

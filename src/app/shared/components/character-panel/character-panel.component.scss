@@ -26,6 +26,7 @@
 }
 
 .character-card {
+  position: relative; // Needed for absolute positioned damage indicator
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--card-border-radius);
@@ -49,6 +50,30 @@
     border-color: var(--color-gold-primary);
     background: rgba(212, 165, 116, 0.1);
     box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+  }
+
+  // Trap hit flash animation
+  &.trap-hit {
+    animation: card-hit-flash 0.4s ease-out;
+    border-color: var(--color-hp-critical) !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes card-hit-flash {
+  0% {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+  }
+  25% {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: var(--color-hp-critical);
+  }
+  50% {
+    background: rgba(239, 68, 68, 0.15);
+  }
+  100% {
+    background: var(--color-bg-card);
   }
 }
 
@@ -265,4 +290,73 @@
   color: var(--color-text-muted);
   font-style: italic;
   font-size: var(--font-size-sm);
+}
+
+// ============================================
+// DAMAGE INDICATOR (JRPG-style floating damage)
+// ============================================
+
+.damage-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+  z-index: 10;
+  animation: damage-pop 1s ease-out;
+
+  .damage-amount {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: var(--color-hp-critical);
+    text-shadow:
+      0 0 10px rgba(239, 68, 68, 0.8),
+      2px 2px 4px rgba(0, 0, 0, 0.9);
+  }
+
+  .damage-status {
+    font-size: 0.85rem;
+    color: var(--color-warning);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+}
+
+@keyframes damage-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// ============================================
+// REDUCED MOTION
+// ============================================
+
+@media (prefers-reduced-motion: reduce) {
+  .character-card.trap-hit {
+    animation: none;
+    // Keep the visual indicator but without animation
+    border-color: var(--color-hp-critical) !important;
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  .damage-indicator {
+    animation: none;
+    opacity: 1;
+  }
 }

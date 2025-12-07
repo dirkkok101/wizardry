@@ -24,7 +24,9 @@ export class SpritePreloadService {
    */
   private static readonly UI_SPRITES = [
     '/assets/sprites/victory-clean.png',
-    '/assets/sprites/victory-pyrrhic.png'
+    '/assets/sprites/victory-pyrrhic.png',
+    '/assets/sprites/chest_closed.png',
+    '/assets/sprites/chest_open.png'
   ]
 
   /**

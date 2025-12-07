@@ -1,0 +1,201 @@
+<!-- Chest Overlay - Theater Stage Container -->
+@if (visible()) {
+  <div
+    class="chest-overlay"
+    [class.revealing]="phase() === 'reveal'"
+    [class.opening]="phase() === 'opening'"
+    role="dialog"
+    aria-labelledby="chest-heading"
+    aria-modal="true"
+  >
+    <!-- Vignette Effect for Atmosphere -->
+    <div class="chest-vignette"></div>
+
+    <!-- Full-bleed Sprite Background -->
+    <div class="chest-sprite-layer">
+      @if (!spriteError()) {
+        <img
+          [src]="spriteUrl()"
+          [alt]="spriteState() === 'open' ? 'Open treasure chest' : 'Closed treasure chest'"
+          class="chest-sprite"
+          [class.opening-anim]="phase() === 'opening'"
+          (error)="onSpriteError()"
+        />
+      }
+    </div>
+
+    <!-- Gradient Overlay for Text Readability -->
+    <div class="chest-gradient-overlay"></div>
+
+    <!-- Letterbox Banner (Dramatic Reveals) -->
+    @if (letterboxType()) {
+      <div
+        class="letterbox-banner"
+        [class.treasure]="letterboxType() === 'treasure'"
+        [class.trap-detected]="letterboxType() === 'trap_detected'"
+        [class.disarm-attempt]="letterboxType() === 'disarm_attempt'"
+        [class.trap-triggered]="letterboxType() === 'trap_triggered'"
+      >
+        <div class="letterbox-bar top"></div>
+        <div class="letterbox-content">
+          @switch (letterboxType()) {
+            @case ('treasure') {
+              <span class="banner-icon">&#x1F4B0;</span>
+              <span class="banner-text">T R E A S U R E !</span>
+              <span class="banner-icon">&#x1F4B0;</span>
+            }
+            @case ('trap_detected') {
+              <span class="banner-icon">&#x26A0;</span>
+              <span class="banner-text">T R A P  D E T E C T E D !</span>
+              <span class="banner-icon">&#x26A0;</span>
+            }
+            @case ('disarm_attempt') {
+              <span class="banner-icon">&#x1F527;</span>
+              <span class="banner-text">D I S A R M  A T T E M P T</span>
+              <span class="banner-icon">&#x1F527;</span>
+            }
+            @case ('trap_triggered') {
+              <span class="banner-icon">&#x1F480;</span>
+              <div class="trap-announcement">
+                <span class="trap-name">{{ trapLetterboxName() }}</span>
+                <span class="banner-text">T R I G G E R E D !</span>
+              </div>
+              <span class="banner-icon">&#x1F480;</span>
+            }
+          }
+        </div>
+        <div class="letterbox-bar bottom"></div>
+      </div>
+    }
+
+    <!-- Content Layer -->
+    <div class="chest-content">
+      <!-- Title (hidden but accessible) -->
+      <h2 id="chest-heading" class="sr-only">Treasure Chest</h2>
+
+      <!-- ACTION SELECT MODE - Actions are on character cards -->
+      @if (phase() === 'action_select') {
+        <div class="phase-content action-select-phase">
+          <div class="trap-info">
+            <p class="trap-status">{{ getTrapStatusText() }}</p>
+          </div>
+
+          @if (lastMessage()) {
+            <div class="action-message">{{ lastMessage() }}</div>
+          }
+        </div>
+      }
+
+      <!-- CASTER SELECT MODE -->
+      @if (phase() === 'caster_select') {
+        <div class="phase-content caster-select-phase">
+          <p class="phase-title">Who will cast CALFO?</p>
+
+          <div class="character-list">
+            @for (caster of calfoEligibleCasters(); track caster.id; let i = $index) {
+              <div class="character-option" (click)="selectCaster(i)">
+                <span class="char-index">{{ i + 1 }}</span>
+                <span class="char-name">{{ caster.name }}</span>
+                <span class="sp-display">
+                  SP: {{ caster.spellPoints?.priest?.level2?.current ?? 0 }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <p class="hint">Press 1-{{ calfoEligibleCasters().length }} to select, ESC to cancel</p>
+        </div>
+      }
+
+      <!-- TRAP DISPLAY MODE -->
+      @if (phase() === 'trap_display') {
+        <div class="phase-content trap-display-phase">
+          <p class="phase-title">Unscramble the letters to identify the trap:</p>
+
+          <app-scrambled-letters [state]="scrambledState()" />
+
+          @if (lastMessage()) {
+            <div class="action-message">{{ lastMessage() }}</div>
+          }
+        </div>
+      }
+
+      <!-- TRAP INPUT MODE -->
+      @if (phase() === 'trap_input') {
+        <div class="phase-content trap-input-phase">
+          <p class="phase-title">Enter the trap name to disarm:</p>
+
+          <div class="input-display">
+            <span class="input-text">{{ trapInput() }}</span>
+            <span class="cursor">_</span>
+          </div>
+
+          <p class="input-hint">Type the trap name exactly, then press ENTER</p>
+
+          @if (lastMessage()) {
+            <div class="action-message retry-message">{{ lastMessage() }}</div>
+          }
+        </div>
+      }
+
+      <!-- INVENTORY WARNING MODE -->
+      @if (phase() === 'inventory_warning') {
+        <div class="phase-content inventory-warning-phase">
+          <div class="warning-box">
+            <span class="warning-icon">!</span>
+            <p class="warning-text">{{ inventoryWarning() }}</p>
+            <p class="warning-question">Open chest anyway?</p>
+            <p class="warning-hint">Press Y to open, N to cancel</p>
+          </div>
+        </div>
+      }
+
+      <!-- RESULT DISPLAY MODE -->
+      @if (phase() === 'result') {
+        <div class="phase-content result-phase">
+          <h3 class="result-title">Chest Opened!</h3>
+
+          <!-- Treasure Section (Victory-style badges) -->
+          <div class="treasure-rewards">
+            <div class="rewards-row">
+              @if (summary()?.goldObtained) {
+                <div class="reward-badge gold">
+                  <span class="reward-value">{{ summary()?.goldObtained }}</span>
+                  <span class="reward-label">GOLD</span>
+                </div>
+              }
+            </div>
+
+            @if (summary()?.itemsObtained?.length) {
+              <div class="items-section">
+                <p class="items-header">Items for {{ summary()?.recipientName }}:</p>
+                <div class="items-row">
+                  @for (item of summary()?.itemsObtained; track $index) {
+                    <span class="item-tag">{{ item.name }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (!summary()?.goldObtained && !summary()?.itemsObtained?.length) {
+              <p class="empty-chest">The chest was empty.</p>
+            }
+          </div>
+
+          <!-- Lost Items Warning -->
+          @if (summary()?.itemsLost?.length) {
+            <div class="items-lost-section">
+              <h4 class="section-title warning-title">Items Lost (Inventory Full)</h4>
+              <div class="items-row lost">
+                @for (item of summary()?.itemsLost; track $index) {
+                  <span class="item-tag lost">{{ item.name }}</span>
+                }
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+  </div>
+}

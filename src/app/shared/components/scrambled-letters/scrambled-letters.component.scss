@@ -1,0 +1,132 @@
+// ============================================
+// SCRAMBLED LETTERS - Overlay Variant
+// ============================================
+// Enhanced styling for visibility over sprite backgrounds
+// Uses larger letters and enhanced glows compared to scene variant
+
+.scrambled-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.scrambled-letters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--color-gold-primary);
+  border-radius: var(--card-border-radius);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 20px rgba(212, 165, 116, 0.3),
+    inset 0 0 30px rgba(0, 0, 0, 0.5);
+  min-height: 4rem;
+  max-width: 90%;
+
+  .letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-family: var(--font-body);
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 6px;
+    text-transform: uppercase;
+    transition: all var(--transition-fast);
+
+    // Green: Confirmed correct position
+    &.green {
+      color: var(--color-status-ok);
+      background: rgba(34, 197, 94, 0.25);
+      border: 2px solid var(--color-status-ok);
+      text-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+    }
+
+    // Red: Uncertain (may or may not be correct)
+    &.red {
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.25);
+      border: 2px solid var(--color-danger);
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+
+    // Hidden: Not yet revealed
+    &.hidden {
+      color: var(--color-text-muted);
+      background: rgba(30, 30, 30, 0.8);
+      border: 2px solid var(--color-border);
+      text-shadow: none;
+    }
+
+    // Excluded: Confirmed not in trap name
+    &.excluded {
+      color: var(--color-text-muted);
+      background: transparent;
+      border: 2px dashed var(--color-border);
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    // Space character
+    &.space {
+      width: 1.5rem;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+  }
+}
+
+.inspection-info {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: var(--card-border-radius);
+  backdrop-filter: blur(4px);
+
+  .inspection-count {
+    color: var(--color-text-secondary);
+  }
+
+  .fully-revealed {
+    color: var(--color-status-ok);
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+  }
+}
+
+// ============================================
+// REDUCED MOTION
+// ============================================
+@media (prefers-reduced-motion: reduce) {
+  .scrambled-letters .letter {
+    transition: none;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 480px) {
+  .scrambled-letters {
+    gap: var(--space-1);
+    padding: var(--space-3);
+
+    .letter {
+      width: 2rem;
+      height: 2rem;
+      font-size: 1.25rem;
+    }
+  }
+}

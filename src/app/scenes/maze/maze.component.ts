@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, HostListener, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
@@ -9,6 +9,7 @@ import { MessageLogComponent } from '@shared/components/message-log/message-log.
 import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component';
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
 import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
+import { ChestOverlayComponent, ChestPhase, ChestLetterboxType, ChestSummary, RecommendedHandler } from '@shared/components/chest-overlay/chest-overlay.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
@@ -38,6 +39,13 @@ import { ViewportConfig } from '@models/rendering.types';
 import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant } from '@models/Combat';
 import { VictoryService, VictoryRewards } from '@services/VictoryService';
 import { PartyAbandonmentService } from '@services/PartyAbandonmentService';
+import { ChestService } from '@services/ChestService';
+import { TrapService } from '@services/TrapService';
+import { TrapDataLoader } from '@services/TrapDataLoader';
+import { Chest } from '@models/Chest';
+import { ScrambledTrapState, TrapId } from '@models/Trap';
+import { Item } from '@models/Item';
+import { canAct } from '@utils/CharacterStatusHelpers';
 import * as TextureAtlasService from '@services/TextureAtlasService';
 
 @Component({
@@ -51,12 +59,16 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
     MessageLogComponent,
     SpellPanelComponent,
     CharacterSelectionDialogComponent,
-    CombatOverlayComponent
+    CombatOverlayComponent,
+    ChestOverlayComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
 })
 export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
+  /** Debug flag for chest/trap logging. Set to true to enable verbose console output. */
+  static DEBUG_CHEST = true;
+
   // Canvas reference for WebGL rendering
   @ViewChild('mazeCanvas', { static: false })
   canvasRef?: ElementRef<HTMLCanvasElement>;
@@ -100,9 +112,63 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Abandon party confirmation state
   readonly showAbandonConfirmation = signal<boolean>(false);
 
-  // Get alive party members for combat
+  // ============================================================
+  // INTEGRATED CHEST STATE (Theater Stage Design)
+  // Chest interactions happen IN the maze view via overlay
+  // ============================================================
+  readonly chestPhase = signal<ChestPhase>('idle');
+  readonly chestLetterboxType = signal<ChestLetterboxType>(null);
+  readonly pendingChest = signal<Chest | null>(null);
+  readonly chestSprite = signal<'closed' | 'open'>('closed');
+  readonly chestOpener = signal<Character | null>(null);
+  readonly chestCaster = signal<Character | null>(null);
+  readonly scrambledTrapState = signal<ScrambledTrapState | null>(null);
+  readonly chestTrapInput = signal<string>('');
+  readonly chestSummary = signal<ChestSummary | null>(null);
+  readonly chestLastMessage = signal<string>('');
+  readonly chestInventoryWarning = signal<string | null>(null);
+  readonly preSelectedRecipient = signal<Character | null>(null);
+  readonly pendingTrapInfo = signal<{
+    trapTriggered: boolean
+    trapId: TrapId | null
+    trapMessage: string | null
+    damageDealt: Map<string, number>
+    statusEffects: Map<string, CharacterStatus>
+  } | null>(null);
+
+  // Trap effect visualization state
+  readonly trapLetterboxName = signal<string>('');
+  readonly hitCharacterIds = signal<string[]>([]);
+  readonly currentDamageIndicator = signal<{ characterId: string; damage: number; status?: string } | null>(null);
+
+  // Computed chest state
+  readonly showChestOverlay = computed(() => this.chestPhase() !== 'idle');
+  readonly availableChestCharacters = computed(() =>
+    this.partyCharacters().filter(canAct)
+  );
+  readonly calfoEligibleCasters = computed(() =>
+    this.partyCharacters().filter(c => TrapService.canCastCalfo(c))
+  );
+  readonly recommendedChestHandler = computed((): RecommendedHandler | null => {
+    const chest = this.pendingChest();
+    if (!chest) return null;
+    return TrapService.getRecommendedHandler(this.partyCharacters(), chest.mazeLevel);
+  });
+  readonly chestInspectChance = computed(() => {
+    const opener = this.chestOpener();
+    if (!opener) return 0;
+    return TrapService.calculateInspectChance(opener);
+  });
+  readonly chestDisarmChance = computed(() => {
+    const opener = this.chestOpener();
+    const chest = this.pendingChest();
+    if (!opener || !chest) return 0;
+    return Math.round(TrapService.calculateDisarmChance(opener, chest.mazeLevel));
+  });
+
+  // Get party members who can take combat actions (not incapacitated: dead, paralyzed, asleep, etc.)
   readonly alivePartyMembers = computed(() =>
-    this.partyCharacters().filter(c => c.hp > 0)
+    this.partyCharacters().filter(c => !this.isCharacterIncapacitated(c))
   );
 
   // Check if all actions are selected
@@ -441,6 +507,47 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   };
 
   /**
+   * Get chest-specific actions for a character
+   * Used when chest overlay is active - shows Open, Inspect, CALFO (if eligible), Disarm (if trap identified)
+   */
+  getChestActionsForCharacter = (char: Character): CharacterAction[] => {
+    // No actions for incapacitated characters
+    if (char.status === CharacterStatus.DEAD ||
+        char.status === CharacterStatus.ASHES ||
+        char.status === CharacterStatus.LOST ||
+        char.status === CharacterStatus.PARALYZED) {
+      return [];
+    }
+
+    const actions: CharacterAction[] = [
+      { type: 'open', label: 'OPEN' },
+      { type: 'inspect', label: 'INSPECT' }
+    ];
+
+    // CALFO only if character can cast it AND trap not yet fully revealed
+    const trapFullyRevealed = this.scrambledTrapState()?.fullyRevealed ?? false;
+    if (TrapService.canCastCalfo(char) && !trapFullyRevealed) {
+      actions.push({ type: 'calfo', label: 'CALFO' });
+    }
+
+    // Disarm only if trap is identified
+    const chest = this.pendingChest();
+    if (chest?.trapIdentified && chest?.trapped && !chest?.trapDisarmed) {
+      actions.push({ type: 'disarm', label: 'DISARM' });
+    }
+
+    return actions;
+  };
+
+  /**
+   * Check if the current chest has an identified trap
+   */
+  chestTrapIdentified(): boolean {
+    const chest = this.pendingChest();
+    return chest?.trapIdentified ?? false;
+  }
+
+  /**
    * Handle action clicks from character cards
    */
   handleCharacterAction(event: CharacterActionEvent): void {
@@ -479,6 +586,184 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.onMoveDown(event.characterId);
         break;
     }
+  }
+
+  /**
+   * Handle chest-specific action clicks from character cards
+   * Called when chest overlay is active - character performs the action on the chest
+   */
+  handleChestCardAction(event: CharacterActionEvent): void {
+    const character = this.partyCharacters().find(c => c.id === event.characterId);
+    if (!character) return;
+
+    switch (event.actionType) {
+      case 'open':
+        this.handleChestOpenWith(character);
+        break;
+      case 'inspect':
+        this.handleChestInspectWith(character);
+        break;
+      case 'calfo':
+        this.handleChestCalfoWith(character);
+        break;
+      case 'disarm':
+        this.handleChestDisarmWith(character);
+        break;
+    }
+  }
+
+  /**
+   * Handle Open chest with specific character
+   */
+  private handleChestOpenWith(character: Character): void {
+    const chest = this.pendingChest();
+    if (!chest) return;
+
+    // Set this character as the opener for any trap effects
+    this.chestOpener.set(character);
+
+    // Pre-select recipient for inventory warning
+    const recipient = ChestService.selectRecipient(this.partyCharacters());
+    this.preSelectedRecipient.set(recipient);
+
+    // Check inventory space
+    if (recipient) {
+      const warning = ChestService.checkInventorySpace(recipient, chest);
+      if (warning) {
+        this.chestInventoryWarning.set(warning.warning);
+        this.chestPhase.set('inventory_warning');
+        return;
+      }
+    }
+    this.openChest(false);
+  }
+
+  /**
+   * Handle Inspect trap with specific character
+   */
+  private handleChestInspectWith(character: Character): void {
+    const chest = this.pendingChest();
+    if (!chest || chest.trapIdentified) {
+      this.chestLastMessage.set('The trap has already been identified.');
+      return;
+    }
+
+    // Set this character as the opener for any trap trigger effects
+    this.chestOpener.set(character);
+
+    const result = TrapService.attemptInspection(character, chest);
+
+    if (result.triggered) {
+      this.chestLastMessage.set(`${character.name} accidentally triggered the trap!`);
+      this.triggerChestTrap(chest, character);
+      return;
+    }
+
+    // Update chest state based on inspection result
+    if (result.trapIdentified) {
+      this.pendingChest.update(c => c ? {
+        ...c,
+        trapIdentified: true,
+        trapId: result.trapIdentified
+      } : null);
+
+      // Initialize scrambled state for trap display
+      const scrambledState = TrapService.createScrambledState(result.trapIdentified);
+      this.scrambledTrapState.set(scrambledState);
+
+      // Show trap display with letterbox
+      this.chestLetterboxType.set('trap_detected');
+      setTimeout(() => {
+        this.chestLetterboxType.set(null);
+        this.chestPhase.set('trap_display');
+      }, 1000);
+
+      this.chestLastMessage.set(`${character.name} found a trap!`);
+    } else {
+      this.chestLastMessage.set(`${character.name} didn't find anything suspicious.`);
+    }
+  }
+
+  /**
+   * Handle CALFO spell with specific character
+   */
+  private handleChestCalfoWith(character: Character): void {
+    if (!TrapService.canCastCalfo(character)) {
+      this.chestLastMessage.set(`${character.name} cannot cast CALFO.`);
+      return;
+    }
+
+    // Consume spell point
+    this.consumeChestCalfoSpellPoint(character);
+
+    const chest = this.pendingChest();
+    if (!chest) return;
+
+    // Set this character as the opener
+    this.chestOpener.set(character);
+
+    // If trap not yet identified, identify it first
+    if (!chest.trapIdentified) {
+      const result = TrapService.castCalfo(character, chest);
+
+      if (result.trapIdentified) {
+        // Update chest with identified trap
+        this.pendingChest.update(c => c ? {
+          ...c,
+          trapIdentified: true,
+          trapId: result.trapIdentified
+        } : null);
+
+        // Initialize scrambled state with full reveal (CALFO reveals all)
+        const scrambledState = TrapService.createScrambledState(result.trapIdentified);
+        const fullyRevealedState = TrapService.performCalfo(character, scrambledState);
+        this.scrambledTrapState.set(fullyRevealedState);
+
+        // Show trap display
+        this.chestLetterboxType.set('trap_detected');
+        setTimeout(() => {
+          this.chestLetterboxType.set(null);
+          this.chestPhase.set('trap_display');
+        }, 1000);
+
+        this.chestLastMessage.set(`${character.name} casts CALFO! A trap is revealed!`);
+      } else {
+        // CALFO says no trap (could be real or 5% failed check)
+        this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : null);
+        this.chestLastMessage.set(`${character.name} casts CALFO. No trap detected.`);
+      }
+    } else {
+      // Trap already identified - just reveal more letters
+      const currentState = this.scrambledTrapState();
+      if (currentState) {
+        const fullyRevealedState = TrapService.performCalfo(character, currentState);
+        this.scrambledTrapState.set(fullyRevealedState);
+        this.chestLastMessage.set(`${character.name} casts CALFO! All letters revealed!`);
+      }
+    }
+  }
+
+  /**
+   * Handle Disarm trap with specific character
+   */
+  private handleChestDisarmWith(character: Character): void {
+    const chest = this.pendingChest();
+    if (!chest || !chest.trapIdentified || !chest.trapped || chest.trapDisarmed) {
+      return;
+    }
+
+    // Set this character as the disarmer
+    this.chestOpener.set(character);
+
+    // Show disarm letterbox then input phase
+    this.chestLetterboxType.set('disarm_attempt');
+
+    setTimeout(() => {
+      this.chestLetterboxType.set(null);
+      this.chestPhase.set('trap_input');
+      this.chestTrapInput.set('');
+      this.chestLastMessage.set(`${character.name} prepares to disarm. Enter the trap name.`);
+    }, 1500);
   }
 
   /**
@@ -546,7 +831,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private gameState: GameStateService,
     private router: Router,
-    private navigation: SceneNavigationService
+    private navigation: SceneNavigationService,
+    private ngZone: NgZone
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -830,10 +1116,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Check if movement should be locked (during combat or dialogs)
+   * Check if movement should be locked (during combat, dialogs, or chest overlay)
    */
   private isMovementLocked(): boolean {
-    return this.inCombat() || this.isDialogOpen();
+    return this.inCombat() || this.isDialogOpen() || this.showChestOverlay();
+  }
+
+  /**
+   * General keyboard handler for chest overlay
+   * Must capture all keys when chest overlay is active
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // Only handle when chest overlay is active
+    if (!this.showChestOverlay()) return;
+
+    // Route all keyboard input to chest handler
+    this.handleChestKeyboard(event);
   }
 
   @HostListener('window:keydown.escape')
@@ -900,6 +1199,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const status = newEncounterState ? 'ENABLED' : 'DISABLED';
     this.addMessage(`Random encounters ${status} (Ctrl+E to toggle)`);
+  }
+
+  @HostListener('window:keydown.control.t')
+  toggleGuaranteedChests(): void {
+    const currentState = this.gameState.state();
+    const newChestState = !currentState.settings.guaranteedChestDrops;
+
+    this.gameState.updateState((state) => ({
+      ...state,
+      settings: {
+        ...state.settings,
+        guaranteedChestDrops: newChestState
+      }
+    }));
+
+    const status = newChestState ? 'ENABLED' : 'DISABLED';
+    this.addMessage(`Guaranteed chest drops ${status} (Ctrl+T to toggle)`);
   }
 
   moveForward(): void {
@@ -1633,9 +1949,15 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       };
     });
 
-    // Check if this was a treasure room encounter (guaranteed chest)
-    if (finalState.encounterReason === 'treasure_room') {
-      this.router.navigate(['/chest']);
+    // Check if chest should appear:
+    // 1. Treasure room encounters always drop chest
+    // 2. Debug mode: guaranteedChestDrops setting guarantees chest after every combat
+    const currentSettings = this.gameState.state().settings;
+    const shouldShowChest = finalState.encounterReason === 'treasure_room' ||
+                            currentSettings.guaranteedChestDrops;
+
+    if (shouldShowChest) {
+      this.showChestAfterVictory(finalState);
     } else {
       this.endCombat();
     }
@@ -2324,4 +2646,850 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   private rollDice(dice: string): number {
     return RandomService.rollDiceNotation(dice);
   }
+
+  // ============================================================
+  // CHEST OVERLAY METHODS
+  // ============================================================
+
+  /**
+   * Show chest overlay after combat victory (treasure room)
+   */
+  private async showChestAfterVictory(finalState: CombatState): Promise<void> {
+    // End combat visuals
+    this.showVictoryOverlay.set(false);
+    this.combatPhase.set('idle');
+
+    // Generate chest based on dungeon level
+    const dungeonState = this.gameState.state().dungeon;
+    const position = dungeonState?.position ?? { x: 0, y: 0, facing: 'NORTH' as const };
+    const mazeLevel = dungeonState?.currentLevel ?? 1;
+
+    const chest = await ChestService.generateChest(
+      14, // Reward tier (mid-tier in Reward 2 system 10-19)
+      mazeLevel,
+      { x: position.x, y: position.y, facing: position.facing },
+      'combat_victory'
+    );
+
+    // Initialize chest overlay
+    this.pendingChest.set(chest);
+    this.chestSprite.set('closed');
+    this.chestPhase.set('reveal');
+    this.chestLetterboxType.set('treasure');
+
+    // After letterbox animation, go straight to action phase (actions on character cards)
+    await this.delay(1200);
+    this.chestLetterboxType.set(null);
+    this.chestPhase.set('action_select');
+    this.chestLastMessage.set('Choose an action from a character card.');
+  }
+
+  /**
+   * Handle chest character selection
+   */
+  onChestCharacterSelected(index: number): void {
+    const characters = this.availableChestCharacters();
+    if (index >= 0 && index < characters.length) {
+      this.chestOpener.set(characters[index]);
+      this.chestPhase.set('action_select');
+      this.chestLastMessage.set(`${characters[index].name} will handle the chest.`);
+    }
+  }
+
+  /**
+   * Handle chest caster selection
+   */
+  onChestCasterSelected(index: number): void {
+    const casters = this.calfoEligibleCasters();
+    if (index >= 0 && index < casters.length) {
+      this.chestCaster.set(casters[index]);
+      this.castChestCalfo(casters[index]);
+    }
+  }
+
+  /**
+   * Handle chest footer action
+   */
+  handleChestFooterAction(itemId: string): void {
+    switch (itemId) {
+      case 'open': this.handleChestOpen(); break;
+      case 'inspect': this.handleChestInspect(); break;
+      case 'inspect-more': this.handleChestInspectMore(); break;
+      case 'calfo':
+        if (this.chestPhase() === 'trap_display') {
+          this.handleChestCalfoFromTrapDisplay();
+        } else {
+          this.handleChestCalfo();
+        }
+        break;
+      case 'disarm': this.handleChestDisarm(); break;
+      case 'submit-disarm': this.submitChestTrapName(); break;
+      case 'leave': this.handleChestLeave(); break;
+      case 'cancel': this.handleChestCancel(); break;
+      case 'continue': this.handleChestContinue(); break;
+      case 'confirm-open': this.openChest(true); break;
+    }
+  }
+
+  /**
+   * Handle keyboard input for chest overlay
+   */
+  handleChestKeyboard(event: KeyboardEvent): void {
+    const key = event.key.toUpperCase();
+    const phase = this.chestPhase();
+
+    // ESC to cancel/leave
+    if (key === 'ESCAPE') {
+      this.handleChestCancel();
+      return;
+    }
+
+    // ENTER for continue
+    if (key === 'ENTER' && (phase === 'trap_display' || phase === 'result')) {
+      this.handleChestContinue();
+      return;
+    }
+
+    // Caster select mode
+    if (phase === 'caster_select') {
+      const num = parseInt(key);
+      if (num >= 1 && num <= this.calfoEligibleCasters().length) {
+        this.onChestCasterSelected(num - 1);
+      }
+      return;
+    }
+
+    // Trap name input mode
+    if (phase === 'trap_input') {
+      if (key === 'BACKSPACE') {
+        this.chestTrapInput.update(v => v.slice(0, -1));
+        event.preventDefault();
+        return;
+      } else if (key.length === 1 && /[A-Z ]/.test(key)) {
+        this.chestTrapInput.update(v => v + key);
+        event.preventDefault();
+        return;
+      }
+      if (key === 'ENTER') {
+        this.submitChestTrapName();
+        return;
+      }
+    }
+
+    // Inventory warning mode
+    if (phase === 'inventory_warning') {
+      if (key === 'Y') {
+        this.openChest(true);
+      } else if (key === 'N') {
+        this.chestPhase.set('action_select');
+        this.chestInventoryWarning.set(null);
+      }
+      return;
+    }
+
+    // Trap display mode
+    if (phase === 'trap_display') {
+      if (key === 'I') {
+        this.handleChestInspectMore();
+      } else if (key === 'C') {
+        this.handleChestCalfoFromTrapDisplay();
+      }
+      return;
+    }
+
+    // Action select mode
+    if (phase === 'action_select') {
+      switch (key) {
+        case 'O': this.handleChestOpen(); break;
+        case 'I': this.handleChestInspect(); break;
+        case 'C': this.handleChestCalfo(); break;
+        case 'D': this.handleChestDisarm(); break;
+        case 'L': this.handleChestLeave(); break;
+      }
+    }
+  }
+
+  /**
+   * Handle Open action
+   */
+  private handleChestOpen(): void {
+    const chest = this.pendingChest();
+    const opener = this.chestOpener();
+    if (!chest || !opener) return;
+
+    // Pre-select recipient for inventory warning
+    const recipient = ChestService.selectRecipient(this.partyCharacters());
+    this.preSelectedRecipient.set(recipient);
+
+    // Check inventory space
+    if (recipient) {
+      const warning = ChestService.checkInventorySpace(recipient, chest);
+      if (warning) {
+        this.chestInventoryWarning.set(warning.warning);
+        this.chestPhase.set('inventory_warning');
+        return;
+      }
+    }
+    this.openChest(false);
+  }
+
+  /**
+   * Open the chest
+   */
+  private openChest(skipWarning: boolean): void {
+    const chest = this.pendingChest();
+    const opener = this.chestOpener();
+    if (!chest || !opener) return;
+
+    this.chestInventoryWarning.set(null);
+
+    // Check if trapped and not disarmed
+    if (chest.trapped && !chest.trapDisarmed) {
+      this.triggerChestTrap(chest, opener);
+      return;
+    }
+
+    // Safe to open - show opening animation then distribute treasure
+    this.showChestOpening();
+  }
+
+  /**
+   * Show chest opening animation
+   */
+  private async showChestOpening(): Promise<void> {
+    this.chestPhase.set('opening');
+    this.chestSprite.set('open');
+
+    await this.delay(600);
+
+    this.distributeChestTreasure();
+  }
+
+  /**
+   * Trigger trap effects with dramatic animated sequence
+   */
+  private async triggerChestTrap(chest: Chest, opener: Character): Promise<void> {
+    if (MazeComponent.DEBUG_CHEST) console.log('[CHEST] triggerChestTrap called, trapId:', chest.trapId);
+    if (!chest.trapId) return;
+
+    const result = TrapService.applyTrapEffects(
+      chest.trapId,
+      opener,
+      this.partyCharacters()
+    );
+    if (MazeComponent.DEBUG_CHEST) {
+      console.log('[CHEST] TrapService result - trapName:', result.trapName, 'message:', result.message);
+      console.log('[CHEST] damageDealt size:', result.damageDealt.size, 'statusApplied size:', result.statusApplied.size);
+    }
+
+    // Handle special effects immediately (before animation)
+    if (result.specialEffect === 'teleport') {
+      // Apply damage first
+      this.applyChestTrapDamage(result);
+      this.handleChestTeleport();
+      return;
+    }
+
+    if (result.specialEffect === 'combat') {
+      // Apply damage first
+      this.applyChestTrapDamage(result);
+      this.handleChestAlarm();
+      return;
+    }
+
+    // Show dramatic trap triggered letterbox
+    this.chestPhase.set('trap_triggered');
+    this.trapLetterboxName.set(result.trapName);
+    this.chestLetterboxType.set('trap_triggered');
+
+    // Display letterbox for 1.5s
+    await this.delay(1500);
+
+    // Clear letterbox before showing damage indicators
+    this.chestLetterboxType.set(null);
+
+    // Build list of affected characters (either damaged OR status-affected)
+    const damagedIds = Array.from(result.damageDealt.keys());
+    const statusIds = Array.from(result.statusApplied.keys());
+    const affectedCharIds = [...new Set([...damagedIds, ...statusIds])];
+    if (MazeComponent.DEBUG_CHEST) console.log('[CHEST] affectedCharIds:', affectedCharIds.length);
+
+    // Stagger damage application with visual feedback
+    for (const charId of affectedCharIds) {
+      const damage = result.damageDealt.get(charId) || 0;
+      const status = result.statusApplied.get(charId);
+      const char = this.partyCharacters().find(c => c.id === charId);
+
+      if (!char) continue;
+
+      if (MazeComponent.DEBUG_CHEST) console.log('[CHEST] Showing damage indicator for', char.name, 'damage:', damage, 'status:', status);
+
+      // Wrap signal updates in ngZone.run() to ensure Angular detects changes
+      // after async delay() which runs outside Angular's zone
+      this.ngZone.run(() => {
+        this.hitCharacterIds.set([charId]);
+        this.currentDamageIndicator.set({
+          characterId: charId,
+          damage: damage,
+          status: status ? this.formatStatusForLog(status) : undefined
+        });
+        this.applySingleCharacterTrapDamage(charId, damage, status);
+      });
+
+      // Damage indicator on character card provides visual feedback
+      // No message log text needed - the overlay shows damage/status
+
+      // Wait 1000ms between characters for visible damage indicator
+      await this.delay(1000);
+    }
+
+    // Clear hit effects and damage indicator (also in zone for clean-up)
+    this.ngZone.run(() => {
+      this.hitCharacterIds.set([]);
+      this.currentDamageIndicator.set(null);
+    });
+
+    // Store trap info for summary
+    this.pendingTrapInfo.set({
+      trapTriggered: true,
+      trapId: chest.trapId,
+      trapMessage: result.message,
+      damageDealt: result.damageDealt,
+      statusEffects: result.statusApplied
+    });
+
+    // Short pause before opening chest
+    await this.delay(300);
+
+    // Continue to treasure reveal
+    this.showChestOpening();
+  }
+
+  /**
+   * Apply trap damage to a single character
+   */
+  private applySingleCharacterTrapDamage(charId: string, damage: number, status?: CharacterStatus): void {
+    this.gameState.updateState(state => {
+      const char = state.roster.get(charId);
+      if (!char) return state;
+
+      const newHp = Math.max(0, char.hp - damage);
+      const newStatus = newHp === 0 ? CharacterStatus.DEAD : (status ?? char.status);
+
+      const newRoster = new Map(state.roster);
+      newRoster.set(charId, {
+        ...char,
+        hp: newHp,
+        status: newStatus
+      });
+
+      return { ...state, roster: newRoster };
+    });
+  }
+
+  /**
+   * Format status for message log
+   */
+  private formatStatusForLog(status: CharacterStatus): string {
+    const statusMap: Record<CharacterStatus, string> = {
+      [CharacterStatus.OK]: 'OK',
+      [CharacterStatus.POISONED]: 'Poisoned',
+      [CharacterStatus.PARALYZED]: 'Paralyzed',
+      [CharacterStatus.STONED]: 'Petrified',
+      [CharacterStatus.DEAD]: 'Dead',
+      [CharacterStatus.ASHES]: 'Ashes',
+      [CharacterStatus.LOST]: 'Lost',
+      [CharacterStatus.INJURED]: 'Injured',
+      [CharacterStatus.ASLEEP]: 'Asleep'
+    };
+    return statusMap[status] ?? String(status);
+  }
+
+  /**
+   * Apply trap damage to game state
+   */
+  private applyChestTrapDamage(result: ReturnType<typeof TrapService.applyTrapEffects>): void {
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster);
+
+      // Apply damage
+      result.damageDealt.forEach((damage, charId) => {
+        const char = newRoster.get(charId);
+        if (char) {
+          const newHp = Math.max(0, char.hp - damage);
+          newRoster.set(charId, {
+            ...char,
+            hp: newHp,
+            status: newHp === 0 ? CharacterStatus.DEAD : char.status
+          });
+        }
+      });
+
+      // Apply status effects
+      result.statusApplied.forEach((status, charId) => {
+        const char = newRoster.get(charId);
+        if (char && char.status !== CharacterStatus.DEAD) {
+          newRoster.set(charId, { ...char, status });
+        }
+      });
+
+      return { ...state, roster: newRoster };
+    });
+  }
+
+  /**
+   * Handle teleporter trap
+   */
+  private handleChestTeleport(): void {
+    const maxCoord = 19;
+    const newX = RandomService.random(0, maxCoord);
+    const newY = RandomService.random(0, maxCoord);
+    const facings: Array<'NORTH' | 'SOUTH' | 'EAST' | 'WEST'> = ['NORTH', 'SOUTH', 'EAST', 'WEST'];
+    const newFacing = RandomService.pickRandom(facings);
+
+    this.gameState.updateState(state => ({
+      ...state,
+      party: {
+        ...state.party,
+        position: { ...state.party.position, x: newX, y: newY, facing: newFacing }
+      }
+    }));
+
+    this.chestLastMessage.update(m => m + ` Teleported to (${newX}, ${newY})!`);
+    this.chestPhase.set('result');
+  }
+
+  /**
+   * Handle alarm trap (triggers combat)
+   */
+  private handleChestAlarm(): void {
+    this.gameState.updateState(state => ({
+      ...state,
+      chestAlarmActive: true,
+      pendingChest: undefined
+    }));
+
+    this.chestLastMessage.update(m => m + ' Monsters approach!');
+    this.closeChestOverlay();
+  }
+
+  /**
+   * Distribute treasure from chest
+   */
+  private distributeChestTreasure(): void {
+    const chest = this.pendingChest();
+    const opener = this.chestOpener();
+    if (!chest || !opener) return;
+
+    const preSelected = this.preSelectedRecipient();
+    const result = ChestService.distributeTreasure(
+      chest,
+      this.partyCharacters(),
+      preSelected ?? undefined
+    );
+
+    this.preSelectedRecipient.set(null);
+
+    // Update game state
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster);
+
+      if (result.recipientId && result.itemsReceived.length > 0) {
+        const recipient = newRoster.get(result.recipientId);
+        if (recipient) {
+          newRoster.set(result.recipientId, {
+            ...recipient,
+            inventory: [...recipient.inventory, ...result.itemsReceived]
+          });
+        }
+      }
+
+      return {
+        ...state,
+        roster: newRoster,
+        party: {
+          ...state.party,
+          gold: state.party.gold + result.goldAdded
+        }
+      };
+    });
+
+    // Build summary
+    const trapInfo = this.pendingTrapInfo();
+    this.chestSummary.set({
+      goldObtained: result.goldAdded,
+      itemsObtained: result.itemsReceived,
+      itemsLost: result.itemsLost,
+      recipientName: result.recipientName,
+      trapTriggered: trapInfo?.trapTriggered ?? false,
+      trapName: trapInfo?.trapId ? TrapDataLoader.getTrapDisplayName(trapInfo.trapId) : null,
+      damageDealt: trapInfo?.damageDealt ?? new Map(),
+      statusEffects: trapInfo?.statusEffects ?? new Map()
+    });
+
+    this.pendingTrapInfo.set(null);
+    this.chestLastMessage.set(ChestService.getDistributionMessage(result));
+    this.chestPhase.set('result');
+  }
+
+  /**
+   * Handle Inspect action
+   */
+  private handleChestInspect(): void {
+    const chest = this.pendingChest();
+    const opener = this.chestOpener();
+    if (!chest || !opener || chest.trapIdentified) return;
+
+    const result = TrapService.attemptInspection(opener, chest);
+
+    if (result.triggered) {
+      this.chestLastMessage.set('You accidentally triggered the trap!');
+      this.triggerChestTrap(chest, opener);
+      return;
+    }
+
+    if (result.success) {
+      if (result.trapIdentified && chest.trapped && chest.trapId) {
+        const scrambledState = TrapService.createScrambledState(chest.trapId);
+        const updatedState = TrapService.performInspection(opener, scrambledState);
+        this.scrambledTrapState.set(updatedState);
+        this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
+        this.chestLastMessage.set(`${opener.name} detects something...`);
+        this.chestLetterboxType.set('trap_detected');
+
+        // Show letterbox then trap display
+        setTimeout(() => {
+          this.chestLetterboxType.set(null);
+          this.chestPhase.set('trap_display');
+        }, 1000);
+      } else {
+        this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
+        this.chestLastMessage.set(`${opener.name} finds no trap.`);
+      }
+    } else {
+      this.chestLastMessage.set(`${opener.name} cannot determine if there's a trap.`);
+    }
+  }
+
+  /**
+   * Handle additional inspection
+   */
+  private handleChestInspectMore(): void {
+    const opener = this.chestOpener();
+    const currentState = this.scrambledTrapState();
+    if (!opener || !currentState || currentState.fullyRevealed) return;
+
+    const updatedState = TrapService.performInspection(opener, currentState);
+    this.scrambledTrapState.set(updatedState);
+    this.chestLastMessage.set(`${opener.name} inspects again...`);
+  }
+
+  /**
+   * Handle CALFO from trap display
+   */
+  private handleChestCalfoFromTrapDisplay(): void {
+    const casters = this.calfoEligibleCasters();
+    if (casters.length === 0) return;
+
+    const caster = casters[0];
+    this.consumeChestCalfoSpellPoint(caster);
+
+    const currentState = this.scrambledTrapState();
+    if (currentState) {
+      const updatedState = TrapService.performCalfo(caster, currentState);
+      this.scrambledTrapState.set(updatedState);
+      this.chestLastMessage.set(`${caster.name} casts CALFO! All letters revealed.`);
+    }
+  }
+
+  /**
+   * Consume CALFO spell point
+   */
+  private consumeChestCalfoSpellPoint(caster: Character): void {
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster);
+      const char = newRoster.get(caster.id);
+      if (char?.spellPoints?.priest?.level2) {
+        const currentSP = char.spellPoints.priest.level2.current;
+        newRoster.set(caster.id, {
+          ...char,
+          spellPoints: {
+            ...char.spellPoints,
+            priest: {
+              ...char.spellPoints.priest,
+              level2: { ...char.spellPoints.priest.level2, current: Math.max(0, currentSP - 1) }
+            }
+          }
+        });
+      }
+      return { ...state, roster: newRoster };
+    });
+  }
+
+  /**
+   * Handle CALFO action
+   */
+  private handleChestCalfo(): void {
+    const casters = this.calfoEligibleCasters();
+    if (casters.length === 0) return;
+
+    if (casters.length === 1) {
+      this.castChestCalfo(casters[0]);
+    } else {
+      this.chestPhase.set('caster_select');
+      this.chestLastMessage.set(`Select who will cast CALFO (1-${casters.length})`);
+    }
+  }
+
+  /**
+   * Cast CALFO spell
+   */
+  private castChestCalfo(caster: Character): void {
+    const chest = this.pendingChest();
+    if (!chest) return;
+
+    this.consumeChestCalfoSpellPoint(caster);
+    const result = TrapService.castCalfo(caster, chest);
+
+    if (result.success && result.trapIdentified && chest.trapped && chest.trapId) {
+      const scrambledState = TrapService.createScrambledState(chest.trapId);
+      const revealedState = TrapService.performCalfo(caster, scrambledState);
+      this.scrambledTrapState.set(revealedState);
+      this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
+      this.chestLastMessage.set(`${caster.name} casts CALFO! All letters revealed.`);
+      this.chestLetterboxType.set('trap_detected');
+
+      setTimeout(() => {
+        this.chestLetterboxType.set(null);
+        this.chestPhase.set('trap_display');
+      }, 1000);
+    } else if (result.success && !chest.trapped) {
+      this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
+      this.chestLastMessage.set('CALFO reveals the chest is not trapped.');
+      this.chestPhase.set('action_select');
+    } else {
+      this.chestLastMessage.set('CALFO fails to reveal the trap type.');
+      this.chestPhase.set('action_select');
+    }
+
+    this.chestCaster.set(null);
+  }
+
+  /**
+   * Handle Disarm action
+   */
+  private handleChestDisarm(): void {
+    const chest = this.pendingChest();
+    if (!chest || !chest.trapIdentified || !chest.trapped || chest.trapDisarmed) return;
+
+    this.chestLetterboxType.set('disarm_attempt');
+
+    setTimeout(() => {
+      this.chestLetterboxType.set(null);
+      this.chestPhase.set('trap_input');
+      this.chestTrapInput.set('');
+      this.chestLastMessage.set('Enter the trap name to attempt disarm.');
+    }, 1500);
+  }
+
+  /**
+   * Submit trap name for disarm
+   */
+  private submitChestTrapName(): void {
+    const chest = this.pendingChest();
+    const opener = this.chestOpener();
+    if (!chest || !opener) return;
+
+    const result = TrapService.attemptDisarm(opener, chest, this.chestTrapInput());
+
+    if (result.success) {
+      this.pendingChest.update(c => c ? { ...c, trapDisarmed: true, trapped: false } : c);
+      this.chestLastMessage.set(`${opener.name} successfully disarmed the trap!`);
+      this.chestPhase.set('action_select');
+      this.chestTrapInput.set('');
+    } else if (result.triggered) {
+      if (result.wrongName) {
+        this.chestLastMessage.set('Wrong trap name! The trap triggers!');
+      } else {
+        this.chestLastMessage.set('Disarm failed! The trap triggers!');
+      }
+      this.triggerChestTrap(chest, opener);
+    } else {
+      this.chestLastMessage.set(`${opener.name} could not disarm it. Try again?`);
+      this.chestTrapInput.set('');
+    }
+  }
+
+  /**
+   * Handle Leave action
+   */
+  private handleChestLeave(): void {
+    this.closeChestOverlay();
+  }
+
+  /**
+   * Handle Cancel action
+   */
+  private handleChestCancel(): void {
+    const phase = this.chestPhase();
+    if (phase === 'caster_select' || phase === 'trap_input') {
+      this.chestPhase.set('action_select');
+      this.chestTrapInput.set('');
+      this.chestCaster.set(null);
+    } else if (phase === 'trap_display') {
+      this.chestPhase.set('action_select');
+    } else if (phase === 'inventory_warning') {
+      this.chestPhase.set('action_select');
+      this.chestInventoryWarning.set(null);
+    } else {
+      this.closeChestOverlay();
+    }
+  }
+
+  /**
+   * Handle Continue action
+   */
+  private handleChestContinue(): void {
+    const phase = this.chestPhase();
+
+    if (phase === 'trap_display') {
+      this.chestPhase.set('action_select');
+      return;
+    }
+
+    if (phase === 'result') {
+      this.closeChestOverlay();
+    }
+  }
+
+  /**
+   * Close chest overlay and return to maze
+   */
+  private closeChestOverlay(): void {
+    this.chestPhase.set('idle');
+    this.chestLetterboxType.set(null);
+    this.pendingChest.set(null);
+    this.chestSprite.set('closed');
+    this.chestOpener.set(null);
+    this.chestCaster.set(null);
+    this.scrambledTrapState.set(null);
+    this.chestTrapInput.set('');
+    this.chestSummary.set(null);
+    this.chestLastMessage.set('');
+    this.chestInventoryWarning.set(null);
+    this.preSelectedRecipient.set(null);
+    this.pendingTrapInfo.set(null);
+
+    // End combat if it was still active
+    this.endCombat();
+  }
+
+  /**
+   * Computed footer menu items for chest overlay
+   */
+  readonly chestFooterMenuItems = computed((): MenuItem[] => {
+    const chest = this.pendingChest();
+    const phase = this.chestPhase();
+    const opener = this.chestOpener();
+
+    if (phase === 'idle' || phase === 'reveal' || phase === 'opening') {
+      return [];
+    }
+
+    if (phase === 'caster_select') {
+      return [{ id: 'cancel', label: 'Cancel', shortcut: 'ESC', enabled: true }];
+    }
+
+    if (phase === 'trap_display') {
+      const canInspectMore = !this.scrambledTrapState()?.fullyRevealed;
+      const items: MenuItem[] = [
+        { id: 'continue', label: 'Done', shortcut: 'ENTER', enabled: true }
+      ];
+      if (canInspectMore) {
+        items.unshift({ id: 'inspect-more', label: 'Inspect Again', shortcut: 'I', enabled: true });
+      }
+      if (this.calfoEligibleCasters().length > 0 && !this.scrambledTrapState()?.fullyRevealed) {
+        items.splice(1, 0, { id: 'calfo', label: 'CALFO', shortcut: 'C', enabled: true });
+      }
+      return items;
+    }
+
+    if (phase === 'trap_input') {
+      return [
+        { id: 'submit-disarm', label: 'Disarm', shortcut: 'ENTER', enabled: true },
+        { id: 'cancel', label: 'Cancel', shortcut: 'ESC', enabled: true }
+      ];
+    }
+
+    if (phase === 'inventory_warning') {
+      return [
+        { id: 'confirm-open', label: 'Open Anyway', shortcut: 'Y', enabled: true },
+        { id: 'cancel', label: 'Cancel', shortcut: 'N', enabled: true }
+      ];
+    }
+
+    if (phase === 'result') {
+      return [{ id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }];
+    }
+
+    // action_select mode
+    if (!chest || !opener) {
+      return [{ id: 'leave', label: 'Leave', shortcut: 'L', enabled: true }];
+    }
+
+    const items: MenuItem[] = [];
+    items.push({ id: 'open', label: 'Open', shortcut: 'O', enabled: true });
+
+    if (!chest.trapIdentified) {
+      items.push({ id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: true });
+    }
+
+    if (!chest.trapIdentified && this.calfoEligibleCasters().length > 0) {
+      items.push({ id: 'calfo', label: 'CALFO', shortcut: 'C', enabled: true });
+    }
+
+    if (chest.trapIdentified && chest.trapped && !chest.trapDisarmed) {
+      items.push({ id: 'disarm', label: 'Disarm', shortcut: 'D', enabled: true });
+    }
+
+    items.push({ id: 'leave', label: 'Leave', shortcut: 'L', enabled: true });
+    return items;
+  });
+
+  /**
+   * Simple Leave button for chest overlay footer
+   * Actions are now on character cards, footer just shows Leave
+   */
+  readonly chestLeaveMenuItem = computed((): MenuItem[] => {
+    const phase = this.chestPhase();
+
+    // Special phases with different footer items
+    if (phase === 'trap_input') {
+      return [
+        { id: 'submit-disarm', label: 'Disarm', shortcut: 'ENTER', enabled: true },
+        { id: 'cancel', label: 'Cancel', shortcut: 'ESC', enabled: true }
+      ];
+    }
+
+    if (phase === 'inventory_warning') {
+      return [
+        { id: 'confirm-open', label: 'Open Anyway', shortcut: 'Y', enabled: true },
+        { id: 'cancel', label: 'Cancel', shortcut: 'N', enabled: true }
+      ];
+    }
+
+    if (phase === 'result') {
+      return [{ id: 'continue', label: 'Return to Maze', shortcut: 'ENTER', enabled: true }];
+    }
+
+    if (phase === 'trap_display') {
+      return [
+        { id: 'continue', label: 'Done', shortcut: 'ENTER', enabled: true },
+        { id: 'leave', label: 'Leave', shortcut: 'L', enabled: true }
+      ];
+    }
+
+    // Default: just Leave button (actions are on character cards)
+    return [{ id: 'leave', label: 'Leave', shortcut: 'L', enabled: true }];
+  });
 }

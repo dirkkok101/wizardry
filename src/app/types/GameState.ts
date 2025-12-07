@@ -35,6 +35,7 @@ export interface Settings {
   soundEnabled: boolean
   musicEnabled: boolean
   encountersEnabled: boolean // Set to false to disable random encounters (useful for testing rendering/movement)
+  guaranteedChestDrops: boolean // Debug: guarantee chest drop after every combat victory (Ctrl+T to toggle)
 }
 
 /**

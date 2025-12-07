@@ -19,10 +19,12 @@
     <div class="left-panel" [class.dimmed]="shouldDimLeftPanel()">
       <app-character-panel
         [characters]="leftColumnCharacters()"
-        [actions]="inCombat() ? getCombatActionsForCharacter : getActionsForCharacter"
-        [visibleActionTypes]="inCombat() ? ['attack', 'cast-spell', 'parry'] : ['inspect', 'cast-spell']"
+        [actions]="showChestOverlay() ? getChestActionsForCharacter : (inCombat() ? getCombatActionsForCharacter : getActionsForCharacter)"
+        [visibleActionTypes]="showChestOverlay() ? ['open', 'inspect', 'calfo', 'disarm'] : (inCombat() ? ['attack', 'cast-spell', 'parry'] : ['inspect', 'cast-spell'])"
         [statusTexts]="combatActionTexts()"
-        (actionClick)="handleCharacterAction($event)"
+        [hitCharacterIds]="hitCharacterIds()"
+        [damageIndicator]="currentDamageIndicator()"
+        (actionClick)="showChestOverlay() ? handleChestCardAction($event) : handleCharacterAction($event)"
       />
     </div>
 
@@ -45,33 +47,66 @@
           [partyCharacters]="partyCharacters()"
           (groupClicked)="onCombatGroupClicked($event)"
         />
+
+        <!-- Chest Overlay (Theater Stage) -->
+        <app-chest-overlay
+          [visible]="showChestOverlay()"
+          [phase]="chestPhase()"
+          [chest]="pendingChest()"
+          [spriteState]="chestSprite()"
+          [scrambledState]="scrambledTrapState()"
+          [trapInput]="chestTrapInput()"
+          [summary]="chestSummary()"
+          [availableCharacters]="partyCharacters()"
+          [calfoEligibleCasters]="calfoEligibleCasters()"
+          [selectedOpener]="chestOpener()"
+          [lastMessage]="chestLastMessage()"
+          [recommendedHandler]="recommendedChestHandler()"
+          [inventoryWarning]="chestInventoryWarning()"
+          [letterboxType]="chestLetterboxType()"
+          [inspectChance]="chestInspectChance()"
+          [disarmChance]="chestDisarmChance()"
+          [trapLetterboxName]="trapLetterboxName()"
+          (characterSelected)="onChestCharacterSelected($event)"
+          (casterSelected)="onChestCasterSelected($event)"
+        />
       </div>
 
-      <div class="message-log-section">
-        <app-message-log [messages]="messages()" />
-      </div>
+      @if (!showChestOverlay()) {
+        <div class="message-log-section">
+          <app-message-log [messages]="messages()" />
+        </div>
+      }
     </div>
 
     <!-- Right Column: Positions 2, 4, 6 -->
     <div class="right-panel" [class.dimmed]="shouldDimRightPanel()">
       <app-character-panel
         [characters]="rightColumnCharacters()"
-        [actions]="inCombat() ? getCombatActionsForCharacter : getActionsForCharacter"
-        [visibleActionTypes]="inCombat() ? ['attack', 'cast-spell', 'parry'] : ['inspect', 'cast-spell']"
+        [actions]="showChestOverlay() ? getChestActionsForCharacter : (inCombat() ? getCombatActionsForCharacter : getActionsForCharacter)"
+        [visibleActionTypes]="showChestOverlay() ? ['open', 'inspect', 'calfo', 'disarm'] : (inCombat() ? ['attack', 'cast-spell', 'parry'] : ['inspect', 'cast-spell'])"
         [statusTexts]="combatActionTexts()"
-        (actionClick)="handleCharacterAction($event)"
+        [hitCharacterIds]="hitCharacterIds()"
+        [damageIndicator]="currentDamageIndicator()"
+        (actionClick)="showChestOverlay() ? handleChestCardAction($event) : handleCharacterAction($event)"
       />
     </div>
   </div>
 
-  <!-- Scene Footer - Navigation or Combat Actions -->
-  @if (!inCombat()) {
+  <!-- Scene Footer - Navigation, Combat, or Chest Actions -->
+  @if (showChestOverlay()) {
+    <!-- Chest mode: Only Leave button (actions are on character cards now) -->
+    <app-scene-footer
+      [menuItems]="chestLeaveMenuItem()"
+      (itemSelected)="handleChestFooterAction($event)"
+    />
+  } @else if (!inCombat() && !showChestOverlay()) {
     <!-- Normal navigation menu -->
     <app-scene-footer
       [menuItems]="mazeMenuItems()"
       (itemSelected)="handleMenuAction($event)"
     />
-  } @else if (!isExecutingRound() && !showSpellDialog() && !showTargetDialog() && !isTargetingMode()) {
+  } @else if (inCombat() && !isExecutingRound() && !showSpellDialog() && !showTargetDialog() && !isTargetingMode()) {
     <!-- Combat mode footer: [Start Round], [Flee], [Reset Actions] -->
     <app-scene-footer
       [menuItems]="combatFooterMenuItems()"
