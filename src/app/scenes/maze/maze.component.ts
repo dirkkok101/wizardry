@@ -108,6 +108,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly showVictoryOverlay = signal<boolean>(false);
   readonly showDefeatOverlay = signal<boolean>(false);
   readonly victoryRewards = signal<VictoryRewards | null>(null);
+  // Combat intro phase - hides monster cards and player actions during letterbox
+  readonly combatIntroActive = signal<boolean>(false);
+  // Monster cards should only show after intro completes
+  readonly showMonsterCards = computed(() => this.inCombat() && !this.combatIntroActive());
 
   // Abandon party confirmation state
   readonly showAbandonConfirmation = signal<boolean>(false);
@@ -257,6 +261,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Returns empty during round execution or when party is surprised
    */
   getCombatActionsForCharacter = (char: Character): CharacterAction[] => {
+    // No actions during intro phase (ENCOUNTER/AMBUSH/SURPRISE letterboxes)
+    if (this.combatIntroActive()) {
+      return [];
+    }
+
     // No actions during round execution (monsters attacking, spells resolving, etc.)
     if (this.isExecutingRound()) {
       return [];
@@ -2021,6 +2030,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Handles encounter + surprise states
    */
   private async showCombatIntro(combatState: CombatState): Promise<void> {
+    // Mark intro as active to hide monster cards and player actions
+    this.combatIntroActive.set(true);
+
     // 1. Always show ENCOUNTER! first
     await this.showLetterbox('encounter', 1800);
 
@@ -2039,6 +2051,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Normal combat - proceed to action selection
       this.combatPhase.set('action_select');
     }
+
+    // Intro complete - show monster cards and player actions
+    this.combatIntroActive.set(false);
   }
 
   /**

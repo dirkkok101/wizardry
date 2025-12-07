@@ -10,8 +10,9 @@
     <div class="combat-vignette"></div>
 
     <!-- Monster Sprite Layer (delegated to child component) -->
-    <div class="monster-layer">
-      <app-monster-sprite-overlay
+    @if (showMonsterCards()) {
+      <div class="monster-layer">
+        <app-monster-sprite-overlay
         [monsterGroups]="monsterGroups()"
         [selectedGroupId]="selectedGroupId()"
         [isTargetingMode]="isTargetingMode()"
@@ -19,7 +20,8 @@
         (groupClicked)="onGroupClick($event)"
         (animationComplete)="onAnimationComplete($event)"
       />
-    </div>
+      </div>
+    }
 
     <!-- Floating Damage Numbers Layer -->
     <div class="floating-damage-layer">

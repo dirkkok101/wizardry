@@ -45,6 +45,7 @@
           [showDefeatOverlay]="combatPhase() === 'defeat'"
           [victoryRewards]="victoryRewards()"
           [partyCharacters]="partyCharacters()"
+          [showMonsterCards]="showMonsterCards()"
           (groupClicked)="onCombatGroupClicked($event)"
         />
 
@@ -106,7 +107,7 @@
       [menuItems]="mazeMenuItems()"
       (itemSelected)="handleMenuAction($event)"
     />
-  } @else if (inCombat() && !isExecutingRound() && !showSpellDialog() && !showTargetDialog() && !isTargetingMode()) {
+  } @else if (inCombat() && !combatIntroActive() && !isExecutingRound() && !showSpellDialog() && !showTargetDialog() && !isTargetingMode()) {
     <!-- Combat mode footer: [Start Round], [Flee], [Reset Actions] -->
     <app-scene-footer
       [menuItems]="combatFooterMenuItems()"
