@@ -520,6 +520,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Used when chest overlay is active - shows Open, Inspect, CALFO (if eligible), Disarm (if trap identified)
    */
   getChestActionsForCharacter = (char: Character): CharacterAction[] => {
+    // Only show actions during action_select phase
+    const phase = this.chestPhase();
+    if (phase !== 'action_select') {
+      return [];
+    }
+
     // No actions for incapacitated characters
     if (char.status === CharacterStatus.DEAD ||
         char.status === CharacterStatus.ASHES ||
@@ -3067,11 +3073,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       party: {
         ...state.party,
         position: { ...state.party.position, x: newX, y: newY, facing: newFacing }
-      }
+      },
+      pendingChest: undefined
     }));
 
-    this.chestLastMessage.update(m => m + ` Teleported to (${newX}, ${newY})!`);
-    this.chestPhase.set('result');
+    this.addMessage(`Teleported to (${newX}, ${newY})!`);
+    this.closeChestOverlay();
   }
 
   /**
