@@ -270,9 +270,10 @@ export class CombatComponent implements OnInit, OnDestroy {
     const chars = this.partyCharacters()
     const actions = this.selectedActions()
 
-    // All alive characters must have selected an action
+    // All characters who can act must have selected an action
+    // (excludes dead, paralyzed, asleep, and stoned characters)
     return chars
-      .filter(c => c.hp > 0)
+      .filter(c => this.canCharacterAct(c))
       .every(c => actions.has(c.id))
   })
 
@@ -289,9 +290,9 @@ export class CombatComponent implements OnInit, OnDestroy {
     return textMap
   })
 
-  // Get alive party members (for action selection)
+  // Get party members who can select actions (alive and not incapacitated)
   readonly alivePartyMembers = computed(() => {
-    return this.partyCharacters().filter(c => c.hp > 0)
+    return this.partyCharacters().filter(c => this.canCharacterAct(c))
   })
 
   // Current active character (the one selecting an action)
@@ -489,6 +490,18 @@ export class CombatComponent implements OnInit, OnDestroy {
       // Schedule scroll after Angular renders the new messages
       queueMicrotask(() => this.scrollLogToBottom())
     })
+  }
+
+  /**
+   * Check if a character can select and perform actions in combat.
+   * Characters who are dead, paralyzed, asleep, or stoned cannot act.
+   */
+  private canCharacterAct(char: Character): boolean {
+    return char.hp > 0 &&
+           char.status !== CharacterStatus.DEAD &&
+           char.status !== CharacterStatus.ASLEEP &&
+           char.status !== CharacterStatus.PARALYZED &&
+           char.status !== CharacterStatus.STONED
   }
 
   /**
