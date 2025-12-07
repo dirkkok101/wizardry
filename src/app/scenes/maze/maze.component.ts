@@ -1855,7 +1855,17 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Apply final state
       this.gameState.updateState(state => {
-        const newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+        let newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+
+        // Apply spell point deductions for characters who cast spells
+        for (const [charId, { spellId }] of result.spellCasters) {
+          const caster = newRoster.get(charId);
+          if (caster) {
+            const updatedCaster = SpellCastingService.deductSpellPoints(caster, spellId);
+            newRoster = new Map(newRoster).set(charId, updatedCaster);
+          }
+        }
+
         const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
 
         return {
@@ -2185,7 +2195,17 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Update game state
     this.gameState.updateState(state => {
-      const newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+      let newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+
+      // Apply spell point deductions for characters who cast spells
+      for (const [charId, { spellId }] of result.spellCasters) {
+        const caster = newRoster.get(charId);
+        if (caster) {
+          const updatedCaster = SpellCastingService.deductSpellPoints(caster, spellId);
+          newRoster = new Map(newRoster).set(charId, updatedCaster);
+        }
+      }
+
       const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
 
       return {
