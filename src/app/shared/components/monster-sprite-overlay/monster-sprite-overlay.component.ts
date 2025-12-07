@@ -143,11 +143,11 @@ export class MonsterSpriteOverlayComponent {
 
   /**
    * Get sprite image URL for a monster
-   * Maps monsterId to sprite file path (e.g., 'kobold' → '/assets/monsters/sprites/kobold.png')
+   * Maps monsterId to sprite file path (e.g., 'kobold' → '/assets/sprites/monsters/kobold.png')
    */
   getSpriteUrl(monster: MonsterInstance | undefined): string {
-    if (!monster) return '/assets/monsters/sprites/unknown.png'
-    return `/assets/monsters/sprites/${monster.monsterId}.png`
+    if (!monster) return '/assets/sprites/monsters/unknown.png'
+    return `/assets/sprites/monsters/${monster.monsterId}.png`
   }
 
   /**

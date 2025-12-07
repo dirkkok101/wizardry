@@ -89,8 +89,8 @@ export class CombatOverlayComponent {
   // Note: Angular serves data/ as /assets/ (configured in angular.json)
   readonly victorySpriteUrl = computed(() => {
     return this.isPyrrhicVictory()
-      ? '/assets/sprites/victory-pyrrhic.png'
-      : '/assets/sprites/victory-clean.png'
+      ? '/assets/sprites/combat/victory-pyrrhic.png'
+      : '/assets/sprites/combat/victory-clean.png'
   })
 
   // Outputs

@@ -1,12 +1,5 @@
 import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
-import { SpellDataLoader } from '@services/SpellDataLoader';
-import { MonsterDataLoader } from '@services/MonsterDataLoader';
-import { ClassDataLoader } from '@services/ClassDataLoader';
-import { ItemDataLoader } from '@services/ItemDataLoader';
-import { TrapDataLoader } from '@services/TrapDataLoader';
-import { RaceService } from '@services/RaceService';
 import { RandomService } from '@services/RandomService';
-import { StatModifierService } from '@services/StatModifierService';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -55,27 +48,9 @@ global.fetch = jest.fn(async (url: string) => {
   }
 }) as jest.Mock;
 
-// Pre-load classes, spells, monsters, items, traps, races, and stat modifiers for all tests using real data
-beforeAll(async () => {
-  await Promise.all([
-    ClassDataLoader.loadAllClasses(),
-    SpellDataLoader.loadAllSpells(),
-    MonsterDataLoader.loadAllMonsters(),
-    ItemDataLoader.loadAllItems(),
-    TrapDataLoader.loadAllTraps(),
-    RaceService.initialize(),
-    StatModifierService.initialize()
-  ]);
-});
-
-// Clear caches after all tests
-afterAll(() => {
-  ClassDataLoader.clearCache();
-  SpellDataLoader.clearCache();
-  MonsterDataLoader.clearCache();
-  ItemDataLoader.clearCache();
-  TrapDataLoader.clearCache();
-});
+// NOTE: Game data loading moved to test-data-loader.ts
+// Tests that need game data should call loadGameDataForTests() in their own beforeAll
+// This avoids loading 314 JSON files for tests that don't need them
 
 // Reset RandomService before each test to ensure deterministic behavior
 // Tests that need specific random values should use:

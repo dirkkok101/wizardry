@@ -9,7 +9,7 @@
       "node"
     ],
     "esModuleInterop": true,
-    "emitDecoratorMetadata": true
+    "isolatedModules": true
   },
   "include": [
     "src/**/*.spec.ts",

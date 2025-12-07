@@ -156,8 +156,8 @@ export class ChestOverlayComponent {
   /** Sprite URL based on state */
   readonly spriteUrl = computed(() => {
     return this.spriteState() === 'open'
-      ? '/assets/sprites/chest_open.png'
-      : '/assets/sprites/chest_closed.png'
+      ? '/assets/sprites/chest/chest_open.png'
+      : '/assets/sprites/chest/chest_closed.png'
   })
 
   /** Whether to show sprite background */

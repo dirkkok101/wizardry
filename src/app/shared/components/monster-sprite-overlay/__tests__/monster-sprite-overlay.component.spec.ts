@@ -94,12 +94,12 @@ describe('MonsterSpriteOverlayComponent', () => {
     it('should generate correct sprite URL for monster', () => {
       const monster = createTestMonster({ monsterId: 'kobold' })
       const url = component.getSpriteUrl(monster)
-      expect(url).toBe('/assets/monsters/sprites/kobold.png')
+      expect(url).toBe('/assets/sprites/monsters/kobold.png')
     })
 
     it('should return unknown sprite URL for undefined monster', () => {
       const url = component.getSpriteUrl(undefined)
-      expect(url).toBe('/assets/monsters/sprites/unknown.png')
+      expect(url).toBe('/assets/sprites/monsters/unknown.png')
     })
   })
 

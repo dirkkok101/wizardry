@@ -23,10 +23,10 @@ export class SpritePreloadService {
    * Located in data/sprites/ which is served as /assets/sprites/
    */
   private static readonly UI_SPRITES = [
-    '/assets/sprites/victory-clean.png',
-    '/assets/sprites/victory-pyrrhic.png',
-    '/assets/sprites/chest_closed.png',
-    '/assets/sprites/chest_open.png'
+    '/assets/sprites/combat/victory-clean.png',
+    '/assets/sprites/combat/victory-pyrrhic.png',
+    '/assets/sprites/chest/chest_closed.png',
+    '/assets/sprites/chest/chest_open.png'
   ]
 
   /**
@@ -78,7 +78,7 @@ export class SpritePreloadService {
     try {
       const monsters = MonsterDataLoader.getAllMonsters()
       for (const monster of monsters.values()) {
-        urls.push(`/assets/monsters/sprites/${monster.id}.png`)
+        urls.push(`/assets/sprites/monsters/${monster.id}.png`)
       }
     } catch {
       // MonsterDataLoader not initialized yet - skip monster sprites
