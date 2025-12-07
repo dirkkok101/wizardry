@@ -9,6 +9,7 @@ import { GameStateService } from '@services/GameStateService';
 import { PartyAbandonmentService } from '@services/PartyAbandonmentService';
 import { KeystrokeInputDirective } from '@shared/directives/keystroke-input.directive';
 import { SceneType } from '@models/SceneType';
+import { APP_VERSION } from '@config/version';
 
 /**
  * Title Screen Component
@@ -52,6 +53,9 @@ export class TitleScreenComponent implements OnInit {
   // Save data detection
   readonly hasSaveData = computed(() => this._hasSaveData);
   private _hasSaveData = false;
+
+  // App version for display
+  readonly appVersion = APP_VERSION;
 
   // Navigation state
   private hasNavigated = false;

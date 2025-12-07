@@ -71,6 +71,16 @@
           (characterSelected)="onChestCharacterSelected($event)"
           (casterSelected)="onChestCasterSelected($event)"
         />
+
+        <!-- Tile Message Overlay (Theater Stage) -->
+        <app-tile-message-overlay
+          [visible]="showTileMessageOverlay()"
+          [phase]="tileMessagePhase()"
+          [message]="tileMessageText()"
+          [itemFound]="tileMessageItem()"
+          [autoDismiss]="tileMessageAutoDismiss()"
+          (dismissed)="handleTileMessageDismiss()"
+        />
       </div>
 
       @if (!showChestOverlay()) {

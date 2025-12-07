@@ -13,6 +13,9 @@ dist-ssr/
 .angular/
 .vscode-angular/
 
+# Auto-generated files
+src/app/config/version.ts
+
 # Test coverage
 coverage/
 

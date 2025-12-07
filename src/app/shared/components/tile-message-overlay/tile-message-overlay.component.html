@@ -1,0 +1,31 @@
+@if (visible()) {
+  <div class="tile-message-overlay" role="dialog" aria-modal="true">
+    <!-- Message Phase: Letterbox Banner -->
+    @if (phase() === 'message') {
+      <div class="letterbox-banner discovery" [attr.data-key]="animationKey()">
+        <div class="letterbox-bar top"></div>
+        <div class="letterbox-content">
+          <span class="message-text">{{ message() }}</span>
+        </div>
+        <div class="letterbox-bar bottom"></div>
+      </div>
+
+      @if (!autoDismiss()) {
+        <div class="dismiss-hint">Press any key to continue...</div>
+      }
+    }
+
+    <!-- Item Reward Phase -->
+    @if (phase() === 'item_reward') {
+      <div class="item-reward-overlay" [attr.data-key]="animationKey()">
+        <div class="reward-content">
+          <h3 class="reward-title">Item Found!</h3>
+          <div class="item-badge">
+            <span class="item-name">{{ itemDisplayName() }}</span>
+          </div>
+          <div class="dismiss-hint">Press any key to continue...</div>
+        </div>
+      </div>
+    }
+  </div>
+}

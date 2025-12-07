@@ -10,6 +10,8 @@ export interface InspectionResult {
   itemId?: string;
   message?: string;
   state?: GameState;
+  tileMessage?: string;  // Raw message from tile.message for overlay display
+  hasItem?: boolean;     // Whether tile had an item to collect
 }
 
 /**
@@ -20,6 +22,26 @@ function getLootedTileKey(level: number, x: number, y: number): string {
 }
 
 export class TileInspectionService {
+  /**
+   * Get the message for a tile at the given position
+   * Used for displaying tile messages in overlay before inspection
+   */
+  static getTileMessage(
+    level: LevelData,
+    position: Position
+  ): string | undefined {
+    const tile = DungeonService.getTile(level, position.x, position.y);
+    return tile.message;
+  }
+
+  /**
+   * Check if current tile has a message to display (regardless of searchable content)
+   */
+  static hasTileMessage(level: LevelData, position: Position): boolean {
+    const tile = DungeonService.getTile(level, position.x, position.y);
+    return !!tile.message;
+  }
+
   /**
    * Check if current tile has searchable content that hasn't been looted yet
    *
@@ -176,6 +198,8 @@ export class TileInspectionService {
       itemId,
       message,
       state: newState,
+      tileMessage: tile.message,  // Raw tile message for overlay display
+      hasItem: true,
     };
   }
 }

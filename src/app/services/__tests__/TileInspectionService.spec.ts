@@ -31,6 +31,70 @@ describe('TileInspectionService', () => {
   afterEach(() => {
     jest.restoreAllMocks()
   })
+
+  describe('getTileMessage', () => {
+    const level: LevelData = {
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      startPosition: { x: 0, y: 0, facing: 'north' },
+      edgeWrapping: false,
+      tiles: [
+        { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, message: 'A mysterious inscription!' },
+        { x: 2, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'key', message: 'A glowing statue!' },
+      ],
+      encounterRate: 0.1,
+      encounterTable: 'level_1',
+    };
+
+    it('returns undefined for tile without message', () => {
+      const position: Position = { x: 0, y: 0, facing: 'NORTH' };
+      const result = TileInspectionService.getTileMessage(level, position);
+      expect(result).toBeUndefined();
+    });
+
+    it('returns message for tile with message', () => {
+      const position: Position = { x: 1, y: 0, facing: 'NORTH' };
+      const result = TileInspectionService.getTileMessage(level, position);
+      expect(result).toBe('A mysterious inscription!');
+    });
+
+    it('returns message for searchable tile with message', () => {
+      const position: Position = { x: 2, y: 0, facing: 'NORTH' };
+      const result = TileInspectionService.getTileMessage(level, position);
+      expect(result).toBe('A glowing statue!');
+    });
+  });
+
+  describe('hasTileMessage', () => {
+    const level: LevelData = {
+      level: 1,
+      name: 'Test Level',
+      size: { width: 20, height: 20 },
+      startPosition: { x: 0, y: 0, facing: 'north' },
+      edgeWrapping: false,
+      tiles: [
+        { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' } },
+        { x: 1, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, message: 'A warning sign!' },
+      ],
+      encounterRate: 0.1,
+      encounterTable: 'level_1',
+    };
+
+    it('returns false for tile without message', () => {
+      const position: Position = { x: 0, y: 0, facing: 'NORTH' };
+      const result = TileInspectionService.hasTileMessage(level, position);
+      expect(result).toBe(false);
+    });
+
+    it('returns true for tile with message', () => {
+      const position: Position = { x: 1, y: 0, facing: 'NORTH' };
+      const result = TileInspectionService.hasTileMessage(level, position);
+      expect(result).toBe(true);
+    });
+  });
+
   describe('hasSearchableContent', () => {
     const level: LevelData = {
       level: 1,

@@ -1,0 +1,252 @@
+// ============================================
+// TILE MESSAGE OVERLAY - Story & Discovery
+// ============================================
+// Displays tile messages in a cinematic letterbox
+// Reuses patterns from combat-overlay for consistency
+
+.tile-message-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+
+  // Semi-transparent backdrop
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    animation: backdrop-fade-in 0.3s ease-out;
+  }
+}
+
+@keyframes backdrop-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+// ============================================
+// LETTERBOX BANNER - Cinematic Message Display
+// ============================================
+
+.letterbox-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 25;
+  pointer-events: none;
+}
+
+// Sliding bars (top and bottom)
+.letterbox-bar {
+  flex: 0 0 auto;
+  height: 0;
+  background: transparent;
+
+  &.top {
+    animation: bar-slide-down 0.4s ease-out forwards;
+  }
+
+  &.bottom {
+    animation: bar-slide-up 0.4s ease-out forwards;
+  }
+}
+
+@keyframes bar-slide-down {
+  0% { height: 0; }
+  100% { height: 100px; }
+}
+
+@keyframes bar-slide-up {
+  0% { height: 0; }
+  100% { height: 100px; }
+}
+
+// Center content area
+.letterbox-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  opacity: 0;
+  animation: text-fade-in 0.5s ease-out 0.3s forwards;
+}
+
+@keyframes text-fade-in {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+// Message text styling
+.message-text {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  text-align: center;
+  line-height: 1.6;
+  max-width: 600px;
+  white-space: pre-wrap; // Allow multi-line messages
+  letter-spacing: 0.05em;
+}
+
+// ============================================
+// VARIANT: Discovery (Gold/Neutral)
+// ============================================
+
+.letterbox-banner.discovery {
+  .message-text {
+    color: var(--color-gold-bright);
+    text-shadow:
+      0 0 20px var(--color-gold-glow),
+      0 0 40px rgba(244, 196, 48, 0.5),
+      0 0 60px rgba(244, 196, 48, 0.3);
+  }
+
+  .letterbox-bar {
+    box-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+  }
+}
+
+// ============================================
+// ITEM REWARD OVERLAY
+// ============================================
+
+.item-reward-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlay-fade-in 0.4s ease-out;
+}
+
+@keyframes overlay-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.reward-content {
+  text-align: center;
+  animation: content-slide-up 0.4s ease-out;
+}
+
+@keyframes content-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reward-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--color-gold-bright);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 20px var(--color-gold-glow),
+    0 0 40px rgba(244, 196, 48, 0.5);
+}
+
+.item-badge {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: rgba(168, 85, 247, 0.25);
+  border: 1px solid var(--color-magic);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+
+  .item-name {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    color: var(--color-magic);
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  }
+}
+
+// ============================================
+// DISMISS HINT
+// ============================================
+
+.dismiss-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  animation: hint-pulse 2s ease-in-out infinite;
+  z-index: 30;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+// ============================================
+// REDUCED MOTION SUPPORT
+// ============================================
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-message-overlay::before,
+  .letterbox-bar,
+  .letterbox-content,
+  .item-reward-overlay,
+  .reward-content,
+  .dismiss-hint {
+    animation: none;
+  }
+
+  .letterbox-bar {
+    height: 80px;
+  }
+
+  .letterbox-content {
+    opacity: 1;
+  }
+
+  .tile-message-overlay::before {
+    opacity: 1;
+  }
+}
+
+// ============================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================
+
+@media (max-width: 480px) {
+  .message-text {
+    font-size: 1rem;
+    padding: 0 1rem;
+    max-width: 100%;
+  }
+
+  .reward-title {
+    font-size: 1.25rem;
+  }
+
+  .item-badge {
+    padding: 0.5rem 1rem;
+
+    .item-name {
+      font-size: 1rem;
+    }
+  }
+
+  .dismiss-hint {
+    font-size: 0.75rem;
+    bottom: 1.5rem;
+  }
+}

@@ -1,5 +1,10 @@
 <header class="scene-header">
-  <h1>{{ title() }}</h1>
+  <div class="scene-title-row">
+    <h1>{{ title() }}</h1>
+    @if (showVersion()) {
+      <span class="version-badge">{{ appVersion.display }}</span>
+    }
+  </div>
   <div class="scene-header-content">
     <ng-content></ng-content>
     @if (activeSpells().length > 0) {

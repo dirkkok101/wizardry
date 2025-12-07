@@ -10,6 +10,7 @@ import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.
 import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
 import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
 import { ChestOverlayComponent, ChestPhase, ChestLetterboxType, ChestSummary, RecommendedHandler } from '@shared/components/chest-overlay/chest-overlay.component';
+import { TileMessageOverlayComponent, TileMessagePhase, TileMessageItem } from '@shared/components/tile-message-overlay/tile-message-overlay.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
@@ -60,7 +61,8 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
     SpellPanelComponent,
     CharacterSelectionDialogComponent,
     CombatOverlayComponent,
-    ChestOverlayComponent
+    ChestOverlayComponent,
+    TileMessageOverlayComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
@@ -169,6 +171,19 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!opener || !chest) return 0;
     return Math.round(TrapService.calculateDisarmChance(opener, chest.mazeLevel));
   });
+
+  // ============================================================
+  // INTEGRATED TILE MESSAGE STATE (Theater Stage Design)
+  // Tile messages shown in letterbox overlay during inspection
+  // ============================================================
+  readonly tileMessagePhase = signal<TileMessagePhase>('idle');
+  readonly tileMessageText = signal<string>('');
+  readonly tileMessageItem = signal<TileMessageItem | null>(null);
+  readonly tileMessageAutoDismiss = signal<boolean>(false);
+  readonly pendingFixedEncounter = signal<FixedEncounterConfig | null>(null);
+
+  // Computed tile message state
+  readonly showTileMessageOverlay = computed(() => this.tileMessagePhase() !== 'idle');
 
   // Get party members who can take combat actions (not incapacitated: dead, paralyzed, asleep, etc.)
   readonly alivePartyMembers = computed(() =>
@@ -1113,20 +1128,29 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Check if movement should be locked (during combat, dialogs, or chest overlay)
    */
   private isMovementLocked(): boolean {
-    return this.inCombat() || this.isDialogOpen() || this.showChestOverlay();
+    return this.inCombat() || this.isDialogOpen() || this.showChestOverlay() || this.showTileMessageOverlay();
   }
 
   /**
-   * General keyboard handler for chest overlay
-   * Must capture all keys when chest overlay is active
+   * General keyboard handler for overlays
+   * Must capture all keys when overlays are active
    */
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent): void {
-    // Only handle when chest overlay is active
-    if (!this.showChestOverlay()) return;
+    // Handle tile message overlay first (any key dismisses, except modifiers)
+    if (this.showTileMessageOverlay() && !this.tileMessageAutoDismiss()) {
+      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+        event.preventDefault();
+        this.handleTileMessageDismiss();
+      }
+      return;
+    }
 
-    // Route all keyboard input to chest handler
-    this.handleChestKeyboard(event);
+    // Handle chest overlay
+    if (this.showChestOverlay()) {
+      this.handleChestKeyboard(event);
+      return;
+    }
   }
 
   @HostListener('window:keydown.escape')
@@ -1294,24 +1318,99 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     const level = DungeonService.loadLevel(this.currentLevel());
+    const position = state.dungeon.position;
 
-    // Check if current tile has searchable content (not already looted)
-    if (!TileInspectionService.hasSearchableContent(level, state.dungeon.position, state.dungeon)) {
+    // Check if tile has a message (even if no searchable content)
+    const tileMessage = TileInspectionService.getTileMessage(level, position);
+    const hasSearchableContent = TileInspectionService.hasSearchableContent(level, position, state.dungeon);
+
+    // If no message and no searchable content, show nothing found
+    if (!tileMessage && !hasSearchableContent) {
       this.addMessage('Nothing to search here.');
       return;
     }
 
-    const result = TileInspectionService.inspectTileWithState(state, level);
+    // If there's searchable content, process the inspection
+    if (hasSearchableContent) {
+      const result = TileInspectionService.inspectTileWithState(state, level);
 
-    if (result.found && result.state) {
-      this.gameState.updateState(() => result.state!);
-      this.addMessage(result.message || `You found ${result.itemId}!`);
-    } else if (result.message) {
-      // Already looted or other message
-      this.addMessage(result.message);
-    } else {
-      this.addMessage('Nothing found.');
+      if (result.found && result.state) {
+        this.gameState.updateState(() => result.state!);
+
+        // If tile has a message, show overlay with message then item
+        if (result.tileMessage) {
+          const item = result.itemId
+            ? { name: result.itemId, identified: false }
+            : null;
+          this.showTileMessage(result.tileMessage, false, item);
+        } else {
+          // No message, just add to log
+          this.addMessage(result.message || `You found ${result.itemId}!`);
+        }
+      } else if (result.message) {
+        // Already looted or other message
+        this.addMessage(result.message);
+      }
+    } else if (tileMessage) {
+      // Tile has message but no item (message-only tile)
+      this.showTileMessage(tileMessage, false, null);
     }
+  }
+
+  /**
+   * Show tile message overlay with optional item reward
+   */
+  private showTileMessage(
+    message: string,
+    autoDismiss: boolean,
+    item: TileMessageItem | null
+  ): void {
+    this.tileMessageText.set(message);
+    this.tileMessageAutoDismiss.set(autoDismiss);
+    this.tileMessageItem.set(item);
+    this.tileMessagePhase.set('message');
+  }
+
+  /**
+   * Handle tile message overlay dismissal
+   */
+  handleTileMessageDismiss(): void {
+    const phase = this.tileMessagePhase();
+    const item = this.tileMessageItem();
+
+    if (phase === 'message' && item) {
+      // Transition to item reward phase
+      this.tileMessagePhase.set('item_reward');
+    } else {
+      // Dismiss overlay completely
+      this.dismissTileMessageOverlay();
+    }
+  }
+
+  /**
+   * Fully dismiss the tile message overlay and check for pending encounters
+   */
+  private dismissTileMessageOverlay(): void {
+    this.tileMessagePhase.set('idle');
+    this.tileMessageText.set('');
+    this.tileMessageItem.set(null);
+    this.tileMessageAutoDismiss.set(false);
+
+    // Check for pending fixed encounter (will be implemented in encounter flow update)
+    const pending = this.pendingFixedEncounter();
+    if (pending) {
+      this.pendingFixedEncounter.set(null);
+      // Trigger the encounter now that message is dismissed
+      this.triggerPendingFixedEncounter(pending);
+    }
+  }
+
+  /**
+   * Trigger a pending fixed encounter after message overlay dismissal
+   */
+  private triggerPendingFixedEncounter(config: FixedEncounterConfig): void {
+    // Use the existing initiateEncounter method which handles everything correctly
+    this.initiateEncounter(this.currentLevel(), !config.cannotFlee, config, 'fixed');
   }
 
   selectElevatorLevel(level: number): void {
@@ -1576,6 +1675,18 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // For repeatable encounters, this resets when re-entering the level
     if (result.reason === 'fixed' && result.fixedEncounterConfig) {
       FightMapService.markFixedEncounterTriggered(dungeon.currentLevel, pos.x, pos.y);
+    }
+
+    // For fixed encounters, check if tile has a message to show first
+    if (result.reason === 'fixed' && result.fixedEncounterConfig) {
+      const tileMessage = TileInspectionService.getTileMessage(level, pos);
+      if (tileMessage) {
+        // Store the encounter config to trigger after message dismissal
+        this.pendingFixedEncounter.set(result.fixedEncounterConfig);
+        // Show message with auto-dismiss
+        this.showTileMessage(tileMessage, true, null);
+        return; // Don't initiate encounter yet - will trigger on message dismiss
+      }
     }
 
     // Initiate encounter - canFlee depends on whether it's a guaranteed fight
