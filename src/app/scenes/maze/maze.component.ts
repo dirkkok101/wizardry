@@ -1869,6 +1869,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         };
       });
 
+      // Log final character states after state update
+      console.log('[Combat] After state update - Final character states:');
+      for (const char of this.partyCharacters()) {
+        console.log(`[Combat]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
+      }
+
       // Check for victory or defeat
       if (result.victory) {
         await this.handleVictory(result.finalState);
@@ -1893,8 +1899,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     roster: Map<string, Character>,
     updates: Map<string, Character>
   ): Map<string, Character> {
+    console.log('[updateRosterFromCombat] Processing', updates.size, 'character updates');
     const newRoster = new Map(roster);
     for (const [charId, updatedChar] of updates.entries()) {
+      const oldChar = roster.get(charId);
+      console.log(`[updateRosterFromCombat] ${updatedChar.name}: HP ${oldChar?.hp} → ${updatedChar.hp}, Status ${oldChar?.status} → ${updatedChar.status}`);
       // Use the updated character from combat result
       newRoster.set(charId, updatedChar);
     }
@@ -1909,6 +1918,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     members: string[],
     roster: Map<string, Character>
   ): string[] {
+    console.log('[reorderPartyAfterCasualties] Checking', members.length, 'party members');
     const living: string[] = [];
     const incapacitated: string[] = [];
 
@@ -1923,6 +1933,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         char.status === CharacterStatus.STONED ||
         char.status === CharacterStatus.PARALYZED;
 
+      console.log(`[reorderPartyAfterCasualties] ${char.name}: HP=${char.hp}, status=${char.status}, isIncapacitated=${isIncapacitated}`);
+
       if (isIncapacitated) {
         incapacitated.push(id);
       } else {
@@ -1930,6 +1942,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
+    console.log(`[reorderPartyAfterCasualties] Result: ${living.length} living, ${incapacitated.length} incapacitated`);
     return [...living, ...incapacitated];
   }
 
@@ -1950,6 +1963,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Handle combat victory
    */
   private async handleVictory(finalState: CombatState): Promise<void> {
+    console.log('[handleVictory] Starting victory processing');
+    console.log('[handleVictory] Party states at victory start:');
+    for (const char of this.partyCharacters()) {
+      console.log(`[handleVictory]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
+    }
+
     this.combatPhase.set('victory');
     this.showVictoryOverlay.set(true);
     this.addMessage('VICTORY!');
@@ -1979,6 +1998,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Apply victory rewards to party
    */
   private applyVictoryRewards(rewards: VictoryRewards, finalState: CombatState): void {
+    console.log('[applyVictoryRewards] Applying rewards');
     this.gameState.updateState(state => {
       // Use VictoryService to distribute XP (handles dead character exclusion)
       const rosterWithXP = VictoryService.distributeRewards(
@@ -2004,6 +2024,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         combat: undefined  // Clear combat state
       };
     });
+
+    // Log character states after rewards applied
+    console.log('[applyVictoryRewards] After rewards - Character states:');
+    for (const char of this.partyCharacters()) {
+      console.log(`[applyVictoryRewards]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
+    }
 
     // Check if chest should appear:
     // 1. Treasure room encounters always drop chest
@@ -2726,6 +2752,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Show chest overlay after combat victory (treasure room)
    */
   private async showChestAfterVictory(finalState: CombatState): Promise<void> {
+    console.log('[showChestAfterVictory] Starting chest display');
+    console.log('[showChestAfterVictory] Party states at chest start:');
+    for (const char of this.partyCharacters()) {
+      console.log(`[showChestAfterVictory]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
+    }
+
     // End combat visuals
     this.showVictoryOverlay.set(false);
     this.combatPhase.set('idle');
