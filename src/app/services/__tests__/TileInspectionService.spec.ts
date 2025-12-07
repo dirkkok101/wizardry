@@ -380,5 +380,179 @@ describe('TileInspectionService', () => {
       // Should include both tile message and found item
       expect(result.message).toBe('A STATUE OF A MONSTER... You found a bronze key!');
     });
+
+    it('does not give special item if party already has it', () => {
+      // Mock to return a special item
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+        return createItem(itemId, 'Bronze Key', { category: 'special' })
+      })
+
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key' },
+        ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
+      };
+
+      // Character already has the bronze key
+      const existingKey = createItem('bronze_key', 'Bronze Key', { category: 'special' })
+      const character = createTestCharacter({ id: 'char1', inventory: [existingKey] });
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          members: ['char1'],
+          formation: { frontRow: ['char1'], backRow: [] },
+          position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
+          light: false,
+          gold: 0,
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          visitedTiles: new Set(),
+          lootedTiles: new Set(),
+          inDarknessZone: false,
+        },
+      };
+
+      const result = TileInspectionService.inspectTileWithState(state, level);
+
+      // Should not give the item
+      expect(result.found).toBe(false);
+      expect(result.message).toBe('You search but find nothing new.');
+
+      // Character should still have exactly one key (no duplicate added)
+      const charAfter = result.state!.roster.get('char1')!;
+      expect(charAfter.inventory.filter(i => i.id === 'bronze_key')).toHaveLength(1);
+
+      // Tile should still be marked as looted
+      expect(result.state!.dungeon!.lootedTiles.has('1_0_0')).toBe(true);
+    });
+
+    it('checks all party members for special item ownership', () => {
+      // Mock to return a special item
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+        return createItem(itemId, 'Bronze Key', { category: 'special' })
+      })
+
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key' },
+        ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
+      };
+
+      // Second party member has the key (not the first)
+      const existingKey = createItem('bronze_key', 'Bronze Key', { category: 'special' })
+      const char1 = createTestCharacter({ id: 'char1', inventory: [] });
+      const char2 = createTestCharacter({ id: 'char2', inventory: [existingKey] });
+
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          members: ['char1', 'char2'],
+          formation: { frontRow: ['char1', 'char2'], backRow: [] },
+          position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
+          light: false,
+          gold: 0,
+        },
+        roster: new Map([['char1', char1], ['char2', char2]]),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          visitedTiles: new Set(),
+          lootedTiles: new Set(),
+          inDarknessZone: false,
+        },
+      };
+
+      const result = TileInspectionService.inspectTileWithState(state, level);
+
+      // Should not give the item - char2 already has it
+      expect(result.found).toBe(false);
+      expect(result.message).toBe('You search but find nothing new.');
+    });
+
+    it('still gives non-special items even if party has one', () => {
+      // Mock to return a NON-special item (normal weapon)
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+        return createItem(itemId, 'Short Sword', { category: 'weapon' })
+      })
+
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'short_sword' },
+        ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
+      };
+
+      // Character already has a short sword
+      const existingSword = createItem('short_sword', 'Short Sword', { category: 'weapon' })
+      const character = createTestCharacter({ id: 'char1', inventory: [existingSword] });
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          members: ['char1'],
+          formation: { frontRow: ['char1'], backRow: [] },
+          position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
+          light: false,
+          gold: 0,
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          visitedTiles: new Set(),
+          lootedTiles: new Set(),
+          inDarknessZone: false,
+        },
+      };
+
+      const result = TileInspectionService.inspectTileWithState(state, level);
+
+      // SHOULD give the item - non-special items can be duplicated
+      expect(result.found).toBe(true);
+
+      // Character should now have 2 swords
+      const charAfter = result.state!.roster.get('char1')!;
+      expect(charAfter.inventory.filter(i => i.id === 'short_sword')).toHaveLength(2);
+    });
   });
 });

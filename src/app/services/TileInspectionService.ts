@@ -2,6 +2,7 @@ import { DungeonState, LevelData, Position } from '@models/Dungeon';
 import { GameState } from '@models/GameState';
 import { Item } from '@models/Item';
 import { DungeonService } from './DungeonService';
+import { InventoryService } from './InventoryService';
 import { ItemDataLoader } from './ItemDataLoader';
 
 export interface InspectionResult {
@@ -109,6 +110,29 @@ export class TileInspectionService {
     if (!baseItem) {
       // Item not found in database
       return { found: false, state, message: 'Item data not found' };
+    }
+
+    // For special items, check if party already has one
+    if (baseItem.category === 'special') {
+      const alreadyOwned = InventoryService.partyHasItem(
+        state.roster,
+        state.party.members,
+        itemId
+      );
+      if (alreadyOwned) {
+        // Mark tile as looted but don't give duplicate
+        const newLootedTiles = new Set(state.dungeon.lootedTiles);
+        newLootedTiles.add(lootKey);
+
+        return {
+          found: false,
+          state: {
+            ...state,
+            dungeon: { ...state.dungeon, lootedTiles: newLootedTiles }
+          },
+          message: 'You search but find nothing new.'
+        };
+      }
     }
 
     // Create item instance (found items start unidentified and unequipped)

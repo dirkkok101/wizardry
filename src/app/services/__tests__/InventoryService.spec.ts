@@ -320,4 +320,50 @@ describe('InventoryService', () => {
       expect(result.max).toBe(8)
     })
   })
+
+  describe('partyHasItem', () => {
+    it('returns true when any party member has the item', () => {
+      const bronzeKey = createItem('bronze_key', 'Bronze Key')
+      const char1 = { ...mockCharacter, id: 'char-1', inventory: [] }
+      const char2 = { ...mockCharacter, id: 'char-2', inventory: [bronzeKey] }
+      const char3 = { ...mockCharacter, id: 'char-3', inventory: [] }
+
+      const roster = new Map<string, Character>([
+        ['char-1', char1],
+        ['char-2', char2],
+        ['char-3', char3]
+      ])
+      const memberIds = ['char-1', 'char-2', 'char-3']
+
+      expect(InventoryService.partyHasItem(roster, memberIds, 'bronze_key')).toBe(true)
+    })
+
+    it('returns false when no party member has the item', () => {
+      const char1 = { ...mockCharacter, id: 'char-1', inventory: [] }
+      const char2 = { ...mockCharacter, id: 'char-2', inventory: [] }
+
+      const roster = new Map<string, Character>([
+        ['char-1', char1],
+        ['char-2', char2]
+      ])
+      const memberIds = ['char-1', 'char-2']
+
+      expect(InventoryService.partyHasItem(roster, memberIds, 'bronze_key')).toBe(false)
+    })
+
+    it('only checks party members, not entire roster', () => {
+      const bronzeKey = createItem('bronze_key', 'Bronze Key')
+      const partyMember = { ...mockCharacter, id: 'party-1', inventory: [] }
+      const nonPartyMember = { ...mockCharacter, id: 'roster-only', inventory: [bronzeKey] }
+
+      const roster = new Map<string, Character>([
+        ['party-1', partyMember],
+        ['roster-only', nonPartyMember]
+      ])
+      const memberIds = ['party-1'] // Only party-1 is in the party
+
+      // roster-only has the key, but they're not in the party
+      expect(InventoryService.partyHasItem(roster, memberIds, 'bronze_key')).toBe(false)
+    })
+  })
 })

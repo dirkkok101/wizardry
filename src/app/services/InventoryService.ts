@@ -185,4 +185,15 @@ export class InventoryService {
       max: MAX_INVENTORY_SIZE
     }
   }
+
+  /**
+   * Check if any character in the party has an item.
+   * Checks by item ID regardless of identified status.
+   */
+  static partyHasItem(roster: Map<string, Character>, memberIds: string[], itemId: string): boolean {
+    return memberIds.some(id => {
+      const char = roster.get(id)
+      return char && this.hasItem(char, itemId)
+    })
+  }
 }
