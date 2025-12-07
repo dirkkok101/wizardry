@@ -685,14 +685,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Initialize scrambled state for trap display
       const scrambledState = TrapService.createScrambledState(result.trapIdentified);
       this.scrambledTrapState.set(scrambledState);
-
-      // Show trap detected letterbox then return to action_select
-      this.chestLetterboxType.set('trap_detected');
-      setTimeout(() => {
-        this.chestLetterboxType.set(null);
-        this.chestPhase.set('action_select');
-      }, 1000);
-
       this.chestLastMessage.set(`${character.name} found a trap!`);
     } else {
       this.chestLastMessage.set(`${character.name} didn't find anything suspicious.`);
@@ -733,14 +725,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         const scrambledState = TrapService.createScrambledState(result.trapIdentified);
         const fullyRevealedState = TrapService.performCalfo(character, scrambledState);
         this.scrambledTrapState.set(fullyRevealedState);
-
-        // Show trap detected letterbox then return to action_select
-        this.chestLetterboxType.set('trap_detected');
-        setTimeout(() => {
-          this.chestLetterboxType.set(null);
-          this.chestPhase.set('action_select');
-        }, 1000);
-
         this.chestLastMessage.set(`${character.name} casts CALFO! A trap is revealed!`);
       } else {
         // CALFO says no trap (could be real or 5% failed check)
@@ -770,15 +754,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Set this character as the disarmer
     this.chestOpener.set(character);
 
-    // Show disarm letterbox then input phase
-    this.chestLetterboxType.set('disarm_attempt');
-
-    setTimeout(() => {
-      this.chestLetterboxType.set(null);
-      this.chestPhase.set('trap_input');
-      this.chestTrapInput.set('');
-      this.chestLastMessage.set(`${character.name} prepares to disarm. Enter the trap name.`);
-    }, 1500);
+    // Go straight to trap input phase
+    this.chestPhase.set('trap_input');
+    this.chestTrapInput.set('');
+    this.chestLastMessage.set(`${character.name} prepares to disarm. Enter the trap name.`);
   }
 
   /**
@@ -3279,13 +3258,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.scrambledTrapState.set(updatedState);
         this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
         this.chestLastMessage.set(`${opener.name} detects something...`);
-        this.chestLetterboxType.set('trap_detected');
-
-        // Show letterbox then return to action_select (trap letters still visible via scrambledTrapState)
-        setTimeout(() => {
-          this.chestLetterboxType.set(null);
-          this.chestPhase.set('action_select');
-        }, 1000);
       } else {
         this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
         this.chestLastMessage.set(`${opener.name} finds no trap.`);
@@ -3381,12 +3353,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scrambledTrapState.set(revealedState);
       this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
       this.chestLastMessage.set(`${caster.name} casts CALFO! All letters revealed.`);
-      this.chestLetterboxType.set('trap_detected');
-
-      setTimeout(() => {
-        this.chestLetterboxType.set(null);
-        this.chestPhase.set('action_select');
-      }, 1000);
     } else if (result.success && !chest.trapped) {
       this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
       this.chestLastMessage.set('CALFO reveals the chest is not trapped.');
@@ -3406,14 +3372,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const chest = this.pendingChest();
     if (!chest || !chest.trapIdentified || !chest.trapped || chest.trapDisarmed) return;
 
-    this.chestLetterboxType.set('disarm_attempt');
-
-    setTimeout(() => {
-      this.chestLetterboxType.set(null);
-      this.chestPhase.set('trap_input');
-      this.chestTrapInput.set('');
-      this.chestLastMessage.set('Enter the trap name to attempt disarm.');
-    }, 1500);
+    // Go straight to trap input phase
+    this.chestPhase.set('trap_input');
+    this.chestTrapInput.set('');
+    this.chestLastMessage.set('Enter the trap name to attempt disarm.');
   }
 
   /**
