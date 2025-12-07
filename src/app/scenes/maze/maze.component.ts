@@ -1854,11 +1854,20 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       // Apply final state
-      this.gameState.updateState(state => ({
-        ...state,
-        combat: result.finalState,
-        roster: this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates)
-      }));
+      this.gameState.updateState(state => {
+        const newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+        const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
+
+        return {
+          ...state,
+          combat: result.finalState,
+          roster: newRoster,
+          party: {
+            ...state.party,
+            members: newMembers
+          }
+        };
+      });
 
       // Check for victory or defeat
       if (result.victory) {
@@ -1890,6 +1899,38 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       newRoster.set(charId, updatedChar);
     }
     return newRoster;
+  }
+
+  /**
+   * Reorder party members after combat casualties.
+   * Dead/incapacitated characters move to the end, living characters shift forward.
+   */
+  private reorderPartyAfterCasualties(
+    members: string[],
+    roster: Map<string, Character>
+  ): string[] {
+    const living: string[] = [];
+    const incapacitated: string[] = [];
+
+    for (const id of members) {
+      const char = roster.get(id);
+      if (!char) continue;
+
+      const isIncapacitated =
+        char.status === CharacterStatus.DEAD ||
+        char.status === CharacterStatus.ASHES ||
+        char.status === CharacterStatus.LOST ||
+        char.status === CharacterStatus.STONED ||
+        char.status === CharacterStatus.PARALYZED;
+
+      if (isIncapacitated) {
+        incapacitated.push(id);
+      } else {
+        living.push(id);
+      }
+    }
+
+    return [...living, ...incapacitated];
   }
 
   /**
@@ -2117,11 +2158,20 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Update game state
-    this.gameState.updateState(state => ({
-      ...state,
-      combat: result.finalState,
-      roster: this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates)
-    }));
+    this.gameState.updateState(state => {
+      const newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+      const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
+
+      return {
+        ...state,
+        combat: result.finalState,
+        roster: newRoster,
+        party: {
+          ...state.party,
+          members: newMembers
+        }
+      };
+    });
 
     // Check for defeat
     if (result.defeat) {
@@ -3351,6 +3401,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Handle Cancel action
+   * Returns to action_select for most phases, only closes overlay from action_select or result
    */
   private handleChestCancel(): void {
     const phase = this.chestPhase();
@@ -3363,9 +3414,14 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (phase === 'inventory_warning') {
       this.chestPhase.set('action_select');
       this.chestInventoryWarning.set(null);
-    } else {
+    } else if (phase === 'action_select') {
+      // From action_select, cancel means leave the chest
+      this.closeChestOverlay();
+    } else if (phase === 'result') {
+      // From result, cancel means return to maze
       this.closeChestOverlay();
     }
+    // For other phases (idle, reveal, opening, trap_triggered), do nothing
   }
 
   /**
