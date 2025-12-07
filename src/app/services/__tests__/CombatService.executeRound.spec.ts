@@ -27,7 +27,8 @@ describe('CombatService.executeRound', () => {
     state.commandQueue = [cmd1, cmd2, cmd3]
 
     const party = [char1, char2]
-    const result = CombatService.executeRound(state, party)
+    const frontRow = ['c1', 'c2'] // Both in front row (no back row)
+    const result = CombatService.executeRound(state, party, frontRow)
 
     // Should execute in order: cmd2 (10), cmd3 (7), cmd1 (5)
     // Each action produces 2 messages (action + result), so 6 total
@@ -121,7 +122,8 @@ describe('CombatService.executeRound', () => {
       })
 
       const party = [fighter]
-      const result = CombatService.executeRound(state, party)
+      const frontRow = ['fighter'] // Fighter in front row
+      const result = CombatService.executeRound(state, party, frontRow)
 
       // Should have 2 messages for fighter's attack (attack + result)
       // Monster's command should be skipped entirely - no messages for its attack
@@ -217,7 +219,8 @@ describe('CombatService.executeRound', () => {
       })
 
       const party = [fighter]
-      const result = CombatService.executeRound(state, party)
+      const frontRow = ['fighter'] // Fighter in front row
+      const result = CombatService.executeRound(state, party, frontRow)
 
       // Should have 4 messages total:
       // 2 for monster2's attack, 2 for fighter's attack
@@ -231,6 +234,130 @@ describe('CombatService.executeRound', () => {
       // Verify monster1 is dead
       const deadMonster = result.newState.monsterGroups[0].monsters.find(m => m.id === 'monster1')
       expect(deadMonster?.status).toBe('DEAD')
+    })
+  })
+
+  describe('party repositioning at end of round', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('returns newFormation when front-row character dies', () => {
+      // Setup: 6 characters, monster kills front-row fighter
+      const fighter1 = createTestCharacter({ id: 'f1', name: 'Fighter1', hp: 5, agility: 5 })
+      const fighter2 = createTestCharacter({ id: 'f2', name: 'Fighter2', hp: 100, agility: 5 })
+      const fighter3 = createTestCharacter({ id: 'f3', name: 'Fighter3', hp: 100, agility: 5 })
+      const mage1 = createTestCharacter({ id: 'm1', name: 'Mage1', hp: 50, agility: 5 })
+      const mage2 = createTestCharacter({ id: 'm2', name: 'Mage2', hp: 50, agility: 5 })
+      const mage3 = createTestCharacter({ id: 'm3', name: 'Mage3', hp: 50, agility: 5 })
+
+      const monster = createTestMonster({ id: 'monster1', name: 'Kobold', hp: 100, agility: 20 })
+
+      const monsterGroups: MonsterGroup[] = [{
+        id: 'A',
+        monsters: [monster],
+        formation: 'front',
+        identified: true
+      }]
+      const state = createTestCombatState({ monsterGroups })
+
+      // Monster kills fighter1
+      const monsterCmd = CombatService.createCommand(monster, 'ATTACK', fighter1)
+      monsterCmd.initiative = 20
+      state.commandQueue = [monsterCmd]
+
+      jest.spyOn(CombatService, 'resolveAttack').mockReturnValue({
+        hit: true,
+        damage: 100,
+        critical: false,
+        message: '100 damage!'
+      })
+
+      const party = [fighter1, fighter2, fighter3, mage1, mage2, mage3]
+      const frontRow = ['f1', 'f2', 'f3']
+      const result = CombatService.executeRound(state, party, frontRow)
+
+      // Should return newFormation with mage1 moved to front
+      expect(result.newFormation).toBeDefined()
+      expect(result.newFormation?.frontRow).toContain('m1')
+      expect(result.newFormation?.backRow).toContain('f1')
+      // Should have repositioning message
+      expect(result.messages.some(m => m.includes('Mage1') && m.includes('front'))).toBe(true)
+    })
+
+    it('does not return newFormation when no repositioning needed', () => {
+      // All characters healthy, no repositioning needed
+      const fighter = createTestCharacter({ id: 'f1', name: 'Fighter', hp: 100, agility: 5 })
+      const monster = createTestMonster({ id: 'monster1', name: 'Kobold', hp: 100, agility: 5 })
+
+      const monsterGroups: MonsterGroup[] = [{
+        id: 'A',
+        monsters: [monster],
+        formation: 'front',
+        identified: true
+      }]
+      const state = createTestCombatState({ monsterGroups, commandQueue: [] })
+
+      const party = [fighter]
+      const frontRow = ['f1']
+      const result = CombatService.executeRound(state, party, frontRow)
+
+      // No newFormation when no repositioning needed
+      expect(result.newFormation).toBeUndefined()
+    })
+  })
+
+  describe('monster auto-advance at end of round', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('advances back-row monsters when front-row monsters are wiped out', () => {
+      // Setup: front-row monster (melee), back-row monster (melee)
+      const fighter = createTestCharacter({ id: 'f1', name: 'Fighter', hp: 100, agility: 20 })
+
+      const frontMonster = createTestMonster({ id: 'front-m', name: 'Kobold', hp: 1, agility: 5 })
+      const backMonster = createTestMonster({ id: 'back-m', name: 'Goblin', hp: 100, agility: 5 })
+
+      const monsterGroups: MonsterGroup[] = [
+        {
+          id: 'A',
+          monsters: [frontMonster],
+          formation: 'front',
+          identified: true
+        },
+        {
+          id: 'B',
+          monsters: [backMonster],
+          formation: 'back',
+          identified: true
+        }
+      ]
+      const state = createTestCombatState({ monsterGroups })
+
+      // Fighter kills front monster
+      const fighterCmd = CombatService.createCommand(fighter, 'ATTACK', frontMonster)
+      fighterCmd.initiative = 20
+      state.commandQueue = [fighterCmd]
+
+      jest.spyOn(CombatService, 'resolveAttack').mockReturnValue({
+        hit: true,
+        damage: 100,
+        critical: false,
+        message: '100 damage!'
+      })
+
+      const party = [fighter]
+      const result = CombatService.executeRound(state, party)
+
+      // Back-row monster should have advanced to front
+      const groupB = result.newState.monsterGroups.find(g => g.id === 'B')
+      expect(groupB?.formation).toBe('front')
+
+      // Should have advancement message
+      expect(result.messages.some(m =>
+        m.toLowerCase().includes('forward') || m.toLowerCase().includes('rush')
+      )).toBe(true)
     })
   })
 })

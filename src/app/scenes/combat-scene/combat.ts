@@ -1416,9 +1416,21 @@ export class CombatComponent implements OnInit, OnDestroy {
         combatLog: [...(state.combat?.combatLog || []), ...cleanMessages]
       }
 
+      // Update party formation if repositioning occurred (dead/stoned/paralyzed moved to back)
+      let updatedParty = state.party
+      if (result.newFormation) {
+        updatedParty = {
+          ...state.party,
+          members: [...result.newFormation.frontRow, ...result.newFormation.backRow],
+          formation: result.newFormation
+        }
+        console.log('[Combat] Party repositioned:', result.newFormation)
+      }
+
       return {
         ...state,
         roster: newRoster,
+        party: updatedParty,
         combat: updatedCombat
       }
     })

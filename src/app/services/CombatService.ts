@@ -2547,6 +2547,7 @@ export class CombatService {
     victory: boolean
     defeat: boolean
     fled: boolean  // Whether party successfully fled
+    newFormation?: { frontRow: string[]; backRow: string[] }  // If party repositioned due to casualties
   } {
     // Sort commands by initiative (descending)
     const sortedQueue = [...state.commandQueue].sort(
@@ -2782,6 +2783,24 @@ export class CombatService {
       }
     }
 
+    // Auto-advance monsters if front row wiped out
+    const advanceResult = this.checkAndAdvanceMonsters(currentState)
+    if (advanceResult.message) {
+      currentState = advanceResult.newState
+      messages.push(advanceResult.message)
+    }
+
+    // Reposition party: dead/stoned/paralyzed to back, living advance to front
+    const backRow = party.map(c => c.id).filter(id => !frontRow.includes(id))
+    const repositionResult = this.repositionPartyAfterCasualties(
+      party,
+      damagedCharacters,
+      { frontRow, backRow }
+    )
+    if (repositionResult.changedPositions && repositionResult.messages.length > 0) {
+      messages.push(...repositionResult.messages)
+    }
+
     return {
       newState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
       messages,
@@ -2790,7 +2809,8 @@ export class CombatService {
       curedCharacters,
       victory: false,
       defeat: false,
-      fled: false
+      fled: false,
+      newFormation: repositionResult.changedPositions ? repositionResult.newFormation : undefined
     }
   }
 
@@ -3268,6 +3288,30 @@ export class CombatService {
       })
     }
 
+    // Auto-advance monsters if front row wiped out
+    const advanceResult = this.checkAndAdvanceMonsters(currentState)
+    if (advanceResult.message) {
+      currentState = advanceResult.newState
+      events.push({
+        type: 'status',
+        messages: [advanceResult.message]
+      })
+    }
+
+    // Reposition party: dead/stoned/paralyzed to back, living advance to front
+    const backRow = party.map(c => c.id).filter(id => !frontRow.includes(id))
+    const repositionResult = this.repositionPartyAfterCasualties(
+      party,
+      accumulatedCharacterUpdates,
+      { frontRow, backRow }
+    )
+    if (repositionResult.changedPositions && repositionResult.messages.length > 0) {
+      events.push({
+        type: 'status',
+        messages: repositionResult.messages
+      })
+    }
+
     return {
       events,
       finalState: { ...currentState, roundNumber: currentState.roundNumber + 1 },
@@ -3277,6 +3321,7 @@ export class CombatService {
       victory: false,
       defeat: false,
       fled: false,
+      newFormation: repositionResult.changedPositions ? repositionResult.newFormation : undefined,
       audit: buildAudit()
     }
   }
@@ -3433,6 +3478,107 @@ export class CombatService {
         monsterGroups: newMonsterGroups
       },
       message
+    }
+  }
+
+  /**
+   * Reposition party members after casualties occur.
+   *
+   * Original Wizardry 1 behavior (verified via StrategyWiki):
+   * - Dead/incapacitated characters are automatically moved to the back of the formation
+   * - Living back-row characters advance to fill front-row gaps
+   * - This happens at the end of each combat round
+   *
+   * Statuses triggering repositioning: DEAD, STONED, PARALYZED
+   * ASLEEP is excluded (wakes from damage, too transient)
+   *
+   * @param party - Current party array
+   * @param damagedCharacters - Map of characters with updated HP/status from this round
+   * @param formation - Current party formation
+   * @returns New formation, messages, and whether positions changed
+   */
+  static repositionPartyAfterCasualties(
+    party: Character[],
+    damagedCharacters: Map<string, Character>,
+    formation: { frontRow: string[]; backRow: string[] }
+  ): {
+    newFormation: { frontRow: string[]; backRow: string[] }
+    messages: string[]
+    changedPositions: boolean
+  } {
+    // Get current state for each character (use damagedCharacters if available)
+    const getCurrentState = (char: Character): Character => {
+      return damagedCharacters.get(char.id) || char
+    }
+
+    // Determine if a character is incapacitated (should be moved to back)
+    const isIncapacitated = (char: Character): boolean => {
+      const current = getCurrentState(char)
+      return (
+        current.hp <= 0 ||
+        current.status === CharacterStatus.DEAD ||
+        current.status === CharacterStatus.STONED ||
+        current.status === CharacterStatus.PARALYZED
+      )
+    }
+
+    // Create lookup map for party by ID
+    const partyById = new Map(party.map(c => [c.id, c]))
+
+    // Get all members in order (front row first, then back row)
+    const allMembers = [...formation.frontRow, ...formation.backRow]
+
+    // Separate into capable and incapacitated
+    const capable: string[] = []
+    const incapacitated: string[] = []
+
+    for (const memberId of allMembers) {
+      const char = partyById.get(memberId)
+      if (!char) continue
+
+      if (isIncapacitated(char)) {
+        incapacitated.push(memberId)
+      } else {
+        capable.push(memberId)
+      }
+    }
+
+    // New formation: capable characters first (up to 3 in front), incapacitated at back
+    const newFrontRow = capable.slice(0, 3)
+    const newBackRow = [...capable.slice(3), ...incapacitated]
+
+    // Check if formation actually changed
+    const frontRowChanged =
+      formation.frontRow.length !== newFrontRow.length ||
+      !formation.frontRow.every((id, i) => id === newFrontRow[i])
+    const backRowChanged =
+      formation.backRow.length !== newBackRow.length ||
+      !formation.backRow.every((id, i) => id === newBackRow[i])
+
+    const changedPositions = frontRowChanged || backRowChanged
+
+    // Generate messages for characters who advanced to front
+    const messages: string[] = []
+    if (changedPositions) {
+      // Find characters who moved from back to front
+      const originalBackRowSet = new Set(formation.backRow)
+      for (const memberId of newFrontRow) {
+        if (originalBackRowSet.has(memberId)) {
+          const char = partyById.get(memberId)
+          if (char) {
+            messages.push(`${char.name} moves to the front line!`)
+          }
+        }
+      }
+    }
+
+    return {
+      newFormation: {
+        frontRow: newFrontRow,
+        backRow: newBackRow
+      },
+      messages,
+      changedPositions
     }
   }
 

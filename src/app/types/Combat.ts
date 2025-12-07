@@ -359,6 +359,9 @@ export interface CombatRoundResult {
   /** Party successfully fled */
   fled: boolean
 
+  /** New formation if party repositioned due to casualties (dead/stoned/paralyzed moved to back) */
+  newFormation?: { frontRow: string[]; backRow: string[] }
+
   /** Optional round audit for debugging (only populated when auditing enabled) */
   audit?: CombatRoundAudit
 }
