@@ -10,9 +10,6 @@ import { CharacterCreationComponent } from '@scenes/character-creation/character
 import { CharacterInspectionComponent } from '@scenes/character-inspection/character-inspection.component';
 import { SpellCastingComponent } from '@scenes/spell-casting/spell-casting.component';
 import { MazeComponent } from '@scenes/maze/maze.component';
-import { CombatComponent } from '@scenes/combat-scene/combat';
-import { ChestComponent } from '@scenes/chest/chest.component';
-import { VictoryComponent } from '@scenes/victory/victory.component';
 import { gameLoadedGuard } from '@core/guards/game-loaded.guard';
 import { partyExistsGuard } from '@core/guards/party-exists.guard';
 import { partyNotInMazeGuard } from '@core/guards/party-not-in-maze.guard';
@@ -71,25 +68,10 @@ export const routes: Routes = [
     component: SpellCastingComponent,
     canActivate: [gameLoadedGuard]
   },
-  // Dungeon zone routes - require party exists AND proper maze entry
+  // Dungeon zone route - combat/chest/victory handled via overlays in maze
   {
     path: 'maze',
     component: MazeComponent,
-    canActivate: [gameLoadedGuard, partyExistsGuard, partyInMazeGuard]
-  },
-  {
-    path: 'combat',
-    component: CombatComponent,
-    canActivate: [gameLoadedGuard, partyExistsGuard, partyInMazeGuard]
-  },
-  {
-    path: 'chest',
-    component: ChestComponent,
-    canActivate: [gameLoadedGuard, partyExistsGuard, partyInMazeGuard]
-  },
-  {
-    path: 'victory',
-    component: VictoryComponent,
     canActivate: [gameLoadedGuard, partyExistsGuard, partyInMazeGuard]
   },
   {

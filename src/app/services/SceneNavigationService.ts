@@ -88,22 +88,6 @@ export class SceneNavigationService {
   }
 
   /**
-   * Navigate to combat
-   * Used by: Maze (when encounter triggered)
-   */
-  enterCombat(): Promise<boolean> {
-    return this.router.navigate(['/combat']);
-  }
-
-  /**
-   * Navigate to chest scene
-   * Used by: Combat (after victory for treasure)
-   */
-  enterChest(): Promise<boolean> {
-    return this.router.navigate(['/chest']);
-  }
-
-  /**
    * Return from character inspection to previous scene
    * Used by: Character Inspection component
    */
@@ -111,7 +95,7 @@ export class SceneNavigationService {
     // Validate returnTo is a valid destination, default to castle-menu if not
     const validDestinations: ReturnDestination[] = [
       'castle-menu', 'tavern', 'temple', 'shop', 'inn',
-      'training-grounds', 'maze', 'chest'
+      'training-grounds', 'maze'
     ];
 
     const destination = validDestinations.includes(returnTo as ReturnDestination)

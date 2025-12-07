@@ -6,14 +6,10 @@ import { LoggerService } from '@services/LoggerService';
 /**
  * Route guard that ensures party IS in maze before allowing access to dungeon routes.
  *
- * Prevents direct URL navigation to /maze, /combat, /chest, /victory
- * without properly entering dungeon through castle-menu.
+ * Prevents direct URL navigation to /maze without properly entering
+ * dungeon through castle-menu.
  *
- * Use on dungeon routes:
- * - Maze
- * - Combat
- * - Chest
- * - Victory
+ * Note: Combat, chest, and victory are now handled via overlays in the maze component.
  */
 export const partyInMazeGuard: CanActivateFn = () => {
   const gameState = inject(GameStateService);
