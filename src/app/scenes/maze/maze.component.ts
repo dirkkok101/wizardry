@@ -686,11 +686,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       const scrambledState = TrapService.createScrambledState(result.trapIdentified);
       this.scrambledTrapState.set(scrambledState);
 
-      // Show trap display with letterbox
+      // Show trap detected letterbox then return to action_select
       this.chestLetterboxType.set('trap_detected');
       setTimeout(() => {
         this.chestLetterboxType.set(null);
-        this.chestPhase.set('trap_display');
+        this.chestPhase.set('action_select');
       }, 1000);
 
       this.chestLastMessage.set(`${character.name} found a trap!`);
@@ -734,11 +734,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         const fullyRevealedState = TrapService.performCalfo(character, scrambledState);
         this.scrambledTrapState.set(fullyRevealedState);
 
-        // Show trap display
+        // Show trap detected letterbox then return to action_select
         this.chestLetterboxType.set('trap_detected');
         setTimeout(() => {
           this.chestLetterboxType.set(null);
-          this.chestPhase.set('trap_display');
+          this.chestPhase.set('action_select');
         }, 1000);
 
         this.chestLastMessage.set(`${character.name} casts CALFO! A trap is revealed!`);
@@ -3281,10 +3281,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.chestLastMessage.set(`${opener.name} detects something...`);
         this.chestLetterboxType.set('trap_detected');
 
-        // Show letterbox then trap display
+        // Show letterbox then return to action_select (trap letters still visible via scrambledTrapState)
         setTimeout(() => {
           this.chestLetterboxType.set(null);
-          this.chestPhase.set('trap_display');
+          this.chestPhase.set('action_select');
         }, 1000);
       } else {
         this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);
@@ -3385,7 +3385,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
       setTimeout(() => {
         this.chestLetterboxType.set(null);
-        this.chestPhase.set('trap_display');
+        this.chestPhase.set('action_select');
       }, 1000);
     } else if (result.success && !chest.trapped) {
       this.pendingChest.update(c => c ? { ...c, trapIdentified: true } : c);

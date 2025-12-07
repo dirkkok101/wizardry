@@ -76,9 +76,15 @@
       <!-- ACTION SELECT MODE - Actions are on character cards -->
       @if (phase() === 'action_select') {
         <div class="phase-content action-select-phase">
-          <div class="trap-info">
-            <p class="trap-status">{{ getTrapStatusText() }}</p>
-          </div>
+          <!-- Show scrambled letters if trap has been identified -->
+          @if (scrambledState()) {
+            <p class="phase-title">Unscramble the letters to identify the trap:</p>
+            <app-scrambled-letters [state]="scrambledState()" />
+          } @else {
+            <div class="trap-info">
+              <p class="trap-status">{{ getTrapStatusText() }}</p>
+            </div>
+          }
 
           @if (lastMessage()) {
             <div class="action-message">{{ lastMessage() }}</div>
