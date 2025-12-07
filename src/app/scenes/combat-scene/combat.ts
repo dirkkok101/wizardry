@@ -1,5 +1,5 @@
 // src/app/scenes/combat/combat.ts
-import { Component, computed, signal, OnInit, OnDestroy, ViewChild, ElementRef, effect, HostListener } from '@angular/core'
+import { Component, computed, signal, OnInit, OnDestroy, ViewChild, ElementRef, effect, HostListener, ChangeDetectorRef } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { GameStateService } from '@services/GameStateService'
@@ -479,7 +479,8 @@ export class CombatComponent implements OnInit, OnDestroy {
 
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     // Auto-scroll combat log to bottom when new messages are added
     effect(() => {
@@ -1418,13 +1419,17 @@ export class CombatComponent implements OnInit, OnDestroy {
 
       // Update party formation if repositioning occurred (dead/stoned/paralyzed moved to back)
       let updatedParty = state.party
+      console.log('[Combat] Formation update check - result.newFormation:', result.newFormation)
+      console.log('[Combat] Old formation:', state.party.formation)
       if (result.newFormation) {
         updatedParty = {
           ...state.party,
           members: [...result.newFormation.frontRow, ...result.newFormation.backRow],
           formation: result.newFormation
         }
-        console.log('[Combat] Party repositioned:', result.newFormation)
+        console.log('[Combat] Party repositioned - new formation:', JSON.stringify(updatedParty.formation))
+      } else {
+        console.log('[Combat] No formation change needed')
       }
 
       return {
@@ -1437,6 +1442,15 @@ export class CombatComponent implements OnInit, OnDestroy {
 
     // Clear display state signals - game state is now the source of truth
     this.clearAnimationState()
+
+    // Force Angular to detect changes since we're in a setTimeout callback
+    // (animation timer runs outside Angular's zone)
+    this.cdr.markForCheck()
+
+    // DEBUG: Log the formation after state update
+    console.log('[Combat] Formation after commit:', JSON.stringify(this.party().formation))
+    console.log('[Combat] Front row chars:', this.frontRowCharacters().map(c => c.name))
+    console.log('[Combat] Back row chars:', this.backRowCharacters().map(c => c.name))
 
     // Clear surprise round flag if it was set
     if (this.isSurpriseRound()) {
