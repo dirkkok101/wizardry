@@ -1556,8 +1556,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.addMessage(`Gained ${rewards.totalXP} XP and ${rewards.totalGold} gold!`);
 
-    // Wait for player to acknowledge
-    await this.delay(2000);
+    // Wait for player to acknowledge (extra 500ms for full-bleed sprite impact)
+    await this.delay(2500);
 
     // Apply rewards and end combat
     this.applyVictoryRewards(rewards, finalState);
