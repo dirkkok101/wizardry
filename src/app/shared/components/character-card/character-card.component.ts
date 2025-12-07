@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Character } from '@models/Character';
 import { CharacterField, CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
+import { SpriteService } from '@services/SpriteService';
 import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 import { CharacterStatsComponent } from '../character-stats/character-stats.component';
 import { CharacterActionsComponent } from '../character-actions/character-actions.component';
@@ -31,7 +32,16 @@ export class CharacterCardComponent {
   @Input() statusText?: string | null;
   /** Show "X HP to heal" context text when HP < max */
   @Input() showHpContext = false;
+  /** Show character sprite thumbnail */
+  @Input() showSprite = false;
+  /** Size of the sprite thumbnail */
+  @Input() spriteSize: 'small' | 'medium' = 'medium';
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
+
+  /** Get the sprite URL for this character (with fallback) */
+  get spriteUrl(): string {
+    return SpriteService.getSpriteUrl(this.character);
+  }
 
   get displayFields(): CharacterField[] {
     if (this.visibleFields === undefined) {

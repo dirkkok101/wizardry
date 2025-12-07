@@ -4,6 +4,7 @@ import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterClass } from '@models/CharacterClass';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
+import { SpriteService } from '@services/SpriteService';
 
 /**
  * Abbreviated class names for compact display
@@ -113,9 +114,21 @@ export class CharacterPanelComponent {
   @Input() damageIndicator: { characterId: string; damage: number; status?: string } | null = null;
 
   /**
+   * Whether to show character sprite thumbnails
+   */
+  @Input() showSprites = false;
+
+  /**
    * Event emitted when an action is clicked on a character card
    */
   @Output() actionClick = new EventEmitter<CharacterActionEvent>();
+
+  /**
+   * Get sprite URL for a character (with fallback)
+   */
+  getSpriteUrl(char: Character): string {
+    return SpriteService.getSpriteUrl(char);
+  }
 
   /**
    * Check if character was just hit by a trap

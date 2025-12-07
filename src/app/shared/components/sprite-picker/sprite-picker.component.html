@@ -1,0 +1,49 @@
+<div class="sprite-picker">
+  <div class="sprite-label">Portrait</div>
+
+  <div class="sprite-frame">
+    <!-- Left navigation button -->
+    <button
+      class="nav-btn nav-prev"
+      (click)="selectPrevious()"
+      type="button"
+      aria-label="Previous portrait"
+    >
+      <span class="arrow">&lt;</span>
+    </button>
+
+    <!-- Sprite display area -->
+    <div class="sprite-display">
+      @if (currentSprite && !imageError) {
+        <img
+          [src]="currentSprite.url"
+          [alt]="currentSprite.displayName"
+          class="sprite-image"
+          (error)="onImageError()"
+          (load)="onImageLoad()"
+        />
+      } @else {
+        <div class="sprite-placeholder">
+          <span class="placeholder-icon">?</span>
+        </div>
+      }
+    </div>
+
+    <!-- Right navigation button -->
+    <button
+      class="nav-btn nav-next"
+      (click)="selectNext()"
+      type="button"
+      aria-label="Next portrait"
+    >
+      <span class="arrow">&gt;</span>
+    </button>
+  </div>
+
+  <!-- Sprite name -->
+  @if (currentSprite) {
+    <div class="sprite-info">
+      <div class="sprite-name">{{ currentSprite.displayName }}</div>
+    </div>
+  }
+</div>

@@ -123,6 +123,15 @@
 
           @case (CreationStep.NAME_CHARACTER) {
             <div class="name-character">
+              <!-- Sprite Picker -->
+              <app-sprite-picker
+                [race]="selectedRace()!"
+                [characterClass]="selectedClass()!"
+                [selectedSpriteId]="selectedSpriteId() ?? undefined"
+                (spriteChange)="handleSpriteChange($event)"
+              />
+
+              <!-- Name Input Form -->
               <form (submit)="onNameSubmit($event)">
                 <label for="character-name">Character Name</label>
                 <input

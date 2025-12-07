@@ -89,9 +89,39 @@ $card-min-height-compact: 80px;
   font-weight: 600;
   color: var(--color-text-gold);
   letter-spacing: 0.02em;
+  flex: 1;
 
   .compact & {
     font-size: var(--font-size-base);
+  }
+}
+
+.sprite-thumbnail {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid var(--color-gold-dim, rgba(212, 165, 116, 0.4));
+  flex-shrink: 0;
+  background: var(--color-bg-darkest);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  &.small {
+    width: 32px;
+    height: 32px;
+    border-width: 1px;
+  }
+
+  .compact & {
+    width: 32px;
+    height: 32px;
+    border-width: 1px;
   }
 }
 

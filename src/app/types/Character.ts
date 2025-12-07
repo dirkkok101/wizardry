@@ -66,6 +66,9 @@ export interface Character {
   createdAt?: number  // Timestamp of character creation
   lastModified?: number  // Timestamp of last modification
 
+  // Visual representation
+  spriteId?: string  // Format: '{race}_{class}' e.g., 'human_fighter'
+
   // Character History/Statistics
   deathCount: number      // Number of times character has died
   monsterKills: number    // Total monsters killed by this character

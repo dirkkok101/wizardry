@@ -8,7 +8,9 @@ import { ClassService } from '@services/ClassService';
 import { CharacterService } from '@services/CharacterService';
 import { CharacterCreationService, RolledStats, BaseStats } from '@services/CharacterCreationService';
 import { SpellLearningService } from '@services/SpellLearningService';
+import { SpriteService } from '@services/SpriteService';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
+import { SpritePickerComponent } from '@shared/components/sprite-picker/sprite-picker.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import {
   CharacterCreationStatsCardComponent,
@@ -46,7 +48,8 @@ interface FinalStats {
     FormsModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterCreationStatsCardComponent
+    CharacterCreationStatsCardComponent,
+    SpritePickerComponent
   ],
   templateUrl: './character-creation.component.html',
   styleUrl: './character-creation.component.scss'
@@ -115,6 +118,7 @@ export class CharacterCreationComponent implements OnInit {
   ];
 
   characterName = signal<string>('');
+  selectedSpriteId = signal<string | null>(null);
 
   // Reference to name input for auto-focus
   @ViewChild('nameInput') nameInput?: ElementRef<HTMLInputElement>;
@@ -342,6 +346,28 @@ export class CharacterCreationComponent implements OnInit {
         this.selectedClass.set(null);
       }
     });
+
+    // Auto-suggest sprite when race or class changes (only if no sprite selected)
+    effect(() => {
+      const race = this.selectedRace();
+      const charClass = this.selectedClass();
+      const currentSprite = this.selectedSpriteId();
+
+      // Only auto-suggest if we don't have a sprite selected yet
+      if (race && charClass && !currentSprite) {
+        const suggested = SpriteService.suggestSprite(race, charClass);
+        if (suggested) {
+          this.selectedSpriteId.set(suggested.id);
+        }
+      }
+    });
+  }
+
+  /**
+   * Handle sprite change from the sprite picker component.
+   */
+  handleSpriteChange(spriteId: string): void {
+    this.selectedSpriteId.set(spriteId);
   }
 
   ngOnInit() {
@@ -490,6 +516,12 @@ export class CharacterCreationComponent implements OnInit {
       const spellResult = SpellLearningService.learnInitialSpells(character);
       character = spellResult.updatedCharacter;
 
+      // Add sprite ID if selected
+      const spriteId = this.selectedSpriteId();
+      if (spriteId) {
+        character = { ...character, spriteId };
+      }
+
       // Add to roster
       this.gameState.updateState(state => ({
         ...state,
@@ -515,6 +547,7 @@ export class CharacterCreationComponent implements OnInit {
     this.rolledStats.set(null);
     this.selectedClass.set(null);
     this.characterName.set('');
+    this.selectedSpriteId.set(null);
     this.successMessage.set(null);
     this.errorMessage.set(null);
     this.isLocked.set(false);
@@ -807,8 +840,38 @@ export class CharacterCreationComponent implements OnInit {
         this.submitCharacter(name);
         return true;
       }
+    } else if (key === ',' || key === '<' || key === 'arrowleft') {
+      // Navigate to previous sprite
+      this.navigateSpritePrevious();
+      return true;
+    } else if (key === '.' || key === '>' || key === 'arrowright') {
+      // Navigate to next sprite
+      this.navigateSpriteNext();
+      return true;
     }
     return false;
+  }
+
+  /**
+   * Navigate to the previous sprite in the carousel.
+   */
+  private navigateSpritePrevious(): void {
+    const current = this.selectedSpriteId();
+    if (current) {
+      const prev = SpriteService.getPreviousSprite(current);
+      this.selectedSpriteId.set(prev.id);
+    }
+  }
+
+  /**
+   * Navigate to the next sprite in the carousel.
+   */
+  private navigateSpriteNext(): void {
+    const current = this.selectedSpriteId();
+    if (current) {
+      const next = SpriteService.getNextSprite(current);
+      this.selectedSpriteId.set(next.id);
+    }
   }
 
   // Footer menu handler

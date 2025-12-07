@@ -6,6 +6,13 @@
   <div class="character-stack">
     @for (char of characters; track char.id) {
       <div class="character-card" [class.incapacitated]="isIncapacitated(char)" [class.highlighted]="isHighlighted(char)" [class.trap-hit]="isHit(char)">
+        <!-- Optional sprite thumbnail -->
+        @if (showSprites) {
+          <div class="card-sprite">
+            <img [src]="getSpriteUrl(char)" [alt]="char.name" />
+          </div>
+        }
+
         <!-- Row 1: Name + Status -->
         <div class="card-row name-row">
           <span class="char-name">{{ char.name }}</span>

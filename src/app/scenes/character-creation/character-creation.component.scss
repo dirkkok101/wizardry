@@ -246,6 +246,10 @@
 
 // Name Character Step
 .name-character {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
   form {
     display: flex;
     flex-direction: column;
