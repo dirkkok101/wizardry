@@ -4,12 +4,14 @@ import { TitleScreenComponent } from './title-screen.component';
 import { SaveService } from '@services/SaveService';
 import { LoadingProgressService } from '@services/LoadingProgressService';
 import { GameInitializationService } from '@services/GameInitializationService';
+import { GameStateService } from '@services/GameStateService';
 
 describe('TitleScreenComponent', () => {
   let component: TitleScreenComponent;
   let fixture: ComponentFixture<TitleScreenComponent>;
   let saveService: SaveService;
   let loadingProgress: LoadingProgressService;
+  let gameState: GameStateService;
   let router: Router;
 
   beforeEach(() => {
@@ -23,17 +25,24 @@ describe('TitleScreenComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [TitleScreenComponent],
-      providers: [SaveService, LoadingProgressService]
+      providers: [SaveService, LoadingProgressService, GameStateService]
     });
 
     fixture = TestBed.createComponent(TitleScreenComponent);
     component = fixture.componentInstance;
     saveService = TestBed.inject(SaveService);
     loadingProgress = TestBed.inject(LoadingProgressService);
+    gameState = TestBed.inject(GameStateService);
     router = TestBed.inject(Router);
 
     // Mock save data check
     jest.spyOn(saveService, 'hasSaveData').mockResolvedValue(false);
+
+    // Ensure party is NOT in maze by default (dungeon undefined)
+    gameState.updateState(state => ({
+      ...state,
+      dungeon: undefined
+    }));
 
     jest.spyOn(router, 'navigate');
   });
@@ -149,6 +158,137 @@ describe('TitleScreenComponent', () => {
       await component.ngOnInit();
 
       expect(component.hasError()).toBe(true);
+    });
+  });
+
+  describe('state-aware navigation', () => {
+    beforeEach(async () => {
+      await component.ngOnInit();
+    });
+
+    it('ignores key press when party is in maze', () => {
+      // Put party in maze
+      gameState.updateState(state => ({
+        ...state,
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' as const },
+          lightActive: false,
+          lightRadius: 0,
+          inDarknessZone: false,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          lootedTiles: new Set(),
+          latumapicActive: false
+        }
+      }));
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter' });
+      component.handleKeyPress(event);
+
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('detects when party is in maze', () => {
+      gameState.updateState(state => ({
+        ...state,
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' as const },
+          lightActive: false,
+          lightRadius: 0,
+          inDarknessZone: false,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          lootedTiles: new Set(),
+          latumapicActive: false
+        }
+      }));
+
+      expect(component.partyInMaze()).toBe(true);
+    });
+
+    it('detects when party is not in maze', () => {
+      gameState.updateState(state => ({
+        ...state,
+        dungeon: undefined
+      }));
+
+      expect(component.partyInMaze()).toBe(false);
+    });
+
+    it('detects when party exists', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          members: ['char1', 'char2']
+        }
+      }));
+
+      expect(component.hasParty()).toBe(true);
+    });
+
+    it('detects when no party exists', () => {
+      gameState.updateState(state => ({
+        ...state,
+        party: {
+          ...state.party,
+          members: []
+        }
+      }));
+
+      expect(component.hasParty()).toBe(false);
+    });
+
+    it('handleResumeAdventure navigates to maze', () => {
+      component.handleResumeAdventure();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/maze']);
+    });
+
+    it('handleContinue navigates to castle menu', () => {
+      component.handleContinue();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+
+    it('handleNewGame navigates to castle menu', () => {
+      component.handleNewGame();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
+    });
+  });
+
+  describe('abandon party flow', () => {
+    beforeEach(async () => {
+      await component.ngOnInit();
+    });
+
+    it('promptAbandonParty shows confirmation dialog', () => {
+      component.promptAbandonParty();
+
+      expect(component.showConfirmation()).toBe(true);
+      expect(component.confirmationMessage()).toContain('Abandon your party');
+    });
+
+    it('cancelAbandon hides confirmation dialog', () => {
+      component.promptAbandonParty();
+      component.cancelAbandon();
+
+      expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('confirmAbandon navigates to castle menu', () => {
+      component.confirmAbandon();
+
+      expect(router.navigate).toHaveBeenCalledWith(['/castle-menu']);
     });
   });
 });

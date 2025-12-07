@@ -64,18 +64,62 @@
       </div>
     }
 
-    <!-- Ready state -->
-    @if (isComplete() && !hasError()) {
+    <!-- Ready state - wait for both game data AND saved state to load -->
+    @if (isFullyReady() && !hasError()) {
       <div class="ready-prompt" appKeystrokeInput (keystroke)="handleKeyPress($event)">
-        <p class="press-key">Press any key to continue</p>
-
-        @if (hasSaveData()) {
+        @if (partyInMaze()) {
+          <!-- Party is stuck in maze - show resume/abandon options -->
+          <p class="maze-warning">
+            <span class="warning-icon">&#9888;</span>
+            Party is in the dungeon
+          </p>
+          <div class="action-buttons">
+            <button class="action-btn primary" (click)="handleResumeAdventure()">
+              Resume Adventure
+            </button>
+            <button class="action-btn danger" (click)="promptAbandonParty()">
+              Abandon Party
+            </button>
+          </div>
+        } @else if (hasParty() && hasSaveData()) {
+          <!-- Party in town with save -->
+          <div class="action-buttons">
+            <button class="action-btn primary" (click)="handleContinue()">
+              Continue
+            </button>
+          </div>
           <p class="save-indicator">
             <span class="save-icon">&#9670;</span>
             Saved game detected
           </p>
+        } @else {
+          <!-- No party or new game -->
+          <p class="press-key">Press any key to continue</p>
+          @if (hasSaveData()) {
+            <p class="save-indicator">
+              <span class="save-icon">&#9670;</span>
+              Saved game detected
+            </p>
+          }
         }
       </div>
+
+      <!-- Confirmation dialog for abandon -->
+      @if (showConfirmation()) {
+        <div class="confirmation-overlay" (click)="cancelAbandon()">
+          <div class="confirmation-dialog" (click)="$event.stopPropagation()">
+            <p class="confirmation-message">{{ confirmationMessage() }}</p>
+            <div class="confirmation-buttons">
+              <button class="action-btn danger" (click)="confirmAbandon()">
+                Abandon
+              </button>
+              <button class="action-btn secondary" (click)="cancelAbandon()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     }
 
     <!-- Copyright footer -->

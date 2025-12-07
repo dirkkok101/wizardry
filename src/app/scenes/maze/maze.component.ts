@@ -37,6 +37,7 @@ import { TextureAtlas } from '@models/texture.types';
 import { ViewportConfig } from '@models/rendering.types';
 import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant } from '@models/Combat';
 import { VictoryService, VictoryRewards } from '@services/VictoryService';
+import { PartyAbandonmentService } from '@services/PartyAbandonmentService';
 import * as TextureAtlasService from '@services/TextureAtlasService';
 
 @Component({
@@ -95,6 +96,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly showVictoryOverlay = signal<boolean>(false);
   readonly showDefeatOverlay = signal<boolean>(false);
   readonly victoryRewards = signal<VictoryRewards | null>(null);
+
+  // Abandon party confirmation state
+  readonly showAbandonConfirmation = signal<boolean>(false);
 
   // Get alive party members for combat
   readonly alivePartyMembers = computed(() =>
@@ -392,7 +396,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'right', label: 'Turn R', shortcut: 'D', enabled: true },
       { id: 'strafe_left', label: 'Strafe L', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe R', shortcut: 'E', enabled: true },
-      { id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: canInspect }
+      { id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: canInspect },
+      { id: 'abandon', label: 'Abandon', shortcut: 'X', enabled: true }
     ];
   });
 
@@ -873,6 +878,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.spellContext.set('dungeon');
   }
 
+  @HostListener('window:keydown.x')
+  handleAbandonShortcut(): void {
+    // Ignore if dialogs open or in combat
+    if (this.isDialogOpen() || this.inCombat()) return;
+    this.promptAbandonParty();
+  }
+
   @HostListener('window:keydown.control.e')
   toggleEncounters(): void {
     const currentState = this.gameState.state();
@@ -1031,7 +1043,35 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'inspect':
         this.inspectTile();
         break;
+      case 'abandon':
+        this.promptAbandonParty();
+        break;
     }
+  }
+
+  /**
+   * Show abandon party confirmation dialog
+   */
+  promptAbandonParty(): void {
+    this.showAbandonConfirmation.set(true);
+  }
+
+  /**
+   * Confirm party abandonment - kill all members, leave bodies, return to castle
+   */
+  confirmAbandon(): void {
+    this.gameState.updateState(state =>
+      PartyAbandonmentService.abandonParty(state)
+    );
+    this.showAbandonConfirmation.set(false);
+    this.router.navigate(['/castle-menu']);
+  }
+
+  /**
+   * Cancel abandon confirmation
+   */
+  cancelAbandon(): void {
+    this.showAbandonConfirmation.set(false);
   }
 
   /**

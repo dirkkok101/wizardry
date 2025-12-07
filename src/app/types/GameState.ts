@@ -49,6 +49,7 @@ export interface Body {
   level: number // Dungeon level where character died (1-10)
   x: number // X coordinate (0-19)
   y: number // Y coordinate (0-19)
+  gold?: number // Gold to recover when body is retrieved (split from party gold on abandonment)
 }
 
 /**

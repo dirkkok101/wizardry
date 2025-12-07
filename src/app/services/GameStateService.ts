@@ -1,6 +1,5 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, Signal } from '@angular/core';
 import { GameState } from '@models/GameState';
-import { SceneType } from '@models/SceneType';
 import { GameInitializationService } from './GameInitializationService';
 import { SaveService } from './SaveService';
 import { LoggerService } from './LoggerService';
@@ -33,9 +32,12 @@ export class GameStateService {
   readonly currentScene = computed(() => this.state().currentScene);
   readonly party = computed(() => this.state().party);
   readonly roster = computed(() => this.state().roster);
+  // Canonical "in maze" check: dungeon state exists
+  // This is aligned with route guards (partyInMazeGuard, partyNotInMazeGuard)
+  // to ensure consistent behavior across the application
   readonly isInMaze = computed(() => {
-    const scene = this.currentScene();
-    return scene === SceneType.MAZE || scene === SceneType.COMBAT;
+    const state = this.state();
+    return state.dungeon !== undefined;
   });
 
   // Debounce timer for auto-save
@@ -43,6 +45,10 @@ export class GameStateService {
 
   // Flag to prevent auto-save until initial load completes
   private initialLoadComplete = false;
+
+  // Signal to track when state is ready (saved game loaded or confirmed no save exists)
+  private readonly _isStateReady = signal(false);
+  readonly isStateReady: Signal<boolean> = this._isStateReady.asReadonly();
 
   constructor(
     private saveService: SaveService,
@@ -106,10 +112,14 @@ export class GameStateService {
         }
         // Mark initial load as complete - enables auto-save
         this.initialLoadComplete = true;
+        // Signal that state is ready for UI to read
+        this._isStateReady.set(true);
       }).catch(error => {
         this.logger.error('Failed to load saved game:', error);
         // Mark initial load as complete even on error - enables auto-save for new game
         this.initialLoadComplete = true;
+        // Still signal ready - we have a valid (new game) state
+        this._isStateReady.set(true);
       });
     });
   }

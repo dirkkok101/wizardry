@@ -526,6 +526,149 @@
   font-size: 0.75em;
 }
 
+// Maze warning message
+.maze-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-warning, #f59e0b);
+  margin: 0 0 var(--space-4) 0;
+  padding: var(--space-2) var(--space-4);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--color-warning, #f59e0b);
+  border-radius: var(--card-border-radius);
+}
+
+.warning-icon {
+  font-size: 1.25em;
+}
+
+// ============================================
+// ACTION BUTTONS
+// ============================================
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  min-width: 200px;
+}
+
+.action-btn {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-6);
+  border: 1px solid;
+  border-radius: var(--card-border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.primary {
+    background: linear-gradient(
+      135deg,
+      var(--color-gold-dim),
+      var(--color-gold-primary)
+    );
+    border-color: var(--color-gold-primary);
+    color: var(--color-bg-darkest);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        var(--color-gold-primary),
+        var(--color-gold-bright)
+      );
+      box-shadow: 0 0 12px var(--color-gold-glow);
+    }
+  }
+
+  &.danger {
+    background: rgba(220, 38, 38, 0.2);
+    border-color: var(--color-danger, #dc2626);
+    color: var(--color-danger, #dc2626);
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.3);
+      box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+    }
+  }
+
+  &.secondary {
+    background: transparent;
+    border-color: var(--color-gold-dim);
+    color: var(--color-gold-primary);
+
+    &:hover {
+      background: rgba(212, 165, 116, 0.1);
+      border-color: var(--color-gold-primary);
+    }
+  }
+}
+
+// ============================================
+// CONFIRMATION DIALOG
+// ============================================
+.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fade-in 0.2s ease-out;
+}
+
+.confirmation-dialog {
+  background: var(--color-bg-card, #1a1a1a);
+  border: 1px solid var(--color-gold-dim);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-6);
+  max-width: 400px;
+  text-align: center;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 20px var(--color-gold-glow);
+  animation: scale-in 0.2s ease-out;
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.confirmation-message {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary, #e0e0e0);
+  margin: 0 0 var(--space-6) 0;
+  line-height: 1.6;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
 // ============================================
 // COPYRIGHT FOOTER
 // ============================================

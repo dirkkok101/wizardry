@@ -42,22 +42,9 @@ function createNewGame(): GameState {
       light: false,
       gold: 0 // NEW: initialize with 0 gold
     },
-    dungeon: {
-      currentLevel: 1,
-      position: { x: 0, y: 0, facing: 'NORTH' },
-      lightActive: false,              // Party starts in darkness (must cast MILWA)
-      lightRadius: 3,                  // Default view distance without spell
-      lightSpellType: undefined,       // No active light spell
-      lightDurationRemaining: undefined, // No duration tracking yet
-      inDarknessZone: false,           // Not in a darkness zone tile
-      teleportCount: 0,
-      visitedTiles: new Set(),
-      defeatedEncounters: [],
-      unlockedDoors: new Set(),
-      openDoors: new Set(),
-      lootedTiles: new Set(),
-      latumapicActive: false           // LATUMAPIC not active at expedition start
-    },
+    // dungeon is undefined until party enters maze via DungeonMovementService.enterDungeon()
+    // Per GameState.ts: "Optional: undefined when in castle/town"
+    dungeon: undefined,
     settings: {
       difficulty: 'NORMAL',
       soundEnabled: true,

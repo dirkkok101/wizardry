@@ -74,23 +74,36 @@ describe('GameStateService', () => {
       expect(service.currentScene()).toBe(SceneType.CASTLE_MENU);
     });
 
-    it('isInMaze computed signal detects maze scenes', () => {
-      // Not in maze initially
+    it('isInMaze computed signal detects dungeon state presence', () => {
+      // Not in maze initially (dungeon is undefined)
       expect(service.isInMaze()).toBe(false);
 
-      // In maze
+      // In maze (dungeon state exists)
       service.updateState(state => ({
         ...state,
-        currentScene: SceneType.MAZE
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' as const },
+          lightActive: false,
+          lightRadius: 3,
+          inDarknessZone: false,
+          teleportCount: 0,
+          visitedTiles: new Set(),
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          lootedTiles: new Set(),
+          latumapicActive: false
+        }
       }));
       expect(service.isInMaze()).toBe(true);
 
-      // In combat
+      // Back to town (dungeon cleared)
       service.updateState(state => ({
         ...state,
-        currentScene: SceneType.COMBAT
+        dungeon: undefined
       }));
-      expect(service.isInMaze()).toBe(true);
+      expect(service.isInMaze()).toBe(false);
     });
   });
 
