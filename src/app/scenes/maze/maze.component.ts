@@ -3429,8 +3429,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (result.success) {
       this.pendingChest.update(c => c ? { ...c, trapDisarmed: true, trapped: false } : c);
       this.chestLastMessage.set(`${opener.name} successfully disarmed the trap!`);
-      this.chestPhase.set('action_select');
       this.chestTrapInput.set('');
+      // Auto-open chest after successful disarm (brief delay to show success message)
+      setTimeout(() => {
+        this.showChestOpening();
+      }, 1000);
     } else if (result.triggered) {
       if (result.wrongName) {
         this.chestLastMessage.set('Wrong trap name! The trap triggers!');
