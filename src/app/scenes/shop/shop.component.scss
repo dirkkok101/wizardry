@@ -1,92 +1,106 @@
-// Shop scene - Modern Retro-Fantasy theme
+// Shop scene - 3-column layout matching Castle scene pattern
 
 .shop-scene {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--color-bg-darkest);
-}
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
+  overflow: hidden;
 
-.shop-content {
-  flex: 1;
-  padding: var(--space-4);
-  overflow-y: auto;
-}
-
-// Character selection view
-.character-select-view {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.view-subtitle {
-  font-family: var(--font-display);
-  margin: 0 0 var(--space-3) 0;
-  font-size: var(--font-size-base);
-  color: var(--color-gold-primary);
-  letter-spacing: 0.05em;
-}
-
-// Two-column layout for front/back rows (matching Castle style)
-.formation-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
-  width: 100%;  // Expand to fill parent before max-width constrains
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.formation-column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.row-title {
-  font-family: var(--font-display);
-  font-size: var(--font-size-sm);
-  color: var(--color-gold-primary);
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-1);
-  margin: 0;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-// Style the character panel within the formation
-.formation-column {
-  ::ng-deep {
-    .character-panel {
-      flex: 1;
-    }
-
-    .panel-title {
-      display: none; // We use our own row-title
-    }
-
-    .character-stack {
-      padding: 0;
-      gap: var(--space-1);
-    }
-
-    .character-card {
-      padding: var(--space-2);
-    }
+  app-scene-title {
+    display: block;
+    flex-shrink: 0;
   }
 }
 
-// Main menu view
-.main-view {
+// 3-Column Grid Layout
+.shop-content {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
+// Side panels (left and right character columns)
+.left-panel,
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  align-self: start;
+
+  app-character-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+// Center panel with viewport
+.center-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-  text-align: center;
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0.5rem 2px;
 }
 
-// Shopping bar - compact horizontal layout (replaces character-info)
+.scene-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 740px;
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.empty-viewport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Buy view (replaces scene viewport when shopping)
+.buy-view {
+  width: 740px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+}
+
+// Shopping bar - compact horizontal layout
 .shopping-bar {
   display: flex;
   justify-content: space-between;
@@ -95,7 +109,7 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--card-border-radius);
-  margin-bottom: var(--space-3);
+  flex-shrink: 0;
 
   .shopping-for {
     color: var(--color-text-secondary);
@@ -111,42 +125,14 @@
   }
 }
 
-.menu-instructions {
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-// Transaction views (buy, sell, identify, uncurse)
-.transaction-view {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.gold-bar {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--card-border-radius);
-
-  strong {
-    color: var(--color-gold-primary);
-  }
-
-  .service-cost {
-    color: var(--color-text-secondary);
-  }
-}
-
-// Item list with 2-column layout (matching Training Grounds)
+// Item list with 2-column layout
 .item-list {
   column-count: 2;
   column-gap: var(--space-3);
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 
-  // Subtle scrollbar styling
   &::-webkit-scrollbar {
     width: 4px;
   }
@@ -161,7 +147,7 @@
   }
 }
 
-// Compact item row (matching CharacterListItemComponent pattern)
+// Compact item row
 .item-row {
   display: grid;
   grid-template-columns: 1fr auto auto auto auto;
@@ -173,7 +159,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--card-border-radius);
   transition: all var(--transition-fast);
-  break-inside: avoid;  // Prevent splitting across columns
+  break-inside: avoid;
 
   &:hover:not(.unaffordable) {
     border-color: var(--color-gold-dim);
@@ -208,39 +194,11 @@
   white-space: nowrap;
 }
 
-.equipped-badge {
-  padding: 2px 6px;
-  background: var(--color-gold-primary);
-  color: var(--color-bg-darkest);
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  font-weight: 600;
-  border-radius: 2px;
-}
-
-.cursed-badge {
-  padding: 2px 6px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  font-weight: 600;
-  border-radius: 2px;
-}
-
 .item-price {
   font-size: var(--font-size-sm);
   color: var(--color-gold-primary);
   font-weight: 600;
   white-space: nowrap;
-
-  &.sell-price {
-    color: var(--color-status-ok);
-  }
-
-  &.uncurse-price {
-    color: var(--color-warning);
-  }
 }
 
 .action-btn {
@@ -269,40 +227,12 @@
     border-color: var(--color-gold-dim);
     color: var(--color-text-gold);
   }
-
-  &.sell-btn {
-    border-color: var(--color-status-ok);
-    color: var(--color-status-ok);
-
-    &:hover:not(:disabled) {
-      background: var(--color-status-ok);
-    }
-  }
-
-  &.identify-btn {
-    border-color: var(--color-magic);
-    color: var(--color-magic);
-
-    &:hover:not(:disabled) {
-      background: var(--color-magic);
-    }
-  }
-
-  &.uncurse-btn {
-    border-color: var(--color-warning);
-    color: var(--color-warning);
-
-    &:hover:not(:disabled) {
-      background: var(--color-warning);
-    }
-  }
 }
 
-
-// Messages - Modern Retro-Fantasy toast notifications
+// Messages - toast notifications
 .message {
   position: fixed;
-  bottom: 100px;  // Above the footer
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   padding: var(--space-2) var(--space-4);
@@ -339,22 +269,26 @@
   }
 }
 
-// Responsive adjustments
-@media (max-width: 900px) {
-  .formation-layout {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-  }
-
-  .item-list {
-    column-count: 1;
+// Large screens - wider side panels
+@media (min-width: 1200px) {
+  .shop-content {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
   }
 }
 
-// MacBook Air 13" (1440x900) - smaller row title
-@media (max-height: 900px) {
-  .row-title {
-    font-size: var(--font-size-xs);
-    padding-bottom: 2px;
+// Compact height
+@media (max-height: 767px) {
+  .shop-scene {
+    padding: 0.25rem;
+  }
+  .shop-content {
+    gap: 0.35rem;
+  }
+}
+
+// Smaller screens - single column item list
+@media (max-width: 900px) {
+  .item-list {
+    column-count: 1;
   }
 }

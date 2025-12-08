@@ -86,15 +86,17 @@ export class ShopComponent implements OnInit {
     GameStateQueries.partyCharacters(this.gameState.state())
   );
 
-  // Front row characters (positions 1, 2, 3)
-  readonly frontRowCharacters = computed(() =>
-    GameStateQueries.frontRowCharacters(this.gameState.state())
-  );
+  // Left column characters (positions 1, 3, 5 - indices 0, 2, 4)
+  readonly leftColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter((c): c is Character => c !== undefined);
+  });
 
-  // Back row characters (positions 4, 5, 6)
-  readonly backRowCharacters = computed(() =>
-    GameStateQueries.backRowCharacters(this.gameState.state())
-  );
+  // Right column characters (positions 2, 4, 6 - indices 1, 3, 5)
+  readonly rightColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter((c): c is Character => c !== undefined);
+  });
 
   // Actions available for each character in the shop
   getActionsForCharacter = (_char: Character): CharacterAction[] => {

@@ -2,85 +2,88 @@
   <app-scene-title title="BOLTAC'S TRADING POST" [showPartyGold]="true" />
 
   <div class="shop-content">
-    <!-- Character Selection View -->
-    @if (currentView() === 'character-select') {
-      <div class="character-select-view">
-        <h2 class="view-subtitle">Select a character to shop for:</h2>
+    <!-- Left Column: Party positions 1, 3, 5 -->
+    <div class="left-panel">
+      <app-character-panel
+        [characters]="leftColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['buy', 'inspect']"
+        [showSprites]="true"
+        (actionClick)="handleCharacterAction($event)"
+      />
+    </div>
 
+    <!-- Center Column: Scene viewport or Buy view -->
+    <div class="center-panel">
+      @if (currentView() === 'character-select') {
         @if (partyCharacters().length > 0) {
-          <div class="formation-layout">
-            <div class="formation-column">
-              <h3 class="row-title">Front Row</h3>
-              <app-character-panel
-                [characters]="frontRowCharacters()"
-                [actions]="getActionsForCharacter"
-                [visibleActionTypes]="['buy', 'inspect']"
-                (actionClick)="handleCharacterAction($event)"
-              />
-            </div>
-            <div class="formation-column">
-              <h3 class="row-title">Back Row</h3>
-              <app-character-panel
-                [characters]="backRowCharacters()"
-                [actions]="getActionsForCharacter"
-                [visibleActionTypes]="['buy', 'inspect']"
-                (actionClick)="handleCharacterAction($event)"
-              />
-            </div>
+          <div class="scene-viewport">
+            <img src="assets/sprites/scenes/trading_post_scene.png" alt="Trading Post" class="scene-image" />
           </div>
         } @else {
-          <app-empty-state
-            title="You need party members to shop"
-            subtitle="Visit the Tavern to recruit characters"
-          />
-        }
-      </div>
-    }
-
-    <!-- Buy View -->
-    @if (currentView() === 'buy') {
-      <div class="transaction-view">
-        @if (selectedCharacter(); as character) {
-          <div class="shopping-bar">
-            <span class="shopping-for">Shopping for: <strong>{{ character.name }}</strong></span>
-            <span class="inventory-status">{{ character.inventory.length }}/8 slots</span>
+          <div class="scene-viewport empty-viewport">
+            <app-empty-state
+              title="You need party members to shop"
+              subtitle="Visit the Tavern to recruit characters"
+            />
           </div>
         }
-
-        <div class="item-list">
-          @for (item of shopInventory(); track item.id) {
-            <div class="item-row" [class.unaffordable]="item.price > partyGold()">
-              <span class="item-name">{{ item.name }}</span>
-              <span class="item-type">{{ item.type }}</span>
-              @if (item.damage) {
-                <span class="item-stat">DMG: {{ item.damage }}</span>
-              }
-              @if (item.defense) {
-                <span class="item-stat">DEF: {{ item.defense }}</span>
-              }
-              <span class="item-price">{{ item.price }} GP</span>
-              <button
-                class="action-btn buy-btn"
-                (click)="initiateBuy(item.id)"
-                [disabled]="item.price > partyGold()"
-              >
-                Buy
-              </button>
+      } @else {
+        <!-- Buy View -->
+        <div class="buy-view">
+          @if (selectedCharacter(); as character) {
+            <div class="shopping-bar">
+              <span class="shopping-for">Shopping for: <strong>{{ character.name }}</strong></span>
+              <span class="inventory-status">{{ character.inventory.length }}/8 slots</span>
             </div>
-          } @empty {
-            <app-empty-state title="No items available for purchase" variant="inline" />
           }
-        </div>
-      </div>
-    }
 
-    <!-- Messages -->
-    @if (messages.hasMessage()) {
-      <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
-        {{ messages.messageText() }}
-      </div>
-    }
+          <div class="item-list">
+            @for (item of shopInventory(); track item.id) {
+              <div class="item-row" [class.unaffordable]="item.price > partyGold()">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-type">{{ item.type }}</span>
+                @if (item.damage) {
+                  <span class="item-stat">DMG: {{ item.damage }}</span>
+                }
+                @if (item.defense) {
+                  <span class="item-stat">DEF: {{ item.defense }}</span>
+                }
+                <span class="item-price">{{ item.price }} GP</span>
+                <button
+                  class="action-btn buy-btn"
+                  (click)="initiateBuy(item.id)"
+                  [disabled]="item.price > partyGold()"
+                >
+                  Buy
+                </button>
+              </div>
+            } @empty {
+              <app-empty-state title="No items available for purchase" variant="inline" />
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Right Column: Party positions 2, 4, 6 -->
+    <div class="right-panel">
+      <app-character-panel
+        [characters]="rightColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['buy', 'inspect']"
+        [showSprites]="true"
+        (actionClick)="handleCharacterAction($event)"
+      />
+    </div>
   </div>
+
+  <!-- Messages -->
+  @if (messages.hasMessage()) {
+    <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
+      {{ messages.messageText() }}
+    </div>
+  }
 
   <app-scene-footer
     [menuItems]="footerMenuItems()"
