@@ -43,7 +43,8 @@ export class VictoryService {
     partyMembers: string[]
   ): VictoryRewards {
     const totalXP = monsters.reduce((sum, m) => sum + m.xp, 0)
-    const totalGold = monsters.reduce((sum, m) => sum + (m.gold || 0), 0)
+    // Gold comes from treasure chests, not direct monster kills (faithful to Wizardry 1)
+    const totalGold = 0
 
     // Count only living characters
     const livingCharacterCount = partyMembers.filter(id => {
