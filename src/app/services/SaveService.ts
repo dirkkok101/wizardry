@@ -70,11 +70,15 @@ export class SaveService {
       acModifiers: Array.from(state.combat.acModifiers.entries())
     } : undefined
 
+    // Serialize bodies Map (convert to array for JSON, handle undefined and non-Map cases)
+    const serializedBodies = state.bodies instanceof Map ? Array.from(state.bodies.entries()) : []
+
     // Handle optional dungeon state
     if (!state.dungeon) {
       return {
         ...state,
         roster: Array.from(state.roster.entries()),
+        bodies: serializedBodies,
         combat: serializedCombat,
         dungeon: undefined
       }
@@ -103,6 +107,7 @@ export class SaveService {
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
+      bodies: serializedBodies,
       combat: serializedCombat,
       dungeon: {
         ...state.dungeon,
@@ -157,11 +162,15 @@ export class SaveService {
         : new Map()
     } : undefined
 
+    // Deserialize bodies Map (from array, handle old saves that don't have it)
+    const deserializedBodies = Array.isArray(data.bodies) ? new Map(data.bodies) : new Map()
+
     // Handle undefined/null dungeon state (castle/town)
     if (!data.dungeon) {
       return {
         ...data,
         roster: new Map(data.roster || []),
+        bodies: deserializedBodies,
         combat: deserializedCombat,
         dungeon: undefined,
         settings
@@ -198,6 +207,7 @@ export class SaveService {
     return {
       ...data,
       roster: new Map(data.roster || []),
+      bodies: deserializedBodies,
       combat: deserializedCombat,
       settings,
       dungeon: {

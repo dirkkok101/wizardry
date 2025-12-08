@@ -45,6 +45,8 @@ function createNewGame(): GameState {
     // dungeon is undefined until party enters maze via DungeonMovementService.enterDungeon()
     // Per GameState.ts: "Optional: undefined when in castle/town"
     dungeon: undefined,
+    // bodies tracks dead character corpses left in dungeon
+    bodies: new Map(),
     settings: {
       difficulty: 'NORMAL',
       soundEnabled: true,

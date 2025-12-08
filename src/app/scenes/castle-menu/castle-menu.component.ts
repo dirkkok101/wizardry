@@ -11,7 +11,6 @@ import { MenuItem } from '@shared/components/menu/menu.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
@@ -34,8 +33,7 @@ import { Character } from '@models/Character';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterPanelComponent,
-    EmptyStateComponent
+    CharacterPanelComponent
   ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
@@ -47,18 +45,27 @@ export class CastleMenuComponent implements OnInit {
   private readonly messages = inject(MessageService);
 
   /**
-   * Front row characters (positions 1, 2, 3)
+   * All party characters in order
    */
-  readonly frontRowCharacters = computed(() =>
-    GameStateQueries.frontRowCharacters(this.gameState.state())
+  readonly partyCharacters = computed(() =>
+    GameStateQueries.partyCharacters(this.gameState.state())
   );
 
   /**
-   * Back row characters (positions 4, 5, 6)
+   * Characters for left column (positions 1, 3, 5 = indices 0, 2, 4)
    */
-  readonly backRowCharacters = computed(() =>
-    GameStateQueries.backRowCharacters(this.gameState.state())
-  );
+  readonly leftColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter(c => c !== undefined);
+  });
+
+  /**
+   * Characters for right column (positions 2, 4, 6 = indices 1, 3, 5)
+   */
+  readonly rightColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter(c => c !== undefined);
+  });
 
   /**
    * Actions available for each character
