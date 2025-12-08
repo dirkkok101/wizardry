@@ -180,7 +180,7 @@
             "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "door"
+            "west": "open"
           },
           "types": ["darkness"]
         },

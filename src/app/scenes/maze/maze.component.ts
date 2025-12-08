@@ -2984,6 +2984,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
       if (key === 'ENTER') {
+        event.preventDefault();
+        event.stopPropagation();
         this.submitChestTrapName();
         return;
       }
@@ -3095,22 +3097,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('[CHEST] damageDealt size:', result.damageDealt.size, 'statusApplied size:', result.statusApplied.size);
     }
 
-    // Handle special effects immediately (before animation)
-    if (result.specialEffect === 'teleport') {
-      // Apply damage first
-      this.applyChestTrapDamage(result);
-      this.handleChestTeleport();
-      return;
-    }
-
-    if (result.specialEffect === 'combat') {
-      // Apply damage first
-      this.applyChestTrapDamage(result);
-      this.handleChestAlarm();
-      return;
-    }
-
-    // Show dramatic trap triggered letterbox
+    // Show dramatic trap triggered letterbox for ALL traps
     this.chestPhase.set('trap_triggered');
     this.trapLetterboxName.set(result.trapName);
     this.chestLetterboxType.set('trap_triggered');
@@ -3118,8 +3105,21 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Display letterbox for 1.5s
     await this.delay(1500);
 
-    // Clear letterbox before showing damage indicators
+    // Clear letterbox before showing damage indicators or special effects
     this.chestLetterboxType.set(null);
+
+    // Handle special effects after showing trap name
+    if (result.specialEffect === 'teleport') {
+      this.applyChestTrapDamage(result);
+      this.handleChestTeleport();
+      return;
+    }
+
+    if (result.specialEffect === 'combat') {
+      this.applyChestTrapDamage(result);
+      this.handleChestAlarm();
+      return;
+    }
 
     // Build list of affected characters (either damaged OR status-affected)
     const damagedIds = Array.from(result.damageDealt.keys());

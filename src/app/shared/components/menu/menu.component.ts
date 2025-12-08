@@ -164,7 +164,8 @@ export class MenuComponent implements OnInit, OnChanges {
     const modalSelectors = [
       '.dialog-overlay',   // ConfirmationDialogComponent
       '.modal-backdrop',   // NameModalComponent
-      '.name-modal'        // NameModalComponent inner
+      '.name-modal',       // NameModalComponent inner
+      '.chest-overlay'     // ChestOverlayComponent (has its own keyboard handler)
     ];
 
     return modalSelectors.some(selector =>

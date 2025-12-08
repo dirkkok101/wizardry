@@ -150,8 +150,19 @@ function calculateInspectChance(character: Character): number {
  * @returns InspectionResult with success status, identified trap, and trigger status
  */
 function attemptInspection(character: Character, chest: Chest): TrapInspectionResult {
+  console.log(`[CHEST] Inspect attempt: ${character.name} (${character.class} L${character.level})`)
+
   // Check for critical failure first (1-2% chance to trigger trap during inspection)
-  if (RandomService.chance(INSPECT_CRITICAL_FAILURE_CHANCE)) {
+  const critRoll = RandomService.nextRandom() * 100
+  const critFailed = critRoll < INSPECT_CRITICAL_FAILURE_CHANCE
+  console.log(`[CHEST]   Critical failure check: Roll ${critRoll.toFixed(1)}% vs ${INSPECT_CRITICAL_FAILURE_CHANCE}% threshold → ${critFailed ? 'CRITICAL FAIL!' : 'Pass'}`)
+
+  if (critFailed) {
+    if (chest.trapped) {
+      console.log(`[CHEST]   Result: Trap triggered due to critical failure!`)
+    } else {
+      console.log(`[CHEST]   Result: Critical fail but chest not trapped - no effect`)
+    }
     return {
       success: false,
       trapIdentified: null,
@@ -160,11 +171,20 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   }
 
   // Roll for inspection success
-  const chance = calculateInspectChance(character)
-  const success = RandomService.chance(chance)
+  const inspectChance = calculateInspectChance(character)
+  const multiplier = INSPECT_MULTIPLIER[character.class]
+  const inspectRoll = RandomService.nextRandom() * 100
+  const success = inspectRoll < inspectChance
+  console.log(`[CHEST]   Inspect chance: AGI ${character.agility} × ${multiplier} = ${inspectChance}%`)
+  console.log(`[CHEST]   Inspect roll: ${inspectRoll.toFixed(1)}% vs ${inspectChance}% → ${success ? 'Success' : 'Fail'}`)
 
   // SUCCESS - return real information
   if (success) {
+    if (chest.trapped) {
+      console.log(`[CHEST]   Result: Trap identified - ${chest.trapId}`)
+    } else {
+      console.log(`[CHEST]   Result: No trap found (chest is safe)`)
+    }
     return {
       success: true,
       trapIdentified: chest.trapped ? chest.trapId : null,
@@ -178,7 +198,10 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   // Original formula: If (RANDOM MOD 20) > AGI, trap triggers
   if (chest.trapped) {
     const triggerRoll = RandomService.random(0, 19)
-    if (triggerRoll > character.agility) {
+    const triggered = triggerRoll > character.agility
+    console.log(`[CHEST]   AGI save (failed inspect): Roll ${triggerRoll} vs AGI ${character.agility} → ${triggered ? 'TRIGGERED!' : 'Saved'}`)
+
+    if (triggered) {
       return {
         success: false,
         trapIdentified: null,
@@ -190,6 +213,7 @@ function attemptInspection(character: Character, chest: Chest): TrapInspectionRe
   // Stage 2: Return RANDOM trap name (misleading!)
   // This is a core deception mechanic - player cannot tell if result is real
   const randomTrapId = getRandomTrapId()
+  console.log(`[CHEST]   Result: Failed inspection - showing random trap "${randomTrapId}" (may be misleading!)`)
 
   return {
     success: false,
@@ -259,8 +283,11 @@ function attemptDisarm(
   chest: Chest,
   enteredTrapName: string
 ): TrapDisarmResult {
+  console.log(`[CHEST] Disarm attempt: ${character.name} (${character.class} L${character.level})`)
+
   // Get the actual trap name from loaded data
   if (!chest.trapId) {
+    console.log(`[CHEST]   Error: Chest has no trapId!`)
     return {
       success: false,
       triggered: false,
@@ -272,12 +299,17 @@ function attemptDisarm(
   const actualTrapName = trapEffect.name
 
   // Check if trap name matches
-  if (!trapNameMatches(enteredTrapName, actualTrapName)) {
+  const nameMatches = trapNameMatches(enteredTrapName, actualTrapName)
+  console.log(`[CHEST]   Name match: "${enteredTrapName}" vs "${actualTrapName}" → ${nameMatches ? 'Match' : 'MISMATCH'}`)
+
+  if (!nameMatches) {
     // Wrong trap name - check if it triggers
     // Original formula uses character level (higher level = tiny chance to avoid trigger)
     const triggerChance = calculateWrongNameTriggerChance(character.level)
-    const triggered = RandomService.chance(triggerChance)
-    console.log(`[TrapService] Wrong trap name! Entered "${enteredTrapName}", actual "${actualTrapName}". Trigger chance: ${triggerChance.toFixed(1)}%. Triggered: ${triggered}`)
+    const triggerRoll = RandomService.nextRandom() * 100
+    const triggered = triggerRoll < triggerChance
+    console.log(`[CHEST]   Wrong name penalty: L${character.level} → ${(100 - triggerChance).toFixed(1)}% avoid chance`)
+    console.log(`[CHEST]   Trigger roll: ${triggerRoll.toFixed(1)}% vs ${triggerChance.toFixed(1)}% → ${triggered ? 'TRIGGERED!' : 'Avoided'}`)
     return {
       success: false,
       triggered,
@@ -288,11 +320,16 @@ function attemptDisarm(
   // Correct trap name - attempt disarm
   // Formula: (EffectiveLevel - MazeLevel) / 70, Thief/Ninja get +50 level bonus
   const disarmChance = calculateDisarmChance(character, chest.mazeLevel)
-  const success = RandomService.chance(disarmChance)
+  const levelBonus = DISARM_BONUS_CLASSES.has(character.class) ? 50 : 0
+  const effectiveLevel = character.level + levelBonus
+  console.log(`[CHEST]   Disarm chance: (EffLvl ${effectiveLevel} - MazeLvl ${chest.mazeLevel}) / 70 = ${disarmChance.toFixed(1)}%`)
 
-  console.log(`[TrapService] Disarm attempt: ${character.name} (${character.class} L${character.level}) vs maze L${chest.mazeLevel}. Chance: ${disarmChance.toFixed(1)}%. Success: ${success}`)
+  const disarmRoll = RandomService.nextRandom() * 100
+  const success = disarmRoll < disarmChance
+  console.log(`[CHEST]   Disarm roll: ${disarmRoll.toFixed(1)}% vs ${disarmChance.toFixed(1)}% → ${success ? 'Success!' : 'Fail'}`)
 
   if (success) {
+    console.log(`[CHEST]   Result: Trap disarmed!`)
     return {
       success: true,
       triggered: false,
@@ -303,9 +340,10 @@ function attemptDisarm(
   // Failed disarm - check AGI save to avoid triggering
   // Formula: AGI × 5%
   const avoidChance = calculateTriggerAvoidance(character)
-  const avoided = RandomService.chance(avoidChance)
-
-  console.log(`[TrapService] Disarm failed! AGI save: ${character.agility} AGI × 5% = ${avoidChance}% chance to avoid trigger. Avoided: ${avoided}`)
+  const avoidRoll = RandomService.nextRandom() * 100
+  const avoided = avoidRoll < avoidChance
+  console.log(`[CHEST]   AGI save (failed disarm): AGI ${character.agility} × 5% = ${avoidChance}%`)
+  console.log(`[CHEST]   Save roll: ${avoidRoll.toFixed(1)}% vs ${avoidChance}% → ${avoided ? 'Saved' : 'TRIGGERED!'}`)
 
   return {
     success: false,
@@ -400,6 +438,9 @@ function applyTrapEffects(
   const statusApplied = new Map<string, CharacterStatus>()
   const messages: string[] = []
 
+  console.log(`[CHEST] Trap triggered: ${effect.name} (${trapId})`)
+  console.log(`[CHEST]   Effect: ${effect.diceType ? `${mazeLevel}d${effect.diceType} damage` : 'no damage'}, ${effect.statusEffect || 'no status'}, target=${effect.targetMode}`)
+
   // Determine targets based on target mode
   let targets: Character[] = []
   const isClassSpecific = effect.targetMode === 'class_specific'
@@ -407,17 +448,21 @@ function applyTrapEffects(
   switch (effect.targetMode) {
     case 'opener':
       targets = [opener]
+      console.log(`[CHEST]   Targets: ${opener.name} (opener only)`)
       break
     case 'party':
       targets = partyMembers
+      console.log(`[CHEST]   Targets: All ${partyMembers.length} party members`)
       break
     case 'class_specific':
       targets = partyMembers.filter(m =>
         effect.targetClasses?.includes(m.class)
       )
+      console.log(`[CHEST]   Targets: ${targets.length} ${effect.targetClasses?.join('/')} class members`)
       break
     case 'special':
       // Special effects handled separately
+      console.log(`[CHEST]   Targets: Special effect`)
       break
   }
 
@@ -428,10 +473,15 @@ function applyTrapEffects(
 
     for (const target of targets) {
       // Roll for hit (0-1 random vs hitChance threshold)
-      if (RandomService.roll(hitChance)) {
+      const hitRoll = RandomService.nextRandom()
+      const didHit = hitRoll < hitChance
+      console.log(`[CHEST]   ${target.name}: Hit roll ${(hitRoll * 100).toFixed(1)}% vs ${(hitChance * 100).toFixed(1)}% → ${didHit ? 'Hit' : 'Miss'}`)
+
+      if (didHit) {
         // Check resistance before applying damage (authentic Wizardry 1)
         if (resistanceType) {
           const resistResult = CharacterResistanceService.checkResistance(target, resistanceType)
+          console.log(`[CHEST]     Resist (${resistanceType}): ${resistResult.resisted ? 'RESISTED' : 'Failed'}`)
           if (resistResult.resisted) {
             messages.push(`${target.name} resists the trap!`)
             continue  // Skip damage for this target
@@ -441,6 +491,7 @@ function applyTrapEffects(
         // Authentic Wizardry 1: (mazeLevel)d{diceType}
         const damage = calculateTrapDamage(effect.diceType, mazeLevel)
         damageDealt.set(target.id, damage)
+        console.log(`[CHEST]     Damage: ${mazeLevel}d${effect.diceType} = ${damage}`)
         messages.push(`${target.name} takes ${damage} damage!`)
       } else {
         messages.push(`${target.name} avoids the trap!`)
@@ -457,9 +508,14 @@ function applyTrapEffects(
     for (const target of targets) {
       // Only apply status if not already rolled for damage (avoid double roll)
       // If there's no diceType, we need to roll for status
-      const shouldApply = effect.diceType
-        ? damageDealt.has(target.id)  // Hit was already determined
-        : RandomService.roll(hitChance)  // Roll now for status-only effects
+      let shouldApply: boolean
+      if (effect.diceType) {
+        shouldApply = damageDealt.has(target.id)  // Hit was already determined
+      } else {
+        const statusRoll = RandomService.nextRandom()
+        shouldApply = statusRoll < hitChance
+        console.log(`[CHEST]   ${target.name}: Status roll ${(statusRoll * 100).toFixed(1)}% vs ${(hitChance * 100).toFixed(1)}% → ${shouldApply ? 'Hit' : 'Miss'}`)
+      }
 
       if (shouldApply) {
         // Check resistance (Save vs. Spell for class-specific traps)
@@ -467,11 +523,13 @@ function applyTrapEffects(
         if (!effect.diceType && resistanceType) {
           const resistResult = CharacterResistanceService.checkResistance(target, resistanceType)
           saveSucceeded = resistResult.resisted
+          console.log(`[CHEST]     Save vs ${resistanceType}: ${saveSucceeded ? 'SAVED' : 'Failed'}`)
         }
 
         // Authentic Wizardry 1: Primary vs Secondary class behavior for class-specific traps
         if (hasPrimaryTargets) {
           const isPrimaryTarget = effect.primaryTargetClasses!.includes(target.class)
+          console.log(`[CHEST]     Class type: ${isPrimaryTarget ? 'PRIMARY' : 'SECONDARY'} (${target.class})`)
 
           if (isPrimaryTarget) {
             // PRIMARY CLASS (e.g., MAGE for Anti-Mage, PRIEST for Anti-Priest):
@@ -481,11 +539,13 @@ function applyTrapEffects(
             if (saveSucceeded) {
               // Save succeeded: Apply status but do NOT escalate
               statusApplied.set(target.id, effect.statusEffect)
+              console.log(`[CHEST]     Result: ${effect.statusEffect} (no escalation - saved)`)
               messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
             } else {
               // Save failed: Apply with potential escalation to STONED
               const finalStatus = escalateStatus(target.status, effect.statusEffect, true)
               statusApplied.set(target.id, finalStatus)
+              console.log(`[CHEST]     Result: ${finalStatus}${finalStatus !== effect.statusEffect ? ` (escalated from ${target.status})` : ''}`)
 
               if (finalStatus === CharacterStatus.STONED && target.status === CharacterStatus.PARALYZED) {
                 messages.push(`${target.name} was already paralyzed and turns to stone!`)
@@ -498,17 +558,20 @@ function applyTrapEffects(
             // - Save success: NO effect whatsoever
             // - Save failure: Paralyzed only (NEVER escalates to STONED)
             if (saveSucceeded) {
+              console.log(`[CHEST]     Result: Resisted (secondary class saved)`)
               messages.push(`${target.name} resists the trap!`)
               // No status applied - secondary class successfully saved
             } else {
               // Secondary class fails save: Apply status but NEVER escalate
               statusApplied.set(target.id, effect.statusEffect)
+              console.log(`[CHEST]     Result: ${effect.statusEffect} (no escalation - secondary class)`)
               messages.push(`${target.name} is ${effect.statusEffect.toLowerCase()}!`)
             }
           }
         } else {
           // Non-class-specific traps or traps without primaryTargetClasses: Original behavior
           if (saveSucceeded) {
+            console.log(`[CHEST]     ${target.name}: Resisted status effect`)
             messages.push(`${target.name} resists the ${effect.statusEffect.toLowerCase()}!`)
             continue  // Skip status for this target
           }
@@ -516,6 +579,7 @@ function applyTrapEffects(
           // Authentic Wizardry 1: Status escalation (class-specific vs regular)
           const finalStatus = escalateStatus(target.status, effect.statusEffect, isClassSpecific)
           statusApplied.set(target.id, finalStatus)
+          console.log(`[CHEST]     ${target.name}: Status → ${finalStatus}${finalStatus !== effect.statusEffect ? ` (escalated from ${target.status})` : ''}`)
 
           if (finalStatus === CharacterStatus.STONED && isClassSpecific && target.status === CharacterStatus.PARALYZED) {
             messages.push(`${target.name} was already paralyzed and turns to stone!`)
@@ -531,6 +595,7 @@ function applyTrapEffects(
 
   // Handle special effects
   if (effect.specialEffect) {
+    console.log(`[CHEST]   Special effect: ${effect.specialEffect}`)
     switch (effect.specialEffect) {
       case 'teleport':
         messages.push('The party is teleported to a random location!')
@@ -592,10 +657,16 @@ function canCastCalfo(character: Character): boolean {
  * @returns InspectionResult (95% success rate, never triggers trap)
  */
 function castCalfo(caster: Character, chest: Chest): TrapInspectionResult {
+  console.log(`[CHEST] CALFO cast: ${caster.name} (${caster.class} L${caster.level})`)
+
   // CALFO has 95% success rate
-  const success = RandomService.chance(95)
+  const roll = RandomService.nextRandom() * 100
+  const success = roll < 95
+  console.log(`[CHEST]   Roll: ${roll.toFixed(1)}% vs 95% → ${success ? 'Success' : 'Failed'}`)
 
   if (success) {
+    const trapName = chest.trapped ? chest.trapId : 'No trap'
+    console.log(`[CHEST]   Result: ${trapName}`)
     return {
       success: true,
       trapIdentified: chest.trapped ? chest.trapId : null,
@@ -606,6 +677,7 @@ function castCalfo(caster: Character, chest: Chest): TrapInspectionResult {
   // Failed CALFO (5%) - return RANDOM trap name (deception mechanic)
   // Same as failed inspection - player cannot tell if result is real
   const randomTrapId = getRandomTrapId()
+  console.log(`[CHEST]   Result: ${randomTrapId} (RANDOM - deception!)`)
 
   return {
     success: false,

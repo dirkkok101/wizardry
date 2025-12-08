@@ -6,10 +6,8 @@
     { "monsterId": "orc", "weight": 25 },
     { "monsterId": "kobold", "weight": 20 },
     { "monsterId": "rogue", "weight": 10 },
-    { "monsterId": "zombie", "weight": 8 },
     { "monsterId": "undead_kobold", "weight": 5 },
     { "monsterId": "bushwacker", "weight": 4 },
-    { "monsterId": "highwayman", "weight": 2 },
-    { "monsterId": "lvl_1_mage", "weight": 1 }
+    { "monsterId": "highwayman", "weight": 2 }
   ]
 }
