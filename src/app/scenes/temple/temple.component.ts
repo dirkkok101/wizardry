@@ -4,14 +4,13 @@ import { GameStateService } from '@services/GameStateService';
 import { TempleService } from '@services/TempleService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
-import { LoggerService } from '@services/LoggerService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
-import { PartyCharacterGridComponent } from '@shared/components/party-character-grid/party-character-grid.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
-import { CharacterActionEvent, CharacterAction, CharacterField } from '@models/CharacterCardTypes';
+import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { Character } from '@models/Character';
 import { SceneType } from '@models/SceneType';
 import { CharacterStatus } from '@models/CharacterStatus';
@@ -33,7 +32,7 @@ import { ServiceType } from '@models/ServiceType';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    PartyCharacterGridComponent,
+    CharacterPanelComponent,
     EmptyStateComponent
   ],
   templateUrl: './temple.component.html',
@@ -42,42 +41,47 @@ import { ServiceType } from '@models/ServiceType';
 export class TempleComponent implements OnInit {
   private readonly gameState = inject(GameStateService);
   private readonly navigation = inject(SceneNavigationService);
-  private readonly logger = inject(LoggerService);
   readonly messages = inject(MessageService);
 
-  // Visible fields for character cards - show status prominently
-  readonly visibleFields: CharacterField[] = ['class', 'level', 'hp', 'status'];
-
-  // Afflicted characters (computed using GameStateQueries)
-  readonly afflictedCharacters = computed(() =>
-    GameStateQueries.afflictedCharacters(this.gameState.state())
+  // All party characters for display
+  readonly partyCharacters = computed(() =>
+    GameStateQueries.partyCharacters(this.gameState.state())
   );
+
+  // Party gold for tithe calculations
+  readonly partyGold = computed(() =>
+    GameStateQueries.partyGold(this.gameState.state())
+  );
+
+  // Left column characters (positions 1, 3, 5 - indices 0, 2, 4)
+  readonly leftColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter((c): c is Character => c !== undefined);
+  });
+
+  // Right column characters (positions 2, 4, 6 - indices 1, 3, 5)
+  readonly rightColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter((c): c is Character => c !== undefined);
+  });
+
+  // Visible action types for character panel - inspect + all service types
+  readonly visibleActionTypes = ['inspect', 'cure-poison', 'cure-paralysis', 'cure-stoned', 'resurrect', 'restore'];
 
   /**
    * Get dynamic actions for each character based on their status
-   * This allows clicking the specific service action on the character card
+   * OK characters only get Inspect, afflicted characters get Inspect + service action
    */
   getCharacterActions = (character: Character): CharacterAction[] => {
     const actions: CharacterAction[] = [{ type: 'inspect', label: 'Inspect' }];
     const serviceType = this.getServiceTypeForStatus(character.status);
 
+    // Only add service action if character needs healing
     if (serviceType) {
       const tithe = TempleService.calculateTithe(character, serviceType);
-      const partyGold = GameStateQueries.partyGold(this.gameState.state());
-      const canAfford = partyGold >= tithe;
+      const canAfford = this.partyGold() >= tithe;
       const actionId = this.getActionIdFromServiceType(serviceType);
       const serviceName = this.getServiceName(serviceType);
-
-      // Debug logging for temple service button state
-      this.logger.debug(`[Temple] getCharacterActions for ${character.name}:`, {
-        status: character.status,
-        level: character.level,
-        serviceType,
-        tithe,
-        partyGold,
-        canAfford,
-        actionId
-      });
 
       actions.push({
         type: actionId,
@@ -129,24 +133,6 @@ export class TempleComponent implements OnInit {
 
   ngOnInit(): void {
     this.messages.clear();
-
-    // Debug logging for temple initialization
-    const state = this.gameState.state();
-    const afflicted = GameStateQueries.afflictedCharacters(state);
-    const partyGold = GameStateQueries.partyGold(state);
-
-    this.logger.debug('[Temple] Initializing temple scene:', {
-      partyGold,
-      afflictedCount: afflicted.length,
-      afflictedCharacters: afflicted.map(c => ({
-        id: c.id,
-        name: c.name,
-        status: c.status,
-        level: c.level,
-        hp: c.hp
-      }))
-    });
-
     this.gameState.updateState(state => ({
       ...state,
       currentScene: SceneType.TEMPLE
@@ -174,7 +160,6 @@ export class TempleComponent implements OnInit {
   }
 
   handleCharacterAction(event: CharacterActionEvent): void {
-    this.logger.debug('[Temple] handleCharacterAction received:', event);
     this.messages.clear();
 
     if (event.actionType === 'inspect') {
@@ -189,23 +174,12 @@ export class TempleComponent implements OnInit {
     const state = this.gameState.state();
     const character = state.roster.get(event.characterId);
     if (!character) {
-      this.logger.error('[Temple] Character not found:', event.characterId);
       this.messages.showError('Character not found');
       return;
     }
 
     const tithe = TempleService.calculateTithe(character, serviceType);
-    const partyGold = GameStateQueries.partyGold(state);
-
-    this.logger.debug('[Temple] Service action:', {
-      character: character.name,
-      serviceType,
-      tithe,
-      partyGold,
-      canAfford: partyGold >= tithe
-    });
-
-    if (partyGold < tithe) {
+    if (this.partyGold() < tithe) {
       this.messages.showError(`Cannot afford service. Need ${tithe} gold.`);
       return;
     }

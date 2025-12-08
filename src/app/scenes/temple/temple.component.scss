@@ -1,41 +1,147 @@
-// Temple scene - Modern Retro-Fantasy theme
+// Temple scene - 3-column layout matching Castle scene pattern
 
 .temple-scene {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--color-bg-darkest);
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
+  overflow: hidden;
+
+  app-scene-title {
+    display: block;
+    flex-shrink: 0;
+  }
 }
 
+// 3-Column Grid Layout
 .temple-content {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  gap: 0.5rem;
   flex: 1;
-  padding: var(--space-3) var(--space-4);
-  overflow-y: auto;
+  min-height: 0;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
 }
 
+// Side panels (left and right character columns)
+.left-panel,
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  align-self: start;
 
+  app-character-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+// Center panel with viewport
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0.5rem 2px;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 740px;
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.empty-viewport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Messages - toast notifications
 .message {
-  margin-top: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--card-border-radius);
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
   text-align: center;
-  font-weight: 500;
+  border-radius: var(--card-border-radius);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  z-index: 100;
+  animation: slideUp 0.3s ease-out;
 
   &.error {
-    background-color: rgba(220, 38, 38, 0.1);
-    color: var(--color-danger);
+    background: var(--color-bg-darkest);
     border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
   }
 
   &.success {
-    background-color: rgba(34, 197, 94, 0.1);
-    color: var(--color-status-ok);
-    border: 1px solid var(--color-status-ok);
-  }
-
-  &.info {
-    background-color: rgba(212, 165, 116, 0.1);
+    background: var(--color-bg-darkest);
+    border: 1px solid var(--color-gold-primary);
     color: var(--color-gold-primary);
-    border: 1px solid var(--color-gold-dim);
+    box-shadow: 0 0 10px rgba(212, 165, 116, 0.3);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// Large screens - wider side panels
+@media (min-width: 1200px) {
+  .temple-content {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  }
+}
+
+// Compact height
+@media (max-height: 767px) {
+  .temple-scene {
+    padding: 0.25rem;
+  }
+  .temple-content {
+    gap: 0.35rem;
   }
 }
