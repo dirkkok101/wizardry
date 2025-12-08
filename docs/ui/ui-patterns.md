@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document codifies the 7 core UI patterns that appear throughout Wizardry 1's interface. These patterns ensure consistency, predictability, and usability across all 14 scenes.
+This document codifies the 8 core UI patterns that appear throughout Wizardry 1's interface. These patterns ensure consistency, predictability, and usability across all 14 scenes.
 
 **Pattern Philosophy:**
 - **Simplicity:** Single-keystroke inputs, minimal steps
@@ -26,6 +26,7 @@ This document codifies the 7 core UI patterns that appear throughout Wizardry 1'
 5. **Confirmation Dialog Pattern** - Destructive action warnings
 6. **Multi-Step Transaction Pattern** - Shopping, services, complex operations
 7. **List Navigation Pattern** - Paginated content browsing
+8. **Castle Scene Layout Pattern** - 3-column layout for town service scenes
 
 ---
 
@@ -878,24 +879,312 @@ if (selectedItem) {
 
 ---
 
+## 8. Castle Scene Layout Pattern
+
+**Used In:** Castle Menu, Tavern, Temple, Shop, Inn, Training Grounds
+
+**Description:** A 3-column layout for town/castle service scenes that mirrors the maze navigation layout. Character cards appear in side columns while a static scene sprite fills the center viewport. This creates visual consistency between dungeon exploration and town scenes.
+
+### Visual Pattern
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CASTLE                        Party Gold: 1250 │
+├──────────────┬──────────────────────────────────────────┬──────────────────┤
+│ [Char 1]     │                                          │     [Char 2]     │
+│ ┌────────┐   │                                          │   ┌────────┐     │
+│ │ SPRITE │   │                                          │   │ SPRITE │     │
+│ └────────┘   │                                          │   └────────┘     │
+│              │          ┌────────────────────┐          │                  │
+│ [Char 3]     │          │                    │          │     [Char 4]     │
+│ ┌────────┐   │          │   SCENE SPRITE     │          │   ┌────────┐     │
+│ │ SPRITE │   │          │   740px fixed      │          │   │ SPRITE │     │
+│ └────────┘   │          │   height: flex     │          │   └────────┘     │
+│              │          │                    │          │                  │
+│ [Char 5]     │          └────────────────────┘          │     [Char 6]     │
+│ ┌────────┐   │                                          │   ┌────────┐     │
+│ │ SPRITE │   │                                          │   │ SPRITE │     │
+│ └────────┘   │                                          │   └────────┘     │
+├──────────────┴──────────────────────────────────────────┴──────────────────┤
+│  [G] Tavern   [T] Temple   [S] Shop   [I] Inn   [R] Training   [M] Maze    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Layout Structure
+
+| Section | Component | Purpose |
+|---------|-----------|---------|
+| Header | `SceneTitleComponent` | Scene title + optional party gold |
+| Left Panel | `CharacterPanelComponent` | Party positions 1, 3, 5 (odd) |
+| Center Panel | Static `<img>` | Scene-specific artwork |
+| Right Panel | `CharacterPanelComponent` | Party positions 2, 4, 6 (even) |
+| Footer | `SceneFooterComponent` | Navigation menu items |
+
+### Character Position Split
+
+Characters are split by party position (1-6) using `GameStateQueries`:
+- **Left column**: Positions 1, 3, 5 (odd indices)
+- **Right column**: Positions 2, 4, 6 (even indices)
+
+This matches the maze scene layout for visual consistency.
+
+### CSS Implementation
+
+```scss
+// Scene container
+.castle-scene {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
+  overflow: hidden;
+
+  // SceneTitleComponent handles its own styling
+  app-scene-title {
+    display: block;
+    flex-shrink: 0;
+  }
+}
+
+// 3-Column Grid Layout
+.castle-content {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+
+  // Mobile: stack vertically
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
+// Side panels (character columns)
+.left-panel,
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  align-self: start;
+
+  app-character-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  @media (max-width: 767px) {
+    display: none; // Hide on mobile
+  }
+}
+
+// Center column: Scene Sprite
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;  // Top-align to match maze viewport
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0.5rem 2px;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;                 // Fill available vertical space
+  min-height: 0;
+  width: 740px;            // Fixed width matching maze viewport
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;     // Scale image to fill, crop if needed
+    display: block;
+  }
+}
+
+// Large screens - wider side panels
+@media (min-width: 1200px) {
+  .castle-content {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  }
+}
+
+// Compact height
+@media (max-height: 767px) {
+  .castle-scene {
+    padding: 0.25rem;
+  }
+  .castle-content {
+    gap: 0.35rem;
+  }
+}
+```
+
+### TypeScript Component Structure
+
+```typescript
+@Component({
+  selector: 'app-castle-menu',
+  templateUrl: './castle-menu.component.html',
+  styleUrl: './castle-menu.component.scss',
+  imports: [
+    SceneTitleComponent,
+    SceneFooterComponent,
+    CharacterPanelComponent
+  ]
+})
+export class CastleMenuComponent {
+  private gameState = inject(GameStateStore)
+
+  // Character column computed signals
+  readonly leftColumnCharacters = computed(() =>
+    GameStateQueries.leftColumnCharacters(this.gameState.state())
+  )
+
+  readonly rightColumnCharacters = computed(() =>
+    GameStateQueries.rightColumnCharacters(this.gameState.state())
+  )
+
+  // Footer menu items
+  readonly footerMenuItems = computed(() => [
+    { key: 'G', label: 'Tavern' },
+    { key: 'T', label: 'Temple' },
+    // ... other navigation options
+  ])
+}
+```
+
+### HTML Template Structure
+
+```html
+<div class="castle-scene">
+  <app-scene-title title="CASTLE" [showPartyGold]="true" />
+
+  <div class="castle-content">
+    <!-- Left Column: Positions 1, 3, 5 -->
+    <div class="left-panel">
+      <app-character-panel
+        [characters]="leftColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['inspect']"
+        [showSprites]="true"
+        (actionClick)="handleActionClick($event)"
+      />
+    </div>
+
+    <!-- Center Column: Scene Sprite -->
+    <div class="center-panel">
+      <div class="scene-viewport">
+        <img src="assets/sprites/scenes/castle_scene.png"
+             alt="Castle"
+             class="scene-image" />
+      </div>
+    </div>
+
+    <!-- Right Column: Positions 2, 4, 6 -->
+    <div class="right-panel">
+      <app-character-panel
+        [characters]="rightColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['inspect']"
+        [showSprites]="true"
+        (actionClick)="handleActionClick($event)"
+      />
+    </div>
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+</div>
+```
+
+### Scene Sprites
+
+Each castle scene uses a static sprite in the center viewport:
+
+| Scene | Sprite Path | Notes |
+|-------|-------------|-------|
+| Castle Menu | `assets/sprites/scenes/castle_scene.png` | Main hub view |
+| Tavern | `assets/sprites/scenes/tavern_scene.png` | Gilgamesh's Tavern |
+| Temple | `assets/sprites/scenes/temple_scene.png` | Temple of Cant |
+| Shop | `assets/sprites/scenes/shop_scene.png` | Boltac's Trading Post |
+| Inn | `assets/sprites/scenes/inn_scene.png` | Adventurer's Inn |
+| Training | `assets/sprites/scenes/training_scene.png` | Training Grounds |
+
+Scene sprites should be high-resolution (2816×1536 recommended) and will be scaled down with `object-fit: cover`.
+
+### Viewport Dimensions
+
+- **Width**: 740px fixed (matches maze canvas viewport)
+- **Height**: Flexible (`flex: 1`) to fill available space
+- **Aspect ratio**: Not constrained - uses `object-fit: cover` for scaling
+- **Border**: 1px solid `var(--color-border)`
+
+### Key Design Decisions
+
+1. **Fixed width, flexible height**: Ensures horizontal consistency with maze while maximizing vertical space usage.
+
+2. **Top-aligned**: Scene sprite starts at top of center panel (`justify-content: flex-start`) to match maze viewport position.
+
+3. **Object-fit cover**: Large sprites scale down and may crop edges, but always fill the viewport completely.
+
+4. **Character sprites enabled**: `[showSprites]="true"` on `CharacterPanelComponent` displays 72×72 character sprites.
+
+5. **Consistent with maze**: Same grid structure, same character position split, same viewport width.
+
+### Responsive Behavior
+
+| Breakpoint | Behavior |
+|------------|----------|
+| ≥1200px | Wider side panels (220px min) |
+| 768-1199px | Standard 3-column layout |
+| <768px | Center column only, side panels hidden |
+| <768px height | Reduced padding/gaps |
+
+### Empty Party Handling
+
+When no party members exist:
+- Left and right panels render empty `CharacterPanelComponent`
+- Center sprite and footer remain visible
+- User can still navigate to services (Training Grounds to create characters)
+
+---
+
 ## Pattern Usage Matrix
 
-| Scene | Menu | Char Select | Keystroke | Error | Confirm | Transaction | List Nav |
-|-------|:----:|:-----------:|:---------:|:-----:|:-------:|:-----------:|:--------:|
-| Title Screen | ✓ | - | ✓ | ✓ | - | - | - |
-| Castle Menu | ✓ | - | ✓ | ✓ | - | - | - |
-| Training Grounds | ✓ | - | ✓ | ✓ | ✓ | ✓ | - |
-| Tavern | ✓ | ✓ | ✓ | ✓ | - | - | - |
-| Shop | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Temple | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - |
-| Inn | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - |
-| Edge of Town | ✓ | - | ✓ | ✓ | ✓ | - | - |
-| Utilities | ✓ | - | ✓ | ✓ | - | - | - |
-| Camp | ✓ | ✓ | ✓ | ✓ | - | - | - |
-| Maze | - | - | ✓ | ✓ | - | - | - |
-| Combat | - | - | ✓ | ✓ | - | - | - |
-| Chest | ✓ | ✓ | ✓ | ✓ | - | ✓ | - |
-| Char Inspect | - | - | ✓ | ✓ | - | - | - |
+| Scene | Menu | Char Select | Keystroke | Error | Confirm | Transaction | List Nav | Castle Layout |
+|-------|:----:|:-----------:|:---------:|:-----:|:-------:|:-----------:|:--------:|:-------------:|
+| Title Screen | ✓ | - | ✓ | ✓ | - | - | - | - |
+| Castle Menu | ✓ | - | ✓ | ✓ | - | - | - | ✓ |
+| Training Grounds | ✓ | - | ✓ | ✓ | ✓ | ✓ | - | ✓ |
+| Tavern | ✓ | ✓ | ✓ | ✓ | - | - | - | ✓ |
+| Shop | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Temple | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | ✓ |
+| Inn | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | ✓ |
+| Edge of Town | ✓ | - | ✓ | ✓ | ✓ | - | - | - |
+| Utilities | ✓ | - | ✓ | ✓ | - | - | - | - |
+| Camp | ✓ | ✓ | ✓ | ✓ | - | - | - | - |
+| Maze | - | - | ✓ | ✓ | - | - | - | - |
+| Combat | - | - | ✓ | ✓ | - | - | - | - |
+| Chest | ✓ | ✓ | ✓ | ✓ | - | ✓ | - | - |
+| Char Inspect | - | - | ✓ | ✓ | - | - | - | - |
 
 **Legend:**
 - ✓ = Pattern used in this scene
