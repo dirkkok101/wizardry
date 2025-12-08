@@ -1,18 +1,18 @@
 import { Component, OnInit, HostListener, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
-import { InnService, RoomType, PartyHealPlan, PartyRestResult, LevelUpDisplayData } from '@services/InnService';
+import { InnService, RoomType, PartyHealPlan, PartyRestResult } from '@services/InnService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
-import { RestActionCardComponent, RestActionConfig, RestActionType } from '@shared/components/rest-action-card/rest-action-card.component';
 import { RestResultsModalComponent, RestResultsData } from '@shared/components/rest-results-modal/rest-results-modal.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
+import { Character } from '@models/Character';
 import { SceneType } from '@models/SceneType';
 import { CharacterStatus } from '@models/CharacterStatus';
 
@@ -35,7 +35,6 @@ import { CharacterStatus } from '@models/CharacterStatus';
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterPanelComponent,
-    RestActionCardComponent,
     RestResultsModalComponent,
     EmptyStateComponent
   ],
@@ -61,15 +60,17 @@ export class InnComponent implements OnInit {
     GameStateQueries.partyGold(this.gameState.state())
   );
 
-  // Front row characters (for 3-column layout)
-  readonly frontRowCharacters = computed(() =>
-    GameStateQueries.frontRowCharacters(this.gameState.state())
-  );
+  // Left column characters (positions 1, 3, 5 - indices 0, 2, 4)
+  readonly leftColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter((c): c is Character => c !== undefined);
+  });
 
-  // Back row characters (for 3-column layout)
-  readonly backRowCharacters = computed(() =>
-    GameStateQueries.backRowCharacters(this.gameState.state())
-  );
+  // Right column characters (positions 2, 4, 6 - indices 1, 3, 5)
+  readonly rightColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter((c): c is Character => c !== undefined);
+  });
 
   // Living characters only (for rest calculations)
   readonly livingCharacters = computed(() =>
@@ -96,63 +97,38 @@ export class InnComponent implements OnInit {
     InnService.partyHasCasters(this.livingCharacters())
   );
 
-  // Rest action configurations (computed for the 3 cards)
-  readonly restActionConfigs = computed((): RestActionConfig[] => {
+  // Footer menu items with rest actions
+  readonly footerMenuItems = computed((): MenuItem[] => {
     const plan = this.healPlan();
     const needsHealing = this.partyNeedsHealing();
     const needsSpells = this.partyNeedsSpells();
     const hasCasters = this.partyHasCasters();
 
-    return [
-      {
-        type: 'restore-spells' as RestActionType,
-        title: 'Restore Spells',
-        description: 'Rest at the stables to restore all spell points for casters.',
-        costText: '1 week at Stables',
-        goldCost: 0,
-        weeksNeeded: 1,
-        enabled: hasCasters && needsSpells,
-        disabledReason: !hasCasters
-          ? 'No spell casters in party'
-          : !needsSpells
-          ? 'All spell points are full'
-          : undefined
-      },
-      {
-        type: 'heal-party' as RestActionType,
-        title: 'Heal Party',
-        description: this.getHealDescription(plan),
-        costText: this.getHealCostText(plan),
-        goldCost: plan.totalCost,
-        weeksNeeded: plan.weeksNeeded,
-        enabled: needsHealing && (plan.canAffordFull || plan.weeksNeeded > 0),
-        disabledReason: !needsHealing
-          ? 'All characters at full HP'
-          : plan.weeksNeeded === 0
-          ? 'Cannot afford any healing'
-          : undefined
-      },
-      {
-        type: 'full-rest' as RestActionType,
-        title: 'Full Rest',
-        description: 'Complete recovery: heal all HP and restore all spell points.',
-        costText: this.getFullRestCostText(plan),
-        goldCost: plan.totalCost,
-        weeksNeeded: Math.max(plan.weeksNeeded, 1),
-        enabled: (needsHealing || needsSpells) && (plan.canAffordFull || plan.weeksNeeded > 0 || !needsHealing),
-        disabledReason: !needsHealing && !needsSpells
-          ? 'Party is fully rested'
-          : undefined
-      }
-    ];
-  });
+    // Calculate full rest cost (0 if only spells needed)
+    const fullRestCost = needsHealing ? plan.totalCost : 0;
 
-  // Footer menu items
-  readonly footerMenuItems = computed((): MenuItem[] => {
     return [
+      {
+        id: 'restore-spells',
+        label: 'Restore Spells',
+        shortcut: '1',
+        enabled: hasCasters && needsSpells
+      },
+      {
+        id: 'heal-party',
+        label: plan.totalCost > 0 ? `Heal Party (${plan.totalCost}g)` : 'Heal Party',
+        shortcut: '2',
+        enabled: needsHealing && plan.weeksNeeded > 0
+      },
+      {
+        id: 'full-rest',
+        label: fullRestCost > 0 ? `Full Rest (${fullRestCost}g)` : 'Full Rest',
+        shortcut: '3',
+        enabled: needsHealing || needsSpells
+      },
       {
         id: 'return',
-        label: 'Return to Castle (ESC)',
+        label: 'Return to Castle',
         shortcut: 'ESC',
         enabled: true
       }
@@ -170,21 +146,7 @@ export class InnComponent implements OnInit {
   handleFooterAction(itemId: string): void {
     this.messages.clear();
 
-    if (itemId === 'return') {
-      this.navigation.returnToCastle();
-    }
-  }
-
-  handleCharacterAction(event: CharacterActionEvent): void {
-    if (event.actionType === 'inspect') {
-      this.navigation.inspectCharacter(event.characterId, 'inn');
-    }
-  }
-
-  handleRestActionSelected(actionType: RestActionType): void {
-    this.messages.clear();
-
-    switch (actionType) {
+    switch (itemId) {
       case 'restore-spells':
         this.executeRestoreSpells();
         break;
@@ -194,6 +156,15 @@ export class InnComponent implements OnInit {
       case 'full-rest':
         this.executeFullRest();
         break;
+      case 'return':
+        this.navigation.returnToCastle();
+        break;
+    }
+  }
+
+  handleCharacterAction(event: CharacterActionEvent): void {
+    if (event.actionType === 'inspect') {
+      this.navigation.inspectCharacter(event.characterId, 'inn');
     }
   }
 
@@ -316,64 +287,6 @@ export class InnComponent implements OnInit {
     this.restResults.set(null);
   }
 
-  /**
-   * Get description text for Heal Party action
-   */
-  private getHealDescription(plan: PartyHealPlan): string {
-    if (plan.weeksNeeded === 0) {
-      return 'All characters are at full HP.';
-    }
-
-    const roomName = this.getRoomName(plan.roomTier);
-    if (plan.canAffordFull) {
-      return `Rest at ${roomName} to fully heal all party members.`;
-    } else {
-      return `Partial healing at ${roomName} (cannot afford full heal).`;
-    }
-  }
-
-  /**
-   * Get cost text for Heal Party action
-   */
-  private getHealCostText(plan: PartyHealPlan): string {
-    if (plan.weeksNeeded === 0) {
-      return 'No cost';
-    }
-
-    const weeks = plan.weeksNeeded;
-    const weekText = weeks === 1 ? '1 week' : `${weeks} weeks`;
-    const roomName = this.getRoomName(plan.roomTier);
-
-    return `${weekText} at ${roomName}`;
-  }
-
-  /**
-   * Get cost text for Full Rest action
-   */
-  private getFullRestCostText(plan: PartyHealPlan): string {
-    const needsHealing = this.partyNeedsHealing();
-
-    if (!needsHealing) {
-      return '1 week at Stables';
-    }
-
-    return this.getHealCostText(plan);
-  }
-
-  /**
-   * Get display name for room type
-   */
-  private getRoomName(roomType: RoomType): string {
-    const names: Record<RoomType, string> = {
-      [RoomType.STABLES]: 'Stables',
-      [RoomType.BARRACKS]: 'Barracks',
-      [RoomType.DOUBLE]: 'Double Room',
-      [RoomType.PRIVATE]: 'Private Room',
-      [RoomType.ROYAL_SUITE]: 'Royal Suite'
-    };
-    return names[roomType];
-  }
-
   @HostListener('window:keydown.escape')
   handleEscape(): void {
     if (this.showRestResults()) {
@@ -398,17 +311,13 @@ export class InnComponent implements OnInit {
     }
 
     const key = event.key;
-    const configs = this.restActionConfigs();
+    const menuItems = this.footerMenuItems();
 
-    if (key === '1' && configs[0].enabled) {
+    // Find menu item by shortcut key
+    const item = menuItems.find(m => m.shortcut === key);
+    if (item && item.enabled) {
       event.preventDefault();
-      this.handleRestActionSelected('restore-spells');
-    } else if (key === '2' && configs[1].enabled) {
-      event.preventDefault();
-      this.handleRestActionSelected('heal-party');
-    } else if (key === '3' && configs[2].enabled) {
-      event.preventDefault();
-      this.handleRestActionSelected('full-rest');
+      this.handleFooterAction(item.id);
     }
   }
 }

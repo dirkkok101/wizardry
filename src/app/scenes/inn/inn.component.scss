@@ -1,86 +1,95 @@
-// Inn scene - 3-column layout (Front Row | Back Row | Rest Options)
-// Modern Retro-Fantasy theme matching character-inspection pattern
+// Inn scene - 3-column layout matching Castle scene pattern
 
 .inn-scene {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--color-bg-darkest);
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
+  overflow: hidden;
+
+  app-scene-title {
+    display: block;
+    flex-shrink: 0;
+  }
 }
 
+// 3-Column Grid Layout
 .inn-content {
-  flex: 1;
-  min-height: 0;  // Critical for flex shrinking
-  overflow: hidden;
-  padding: var(--space-2);
-}
-
-// 3-column grid layout
-.inn-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--space-3);
-  height: 100%;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
 }
 
-// Formation columns (Front/Back Row)
-.formation-column {
+// Side panels (left and right character columns)
+.left-panel,
+.right-panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 0;
+  width: 100%;
+  align-self: start;
 
-  // CharacterPanel fills available space
-  ::ng-deep .character-panel {
+  app-character-panel {
+    display: flex;
+    flex-direction: column;
     flex: 1;
-    overflow-y: auto;
-
-    // Subtle scrollbar styling
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: var(--color-bg-dark);
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--color-border);
-      border-radius: 2px;
-    }
+    width: 100%;
+    min-height: 0;
   }
 
-  ::ng-deep .character-stack {
-    padding: 0;
-    gap: var(--space-1);
+  @media (max-width: 767px) {
+    display: none;
   }
 }
 
-// Compact row titles (matching Tavern/Shop/Inspection)
-.row-title {
-  font-family: var(--font-display);
-  font-size: var(--font-size-sm);
-  color: var(--color-gold-primary);
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-1);
-  margin: 0 0 var(--space-2) 0;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-// Actions section (Rest Options)
-.actions-section {
+// Center panel with viewport
+.center-panel {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0.5rem 2px;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 740px;
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
   overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.empty-viewport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
-.rest-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-// Message styling (toast notification)
+// Messages - toast notifications
 .message {
   position: fixed;
   bottom: 100px;
@@ -120,51 +129,19 @@
   }
 }
 
-// MacBook Air 13" (1440x900) responsive
-@media (max-height: 900px) {
+// Large screens - wider side panels
+@media (min-width: 1200px) {
   .inn-content {
-    padding: var(--space-2);
-  }
-
-  .inn-layout {
-    gap: var(--space-2);
-  }
-
-  .row-title {
-    font-size: var(--font-size-xs);
-    padding-bottom: 2px;
-    margin-bottom: var(--space-1);
-  }
-
-  .rest-actions {
-    gap: var(--space-1);
-  }
-
-  ::ng-deep .character-stack {
-    gap: 2px;
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
   }
 }
 
-// Responsive: narrower screens - 2 columns
-@media (max-width: 1024px) {
-  .inn-layout {
-    grid-template-columns: 1fr 1fr;
+// Compact height
+@media (max-height: 767px) {
+  .inn-scene {
+    padding: 0.25rem;
   }
-
-  .actions-section {
-    grid-column: 1 / -1;
-  }
-}
-
-// Responsive: mobile - stack all columns
-@media (max-width: 768px) {
-  .inn-layout {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
-  }
-
-  .formation-column,
-  .actions-section {
-    overflow: visible;
+  .inn-content {
+    gap: 0.35rem;
   }
 }
