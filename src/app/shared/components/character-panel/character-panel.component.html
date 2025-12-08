@@ -6,55 +6,52 @@
   <div class="character-stack">
     @for (char of characters; track char.id) {
       <div class="character-card" [class.incapacitated]="isIncapacitated(char)" [class.highlighted]="isHighlighted(char)" [class.trap-hit]="isHit(char)">
-        <!-- Optional sprite thumbnail -->
-        @if (showSprites) {
-          <div class="card-sprite">
-            <img [src]="getSpriteUrl(char)" [alt]="char.name" />
+        <!-- Portrait Left Layout: Sprite + Info -->
+        <div class="card-body">
+          <!-- Sprite (shown when showSprites enabled) -->
+          @if (showSprites) {
+            <div class="card-sprite">
+              <img [src]="getSpriteUrl(char)" [alt]="char.name" />
+            </div>
+          }
+
+          <!-- Info Stack (right side) -->
+          <div class="card-info">
+            <!-- Row 1: Name + Status -->
+            <div class="info-row name-row">
+              <span class="char-name">{{ char.name }}</span>
+              <span class="char-status" [class]="getStatusClass(char.status)">
+                {{ getStatusCode(char.status) }}
+              </span>
+            </div>
+
+            <!-- Row 2: Class abbreviation only -->
+            <div class="info-row class-row">
+              <span class="char-class">{{ getClassAbbr(char.class) }}</span>
+            </div>
+
+            <!-- Row 3: HP Bar (no label, saves space) -->
+            <div class="info-row hp-row">
+              <div class="hp-bar-container">
+                <div
+                  class="hp-bar-fill"
+                  [class]="getHPClass(char)"
+                  [style.width.%]="getHPPercentage(char)"
+                ></div>
+              </div>
+              <span class="hp-value" [class]="getHPClass(char)">{{ char.hp }}/{{ char.maxHp }}</span>
+            </div>
+
+            <!-- Row 4: Spell Points (all characters for uniform height) -->
+            <div class="info-row sp-row">
+              <span class="sp-value" [class.no-spells]="!isCaster(char)">
+                {{ isCaster(char) ? getSpellPointsDisplay(char) : '---' }}
+              </span>
+            </div>
           </div>
-        }
-
-        <!-- Row 1: Name + Status -->
-        <div class="card-row name-row">
-          <span class="char-name">{{ char.name }}</span>
-          <span class="char-status" [class]="getStatusClass(char.status)">
-            {{ getStatusCode(char.status) }}
-          </span>
         </div>
 
-        <!-- Row 2: Class + Level + AC -->
-        <div class="card-row stats-row">
-          <span class="char-class">{{ getClassAbbr(char.class) }} Lv{{ char.level }}</span>
-          <span class="char-ac">AC: {{ char.ac }}</span>
-        </div>
-
-        <!-- Row 3: HP Bar -->
-        <div class="card-row hp-row">
-          <span class="hp-label">HP</span>
-          <div class="hp-bar-container">
-            <div
-              class="hp-bar-fill"
-              [class]="getHPClass(char)"
-              [style.width.%]="getHPPercentage(char)"
-            ></div>
-          </div>
-          <span class="hp-value" [class]="getHPClass(char)">{{ char.hp }}/{{ char.maxHp }}</span>
-        </div>
-
-        <!-- Row 4: Equipped Weapon -->
-        <div class="card-row weapon-row">
-          <span class="weapon-label">Wpn:</span>
-          <span class="weapon-name">{{ getEquippedWeapon(char) }}</span>
-        </div>
-
-        <!-- Row 5: Spell Points (show --- for non-casters for consistent height) -->
-        <div class="card-row sp-row">
-          <span class="sp-label">SP:</span>
-          <span class="sp-value" [class.no-spells]="!isCaster(char)">
-            {{ isCaster(char) ? getSpellPointsDisplay(char) : '---' }}
-          </span>
-        </div>
-
-        <!-- Row 6: Action buttons OR Status text -->
+        <!-- Actions Row OR Status text -->
         <div class="card-row actions-row">
           @if (getStatusText(char); as statusText) {
             <span class="status-text">{{ statusText }}</span>

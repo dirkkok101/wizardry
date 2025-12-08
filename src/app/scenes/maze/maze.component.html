@@ -24,6 +24,7 @@
         [statusTexts]="combatActionTexts()"
         [hitCharacterIds]="hitCharacterIds()"
         [damageIndicator]="currentDamageIndicator()"
+        [showSprites]="true"
         (actionClick)="showChestOverlay() ? handleChestCardAction($event) : handleCharacterAction($event)"
       />
     </div>
@@ -99,6 +100,7 @@
         [statusTexts]="combatActionTexts()"
         [hitCharacterIds]="hitCharacterIds()"
         [damageIndicator]="currentDamageIndicator()"
+        [showSprites]="true"
         (actionClick)="showChestOverlay() ? handleChestCardAction($event) : handleCharacterAction($event)"
       />
     </div>
