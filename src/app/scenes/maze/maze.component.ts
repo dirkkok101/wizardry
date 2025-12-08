@@ -1342,7 +1342,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
           const item = result.itemId
             ? { name: result.itemId, identified: false }
             : null;
-          this.showTileMessage(result.tileMessage, false, item);
+          this.showTileMessage(result.tileMessage, true, item);
         } else {
           // No message, just add to log
           this.addMessage(result.message || `You found ${result.itemId}!`);
@@ -1353,7 +1353,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } else if (tileMessage) {
       // Tile has message but no item (message-only tile)
-      this.showTileMessage(tileMessage, false, null);
+      this.showTileMessage(tileMessage, true, null);
     }
   }
 
@@ -2214,6 +2214,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Party is surprised - show AMBUSHED! then auto-execute monster round
       await this.showLetterbox('ambush', 2000);
       this.addMessage('Your party is AMBUSHED!');
+      this.combatIntroActive.set(false);  // Show monster cards before attacks
       await this.handlePartySurprise();
     } else if (combatState.surpriseState === 'party') {
       // Monsters are surprised - show SURPRISE! then let player act
