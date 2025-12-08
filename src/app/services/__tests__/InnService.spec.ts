@@ -5,6 +5,12 @@ import { SpellPointPool } from '@models/SpellPoints'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { CharacterClass } from '@models/CharacterClass'
 import { RandomService } from '../RandomService'
+import { loadInnDataForTests } from '@testing/test-data-loader'
+
+// Load inn data (classes, races, stat modifiers, spells - needed for level-up and spell learning tests)
+beforeAll(async () => {
+  await loadInnDataForTests()
+})
 
 describe('InnService', () => {
   describe('getRoomCost', () => {

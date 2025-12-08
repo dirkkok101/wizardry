@@ -12,6 +12,12 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { Race } from '@models/Race'
 import { TrapId } from '@models/Trap'
 import { Chest, RewardTier } from '@models/Chest'
+import { loadTrapsWithResistanceForTests } from '@testing/test-data-loader'
+
+// Load trap data with class data (needed for trap effects and resistance checks)
+beforeAll(async () => {
+  await loadTrapsWithResistanceForTests()
+})
 
 // Helper to create a test chest
 function createTestChest(overrides: Partial<Chest> = {}): Chest {

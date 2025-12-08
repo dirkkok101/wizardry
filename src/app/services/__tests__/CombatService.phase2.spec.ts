@@ -5,6 +5,16 @@ import { createTestCharacter, createTestMonster, createTestCombatState } from '@
 import { MonsterGroup } from '@models/Combat'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { CharacterClass } from '@models/CharacterClass'
+import { loadMonstersForTests } from '@testing/test-data-loader'
+import { StatModifierService } from '../StatModifierService'
+
+// Load monster data and stat modifiers (needed for combat calculations)
+beforeAll(async () => {
+  await Promise.all([
+    loadMonstersForTests(),
+    StatModifierService.initialize()
+  ])
+})
 
 describe('CombatService - Phase 2 Features', () => {
   describe('Critical Hit Formula', () => {

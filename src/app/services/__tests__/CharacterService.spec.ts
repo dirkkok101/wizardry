@@ -6,61 +6,15 @@ import { CharacterClass } from '@models/CharacterClass'
 import { Alignment } from '@models/Alignment'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { BaseStats } from '../CharacterCreationService'
-import { ClassService } from '../ClassService'
-import { RaceService } from '../RaceService'
-import { StatModifierService } from '../StatModifierService'
-import * as fs from 'fs'
-import * as path from 'path'
+import { loadCharacterCreationDataForTests } from '@testing/test-data-loader'
 
 describe('CharacterService', () => {
   let gameState: GameState
 
+  // Load character creation data (classes, races, stat modifiers)
+  // Uses global fetch mock from setup-jest.ts
   beforeAll(async () => {
-    // Mock fetch to load real data files from data/ directory
-    global.fetch = jest.fn((url: string) => {
-      const urlPath = url.toString()
-
-      // Handle config files (stat-modifiers.json)
-      if (urlPath.includes('/assets/config/stat-modifiers.json')) {
-        const dataPath = path.join(__dirname, '../../../../data/config/stat-modifiers.json')
-        try {
-          const fileContent = fs.readFileSync(dataPath, 'utf-8')
-          const jsonData = JSON.parse(fileContent)
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(jsonData)
-          } as Response)
-        } catch (error) {
-          return Promise.reject(new Error(`File not found: ${dataPath}`))
-        }
-      }
-
-      // Extract filename from URL (e.g., '/assets/races/human.json' -> 'human.json')
-      const match = urlPath.match(/\/(races|classes|spells|monsters|items)\/([^/]+\.json)/)
-      if (match) {
-        const [, directory, filename] = match
-        const dataPath = path.join(__dirname, '../../../../data', directory, filename)
-
-        try {
-          const fileContent = fs.readFileSync(dataPath, 'utf-8')
-          const jsonData = JSON.parse(fileContent)
-
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(jsonData)
-          } as Response)
-        } catch (error) {
-          return Promise.reject(new Error(`File not found: ${dataPath}`))
-        }
-      }
-
-      return Promise.reject(new Error(`Not found: ${urlPath}`))
-    }) as jest.Mock
-
-    // Initialize services for data-driven character creation
-    await ClassService.initialize()
-    await RaceService.initialize()
-    await StatModifierService.initialize()
+    await loadCharacterCreationDataForTests()
   })
 
   beforeEach(() => {

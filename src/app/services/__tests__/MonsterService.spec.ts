@@ -3,11 +3,12 @@ import { MonsterService } from '../MonsterService'
 import { MonsterDataLoader } from '../MonsterDataLoader'
 import { RandomService } from '../RandomService'
 import { MonsterTemplate } from '@validation/MonsterSchema'
+import { loadMonstersForTests } from '@testing/test-data-loader'
 
 describe('MonsterService', () => {
-  // Load monsters before running tests
+  // Load monsters before running tests (cached for all tests in this file)
   beforeAll(async () => {
-    await MonsterDataLoader.loadAllMonsters()
+    await loadMonstersForTests()
   })
 
   describe('createMonsterInstance', () => {

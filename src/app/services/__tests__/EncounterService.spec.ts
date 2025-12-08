@@ -1,13 +1,11 @@
 import { EncounterService } from '../EncounterService'
-import { MonsterDataLoader } from '../MonsterDataLoader'
 import { RandomService } from '../RandomService'
 import { ENCOUNTER_CONFIG } from '@models/Combat'
+import { loadMonstersForTests } from '@testing/test-data-loader'
 
-// Load monster data before tests
+// Load monster data before tests (cached for all tests in this file)
 beforeAll(async () => {
-  if (!MonsterDataLoader.isLoaded()) {
-    await MonsterDataLoader.loadAll()
-  }
+  await loadMonstersForTests()
 })
 
 describe('EncounterService', () => {

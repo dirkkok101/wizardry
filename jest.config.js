@@ -1,7 +1,7 @@
-module.exports = {
+// Shared configuration used by all test projects
+const sharedConfig = {
   preset: 'jest-preset-angular',
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/e2e/'],
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -34,9 +34,43 @@ module.exports = {
         stringifyContentPathRegex: '\\.html$'
       }
     ]
-  },
-  testMatch: [
-    '**/__tests__/**/*.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[jt]s?(x)'
+  }
+};
+
+module.exports = {
+  // Use projects to split fast unit tests from slow integration/e2e tests
+  // Run fast tests: npm run test:unit
+  // Run slow tests: npm run test:integration
+  // Run all tests:  npm test
+  projects: [
+    {
+      ...sharedConfig,
+      displayName: 'unit',
+      testMatch: [
+        '<rootDir>/src/**/__tests__/**/*.spec.ts',
+        '<rootDir>/src/**/*.spec.ts'
+      ],
+      testPathIgnorePatterns: [
+        '/node_modules/',
+        '/dist/',
+        '/e2e/',
+        '\\.integration\\.spec\\.ts$',
+        '\\.e2e\\.spec\\.ts$',
+        '\\.performance\\.spec\\.ts$'
+      ]
+    },
+    {
+      ...sharedConfig,
+      displayName: 'integration',
+      testMatch: [
+        '<rootDir>/src/**/*.integration.spec.ts',
+        '<rootDir>/src/**/*.e2e.spec.ts',
+        '<rootDir>/src/**/*.performance.spec.ts'
+      ],
+      testPathIgnorePatterns: [
+        '/node_modules/',
+        '/dist/'
+      ]
+    }
   ]
 };

@@ -4,15 +4,13 @@
  * Tests for chest generation, treasure distribution, and inventory management.
  *
  * Note: Trap data is loaded from real JSON files via setup-jest.ts
- * Note: Treasure data is loaded from real JSON files (TreasureDataLoader)
+ * Note: Treasure data is loaded via loadChestDataForTests() helper
  */
 
 import { ChestService } from '../ChestService'
 import { RandomService } from '../RandomService'
-import { TreasureDataLoader } from '../TreasureDataLoader'
-import { NumericIdMappingLoader } from '../NumericIdMappingLoader'
-import { ItemDataLoader } from '../ItemDataLoader'
 import { createTestCharacter } from '@testing/test-factories'
+import { loadChestDataForTests } from '@testing/test-data-loader'
 import { TrapId } from '@models/Trap'
 import { RewardTier } from '@models/Chest'
 import { Position } from '@models/Dungeon'
@@ -40,13 +38,10 @@ const AUTHENTIC_GOLD_RANGES: Record<RewardTier, { min: number; max: number }> = 
 
 describe('ChestService', () => {
   // Trap data is pre-loaded by setup-jest.ts from real JSON files
-  // Treasure data is loaded in beforeAll
+  // Treasure data is loaded via helper (cached for all tests in this file)
 
   beforeAll(async () => {
-    // Load treasure data required by TreasureService
-    await TreasureDataLoader.loadAllRewards()
-    await NumericIdMappingLoader.loadMapping()
-    await ItemDataLoader.loadAllItems()
+    await loadChestDataForTests()
   })
 
   describe('generateChest', () => {

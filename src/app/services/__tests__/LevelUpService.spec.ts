@@ -2,6 +2,12 @@ import { LevelUpService } from '../LevelUpService'
 import { RandomService } from '../RandomService'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterClass } from '@models/CharacterClass'
+import { loadClassesForTests } from '@testing/test-data-loader'
+
+// Load class data (needed for performLevelUp spell point calculations)
+beforeAll(async () => {
+  await loadClassesForTests()
+})
 
 describe('LevelUpService', () => {
   describe('getXPRequirement', () => {

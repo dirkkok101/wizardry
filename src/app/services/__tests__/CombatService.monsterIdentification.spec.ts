@@ -5,8 +5,12 @@ import { RandomService } from '../RandomService'
 import { CombatState, MonsterGroup } from '@models/Combat'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { loadMonstersForTests } from '@testing/test-data-loader'
 
-// Monsters are preloaded in setup-jest.ts via MonsterDataLoader.loadAllMonsters()
+// Load monster data before tests (cached for all tests in this file)
+beforeAll(async () => {
+  await loadMonstersForTests()
+})
 
 function createTestCharacter(overrides: Partial<Character> = {}): Character {
   return {
