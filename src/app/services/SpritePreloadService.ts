@@ -11,6 +11,7 @@
  */
 
 import { MonsterDataLoader } from './MonsterDataLoader'
+import { SpriteService } from './SpriteService'
 
 export class SpritePreloadService {
   private static loadPromise: Promise<void> | null = null
@@ -27,6 +28,19 @@ export class SpritePreloadService {
     '/assets/sprites/combat/victory-pyrrhic.png',
     '/assets/sprites/chest/chest_closed.png',
     '/assets/sprites/chest/chest_open.png'
+  ]
+
+  /**
+   * Scene background sprites (5-7 MB each)
+   * Preloading during initialization ensures instant scene transitions
+   */
+  private static readonly SCENE_SPRITES = [
+    '/assets/sprites/scenes/castle_scene.png',
+    '/assets/sprites/scenes/tavern_scene.png',
+    '/assets/sprites/scenes/temple_scene.png',
+    '/assets/sprites/scenes/trading_post_scene.png',
+    '/assets/sprites/scenes/adventurers_inn_scene.png',
+    '/assets/sprites/scenes/training_grounds.png'
   ]
 
   /**
@@ -74,7 +88,14 @@ export class SpritePreloadService {
     // 1. UI Sprites (victory, defeat, etc.)
     urls.push(...this.UI_SPRITES)
 
-    // 2. Monster Sprites (derived from loaded monster data)
+    // 2. Scene Sprites (backgrounds for town scenes)
+    urls.push(...this.SCENE_SPRITES)
+
+    // 3. Character Sprites (all 20 race/class combinations)
+    const characterSprites = SpriteService.getAllSprites()
+    urls.push(...characterSprites.map(s => s.url))
+
+    // 4. Monster Sprites (derived from loaded monster data)
     try {
       const monsters = MonsterDataLoader.getAllMonsters()
       for (const monster of monsters.values()) {

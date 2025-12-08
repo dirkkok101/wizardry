@@ -1,23 +1,22 @@
-import { Component, OnInit, computed, HostListener, inject } from '@angular/core';
+import { Component, OnInit, computed, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageService } from '@services/MessageService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
-import { CharacterListItemComponent } from '@shared/components/character-list-item/character-list-item.component';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '@services/PartyService';
 import { Character } from '@models/Character';
+import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
 
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, CharacterPanelComponent, CharacterListItemComponent, EmptyStateComponent, SceneTitleComponent, SceneFooterComponent],
+  imports: [CommonModule, CharacterPanelComponent, SceneTitleComponent, SceneFooterComponent, CharacterSelectionDialogComponent],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })
@@ -25,6 +24,10 @@ export class TavernComponent implements OnInit {
   private readonly gameStateService = inject(GameStateService);
   private readonly navigation = inject(SceneNavigationService);
   readonly messages = inject(MessageService);
+
+  // Dialog state
+  readonly showAddDialog = signal(false);
+  readonly dialogCharacters = signal<CharacterOption[]>([]);
 
   ngOnInit(): void {
     this.messages.clear();
@@ -36,21 +39,30 @@ export class TavernComponent implements OnInit {
     GameStateQueries.tavernAvailableCharacters(this.gameStateService.state())
   );
 
-  readonly frontRowCharacters = computed(() =>
-    GameStateQueries.frontRowCharacters(this.gameStateService.state())
+  // Party characters in order (positions 1-6)
+  readonly partyCharacters = computed(() =>
+    GameStateQueries.partyCharacters(this.gameStateService.state())
   );
 
-  readonly backRowCharacters = computed(() =>
-    GameStateQueries.backRowCharacters(this.gameStateService.state())
-  );
+  // Left column: positions 1, 3, 5 (indices 0, 2, 4)
+  readonly leftColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter((c): c is Character => c !== undefined);
+  });
 
-  readonly partyGold = computed(() =>
-    GameStateQueries.partyGold(this.gameStateService.state())
-  );
+  // Right column: positions 2, 4, 6 (indices 1, 3, 5)
+  readonly rightColumnCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter((c): c is Character => c !== undefined);
+  });
 
-  readonly footerMenuItems = computed((): MenuItem[] => [
-    { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true }
-  ]);
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    const canAdd = this.partyCharacters().length < 6;
+    return [
+      { id: 'add', label: 'Add Character', shortcut: 'A', enabled: canAdd },
+      { id: 'leave', label: 'Return to Castle', shortcut: 'ESC', enabled: true }
+    ];
+  });
 
   // Visible action types for party CharacterPanel
   readonly partyActionTypes = ['remove', 'inspect', 'moveUp', 'moveDown'];
@@ -77,20 +89,6 @@ export class TavernComponent implements OnInit {
     return GameStateQueries.canMoveDown(this.gameStateService.state(), characterId);
   }
 
-  getCharacterActions(characterId: string, isInParty: boolean): CharacterAction[] {
-    if (isInParty) {
-      return [
-        { type: 'remove' },
-        { type: 'inspect' },
-        { type: 'moveUp', enabled: this.canCharacterMoveUp(characterId) },
-        { type: 'moveDown', enabled: this.canCharacterMoveDown(characterId) }
-      ];
-    }
-    return [
-      { type: 'add' },
-      { type: 'inspect' }
-    ];
-  }
 
   onAddCharacter(characterId: string): void {
     const state = this.gameStateService.state();
@@ -199,13 +197,62 @@ export class TavernComponent implements OnInit {
   }
 
   handleFooterAction(itemId: string): void {
-    if (itemId === 'leave') {
-      this.navigation.returnToCastle();
+    switch (itemId) {
+      case 'add':
+        this.openAddDialog();
+        break;
+      case 'leave':
+        this.navigation.returnToCastle();
+        break;
     }
+  }
+
+  // Dialog methods
+  openAddDialog(): void {
+    const available = this.availableCharacters();
+    const options: CharacterOption[] = available.map((char, index) => ({
+      character: char,
+      index: index + 1,
+      enabled: this.canAddCharacter(char)
+    }));
+    this.dialogCharacters.set(options);
+    this.showAddDialog.set(true);
+  }
+
+  onDialogCharacterSelected(character: Character): void {
+    this.showAddDialog.set(false);
+    this.onAddCharacter(character.id);
+  }
+
+  onDialogCancelled(): void {
+    this.showAddDialog.set(false);
+    this.dialogCharacters.set([]);
+  }
+
+  private canAddCharacter(char: Character): boolean {
+    const state = this.gameStateService.state();
+    const validation = PartyService.canAddCharacterToParty(
+      state.party,
+      char,
+      state.roster,
+      state.bodies
+    );
+    return validation.allowed;
   }
 
   @HostListener('window:keydown.escape')
   handleEscape(): void {
-    this.navigation.returnToCastle();
+    if (this.showAddDialog()) {
+      this.onDialogCancelled();
+    } else {
+      this.navigation.returnToCastle();
+    }
+  }
+
+  @HostListener('window:keydown.a')
+  handleAddKey(): void {
+    if (!this.showAddDialog() && this.partyCharacters().length < 6) {
+      this.openAddDialog();
+    }
   }
 }

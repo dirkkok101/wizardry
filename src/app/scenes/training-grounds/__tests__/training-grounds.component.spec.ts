@@ -69,9 +69,9 @@ describe('TrainingGroundsComponent', () => {
       const available = component.availableCharacters();
 
       expect(available.length).toBe(2);
-      expect(available.find(c => c.character.id === 'char-1')).toBeTruthy();
-      expect(available.find(c => c.character.id === 'char-3')).toBeTruthy();
-      expect(available.find(c => c.character.id === 'char-2')).toBeFalsy();
+      expect(available.find(c => c.id === 'char-1')).toBeTruthy();
+      expect(available.find(c => c.id === 'char-3')).toBeTruthy();
+      expect(available.find(c => c.id === 'char-2')).toBeFalsy();
     });
 
     it('shows empty when all characters in party', () => {

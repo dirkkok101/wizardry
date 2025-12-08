@@ -1,5 +1,5 @@
-// Training Grounds Scene - Roster Management Hub
-// Uses compact list layout matching Tavern scene style
+// Training Grounds Scene - 3-Column Layout with Statistics
+// Center sprite with roster stats on left, class breakdown on right
 
 .training-grounds {
   display: flex;
@@ -9,45 +9,142 @@
   color: var(--color-text-primary);
 }
 
-.roster-content {
+// 3-Column Grid Layout
+.training-content {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+  gap: var(--space-3);
   flex: 1;
   min-height: 0;
-  overflow: hidden;
   padding: var(--space-3);
+}
+
+// Side panels
+.left-panel,
+.right-panel {
   display: flex;
   flex-direction: column;
+  align-self: start;
 }
 
-// Scrollable character list with 2 columns (vertical-first fill)
-// Character items use shared CharacterListItemComponent
-.character-list {
-  column-count: 2;
-  column-gap: var(--space-3);
-  overflow-y: auto;
-  padding-right: var(--space-1);
+// Statistics Panel (shared by left and right)
+.stats-panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-3);
 
-  // Subtle scrollbar styling
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--color-bg-dark);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 2px;
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-sm);
+    color: var(--color-gold-primary);
+    letter-spacing: 0.1em;
+    margin: 0 0 var(--space-2);
+    text-transform: uppercase;
   }
 }
 
-// 1 column on narrow screens
-@media (max-width: 900px) {
-  .character-list {
-    column-count: 1;
+// Stat rows (left panel)
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1) 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+}
+
+.stat-label {
+  color: var(--color-text-secondary);
+}
+
+.stat-value {
+  color: var(--color-text-primary);
+  font-weight: 500;
+
+  &.alive {
+    color: var(--color-status-ok);
+  }
+
+  &.dead {
+    color: var(--color-status-dead);
   }
 }
 
+.stat-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+// Class breakdown rows (right panel)
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px 0;
+}
+
+.class-abbr {
+  width: 32px;
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.class-bar-container {
+  flex: 1;
+  height: 8px;
+  background: var(--color-bg-darkest);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.class-bar {
+  height: 100%;
+  background: var(--color-gold-dim);
+  border-radius: 2px;
+  min-width: 2px;
+  transition: width 0.3s ease;
+}
+
+.class-count {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  min-width: 16px;
+  text-align: right;
+}
+
+// Center viewport
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0 2px;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 740px;
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
 
 // Message display
 .message {
@@ -74,16 +171,35 @@
   }
 }
 
-// Responsive: tighter spacing on smaller screens
+// Responsive: stack on narrow screens
 @media (max-width: 900px) {
-  .roster-content {
+  .training-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--space-2);
     padding: var(--space-2);
+  }
+
+  .left-panel,
+  .right-panel {
+    display: none;
+  }
+
+  .scene-viewport {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
   }
 }
 
 // MacBook Air 13" and similar - tighter spacing
 @media (max-height: 900px) {
-  .roster-content {
+  .training-content {
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .stats-panel {
     padding: var(--space-2);
   }
 }

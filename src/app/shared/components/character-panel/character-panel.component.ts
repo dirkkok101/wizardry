@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SpriteService } from '@services/SpriteService';
 
@@ -51,6 +52,15 @@ const STATUS_CLASSES: Record<CharacterStatus, string> = {
 };
 
 /**
+ * Alignment CSS classes for color coding
+ */
+const ALIGNMENT_CLASSES: Record<Alignment, string> = {
+  [Alignment.GOOD]: 'align-good',
+  [Alignment.NEUTRAL]: 'align-neutral',
+  [Alignment.EVIL]: 'align-evil'
+};
+
+/**
  * CharacterPanelComponent - Vertical stack of character cards
  *
  * Displays characters in a compact vertical format with:
@@ -69,6 +79,21 @@ const STATUS_CLASSES: Record<CharacterStatus, string> = {
   styleUrls: ['./character-panel.component.scss']
 })
 export class CharacterPanelComponent {
+  /**
+   * Layout mode for the character stack
+   * - 'stack': Vertical column (default, for sidebars)
+   * - 'grid': Auto-fill grid (for dialogs with many characters)
+   */
+  @Input() layoutMode: 'stack' | 'grid' = 'stack';
+
+  /**
+   * HostBinding to apply grid-mode class when layoutMode is 'grid'
+   */
+  @HostBinding('class.grid-mode')
+  get isGridMode(): boolean {
+    return this.layoutMode === 'grid';
+  }
+
   /**
    * Characters to display in this panel
    */
@@ -180,6 +205,20 @@ export class CharacterPanelComponent {
   }
 
   /**
+   * Get alignment CSS class for color coding
+   */
+  getAlignmentClass(alignment: Alignment): string {
+    return ALIGNMENT_CLASSES[alignment] || 'align-neutral';
+  }
+
+  /**
+   * Format class and level display (e.g., "FIG Lv5")
+   */
+  getClassLevelDisplay(char: Character): string {
+    return `${this.getClassAbbr(char.class)} Lv${char.level}`;
+  }
+
+  /**
    * Get HP CSS class based on percentage
    */
   getHPClass(char: Character): string {
@@ -231,6 +270,10 @@ export class CharacterPanelComponent {
       case 'attack': return 'Attack';
       case 'parry': return 'Parry';
       case 'flee': return 'Flee';
+      // Dialog actions
+      case 'select': return 'Select';
+      case 'changeClass': return 'Class';
+      case 'delete': return 'Delete';
       default: return actionType;
     }
   }

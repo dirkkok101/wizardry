@@ -5,8 +5,10 @@ import { RandomService } from '../RandomService'
 import { MonsterTemplate } from '@validation/MonsterSchema'
 
 describe('MonsterService', () => {
-  // Monsters are preloaded in setup-jest.ts via MonsterDataLoader.loadAllMonsters()
-  // This follows the same pattern as SpellDataLoader
+  // Load monsters before running tests
+  beforeAll(async () => {
+    await MonsterDataLoader.loadAllMonsters()
+  })
 
   describe('createMonsterInstance', () => {
     it('creates monster instance with randomized HP', () => {

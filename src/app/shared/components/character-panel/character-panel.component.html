@@ -25,9 +25,11 @@
               </span>
             </div>
 
-            <!-- Row 2: Class abbreviation only -->
+            <!-- Row 2: Class + Level + Alignment -->
             <div class="info-row class-row">
-              <span class="char-class">{{ getClassAbbr(char.class) }}</span>
+              <span class="char-class">{{ getClassLevelDisplay(char) }}</span>
+              <span class="char-separator">•</span>
+              <span class="char-alignment" [class]="getAlignmentClass(char.alignment)">{{ char.alignment }}</span>
             </div>
 
             <!-- Row 3: HP Bar (no label, saves space) -->

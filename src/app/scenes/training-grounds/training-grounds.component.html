@@ -2,35 +2,63 @@
   <!-- Title -->
   <app-scene-title [title]="'TRAINING GROUNDS'" />
 
-  <!-- Character Roster -->
-  <main class="roster-content">
-    @if (availableCharacters().length === 0) {
-      <app-empty-state
-        title="No characters available"
-        subtitle="Create your first adventurer to begin!"
-      />
-    } @else {
-      <div class="character-list">
-        @for (char of availableCharacters(); track char.character.id) {
-          <app-character-list-item
-            [character]="char.character"
-            [showAlignment]="true"
-            [showStatus]="true"
-            [status]="char.status">
-            <ng-template #actions>
-              <button class="action-btn" (click)="handleInspectCharacter(char.character.id)">Inspect</button>
-              @if (hasAvailableClasses(char.character)) {
-                <button class="action-btn" (click)="handleChangeClass(char.character)">Change Class</button>
-              }
-              <button class="action-btn danger" (click)="handleDeleteCharacter(char.character.id)">Delete</button>
-            </ng-template>
-          </app-character-list-item>
+  <!-- 3-Column Layout: Stats | Sprite | Class Breakdown -->
+  <main class="training-content">
+    <!-- Left Panel: Roster Summary -->
+    <div class="left-panel">
+      <div class="stats-panel">
+        <h3 class="panel-title">ROSTER</h3>
+        <div class="stat-row">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ rosterStats().total }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Alive</span>
+          <span class="stat-value alive">{{ rosterStats().alive }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Dead</span>
+          <span class="stat-value dead">{{ rosterStats().dead }}</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-row">
+          <span class="stat-label">Avg Level</span>
+          <span class="stat-value">{{ rosterStats().avgLevel }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Max Level</span>
+          <span class="stat-value">{{ rosterStats().maxLevel }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Scene Viewport -->
+    <div class="center-panel">
+      <div class="scene-viewport">
+        <img src="assets/sprites/scenes/training_grounds.png"
+             alt="Training Grounds"
+             class="scene-image" />
+      </div>
+    </div>
+
+    <!-- Right Panel: Class Breakdown -->
+    <div class="right-panel">
+      <div class="stats-panel">
+        <h3 class="panel-title">CLASSES</h3>
+        @for (entry of classBreakdownEntries(); track entry.class) {
+          <div class="class-row">
+            <span class="class-abbr">{{ entry.abbr }}</span>
+            <div class="class-bar-container">
+              <div class="class-bar" [style.width.%]="entry.percent"></div>
+            </div>
+            <span class="class-count">{{ entry.count }}</span>
+          </div>
         }
       </div>
-    }
+    </div>
   </main>
 
-  <!-- Error Message -->
+  <!-- Message Display -->
   @if (messages.hasMessage()) {
     <div class="message" [class.error]="messages.isError()" [class.success]="messages.isSuccess()">
       <p>{{ messages.messageText() }}</p>
@@ -41,6 +69,15 @@
   <app-scene-footer
     [menuItems]="footerMenuItems()"
     (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Roster Management Dialog -->
+  <app-roster-management-dialog
+    [visible]="showRosterDialog()"
+    [characters]="availableCharacters()"
+    [prompt]="'CHARACTER ROSTER'"
+    (actionClick)="handleRosterAction($event)"
+    (cancelled)="closeRosterDialog()"
   />
 
   <!-- Delete Confirmation Dialog -->

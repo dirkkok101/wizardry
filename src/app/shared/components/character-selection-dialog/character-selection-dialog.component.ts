@@ -7,12 +7,12 @@ import {
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Character } from '@models/Character'
-import { CharacterStatus } from '@models/CharacterStatus'
-import { CharacterClass } from '@models/CharacterClass'
+import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes'
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component'
 
 export interface CharacterOption {
   character: Character
-  index: number  // 1-6 for keyboard shortcuts
+  index: number  // Index for ordering (1-based)
   enabled: boolean
 }
 
@@ -25,22 +25,22 @@ export interface CharacterSelectableOption extends CharacterOption {
 }
 
 /**
- * CharacterSelectionDialogComponent - Card-based character picker for spell targeting.
+ * CharacterSelectionDialogComponent - Card-based character picker with sprites.
+ *
+ * Uses CharacterPanelComponent for consistent card rendering across the app.
  *
  * Features:
- * - Card grid layout (1-2 columns based on character count)
- * - Inline [Select] button for each enabled character
- * - 1-6 keyboard shortcuts for character selection
- * - ESC to cancel
- * - Backdrop click to cancel
- * - Shows character name, class, level, HP, status badge
- * - Design system styling (Cinzel/JetBrains Mono fonts, gold theme)
+ * - Scrollable card grid (supports 20+ characters)
+ * - Consistent 72×72 character sprites
+ * - Full card info (name, class+level, alignment, HP, spell points)
+ * - [Select] button for enabled characters
+ * - ESC to cancel, backdrop click to cancel
  *
  * @example
  * <app-character-selection-dialog
  *   [visible]="showDialog"
  *   [characters]="characterOptions"
- *   [prompt]="'SELECT TARGET'"
+ *   [prompt]="'SELECT CHARACTER TO ADD'"
  *   (characterSelected)="onCharacterSelected($event)"
  *   (cancelled)="onCancel()">
  * </app-character-selection-dialog>
@@ -48,7 +48,7 @@ export interface CharacterSelectableOption extends CharacterOption {
 @Component({
   selector: 'app-character-selection-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CharacterPanelComponent],
   templateUrl: './character-selection-dialog.component.html',
   styleUrls: ['./character-selection-dialog.component.scss']
 })
@@ -62,19 +62,20 @@ export class CharacterSelectionDialogComponent {
   readonly characterSelected = output<Character>()
   readonly cancelled = output<void>()
 
+  /** Visible action types for the CharacterPanel */
+  readonly visibleActionTypes = ['select']
+
   /**
-   * Convert CharacterOption[] to CharacterSelectableOption[] with id for tracking.
+   * Extract enabled characters for CharacterPanel display.
    */
-  readonly selectableCharacters = computed((): CharacterSelectableOption[] => {
-    return this.characters().map(option => ({
-      ...option,
-      id: option.character.id,
-      shortcut: option.index.toString()
-    }))
+  readonly enabledCharacters = computed((): Character[] => {
+    return this.characters()
+      .filter(option => option.enabled)
+      .map(option => option.character)
   })
 
   /**
-   * Handle keyboard events for 1-6 selection and ESC cancel.
+   * Handle keyboard events for ESC cancel.
    */
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
@@ -83,26 +84,6 @@ export class CharacterSelectionDialogComponent {
     if (event.key === 'Escape') {
       event.preventDefault()
       this.cancelled.emit()
-      return
-    }
-
-    // Handle 1-6 keys for selection
-    const num = parseInt(event.key, 10)
-    if (num >= 1 && num <= 6) {
-      const option = this.selectableCharacters().find(o => o.index === num)
-      if (option?.enabled) {
-        event.preventDefault()
-        this.characterSelected.emit(option.character)
-      }
-    }
-  }
-
-  /**
-   * Handle character card or button click.
-   */
-  onCharacterClick(option: CharacterSelectableOption): void {
-    if (option.enabled) {
-      this.characterSelected.emit(option.character)
     }
   }
 
@@ -116,51 +97,21 @@ export class CharacterSelectionDialogComponent {
   }
 
   /**
-   * Get 3-character class abbreviation.
+   * Get actions for a character (just Select).
    */
-  getClassAbbr(char: Character): string {
-    const abbrevs: Record<string, string> = {
-      [CharacterClass.FIGHTER]: 'FIG',
-      [CharacterClass.MAGE]: 'MAG',
-      [CharacterClass.PRIEST]: 'PRI',
-      [CharacterClass.THIEF]: 'THI',
-      [CharacterClass.BISHOP]: 'BIS',
-      [CharacterClass.SAMURAI]: 'SAM',
-      [CharacterClass.LORD]: 'LOR',
-      [CharacterClass.NINJA]: 'NIN'
+  getActionsForCharacter = (_char: Character): CharacterAction[] => {
+    return [{ type: 'select' }]
+  }
+
+  /**
+   * Handle CharacterPanel action click events.
+   */
+  handleActionClick(event: CharacterActionEvent): void {
+    if (event.actionType === 'select') {
+      const char = this.enabledCharacters().find(c => c.id === event.characterId)
+      if (char) {
+        this.characterSelected.emit(char)
+      }
     }
-    return abbrevs[char.class] || char.class.slice(0, 3).toUpperCase()
-  }
-
-  /**
-   * Get HP percentage for bar display.
-   */
-  getHpPercent(char: Character): number {
-    if (char.maxHp <= 0) return 0
-    return Math.max(0, Math.min(100, Math.round((char.hp / char.maxHp) * 100)))
-  }
-
-  /**
-   * Check if HP is critical (<25%).
-   */
-  isCritical(char: Character): boolean {
-    return this.getHpPercent(char) < 25
-  }
-
-  /**
-   * Check if character is dead or ashes.
-   */
-  isDead(char: Character): boolean {
-    return char.status === CharacterStatus.DEAD || char.status === CharacterStatus.ASHES
-  }
-
-  /**
-   * Get status badge text if not OK or INJURED.
-   */
-  getStatusBadge(char: Character): string | null {
-    if (char.status === CharacterStatus.OK || char.status === CharacterStatus.INJURED) {
-      return null
-    }
-    return char.status
   }
 }

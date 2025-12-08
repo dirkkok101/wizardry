@@ -1,33 +1,25 @@
-// Tavern Scene - Modern Retro-Fantasy theme
-// Left: compact list of available characters
-// Right: CharacterPanel for party (Front/Back rows)
+// Tavern Scene - 3-Column Layout (matches castle/maze pattern)
+// Left: positions 1, 3, 5 | Center: scene sprite | Right: positions 2, 4, 6
 
-.tavern-container {
+.tavern-scene {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: var(--color-bg-darkest);
-}
-
-.tavern-layout {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: var(--space-3);
-  flex: 1;
-  min-height: 0;  // Allow shrinking in flex container
-  padding: var(--space-2);
-  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
   overflow: hidden;
 }
 
-// Message display (spans full width)
+// Message display (above content)
 .message {
-  grid-column: 1 / -1;
   padding: var(--space-2) var(--space-3);
   text-align: center;
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
   border-radius: var(--card-border-radius);
+  margin-bottom: var(--space-2);
 
   &.error {
     background: rgba(220, 38, 38, 0.15);
@@ -42,21 +34,22 @@
   }
 }
 
-// Left column: Available characters
-.available-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  overflow: hidden;
+// 3-Column Grid Layout
+.tavern-content {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
-// Character list container - items use CharacterListItemComponent
-.character-list {
+.left-panel,
+.right-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  min-height: 0;
   overflow-y: auto;
-  padding-right: var(--space-1);
+  align-self: start;
 
   // Subtle scrollbar styling
   &::-webkit-scrollbar {
@@ -73,92 +66,66 @@
   }
 }
 
-// Right column: Party display
-.party-section {
+.center-panel {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0.5rem 2px;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 740px;
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
   overflow: hidden;
-}
 
-.formation-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
-  height: 100%;
-}
-
-.formation-column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  overflow: hidden;
-
-  // Style the CharacterPanel inside
-  ::ng-deep {
-    .character-panel {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .panel-title {
-      display: none;  // We use row-title instead
-    }
-
-    .character-stack {
-      padding: 0;
-      gap: var(--space-1);
-    }
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 }
 
-.row-title {
-  font-family: var(--font-display);
-  font-size: var(--font-size-sm);
-  color: var(--color-gold-primary);
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-1);
-  margin: 0;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-
-// Responsive: stack columns on narrow screens
-@media (max-width: 900px) {
-  .tavern-layout {
+// Responsive: hide side panels on mobile
+@media (max-width: 767px) {
+  .tavern-content {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
   }
 
-  .available-section {
-    max-height: 200px;
+  .left-panel,
+  .right-panel {
+    display: none;
   }
+}
 
-  .formation-layout {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
+// Wider screens: expand side panels
+@media (min-width: 1200px) {
+  .tavern-content {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
   }
 }
 
 // MacBook Air 13" (1440x900) - tighter spacing
 @media (max-height: 900px) {
-  .tavern-layout {
-    padding: var(--space-2);
-    gap: var(--space-3);
+  .tavern-scene {
+    padding: 0.25rem;
   }
 
-  .formation-layout {
-    gap: var(--space-2);
+  .tavern-content {
+    gap: 0.25rem;
   }
 
-  .row-title {
-    font-size: var(--font-size-xs);
-    padding-bottom: 2px;
-  }
-
-  .formation-column {
-    ::ng-deep .character-stack {
-      gap: 2px;
-    }
+  .center-panel {
+    padding: 0.25rem 2px;
   }
 }

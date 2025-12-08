@@ -9,9 +9,9 @@
 
       <!-- Character Grid using CharacterPanel -->
       <div class="character-grid">
-        @if (enabledCharacters().length > 0) {
+        @if (characters().length > 0) {
           <app-character-panel
-            [characters]="enabledCharacters()"
+            [characters]="characters()"
             [actions]="getActionsForCharacter"
             [visibleActionTypes]="visibleActionTypes"
             [showSprites]="true"
@@ -19,13 +19,13 @@
             (actionClick)="handleActionClick($event)"
           />
         } @else {
-          <div class="no-characters">No characters available</div>
+          <div class="no-characters">No characters in roster</div>
         }
       </div>
 
       <!-- Footer -->
       <footer class="panel-footer">
-        <span class="instruction">Click to select, ESC to cancel</span>
+        <span class="instruction">ESC to close</span>
       </footer>
     </div>
   </div>

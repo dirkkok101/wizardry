@@ -116,8 +116,8 @@ describe('CharacterSelectionDialogComponent', () => {
     })
   })
 
-  describe('character cards', () => {
-    it('displays character cards for each option', () => {
+  describe('character cards (via CharacterPanel)', () => {
+    it('displays character cards for each enabled option', () => {
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
@@ -126,15 +126,15 @@ describe('CharacterSelectionDialogComponent', () => {
       expect(cards.length).toBe(3)
     })
 
-    it('displays character number', () => {
+    it('displays character sprite', () => {
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      const numbers = fixture.nativeElement.querySelectorAll('.character-number')
-      expect(numbers[0]?.textContent).toContain('1)')
-      expect(numbers[1]?.textContent).toContain('2)')
-      expect(numbers[2]?.textContent).toContain('3)')
+      const sprites = fixture.nativeElement.querySelectorAll('.card-sprite img')
+      expect(sprites.length).toBe(3)
+      // Sprites should have src attributes
+      expect(sprites[0]?.getAttribute('src')).toBeTruthy()
     })
 
     it('displays character name', () => {
@@ -142,7 +142,7 @@ describe('CharacterSelectionDialogComponent', () => {
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      const names = fixture.nativeElement.querySelectorAll('.character-name')
+      const names = fixture.nativeElement.querySelectorAll('.char-name')
       expect(names[0]?.textContent).toContain('Dirk')
       expect(names[1]?.textContent).toContain('Michael')
       expect(names[2]?.textContent).toContain('Fred')
@@ -153,43 +153,10 @@ describe('CharacterSelectionDialogComponent', () => {
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      const classLevels = fixture.nativeElement.querySelectorAll('.class-level')
-      expect(classLevels[0]?.textContent).toContain('FIG')
-      expect(classLevels[0]?.textContent).toContain('Lv1')
-      expect(classLevels[2]?.textContent).toContain('THI')
-    })
-
-    it('displays HP text', () => {
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', createCharacterOptions())
-      fixture.detectChanges()
-
-      const hpTexts = fixture.nativeElement.querySelectorAll('.hp-text')
-      expect(hpTexts[0]?.textContent).toContain('HP: 3/4')
-      expect(hpTexts[1]?.textContent).toContain('HP: 4/4')
-    })
-
-    it('shows critical styling for low HP', () => {
-      const options: CharacterOption[] = [
-        {
-          character: createTestCharacter({
-            id: 'low-hp',
-            name: 'Dying',
-            class: CharacterClass.FIGHTER,
-            hp: 1,
-            maxHp: 10,
-            status: CharacterStatus.OK
-          }),
-          index: 1,
-          enabled: true
-        }
-      ]
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', options)
-      fixture.detectChanges()
-
-      const hpText = fixture.nativeElement.querySelector('.hp-text')
-      expect(hpText?.classList.contains('critical')).toBe(true)
+      const classInfo = fixture.nativeElement.querySelectorAll('.char-class')
+      expect(classInfo[0]?.textContent).toContain('FIG')
+      expect(classInfo[0]?.textContent).toContain('Lv1')
+      expect(classInfo[2]?.textContent).toContain('THI')
     })
 
     it('shows [Select] button for enabled characters', () => {
@@ -197,12 +164,14 @@ describe('CharacterSelectionDialogComponent', () => {
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      const buttons = fixture.nativeElement.querySelectorAll('.select-button')
-      expect(buttons.length).toBe(3)
-      expect(buttons[0]?.textContent).toContain('[Select]')
+      const allButtons = fixture.nativeElement.querySelectorAll('.action-btn')
+      const selectCount = Array.from(allButtons).filter(
+        (btn: Element) => btn.textContent?.includes('Select')
+      ).length
+      expect(selectCount).toBe(3)
     })
 
-    it('does not show [Select] button for disabled characters', () => {
+    it('does not show cards for disabled characters', () => {
       const options: CharacterOption[] = [
         {
           character: createTestCharacter({
@@ -213,38 +182,30 @@ describe('CharacterSelectionDialogComponent', () => {
           }),
           index: 1,
           enabled: false
-        }
-      ]
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', options)
-      fixture.detectChanges()
-
-      const buttons = fixture.nativeElement.querySelectorAll('.select-button')
-      expect(buttons.length).toBe(0)
-    })
-
-    it('adds disabled class to disabled cards', () => {
-      const options: CharacterOption[] = [
+        },
         {
           character: createTestCharacter({
-            id: 'disabled',
-            name: 'Disabled',
-            class: CharacterClass.FIGHTER,
+            id: 'enabled',
+            name: 'Enabled',
+            class: CharacterClass.MAGE,
             status: CharacterStatus.OK
           }),
-          index: 1,
-          enabled: false
+          index: 2,
+          enabled: true
         }
       ]
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', options)
       fixture.detectChanges()
 
-      const card = fixture.nativeElement.querySelector('.character-card')
-      expect(card?.classList.contains('disabled')).toBe(true)
+      // Only enabled characters are shown
+      const cards = fixture.nativeElement.querySelectorAll('.character-card')
+      expect(cards.length).toBe(1)
+      const names = fixture.nativeElement.querySelectorAll('.char-name')
+      expect(names[0]?.textContent).toContain('Enabled')
     })
 
-    it('adds dead class for dead characters', () => {
+    it('adds incapacitated class for dead characters', () => {
       const options: CharacterOption[] = [
         {
           character: createTestCharacter({
@@ -263,10 +224,10 @@ describe('CharacterSelectionDialogComponent', () => {
       fixture.detectChanges()
 
       const card = fixture.nativeElement.querySelector('.character-card')
-      expect(card?.classList.contains('dead')).toBe(true)
+      expect(card?.classList.contains('incapacitated')).toBe(true)
     })
 
-    it('shows status badge for non-OK status', () => {
+    it('shows status code badge', () => {
       const options: CharacterOption[] = [
         {
           character: createTestCharacter({
@@ -283,141 +244,41 @@ describe('CharacterSelectionDialogComponent', () => {
       fixture.componentRef.setInput('characters', options)
       fixture.detectChanges()
 
-      const badge = fixture.nativeElement.querySelector('.status-badge')
-      expect(badge).toBeTruthy()
-      expect(badge?.textContent).toContain('POISONED')
-    })
-
-    it('does not show status badge for OK status', () => {
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', createCharacterOptions())
-      fixture.detectChanges()
-
-      const badges = fixture.nativeElement.querySelectorAll('.status-badge')
-      expect(badges.length).toBe(0)
+      const statuses = fixture.nativeElement.querySelectorAll('.char-status')
+      expect(statuses[0]?.textContent).toContain('PSN')
     })
   })
 
-  describe('two-column layout', () => {
-    it('uses single column for 3 or fewer characters', () => {
+  describe('scrollable grid layout', () => {
+    it('uses auto-fill grid for characters', () => {
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      const list = fixture.nativeElement.querySelector('.character-list')
-      expect(list?.classList.contains('two-columns')).toBe(false)
-    })
-
-    it('uses two columns for more than 3 characters', () => {
-      const options = [
-        ...createCharacterOptions(),
-        {
-          character: createTestCharacter({
-            id: 'char-4',
-            name: 'Fourth',
-            class: CharacterClass.MAGE,
-            status: CharacterStatus.OK
-          }),
-          index: 4,
-          enabled: true
-        }
-      ]
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', options)
-      fixture.detectChanges()
-
-      const list = fixture.nativeElement.querySelector('.character-list')
-      expect(list?.classList.contains('two-columns')).toBe(true)
+      const grid = fixture.nativeElement.querySelector('.character-grid')
+      expect(grid).toBeTruthy()
     })
   })
 
   describe('click selection', () => {
-    it('emits characterSelected when card clicked', () => {
-      const spy = jest.spyOn(component.characterSelected, 'emit')
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', createCharacterOptions())
-      fixture.detectChanges()
-
-      const card = fixture.nativeElement.querySelector('.character-card.clickable')
-      card?.click()
-
-      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ name: 'Dirk' }))
-    })
-
     it('emits characterSelected when [Select] button clicked', () => {
       const spy = jest.spyOn(component.characterSelected, 'emit')
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      const button = fixture.nativeElement.querySelector('.select-button')
-      button?.click()
+      // Find the first Select button
+      const allButtons = Array.from(fixture.nativeElement.querySelectorAll('.action-btn'))
+      const selectBtn = allButtons.find((btn: Element) =>
+        btn.textContent?.includes('Select')
+      ) as HTMLElement
+      selectBtn?.click()
 
       expect(spy).toHaveBeenCalledWith(expect.objectContaining({ name: 'Dirk' }))
-    })
-
-    it('does not emit when disabled card clicked', () => {
-      const spy = jest.spyOn(component.characterSelected, 'emit')
-      const options: CharacterOption[] = [
-        {
-          character: createTestCharacter({
-            id: 'disabled',
-            name: 'Disabled',
-            class: CharacterClass.FIGHTER,
-            status: CharacterStatus.OK
-          }),
-          index: 1,
-          enabled: false
-        }
-      ]
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', options)
-      fixture.detectChanges()
-
-      const card = fixture.nativeElement.querySelector('.character-card')
-      card?.click()
-
-      expect(spy).not.toHaveBeenCalled()
     })
   })
 
   describe('keyboard handling', () => {
-    it('selects character on 1-6 key press', () => {
-      const spy = jest.spyOn(component.characterSelected, 'emit')
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', createCharacterOptions())
-      fixture.detectChanges()
-
-      const event = new KeyboardEvent('keydown', { key: '2' })
-      document.dispatchEvent(event)
-
-      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ name: 'Michael' }))
-    })
-
-    it('does not select disabled character on key press', () => {
-      const spy = jest.spyOn(component.characterSelected, 'emit')
-      const options: CharacterOption[] = [
-        {
-          character: createTestCharacter({
-            id: 'disabled',
-            name: 'Disabled',
-            class: CharacterClass.FIGHTER,
-            status: CharacterStatus.OK
-          }),
-          index: 1,
-          enabled: false
-        }
-      ]
-      fixture.componentRef.setInput('visible', true)
-      fixture.componentRef.setInput('characters', options)
-      fixture.detectChanges()
-
-      const event = new KeyboardEvent('keydown', { key: '1' })
-      document.dispatchEvent(event)
-
-      expect(spy).not.toHaveBeenCalled()
-    })
-
     it('cancels on ESC key press', () => {
       const spy = jest.spyOn(component.cancelled, 'emit')
       fixture.componentRef.setInput('visible', true)
@@ -430,17 +291,14 @@ describe('CharacterSelectionDialogComponent', () => {
       expect(spy).toHaveBeenCalled()
     })
 
-    it('does not handle keys when not visible', () => {
-      const selectSpy = jest.spyOn(component.characterSelected, 'emit')
+    it('does not handle ESC when not visible', () => {
       const cancelSpy = jest.spyOn(component.cancelled, 'emit')
       fixture.componentRef.setInput('visible', false)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }))
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
 
-      expect(selectSpy).not.toHaveBeenCalled()
       expect(cancelSpy).not.toHaveBeenCalled()
     })
   })
@@ -471,78 +329,90 @@ describe('CharacterSelectionDialogComponent', () => {
     })
   })
 
-  describe('helper methods', () => {
-    beforeEach(() => {
+  describe('enabledCharacters computed', () => {
+    it('filters to only enabled characters', () => {
+      const options: CharacterOption[] = [
+        { character: createTestCharacter({ id: 'a' }), index: 1, enabled: true },
+        { character: createTestCharacter({ id: 'b' }), index: 2, enabled: false },
+        { character: createTestCharacter({ id: 'c' }), index: 3, enabled: true }
+      ]
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('characters', options)
+      fixture.detectChanges()
+
+      const enabled = component.enabledCharacters()
+      expect(enabled.length).toBe(2)
+      expect(enabled.map(c => c.id)).toEqual(['a', 'c'])
+    })
+  })
+
+  describe('getActionsForCharacter', () => {
+    it('returns select action', () => {
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('characters', [])
+      fixture.detectChanges()
+
+      const char = createTestCharacter()
+      const actions = component.getActionsForCharacter(char)
+
+      expect(actions).toHaveLength(1)
+      expect(actions[0].type).toBe('select')
+    })
+  })
+
+  describe('handleActionClick', () => {
+    it('emits characterSelected event for select action', () => {
+      const spy = jest.spyOn(component.characterSelected, 'emit')
+      const options = createCharacterOptions()
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('characters', options)
+      fixture.detectChanges()
+
+      component.handleActionClick({
+        characterId: 'char-1',
+        actionType: 'select'
+      })
+
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: 'char-1', name: 'Dirk' }))
+    })
+
+    it('does not emit if character not found', () => {
+      const spy = jest.spyOn(component.characterSelected, 'emit')
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
+
+      component.handleActionClick({
+        characterId: 'non-existent',
+        actionType: 'select'
+      })
+
+      expect(spy).not.toHaveBeenCalled()
     })
 
-    it('getClassAbbr returns correct abbreviation', () => {
-      const fighter = createTestCharacter({ class: CharacterClass.FIGHTER })
-      const mage = createTestCharacter({ class: CharacterClass.MAGE })
-      const priest = createTestCharacter({ class: CharacterClass.PRIEST })
-      const ninja = createTestCharacter({ class: CharacterClass.NINJA })
+    it('does not emit for non-select actions', () => {
+      const spy = jest.spyOn(component.characterSelected, 'emit')
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('characters', createCharacterOptions())
+      fixture.detectChanges()
 
-      expect(component.getClassAbbr(fighter)).toBe('FIG')
-      expect(component.getClassAbbr(mage)).toBe('MAG')
-      expect(component.getClassAbbr(priest)).toBe('PRI')
-      expect(component.getClassAbbr(ninja)).toBe('NIN')
-    })
+      component.handleActionClick({
+        characterId: 'char-1',
+        actionType: 'inspect'  // Different action type
+      })
 
-    it('getHpPercent calculates correctly', () => {
-      const char = createTestCharacter({ hp: 50, maxHp: 100 })
-      expect(component.getHpPercent(char)).toBe(50)
-    })
-
-    it('getHpPercent handles zero maxHp', () => {
-      const char = createTestCharacter({ hp: 0, maxHp: 0 })
-      expect(component.getHpPercent(char)).toBe(0)
-    })
-
-    it('isCritical returns true for HP < 25%', () => {
-      const low = createTestCharacter({ hp: 2, maxHp: 10 })
-      const ok = createTestCharacter({ hp: 3, maxHp: 10 })
-
-      expect(component.isCritical(low)).toBe(true)
-      expect(component.isCritical(ok)).toBe(false)
-    })
-
-    it('isDead returns true for DEAD or ASHES status', () => {
-      const dead = createTestCharacter({ status: CharacterStatus.DEAD })
-      const ashes = createTestCharacter({ status: CharacterStatus.ASHES })
-      const alive = createTestCharacter({ status: CharacterStatus.OK })
-
-      expect(component.isDead(dead)).toBe(true)
-      expect(component.isDead(ashes)).toBe(true)
-      expect(component.isDead(alive)).toBe(false)
-    })
-
-    it('getStatusBadge returns null for OK and INJURED', () => {
-      const ok = createTestCharacter({ status: CharacterStatus.OK })
-      const injured = createTestCharacter({ status: CharacterStatus.INJURED })
-
-      expect(component.getStatusBadge(ok)).toBeNull()
-      expect(component.getStatusBadge(injured)).toBeNull()
-    })
-
-    it('getStatusBadge returns status for other statuses', () => {
-      const poisoned = createTestCharacter({ status: CharacterStatus.POISONED })
-      const dead = createTestCharacter({ status: CharacterStatus.DEAD })
-
-      expect(component.getStatusBadge(poisoned)).toBe('POISONED')
-      expect(component.getStatusBadge(dead)).toBe('DEAD')
+      expect(spy).not.toHaveBeenCalled()
     })
   })
 
   describe('footer', () => {
-    it('displays keyboard instruction', () => {
+    it('displays click instruction', () => {
       fixture.componentRef.setInput('visible', true)
       fixture.componentRef.setInput('characters', createCharacterOptions())
       fixture.detectChanges()
 
       const instruction = fixture.nativeElement.querySelector('.instruction')
-      expect(instruction?.textContent).toContain('Press 1-6 to select, ESC to cancel')
+      expect(instruction?.textContent).toContain('Click to select, ESC to cancel')
     })
   })
 
@@ -553,7 +423,19 @@ describe('CharacterSelectionDialogComponent', () => {
       fixture.detectChanges()
 
       const empty = fixture.nativeElement.querySelector('.no-characters')
-      expect(empty?.textContent).toContain('No valid targets')
+      expect(empty?.textContent).toContain('No characters available')
+    })
+
+    it('shows no characters message when all disabled', () => {
+      const options: CharacterOption[] = [
+        { character: createTestCharacter({ id: 'a' }), index: 1, enabled: false }
+      ]
+      fixture.componentRef.setInput('visible', true)
+      fixture.componentRef.setInput('characters', options)
+      fixture.detectChanges()
+
+      const empty = fixture.nativeElement.querySelector('.no-characters')
+      expect(empty?.textContent).toContain('No characters available')
     })
   })
 })

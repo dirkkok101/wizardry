@@ -174,12 +174,37 @@
   }
 }
 
-// Row 2: Class abbreviation
+// Row 2: Class + Level + Alignment
 .class-row {
+  gap: var(--space-1);
+
   .char-class {
     color: var(--color-text-secondary);
     font-size: var(--font-size-xs);
     letter-spacing: 0.05em;
+  }
+
+  .char-separator {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+
+  .char-alignment {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-transform: capitalize;
+
+    &.align-good {
+      color: var(--color-status-ok);
+    }
+
+    &.align-neutral {
+      color: var(--color-text-secondary);
+    }
+
+    &.align-evil {
+      color: var(--color-status-poisoned);
+    }
   }
 }
 
@@ -378,6 +403,26 @@
   100% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// ============================================
+// GRID MODE (for dialogs with many characters)
+// ============================================
+
+:host(.grid-mode) {
+  .character-panel {
+    width: 100%;
+  }
+
+  .character-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .character-card {
+    // Cards are already flex-column, no changes needed
   }
 }
 

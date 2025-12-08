@@ -146,8 +146,8 @@ describe('TavernComponent (redesigned)', () => {
     });
   });
 
-  describe('computed: frontRowCharacters()', () => {
-    it('should return characters in front row', () => {
+  describe('computed: partyCharacters()', () => {
+    it('should return party characters in order', () => {
       const char1 = createTestCharacter({ id: 'char-1', name: 'Fighter' });
       const char2 = createTestCharacter({ id: 'char-2', name: 'Mage' });
 
@@ -167,79 +167,133 @@ describe('TavernComponent (redesigned)', () => {
         }
       }));
 
-      const frontRow = component.frontRowCharacters();
-      expect(frontRow.length).toBe(1);
-      expect(frontRow[0].id).toBe('char-1');
-      expect(frontRow[0].name).toBe('Fighter');
+      const partyChars = component.partyCharacters();
+      expect(partyChars.length).toBe(2);
+      expect(partyChars[0].id).toBe('char-1');
+      expect(partyChars[1].id).toBe('char-2');
     });
 
-    it('should return empty array when front row is empty', () => {
-      expect(component.frontRowCharacters().length).toBe(0);
+    it('should return empty array when party is empty', () => {
+      expect(component.partyCharacters().length).toBe(0);
     });
+  });
 
-    it('should filter out undefined characters', () => {
+  describe('computed: leftColumnCharacters() and rightColumnCharacters()', () => {
+    it('should split characters into odd/even positions', () => {
+      const chars = Array.from({ length: 6 }, (_, i) =>
+        createTestCharacter({ id: `char-${i + 1}`, name: `Character ${i + 1}` })
+      );
+
       gameStateService.updateState(state => ({
         ...state,
+        roster: new Map(chars.map(c => [c.id, c])),
         party: {
           ...state.party,
+          members: chars.map(c => c.id),
           formation: {
-            frontRow: ['non-existent-id'],
+            frontRow: chars.slice(0, 3).map(c => c.id),
+            backRow: chars.slice(3, 6).map(c => c.id)
+          }
+        }
+      }));
+
+      // Left column: positions 1, 3, 5 (indices 0, 2, 4)
+      const leftChars = component.leftColumnCharacters();
+      expect(leftChars.length).toBe(3);
+      expect(leftChars[0].id).toBe('char-1');
+      expect(leftChars[1].id).toBe('char-3');
+      expect(leftChars[2].id).toBe('char-5');
+
+      // Right column: positions 2, 4, 6 (indices 1, 3, 5)
+      const rightChars = component.rightColumnCharacters();
+      expect(rightChars.length).toBe(3);
+      expect(rightChars[0].id).toBe('char-2');
+      expect(rightChars[1].id).toBe('char-4');
+      expect(rightChars[2].id).toBe('char-6');
+    });
+
+    it('should handle partial party correctly', () => {
+      const char1 = createTestCharacter({ id: 'char-1' });
+      const char2 = createTestCharacter({ id: 'char-2' });
+      const char3 = createTestCharacter({ id: 'char-3' });
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([
+          [char1.id, char1],
+          [char2.id, char2],
+          [char3.id, char3]
+        ]),
+        party: {
+          ...state.party,
+          members: [char1.id, char2.id, char3.id],
+          formation: {
+            frontRow: [char1.id, char2.id, char3.id],
             backRow: []
           }
         }
       }));
 
-      expect(component.frontRowCharacters().length).toBe(0);
+      // Left: positions 1, 3 (indices 0, 2)
+      const leftChars = component.leftColumnCharacters();
+      expect(leftChars.length).toBe(2);
+      expect(leftChars[0].id).toBe('char-1');
+      expect(leftChars[1].id).toBe('char-3');
+
+      // Right: position 2 (index 1)
+      const rightChars = component.rightColumnCharacters();
+      expect(rightChars.length).toBe(1);
+      expect(rightChars[0].id).toBe('char-2');
+    });
+
+    it('should return empty arrays when party is empty', () => {
+      expect(component.leftColumnCharacters().length).toBe(0);
+      expect(component.rightColumnCharacters().length).toBe(0);
     });
   });
 
-  describe('computed: backRowCharacters()', () => {
-    it('should return characters in back row', () => {
-      const char1 = createTestCharacter({ id: 'char-1', name: 'Fighter' });
-      const char2 = createTestCharacter({ id: 'char-2', name: 'Mage' });
+  describe('computed: footerMenuItems()', () => {
+    it('should include Add Character button enabled when party not full', () => {
+      const char1 = createTestCharacter({ id: 'char-1' });
 
       gameStateService.updateState(state => ({
         ...state,
-        roster: new Map([
-          [char1.id, char1],
-          [char2.id, char2]
-        ]),
+        roster: new Map([[char1.id, char1]]),
         party: {
           ...state.party,
-          members: [char1.id, char2.id],
+          members: [char1.id],
+          formation: { frontRow: [char1.id], backRow: [] }
+        }
+      }));
+
+      const items = component.footerMenuItems();
+      const addItem = items.find(i => i.id === 'add');
+      expect(addItem).toBeTruthy();
+      expect(addItem?.enabled).toBe(true);
+      expect(addItem?.shortcut).toBe('A');
+    });
+
+    it('should disable Add Character button when party is full', () => {
+      const chars = Array.from({ length: 6 }, (_, i) =>
+        createTestCharacter({ id: `char-${i}`, alignment: Alignment.NEUTRAL })
+      );
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map(chars.map(c => [c.id, c])),
+        party: {
+          ...state.party,
+          members: chars.map(c => c.id),
           formation: {
-            frontRow: [char1.id],
-            backRow: [char2.id]
+            frontRow: chars.slice(0, 3).map(c => c.id),
+            backRow: chars.slice(3, 6).map(c => c.id)
           }
         }
       }));
 
-      const backRow = component.backRowCharacters();
-      expect(backRow.length).toBe(1);
-      expect(backRow[0].id).toBe('char-2');
-      expect(backRow[0].name).toBe('Mage');
-    });
-
-    it('should return empty array when back row is empty', () => {
-      expect(component.backRowCharacters().length).toBe(0);
-    });
-  });
-
-  describe('computed: partyGold()', () => {
-    it('should return party gold amount', () => {
-      gameStateService.updateState(state => ({
-        ...state,
-        party: {
-          ...state.party,
-          gold: 500
-        }
-      }));
-
-      expect(component.partyGold()).toBe(500);
-    });
-
-    it('should return 0 when party has no gold', () => {
-      expect(component.partyGold()).toBe(0);
+      const items = component.footerMenuItems();
+      const addItem = items.find(i => i.id === 'add');
+      expect(addItem?.enabled).toBe(false);
     });
   });
 
@@ -675,17 +729,140 @@ describe('TavernComponent (redesigned)', () => {
   });
 
   describe('handleEscape()', () => {
-    it('should navigate to castle menu', () => {
+    it('should close dialog if open instead of navigating', () => {
+      component.showAddDialog.set(true);
+      component.handleEscape();
+
+      expect(component.showAddDialog()).toBe(false);
+      expect(navigationService.returnToCastle).not.toHaveBeenCalled();
+    });
+
+    it('should navigate to castle menu when dialog is closed', () => {
+      component.showAddDialog.set(false);
       component.handleEscape();
       expect(navigationService.returnToCastle).toHaveBeenCalled();
     });
 
-    it('should navigate to castle menu on ESC key press', () => {
+    it('should navigate to castle menu on ESC key press when dialog closed', () => {
+      component.showAddDialog.set(false);
       const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
       window.dispatchEvent(escapeEvent);
       fixture.detectChanges();
 
       expect(navigationService.returnToCastle).toHaveBeenCalled();
+    });
+  });
+
+  describe('Add Character Dialog', () => {
+    beforeEach(() => {
+      const availableChar = createTestCharacter({
+        id: 'available-1',
+        name: 'Available Guy',
+        status: CharacterStatus.OK,
+        alignment: Alignment.NEUTRAL
+      });
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([[availableChar.id, availableChar]])
+      }));
+    });
+
+    it('should open dialog with available characters', () => {
+      component.openAddDialog();
+
+      expect(component.showAddDialog()).toBe(true);
+      expect(component.dialogCharacters().length).toBe(1);
+      expect(component.dialogCharacters()[0].character.id).toBe('available-1');
+    });
+
+    it('should close dialog and add character on selection', () => {
+      const availableChar = gameStateService.state().roster.get('available-1')!;
+
+      component.openAddDialog();
+      component.onDialogCharacterSelected(availableChar);
+
+      expect(component.showAddDialog()).toBe(false);
+      expect(gameStateService.state().party.members).toContain('available-1');
+    });
+
+    it('should close dialog and clear characters on cancel', () => {
+      component.openAddDialog();
+      expect(component.dialogCharacters().length).toBe(1);
+
+      component.onDialogCancelled();
+
+      expect(component.showAddDialog()).toBe(false);
+      expect(component.dialogCharacters().length).toBe(0);
+    });
+
+    it('should mark characters with alignment conflicts as disabled', () => {
+      const goodChar = createTestCharacter({
+        id: 'good-1',
+        alignment: Alignment.GOOD
+      });
+      const evilChar = createTestCharacter({
+        id: 'evil-1',
+        alignment: Alignment.EVIL
+      });
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map([
+          [goodChar.id, goodChar],
+          [evilChar.id, evilChar]
+        ]),
+        party: {
+          ...state.party,
+          members: [goodChar.id],
+          formation: { frontRow: [goodChar.id], backRow: [] }
+        }
+      }));
+
+      component.openAddDialog();
+
+      // Evil character should be disabled due to alignment conflict
+      const evilOption = component.dialogCharacters().find(o => o.character.id === 'evil-1');
+      expect(evilOption?.enabled).toBe(false);
+    });
+
+    it('should open dialog on A key press when party not full', () => {
+      component.handleAddKey();
+
+      expect(component.showAddDialog()).toBe(true);
+    });
+
+    it('should not open dialog on A key press when party is full', () => {
+      const chars = Array.from({ length: 6 }, (_, i) =>
+        createTestCharacter({ id: `char-${i}`, alignment: Alignment.NEUTRAL })
+      );
+
+      gameStateService.updateState(state => ({
+        ...state,
+        roster: new Map(chars.map(c => [c.id, c])),
+        party: {
+          ...state.party,
+          members: chars.map(c => c.id),
+          formation: {
+            frontRow: chars.slice(0, 3).map(c => c.id),
+            backRow: chars.slice(3, 6).map(c => c.id)
+          }
+        }
+      }));
+
+      component.handleAddKey();
+
+      expect(component.showAddDialog()).toBe(false);
+    });
+
+    it('should not open dialog on A key press when dialog already open', () => {
+      component.showAddDialog.set(true);
+      const initialDialogChars = component.dialogCharacters();
+
+      component.handleAddKey();
+
+      // Dialog should still be open, characters shouldn't be reset
+      expect(component.showAddDialog()).toBe(true);
     });
   });
 
