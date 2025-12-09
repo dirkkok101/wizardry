@@ -564,20 +564,20 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const actions: CharacterAction[] = [
-      { type: 'open', label: 'OPEN' },
-      { type: 'inspect', label: 'INSPECT' }
+      { type: 'open', label: 'Open' },
+      { type: 'inspect', label: 'Inspect' }
     ];
 
     // CALFO only if character can cast it AND trap not yet fully revealed
     const trapFullyRevealed = this.scrambledTrapState()?.fullyRevealed ?? false;
     if (TrapService.canCastCalfo(char) && !trapFullyRevealed) {
-      actions.push({ type: 'calfo', label: 'CALFO' });
+      actions.push({ type: 'calfo', label: 'Calfo' });
     }
 
     // Disarm only if trap is identified
     const chest = this.pendingChest();
     if (chest?.trapIdentified && chest?.trapped && !chest?.trapDisarmed) {
-      actions.push({ type: 'disarm', label: 'DISARM' });
+      actions.push({ type: 'disarm', label: 'Disarm' });
     }
 
     return actions;
