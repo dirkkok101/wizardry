@@ -10,6 +10,7 @@ import { CharacterCreationComponent } from '@scenes/character-creation/character
 import { CharacterInspectionComponent } from '@scenes/character-inspection/character-inspection.component';
 import { SpellCastingComponent } from '@scenes/spell-casting/spell-casting.component';
 import { MazeComponent } from '@scenes/maze/maze.component';
+import { CampComponent } from '@scenes/camp/camp.component';
 import { gameLoadedGuard } from '@core/guards/game-loaded.guard';
 import { partyExistsGuard } from '@core/guards/party-exists.guard';
 import { partyNotInMazeGuard } from '@core/guards/party-not-in-maze.guard';
@@ -68,10 +69,15 @@ export const routes: Routes = [
     component: SpellCastingComponent,
     canActivate: [gameLoadedGuard]
   },
-  // Dungeon zone route - combat/chest/victory handled via overlays in maze
+  // Dungeon zone routes - combat/chest/victory handled via overlays in maze
   {
     path: 'maze',
     component: MazeComponent,
+    canActivate: [gameLoadedGuard, partyExistsGuard, partyInMazeGuard]
+  },
+  {
+    path: 'camp',
+    component: CampComponent,
     canActivate: [gameLoadedGuard, partyExistsGuard, partyInMazeGuard]
   },
   {

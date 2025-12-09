@@ -100,6 +100,7 @@ export interface DungeonState {
   openDoors: Set<string>            // "level_y_x" - doors currently open
   lootedTiles: Set<string>          // "level_x_y" - searchable tiles already looted
   latumapicActive: boolean          // LATUMAPIC active - monsters identified for expedition
+  pendingCampEncounter?: boolean    // Random encounter triggered during camp healing
 }
 
 export interface EncounterTable {

@@ -13,7 +13,8 @@ export type ReturnDestination =
   | 'inn'
   | 'training-grounds'
   | 'maze'
-  | 'chest';
+  | 'chest'
+  | 'camp';
 
 /**
  * SceneNavigationService - Centralized navigation for all scene transitions
@@ -95,7 +96,7 @@ export class SceneNavigationService {
     // Validate returnTo is a valid destination, default to castle-menu if not
     const validDestinations: ReturnDestination[] = [
       'castle-menu', 'tavern', 'temple', 'shop', 'inn',
-      'training-grounds', 'maze'
+      'training-grounds', 'maze', 'camp'
     ];
 
     const destination = validDestinations.includes(returnTo as ReturnDestination)
@@ -126,5 +127,13 @@ export class SceneNavigationService {
 
   goToTrainingGrounds(): Promise<boolean> {
     return this.router.navigate(['/training-grounds']);
+  }
+
+  /**
+   * Navigate to camp (from maze)
+   * Used by: Maze
+   */
+  goToCamp(): Promise<boolean> {
+    return this.router.navigate(['/camp']);
   }
 }

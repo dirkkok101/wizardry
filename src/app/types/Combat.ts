@@ -130,6 +130,23 @@ export interface AttackResult {
 }
 
 /**
+ * Structured damage result for cinematic display
+ * Used by CinematicArenaComponent to show sequential damage numbers
+ */
+export interface DamageResult {
+  /** Target combatant ID (monster instance ID or character ID) */
+  targetId: string
+  /** Display name for the target */
+  targetName: string
+  /** Damage value dealt */
+  value: number
+  /** Type of effect (damage, healing, status) */
+  type: 'damage' | 'healing' | 'status'
+  /** Category for visual styling (normal, critical, resisted, miss) */
+  category?: 'normal' | 'critical' | 'resisted' | 'miss'
+}
+
+/**
  * Result of executing a combat command
  * Includes state changes and optional metadata about what happened
  */
@@ -145,6 +162,8 @@ export interface CommandExecutionResult {
   }
   /** Character updates from this command (healing, status changes, etc.) */
   characterUpdates?: Map<string, Character>
+  /** Structured damage results for multi-target spells (MAHALITO, etc.) */
+  damageResults?: DamageResult[]
 }
 
 export interface SpellEffect {
@@ -319,6 +338,13 @@ export interface CombatRoundEvent {
 
   /** Spell point deduction info - applied after event displays */
   spellCast?: { characterId: string; spellId: string }
+
+  /**
+   * Structured damage results for cinematic arena display
+   * Contains per-target damage values for sequential animation
+   * Used for group spells (MAHALITO) and multi-target effects
+   */
+  damageResults?: DamageResult[]
 }
 
 /**

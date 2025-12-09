@@ -1,0 +1,67 @@
+<div class="camp-scene">
+  <app-scene-title title="CAMP" [showPartyGold]="true" />
+
+  <!-- 3-Column Layout: Left | Center | Right -->
+  <div class="camp-content">
+    <!-- Left Column: Positions 1, 3, 5 -->
+    <div class="left-panel">
+      <app-character-panel
+        [characters]="leftColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['inspect', 'moveUp', 'moveDown']"
+        [showSprites]="true"
+        (actionClick)="handleActionClick($event)"
+      />
+    </div>
+
+    <!-- Center Column: Camp Scene Sprite + Healing Log -->
+    <div class="center-panel">
+      <div class="scene-viewport">
+        <img src="assets/sprites/scenes/camp_scene.png" alt="Camp" class="scene-image" />
+      </div>
+
+      @if (healingLog().length > 0) {
+        <div class="healing-log-container">
+          <app-message-log [messages]="healingLog()" />
+        </div>
+      }
+    </div>
+
+    <!-- Right Column: Positions 2, 4, 6 -->
+    <div class="right-panel">
+      <app-character-panel
+        [characters]="rightColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['inspect', 'moveUp', 'moveDown']"
+        [showSprites]="true"
+        (actionClick)="handleActionClick($event)"
+      />
+    </div>
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Abandon Party Confirmation Dialog -->
+  @if (showAbandonConfirmation()) {
+    <div class="abandon-overlay" (click)="cancelAbandon()">
+      <div class="abandon-dialog" (click)="$event.stopPropagation()">
+        <h3 class="abandon-title">Abandon Party?</h3>
+        <p class="abandon-message">
+          All party members will die and their bodies (with gold) will remain
+          in the dungeon for recovery by a future party.
+        </p>
+        <div class="abandon-buttons">
+          <button class="abandon-btn danger" (click)="confirmAbandon()">
+            Abandon
+          </button>
+          <button class="abandon-btn cancel" (click)="cancelAbandon()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

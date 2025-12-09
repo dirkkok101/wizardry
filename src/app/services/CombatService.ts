@@ -114,6 +114,7 @@ export class CombatService {
    * @param isFriendlyEncounter - True if party chose to fight friendly monsters
    * @param encounterReason - Why encounter triggered (for treasure mechanics)
    * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
+   * @param forceAmbush - Force monsters to surprise party (used for camp encounters)
    * @returns Initial combat state with monster groups and surprise state
    */
   static initiateCombat(
@@ -123,7 +124,8 @@ export class CombatService {
     fixedEncounterConfig?: FixedEncounterConfig,
     isFriendlyEncounter: boolean = false,
     encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap',
-    latumapicActive: boolean = false
+    latumapicActive: boolean = false,
+    forceAmbush: boolean = false
   ): CombatState {
     // Generate monster groups - use fixed encounter config if provided
     // Fixed encounters use encounterId for direct monster spawning
@@ -139,10 +141,15 @@ export class CombatService {
       currentMageLevel: group.monsters[0]?.mageLevel ?? 0
     }))
 
-    // Roll for surprise
-    const { partySurprises, monstersSurprise } = this.rollSurprise()
-    const surpriseState: 'party' | 'monsters' | 'none' =
-      partySurprises ? 'party' : monstersSurprise ? 'monsters' : 'none'
+    // Roll for surprise (or force ambush for camp encounters)
+    let surpriseState: 'party' | 'monsters' | 'none'
+    if (forceAmbush) {
+      // Party was caught off guard during camp healing
+      surpriseState = 'monsters'
+    } else {
+      const { partySurprises, monstersSurprise } = this.rollSurprise()
+      surpriseState = partySurprises ? 'party' : monstersSurprise ? 'monsters' : 'none'
+    }
 
     return {
       monsterGroups: groupsWithMageLevel,
@@ -1092,11 +1099,15 @@ export class CombatService {
 
       // If not resisted, instant kill the character
       if (!criticalResisted) {
-        // Character instant kill - handled via characterUpdates (not state.monsterGroups)
-        const resultMessage = `${this.RESULT_MARKER}${attackResult.message}`
+        // Character instant kill - generate clear decapitation message
+        // This makes it obvious why the character died from a "small" hit
+        const deathMessage = `${actorName} decapitates ${character.name}!`
+        if (this.DEBUG_COMBAT) {
+          console.debug(`[Combat] ${character.name} fails to resist critical hit - INSTANT DEATH!`)
+        }
         return {
           newState: state,
-          messages: [actionMessage, resultMessage],
+          messages: [actionMessage, `${this.RESULT_MARKER}${deathMessage}`],
           characterUpdates: new Map([[
             target.id,
             { ...character, hp: 0, status: CharacterStatus.DEAD }
@@ -1522,8 +1533,9 @@ export class CombatService {
       })
     }
 
-    // Apply damage to targets (if spell has damage)
+    // Apply damage to targets (if spell has damage) and build structured damageResults
     let newState = state
+    const damageResults: import('@models/Combat').DamageResult[] = []
     if (spellEffect.damage && spellEffect.damage.length > 0) {
       for (let i = 0; i < targets.length && i < spellEffect.damage.length; i++) {
         const target = targets[i]
@@ -1532,6 +1544,17 @@ export class CombatService {
           console.log(`[Combat] Spell damage: ${target.name} takes ${damage} damage (HP: ${target.hp} -> ${Math.max(0, target.hp - damage)})`)
         }
         newState = this.applyDamage(newState, target, damage)
+
+        // Build structured damage result for cinematic display
+        if (damage > 0) {
+          damageResults.push({
+            targetId: target.id,
+            targetName: this.getCombatantName(target, state),
+            value: damage,
+            type: 'damage',
+            category: 'normal'
+          })
+        }
       }
     }
 
@@ -1876,7 +1899,8 @@ export class CombatService {
     return {
       newState,
       messages: [actionMessage, resultMessage],
-      characterUpdates: characterUpdates.size > 0 ? characterUpdates : undefined
+      characterUpdates: characterUpdates.size > 0 ? characterUpdates : undefined,
+      damageResults: damageResults.length > 0 ? damageResults : undefined
     }
   }
 
@@ -2617,12 +2641,17 @@ export class CombatService {
       // This avoids re-rolling attack and ensures displayed damage matches the actual state
       if (result.targetDamage && command.target && !('monsterId' in command.target)) {
         const target = command.target as Character
-        // Get existing character state (may have already been damaged this round)
-        const existingChar = damagedCharacters.get(target.id) || target
 
-        // Apply the damage that was actually calculated (from targetDamage)
-        const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
-        damagedCharacters.set(target.id, updated)
+        // If characterUpdates already handled this target (e.g., status effect infliction),
+        // skip damage re-application to avoid double damage bug.
+        // The characterUpdates from executeCommand already contains the correct final HP.
+        if (!result.characterUpdates?.has(target.id)) {
+          // Normal path: apply damage to accumulated state
+          const existingChar = damagedCharacters.get(target.id) || target
+          const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
+          damagedCharacters.set(target.id, updated)
+        }
+        // Note: if characterUpdates has the target, it was already merged at lines 2614-2617
       }
 
       // Check victory after each action
@@ -3043,13 +3072,21 @@ export class CombatService {
 
       if (result.targetDamage && command.target && !('monsterId' in command.target)) {
         const target = command.target as Character
-        // Get existing character state (may have already been damaged this round)
-        const existingChar = accumulatedCharacterUpdates.get(target.id) || target
 
-        // Apply the damage that was actually calculated (from targetDamage)
-        const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
-        accumulatedCharacterUpdates.set(target.id, updated)
-        eventCharacterUpdates.set(target.id, createCharacterUpdate(updated, updated.hp))
+        // If characterUpdates already handled this target (e.g., status effect infliction),
+        // skip damage re-application to avoid double damage bug.
+        // The characterUpdates from executeCommand already contains the correct final HP.
+        if (result.characterUpdates?.has(target.id)) {
+          // Just use the already-processed character state for event display
+          const charFromUpdates = result.characterUpdates.get(target.id)!
+          eventCharacterUpdates.set(target.id, createCharacterUpdate(charFromUpdates, charFromUpdates.hp))
+        } else {
+          // Normal path: apply damage to accumulated state
+          const existingChar = accumulatedCharacterUpdates.get(target.id) || target
+          const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
+          accumulatedCharacterUpdates.set(target.id, updated)
+          eventCharacterUpdates.set(target.id, createCharacterUpdate(updated, updated.hp))
+        }
       }
 
       // Check if monster groups changed (efficient comparison without JSON.stringify)
@@ -3061,7 +3098,8 @@ export class CombatService {
         messages: result.messages,
         ...(monstersChanged && { monsterGroupsSnapshot: [...currentState.monsterGroups] }),
         ...(eventCharacterUpdates.size > 0 && { characterUpdates: eventCharacterUpdates }),
-        ...(spellCast && { spellCast })
+        ...(spellCast && { spellCast }),
+        ...(result.damageResults && result.damageResults.length > 0 && { damageResults: result.damageResults })
       }
       events.push(event)
 

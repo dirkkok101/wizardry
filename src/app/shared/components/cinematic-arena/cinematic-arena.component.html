@@ -1,0 +1,171 @@
+<!-- Cinematic Arena - Combat Round Visualization -->
+@if (visible()) {
+  <div
+    class="cinematic-arena"
+    [class.playing]="isPlaying()"
+    role="region"
+    aria-label="Combat round playback"
+  >
+    <!-- Letterbox Top Bar -->
+    <div
+      class="letterbox-bar top"
+      [class.expanded]="letterboxExpanded()"
+    ></div>
+
+    <!-- Main Arena Content -->
+    <div class="arena-content">
+      <!-- Split-Screen Arena -->
+      @if (arenaState(); as state) {
+        <div class="arena-stage">
+
+          <!-- Attacker Panel (Left) -->
+          <div
+            class="combatant-panel attacker"
+            [class.attacking]="attackerAnimation() === 'attacking'"
+            [class.casting]="attackerAnimation() === 'casting'"
+          >
+            <div
+              class="portrait-card"
+              [class.character]="state.attacker.type === 'character'"
+              [class.monster]="state.attacker.type === 'monster'"
+              [style.--group-color]="getGroupColor(state.attacker.groupId)"
+            >
+              @if (!hasSpriteError(state.attacker.spriteUrl)) {
+                <img
+                  [src]="state.attacker.spriteUrl"
+                  [alt]="state.attacker.name"
+                  class="portrait-image"
+                  (error)="onSpriteError(state.attacker.spriteUrl)"
+                />
+              } @else {
+                <div class="portrait-fallback-large">
+                  {{ getSpriteInitial(state.attacker.name) }}
+                </div>
+              }
+              <!-- Top overlay: Stats (class/HP for characters, groupId/count for monsters) -->
+              <div class="portrait-top-overlay">
+                @if (state.attacker.type === 'monster') {
+                  <span class="stat-left group-id">[{{ state.attacker.groupId }}]</span>
+                  <span class="stat-right monster-count">×{{ getLiveCount(state.attacker) }}</span>
+                } @else {
+                  <span class="stat-left class-badge">{{ state.attacker.className }}</span>
+                  <span
+                    class="stat-right hp-display"
+                    [class.warning]="isHpWarning(state.attacker)"
+                    [class.critical]="isHpCritical(state.attacker)"
+                  >{{ getLiveHp(state.attacker) }}/{{ state.attacker.maxHp }}</span>
+                }
+              </div>
+              <!-- Bottom overlay: Name -->
+              <div class="portrait-name-overlay">{{ state.attacker.name }}</div>
+            </div>
+          </div>
+
+          <!-- Action Center - Dramatic Labels (centered between cards) -->
+          <div class="action-center">
+            <!-- Attacker Name -->
+            <div class="attacker-label" [class.visible]="showAttackerLabel()">
+              {{ state.attacker.name }}
+            </div>
+
+            <!-- Action Verb + Spell Name -->
+            <div class="action-verb" [class.visible]="showActionVerb()">
+              {{ getActionVerbDisplay(state.actionAnimation) }}
+              @if (state.spellName) {
+                <span class="spell-name">{{ state.spellName }}</span>
+              }
+            </div>
+
+            <!-- Outcome Label (HITS/MISSES/CRITICAL HIT!) -->
+            <div
+              class="outcome-label"
+              [class.visible]="showOutcome()"
+              [class.miss]="state.damageResult?.type === 'miss'"
+              [class.critical]="state.damageResult?.type === 'critical'"
+              [class.damage]="state.damageResult?.type === 'damage'"
+              [class.heal]="state.damageResult?.type === 'heal'"
+              [class.status]="state.damageResult?.type === 'status'"
+            >
+              {{ getOutcomeText(state.damageResult) }}
+            </div>
+          </div>
+
+          <!-- Target Panel (Right) - Supports stacked cards for group/all-enemies -->
+          @if (state.targets.length > 0) {
+            <div
+              class="combatant-panel target"
+              [class.shaking]="targetAnimation() === 'shaking'"
+              [class.stacked]="state.targets.length > 1"
+            >
+              <div class="target-stack">
+                @for (target of state.targets; track target.id; let i = $index) {
+                  <div
+                    class="portrait-card"
+                    [class.character]="target.type === 'character'"
+                    [class.monster]="target.type === 'monster'"
+                    [style.--group-color]="getGroupColor(target.groupId)"
+                    [style.--stack-index]="i"
+                  >
+                    @if (!hasSpriteError(target.spriteUrl)) {
+                      <img
+                        [src]="target.spriteUrl"
+                        [alt]="target.name"
+                        class="portrait-image"
+                        (error)="onSpriteError(target.spriteUrl)"
+                      />
+                    } @else {
+                      <div class="portrait-fallback-large">
+                        {{ getSpriteInitial(target.name) }}
+                      </div>
+                    }
+                    <!-- Top overlay: Stats (class/HP for characters, groupId/count for monsters) -->
+                    <div class="portrait-top-overlay">
+                      @if (target.type === 'monster') {
+                        <span class="stat-left group-id">[{{ target.groupId }}]</span>
+                        <span class="stat-right monster-count">×{{ getLiveCount(target) }}</span>
+                      } @else {
+                        <span class="stat-left class-badge">{{ target.className }}</span>
+                        <span
+                          class="stat-right hp-display"
+                          [class.warning]="isHpWarning(target)"
+                          [class.critical]="isHpCritical(target)"
+                        >{{ getLiveHp(target) }}/{{ target.maxHp }}</span>
+                      }
+                    </div>
+                    <!-- Bottom overlay: Name -->
+                    <div class="portrait-name-overlay">{{ target.name }}</div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <!-- Empty target slot for self-targeting actions -->
+            <div class="combatant-panel target empty">
+              <div class="empty-target-text">
+                @if (state.actionAnimation === 'parry') {
+                  Defending
+                } @else if (state.actionAnimation === 'flee') {
+                  Escaping!
+                } @else {
+                  Self
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Letterbox Bottom Bar -->
+    <div
+      class="letterbox-bar bottom"
+      [class.expanded]="letterboxExpanded()"
+    ></div>
+
+    <!-- Floating Damage Layer -->
+    <app-floating-damage
+      [entries]="damageEntries()"
+      (entryComplete)="onDamageComplete($event)"
+    />
+  </div>
+}

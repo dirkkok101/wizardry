@@ -1,0 +1,223 @@
+// Camp Scene - 3-Column Layout (mirrors Castle Scene)
+// Uses CharacterPanelComponent for portrait-left character cards
+
+.camp-scene {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
+  overflow: hidden;
+
+  // SceneTitleComponent handles its own styling
+  app-scene-title {
+    display: block;
+    flex-shrink: 0;
+  }
+}
+
+// ============================================
+// 3-COLUMN LAYOUT (Same as Castle Scene)
+// Left: Positions 1,3,5 | Center: Scene Sprite | Right: Positions 2,4,6
+// ============================================
+.camp-content {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+
+  // Tablet and mobile - stack vertically
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
+// Side panels (character columns)
+.left-panel,
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  align-self: start;
+
+  // Make character panel fill the entire side column
+  app-character-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+
+  @media (max-width: 767px) {
+    display: none; // Hide side panels on mobile
+  }
+}
+
+// Center column: Scene Sprite + Healing Log
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;  // Top-align image to match maze viewport position
+  min-height: 0;
+  overflow: visible;
+  max-width: fit-content;
+  padding: 0.5rem 2px;
+  gap: 0.5rem;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;              // Fill available vertical space (matches Castle)
+  min-height: 0;
+  width: 740px;            // Fixed width matching maze viewport
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+// Healing log display
+.healing-log-container {
+  width: 740px;
+  max-width: 100%;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: var(--space-2);
+  max-height: 200px;
+  overflow-y: auto;
+
+  app-message-log {
+    display: block;
+  }
+}
+
+// ============================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================
+
+// Large screens - wider minimum for side panels
+@media (min-width: 1200px) {
+  .camp-content {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  }
+}
+
+// Compact height (< 768px viewport height)
+@media (max-height: 767px) {
+  .camp-scene {
+    padding: 0.25rem;
+  }
+
+  .camp-content {
+    gap: 0.35rem;
+  }
+}
+
+// Mobile layout (< 768px width)
+@media (max-width: 767px) {
+  .camp-content {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .center-panel {
+    order: 1;
+  }
+}
+
+// ============================================
+// ABANDON PARTY DIALOG
+// ============================================
+.abandon-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.abandon-dialog {
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-status-critical, #dc2626);
+  padding: 2rem;
+  border-radius: var(--card-border-radius);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+  max-width: 400px;
+  text-align: center;
+}
+
+.abandon-title {
+  color: var(--color-status-critical, #dc2626);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.abandon-message {
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.abandon-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.abandon-btn {
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--card-border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.danger {
+    background: rgba(220, 38, 38, 0.2);
+    border: 1px solid var(--color-status-critical, #dc2626);
+    color: var(--color-status-critical, #dc2626);
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.3);
+      box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
+    }
+  }
+
+  &.cancel {
+    background: transparent;
+    border: 1px solid var(--color-gold-dim);
+    color: var(--color-gold-primary);
+
+    &:hover {
+      background: rgba(212, 165, 116, 0.1);
+      border-color: var(--color-gold-primary);
+    }
+  }
+}

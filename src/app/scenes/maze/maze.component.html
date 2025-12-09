@@ -50,6 +50,19 @@
           (groupClicked)="onCombatGroupClicked($event)"
         />
 
+        <!-- Cinematic Arena (FFX-style combat round playback) -->
+        @if (showCinematicArena()) {
+          <app-cinematic-arena
+            [visible]="showCinematicArena()"
+            [events]="arenaEvents()"
+            [audit]="arenaAudit()"
+            [partyCharacters]="partyCharacters()"
+            [monsterGroups]="monsterGroups()"
+            (playbackComplete)="onArenaComplete()"
+            (eventPlayed)="onArenaEventPlayed($event)"
+          />
+        }
+
         <!-- Chest Overlay (Theater Stage) -->
         <app-chest-overlay
           [visible]="showChestOverlay()"
@@ -169,25 +182,4 @@
     (characterSelected)="onTargetSelected($event)"
     (cancelled)="onTargetDialogCancelled()"
   />
-
-  <!-- Abandon Party Confirmation Dialog -->
-  @if (showAbandonConfirmation()) {
-    <div class="abandon-overlay" (click)="cancelAbandon()">
-      <div class="abandon-dialog" (click)="$event.stopPropagation()">
-        <h3 class="abandon-title">Abandon Party?</h3>
-        <p class="abandon-message">
-          All party members will die and their bodies (with gold) will remain
-          in the dungeon for recovery by a future party.
-        </p>
-        <div class="abandon-buttons">
-          <button class="abandon-btn danger" (click)="confirmAbandon()">
-            Abandon
-          </button>
-          <button class="abandon-btn cancel" (click)="cancelAbandon()">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  }
 </div>

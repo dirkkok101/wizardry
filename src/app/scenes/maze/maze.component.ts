@@ -11,6 +11,7 @@ import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/comp
 import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
 import { ChestOverlayComponent, ChestPhase, ChestLetterboxType, ChestSummary, RecommendedHandler } from '@shared/components/chest-overlay/chest-overlay.component';
 import { TileMessageOverlayComponent, TileMessagePhase, TileMessageItem } from '@shared/components/tile-message-overlay/tile-message-overlay.component';
+import { CinematicArenaComponent } from '@shared/components/cinematic-arena/cinematic-arena.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
@@ -37,9 +38,8 @@ import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardType
 import { DungeonState } from '@models/Dungeon';
 import { TextureAtlas } from '@models/texture.types';
 import { ViewportConfig } from '@models/rendering.types';
-import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant } from '@models/Combat';
+import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant, CombatRoundEvent, CombatRoundAudit } from '@models/Combat';
 import { VictoryService, VictoryRewards } from '@services/VictoryService';
-import { PartyAbandonmentService } from '@services/PartyAbandonmentService';
 import { ChestService } from '@services/ChestService';
 import { TrapService } from '@services/TrapService';
 import { TrapDataLoader } from '@services/TrapDataLoader';
@@ -62,7 +62,8 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
     CharacterSelectionDialogComponent,
     CombatOverlayComponent,
     ChestOverlayComponent,
-    TileMessageOverlayComponent
+    TileMessageOverlayComponent,
+    CinematicArenaComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
@@ -115,8 +116,20 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Monster cards should only show after intro completes
   readonly showMonsterCards = computed(() => this.inCombat() && !this.combatIntroActive());
 
-  // Abandon party confirmation state
-  readonly showAbandonConfirmation = signal<boolean>(false);
+  // ============================================================
+  // CINEMATIC ARENA STATE (FFX-style combat visualization)
+  // Shows theatrical playback of combat round execution
+  // ============================================================
+  readonly showCinematicArena = signal<boolean>(false);
+  readonly arenaEvents = signal<CombatRoundEvent[]>([]);
+  readonly arenaAudit = signal<CombatRoundAudit | null>(null);
+  private pendingCombatResult: {
+    finalState: CombatState;
+    finalCharacterUpdates: Map<string, Character>;
+    spellCasters: Map<string, { character: Character; spellId: string }>;
+    victory: boolean;
+    defeat: boolean;
+  } | null = null;
 
   // ============================================================
   // INTEGRATED CHEST STATE (Theater Stage Design)
@@ -487,7 +500,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       { id: 'strafe_left', label: 'Strafe L', shortcut: 'Q', enabled: true },
       { id: 'strafe_right', label: 'Strafe R', shortcut: 'E', enabled: true },
       { id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: canInspect },
-      { id: 'abandon', label: 'Abandon', shortcut: 'X', enabled: true }
+      { id: 'camp', label: 'Camp', shortcut: 'C', enabled: true }
     ];
   });
 
@@ -869,6 +882,70 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Check for chest alarm - triggers immediate combat encounter
     this.checkForChestAlarm();
+
+    // Check for pending camp encounter - random encounter triggered during healing
+    this.checkForPendingCampEncounter();
+  }
+
+  /**
+   * Check if there's a pending camp encounter from healing.
+   * This triggers when monsters approach during camp healing - party is always surprised.
+   */
+  private checkForPendingCampEncounter(): void {
+    const dungeon = this.dungeonState();
+    if (!dungeon?.pendingCampEncounter) return;
+
+    // Clear the flag
+    this.gameState.updateState(state => ({
+      ...state,
+      dungeon: state.dungeon ? { ...state.dungeon, pendingCampEncounter: false } : undefined
+    }));
+
+    console.log('[MazeComponent] Camp encounter triggered - party is surprised!');
+    this.addMessage('Monsters attack while you rest!');
+
+    // Initiate combat with forceAmbush = true (party always surprised)
+    this.initiateCampEncounter(dungeon.currentLevel);
+  }
+
+  /**
+   * Initiate combat from camp encounter - party is always surprised
+   */
+  private async initiateCampEncounter(dungeonLevel: number): Promise<void> {
+    try {
+      const partyChars = this.partyCharacters();
+      const latumapicActive = this.dungeonState()?.latumapicActive ?? false;
+
+      // Force ambush - party caught off guard during healing
+      const combatState = CombatService.initiateCombat(
+        dungeonLevel,
+        partyChars,
+        true,       // canFlee - party can try to flee
+        undefined,  // no fixed encounter
+        false,      // not friendly
+        'random',   // treated as random encounter
+        latumapicActive,
+        true        // forceAmbush - party is surprised
+      );
+
+      // Update game state with combat
+      this.gameState.updateState(state => ({
+        ...state,
+        combat: combatState
+      }));
+
+      console.log('[MazeComponent] Camp encounter combat initiated:', {
+        groups: combatState.monsterGroups.map(g => `${g.id}: ${g.monsters.length}x ${g.monsters[0]?.name}`),
+        surprise: combatState.surpriseState
+      });
+
+      // Show letterbox cinematic banners
+      this.combatPhase.set('encounter');
+      await this.showCombatIntro(combatState);
+    } catch (error) {
+      console.error('[MazeComponent] Failed to initiate camp encounter:', error);
+      this.addMessage('Error: Failed to create encounter.');
+    }
   }
 
   /**
@@ -1195,13 +1272,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.spellContext.set('dungeon');
   }
 
-  @HostListener('window:keydown.x')
-  handleAbandonShortcut(): void {
-    // Ignore if dialogs open or in combat
-    if (this.isDialogOpen() || this.inCombat()) return;
-    this.promptAbandonParty();
-  }
-
   @HostListener('window:keydown.control.e')
   toggleEncounters(): void {
     const currentState = this.gameState.state();
@@ -1452,35 +1522,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'inspect':
         this.inspectTile();
         break;
-      case 'abandon':
-        this.promptAbandonParty();
+      case 'camp':
+        this.navigation.goToCamp();
         break;
     }
-  }
-
-  /**
-   * Show abandon party confirmation dialog
-   */
-  promptAbandonParty(): void {
-    this.showAbandonConfirmation.set(true);
-  }
-
-  /**
-   * Confirm party abandonment - kill all members, leave bodies, return to castle
-   */
-  confirmAbandon(): void {
-    this.gameState.updateState(state =>
-      PartyAbandonmentService.abandonParty(state)
-    );
-    this.showAbandonConfirmation.set(false);
-    this.router.navigate(['/castle-menu']);
-  }
-
-  /**
-   * Cancel abandon confirmation
-   */
-  cancelAbandon(): void {
-    this.showAbandonConfirmation.set(false);
   }
 
   /**
@@ -1910,80 +1955,29 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     try {
-      // Execute round using CombatService
+      // Execute round using CombatService (pre-calculates everything)
       const result = CombatService.executeRoundWithEvents(
         stateWithCommands,
         chars,
         frontRow
       );
 
-      // Display messages with timing:
-      // - First action: instant (no delay)
-      // - Delay before result: 1000ms
-      // - Delay before next action: 500ms
-      const DELAY_BEFORE_RESULT = 1000;
-      const DELAY_BEFORE_NEXT_ACTION = 500;
+      // Store result for use after arena playback completes
+      this.pendingCombatResult = {
+        finalState: result.finalState,
+        finalCharacterUpdates: result.finalCharacterUpdates,
+        spellCasters: result.spellCasters,
+        victory: result.victory,
+        defeat: result.defeat
+      };
 
-      let isFirstMessage = true;
+      // Activate cinematic arena for playback
+      this.arenaEvents.set(result.events);
+      this.arenaAudit.set(result.audit ?? null);
+      this.showCinematicArena.set(true);
 
-      for (const event of result.events) {
-        for (let i = 0; i < event.messages.length; i++) {
-          const msg = event.messages[i];
-          const isResult = CombatService.isResultMessage(msg);
-          const displayMsg = CombatService.stripResultMarker(msg);
-
-          // Delay BEFORE showing this message (first message is instant)
-          if (!isFirstMessage) {
-            const delay = isResult ? DELAY_BEFORE_RESULT : DELAY_BEFORE_NEXT_ACTION;
-            await this.delay(delay);
-          }
-          isFirstMessage = false;
-
-          this.addMessage(displayMsg);
-        }
-      }
-
-      // Apply final state
-      this.gameState.updateState(state => {
-        let newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
-
-        // Apply spell point deductions for characters who cast spells
-        for (const [charId, { spellId }] of result.spellCasters) {
-          const caster = newRoster.get(charId);
-          if (caster) {
-            const updatedCaster = SpellCastingService.deductSpellPoints(caster, spellId);
-            newRoster = new Map(newRoster).set(charId, updatedCaster);
-          }
-        }
-
-        const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
-
-        return {
-          ...state,
-          combat: result.finalState,
-          roster: newRoster,
-          party: {
-            ...state.party,
-            members: newMembers
-          }
-        };
-      });
-
-      // Log final character states after state update
-      console.log('[Combat] After state update - Final character states:');
-      for (const char of this.partyCharacters()) {
-        console.log(`[Combat]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
-      }
-
-      // Check for victory or defeat
-      if (result.victory) {
-        await this.handleVictory(result.finalState);
-      } else if (result.defeat) {
-        await this.handleDefeat();
-      } else {
-        // Continue to next round
-        this.resetForNextRound();
-      }
+      // Arena will call onArenaComplete() and onArenaEventPlayed() during playback
+      // Final state application happens in onArenaComplete()
     } catch (error) {
       console.error('[Maze] Combat execution error:', error);
       this.addMessage('Error executing combat round!');
@@ -2057,6 +2051,87 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isTargetingCharacterId.set(null);
     this.pendingCombatSpell.set(null);
     this.spellContext.set('dungeon');
+  }
+
+  // ============================================================
+  // CINEMATIC ARENA HANDLERS
+  // ============================================================
+
+  /**
+   * Handle arena playback completion
+   * Called when the cinematic arena finishes playing all events
+   */
+  onArenaComplete(): void {
+    console.log('[Arena] Playback complete');
+
+    // Hide the arena
+    this.showCinematicArena.set(false);
+    this.arenaEvents.set([]);
+    this.arenaAudit.set(null);
+
+    // Apply the stored combat result
+    const result = this.pendingCombatResult;
+    if (!result) {
+      console.error('[Arena] No pending combat result!');
+      this.resetForNextRound();
+      return;
+    }
+
+    // Apply final state
+    this.gameState.updateState(state => {
+      let newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
+
+      // Apply spell point deductions for characters who cast spells
+      for (const [charId, { spellId }] of result.spellCasters) {
+        const caster = newRoster.get(charId);
+        if (caster) {
+          const updatedCaster = SpellCastingService.deductSpellPoints(caster, spellId);
+          newRoster = new Map(newRoster).set(charId, updatedCaster);
+        }
+      }
+
+      const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
+
+      return {
+        ...state,
+        combat: result.finalState,
+        roster: newRoster,
+        party: {
+          ...state.party,
+          members: newMembers
+        }
+      };
+    });
+
+    // Log final character states
+    console.log('[Arena] After state update - Final character states:');
+    for (const char of this.partyCharacters()) {
+      console.log(`[Arena]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
+    }
+
+    // Clear pending result
+    this.pendingCombatResult = null;
+
+    // Check for victory or defeat
+    if (result.victory) {
+      this.handleVictory(result.finalState);
+    } else if (result.defeat) {
+      this.handleDefeat();
+    } else {
+      // Continue to next round
+      this.resetForNextRound();
+    }
+  }
+
+  /**
+   * Handle arena event played
+   * Called after each event is displayed in the arena (for combat log sync)
+   */
+  onArenaEventPlayed(event: CombatRoundEvent): void {
+    // Add event messages to combat log
+    for (const msg of event.messages) {
+      this.addMessage(CombatService.stripResultMarker(msg));
+    }
   }
 
   /**
@@ -2263,61 +2338,22 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const result = CombatService.executeRoundWithEvents(stateWithCommands, chars, frontRow);
 
-    // Display messages
-    const DELAY_BEFORE_RESULT = 1000;
-    const DELAY_BEFORE_NEXT_ACTION = 500;
-    let isFirstMessage = true;
+    // Store result for use after arena playback completes
+    this.pendingCombatResult = {
+      finalState: result.finalState,
+      finalCharacterUpdates: result.finalCharacterUpdates,
+      spellCasters: result.spellCasters,
+      victory: result.victory,
+      defeat: result.defeat
+    };
 
-    for (const event of result.events) {
-      for (let i = 0; i < event.messages.length; i++) {
-        const msg = event.messages[i];
-        const isResult = CombatService.isResultMessage(msg);
-        const displayMsg = CombatService.stripResultMarker(msg);
+    // Activate cinematic arena for playback
+    this.arenaEvents.set(result.events);
+    this.arenaAudit.set(result.audit ?? null);
+    this.showCinematicArena.set(true);
 
-        if (!isFirstMessage) {
-          const delay = isResult ? DELAY_BEFORE_RESULT : DELAY_BEFORE_NEXT_ACTION;
-          await this.delay(delay);
-        }
-        isFirstMessage = false;
-
-        this.addMessage(displayMsg);
-      }
-    }
-
-    // Update game state
-    this.gameState.updateState(state => {
-      let newRoster = this.updateRosterFromCombat(state.roster, result.finalCharacterUpdates);
-
-      // Apply spell point deductions for characters who cast spells
-      for (const [charId, { spellId }] of result.spellCasters) {
-        const caster = newRoster.get(charId);
-        if (caster) {
-          const updatedCaster = SpellCastingService.deductSpellPoints(caster, spellId);
-          newRoster = new Map(newRoster).set(charId, updatedCaster);
-        }
-      }
-
-      const newMembers = this.reorderPartyAfterCasualties(state.party.members, newRoster);
-
-      return {
-        ...state,
-        combat: result.finalState,
-        roster: newRoster,
-        party: {
-          ...state.party,
-          members: newMembers
-        }
-      };
-    });
-
-    // Check for defeat
-    if (result.defeat) {
-      await this.handleDefeat();
-    } else {
-      // Continue to player's turn
-      this.isExecutingRound.set(false);
-      this.resetForNextRound();
-    }
+    // Arena will call onArenaComplete() when done
+    // State application and defeat handling happen there
   }
 
   private formatMonsterName(monsterId: string): string {
@@ -3278,14 +3314,18 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Handle alarm trap (triggers combat)
    */
   private handleChestAlarm(): void {
+    // Clear pending chest (don't set chestAlarmActive flag - we trigger encounter directly)
     this.gameState.updateState(state => ({
       ...state,
-      chestAlarmActive: true,
       pendingChest: undefined
     }));
 
     this.chestLastMessage.update(m => m + ' Monsters approach!');
     this.closeChestOverlay();
+
+    // Directly trigger the encounter (alarm traps cannot be fled)
+    this.addMessage('An alarm sounds! Monsters rush to attack!');
+    this.initiateEncounter(this.currentLevel(), false);
   }
 
   /**

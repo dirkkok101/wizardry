@@ -131,8 +131,13 @@ export function createFloatingDamage(
  * Parse combat message to determine damage type and extract value
  */
 export function parseCombatMessage(message: string): { value: string; type: DamageType } | null {
-  // Critical hit patterns
-  if (message.includes('CRITICAL') || message.includes('critical')) {
+  // Critical hit patterns - includes instant kill decapitation
+  if (message.includes('CRITICAL') || message.includes('critical') ||
+      message.includes('decapitates') || message.includes('decapitated')) {
+    // Decapitation = instant kill, show dramatic text instead of damage number
+    if (message.includes('decapitates') || message.includes('decapitated')) {
+      return { value: 'INSTANT KILL!', type: 'critical' }
+    }
     const match = message.match(/(\d+)\s*(?:damage|HP|points)/i)
     return match ? { value: match[1], type: 'critical' } : { value: 'CRIT!', type: 'critical' }
   }

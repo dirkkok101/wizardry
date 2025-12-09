@@ -20,4 +20,5 @@ export enum SceneType {
   MAZE = 'MAZE',
   COMBAT = 'COMBAT',
   CHEST = 'CHEST',
+  CAMP = 'CAMP',
 }
