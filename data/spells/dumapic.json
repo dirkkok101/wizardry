@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "utility",
   "target": "party",
-  "description": "Reveals exact party coordinates (X, Y) and current dungeon level",
+  "description": "Clarity - Reveals the party's exact position in the dungeon, displaying X and Y coordinates and current depth below the castle. Essential for navigation and vital for calculating safe MALOR teleportation destinations.",
   "castableIn": ["camp"],
   "utility": "show_coordinates"
 }

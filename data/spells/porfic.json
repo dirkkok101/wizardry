@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "buff",
   "target": "caster",
-  "description": "Creates magical shield around caster, reducing AC by 4",
+  "description": "Shield - Surrounds the caster with an invisible barrier of divine protection, reducing Armor Class by 4 for the duration of battle. Essential personal defense for priests in dangerous encounters.",
   "castableIn": ["combat"],
   "acModifier": -4
 }

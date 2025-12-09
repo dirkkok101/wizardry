@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "resurrection",
   "target": "dead_or_ashed_ally",
-  "description": "Ultimate resurrection spell - can resurrect from Dead OR Ashes with full HP",
+  "description": "Greater Life - The ultimate resurrection prayer that can restore life even to those reduced to ashes, returning them with full HP. If the spell fails on a dead character, they become ashes. If it fails on ashes, the character is LOST FOREVER. Can only be cast at camp.",
   "castableIn": ["camp"],
   "notCastableIn": ["combat"],
   "resurrection": {

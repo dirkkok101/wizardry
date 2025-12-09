@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "single",
-  "description": "Massive damage spell that ONLY affects UNDEAD - useless against living creatures",
+  "description": "Dispel - Channels holy energy to obliterate a single undead creature, dealing 10-2000 points of damage. Particularly effective against Vampire Lords and other powerful undead. Completely useless against living creatures.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "10d200",

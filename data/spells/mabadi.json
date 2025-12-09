@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "single",
-  "description": "Reduces target monster's HP to 1-8 regardless of current HP - CANNOT be resisted",
+  "description": "Harm All - Drains nearly all life force from a single monster, reducing its HP to just 1-8 regardless of how much it had. Cannot be resisted or saved against. Devastating against bosses and high-HP creatures, reducing mighty foes to easy prey.",
   "castableIn": ["combat"],
   "effect": {
     "type": "hp_reduction",

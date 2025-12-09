@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "buff",
   "target": "party",
-  "description": "Powerful prayer - maximum party AC buff per cast",
+  "description": "Prayer - The most powerful single-cast blessing, reducing the Armor Class of all party members by 4 for the duration of battle. Four times more effective than KALKI. A cornerstone of party defense in serious encounters.",
   "castableIn": ["combat"],
   "acModifier": -4
 }

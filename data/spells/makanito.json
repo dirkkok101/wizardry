@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "instant_death",
   "target": "all_enemies",
-  "description": "Instantly kills all eligible monsters with NO saving throw",
+  "description": "Deadly Air - Creates a vacuum that suffocates all air-breathing creatures of less than 8th level (roughly 35-40 HP), killing them instantly with no saving throw. Undead and high-level monsters are immune. Devastating against hordes of weaker foes.",
   "castableIn": ["combat"],
   "instantDeath": {
     "type": "suffocation",

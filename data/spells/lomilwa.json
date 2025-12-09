@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "utility",
   "target": "party",
-  "description": "Creates powerful, long-lasting light that persists for the entire expedition",
+  "description": "More Light - Creates brilliant illumination that persists for the entire expedition, unlike MILWA's temporary glow. Reveals secret doors and extends vision. One of three essential spells (with MAPORFIC and LATUMAPIC) cast at the start of every dungeon delve.",
   "castableIn": ["combat", "camp"],
   "utility": "extended_light"
 }

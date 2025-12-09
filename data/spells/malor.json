@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "utility",
   "target": "party",
-  "description": "Teleportation spell - behavior differs between camp and combat",
+  "description": "Apport - The ultimate teleportation spell. At camp, specify exact X, Y coordinates and dungeon depth to teleport instantly. WARNING: Teleporting into solid rock means instant death for the entire party! In combat, teleports party to a random safe location on the current level to escape. Cannot teleport into level 10.",
   "castableIn": ["combat", "camp"],
   "utility": "teleport",
   "campBehavior": {

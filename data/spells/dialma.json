@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Greater healing spell - restores 3-24 HP",
+  "description": "Great Heal - A powerful healing prayer that restores 3-24 hit points to a single ally. Can be cast at any time. The strongest standard healing spell, capable of recovering from even serious wounds.",
   "castableIn": ["combat", "camp"],
   "healing": {
     "dice": "3d8"

@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "buff",
   "target": "party",
-  "description": "Greater blessing - reduces AC for entire party",
+  "description": "Zeal - A more powerful blessing that reduces the Armor Class of all party members by 2 for the duration of battle. Twice as effective as KALKI, making it the preferred protective prayer.",
   "castableIn": ["combat"],
   "acModifier": -2
 }

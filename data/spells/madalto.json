@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "Highest single-group cold damage in the game",
+  "description": "Frost King - Summons the ultimate arctic frost, dealing 8-64 points of freezing damage to an enemy group. The most powerful single-group damage spell available, though cold-resistant creatures take only half damage.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "8d8",

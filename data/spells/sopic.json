@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "buff",
   "target": "caster",
-  "description": "Makes caster transparent, reducing AC by 4",
+  "description": "Glass - Causes the caster to become transparent like glass, making them extremely difficult for enemies to target. Reduces Armor Class by 4 for the duration of the battle. Superior to MOGREF for personal protection.",
   "castableIn": ["combat"],
   "acModifier": -4
 }

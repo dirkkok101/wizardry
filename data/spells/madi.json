@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Ultimate healing spell - fully restores HP and removes all negative status effects",
+  "description": "Total Heal - The ultimate healing prayer that completely restores all hit points and cures every negative status effect (poison, paralysis, fear, sleep, silence, stone). Cannot restore the dead. The most powerful restorative magic available.",
   "castableIn": ["combat", "camp"],
   "healing": {
     "type": "full"

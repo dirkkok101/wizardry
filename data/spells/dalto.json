@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "Powerful cold attack against a monster group",
+  "description": "Blizzard Blast - Unleashes a devastating wave of arctic cold upon an enemy group, dealing 6-36 points of freezing damage. Similar in power to MAHALITO but uses cold instead of fire, effective against fire-resistant foes.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "6d6",

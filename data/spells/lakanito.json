@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "instant_death",
   "target": "group",
-  "description": "Suffocates all air-breathing monsters in the group",
+  "description": "Suffocation - Creates a total vacuum around an enemy group, suffocating all air-breathing creatures regardless of their hit points. Unlike MAKANITO, this spell can kill powerful monsters. Undead, constructs, and non-breathing creatures are immune.",
   "castableIn": ["combat"],
   "instantDeath": {
     "type": "suffocation"

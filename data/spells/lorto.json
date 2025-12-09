@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "group",
-  "description": "Priest's strongest group damage spell - blades of energy strike all enemies",
+  "description": "Blades - Conjures razor-sharp blades of divine energy that slice through an entire enemy group, dealing 6-36 points of damage. The priest's most powerful area-effect damage spell, rivaling mage offensive magic.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "6d6",

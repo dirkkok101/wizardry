@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "all_enemies",
-  "description": "Most powerful priest damage spell - deals massive damage to ALL monsters",
+  "description": "Word of Death - The priest's ultimate offensive prayer, speaking words of divine destruction that deal 12-72 points of damage to ALL enemy groups simultaneously. Rivals TILTOWAIT in power and devastation.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "12d6",

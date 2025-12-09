@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "utility",
   "target": "caster",
-  "description": "Identifies trap type on a chest before opening (95% accuracy)",
+  "description": "X-Ray Vision - Grants the caster supernatural insight to perceive the trap mechanism on a treasure chest with 95% accuracy. Essential for safe looting when no skilled thief is available. Can mean the difference between treasure and disaster.",
   "castableIn": ["looting"],
   "utility": "identify_trap"
 }

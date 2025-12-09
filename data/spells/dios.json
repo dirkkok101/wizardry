@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Basic healing spell - restores 1-8 HP to a single party member",
+  "description": "Heal - The fundamental healing prayer, channeling divine energy to restore 1-8 hit points to a single ally. Can be cast at any time. The foundation of the priest's healing arsenal, used countless times in every expedition.",
   "castableIn": ["combat", "camp"],
   "healing": {
     "dice": "1d8"

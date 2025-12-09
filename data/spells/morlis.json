@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Causes fear in an enemy group, making them easier to hit (+3 AC)",
+  "description": "Fear - Invokes terrifying illusions that cause an enemy group to cower in fear. Twice as powerful as DILTO, afflicting monsters with +3 AC penalty. Fearful enemies may also flee from battle entirely.",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "fear",

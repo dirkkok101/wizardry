@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "single",
-  "description": "Deals damage to a single monster",
+  "description": "Harm - The inverse of DIOS, channeling destructive divine energy to inflict 1-8 points of damage upon a single monster. The priest's basic offensive spell, useful when healing is not needed.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",

@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "utility",
   "target": "caster",
-  "description": "Reveals coordinates of dead or missing party members",
+  "description": "Location - Divines the exact coordinates of dead or lost party members left behind in the dungeon. Essential for recovery missions when comrades have fallen and their bodies must be retrieved for resurrection.",
   "castableIn": ["camp"],
   "utility": "locate_person"
 }

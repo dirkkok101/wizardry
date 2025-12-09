@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "all_enemies",
-  "description": "Most powerful damage spell - deals massive damage to ALL monsters",
+  "description": "Ka-Blam! - The ultimate destructive spell, releasing catastrophic magical energies that deal 10-150 points of damage to ALL enemy groups simultaneously. No elemental resistance can reduce this damage. The pinnacle of offensive magic.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "10d15",

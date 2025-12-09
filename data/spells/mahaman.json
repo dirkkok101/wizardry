@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "buff",
   "target": "variable",
-  "description": "Most powerful random effect spell - costs 1 level AND spell is forgotten after casting",
+  "description": "Greater Beg - The ultimate divine intervention with three possible effects: heal and cure entire party, silence all enemy spellcasters, or instantly destroy all monsters. Requires level 13+, permanently costs 1 experience level, AND the caster forgets the spell afterward. A true last resort.",
   "castableIn": ["combat"],
   "requirements": {
     "minCasterLevel": 13

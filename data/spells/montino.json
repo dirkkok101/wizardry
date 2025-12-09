@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "debuff",
   "target": "group",
-  "description": "Silences all monsters in a group, preventing spellcasting",
+  "description": "Silence - Seals the mouths of all monsters in a group, preventing them from casting spells. Critical against enemy spellcasters who could otherwise devastate your party with their own magic. Effectiveness decreases against higher-level foes.",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "silenced"

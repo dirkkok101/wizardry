@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "Non-elemental storm attack - bypasses fire resistance",
+  "description": "Spark Storm - Conjures a tempest of electrical sparks that crackle through an enemy group, dealing 3-18 points of damage. Unlike fire spells, this lightning cannot be resisted, making it ideal against fire-immune creatures.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "3d6",
