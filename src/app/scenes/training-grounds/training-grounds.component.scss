@@ -1,5 +1,5 @@
-// Training Grounds Scene - 3-Column Layout with Statistics
-// Center sprite with roster stats on left, class breakdown on right
+// Training Grounds Scene - 3-Column Layout (mirrors Castle Scene)
+// Left: Roster Stats | Center: Scene Sprite | Right: Class Breakdown
 
 .training-grounds {
   display: flex;
@@ -7,6 +7,8 @@
   height: 100vh;
   background: var(--color-bg-darkest);
   color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 0.5rem;
   box-sizing: border-box;
   overflow: hidden;
 
@@ -17,34 +19,102 @@
   }
 }
 
-// 3-Column Grid Layout
+// 3-Column Grid Layout (same as Castle)
 .training-content {
   display: grid;
-  grid-template-columns: minmax(160px, var(--scene-panel-max-width)) auto minmax(160px, var(--scene-panel-max-width));
-  gap: var(--space-3);
+  grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
+  gap: 0.5rem;
   flex: 1;
   min-height: 0;
-  padding: var(--space-3);
 
-  // 4K screens: 50% larger panels
+  // 4K screens: 50% larger cards
   @media (min-width: 2000px) {
-    grid-template-columns: minmax(280px, var(--scene-panel-max-width-4k)) auto minmax(280px, var(--scene-panel-max-width-4k));
+    grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+  }
+
+  // Tablet and mobile - stack vertically
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
   }
 }
 
-// Side panels
+// Side panels (same as Castle)
 .left-panel,
 .right-panel {
   display: flex;
   flex-direction: column;
-  align-self: start;
+  min-height: 0;
+  width: 100%;
   max-width: var(--scene-panel-max-width);
+  align-self: start;
 
-  // 4K: 50% larger
   @media (min-width: 2000px) {
     max-width: var(--scene-panel-max-width-4k);
   }
+
+  @media (max-width: 767px) {
+    display: none;
+  }
 }
+
+// Center viewport (same as Castle)
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+  padding: 0.5rem 2px;
+}
+
+.scene-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  aspect-ratio: var(--scene-viewport-aspect) / 1;
+  max-width: 100%;
+  background: var(--color-bg-darkest);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  .scene-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+// Responsive (same as Castle)
+@media (max-height: 767px) {
+  .training-grounds {
+    padding: 0.25rem;
+  }
+
+  .training-content {
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .training-content {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .center-panel {
+    order: 1;
+  }
+}
+
+// ============================================
+// TRAINING-SPECIFIC STYLES (Content)
+// ============================================
 
 // Statistics Panel (shared by left and right)
 .stats-panel {
@@ -134,38 +204,6 @@
   text-align: right;
 }
 
-// Center viewport
-.center-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 0;
-  min-width: 0;
-  overflow: visible;
-  padding: 0 2px;
-}
-
-.scene-viewport {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  aspect-ratio: var(--scene-viewport-aspect) / 1;
-  max-width: 100%;
-  background: var(--color-bg-darkest);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  overflow: hidden;
-
-  .scene-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-}
-
 // Message display
 .message {
   padding: var(--space-2) var(--space-3);
@@ -191,40 +229,16 @@
   }
 }
 
-// Responsive: stack on narrow screens
-@media (max-width: 900px) {
-  .training-content {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    gap: var(--space-2);
-    padding: var(--space-2);
-  }
-
-  .left-panel,
-  .right-panel {
-    display: none;
-  }
-
-  .scene-viewport {
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-  }
-}
-
-// MacBook Air 13" and similar - tighter spacing
+// Compact height adjustments for stats panel
 @media (max-height: 900px) {
-  .training-content {
-    padding: var(--space-2);
-    gap: var(--space-2);
-  }
-
   .stats-panel {
     padding: var(--space-2);
   }
 }
 
-// Class Change Dialog
+// ============================================
+// CLASS CHANGE DIALOG
+// ============================================
 .dialog-overlay {
   position: fixed;
   inset: 0;
