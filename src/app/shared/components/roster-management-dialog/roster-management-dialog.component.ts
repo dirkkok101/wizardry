@@ -62,6 +62,7 @@ export class RosterManagementDialogComponent {
 
     if (event.key === 'Escape') {
       event.preventDefault()
+      event.stopPropagation()
       this.cancelled.emit()
     }
   }
