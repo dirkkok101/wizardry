@@ -25,6 +25,7 @@
   gap: 0.5rem;
   min-height: 0;
   overflow: hidden;
+  padding: var(--space-3) var(--space-2);
 
   .controls-column,
   .character-display-column {
@@ -324,6 +325,7 @@
   .wizard-content {
     flex-direction: column;
     gap: var(--space-2);
+    padding: var(--space-2) var(--space-1);
 
     .controls-column,
     .character-display-column {
@@ -355,6 +357,7 @@
 
   .wizard-content {
     gap: 0.35rem;
+    padding: var(--space-2) var(--space-1);
 
     .controls-column,
     .character-display-column {
