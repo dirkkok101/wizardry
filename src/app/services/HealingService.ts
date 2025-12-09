@@ -328,10 +328,19 @@ export class HealingService {
       }
     }
 
-    // Build new roster
+    // Build new roster - handle self-healing case
     const newRoster = new Map(state.roster)
-    newRoster.set(action.targetId, updatedTarget)
-    newRoster.set(action.casterId, updatedCaster)
+    if (action.casterId === action.targetId) {
+      // Self-healing: merge HP update from target with spell point deduction from caster
+      const mergedCharacter: Character = {
+        ...updatedTarget,
+        spellPoints: updatedCaster.spellPoints
+      }
+      newRoster.set(action.casterId, mergedCharacter)
+    } else {
+      newRoster.set(action.targetId, updatedTarget)
+      newRoster.set(action.casterId, updatedCaster)
+    }
 
     const newState: GameState = {
       ...state,

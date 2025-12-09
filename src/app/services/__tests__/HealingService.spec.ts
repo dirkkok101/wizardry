@@ -784,5 +784,44 @@ describe('HealingService', () => {
       expect(result.message).toContain('Fighter')
       expect(result.message).toContain('5') // heal amount
     })
+
+    it('correctly updates both HP and spell points when character heals themselves', () => {
+      // Queue dice roll: 1d8 = 5
+      RandomService.queueNextValues([0.5])
+
+      // Priest who is injured and will heal themselves
+      const priest = createTestCharacter({
+        id: 'self-healer',
+        name: 'Richard',
+        class: CharacterClass.PRIEST,
+        hp: 2,
+        maxHp: 10,
+        spellPoints: createPriestSpellPoints(3) // 3 points at L1
+      })
+      const roster = new Map<string, Character>([[priest.id, priest]])
+      const state = createTestGameState({
+        roster,
+        party: createPartyWithMembers([priest.id])
+      })
+
+      const action = {
+        casterId: 'self-healer',
+        casterName: 'Richard',
+        spellId: 'dios',
+        spellName: 'DIOS',
+        targetId: 'self-healer', // Same as caster!
+        targetName: 'Richard',
+        spellLevel: 1
+      }
+
+      const { newState, result } = HealingService.executeHealingAction(state, action)
+
+      const updatedChar = newState.roster.get('self-healer')!
+      // HP should be updated (2 + 5 = 7)
+      expect(updatedChar.hp).toBe(7)
+      expect(result.healAmount).toBe(5)
+      // Spell points should be deducted (3 - 1 = 2)
+      expect(updatedChar.spellPoints!.priest!.level1.current).toBe(2)
+    })
   })
 })
