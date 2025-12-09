@@ -149,7 +149,9 @@ export class ItemUseService {
 
     switch (effect.type) {
       case 'heal': {
-        const healAmount = effect.healAmount || 0
+        // Parse dice notation from JSON (e.g., "1d8", "2d8")
+        const healDice = effect['healing'] || '0d0'
+        const healAmount = RandomService.rollDiceNotation(healDice)
         const newHp = Math.min(updatedCharacter.maxHp, updatedCharacter.hp + healAmount)
         const actualHeal = newHp - updatedCharacter.hp
         updatedCharacter = { ...updatedCharacter, hp: newHp }

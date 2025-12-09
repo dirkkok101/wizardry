@@ -107,6 +107,29 @@
       />
     }
 
+    <!-- Potion Target Selection Dialog -->
+    @if (showPotionTargetDialog()) {
+      <div class="dialog-overlay" (click)="cancelPotionTargetDialog()">
+        <div class="potion-target-dialog" (click)="$event.stopPropagation()">
+          <h3 class="dialog-title">SELECT TARGET</h3>
+          <div class="target-list">
+            @for (member of allPartyMembers(); track member.id) {
+              <button
+                class="target-button"
+                [class.status-poisoned]="member.status === 'POISONED'"
+                [class.status-paralyzed]="member.status === 'PARALYZED'"
+                (click)="onPotionTargetSelected(member)"
+              >
+                <span class="target-name">{{ member.name }}</span>
+                <span class="target-status">{{ member.status }}</span>
+              </button>
+            }
+          </div>
+          <button class="cancel-button" (click)="cancelPotionTargetDialog()">Cancel</button>
+        </div>
+      </div>
+    }
+
     <!-- Spell Book Panel (viewing mode) -->
     <app-spell-panel
       [visible]="showSpellBookDialog()"

@@ -47,8 +47,7 @@ function createNewGame(): GameState {
       difficulty: 'NORMAL',
       soundEnabled: true,
       musicEnabled: true,
-      encountersEnabled: true, // Set to false to disable random encounters for testing
-      guaranteedChestDrops: false // Debug: guarantee chest after every combat (Ctrl+T to toggle)
+      encountersEnabled: true // Set to false to disable random encounters for testing
     }
   }
 }

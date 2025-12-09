@@ -3,6 +3,7 @@ import { Character } from '@models/Character'
 import { Item } from '@models/Item'
 import { ItemType, ItemSlot } from '@models/ItemType'
 import { RandomService } from '../RandomService'
+import { SpellDataLoader } from '../SpellDataLoader'
 
 // Helper to create test character
 const createTestCharacter = (overrides: Partial<Character> = {}): Character => ({
@@ -47,6 +48,11 @@ const createTestItem = (overrides: Partial<Item> = {}): Item => ({
 })
 
 describe('ItemUseService', () => {
+  // Load spell data before tests (required for spell-casting items)
+  beforeAll(async () => {
+    await SpellDataLoader.loadAllSpells()
+  })
+
   beforeEach(() => {
     RandomService.resetSeed()
   })
@@ -76,7 +82,7 @@ describe('ItemUseService', () => {
       const character = createTestCharacter({ class: 'MAGE' })
       const item = createTestItem({
         classRestrictions: ['FIGHTER', 'SAMURAI'],
-        effect: { type: 'heal', healAmount: 10 }
+        effect: { type: 'heal', healing: '1d8' }
       })
 
       const result = ItemUseService.canUseItem(character, item)
@@ -89,7 +95,7 @@ describe('ItemUseService', () => {
       const character = createTestCharacter({ alignment: 'GOOD' })
       const item = createTestItem({
         alignmentRestrictions: ['EVIL'],
-        effect: { type: 'heal', healAmount: 10 }
+        effect: { type: 'heal', healing: '1d8' }
       })
 
       const result = ItemUseService.canUseItem(character, item)
@@ -101,7 +107,7 @@ describe('ItemUseService', () => {
     it('returns true for valid item with effect', () => {
       const character = createTestCharacter()
       const healingPotion = createTestItem({
-        effect: { type: 'heal', healAmount: 10 }
+        effect: { type: 'heal', healing: '1d8' }
       })
 
       const result = ItemUseService.canUseItem(character, healingPotion)
@@ -124,13 +130,16 @@ describe('ItemUseService', () => {
   describe('useItem', () => {
     describe('healing items', () => {
       it('heals character with potion', () => {
+        // Queue dice roll: 1d8 rolls max (8)
+        RandomService.queueNextValues([0.999])  // Roll 8 on d8
+
         const character = createTestCharacter({
           hp: 30,
           maxHp: 50,
           inventory: [createTestItem({
             id: 'potion_dios',
             name: 'Potion of DIOS',
-            effect: { type: 'heal', healAmount: 15 },
+            effect: { type: 'heal', healing: '1d8' },
             singleUse: true,
             depletionChance: 100
           })]
@@ -139,18 +148,21 @@ describe('ItemUseService', () => {
         const result = ItemUseService.useItem(character, 'potion_dios')
 
         expect(result.success).toBe(true)
-        expect(result.updatedCharacter.hp).toBe(45)
-        expect(result.healing).toEqual({ amount: 15, target: 'self' })
+        expect(result.updatedCharacter.hp).toBe(38)  // 30 + 8
+        expect(result.healing).toEqual({ amount: 8, target: 'self' })
       })
 
       it('does not exceed max HP when healing', () => {
+        // Queue dice roll: 2d8 rolls high (16 total)
+        RandomService.queueNextValues([0.999, 0.999])  // Two 8s = 16
+
         const character = createTestCharacter({
           hp: 45,
           maxHp: 50,
           inventory: [createTestItem({
             id: 'potion_dial',
             name: 'Potion of DIAL',
-            effect: { type: 'heal', healAmount: 50 },
+            effect: { type: 'heal', healing: '2d8' },
             singleUse: true
           })]
         })
@@ -158,7 +170,7 @@ describe('ItemUseService', () => {
         const result = ItemUseService.useItem(character, 'potion_dial')
 
         expect(result.updatedCharacter.hp).toBe(50)
-        expect(result.healing?.amount).toBe(5) // Only healed 5
+        expect(result.healing?.amount).toBe(5) // Only healed 5 (capped)
       })
     })
 
@@ -249,11 +261,13 @@ describe('ItemUseService', () => {
 
     describe('depletion', () => {
       it('removes single-use item from inventory', () => {
+        RandomService.queueNextValues([0.5])  // Roll for 1d8 heal
+
         const character = createTestCharacter({
           inventory: [createTestItem({
             id: 'potion_dios',
             name: 'Potion of DIOS',
-            effect: { type: 'heal', healAmount: 10 },
+            effect: { type: 'heal', healing: '1d8' },
             singleUse: true,
             depletionChance: 100,
             transformsTo: null
@@ -318,7 +332,7 @@ describe('ItemUseService', () => {
           inventory: [createTestItem({
             id: 'unidentified',
             identified: false,
-            effect: { type: 'heal', healAmount: 10 }
+            effect: { type: 'heal', healing: '1d8' }
           })]
         })
 

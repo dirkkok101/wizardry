@@ -104,6 +104,24 @@ export class CinematicArenaComponent implements OnDestroy {
   /** Current target animation state */
   readonly targetAnimation = signal<'idle' | 'shaking'>('idle')
 
+  /** Action result message (bottom center banner) */
+  readonly actionResultMessage = signal<string | null>(null)
+
+  /** Whether the action result is a status effect (for purple theming) */
+  readonly isStatusEffectMessage = signal(false)
+
+  /** Whether the action result is a healing effect (for green theming) */
+  readonly isHealingMessage = signal(false)
+
+  /** Whether the action result is an AC buff (for steel blue theming) */
+  readonly isAcBuffMessage = signal(false)
+
+  /** Character ID currently being healed (for HP pulse animation) */
+  readonly healingCharacterId = signal<string | null>(null)
+
+  /** Character ID currently receiving AC buff (for shield pulse animation) */
+  readonly buffedCharacterId = signal<string | null>(null)
+
   // ============================================================================
   // PHASED REVEAL STATE (for dramatic labels)
   // ============================================================================
@@ -139,8 +157,11 @@ export class CinematicArenaComponent implements OnDestroy {
   /** Live HP tracking for characters during combat visualization */
   readonly liveCharacterHp = signal<Map<string, number>>(new Map())
 
-  /** Live monster counts for groups during combat visualization */
+  /** Live monster alive counts for groups during combat visualization */
   readonly liveMonsterCounts = signal<Map<string, number>>(new Map())
+
+  /** Live monster active counts (not asleep/paralyzed) for groups */
+  readonly liveMonsterActiveCounts = signal<Map<string, number>>(new Map())
 
   // ============================================================================
   // LIFECYCLE
@@ -291,6 +312,58 @@ export class CinematicArenaComponent implements OnDestroy {
       if (updatedState) {
         this.arenaState.set(updatedState)
       }
+
+      // Phase 7.5: Show status effect indicator and banner (sleep, paralysis, etc.)
+      // Use structured statusEffects data from event instead of parsing message text
+      const statusEffects = currentEvent.statusEffects
+      if (statusEffects && statusEffects.length > 0) {
+        // Get the effect type from the first status effect
+        const effectType = statusEffects[0].effect.toUpperCase()
+
+        // Show floating status indicator on target
+        this.showFloatingStatusByType(effectType)
+
+        // Show action result banner with purple theming
+        const message = this.formatStatusMessage(effectType, statusEffects.length)
+        this.showActionResult(message, 2500, true)
+        await this.delay(800)  // Let banner display before moving on
+      }
+
+      // Phase 7.6: Show healing celebration (banner + HP pulse effect)
+      const healingResults = currentEvent.damageResults?.filter(r => r.type === 'healing')
+      if (healingResults && healingResults.length > 0) {
+        const totalHealing = healingResults.reduce((sum, r) => sum + r.value, 0)
+
+        // Trigger HP pulse on healed character card
+        this.healingCharacterId.set(healingResults[0].targetId)
+        setTimeout(() => this.healingCharacterId.set(null), 600)
+
+        // Show floating healing indicator
+        this.showFloatingHeal(totalHealing)
+
+        // Show green healing banner
+        const message = this.formatHealingMessage(totalHealing, healingResults.length)
+        this.showActionResult(message, 2500, false, 'healing')
+        await this.delay(800)  // Let banner display before moving on
+      }
+
+      // Phase 7.7: Show AC buff celebration (MOGREF, KALKI, etc.)
+      const acBuffs = currentEvent.acBuffs
+      if (acBuffs && acBuffs.length > 0) {
+        const totalAcBonus = acBuffs.reduce((sum, b) => sum + Math.abs(b.acModifier), 0)
+
+        // Trigger shield pulse on buffed character card
+        this.buffedCharacterId.set(acBuffs[0].target)
+        setTimeout(() => this.buffedCharacterId.set(null), 600)
+
+        // Show floating shield indicator
+        this.showFloatingAcBuff(totalAcBonus)
+
+        // Show steel blue banner
+        const message = this.formatAcBuffMessage(totalAcBonus, acBuffs.length)
+        this.showActionResult(message, 2500, false, 'acBuff')
+        await this.delay(800)  // Let banner display before moving on
+      }
     }
 
     // Phase 8: Settle before next action
@@ -380,11 +453,30 @@ export class CinematicArenaComponent implements OnDestroy {
   }
 
   /**
-   * Get live monster count for a group (uses signal if available)
+   * Get live monster alive count for a group (uses signal if available)
    */
   getLiveCount(combatant: ArenaCombatant): number {
     if (combatant.type !== 'monster' || !combatant.groupId) return 0
     return this.liveMonsterCounts().get(combatant.groupId) ?? combatant.aliveCount ?? 0
+  }
+
+  /**
+   * Get live monster active count (not asleep/paralyzed) for a group
+   */
+  getLiveActiveCount(combatant: ArenaCombatant): number {
+    if (combatant.type !== 'monster' || !combatant.groupId) return 0
+    return this.liveMonsterActiveCounts().get(combatant.groupId) ?? combatant.activeCount ?? this.getLiveCount(combatant)
+  }
+
+  /**
+   * Check if a monster group has inactive (asleep/paralyzed) monsters
+   * Returns true when activeCount < aliveCount
+   */
+  hasInactiveMonsters(combatant: ArenaCombatant): boolean {
+    if (combatant.type !== 'monster') return false
+    const activeCount = this.getLiveActiveCount(combatant)
+    const aliveCount = this.getLiveCount(combatant)
+    return activeCount < aliveCount
   }
 
   /**
@@ -404,11 +496,19 @@ export class CinematicArenaComponent implements OnDestroy {
 
     // Update monster counts from event.monsterGroupsSnapshot
     if (event.monsterGroupsSnapshot) {
-      const countMap = new Map(this.liveMonsterCounts())
+      const aliveMap = new Map(this.liveMonsterCounts())
+      const activeMap = new Map(this.liveMonsterActiveCounts())
       for (const group of event.monsterGroupsSnapshot) {
-        countMap.set(group.id, group.monsters.filter(m => m.hp > 0).length)
+        const aliveMonsters = group.monsters.filter(m => m.hp > 0)
+        aliveMap.set(group.id, aliveMonsters.length)
+        // Active = alive and not asleep/paralyzed
+        const activeMonsters = aliveMonsters.filter(m =>
+          m.status !== 'ASLEEP' && m.status !== 'PARALYZED'
+        )
+        activeMap.set(group.id, activeMonsters.length)
       }
-      this.liveMonsterCounts.set(countMap)
+      this.liveMonsterCounts.set(aliveMap)
+      this.liveMonsterActiveCounts.set(activeMap)
     }
   }
 
@@ -423,12 +523,20 @@ export class CinematicArenaComponent implements OnDestroy {
     }
     this.liveCharacterHp.set(hpMap)
 
-    // Initialize monster counts
-    const countMap = new Map<string, number>()
+    // Initialize monster counts (alive and active)
+    const aliveMap = new Map<string, number>()
+    const activeMap = new Map<string, number>()
     for (const group of this.monsterGroups()) {
-      countMap.set(group.id, group.monsters.filter(m => m.hp > 0).length)
+      const aliveMonsters = group.monsters.filter(m => m.hp > 0)
+      aliveMap.set(group.id, aliveMonsters.length)
+      // Active = alive and not asleep/paralyzed
+      const activeMonsters = aliveMonsters.filter(m =>
+        m.status !== 'ASLEEP' && m.status !== 'PARALYZED'
+      )
+      activeMap.set(group.id, activeMonsters.length)
     }
-    this.liveMonsterCounts.set(countMap)
+    this.liveMonsterCounts.set(aliveMap)
+    this.liveMonsterActiveCounts.set(activeMap)
   }
 
   /**
@@ -771,6 +879,80 @@ export class CinematicArenaComponent implements OnDestroy {
   }
 
   /**
+   * Show floating status effect indicator by effect type
+   * Uses dramatic text for consistent cross-platform rendering
+   */
+  private showFloatingStatusByType(effectType: string): void {
+    const displayTextMap: Record<string, string> = {
+      'ASLEEP': 'SLEEP!',
+      'PARALYZED': 'PARALYZED!',
+      'POISONED': 'POISONED!',
+      'STONED': 'STONED!',
+      'SILENCED': 'SILENCED!',
+      'BLIND': 'BLINDED!'
+    }
+    const displayText = displayTextMap[effectType] || 'AFFLICTED!'
+
+    // Position over target area (right side, slightly higher than damage)
+    const entry = createFloatingDamage(displayText, 'status', 75, 35)
+    this.damageEntries.update(entries => [...entries, entry])
+  }
+
+  /**
+   * Format a status effect message for the action result banner
+   */
+  private formatStatusMessage(effectType: string, count: number): string {
+    const effectNames: Record<string, string> = {
+      'ASLEEP': 'asleep',
+      'PARALYZED': 'paralyzed',
+      'SILENCED': 'silenced',
+      'BLIND': 'blinded',
+      'POISONED': 'poisoned',
+      'STONED': 'stoned'
+    }
+    const effectName = effectNames[effectType] || effectType.toLowerCase()
+    return `${count} monster${count > 1 ? 's' : ''} ${effectName}!`
+  }
+
+  /**
+   * Show floating healing indicator with dramatic presentation
+   */
+  private showFloatingHeal(totalHealing: number): void {
+    // Position over target area (left side for party characters)
+    const entry = createFloatingDamage(`+${totalHealing} HP`, 'heal', 25, 35)
+    this.damageEntries.update(entries => [...entries, entry])
+  }
+
+  /**
+   * Format a healing message for the action result banner
+   */
+  private formatHealingMessage(total: number, targetCount: number): string {
+    if (targetCount === 1) {
+      return `HEALED +${total} HP!`
+    }
+    return `HEALED ${targetCount} ALLIES +${total} HP!`
+  }
+
+  /**
+   * Show floating AC buff indicator with dramatic presentation
+   */
+  private showFloatingAcBuff(acBonus: number): void {
+    // Position over caster area (left side for party characters casting on self)
+    const entry = createFloatingDamage('SHIELDED!', 'buff', 25, 35)
+    this.damageEntries.update(entries => [...entries, entry])
+  }
+
+  /**
+   * Format an AC buff message for the action result banner
+   */
+  private formatAcBuffMessage(totalBonus: number, targetCount: number): string {
+    if (targetCount === 1) {
+      return `DEFENSES STRENGTHENED! AC -${totalBonus}`
+    }
+    return `PARTY SHIELDED! AC -${totalBonus}`
+  }
+
+  /**
    * Display sequential damage numbers for group spells
    * Each damage number appears staggered with a shake effect
    *
@@ -864,6 +1046,37 @@ export class CinematicArenaComponent implements OnDestroy {
    */
   getSpriteInitial(name: string): string {
     return name.charAt(0).toUpperCase()
+  }
+
+  // ============================================================================
+  // ACTION RESULT BANNER
+  // ============================================================================
+
+  /**
+   * Show action result message with auto-clear
+   * @param message Message to display (e.g., "2 BUBBLY SLIMES fall asleep!")
+   * @param duration Duration in ms before auto-clear (default 2000ms)
+   * @param isStatusEffect Whether this is a status effect message (uses purple theming)
+   * @param variant Optional variant for different effect types ('healing' for green, 'acBuff' for steel blue)
+   */
+  showActionResult(message: string, duration = 2000, isStatusEffect = false, variant?: 'healing' | 'acBuff'): void {
+    this.actionResultMessage.set(message)
+    this.isStatusEffectMessage.set(isStatusEffect)
+    this.isHealingMessage.set(variant === 'healing')
+    this.isAcBuffMessage.set(variant === 'acBuff')
+    setTimeout(() => {
+      this.actionResultMessage.set(null)
+      this.isStatusEffectMessage.set(false)
+      this.isHealingMessage.set(false)
+      this.isAcBuffMessage.set(false)
+    }, duration)
+  }
+
+  /**
+   * Clear action result message immediately
+   */
+  clearActionResult(): void {
+    this.actionResultMessage.set(null)
   }
 
   // ============================================================================

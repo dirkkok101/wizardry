@@ -69,6 +69,7 @@ export class CombatOverlayComponent {
   readonly victoryRewards = input<VictoryRewards | null>(null)
   readonly partyCharacters = input<Character[]>([])
   readonly showMonsterCards = input<boolean>(true)
+  readonly sleepIndicator = input<{ groupId: string } | null>(null)
 
   // Pyrrhic victory detection - statuses that indicate costly victory
   private readonly PYRRHIC_STATUSES = [

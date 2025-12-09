@@ -8,10 +8,13 @@ import { InventoryService } from '@services/InventoryService'
 import { SceneNavigationService } from '@services/SceneNavigationService'
 import { SpellLearningService } from '@services/SpellLearningService'
 import { ShopService } from '@services/ShopService'
+import { ItemUseService, ItemUseResult } from '@services/ItemUseService'
+import { SpellDataLoader } from '@services/SpellDataLoader'
 import { GameStateQueries } from '@utils/GameStateQueries'
 import { MessageService } from '@services/MessageService'
 import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
+import { CharacterStatus } from '@models/CharacterStatus'
 import { Item } from '@models/Item'
 import { ItemSlot } from '@models/ItemType'
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes'
@@ -244,7 +247,9 @@ export class CharacterInspectionComponent {
   showDropDialog = signal(false)
   showSpellBookDialog = signal(false)
   showSpellCastDialog = signal(false)
+  showPotionTargetDialog = signal(false)
   pendingAction = signal<{ action: string; item: Item } | null>(null)
+  pendingPotionResult = signal<ItemUseResult | null>(null)
 
   readonly ItemSlot = ItemSlot
 
@@ -366,8 +371,284 @@ export class CharacterInspectionComponent {
     }
   }
 
-  private useItem(_char: Character, _item: Item): void {
-    // TODO: Implement actual item use logic
+  /**
+   * Use an item (potion, scroll, etc.)
+   *
+   * Flow:
+   * 1. Call ItemUseService to process the item
+   * 2. Handle healing result (Potion of Curing/Healing)
+   * 3. Handle spell-casting result (Potion of Neutralization, Glass)
+   * 4. Update game state with modified character/inventory
+   */
+  private useItem(char: Character, item: Item): void {
+    // 1. Call ItemUseService
+    const result = ItemUseService.useItem(char, item.id)
+
+    if (!result.success) {
+      this.messages.showError(result.message)
+      return
+    }
+
+    // 2. Handle healing result (Potions of Curing/Healing)
+    if (result.healing && result.healing.amount > 0) {
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster)
+        newRoster.set(char.id, result.updatedCharacter)
+        return { ...state, roster: newRoster }
+      })
+      this.messages.showSuccess(result.message)
+      return
+    }
+
+    // 3. Handle spell-casting result (Potions of Neutralization/Glass)
+    if (result.spellCast) {
+      this.handlePotionSpell(char, item, result)
+      return
+    }
+
+    // 4. Default: just update character (item consumed)
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster)
+      newRoster.set(char.id, result.updatedCharacter)
+      return { ...state, roster: newRoster }
+    })
+    this.messages.showInfo(result.message)
+  }
+
+  /**
+   * Handle potion spell effects (LATUMOFIS, SOPIC, etc.)
+   *
+   * Different spells require different handling:
+   * - Self-targeting (SOPIC): Combat-only AC buff, no effect outside combat
+   * - Ally-targeting (LATUMOFIS): Need to select target for status cure
+   * - Party-targeting: Apply to all party members
+   */
+  private handlePotionSpell(
+    char: Character,
+    item: Item,
+    result: ItemUseResult
+  ): void {
+    const spellId = result.spellCast!.spellId
+    const targetType = result.spellCast!.targetType
+
+    // Get spell data for effect details
+    const spell = SpellDataLoader.getSpell(spellId)
+    if (!spell) {
+      // Spell not found - just consume the item
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster)
+        newRoster.set(char.id, result.updatedCharacter)
+        return { ...state, roster: newRoster }
+      })
+      this.messages.showError('Spell effect unknown')
+      return
+    }
+
+    // Handle based on target type
+    if (targetType === 'self') {
+      // Self-targeting spells (SOPIC for AC buff - combat only)
+      this.applyPotionSpellToSelf(char, item, spell, result)
+    } else if (targetType === 'ally') {
+      // Single-target spells need target selection (LATUMOFIS)
+      this.pendingPotionResult.set(result)
+      this.showPotionTargetDialog.set(true)
+    } else if (targetType === 'party') {
+      // Party-wide effect - apply to all party members
+      this.applyPotionSpellToParty(char, item, spell, result)
+    } else {
+      // Enemy targeting doesn't make sense outside combat
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster)
+        newRoster.set(char.id, result.updatedCharacter)
+        return { ...state, roster: newRoster }
+      })
+      this.messages.showInfo(`${item.name} has no effect outside of combat.`)
+    }
+  }
+
+  /**
+   * Apply self-targeting potion spell (e.g., SOPIC - Glass)
+   * AC modifiers only work in combat, so just consume the potion with a message
+   */
+  private applyPotionSpellToSelf(
+    char: Character,
+    item: Item,
+    spell: { acModifier?: number },
+    result: ItemUseResult
+  ): void {
+    // SOPIC is a combat-only buff (AC modifier)
+    if (spell.acModifier) {
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster)
+        newRoster.set(char.id, result.updatedCharacter)
+        return { ...state, roster: newRoster }
+      })
+      this.messages.showInfo(`${item.name} has no effect outside of combat.`)
+      return
+    }
+
+    // Other self-targeting effects - just consume and show message
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster)
+      newRoster.set(char.id, result.updatedCharacter)
+      return { ...state, roster: newRoster }
+    })
+    this.messages.showInfo(result.message)
+  }
+
+  /**
+   * Apply party-wide potion spell
+   */
+  private applyPotionSpellToParty(
+    char: Character,
+    item: Item,
+    spell: { statusCure?: string },
+    result: ItemUseResult
+  ): void {
+    const party = this.allPartyMembers()
+    let curedCount = 0
+
+    // Apply status cure to all party members if applicable
+    if (spell.statusCure) {
+      const updates: Character[] = []
+
+      for (const member of party) {
+        const cured = this.applyCureToCharacter(member, spell.statusCure)
+        if (cured) {
+          updates.push(cured)
+          curedCount++
+        }
+      }
+
+      // Update game state with all cured characters
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster)
+        // Update the potion user (item consumed from inventory)
+        newRoster.set(char.id, result.updatedCharacter)
+        // Update any cured characters
+        for (const updated of updates) {
+          newRoster.set(updated.id, updated)
+        }
+        return { ...state, roster: newRoster }
+      })
+
+      if (curedCount > 0) {
+        this.messages.showSuccess(`${item.name} cured ${curedCount} party member(s)!`)
+      } else {
+        this.messages.showInfo(`${item.name} had no effect - no one needed curing.`)
+      }
+      return
+    }
+
+    // No status cure - just consume the item
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster)
+      newRoster.set(char.id, result.updatedCharacter)
+      return { ...state, roster: newRoster }
+    })
+    this.messages.showInfo(result.message)
+  }
+
+  /**
+   * Handle target selection for single-target potions (LATUMOFIS)
+   */
+  onPotionTargetSelected(target: Character): void {
+    const result = this.pendingPotionResult()
+    if (!result || !result.spellCast) {
+      this.showPotionTargetDialog.set(false)
+      this.pendingPotionResult.set(null)
+      return
+    }
+
+    this.showPotionTargetDialog.set(false)
+
+    const spellId = result.spellCast.spellId
+    const spell = SpellDataLoader.getSpell(spellId)
+
+    // Apply status cure to selected target
+    if (spell?.statusCure) {
+      this.applyStatusCure(target, spell.statusCure, result)
+    } else {
+      // No cure effect - just consume the item
+      this.gameState.updateState(state => {
+        const newRoster = new Map(state.roster)
+        newRoster.set(result.updatedCharacter.id, result.updatedCharacter)
+        return { ...state, roster: newRoster }
+      })
+      this.messages.showInfo(result.message)
+    }
+
+    this.pendingPotionResult.set(null)
+  }
+
+  /**
+   * Cancel potion target selection
+   */
+  cancelPotionTargetDialog(): void {
+    this.showPotionTargetDialog.set(false)
+    this.pendingPotionResult.set(null)
+  }
+
+  /**
+   * Apply status cure to a single target
+   */
+  private applyStatusCure(
+    target: Character,
+    cureType: string,
+    result: ItemUseResult
+  ): void {
+    const curedTarget = this.applyCureToCharacter(target, cureType)
+
+    // Update game state
+    this.gameState.updateState(state => {
+      const newRoster = new Map(state.roster)
+      // Update the potion user (item consumed from inventory)
+      newRoster.set(result.updatedCharacter.id, result.updatedCharacter)
+      // Update target if cured (and not the same as user)
+      if (curedTarget && curedTarget.id !== result.updatedCharacter.id) {
+        newRoster.set(target.id, curedTarget)
+      }
+      return { ...state, roster: newRoster }
+    })
+
+    if (curedTarget) {
+      this.messages.showSuccess(`${target.name}'s ${cureType} was cured!`)
+    } else {
+      this.messages.showInfo(`${target.name} is not ${cureType}ed.`)
+    }
+  }
+
+  /**
+   * Apply a cure effect to a character, returning updated character or null if no change
+   */
+  private applyCureToCharacter(char: Character, cureType: string): Character | null {
+    // Map cure type to status
+    const statusToCure = this.mapCureTypeToStatus(cureType)
+
+    if (!statusToCure || char.status !== statusToCure) {
+      return null
+    }
+
+    return {
+      ...char,
+      status: CharacterStatus.OK
+    }
+  }
+
+  /**
+   * Map cure type string to CharacterStatus
+   */
+  private mapCureTypeToStatus(cureType: string): CharacterStatus | null {
+    switch (cureType.toLowerCase()) {
+      case 'poison':
+        return CharacterStatus.POISONED
+      case 'paralysis':
+        return CharacterStatus.PARALYZED
+      case 'stoned':
+        return CharacterStatus.STONED
+      default:
+        return null
+    }
   }
 
   // Shop action: Sell item
@@ -538,7 +819,8 @@ export class CharacterInspectionComponent {
   handleEscape(): void {
     // Don't handle if a dialog is open
     if (this.showTradeDialog() || this.showDropDialog() ||
-        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+        this.showSpellBookDialog() || this.showSpellCastDialog() ||
+        this.showPotionTargetDialog()) {
       return
     }
     this.returnToPrevious()
@@ -548,7 +830,8 @@ export class CharacterInspectionComponent {
   handleSpellsShortcut(): void {
     // Don't handle if a dialog is open
     if (this.showTradeDialog() || this.showDropDialog() ||
-        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+        this.showSpellBookDialog() || this.showSpellCastDialog() ||
+        this.showPotionTargetDialog()) {
       return
     }
     // Only open if character is a caster with spells
@@ -563,7 +846,8 @@ export class CharacterInspectionComponent {
   handlePrevCharacter(): void {
     // Don't handle if a dialog is open
     if (this.showTradeDialog() || this.showDropDialog() ||
-        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+        this.showSpellBookDialog() || this.showSpellCastDialog() ||
+        this.showPotionTargetDialog()) {
       return
     }
     const prev = this.prevCharacter()
@@ -575,7 +859,8 @@ export class CharacterInspectionComponent {
   handleNextCharacter(): void {
     // Don't handle if a dialog is open
     if (this.showTradeDialog() || this.showDropDialog() ||
-        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+        this.showSpellBookDialog() || this.showSpellCastDialog() ||
+        this.showPotionTargetDialog()) {
       return
     }
     const next = this.nextCharacter()

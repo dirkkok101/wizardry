@@ -164,6 +164,10 @@ export interface CommandExecutionResult {
   characterUpdates?: Map<string, Character>
   /** Structured damage results for multi-target spells (MAHALITO, etc.) */
   damageResults?: DamageResult[]
+  /** Status effects applied by this action (sleep, paralysis, etc.) */
+  statusEffects?: { target: string; effect: string }[]
+  /** AC buffs applied by this action (MOGREF, KALKI, etc.) */
+  acBuffs?: { target: string; acModifier: number }[]
 }
 
 export interface SpellEffect {
@@ -331,6 +335,18 @@ export interface CombatRoundEvent {
    * Used for group spells (MAHALITO) and multi-target effects
    */
   damageResults?: DamageResult[]
+
+  /**
+   * Status effects applied by this action (sleep, paralysis, etc.)
+   * Used for cinematic arena floating status indicators
+   */
+  statusEffects?: { target: string; effect: string }[]
+
+  /**
+   * AC buffs applied by this action (MOGREF, KALKI, etc.)
+   * Used for cinematic arena floating shield indicators
+   */
+  acBuffs?: { target: string; acModifier: number }[]
 }
 
 /**

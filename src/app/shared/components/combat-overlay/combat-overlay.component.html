@@ -13,13 +13,14 @@
     @if (showMonsterCards()) {
       <div class="monster-layer">
         <app-monster-sprite-overlay
-        [monsterGroups]="monsterGroups()"
-        [selectedGroupId]="selectedGroupId()"
-        [isTargetingMode]="isTargetingMode()"
-        [animationQueue]="spriteAnimations()"
-        (groupClicked)="onGroupClick($event)"
-        (animationComplete)="onAnimationComplete($event)"
-      />
+          [monsterGroups]="monsterGroups()"
+          [selectedGroupId]="selectedGroupId()"
+          [isTargetingMode]="isTargetingMode()"
+          [animationQueue]="spriteAnimations()"
+          [sleepIndicator]="sleepIndicator()"
+          (groupClicked)="onGroupClick($event)"
+          (animationComplete)="onAnimationComplete($event)"
+        />
       </div>
     }
 

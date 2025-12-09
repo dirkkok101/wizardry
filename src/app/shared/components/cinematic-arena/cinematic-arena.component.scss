@@ -249,9 +249,50 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
   color: var(--group-color, var(--color-gold-primary));
 }
 
-// Monster count
+// Monster count (active/total format)
 .monster-count {
-  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: baseline;
+
+  .active-count {
+    color: var(--color-text-primary);  // Bright white - active monsters
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+
+  .count-separator {
+    color: var(--color-text-muted);
+    margin: 0 1px;
+  }
+
+  .total-count {
+    color: var(--color-text-secondary);  // Dimmed - context
+    font-size: 0.9em;
+  }
+
+  // When some monsters are incapacitated (asleep/paralyzed), highlight the difference
+  &.has-inactive .active-count {
+    color: var(--color-magic);  // Purple when reduced
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+    animation: count-flash 0.6s ease-out;
+  }
+}
+
+// Flash animation when count changes
+@keyframes count-flash {
+  0% {
+    color: #fff;
+    text-shadow: 0 0 15px var(--color-magic);
+    transform: scale(1.2);
+  }
+  50% {
+    color: var(--color-magic);
+    text-shadow: 0 0 10px var(--color-magic);
+  }
+  100% {
+    color: var(--color-magic);
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+    transform: scale(1);
+  }
 }
 
 // Character class badge
@@ -273,11 +314,57 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
     color: var(--color-hp-critical);  // Red
     animation: hp-pulse 0.5s ease-in-out infinite;
   }
+
+  // Healing pulse animation (triggered when character receives healing)
+  &.healing-pulse {
+    animation: hp-heal-pulse 0.6s ease-in-out;
+  }
+
+  // Shield pulse animation (triggered when character receives AC buff)
+  &.shield-pulse {
+    animation: hp-shield-pulse 0.6s ease-in-out;
+  }
 }
 
 @keyframes hp-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+// Healing HP pulse - bright green glow with scale
+@keyframes hp-heal-pulse {
+  0% {
+    color: var(--color-hp-healthy);
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+  }
+  50% {
+    color: #4ade80;  // Brighter green
+    text-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
+    transform: scale(1.15);
+  }
+  100% {
+    color: var(--color-hp-healthy);
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+  }
+}
+
+// Shield HP pulse - steel blue glow with scale (AC buff)
+@keyframes hp-shield-pulse {
+  0% {
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+  }
+  50% {
+    color: #93c5fd;  // Light steel blue
+    text-shadow: 0 0 15px rgba(96, 165, 250, 0.8);
+    transform: scale(1.15);
+  }
+  100% {
+    text-shadow: 0 0 0 transparent;
+    transform: scale(1);
+  }
 }
 
 // Bottom overlay: Name (uppercase like monster cards)
@@ -706,6 +793,94 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
 }
 
 // ----------------------------------------------------------------------------
+// Action Result Banner (bottom center)
+// ----------------------------------------------------------------------------
+.action-result-banner {
+  position: absolute;
+  bottom: 60px;  // Above letterbox
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.85) 15%,
+    rgba(0, 0, 0, 0.85) 85%,
+    transparent 100%
+  );
+  border-top: 1px solid var(--color-gold-dim);
+  border-bottom: 1px solid var(--color-gold-dim);
+  animation: result-reveal 0.4s ease-out;
+  pointer-events: none;
+
+  .result-text {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
+  }
+
+  // Status effect variant (sleep, paralysis, poison, etc.)
+  &.status-effect {
+    border-color: var(--color-magic);  // Purple for magical status
+
+    .result-text {
+      color: #c4b5fd;  // Light purple tint
+      text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(168, 85, 247, 0.4);  // Purple glow
+    }
+  }
+
+  // Healing variant (life-affirming green theming)
+  &.healing {
+    border-color: var(--color-hp-healthy);
+    box-shadow:
+      0 0 20px rgba(34, 197, 94, 0.3),
+      0 0 40px rgba(34, 197, 94, 0.15);
+
+    .result-text {
+      color: #86efac;  // Light green tint
+      text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 10px rgba(34, 197, 94, 0.5),
+        0 0 20px rgba(34, 197, 94, 0.3);  // Green glow
+    }
+  }
+
+  // AC buff variant (protective steel blue theming)
+  &.ac-buff {
+    border-color: #60a5fa;  // Steel blue
+    box-shadow:
+      0 0 20px rgba(96, 165, 250, 0.3),
+      0 0 40px rgba(96, 165, 250, 0.15);
+
+    .result-text {
+      color: #93c5fd;  // Light steel blue
+      text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 10px rgba(96, 165, 250, 0.5),
+        0 0 20px rgba(96, 165, 250, 0.3);  // Steel blue glow
+    }
+  }
+}
+
+@keyframes result-reveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Floating Damage Override (position within arena)
 // ----------------------------------------------------------------------------
 :host ::ng-deep app-floating-damage {
@@ -725,7 +900,8 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
   .portrait-card,
   .action-text,
   .line-segment,
-  .line-arrow {
+  .line-arrow,
+  .action-result-banner {
     animation: none !important;
     transition: none !important;
   }

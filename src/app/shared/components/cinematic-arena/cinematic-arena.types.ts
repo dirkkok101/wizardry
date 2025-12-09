@@ -51,6 +51,7 @@ export interface ArenaCombatant {
   maxHp?: number            // Maximum HP
 
   // Monster-specific stats (for live count display)
+  activeCount?: number      // Monsters active (not asleep/paralyzed) in group
   aliveCount?: number       // Monsters alive in group
   totalCount?: number       // Total monsters in group
 }
@@ -65,7 +66,7 @@ export type ArenaAnimation =
   | 'call'
   | 'dispel'
 
-export type DamageDisplayType = 'damage' | 'critical' | 'heal' | 'miss' | 'status'
+export type DamageDisplayType = 'damage' | 'critical' | 'heal' | 'miss' | 'status' | 'buff'
 
 /**
  * Timing constants for animation choreography (in milliseconds)

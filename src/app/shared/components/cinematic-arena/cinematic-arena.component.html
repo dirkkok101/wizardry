@@ -46,13 +46,19 @@
               <div class="portrait-top-overlay">
                 @if (state.attacker.type === 'monster') {
                   <span class="stat-left group-id">[{{ state.attacker.groupId }}]</span>
-                  <span class="stat-right monster-count">×{{ getLiveCount(state.attacker) }}</span>
+                  <span class="stat-right monster-count" [class.has-inactive]="hasInactiveMonsters(state.attacker)">
+                    <span class="active-count">{{ getLiveActiveCount(state.attacker) }}</span>
+                    <span class="count-separator">/</span>
+                    <span class="total-count">{{ getLiveCount(state.attacker) }}</span>
+                  </span>
                 } @else {
                   <span class="stat-left class-badge">{{ state.attacker.className }}</span>
                   <span
                     class="stat-right hp-display"
                     [class.warning]="isHpWarning(state.attacker)"
                     [class.critical]="isHpCritical(state.attacker)"
+                    [class.healing-pulse]="healingCharacterId() === state.attacker.id"
+                    [class.shield-pulse]="buffedCharacterId() === state.attacker.id"
                   >{{ getLiveHp(state.attacker) }}/{{ state.attacker.maxHp }}</span>
                 }
               </div>
@@ -122,13 +128,19 @@
                     <div class="portrait-top-overlay">
                       @if (target.type === 'monster') {
                         <span class="stat-left group-id">[{{ target.groupId }}]</span>
-                        <span class="stat-right monster-count">×{{ getLiveCount(target) }}</span>
+                        <span class="stat-right monster-count" [class.has-inactive]="hasInactiveMonsters(target)">
+                          <span class="active-count">{{ getLiveActiveCount(target) }}</span>
+                          <span class="count-separator">/</span>
+                          <span class="total-count">{{ getLiveCount(target) }}</span>
+                        </span>
                       } @else {
                         <span class="stat-left class-badge">{{ target.className }}</span>
                         <span
                           class="stat-right hp-display"
                           [class.warning]="isHpWarning(target)"
                           [class.critical]="isHpCritical(target)"
+                          [class.healing-pulse]="healingCharacterId() === target.id"
+                          [class.shield-pulse]="buffedCharacterId() === target.id"
                         >{{ getLiveHp(target) }}/{{ target.maxHp }}</span>
                       }
                     </div>
@@ -161,6 +173,16 @@
       class="letterbox-bar bottom"
       [class.expanded]="letterboxExpanded()"
     ></div>
+
+    <!-- Action Result Banner (bottom center) -->
+    @if (actionResultMessage(); as message) {
+      <div class="action-result-banner"
+           [class.status-effect]="isStatusEffectMessage()"
+           [class.healing]="isHealingMessage()"
+           [class.ac-buff]="isAcBuffMessage()">
+        <span class="result-text">{{ message }}</span>
+      </div>
+    }
 
     <!-- Floating Damage Layer -->
     <app-floating-damage

@@ -1349,23 +1349,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addMessage(`Random encounters ${status} (Ctrl+E to toggle)`);
   }
 
-  @HostListener('window:keydown.control.t')
-  toggleGuaranteedChests(): void {
-    const currentState = this.gameState.state();
-    const newChestState = !currentState.settings.guaranteedChestDrops;
-
-    this.gameState.updateState((state) => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        guaranteedChestDrops: newChestState
-      }
-    }));
-
-    const status = newChestState ? 'ENABLED' : 'DISABLED';
-    this.addMessage(`Guaranteed chest drops ${status} (Ctrl+T to toggle)`);
-  }
-
   moveForward(): void {
     this.executeMovement('FORWARD', (state: GameState) => DungeonMovementService.moveForward(state));
   }
@@ -2301,12 +2284,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log(`[applyVictoryRewards]   ${char.name}: HP=${char.hp}, Status=${char.status}`);
     }
 
-    // Check if chest should appear:
-    // 1. Treasure room encounters always drop chest
-    // 2. Debug mode: guaranteedChestDrops setting guarantees chest after every combat
-    const currentSettings = this.gameState.state().settings;
-    const shouldShowChest = finalState.encounterReason === 'treasure_room' ||
-                            currentSettings.guaranteedChestDrops;
+    // Chest only appears for treasure room encounters
+    const shouldShowChest = finalState.encounterReason === 'treasure_room';
 
     if (shouldShowChest) {
       this.showChestAfterVictory(finalState);
@@ -3023,16 +3002,20 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showVictoryOverlay.set(false);
     this.combatPhase.set('idle');
 
-    // Generate chest based on dungeon level
+    // Generate chest based on monster level (determines reward tier)
     const dungeonState = this.gameState.state().dungeon;
     const position = dungeonState?.position ?? { x: 0, y: 0, facing: 'NORTH' as const };
     const mazeLevel = dungeonState?.currentLevel ?? 1;
 
-    const chest = await ChestService.generateChest(
-      14, // Reward tier (mid-tier in Reward 2 system 10-19)
+    // Get highest monster level from defeated groups for reward tier calculation
+    const maxMonsterLevel = finalState.monsterGroups
+      .flatMap(g => g.monsters)
+      .reduce((max, m) => Math.max(max, m.level), 1);
+
+    const chest = await ChestService.generateCombatChest(
+      maxMonsterLevel,
       mazeLevel,
-      { x: position.x, y: position.y, facing: position.facing },
-      'combat_victory'
+      { x: position.x, y: position.y, facing: position.facing }
     );
 
     // Initialize chest overlay - go directly to action phase (no letterbox)

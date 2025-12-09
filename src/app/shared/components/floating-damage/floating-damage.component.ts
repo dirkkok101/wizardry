@@ -8,7 +8,7 @@ import {
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 
-export type DamageType = 'damage' | 'critical' | 'heal' | 'miss' | 'status'
+export type DamageType = 'damage' | 'critical' | 'heal' | 'miss' | 'status' | 'buff'
 
 export interface FloatingDamageEntry {
   id: string
@@ -27,7 +27,7 @@ export interface FloatingDamageEntry {
  *
  * Features:
  * - Multiple simultaneous damage numbers
- * - Color-coded by type (damage=red, critical=gold, heal=green, miss=gray)
+ * - Color-coded by type (damage=red, critical=gold, heal=green, miss=gray, status=purple, buff=steel-blue)
  * - Float-up and fade-out animation
  * - Auto-removes entries after animation completes
  *

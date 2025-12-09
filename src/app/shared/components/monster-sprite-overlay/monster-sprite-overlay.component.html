@@ -40,9 +40,21 @@
         <!-- Overlaid labels -->
         <div class="card-overlay" aria-hidden="true">
           <span class="group-id">[{{ group.id }}]</span>
-          <span class="monster-count">×{{ getAliveCount(group) }}</span>
+          <span class="monster-count">
+            <span class="active-count">{{ getActiveCount(group) }}</span>
+            <span class="count-separator">/</span>
+            <span class="total-count">{{ getAliveCount(group) }}</span>
+          </span>
         </div>
         <div class="monster-name" aria-hidden="true">{{ getGroupDisplayName(group) }}</div>
+
+        <!-- Sleep Indicator Overlay -->
+        @if (hasSleepIndicator(group)) {
+          <div class="sleep-indicator">
+            <span class="sleep-text">SLEEP</span>
+            <span class="sleep-zzz">💤</span>
+          </div>
+        }
       </div>
     </div>
   </ng-template>

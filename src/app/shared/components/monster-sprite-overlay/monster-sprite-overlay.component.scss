@@ -225,9 +225,24 @@
   }
 
   .monster-count {
-    color: var(--color-text-primary);
+    display: inline-flex;
+    align-items: baseline;
     font-weight: bold;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+
+    .active-count {
+      color: var(--color-text-primary);  // Bright white - active monsters
+    }
+
+    .count-separator {
+      color: var(--color-text-muted);
+      margin: 0 1px;
+    }
+
+    .total-count {
+      color: var(--color-text-secondary);  // Dimmed - context
+      font-size: 0.9em;
+    }
   }
 }
 
@@ -346,6 +361,78 @@
 }
 
 // ============================================
+// SLEEP INDICATOR OVERLAY
+// ============================================
+
+.sleep-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+  z-index: 10;
+  animation: sleep-reveal 0.6s ease-out;
+
+  .sleep-text {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #a855f7;  // Purple - mystical sleep
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    text-shadow:
+      0 0 15px rgba(168, 85, 247, 0.8),
+      0 0 30px rgba(168, 85, 247, 0.5);
+  }
+
+  .sleep-zzz {
+    font-size: 2rem;
+    animation: zzz-float 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.8));
+  }
+}
+
+// Back row: smaller sleep indicator
+.back-row-group .sleep-indicator {
+  .sleep-text {
+    font-size: 0.9rem;
+  }
+
+  .sleep-zzz {
+    font-size: 1.5rem;
+  }
+}
+
+@keyframes sleep-reveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes zzz-float {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-8px);
+    opacity: 0.7;
+  }
+}
+
+// ============================================
 // REDUCED MOTION
 // ============================================
 
@@ -358,6 +445,11 @@
 
   .monster-card.damage-flash,
   .monster-card.dying {
+    animation: none;
+  }
+
+  .sleep-indicator,
+  .sleep-indicator .sleep-zzz {
     animation: none;
   }
 }

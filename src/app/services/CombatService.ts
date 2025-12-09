@@ -1526,6 +1526,9 @@ export class CombatService {
     } else if (spell && spell.target === 'all_enemies') {
       // All-enemies spell: get all alive monsters from all groups
       targets = this.getAllAliveMonsters(state)
+    } else if (spell && spell.target === 'caster') {
+      // Self-targeting spell (MOGREF, PORFIC, etc.): caster is the target
+      targets = [command.actor]
     } else {
       // Single target or other: use command.target
       targets = Array.isArray(command.target) ? command.target : command.target ? [command.target] : []
@@ -1607,6 +1610,17 @@ export class CombatService {
           const currentChar = existingCharacterUpdates?.get(target.id) || characterUpdates.get(target.id) || target as Character
           const healed = this.applyHealingToCharacter(currentChar, healing)
           characterUpdates.set(target.id, healed)
+
+          // Build structured healing result for cinematic display
+          if (healing > 0) {
+            damageResults.push({
+              targetId: target.id,
+              targetName: target.name,
+              value: healing,
+              type: 'healing',
+              category: 'normal'
+            })
+          }
         }
       }
     }
@@ -1917,7 +1931,13 @@ export class CombatService {
       newState,
       messages: [actionMessage, resultMessage],
       characterUpdates: characterUpdates.size > 0 ? characterUpdates : undefined,
-      damageResults: damageResults.length > 0 ? damageResults : undefined
+      damageResults: damageResults.length > 0 ? damageResults : undefined,
+      statusEffects: spellEffect.statusEffects && spellEffect.statusEffects.length > 0
+        ? spellEffect.statusEffects
+        : undefined,
+      acBuffs: spellEffect.acBuffs && spellEffect.acBuffs.length > 0
+        ? spellEffect.acBuffs
+        : undefined
     }
   }
 
@@ -3116,7 +3136,9 @@ export class CombatService {
         ...(monstersChanged && { monsterGroupsSnapshot: [...currentState.monsterGroups] }),
         ...(eventCharacterUpdates.size > 0 && { characterUpdates: eventCharacterUpdates }),
         ...(spellCast && { spellCast }),
-        ...(result.damageResults && result.damageResults.length > 0 && { damageResults: result.damageResults })
+        ...(result.damageResults && result.damageResults.length > 0 && { damageResults: result.damageResults }),
+        ...(result.statusEffects && result.statusEffects.length > 0 && { statusEffects: result.statusEffects }),
+        ...(result.acBuffs && result.acBuffs.length > 0 && { acBuffs: result.acBuffs })
       }
       events.push(event)
 

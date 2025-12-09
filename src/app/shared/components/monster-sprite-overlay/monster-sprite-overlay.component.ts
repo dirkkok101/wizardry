@@ -55,6 +55,7 @@ export class MonsterSpriteOverlayComponent {
   readonly selectedGroupId = input<'A' | 'B' | 'C' | 'D' | null>(null)
   readonly isTargetingMode = input(false)
   readonly animationQueue = input<SpriteAnimationState[]>([])
+  readonly sleepIndicator = input<{ groupId: string } | null>(null)
 
   // Outputs
   readonly groupClicked = output<'A' | 'B' | 'C' | 'D'>()
@@ -175,10 +176,33 @@ export class MonsterSpriteOverlayComponent {
   }
 
   /**
+   * Get count of inactive (asleep/paralyzed) monsters in a group
+   */
+  getInactiveCount(group: MonsterGroup): number {
+    return group.monsters.filter(m =>
+      m.hp > 0 && (m.status === 'ASLEEP' || m.status === 'PARALYZED')
+    ).length
+  }
+
+  /**
+   * Get count of active (alive and not incapacitated) monsters
+   */
+  getActiveCount(group: MonsterGroup): number {
+    return this.getAliveCount(group) - this.getInactiveCount(group)
+  }
+
+  /**
    * Check if group has any alive monsters
    */
   hasAliveMonsters(group: MonsterGroup): boolean {
     return group.monsters.some(m => m.hp > 0)
+  }
+
+  /**
+   * Check if group should show sleep indicator
+   */
+  hasSleepIndicator(group: MonsterGroup): boolean {
+    return this.sleepIndicator()?.groupId === group.id
   }
 
   /**
