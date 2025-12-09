@@ -65,7 +65,7 @@
                   [class.danger]="action.variant === 'danger'"
                   (click)="onActionClick(char, action.type)"
                 >
-                  [{{ getActionLabel(action.type) }}]
+                  [{{ action.label || getActionLabel(action.type) }}]
                 </button>
               }
             }
