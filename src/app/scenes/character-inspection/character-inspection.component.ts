@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal, HostListener } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { ActivatedRoute } from '@angular/router'
+import { ActivatedRoute, Router } from '@angular/router'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { GameStateService } from '@services/GameStateService'
 import { EquipmentService } from '@services/EquipmentService'
@@ -56,6 +56,7 @@ export class CharacterInspectionComponent {
   private readonly gameState = inject(GameStateService)
   private readonly navigation = inject(SceneNavigationService)
   private readonly route = inject(ActivatedRoute)
+  private readonly router = inject(Router)
   readonly messages = inject(MessageService)
 
   private readonly queryParams = toSignal(this.route.queryParams, {
@@ -95,6 +96,39 @@ export class CharacterInspectionComponent {
     const currentId = this.characterId()
     return GameStateQueries.partyCharacters(this.gameState.state())
       .filter(char => char.id !== currentId)
+  })
+
+  // Get all party members for navigation (in party order)
+  readonly allPartyMembers = computed(() =>
+    GameStateQueries.partyCharacters(this.gameState.state())
+  )
+
+  // Current index in party for navigation
+  readonly currentIndex = computed(() => {
+    const id = this.characterId()
+    const members = this.allPartyMembers()
+    return members.findIndex(c => c.id === id)
+  })
+
+  // Navigation helpers - cyclical (wraps around)
+  readonly canNavigate = computed(() => this.allPartyMembers().length > 1)
+
+  readonly prevCharacter = computed(() => {
+    const members = this.allPartyMembers()
+    if (members.length <= 1) return null
+    const idx = this.currentIndex()
+    // Wrap to last character if at first
+    const prevIdx = idx <= 0 ? members.length - 1 : idx - 1
+    return members[prevIdx]
+  })
+
+  readonly nextCharacter = computed(() => {
+    const members = this.allPartyMembers()
+    if (members.length <= 1) return null
+    const idx = this.currentIndex()
+    // Wrap to first character if at last
+    const nextIdx = idx >= members.length - 1 ? 0 : idx + 1
+    return members[nextIdx]
   })
 
   // Show party gold in Tavern mode or Shop mode
@@ -175,6 +209,16 @@ export class CharacterInspectionComponent {
   readonly footerMenuItems = computed((): MenuItem[] => {
     const items: MenuItem[] = []
     const char = this.character()
+    const prevChar = this.prevCharacter()
+    const nextChar = this.nextCharacter()
+
+    // Prev character (leftmost) - show name if available
+    items.push({
+      id: 'prev',
+      label: prevChar ? `◀ ${prevChar.name}` : '◀ Prev',
+      shortcut: 'Q',
+      enabled: this.canNavigate()
+    })
 
     // Spell Book option for casters with known spells
     if (char && SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
@@ -183,6 +227,14 @@ export class CharacterInspectionComponent {
 
     // Return always available
     items.push({ id: 'back', label: 'Return', shortcut: 'ESC', enabled: true })
+
+    // Next character (rightmost) - show name if available
+    items.push({
+      id: 'next',
+      label: nextChar ? `${nextChar.name} ▶` : 'Next ▶',
+      shortcut: 'E',
+      enabled: this.canNavigate()
+    })
 
     return items
   })
@@ -452,8 +504,27 @@ export class CharacterInspectionComponent {
     this.navigation.returnFromInspection(this.returnTo())
   }
 
+  // Navigate to another character while preserving other query params
+  navigateToCharacter(characterId: string): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { characterId },
+      queryParamsHandling: 'merge'
+    })
+  }
+
   handleFooterAction(itemId: string): void {
     switch (itemId) {
+      case 'prev': {
+        const prev = this.prevCharacter()
+        if (prev) this.navigateToCharacter(prev.id)
+        break
+      }
+      case 'next': {
+        const next = this.nextCharacter()
+        if (next) this.navigateToCharacter(next.id)
+        break
+      }
       case 'back':
         this.returnToPrevious()
         break
@@ -485,5 +556,29 @@ export class CharacterInspectionComponent {
     if (char && SpellLearningService.isCaster(char) && char.knownSpells.length > 0) {
       this.showSpellBookDialog.set(true)
     }
+  }
+
+  // Character navigation: ArrowLeft for previous (Q is handled by MenuComponent)
+  @HostListener('window:keydown.arrowleft')
+  handlePrevCharacter(): void {
+    // Don't handle if a dialog is open
+    if (this.showTradeDialog() || this.showDropDialog() ||
+        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+      return
+    }
+    const prev = this.prevCharacter()
+    if (prev) this.navigateToCharacter(prev.id)
+  }
+
+  // Character navigation: ArrowRight for next (E is handled by MenuComponent)
+  @HostListener('window:keydown.arrowright')
+  handleNextCharacter(): void {
+    // Don't handle if a dialog is open
+    if (this.showTradeDialog() || this.showDropDialog() ||
+        this.showSpellBookDialog() || this.showSpellCastDialog()) {
+      return
+    }
+    const next = this.nextCharacter()
+    if (next) this.navigateToCharacter(next.id)
   }
 }

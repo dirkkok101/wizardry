@@ -4124,11 +4124,17 @@
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "door",
+            "south": "wall",
             "west": "wall"
           },
-          "types": ["darkness"]
+          "types": ["teleporter"],
+          "destination": {
+            "level": 1,
+            "x": 0,
+            "y": 0
+          },
+          "message": "MAPIRO MAHAMA DIROMAT!!\nA STRANGE GLOW SEEMS TO EMANATE FROM THIS ROOM.\nIN THE CENTER, A SMALLISH MAN IN A LONG ROBE TURNS TOWARDS THE PARTY AND SHOUTS\nBEGONE, STRANGERS! HE SLOWLY WAVES HIS HANDS, AND CHANTS\nMAPIRO MAHAMA DIROMAT!!"
         },
         {
           "x": 10,
@@ -4137,7 +4143,7 @@
             "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "open"
+            "west": "door"
           },
           "types": ["darkness"]
         },
