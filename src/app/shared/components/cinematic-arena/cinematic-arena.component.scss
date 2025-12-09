@@ -757,3 +757,111 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
     max-width: 200px;
   }
 }
+
+// ----------------------------------------------------------------------------
+// 2K+ DISPLAY - 2x Portrait Card Sizes
+// ----------------------------------------------------------------------------
+@media (min-width: 2000px) {
+  // 2x portrait cards (180 → 360)
+  .portrait-card {
+    width: 360px;
+    height: 360px;
+  }
+
+  // Adjust target stack for larger cards
+  .target-stack {
+    width: 360px;
+    height: 360px;
+  }
+
+  // Expand stacked card width
+  .combatant-panel.stacked {
+    .target-stack {
+      width: calc(360px + 90px);
+
+      .portrait-card {
+        &:nth-child(2) { transform: translate(30px, 16px); }
+        &:nth-child(3) { transform: translate(60px, 32px); }
+        &:nth-child(4) { transform: translate(90px, 48px); }
+      }
+    }
+
+    &.stacked .portrait-card {
+      width: calc(360px * 0.9);
+      height: calc(360px * 0.9);
+    }
+  }
+
+  // Scale up typography in portrait overlays
+  .portrait-top-overlay {
+    padding: 0.8rem 1rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .portrait-name-overlay,
+  .portrait-name {
+    padding: 0.8rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .portrait-fallback-large {
+    font-size: 8rem;
+  }
+
+  .portrait-group-badge {
+    width: 56px;
+    height: 56px;
+    font-size: 1.8rem;
+    top: 16px;
+    left: 16px;
+    border-radius: 12px;
+  }
+
+  // Scale up action center text
+  .attacker-label,
+  .target-label {
+    font-size: 2.5rem;
+  }
+
+  .action-verb {
+    font-size: 1.5rem;
+  }
+
+  .outcome-label {
+    font-size: 2rem;
+
+    &.critical {
+      font-size: 2.5rem;
+    }
+  }
+
+  .outcome-reveal {
+    font-size: 3.5rem;
+
+    &.critical {
+      font-size: 4rem;
+    }
+
+    &.miss {
+      font-size: 2.5rem;
+    }
+  }
+
+  .action-center {
+    min-width: 400px;
+  }
+
+  .action-divider {
+    width: 240px;
+    height: 3px;
+  }
+
+  .spell-name {
+    font-size: 2rem;
+  }
+
+  // Letterbox bars
+  .letterbox-bar.expanded {
+    height: 80px;  // 2x from 40px
+  }
+}

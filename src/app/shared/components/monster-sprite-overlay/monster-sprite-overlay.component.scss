@@ -1,58 +1,89 @@
 // ============================================
-// MONSTER SPRITE OVERLAY - Dungeon Perspective
+// MONSTER SPRITE OVERLAY - Overlapping Depth Stack
 // ============================================
-// Renders monster groups with visual depth WITHOUT overlap:
-// - Back row: smaller, higher (further away), dimmer
-// - Front row: larger, lower (closer), brighter
+// Renders monster groups with visual depth via OVERLAP:
+// - Back row: smaller, offset up-left, peeks from behind front
+// - Front row: larger, centered, prominent
 //
-// Both rows must remain fully visible and clickable!
+// Both rows remain fully visible and clickable via diagonal offset!
 
 .monster-sprite-overlay {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  padding-top: 3%;
-  gap: 1rem;
+  justify-content: center;
+  align-items: center;  // Vertical centering
   pointer-events: none;
 }
 
 // ============================================
-// ROW CONTAINERS - Vertical Stack (No Overlap)
+// ROWS CONTAINER - Positioning Context
+// ============================================
+
+.monster-rows-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// ============================================
+// ROW CONTAINERS - Overlapping Stack
 // ============================================
 
 .back-row,
 .front-row {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1rem;
   pointer-events: auto;
 }
 
-// Back row: Further away (top, smaller, dimmer)
+// Back row: Offset up-left to peek from behind front row
 .back-row {
-  // Depth visual cues - appear "further down the corridor"
-  filter: brightness(0.8) contrast(0.95);
+  position: relative;
+  z-index: 1;  // Below front row
 
-  // Subtle shadow suggesting distance
+  // Offset to create overlap but remain visible
+  transform: translate(-12%, 0);
+  margin-bottom: -70px;  // Pull front row up to overlap
+
+  // Depth visual cues - appear "further down the corridor"
+  filter: brightness(0.75) contrast(0.9);
+
   .monster-card {
     box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.4),
+      0 4px 12px rgba(0, 0, 0, 0.5),
       inset 0 1px 0 rgba(255, 255, 255, 0.03);
   }
 }
 
-// Front row: Closer (larger, brighter, more prominent)
+// Front row: Centered baseline, higher z-index
 .front-row {
+  position: relative;
+  z-index: 2;  // Above back row
+  gap: 1.5rem;
+
   // Full brightness - these are "in your face"
   filter: brightness(1);
 
   .monster-card {
     box-shadow:
       0 8px 24px rgba(0, 0, 0, 0.6),
+      0 0 40px rgba(0, 0, 0, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+}
+
+// ============================================
+// ONLY BACK ROW - No offset when no front row
+// ============================================
+
+.monster-rows-container:has(.back-row):not(:has(.front-row)) {
+  .back-row {
+    transform: none;
+    margin-bottom: 0;
+    filter: brightness(1);  // Full brightness when alone
   }
 }
 
@@ -67,7 +98,6 @@
   gap: 0.5rem;
   cursor: default;
   transition: transform 0.15s ease, filter 0.15s ease;
-  animation: monster-reveal 0.5s ease-out backwards;
 
   &.targetable {
     cursor: pointer;
@@ -103,16 +133,24 @@
   }
 }
 
-// Back row groups: smaller (depth perspective ~70%)
-.back-row-group .monster-card {
-  width: 140px;
-  height: 140px;
+// Back row groups: smaller (depth perspective ~65%)
+.back-row-group {
+  animation: monster-reveal-back 0.5s ease-out backwards;
+
+  .monster-card {
+    width: 130px;
+    height: 130px;
+  }
 }
 
 // Front row groups: full size (closer to viewer)
-.front-row-group .monster-card {
-  width: 200px;
-  height: 200px;
+.front-row-group {
+  animation: monster-reveal-front 0.5s ease-out backwards;
+
+  .monster-card {
+    width: 190px;
+    height: 190px;
+  }
 }
 
 // ============================================
@@ -157,7 +195,7 @@
 
 // Back row placeholder: smaller font to match card size
 .back-row-group .sprite-placeholder {
-  font-size: 3rem;
+  font-size: 2.5rem;
 }
 
 // ============================================
@@ -193,6 +231,12 @@
   }
 }
 
+// Back row: smaller text
+.back-row-group .card-overlay {
+  font-size: var(--font-size-xs);
+  padding: 0.3rem;
+}
+
 // ============================================
 // MONSTER NAME - Overlay at bottom
 // ============================================
@@ -217,14 +261,33 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
+// Back row: even smaller name text
+.back-row-group .monster-name {
+  font-size: 0.6rem;
+  padding: 0.3rem;
+}
+
 // ============================================
 // ANIMATION KEYFRAMES
 // ============================================
 
-@keyframes monster-reveal {
+// Back row: reveal from stacked position
+@keyframes monster-reveal-back {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.9);
+    transform: translate(20px, 30px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+// Front row: reveal from below
+@keyframes monster-reveal-front {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
   }
   100% {
     opacity: 1;
@@ -287,12 +350,66 @@
 // ============================================
 
 @media (prefers-reduced-motion: reduce) {
-  .monster-group {
+  .monster-group,
+  .back-row-group,
+  .front-row-group {
     animation: none;
   }
 
   .monster-card.damage-flash,
   .monster-card.dying {
     animation: none;
+  }
+}
+
+// ============================================
+// 2K+ DISPLAY - 2x Card Sizes
+// ============================================
+
+@media (min-width: 2000px) {
+  // Back row: 2x size (130 → 260)
+  .back-row-group .monster-card {
+    width: 260px;
+    height: 260px;
+  }
+
+  // Front row: 2x size (190 → 380)
+  .front-row-group .monster-card {
+    width: 380px;
+    height: 380px;
+  }
+
+  // Adjust overlap for larger cards
+  .back-row {
+    margin-bottom: -140px;
+  }
+
+  // Scale up typography
+  .sprite-placeholder {
+    font-size: 8rem;
+  }
+
+  .back-row-group .sprite-placeholder {
+    font-size: 5rem;
+  }
+
+  .card-overlay {
+    padding: 0.8rem;
+    font-size: var(--font-size-base);
+  }
+
+  .back-row-group .card-overlay {
+    font-size: var(--font-size-sm);
+    padding: 0.6rem;
+  }
+
+  .monster-name {
+    padding: 0.8rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .back-row-group .monster-name {
+    font-size: var(--font-size-xs);
+    padding: 0.6rem;
   }
 }

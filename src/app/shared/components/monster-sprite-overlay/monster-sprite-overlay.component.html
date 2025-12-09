@@ -47,35 +47,38 @@
     </div>
   </ng-template>
 
-  <!-- Back Row Groups - Smaller, Higher (depth effect) -->
-  @if (backRowGroups().length > 0) {
-    <div class="back-row" role="group" aria-label="Back row monsters">
-      @for (group of backRowGroups(); track group.id; let i = $index) {
-        <ng-container
-          *ngTemplateOutlet="monsterGroupCard; context: {
-            group: group,
-            rowClass: 'back-row-group',
-            index: i,
-            isBackRow: true
-          }"
-        ></ng-container>
-      }
-    </div>
-  }
+  <!-- Container for overlapping depth stack layout -->
+  <div class="monster-rows-container">
+    <!-- Back Row Groups - Smaller, offset to peek from behind -->
+    @if (backRowGroups().length > 0) {
+      <div class="back-row" role="group" aria-label="Back row monsters">
+        @for (group of backRowGroups(); track group.id; let i = $index) {
+          <ng-container
+            *ngTemplateOutlet="monsterGroupCard; context: {
+              group: group,
+              rowClass: 'back-row-group',
+              index: i,
+              isBackRow: true
+            }"
+          ></ng-container>
+        }
+      </div>
+    }
 
-  <!-- Front Row Groups - Larger, Lower -->
-  @if (frontRowGroups().length > 0) {
-    <div class="front-row" role="group" aria-label="Front row monsters">
-      @for (group of frontRowGroups(); track group.id; let i = $index) {
-        <ng-container
-          *ngTemplateOutlet="monsterGroupCard; context: {
-            group: group,
-            rowClass: 'front-row-group',
-            index: i,
-            isBackRow: false
-          }"
-        ></ng-container>
-      }
-    </div>
-  }
+    <!-- Front Row Groups - Larger, centered baseline -->
+    @if (frontRowGroups().length > 0) {
+      <div class="front-row" role="group" aria-label="Front row monsters">
+        @for (group of frontRowGroups(); track group.id; let i = $index) {
+          <ng-container
+            *ngTemplateOutlet="monsterGroupCard; context: {
+              group: group,
+              rowClass: 'front-row-group',
+              index: i,
+              isBackRow: false
+            }"
+          ></ng-container>
+        }
+      </div>
+    }
+  </div>
 </div>

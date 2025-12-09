@@ -32,7 +32,7 @@ export interface TreasureConfig {
 
 const DEFAULT_CONFIG: TreasureConfig = {
   applyItemRangeBug: false,  // Disabled - all items should be obtainable
-  unidentifiedChance: 70
+  unidentifiedChance: 100    // All chest items are unidentified (authentic Wizardry 1)
 }
 
 /**

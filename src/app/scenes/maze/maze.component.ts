@@ -115,8 +115,10 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly victoryRewards = signal<VictoryRewards | null>(null);
   // Combat intro phase - hides monster cards and player actions during letterbox
   readonly combatIntroActive = signal<boolean>(false);
-  // Monster cards should only show after intro completes
-  readonly showMonsterCards = computed(() => this.inCombat() && !this.combatIntroActive());
+  // Monster cards should only show after intro completes and not during cinematic playback
+  readonly showMonsterCards = computed(() =>
+    this.inCombat() && !this.combatIntroActive() && !this.showCinematicArena()
+  );
 
   // ============================================================
   // CINEMATIC ARENA STATE (FFX-style combat visualization)
@@ -3033,15 +3035,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       'combat_victory'
     );
 
-    // Initialize chest overlay
+    // Initialize chest overlay - go directly to action phase (no letterbox)
     this.pendingChest.set(chest);
     this.chestSprite.set('closed');
-    this.chestPhase.set('reveal');
-    this.chestLetterboxType.set('treasure');
-
-    // After letterbox animation, go straight to action phase (actions on character cards)
-    await this.delay(1200);
-    this.chestLetterboxType.set(null);
     this.chestPhase.set('action_select');
     this.chestLastMessage.set('Choose an action from a character card.');
   }
@@ -3660,6 +3656,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.pendingChest.update(c => c ? { ...c, trapDisarmed: true, trapped: false } : c);
       this.chestLastMessage.set(`${opener.name} successfully disarmed the trap!`);
       this.chestTrapInput.set('');
+      this.scrambledTrapState.set(null);  // Hide scrambled letters
+      // Hide trap input immediately by returning to action_select
+      this.chestPhase.set('action_select');
       // Auto-open chest after successful disarm (brief delay to show success message)
       setTimeout(() => {
         this.showChestOpening();
