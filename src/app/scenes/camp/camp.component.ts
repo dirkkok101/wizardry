@@ -191,7 +191,7 @@ export class CampComponent implements OnInit {
       this.gameState.updateState(() => state)
 
       // Add to healing log
-      this.healingLog.update(msgs => [...msgs, result.message])
+      this.addHealingMessage(result.message)
       totalHealed += result.healAmount
       spellsCast++
 
@@ -203,7 +203,7 @@ export class CampComponent implements OnInit {
       // Check for random encounter after each spell (1% chance like dungeon movement)
       if (this.checkForRandomEncounter()) {
         console.log('[Healing] Random encounter triggered during healing!')
-        this.healingLog.update(msgs => [...msgs, 'You hear monsters approaching!'])
+        this.addHealingMessage('You hear monsters approaching!')
         await this.delay(500)
 
         // Set flag for maze to pick up and initiate combat
@@ -266,6 +266,16 @@ export class CampComponent implements OnInit {
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Add message to healing log with limit (keep last 10 like maze scene)
+   */
+  private addHealingMessage(message: string): void {
+    this.healingLog.update(msgs => {
+      const newMsgs = [...msgs, message]
+      return newMsgs.slice(-10)
+    })
   }
 
   /**

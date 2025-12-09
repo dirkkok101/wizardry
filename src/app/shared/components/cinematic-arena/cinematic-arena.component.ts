@@ -762,6 +762,9 @@ export class CinematicArenaComponent implements OnDestroy {
    * Show floating damage
    */
   private showDamage(value: string, type: DamageType): void {
+    // Skip floating damage for misses - outcome label already shows "MISSES"
+    if (type === 'miss') return
+
     // Position over target area (right side)
     const entry = createFloatingDamage(value, type, 75, 40)
     this.damageEntries.update(entries => [...entries, entry])
@@ -799,6 +802,9 @@ export class CinematicArenaComponent implements OnDestroy {
           : result.type === 'healing'
             ? 'heal'
             : 'damage'
+
+      // Skip floating damage for misses - outcome label already shows "MISSES"
+      if (damageType === 'miss') continue
 
       // Show this damage number
       const entry = createFloatingDamage(String(result.value), damageType, xOffset, yOffset)
