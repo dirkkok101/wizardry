@@ -177,7 +177,7 @@
                 <p class="items-header">Items for {{ summary()?.recipientName }}:</p>
                 <div class="items-row">
                   @for (item of summary()?.itemsObtained; track $index) {
-                    <span class="item-tag">{{ item.name }}</span>
+                    <span class="item-tag">{{ getItemDisplayName(item) }}</span>
                   }
                 </div>
               </div>
@@ -194,7 +194,7 @@
               <h4 class="section-title warning-title">Items Lost (Inventory Full)</h4>
               <div class="items-row lost">
                 @for (item of summary()?.itemsLost; track $index) {
-                  <span class="item-tag lost">{{ item.name }}</span>
+                  <span class="item-tag lost">{{ getItemDisplayName(item) }}</span>
                 }
               </div>
             </div>

@@ -6,6 +6,7 @@ import { Chest } from '@models/Chest'
 import { ScrambledTrapState } from '@models/Trap'
 import { Item } from '@models/Item'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { getItemDisplayName } from '@utils/ItemDisplayHelpers'
 
 /**
  * Chest interaction phases
@@ -148,6 +149,9 @@ export class ChestOverlayComponent {
 
   /** Sprite load error tracking */
   readonly spriteError = signal(false)
+
+  /** Expose getItemDisplayName to template for unidentified item display */
+  readonly getItemDisplayName = getItemDisplayName
 
   // ============================================
   // COMPUTED PROPERTIES

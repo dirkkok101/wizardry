@@ -25,6 +25,7 @@ import { TrapId } from '@models/Trap'
 import { RandomService } from './RandomService'
 import { TreasureService } from './TreasureService'
 import { isAlive } from '@utils/CharacterStatusHelpers'
+import { getItemDisplayName } from '@utils/ItemDisplayHelpers'
 
 /**
  * Generate a unique chest ID
@@ -338,12 +339,12 @@ function getDistributionMessage(result: TreasureDistributionResult): string {
   }
 
   if (result.itemsReceived.length > 0) {
-    const itemNames = result.itemsReceived.map(i => i.name).join(', ')
+    const itemNames = result.itemsReceived.map(i => getItemDisplayName(i)).join(', ')
     messages.push(`Obtained: ${itemNames}`)
   }
 
   if (result.itemsLost.length > 0) {
-    const lostNames = result.itemsLost.map(i => i.name).join(', ')
+    const lostNames = result.itemsLost.map(i => getItemDisplayName(i)).join(', ')
     messages.push(`LOST (inventory full): ${lostNames}`)
   }
 

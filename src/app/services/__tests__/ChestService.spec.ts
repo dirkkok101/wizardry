@@ -531,7 +531,7 @@ describe('ChestService', () => {
     it('should format items received message', () => {
       const result = {
         goldAdded: 0,
-        itemsReceived: [{ id: 'sword', name: 'Sword +1' }] as any,
+        itemsReceived: [{ id: 'sword', name: 'Sword +1', identified: true }] as any,
         itemsLost: [],
         recipientId: 'char1',
         recipientName: 'Fighter'
@@ -545,7 +545,7 @@ describe('ChestService', () => {
       const result = {
         goldAdded: 0,
         itemsReceived: [],
-        itemsLost: [{ id: 'rare', name: 'Rare Item' }] as any,
+        itemsLost: [{ id: 'rare', name: 'Rare Item', identified: true }] as any,
         recipientId: 'char1',
         recipientName: 'Fighter'
       }
