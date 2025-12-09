@@ -99,26 +99,36 @@ export const EncounterService = {
    * Generate a complete encounter with 1-4 monster groups
    * Based on original Wizardry 1 mechanics
    *
-   * Uses weighted probability for group count based on dungeon level:
+   * Uses weighted probability for group count from JSON data:
    * - Level 1: 85% single group, 15% two groups (multi-group is "rare")
-   * - Level 2: 60% single, 30% two, 10% three groups
-   * - Level 3+: Progressively more multi-group encounters
+   * - Level 2-3: 60% single, 30% two, 10% three groups
+   * - Level 4+: 25% single, 35% two, 25% three, 15% four groups
+   *
+   * Party level override: Parties under level 4 always face 1 group
    *
    * @param dungeonLevel - Current dungeon level (1-10)
    * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
+   * @param partyLevel - Average party level (for early-game balancing)
    * @returns Array of MonsterGroups (1-4 groups)
    */
-  generateEncounter(dungeonLevel: number, latumapicActive: boolean = false): MonsterGroup[] {
-    const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
+  generateEncounter(dungeonLevel: number, latumapicActive: boolean = false, partyLevel?: number): MonsterGroup[] {
+    const encounterTable = this.getEncounterTable(dungeonLevel)
 
-    // Roll number of groups using weighted probability
-    const groupCountWeights = ENCOUNTER_CONFIG.getGroupCountWeights(dungeonLevel)
+    // Read config from JSON data
+    const maxMonstersPerGroup = encounterTable.maxMonstersPerGroup
+    const maxFrontRowGroups = encounterTable.maxFrontRowGroups
+
+    // Roll number of groups using weighted probability (with party level override)
+    const groupCountWeights = ENCOUNTER_CONFIG.getGroupCountWeights(
+      encounterTable.groupCountWeights,
+      partyLevel
+    )
     const groupCounts = [1, 2, 3, 4].slice(0, groupCountWeights.length)
     const numGroups = RandomService.weightedRandom(groupCounts, groupCountWeights)
 
     const groups: MonsterGroup[] = []
     const groupIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D']
-    const encounterTable = this.getEncounterTable(dungeonLevel)
+    let frontRowCount = 0
 
     for (let i = 0; i < numGroups; i++) {
       // Select monster type for this group
@@ -132,11 +142,20 @@ export const EncounterService = {
         monsters = monsters.slice(0, maxMonstersPerGroup)
       }
 
+      // Determine formation with front row limit enforcement
+      let formation = this.determineFormation(monsters)
+      if (formation === 'front' && frontRowCount >= maxFrontRowGroups) {
+        formation = 'back'  // Force to back row if front is full
+      }
+      if (formation === 'front') {
+        frontRowCount++
+      }
+
       // Create the group
       groups.push({
         id: groupIds[i],
         monsters: monsters,
-        formation: this.determineFormation(monsters),
+        formation: formation,
         identified: latumapicActive  // Monsters identified if LATUMAPIC active for expedition
       })
     }
@@ -154,7 +173,8 @@ export const EncounterService = {
    * @returns Array of MonsterGroups (1 group for fixed encounters)
    */
   generateFixedEncounter(dungeonLevel: number, config: FixedEncounterConfig, latumapicActive: boolean = false): MonsterGroup[] {
-    const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroupForLevel(dungeonLevel)
+    const encounterTable = this.getEncounterTable(dungeonLevel)
+    const maxMonstersPerGroup = encounterTable.maxMonstersPerGroup
 
     // Use encounterId directly - no table lookup needed!
     const monsterId = config.encounterId

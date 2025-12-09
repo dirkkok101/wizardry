@@ -1,6 +1,10 @@
 {
   "levelId": "level_8_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [25, 35, 25, 15],
+  "maxGroups": 4,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 9,
   "monsters": [
     { "monsterId": "dragon_zombie", "weight": 10 },
     { "monsterId": "fire_dragon", "weight": 10 },

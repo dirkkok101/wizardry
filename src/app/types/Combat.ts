@@ -248,59 +248,27 @@ export interface CombatVictoryResult {
 }
 
 /**
- * Encounter configuration based on original Wizardry 1 mechanics
+ * Encounter configuration with party level override
  *
- * Research source: Original Wizardry used weighted encounter tables where
- * multi-group encounters were rare on early levels. On Level 1, it was
- * noted that "it is rare to encounter more than two groups at one time."
+ * Most encounter config is now data-driven via JSON files:
+ * - groupCountWeights, maxGroups, maxFrontRowGroups, maxMonstersPerGroup
+ *
+ * This config only handles runtime overrides (e.g., party level balancing)
  */
 export const ENCOUNTER_CONFIG = {
   /**
-   * Maximum number of monster groups that can occupy the front row
-   * Similar to party's 3-member front row limit
-   */
-  MAX_FRONT_ROW_GROUPS: 2,
-
-  /**
-   * Maximum number of monster groups by dungeon level
-   * Level 1: 1-2 groups
-   * Level 2-3: 1-3 groups
-   * Level 4+: 1-4 groups
-   */
-  getMaxGroupsForLevel(level: number): number {
-    if (level === 1) return 2
-    if (level <= 3) return 3
-    return 4
-  },
-
-  /**
-   * Get weighted probabilities for number of groups by dungeon level
-   * Returns array of weights for [1 group, 2 groups, ...]
+   * Get group count weights with party level override for early-game balance
    *
-   * Level 1: 85% single group, 15% two groups (multi-group is "rare")
-   * Level 2-3: 60% single, 30% two, 10% three groups
-   * Level 4+: 25% single, 35% two, 25% three, 15% four groups
+   * @param jsonWeights - Weights from encounter JSON data
+   * @param partyLevel - Optional average party level
+   * @returns Weights to use (override for low-level parties, otherwise JSON)
    */
-  getGroupCountWeights(level: number): number[] {
-    if (level === 1) return [85, 15]  // Heavily favor single groups
-    if (level <= 3) return [60, 30, 10]  // Max 3 groups for levels 2-3
-    return [25, 35, 25, 15]  // Deeper levels have more multi-group encounters
-  },
-
-  /**
-   * Maximum monsters per group by dungeon level
-   * Level 1: 1-5 monsters
-   * Level 2: 1-6 monsters
-   * Level 3: 1-7 monsters
-   * Level 4+: 1-8 monsters
-   * Deep levels (5+): 1-9 monsters
-   */
-  getMaxMonstersPerGroupForLevel(level: number): number {
-    if (level === 1) return 5
-    if (level === 2) return 6
-    if (level === 3) return 7
-    if (level === 4) return 8
-    return 9
+  getGroupCountWeights(jsonWeights: number[], partyLevel?: number): number[] {
+    // Early game balance: low-level parties only face 1 group
+    if (partyLevel !== undefined && partyLevel < 4) {
+      return [100]  // Always 1 group for party levels 1-3
+    }
+    return jsonWeights
   }
 } as const
 

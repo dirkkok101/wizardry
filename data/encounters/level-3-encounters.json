@@ -1,6 +1,10 @@
 {
   "levelId": "level_3_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [60, 30, 10],
+  "maxGroups": 3,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 7,
   "monsters": [
     { "monsterId": "capybara", "weight": 15 },
     { "monsterId": "coyote", "weight": 15 },

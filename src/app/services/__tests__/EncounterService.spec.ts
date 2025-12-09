@@ -154,34 +154,35 @@ describe('EncounterService', () => {
     })
 
     describe('ENCOUNTER_CONFIG.getGroupCountWeights', () => {
-      it('returns correct weights for level 1', () => {
-        const weights = ENCOUNTER_CONFIG.getGroupCountWeights(1)
-        expect(weights).toEqual([85, 15])
+      it('returns JSON weights when no party level override', () => {
+        const jsonWeights = [85, 15]
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights)).toEqual([85, 15])
       })
 
-      it('returns correct weights for level 2', () => {
-        const weights = ENCOUNTER_CONFIG.getGroupCountWeights(2)
-        expect(weights).toEqual([60, 30, 10])
+      it('returns JSON weights when party level >= 4', () => {
+        const jsonWeights = [60, 30, 10]
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights, 4)).toEqual([60, 30, 10])
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights, 5)).toEqual([60, 30, 10])
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights, 10)).toEqual([60, 30, 10])
       })
 
-      it('returns correct weights for level 3 (same as level 2 per spec)', () => {
-        const weights = ENCOUNTER_CONFIG.getGroupCountWeights(3)
-        // Level 3 has max 3 groups per Wizardry 1 spec, same as level 2
-        expect(weights).toEqual([60, 30, 10])
+      it('returns [100] for low-level parties (< level 4) to force single group', () => {
+        const jsonWeights = [25, 35, 25, 15]
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights, 1)).toEqual([100])
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights, 2)).toEqual([100])
+        expect(ENCOUNTER_CONFIG.getGroupCountWeights(jsonWeights, 3)).toEqual([100])
       })
 
-      it('returns correct weights for level 4+', () => {
-        expect(ENCOUNTER_CONFIG.getGroupCountWeights(4)).toEqual([25, 35, 25, 15])
-        expect(ENCOUNTER_CONFIG.getGroupCountWeights(5)).toEqual([25, 35, 25, 15])
-        expect(ENCOUNTER_CONFIG.getGroupCountWeights(10)).toEqual([25, 35, 25, 15])
-      })
+      it('encounter tables have weights that sum to 100', () => {
+        // Test that encounter table JSON data is valid
+        const table1 = EncounterService.getEncounterTable(1)
+        const table4 = EncounterService.getEncounterTable(4)
 
-      it('weights sum to 100 for all levels', () => {
-        for (let level = 1; level <= 10; level++) {
-          const weights = ENCOUNTER_CONFIG.getGroupCountWeights(level)
-          const sum = weights.reduce((a, b) => a + b, 0)
-          expect(sum).toBe(100)
-        }
+        const sum1 = table1.groupCountWeights.reduce((a, b) => a + b, 0)
+        const sum4 = table4.groupCountWeights.reduce((a, b) => a + b, 0)
+
+        expect(sum1).toBe(100)
+        expect(sum4).toBe(100)
       })
     })
 

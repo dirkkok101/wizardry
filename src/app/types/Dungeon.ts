@@ -107,6 +107,11 @@ export interface EncounterTable {
   levelId: string
   encounterRate: number
   monsters: MonsterEntry[]
+  // Group count configuration (data-driven per level)
+  groupCountWeights: number[]     // Probability weights for [1, 2, 3, 4] groups
+  maxGroups: number               // Maximum total groups (1-4)
+  maxFrontRowGroups: number       // Maximum groups in front row
+  maxMonstersPerGroup: number     // Maximum monsters per group
 }
 
 export interface MonsterEntry {

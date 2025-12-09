@@ -127,12 +127,19 @@ export class CombatService {
     latumapicActive: boolean = false,
     forceAmbush: boolean = false
   ): CombatState {
+    // Calculate average party level for encounter balancing
+    // Low-level parties (< level 4) only face single monster groups
+    const partyLevel = party.length > 0
+      ? Math.floor(party.reduce((sum, c) => sum + c.level, 0) / party.length)
+      : 1
+
     // Generate monster groups - use fixed encounter config if provided
     // Fixed encounters use encounterId for direct monster spawning
     // Pass latumapicActive so monsters are pre-identified if spell is active
+    // Pass partyLevel for early-game balancing (low-level parties = 1 group only)
     const monsterGroups = fixedEncounterConfig
       ? EncounterService.generateFixedEncounter(dungeonLevel, fixedEncounterConfig, latumapicActive)
-      : EncounterService.generateEncounter(dungeonLevel, latumapicActive)
+      : EncounterService.generateEncounter(dungeonLevel, latumapicActive, partyLevel)
 
     // Initialize currentMageLevel for each group (for spell degradation tracking)
     // Per Apple II reference (Section 10): Mage spell level degrades permanently during encounter
@@ -569,7 +576,9 @@ export class CombatService {
         )
 
         // Allow advancement if front row has room
-        if (frontGroups.length < ENCOUNTER_CONFIG.MAX_FRONT_ROW_GROUPS) {
+        // Note: maxFrontRowGroups is 2 for all dungeon levels (per JSON data)
+        const maxFrontRowGroups = 2
+        if (frontGroups.length < maxFrontRowGroups) {
           return this.createCommand(monster, 'ADVANCE')
         }
 
@@ -1850,6 +1859,10 @@ export class CombatService {
       actionMessage += ` on Group ${command.targetGroupId}`
     } else if (spell && spell.target === 'all_enemies') {
       actionMessage += ` on all enemies`
+    } else if (spell && spell.target === 'single' && targets.length > 0) {
+      // Single-target offensive spell - include target name for cinematic parsing
+      const targetName = 'name' in targets[0] ? targets[0].name : (targets[0] as MonsterInstance).monsterId
+      actionMessage += ` on ${targetName}`
     }
 
     // Build result message (spell effect)

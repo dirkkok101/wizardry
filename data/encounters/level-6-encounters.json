@@ -1,6 +1,10 @@
 {
   "levelId": "level_6_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [25, 35, 25, 15],
+  "maxGroups": 4,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 9,
   "monsters": [
     { "monsterId": "arch_mage_lesser", "weight": 8 },
     { "monsterId": "chimera", "weight": 5 },

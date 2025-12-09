@@ -1,6 +1,10 @@
 {
   "levelId": "level_4_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [25, 35, 25, 15],
+  "maxGroups": 4,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 8,
   "monsters": [
     { "monsterId": "attack_dog", "weight": 10 },
     { "monsterId": "bishop", "weight": 5 },

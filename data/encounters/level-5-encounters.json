@@ -1,6 +1,10 @@
 {
   "levelId": "level_5_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [25, 35, 25, 15],
+  "maxGroups": 4,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 9,
   "monsters": [
     { "monsterId": "champ_samurai", "weight": 8 },
     { "monsterId": "giant_spider", "weight": 12 },

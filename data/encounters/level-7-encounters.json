@@ -1,6 +1,10 @@
 {
   "levelId": "level_7_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [25, 35, 25, 15],
+  "maxGroups": 4,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 9,
   "monsters": [
     { "monsterId": "lvl_8_fighter", "weight": 15 },
     { "monsterId": "major_daimyo", "weight": 12 },

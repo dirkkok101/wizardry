@@ -1,6 +1,10 @@
 {
   "levelId": "level_1_monsters",
   "encounterRate": 0.10,
+  "groupCountWeights": [85, 15],
+  "maxGroups": 2,
+  "maxFrontRowGroups": 2,
+  "maxMonstersPerGroup": 5,
   "monsters": [
     { "monsterId": "bubbly_slime", "weight": 25 },
     { "monsterId": "orc", "weight": 25 },
