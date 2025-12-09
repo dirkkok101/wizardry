@@ -28,6 +28,7 @@ import { SpellCastingService, SpellData } from '@services/SpellCastingService';
 import { SpellLearningService } from '@services/SpellLearningService';
 import { LightService } from '@services/LightService';
 import { moveCharacterUp, moveCharacterDown } from '@services/PartyService';
+import { PoisonService } from '@services/PoisonService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneType } from '@models/SceneType';
 import { ActiveSpell } from '@models/active-spell.types';
@@ -1626,6 +1627,35 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Apply poison damage to poisoned party members
+    // Per Wizardry 1: 25% chance per step, 1 HP damage, can kill
+    const partyChars = GameStateQueries.partyCharacters(newState);
+    const poisonResult = PoisonService.applyMazePoison(partyChars);
+
+    if (poisonResult.anyDamaged) {
+      // Update roster with damaged characters
+      this.gameState.updateState(currentState => {
+        const newRoster = new Map(currentState.roster);
+        for (const [charId, char] of poisonResult.updatedCharacters) {
+          newRoster.set(charId, char);
+        }
+        return { ...currentState, roster: newRoster };
+      });
+
+      // Display poison messages
+      for (const msg of poisonResult.messages) {
+        this.addMessage(msg);
+      }
+
+      // Check for party wipe from poison
+      const updatedState = this.gameState.state();
+      const updatedParty = GameStateQueries.partyCharacters(updatedState);
+      if (PoisonService.isPartyWiped(updatedParty, poisonResult.updatedCharacters)) {
+        this.handlePoisonWipe();
+        return;
+      }
+    }
+
     // Dynamic messages based on moveType
     const messages = {
       'FORWARD': isDoorKick ? 'You kick open the door and move forward.' : 'You move forward.',
@@ -2235,6 +2265,25 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       ...state,
       combat: undefined,
       dungeon: undefined  // Party is ejected from dungeon
+    }));
+
+    this.router.navigate(['/castle-menu']);
+  }
+
+  /**
+   * Handle party wipe from poison damage during maze movement
+   * Similar to handleDefeat but for non-combat scenarios
+   */
+  private async handlePoisonWipe(): Promise<void> {
+    this.addMessage('The party succumbs to poison...');
+    this.showDefeatOverlay.set(true);
+
+    await this.delay(2000);
+
+    // Clear dungeon state - party is ejected
+    this.gameState.updateState(state => ({
+      ...state,
+      dungeon: undefined
     }));
 
     this.router.navigate(['/castle-menu']);
