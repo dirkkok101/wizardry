@@ -102,7 +102,7 @@ export class ShopComponent implements OnInit {
   getActionsForCharacter = (_char: Character): CharacterAction[] => {
     return [
       { type: 'buy', label: 'Buy' },
-      { type: 'inspect', label: 'View' }
+      { type: 'inspect', label: 'Inspect' }
     ];
   };
 

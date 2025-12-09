@@ -417,8 +417,18 @@
 
   .character-stack {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, 1fr); // Default: 2 columns
     gap: var(--space-2);
+
+    // 4K: 3 columns
+    @media (min-width: 2000px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    // Narrow screens: single column
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .character-card {

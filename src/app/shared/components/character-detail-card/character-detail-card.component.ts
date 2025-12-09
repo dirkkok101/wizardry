@@ -10,6 +10,7 @@ import { SpellLearningService } from '@services/SpellLearningService'
 import { LevelUpService, MAX_LEVEL } from '@services/LevelUpService'
 import { CharacterService } from '@services/CharacterService'
 import { ClassService } from '@services/ClassService'
+import { SpriteService } from '@services/SpriteService'
 
 export type InspectionMode = 'TRAINING_GROUNDS' | 'TAVERN' | 'CAMP'
 
@@ -56,6 +57,30 @@ export class CharacterDetailCardComponent {
 
   // Outputs
   @Output() actionClick = new EventEmitter<CharacterActionEvent>()
+
+  /** Track if sprite failed to load */
+  spriteError = false
+
+  /**
+   * Get sprite URL for character portrait
+   */
+  get spriteUrl(): string {
+    return SpriteService.getSpriteUrl(this.character)
+  }
+
+  /**
+   * Handle sprite load error - set flag to show placeholder
+   */
+  onSpriteError(): void {
+    this.spriteError = true
+  }
+
+  /**
+   * Handle sprite load success - clear error flag
+   */
+  onSpriteLoad(): void {
+    this.spriteError = false
+  }
 
   /**
    * Check if character is a spellcaster

@@ -1,4 +1,23 @@
 <div class="character-detail-card">
+  <!-- Portrait -->
+  <div class="portrait-section">
+    <div class="portrait-frame">
+      @if (!spriteError) {
+        <img
+          [src]="spriteUrl"
+          [alt]="character.name + ' portrait'"
+          class="portrait-image"
+          (error)="onSpriteError()"
+          (load)="onSpriteLoad()"
+        />
+      } @else {
+        <div class="portrait-placeholder">
+          <span class="placeholder-icon">?</span>
+        </div>
+      }
+    </div>
+  </div>
+
   <!-- Header -->
   <div class="card-header">
     <span class="classification">{{ character.race }} {{ character.class }} LVL {{ character.level }}</span>
