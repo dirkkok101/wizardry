@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "Large fireball that hits all monsters in a group",
+  "description": "Big Fire - Causes a fiery explosion to erupt amid a monster group, engulfing all enemies in flames for 4-24 points of fire damage. The workhorse spell of mid-level mages. Fire-resistant creatures take half damage.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "4d6",

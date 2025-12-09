@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "single",
-  "description": "Greatest single-target damage spell for priests",
+  "description": "Great Harm - Channels maximum destructive divine energy to inflict 3-24 points of damage upon a single monster. The priest's most powerful single-target offensive spell.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "3d8",

@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "support",
   "target": "single",
-  "description": "Neutralizes poison status from a party member",
+  "description": "Cure Poison - Purges all toxins from a single ally's body, neutralizing the poison status. Can be cast at any time. Without this spell, poisoned characters slowly weaken until death claims them.",
   "castableIn": ["combat", "camp"],
   "statusCure": "poison"
 }

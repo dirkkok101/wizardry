@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "buff",
   "target": "caster",
-  "description": "Hardens caster's body, reducing AC by 2",
+  "description": "Body Iron - Transforms the caster's skin to the hardness of iron, reducing Armor Class by 2 for the duration of the battle. Essential protection for mages who find themselves targeted by enemies.",
   "castableIn": ["combat"],
   "acModifier": -2
 }

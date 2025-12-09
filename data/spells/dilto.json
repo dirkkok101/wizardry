@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Creates darkness around enemy group, making them easier to hit (+2 AC)",
+  "description": "Darkness - Envelops an enemy group in a shroud of magical darkness, blinding them and reducing their ability to defend. Affected monsters suffer +2 AC penalty, making them significantly easier to hit for the duration of battle.",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "blinded",

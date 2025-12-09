@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "debuff",
   "target": "group",
-  "description": "Attempts to put all monsters in a group to sleep",
+  "description": "Bad Air - Releases a cloud of enchanted vapors that causes most monsters in a group to fall into a magical slumber. Sleeping enemies are vulnerable: they cannot act and attacks against them deal double damage. Targets awaken when struck.",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "asleep"

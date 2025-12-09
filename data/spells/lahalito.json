@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "group",
-  "description": "Powerful fire attack against a monster group",
+  "description": "Flame Storm - An industrial-strength MAHALITO that conjures a raging inferno, dealing 6-36 points of fire damage to all monsters in a group. The premier fire spell for serious combat situations.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "6d6",

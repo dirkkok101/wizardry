@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "group",
-  "description": "Priest's primary group damage spell - summons a tower of flame",
+  "description": "Flame Tower - Calls forth a righteous pillar of sacred fire that engulfs an entire enemy group, dealing 3-24 points of fire damage. The priest's primary area-effect offensive spell. Fire-resistant creatures take half damage.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "3d8",

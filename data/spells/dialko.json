@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "support",
   "target": "single",
-  "description": "Cures paralysis and sleep status - essential for rescuing disabled party members",
+  "description": "Softness - Restores a single ally from paralysis, sleep, or silence, returning them to full fighting capacity. Can be cast at any time. Essential for keeping party members active during battles against status-inflicting enemies.",
   "castableIn": ["combat", "camp"],
   "statusCure": "paralysis"
 }

@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "utility",
   "target": "party",
-  "description": "Emergency teleport to Castle - low success rate AND devastating cost on success",
+  "description": "Recall - A desperate escape spell that teleports the entire party back to the castle. Low success rate and comes with a devastating price: all equipment is lost and 90% of gold vanishes. Only use when facing certain death with no other options.",
   "castableIn": ["combat", "camp"],
   "utility": "recall",
   "escape": {

@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "debuff",
   "target": "all_enemies",
-  "description": "Causes terror in ALL enemy groups, making them easier to hit (+3 AC)",
+  "description": "Terror - Conjures horrifying illusions that strike fear into ALL enemy groups simultaneously. Affected monsters suffer +3 AC penalty and may flee in panic. The ultimate battlefield control spell for outnumbered parties.",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "fear",

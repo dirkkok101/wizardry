@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "offensive",
   "target": "single",
-  "description": "Basic fire damage spell targeting a single monster",
+  "description": "Little Fire - Conjures a flame ball the size of a baseball that streaks toward a single enemy, dealing 1-8 points of fire damage. The mage's most basic offensive spell, but reliable throughout any adventure.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "1d8",

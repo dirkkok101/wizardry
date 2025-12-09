@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "offensive",
   "target": "single",
-  "description": "Improved damage spell targeting a single monster",
+  "description": "More Harm - Channels stronger destructive energy to inflict 2-16 points of divine damage upon a single monster. The improved offensive prayer for when BADIOS is insufficient.",
   "castableIn": ["combat"],
   "damage": {
     "dice": "2d8",

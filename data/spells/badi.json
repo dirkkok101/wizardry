@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "instant_death",
   "target": "single",
-  "description": "Attempts to instantly kill one monster - binary outcome: instant death or no effect",
+  "description": "Death - Speaks a word of divine judgment that may instantly slay a single monster. Success depends on the target's level and magical resistance. Either the creature dies or nothing happens - there is no partial effect.",
   "castableIn": ["combat"],
   "instantDeath": {
     "type": "divine_word",

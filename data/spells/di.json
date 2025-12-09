@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "resurrection",
   "target": "dead_ally",
-  "description": "Attempts to resurrect a dead character - success depends on Vitality",
+  "description": "Life - Attempts to restore life to a dead character, returning them with 1 HP. Success depends on the character's Vitality stat. If the spell fails, the body crumbles to ashes. Cannot resurrect those already reduced to ashes. Can only be cast at camp.",
   "castableIn": ["camp"],
   "notCastableIn": ["combat"],
   "resurrection": {

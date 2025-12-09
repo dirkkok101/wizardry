@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "buff",
   "target": "variable",
-  "description": "Desperate spell with random powerful effects - costs 1 experience level",
+  "description": "Beg - A desperate plea for divine intervention with unpredictable but powerful effects: may heal the party, strip enemy magic resistance, grant massive AC bonus, or even resurrect fallen comrades. Requires level 13+ to cast and permanently costs 1 experience level. Use only in dire emergencies.",
   "castableIn": ["combat"],
   "requirements": {
     "minCasterLevel": 13

@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "healing",
   "target": "single",
-  "description": "Improved healing spell - restores 2-16 HP to a single party member",
+  "description": "More Heal - An enhanced healing prayer that restores 2-16 hit points to a single ally. Can be cast at any time. Twice as effective as DIOS, becoming the standard healing spell for experienced priests.",
   "castableIn": ["combat", "camp"],
   "healing": {
     "dice": "2d8"

@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "utility",
   "target": "party",
-  "description": "Creates light, extends vision range, and reveals secret doors",
+  "description": "Light - Conjures a softly glowing light that follows the party through the dungeon. Extends vision range and significantly increases the chance of detecting secret doors. Effect fades after approximately 30-40 steps or when entering a dark zone.",
   "castableIn": ["combat", "camp"],
   "utility": "extended_light"
 }

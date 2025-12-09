@@ -5,7 +5,7 @@
   "casterType": "priest",
   "category": "debuff",
   "target": "group",
-  "description": "Attempts to paralyze all monsters in a group - paralyzed monsters take double damage",
+  "description": "Statue - Attempts to turn all monsters in a group to stone, freezing them in place. Paralyzed creatures cannot act and take double damage from attacks. More effective against lower-level monsters. Can turn the tide of difficult battles.",
   "castableIn": ["combat"],
   "statusEffect": {
     "type": "paralyzed"

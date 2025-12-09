@@ -5,7 +5,7 @@
   "casterType": "mage",
   "category": "buff",
   "target": "party",
-  "description": "Makes entire party transparent, reducing AC for all members",
+  "description": "Big Glass - Extends the transparency effect of SOPIC to the entire party, making all members difficult to target. Reduces Armor Class by 4 for everyone for the duration of battle. Essential protection for the whole group.",
   "castableIn": ["combat"],
   "acModifier": -4
 }
