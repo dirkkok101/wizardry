@@ -83,6 +83,7 @@ export class CharacterSelectionDialogComponent {
 
     if (event.key === 'Escape') {
       event.preventDefault()
+      event.stopPropagation()
       this.cancelled.emit()
     }
   }

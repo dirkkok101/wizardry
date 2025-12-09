@@ -345,6 +345,7 @@ export class SpellPanelComponent {
 
     if (event.key === 'Escape') {
       event.preventDefault()
+      event.stopPropagation()
       this.closed.emit()
     }
 
