@@ -12,6 +12,7 @@ export type TileMessagePhase = 'idle' | 'message' | 'item_reward';
 
 export interface TileMessageItem {
   name: string;
+  unidentifiedName?: string;  // Type hint for display when not identified
   identified: boolean;
 }
 
@@ -54,11 +55,11 @@ export class TileMessageOverlayComponent {
   // Internal state for animation
   readonly animationKey = signal(0);
 
-  // Computed: item display name (??? if unidentified)
+  // Computed: item display name (shows type hint if unidentified)
   readonly itemDisplayName = computed(() => {
     const item = this.itemFound();
     if (!item) return '';
-    return item.identified ? item.name : '???';
+    return item.identified ? item.name : (item.unidentifiedName ?? '???');
   });
 
   private autoDismissTimeout: ReturnType<typeof setTimeout> | null = null;

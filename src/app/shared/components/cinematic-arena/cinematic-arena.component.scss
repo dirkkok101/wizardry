@@ -447,7 +447,7 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
   &:not(.visible) { opacity: 0; }
 }
 
-// Action verb - Medium white, pulsing
+// Action verb - Medium white, pulsing (only when visible)
 .action-verb {
   font-family: var(--font-display);
   font-size: 1rem;
@@ -455,10 +455,12 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
   letter-spacing: 0.2em;
   text-align: center;  // Center the text
   text-transform: uppercase;
-  animation: verb-pulse 0.8s ease-in-out infinite;
+  opacity: 0;  // Default hidden
 
-  &.visible { opacity: 1; }
-  &:not(.visible) { opacity: 0; }
+  &.visible {
+    opacity: 1;
+    animation: verb-pulse 0.8s ease-in-out infinite;  // Only animate when visible
+  }
 }
 
 // Outcome label - Dramatic reveal with type-specific colors (HITS/MISSES/CRITICAL HIT!)

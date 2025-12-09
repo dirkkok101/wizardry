@@ -24,6 +24,7 @@ import { FightMapService } from '@services/FightMapService';
 import { CombatService } from '@services/CombatService';
 import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
+import { ItemDataLoader } from '@services/ItemDataLoader';
 import { SpellCastingService, SpellData } from '@services/SpellCastingService';
 import { SpellLearningService } from '@services/SpellLearningService';
 import { LightService } from '@services/LightService';
@@ -1410,9 +1411,15 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // If tile has a message, show overlay with message then item
         if (result.tileMessage) {
-          const item = result.itemId
-            ? { name: result.itemId, identified: false }
-            : null;
+          let item: TileMessageItem | null = null;
+          if (result.itemId) {
+            const itemData = ItemDataLoader.getItem(result.itemId);
+            item = {
+              name: itemData?.name ?? result.itemId,
+              unidentifiedName: itemData?.unidentifiedName,
+              identified: false
+            };
+          }
           this.showTileMessage(result.tileMessage, true, item);
         } else {
           // No message, just add to log

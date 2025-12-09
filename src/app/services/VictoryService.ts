@@ -10,6 +10,7 @@ import { MonsterDropDataLoader } from './MonsterDropDataLoader'
 export interface ItemDrop {
   itemId: string
   itemName: string
+  unidentifiedName?: string  // Type hint for display when not identified (e.g., "ARMOR", "SWORD")
   identified: boolean  // Whether item is identified (unidentified items need temple service)
 }
 
@@ -140,6 +141,7 @@ export class VictoryService {
     return {
       itemId,
       itemName,  // Always store real name, UI handles display logic
+      unidentifiedName: item?.unidentifiedName,  // Type hint for unidentified display
       identified
     }
   }

@@ -117,7 +117,7 @@
                 <div class="items-row">
                   @for (item of rewards.items; track item.itemId) {
                     <span class="item-tag" [class.unidentified]="!item.identified">
-                      {{ item.identified ? item.itemName : '???' }}
+                      {{ item.identified ? item.itemName : (item.unidentifiedName ?? '???') }}
                     </span>
                   }
                 </div>
