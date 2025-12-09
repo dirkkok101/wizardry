@@ -16,18 +16,9 @@
     <!-- Center Column: Scene viewport or Buy view -->
     <div class="center-panel">
       @if (currentView() === 'character-select') {
-        @if (partyCharacters().length > 0) {
-          <div class="scene-viewport">
-            <img src="assets/sprites/scenes/trading_post_scene.png" alt="Trading Post" class="scene-image" />
-          </div>
-        } @else {
-          <div class="scene-viewport empty-viewport">
-            <app-empty-state
-              title="You need party members to shop"
-              subtitle="Visit the Tavern to recruit characters"
-            />
-          </div>
-        }
+        <div class="scene-viewport">
+          <img src="assets/sprites/scenes/trading_post_scene.png" alt="Trading Post" class="scene-image" />
+        </div>
       } @else {
         <!-- Buy View -->
         <div class="buy-view">

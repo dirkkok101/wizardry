@@ -6,10 +6,12 @@
   color: var(--color-text-primary);
   font-family: var(--font-body);
   padding: 0.5rem;
+  box-sizing: border-box;
   overflow: hidden;
 
-  // SceneTitleComponent handles its own styling
-  app-scene-title {
+  // SceneTitleComponent and SceneFooterComponent must not shrink
+  app-scene-title,
+  app-scene-footer {
     display: block;
     flex-shrink: 0;
   }

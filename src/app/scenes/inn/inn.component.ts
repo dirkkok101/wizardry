@@ -9,7 +9,6 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { RestResultsModalComponent, RestResultsData } from '@shared/components/rest-results-modal/rest-results-modal.component';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { Character } from '@models/Character';
@@ -35,8 +34,7 @@ import { CharacterStatus } from '@models/CharacterStatus';
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterPanelComponent,
-    RestResultsModalComponent,
-    EmptyStateComponent
+    RestResultsModalComponent
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']

@@ -9,10 +9,17 @@
   color: var(--color-text-primary);
   font-family: var(--font-body);
   padding: 0.5rem;
+  box-sizing: border-box; // Include padding in height calculation
   overflow: hidden;
 
   // SceneTitleComponent handles its own styling
   app-scene-title {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  // SceneFooterComponent must not shrink
+  app-scene-footer {
     display: block;
     flex-shrink: 0;
   }

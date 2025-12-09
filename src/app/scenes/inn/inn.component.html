@@ -15,18 +15,9 @@
 
     <!-- Center Column: Scene viewport -->
     <div class="center-panel">
-      @if (partyCharacters().length > 0) {
-        <div class="scene-viewport">
-          <img src="assets/sprites/scenes/adventurers_inn_scene.png" alt="Adventurer's Inn" class="scene-image" />
-        </div>
-      } @else {
-        <div class="scene-viewport empty-viewport">
-          <app-empty-state
-            title="No party formed"
-            subtitle="Visit the Tavern to recruit adventurers"
-          />
-        </div>
-      }
+      <div class="scene-viewport">
+        <img src="assets/sprites/scenes/adventurers_inn_scene.png" alt="Adventurer's Inn" class="scene-image" />
+      </div>
     </div>
 
     <!-- Right Column: Party positions 2, 4, 6 -->

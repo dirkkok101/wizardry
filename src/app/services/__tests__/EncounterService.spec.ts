@@ -186,6 +186,36 @@ describe('EncounterService', () => {
       })
     })
 
+    describe('ENCOUNTER_CONFIG.getMaxMonstersPerGroup', () => {
+      it('returns JSON max when no minPartyLevel override', () => {
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9)).toBe(9)
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(5)).toBe(5)
+      })
+
+      it('returns JSON max when minPartyLevel >= 4', () => {
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9, 4)).toBe(9)
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9, 5)).toBe(9)
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9, 10)).toBe(9)
+      })
+
+      it('returns minPartyLevel + 1 for low-level parties (progressive cap)', () => {
+        // L1 party = max 2 monsters, L2 = max 3, L3 = max 4
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9, 1)).toBe(2)
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9, 2)).toBe(3)
+        expect(ENCOUNTER_CONFIG.getMaxMonstersPerGroup(9, 3)).toBe(4)
+      })
+
+      it('caps monsters in generateEncounter for low-level parties', () => {
+        // Generate 100 encounters with minPartyLevel=1 and check all have <= 2 monsters
+        for (let i = 0; i < 100; i++) {
+          const groups = EncounterService.generateEncounter(1, false, 1, 1)
+          for (const group of groups) {
+            expect(group.monsters.length).toBeLessThanOrEqual(2)
+          }
+        }
+      })
+    })
+
     describe('group ID assignment', () => {
       it('assigns unique group IDs (A, B, C, D)', () => {
         const groups = EncounterService.generateEncounter(10)

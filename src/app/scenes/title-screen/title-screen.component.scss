@@ -10,7 +10,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
   overflow: hidden;
   background: var(--color-bg-darkest);
 
@@ -220,10 +220,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: center; // Center content vertically
   text-align: center;
   padding: var(--space-8);
-  min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 // ============================================
@@ -236,26 +238,31 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 8vw, 5rem);
+  // Scale: 40px mobile → 80px tablet → 120px desktop → 160px 4K
+  font-size: clamp(2.5rem, 6vw + 1rem, 10rem);
   font-weight: 700;
   color: var(--color-gold-bright);
-  letter-spacing: 0.2em;
+  // Letter-spacing that scales appropriately
+  letter-spacing: clamp(0.1em, 0.15em, 0.2em);
   margin: 0 0 var(--space-4) 0;
+  // Multi-layered glow for depth (inner, mid, outer layers)
   text-shadow:
     0 0 10px var(--color-gold-glow),
     0 0 20px var(--color-gold-glow),
     0 0 40px rgba(244, 196, 48, 0.3),
     0 0 60px rgba(244, 196, 48, 0.2),
-    0 0 80px rgba(244, 196, 48, 0.1);
+    0 0 80px rgba(244, 196, 48, 0.1),
+    0 0 120px rgba(244, 196, 48, 0.05);
   animation: glow-breathe 4s ease-in-out infinite;
 }
 
 .subtitle {
   font-family: var(--font-display);
-  font-size: clamp(0.875rem, 2.5vw, 1.25rem);
+  // Scale: 12px mobile → 18px tablet → 24px desktop → 28px 4K
+  font-size: clamp(0.75rem, 1.5vw + 0.5rem, 1.75rem);
   font-weight: 400;
   color: var(--color-gold-primary);
-  letter-spacing: 0.15em;
+  letter-spacing: clamp(0.1em, 0.12em, 0.15em);
   margin: 0;
   opacity: 0;
   animation: fade-in 0.8s ease-out 0.4s forwards;
@@ -507,6 +514,60 @@
   }
 }
 
+// ============================================
+// MOBILE ADVISORY - Arcane scroll style
+// ============================================
+.mobile-advisory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  max-width: 280px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(212, 165, 116, 0.06) 0%,
+    rgba(212, 165, 116, 0.02) 50%,
+    rgba(212, 165, 116, 0.06) 100%
+  );
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: var(--card-border-radius);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+
+  opacity: 0;
+  animation: fade-in 0.6s ease-out 0.6s forwards;
+}
+
+.advisory-decoration {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.advisory-decoration .deco-line {
+  width: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-dim), transparent);
+}
+
+.advisory-decoration .deco-rune {
+  color: var(--color-gold-dim);
+  font-size: 0.4rem;
+  text-shadow: 0 0 4px var(--color-gold-glow);
+}
+
+.advisory-text {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--color-gold-dim);
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+}
+
 .save-indicator {
   display: flex;
   align-items: center;
@@ -690,9 +751,9 @@
 }
 
 // ============================================
-// RESPONSIVE ADJUSTMENTS
+// RESPONSIVE - Mobile (< 768px)
 // ============================================
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .ornate-frame {
     inset: var(--space-3);
   }
@@ -730,6 +791,85 @@
 }
 
 // ============================================
+// RESPONSIVE - Tablet (768px - 1199px)
+// ============================================
+@media (min-width: 768px) and (max-width: 1199px) {
+  .ornate-frame {
+    inset: var(--space-8);
+  }
+
+  .title-block {
+    margin-bottom: var(--space-10);
+  }
+
+  .deco-line {
+    width: 80px;
+  }
+
+  .border-line {
+    width: 280px;
+  }
+}
+
+// ============================================
+// RESPONSIVE - Large Desktop / 4K (2000px+)
+// ============================================
+@media (min-width: 2000px) {
+  .content {
+    padding: var(--space-12);
+  }
+
+  .ornate-frame {
+    inset: var(--space-10);
+  }
+
+  .corner {
+    width: 60px;
+    height: 60px;
+  }
+
+  .border-line {
+    width: 400px;
+  }
+
+  .title-block {
+    margin-bottom: var(--space-12);
+  }
+
+  .deco-line {
+    width: 100px;
+  }
+
+  .deco-diamond {
+    width: 12px;
+    height: 12px;
+  }
+
+  .progress-bar {
+    height: 16px;
+  }
+
+  .loading-status {
+    min-width: 400px;
+    max-width: 600px;
+  }
+
+  .action-buttons {
+    min-width: 280px;
+  }
+
+  .action-btn {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--font-size-lg);
+  }
+
+  .copyright {
+    font-size: var(--font-size-sm);
+    gap: var(--space-4);
+  }
+}
+
+// ============================================
 // REDUCED MOTION ACCESSIBILITY
 // ============================================
 @media (prefers-reduced-motion: reduce) {
@@ -748,7 +888,8 @@
   .loading-status,
   .error-status,
   .ready-prompt,
-  .copyright {
+  .copyright,
+  .mobile-advisory {
     animation: none;
     opacity: 1;
   }

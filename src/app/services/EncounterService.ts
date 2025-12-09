@@ -104,18 +104,24 @@ export const EncounterService = {
    * - Level 2-3: 60% single, 30% two, 10% three groups
    * - Level 4+: 25% single, 35% two, 25% three, 15% four groups
    *
-   * Party level override: Parties under level 4 always face 1 group
+   * Party level overrides:
+   * - Average level < 4: Always face 1 group
+   * - Min level 1: Max 1 monster per group, Min level 2: Max 2, Min level 3: Max 3
    *
    * @param dungeonLevel - Current dungeon level (1-10)
    * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
-   * @param partyLevel - Average party level (for early-game balancing)
+   * @param partyLevel - Average party level (for group count balancing)
+   * @param minPartyLevel - Minimum party level (for monster count balancing)
    * @returns Array of MonsterGroups (1-4 groups)
    */
-  generateEncounter(dungeonLevel: number, latumapicActive: boolean = false, partyLevel?: number): MonsterGroup[] {
+  generateEncounter(dungeonLevel: number, latumapicActive: boolean = false, partyLevel?: number, minPartyLevel?: number): MonsterGroup[] {
     const encounterTable = this.getEncounterTable(dungeonLevel)
 
-    // Read config from JSON data
-    const maxMonstersPerGroup = encounterTable.maxMonstersPerGroup
+    // Read config from JSON data, with party level overrides
+    const maxMonstersPerGroup = ENCOUNTER_CONFIG.getMaxMonstersPerGroup(
+      encounterTable.maxMonstersPerGroup,
+      minPartyLevel
+    )
     const maxFrontRowGroups = encounterTable.maxFrontRowGroups
 
     // Roll number of groups using weighted probability (with party level override)
@@ -137,7 +143,7 @@ export const EncounterService = {
       // Generate monster instances (respecting level-based limits)
       let monsters = MonsterService.generateMonsterGroup(monsterId)
 
-      // Enforce max monsters per group based on level
+      // Enforce max monsters per group (party level override applied above)
       if (monsters.length > maxMonstersPerGroup) {
         monsters = monsters.slice(0, maxMonstersPerGroup)
       }

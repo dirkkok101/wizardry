@@ -1,9 +1,14 @@
 @use './variables' as *;
 
 // Global retro styles
-body {
+html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  overflow: hidden; // Prevent scrollbars - scenes handle their own scrolling
+}
+
+body {
   background-color: $color-bg-black;
   color: $color-text-green;
   font-family: $font-mono;

@@ -44,6 +44,26 @@
       </div>
     </header>
 
+    <!-- Mobile Advisory -->
+    @if (isMobile()) {
+      <div class="mobile-advisory">
+        <div class="advisory-decoration" aria-hidden="true">
+          <span class="deco-line"></span>
+          <span class="deco-rune">&#9670;</span>
+          <span class="deco-line"></span>
+        </div>
+        <p class="advisory-text">
+          This tome was scribed for larger viewing crystals.<br>
+          For the truest experience, seek a desktop portal.
+        </p>
+        <div class="advisory-decoration" aria-hidden="true">
+          <span class="deco-line"></span>
+          <span class="deco-rune">&#9670;</span>
+          <span class="deco-line"></span>
+        </div>
+      </div>
+    }
+
     <!-- Loading indicator with progress bar -->
     @if (isLoading() && !hasError()) {
       <div class="loading-status">

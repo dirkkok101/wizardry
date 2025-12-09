@@ -75,7 +75,12 @@ export class TitleScreenComponent implements OnInit {
   readonly showConfirmation = signal(false);
   readonly confirmationMessage = signal('');
 
+  // Mobile device detection
+  readonly isMobile = signal(false);
+
   async ngOnInit(): Promise<void> {
+    // Detect mobile device
+    this.isMobile.set(this.detectMobile());
     try {
       // Start loading game data with progress tracking
       // This runs in background while title screen is visible
@@ -166,5 +171,15 @@ export class TitleScreenComponent implements OnInit {
     if (this.hasNavigated) return;
     this.hasNavigated = true;
     this.router.navigate(['/castle-menu']);
+  }
+
+  /**
+   * Detect if the user is on a mobile device
+   * Checks for touch capability AND small screen width
+   */
+  private detectMobile(): boolean {
+    const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isSmallScreen = window.innerWidth <= 768;
+    return hasTouchScreen && isSmallScreen;
   }
 }

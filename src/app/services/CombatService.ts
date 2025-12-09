@@ -127,19 +127,23 @@ export class CombatService {
     latumapicActive: boolean = false,
     forceAmbush: boolean = false
   ): CombatState {
-    // Calculate average party level for encounter balancing
-    // Low-level parties (< level 4) only face single monster groups
+    // Calculate party levels for encounter balancing
+    // - Average level: Low-level parties (< level 4) only face single monster groups
+    // - Minimum level: Progressive monster count cap (L1=1, L2=2, L3=3 monsters max)
     const partyLevel = party.length > 0
       ? Math.floor(party.reduce((sum, c) => sum + c.level, 0) / party.length)
+      : 1
+    const minPartyLevel = party.length > 0
+      ? Math.min(...party.map(c => c.level))
       : 1
 
     // Generate monster groups - use fixed encounter config if provided
     // Fixed encounters use encounterId for direct monster spawning
     // Pass latumapicActive so monsters are pre-identified if spell is active
-    // Pass partyLevel for early-game balancing (low-level parties = 1 group only)
+    // Pass partyLevel for group count balancing, minPartyLevel for monster count cap
     const monsterGroups = fixedEncounterConfig
       ? EncounterService.generateFixedEncounter(dungeonLevel, fixedEncounterConfig, latumapicActive)
-      : EncounterService.generateEncounter(dungeonLevel, latumapicActive, partyLevel)
+      : EncounterService.generateEncounter(dungeonLevel, latumapicActive, partyLevel, minPartyLevel)
 
     // Initialize currentMageLevel for each group (for spell degradation tracking)
     // Per Apple II reference (Section 10): Mage spell level degrades permanently during encounter

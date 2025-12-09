@@ -15,18 +15,9 @@
 
     <!-- Center Column: Scene viewport -->
     <div class="center-panel">
-      @if (partyCharacters().length > 0) {
-        <div class="scene-viewport">
-          <img src="assets/sprites/scenes/temple_scene.png" alt="Temple of Cant" class="scene-image" />
-        </div>
-      } @else {
-        <div class="scene-viewport empty-viewport">
-          <app-empty-state
-            title="You need party members to visit the temple"
-            subtitle="Visit the Tavern to recruit characters"
-          />
-        </div>
-      }
+      <div class="scene-viewport">
+        <img src="assets/sprites/scenes/temple_scene.png" alt="Temple of Cant" class="scene-image" />
+      </div>
     </div>
 
     <!-- Right Column: Party positions 2, 4, 6 -->

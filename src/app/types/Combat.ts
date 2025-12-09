@@ -269,6 +269,24 @@ export const ENCOUNTER_CONFIG = {
       return [100]  // Always 1 group for party levels 1-3
     }
     return jsonWeights
+  },
+
+  /**
+   * Get max monsters per group with party level override for early-game balance
+   *
+   * Progressive scaling: L1 party = max 2 monsters, L2 = max 3, L3 = max 4
+   * Combined with 1-group limit, a L1 party faces at most 2 monsters total
+   *
+   * @param jsonMax - Max monsters from encounter JSON data
+   * @param minPartyLevel - Optional minimum party level (lowest level character)
+   * @returns Max monsters to use (override for low-level parties, otherwise JSON)
+   */
+  getMaxMonstersPerGroup(jsonMax: number, minPartyLevel?: number): number {
+    // Early game balance: cap monsters based on lowest-level party member
+    if (minPartyLevel !== undefined && minPartyLevel < 4) {
+      return minPartyLevel + 1  // L1 = 2, L2 = 3, L3 = 4
+    }
+    return jsonMax
   }
 } as const
 
