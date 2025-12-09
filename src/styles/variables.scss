@@ -156,6 +156,21 @@ $spacing-xl: 32px;
   --footer-height: 60px;
   --content-max-width: 1200px;
 
+  // ---------------------------------------------------------------------------
+  // RESPONSIVE BREAKPOINTS
+  // ---------------------------------------------------------------------------
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 1200px;
+  --breakpoint-lg: 2000px;   // 4K threshold
+  --breakpoint-xl: 3000px;
+
+  // ---------------------------------------------------------------------------
+  // SCENE LAYOUT
+  // ---------------------------------------------------------------------------
+  --scene-panel-max-width: 350px;         // Base size (laptop & 1080p)
+  --scene-panel-max-width-4k: 525px;      // 50% larger for 4K+
+  --scene-viewport-aspect: 1.83;          // Scene texture aspect ratio
+
   // Legacy aliases (map to new system for gradual migration)
   --color-primary: var(--color-gold-primary);
   --color-primary-light: var(--color-gold-bright);

@@ -24,10 +24,17 @@
 // ============================================
 .castle-content {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  // Center column sizes to viewport (auto), side panels fill remaining space up to max
+  // This keeps the castle image filling vertical space like before
+  grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
   gap: 0.5rem;
   flex: 1;
   min-height: 0;
+
+  // 4K screens: 50% larger cards
+  @media (min-width: 2000px) {
+    grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+  }
 
   // Tablet and mobile - stack vertically
   @media (max-width: 767px) {
@@ -43,7 +50,13 @@
   flex-direction: column;
   min-height: 0;
   width: 100%;
+  max-width: var(--scene-panel-max-width);  // Base: 350px (laptop & 1080p)
   align-self: start;
+
+  // 4K: 50% larger (525px)
+  @media (min-width: 2000px) {
+    max-width: var(--scene-panel-max-width-4k);
+  }
 
   // Make character panel fill the entire side column
   app-character-panel {
@@ -66,8 +79,8 @@
   align-items: center;
   justify-content: flex-start;  // Top-align image to match maze viewport position
   min-height: 0;
+  min-width: 0;                  // Allow shrinking in grid
   overflow: visible;
-  max-width: fit-content;
   padding: 0.5rem 2px;
 }
 
@@ -75,8 +88,10 @@
   position: relative;
   flex: 1;                 // Fill available vertical space
   min-height: 0;
-  width: 740px;            // Fixed width matching maze viewport
-  max-width: 100%;
+  // Height-driven sizing: fill vertical space, width follows aspect ratio
+  height: 100%;
+  aspect-ratio: var(--scene-viewport-aspect) / 1;  // Width = height * 1.83
+  max-width: 100%;         // Don't overflow center column on small screens
   background: var(--color-bg-darkest);
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -85,7 +100,7 @@
   .scene-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover;     // Fill viewport, crop edges if needed
     display: block;
   }
 }
@@ -94,12 +109,8 @@
 // RESPONSIVE ADJUSTMENTS
 // ============================================
 
-// Large screens - wider minimum for side panels
-@media (min-width: 1200px) {
-  .castle-content {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
-  }
-}
+// Note: Large screen grid-template-columns are now defined in .castle-content
+// using CSS custom properties (--scene-panel-max-width) for consistency
 
 // Compact height (< 768px viewport height)
 @media (max-height: 767px) {

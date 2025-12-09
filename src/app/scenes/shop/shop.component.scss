@@ -19,10 +19,15 @@
 // 3-Column Grid Layout
 .shop-content {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
   gap: 0.5rem;
   flex: 1;
   min-height: 0;
+
+  // 4K screens: 50% larger cards
+  @media (min-width: 2000px) {
+    grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+  }
 
   @media (max-width: 767px) {
     grid-template-columns: 1fr;
@@ -37,7 +42,13 @@
   flex-direction: column;
   min-height: 0;
   width: 100%;
+  max-width: var(--scene-panel-max-width);
   align-self: start;
+
+  // 4K: 50% larger
+  @media (min-width: 2000px) {
+    max-width: var(--scene-panel-max-width-4k);
+  }
 
   app-character-panel {
     display: flex;
@@ -59,8 +70,8 @@
   align-items: center;
   justify-content: flex-start;
   min-height: 0;
+  min-width: 0;
   overflow: visible;
-  max-width: fit-content;
   padding: 0.5rem 2px;
 }
 
@@ -68,7 +79,8 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  width: 740px;
+  height: 100%;
+  aspect-ratio: var(--scene-viewport-aspect) / 1;
   max-width: 100%;
   background: var(--color-bg-darkest);
   border: 1px solid var(--color-border);
@@ -91,7 +103,7 @@
 
 // Buy view (replaces scene viewport when shopping)
 .buy-view {
-  width: 740px;
+  width: 100%;
   max-width: 100%;
   display: flex;
   flex-direction: column;
@@ -266,13 +278,6 @@
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
-  }
-}
-
-// Large screens - wider side panels
-@media (min-width: 1200px) {
-  .shop-content {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
   }
 }
 

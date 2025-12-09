@@ -37,10 +37,15 @@
 // 3-Column Grid Layout
 .tavern-content {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
   gap: 0.5rem;
   flex: 1;
   min-height: 0;
+
+  // 4K screens: 50% larger cards
+  @media (min-width: 2000px) {
+    grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+  }
 }
 
 .left-panel,
@@ -48,8 +53,14 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-width: var(--scene-panel-max-width);
   overflow-y: auto;
   align-self: start;
+
+  // 4K: 50% larger
+  @media (min-width: 2000px) {
+    max-width: var(--scene-panel-max-width-4k);
+  }
 
   // Subtle scrollbar styling
   &::-webkit-scrollbar {
@@ -72,8 +83,8 @@
   align-items: center;
   justify-content: flex-start;
   min-height: 0;
+  min-width: 0;
   overflow: visible;
-  max-width: fit-content;
   padding: 0.5rem 2px;
 }
 
@@ -81,7 +92,8 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  width: 740px;
+  height: 100%;
+  aspect-ratio: var(--scene-viewport-aspect) / 1;
   max-width: 100%;
   background: var(--color-bg-darkest);
   border: 1px solid var(--color-border);
@@ -105,13 +117,6 @@
   .left-panel,
   .right-panel {
     display: none;
-  }
-}
-
-// Wider screens: expand side panels
-@media (min-width: 1200px) {
-  .tavern-content {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
   }
 }
 

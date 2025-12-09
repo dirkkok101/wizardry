@@ -82,10 +82,15 @@
 // ============================================
 .maze-content {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);  // Side columns expand to fill gaps
+  grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
   gap: 0.5rem;
   flex: 1;
   min-height: 0;
+
+  // 4K screens: 50% larger cards
+  @media (min-width: 2000px) {
+    grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+  }
 
   // Tablet and mobile - stack vertically
   @media (max-width: 767px) {
@@ -100,16 +105,22 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  width: 100%;          // Fill grid cell width
-  align-self: start;    // Align to top of grid row
+  width: 100%;
+  max-width: var(--scene-panel-max-width);
+  align-self: start;
   transition: opacity 0.2s ease;
+
+  // 4K: 50% larger
+  @media (min-width: 2000px) {
+    max-width: var(--scene-panel-max-width-4k);
+  }
 
   // Make character panel fill the entire side column
   app-character-panel {
     display: flex;
     flex-direction: column;
     flex: 1;
-    width: 100%;        // Fill panel width
+    width: 100%;
     min-height: 0;
   }
 
@@ -130,18 +141,18 @@
   flex-direction: column;
   gap: 0.5rem;
   min-height: 0;
+  min-width: 0;
   align-items: center;
-  overflow: visible;  // Allow borders to render fully
-  max-width: fit-content;  // Constrain to maze viewport width
-  padding: 0.5rem 2px;  // Top padding for alignment, side padding for borders
+  overflow: visible;
+  padding: 0.5rem 2px;
 }
 
 .maze-viewport {
   position: relative;   // Positioning context for combat overlay
   flex: 1;              // Fill available vertical space
   min-height: 0;        // Allow shrinking below content size
-  aspect-ratio: 148 / 75; // 740x375 - Width determined by height
-  width: auto;          // Let aspect-ratio control width
+  height: 100%;
+  aspect-ratio: var(--scene-viewport-aspect) / 1;  // Unified 1.83:1 aspect ratio
   max-width: 100%;      // Don't exceed container
   background: var(--color-bg-darkest);
   border: 1px solid var(--color-border);
@@ -343,13 +354,6 @@
 // ============================================
 // RESPONSIVE ADJUSTMENTS
 // ============================================
-
-// Large screens - wider minimum for side panels
-@media (min-width: 1200px) {
-  .maze-content {
-    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);  // Wider minimum for large screens
-  }
-}
 
 // Compact height (< 768px viewport height)
 @media (max-height: 767px) {

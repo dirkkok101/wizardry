@@ -12,11 +12,16 @@
 // 3-Column Grid Layout
 .training-content {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+  grid-template-columns: minmax(160px, var(--scene-panel-max-width)) auto minmax(160px, var(--scene-panel-max-width));
   gap: var(--space-3);
   flex: 1;
   min-height: 0;
   padding: var(--space-3);
+
+  // 4K screens: 50% larger panels
+  @media (min-width: 2000px) {
+    grid-template-columns: minmax(280px, var(--scene-panel-max-width-4k)) auto minmax(280px, var(--scene-panel-max-width-4k));
+  }
 }
 
 // Side panels
@@ -25,6 +30,12 @@
   display: flex;
   flex-direction: column;
   align-self: start;
+  max-width: var(--scene-panel-max-width);
+
+  // 4K: 50% larger
+  @media (min-width: 2000px) {
+    max-width: var(--scene-panel-max-width-4k);
+  }
 }
 
 // Statistics Panel (shared by left and right)
@@ -122,8 +133,8 @@
   align-items: center;
   justify-content: flex-start;
   min-height: 0;
+  min-width: 0;
   overflow: visible;
-  max-width: fit-content;
   padding: 0 2px;
 }
 
@@ -131,7 +142,8 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  width: 740px;
+  height: 100%;
+  aspect-ratio: var(--scene-viewport-aspect) / 1;
   max-width: 100%;
   background: var(--color-bg-darkest);
   border: 1px solid var(--color-border);

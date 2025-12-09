@@ -374,6 +374,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   // WebGL Renderer
   private webglRenderer: WebGLRenderingService | null = null;
 
+  // Canvas resize observer for responsive rendering
+  private resizeObserver: ResizeObserver | null = null;
+
   // Computed signals from GameStateService
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
   readonly position = computed(() => this.dungeonState()?.position);
@@ -1064,15 +1067,68 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     console.log('[MazeComponent] WebGL renderer initialized successfully');
 
+    // Setup responsive canvas resizing
+    this.setupCanvasResizing();
+
     // Load textures and render
     this.loadTextures();
   }
 
   ngOnDestroy(): void {
+    // Clean up resize observer
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    // Clean up WebGL renderer
     if (this.webglRenderer) {
       this.webglRenderer.dispose();
       this.webglRenderer = null;
     }
+  }
+
+  /**
+   * Setup ResizeObserver for dynamic canvas resolution scaling.
+   * Updates canvas pixel dimensions when viewport size changes,
+   * ensuring sharp rendering at all screen sizes.
+   */
+  private setupCanvasResizing(): void {
+    const viewport = document.querySelector('.maze-viewport');
+    if (!viewport) {
+      console.warn('[MazeComponent] Viewport element not found for resize observer');
+      return;
+    }
+
+    this.resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+
+      const canvas = this.canvasRef?.nativeElement;
+      if (!canvas) return;
+
+      // Get container size
+      const { width, height } = entry.contentRect;
+      if (width === 0 || height === 0) return;
+
+      // Update canvas resolution (respecting device pixel ratio for sharpness)
+      // Cap at 2x to avoid excessive GPU load on 4K+ displays
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const newWidth = Math.floor(width * dpr);
+      const newHeight = Math.floor(height * dpr);
+
+      // Only update if dimensions actually changed
+      if (canvas.width !== newWidth || canvas.height !== newHeight) {
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        console.log(`[MazeComponent] Canvas resized to ${newWidth}x${newHeight} (viewport: ${Math.floor(width)}x${Math.floor(height)}, dpr: ${dpr})`);
+
+        // Re-render with new dimensions
+        this.render();
+      }
+    });
+
+    this.resizeObserver.observe(viewport);
   }
 
   /**
