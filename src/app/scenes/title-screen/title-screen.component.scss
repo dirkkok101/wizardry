@@ -735,7 +735,7 @@
 // ============================================
 .copyright {
   position: absolute;
-  bottom: var(--space-8);
+  bottom: calc(var(--space-10) + 8px);
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -782,7 +782,7 @@
   .copyright {
     flex-direction: column;
     gap: var(--space-1);
-    bottom: var(--space-4);
+    bottom: calc(var(--space-6) + 8px);
 
     .divider {
       display: none;
@@ -866,6 +866,7 @@
   .copyright {
     font-size: var(--font-size-sm);
     gap: var(--space-4);
+    bottom: calc(var(--space-12) + 8px);
   }
 }
 
