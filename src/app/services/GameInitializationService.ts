@@ -33,14 +33,10 @@ function createNewGame(): GameState {
         frontRow: [],
         backRow: []
       },
-      position: {
-        level: 1,
-        x: 0,
-        y: 0,
-        facing: 'NORTH'
-      },
+      // Position is tracked in dungeon.position (DungeonState) when in maze
+      // Dungeon is initialized via DungeonMovementService.enterDungeon()
       light: false,
-      gold: 0 // NEW: initialize with 0 gold
+      gold: 0
     },
     // dungeon is undefined until party enters maze via DungeonMovementService.enterDungeon()
     // Per GameState.ts: "Optional: undefined when in castle/town"

@@ -60,12 +60,6 @@ export function createEmptyParty(): Party {
       frontRow: [],
       backRow: []
     },
-    position: {
-      level: 1,
-      x: 0,
-      y: 0,
-      facing: 'NORTH'
-    },
     light: false,
     gold: 0
   }
@@ -81,12 +75,6 @@ export function createPartyWithMembers(memberIds: string[]): Party {
     formation: {
       frontRow: memberIds.slice(0, 3),
       backRow: memberIds.slice(3, 6)
-    },
-    position: {
-      level: 1,
-      x: 0,
-      y: 0,
-      facing: 'NORTH'
     },
     light: false,
     gold: 0

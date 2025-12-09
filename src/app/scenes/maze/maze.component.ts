@@ -3297,17 +3297,21 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const facings: Array<'NORTH' | 'SOUTH' | 'EAST' | 'WEST'> = ['NORTH', 'SOUTH', 'EAST', 'WEST'];
     const newFacing = RandomService.pickRandom(facings);
 
+    // Update dungeon.position (source of truth for all maze navigation)
     this.gameState.updateState(state => ({
       ...state,
-      party: {
-        ...state.party,
-        position: { ...state.party.position, x: newX, y: newY, facing: newFacing }
-      },
+      dungeon: state.dungeon ? {
+        ...state.dungeon,
+        position: { x: newX, y: newY, facing: newFacing }
+      } : undefined,
       pendingChest: undefined
     }));
 
     this.addMessage(`Teleported to (${newX}, ${newY})!`);
     this.closeChestOverlay();
+
+    // Force maze view to refresh at new position
+    this.render();
   }
 
   /**

@@ -20,12 +20,8 @@ export interface Party {
     frontRow: string[] // Max 3 character IDs
     backRow: string[] // Max 3 character IDs
   }
-  position: {
-    level: number // Dungeon level (1-10)
-    x: number // X coordinate (0-19)
-    y: number // Y coordinate (0-19)
-    facing: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST'
-  }
+  // Position is now tracked in dungeon.position (DungeonState)
+  // dungeon.currentLevel for level, dungeon.position for x, y, facing
   light: boolean // Party has light active (LOMILWA spell or torch)
   gold: number // Party's shared gold pool for services (inn, temple, shop)
 }
