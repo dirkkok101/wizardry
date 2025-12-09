@@ -63,6 +63,7 @@
                 <button
                   class="action-btn"
                   [class.danger]="action.variant === 'danger'"
+                  [title]="action.tooltip || ''"
                   (click)="onActionClick(char, action.type)"
                 >
                   [{{ action.label || getActionLabel(action.type) }}]

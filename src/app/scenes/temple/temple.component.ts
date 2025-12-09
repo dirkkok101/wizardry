@@ -85,7 +85,8 @@ export class TempleComponent implements OnInit {
 
       actions.push({
         type: actionId,
-        label: `${serviceName} (${tithe}g)`,
+        label: serviceName,
+        tooltip: `${tithe}g tithe`,
         enabled: canAfford
       });
     }
