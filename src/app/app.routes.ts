@@ -11,6 +11,7 @@ import { CharacterInspectionComponent } from '@scenes/character-inspection/chara
 import { SpellCastingComponent } from '@scenes/spell-casting/spell-casting.component';
 import { MazeComponent } from '@scenes/maze/maze.component';
 import { CampComponent } from '@scenes/camp/camp.component';
+import { SystemComponent } from '@scenes/system/system.component';
 import { gameLoadedGuard } from '@core/guards/game-loaded.guard';
 import { partyExistsGuard } from '@core/guards/party-exists.guard';
 import { partyNotInMazeGuard } from '@core/guards/party-not-in-maze.guard';
@@ -55,6 +56,11 @@ export const routes: Routes = [
   {
     path: 'character-creation',
     component: CharacterCreationComponent,
+    canActivate: [gameLoadedGuard, partyNotInMazeGuard]
+  },
+  {
+    path: 'system',
+    component: SystemComponent,
     canActivate: [gameLoadedGuard, partyNotInMazeGuard]
   },
   // Flexible routes - accessible from both town and maze

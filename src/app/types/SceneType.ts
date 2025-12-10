@@ -4,6 +4,7 @@
 export enum SceneType {
   // System Scenes
   TITLE_SCREEN = 'TITLE_SCREEN',
+  SYSTEM = 'SYSTEM',
 
   // Castle/Town Scenes
   CASTLE_MENU = 'CASTLE_MENU',

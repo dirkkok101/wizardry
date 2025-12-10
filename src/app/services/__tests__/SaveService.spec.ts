@@ -333,6 +333,148 @@ describe('SaveService', () => {
     })
   })
 
+  describe('exportGameState', () => {
+    it('returns valid JSON string of current state', () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      const json = service.exportGameState(gameState)
+
+      expect(() => JSON.parse(json)).not.toThrow()
+    })
+
+    it('includes roster, party, currentScene, settings', () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      const json = service.exportGameState(gameState)
+      const parsed = JSON.parse(json)
+
+      expect(parsed.state.roster).toBeDefined()
+      expect(parsed.state.party).toBeDefined()
+      expect(parsed.state.currentScene).toBeDefined()
+      expect(parsed.state.settings).toBeDefined()
+    })
+
+    it('includes version and schemaVersion', () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      const json = service.exportGameState(gameState)
+      const parsed = JSON.parse(json)
+
+      expect(parsed.version).toBe('1.0.0')
+      expect(parsed.schemaVersion).toBe(2)
+    })
+
+    it('serializes Maps as arrays', () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      const json = service.exportGameState(gameState)
+      const parsed = JSON.parse(json)
+
+      // Roster Map should be serialized as array
+      expect(Array.isArray(parsed.state.roster)).toBe(true)
+    })
+  })
+
+  describe('importGameState', () => {
+    it('returns success and state for valid JSON', () => {
+      const gameState = GameInitializationService.createNewGame()
+      const json = service.exportGameState(gameState)
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(true)
+      expect(result.state).toBeDefined()
+    })
+
+    it('returns error for invalid JSON syntax', () => {
+      const result = service.importGameState('not valid json {')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid JSON')
+    })
+
+    it('returns error for missing state field', () => {
+      const json = JSON.stringify({ version: '1.0.0' })
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Missing required field')
+    })
+
+    it('returns error for missing roster', () => {
+      const json = JSON.stringify({
+        version: '1.0.0',
+        schemaVersion: 2,
+        state: { party: { members: [] }, currentScene: 'CASTLE_MENU' }
+      })
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('roster')
+    })
+
+    it('returns error for missing party', () => {
+      const json = JSON.stringify({
+        version: '1.0.0',
+        schemaVersion: 2,
+        state: { roster: [], currentScene: 'CASTLE_MENU' }
+      })
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('party')
+    })
+
+    it('returns error for missing currentScene', () => {
+      const json = JSON.stringify({
+        version: '1.0.0',
+        schemaVersion: 2,
+        state: { roster: [], party: { members: [] } }
+      })
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('currentScene')
+    })
+
+    it('returns error for incompatible schema version', () => {
+      const json = JSON.stringify({
+        version: '1.0.0',
+        schemaVersion: 99,
+        state: { roster: [], party: { members: [] }, currentScene: 'CASTLE_MENU' }
+      })
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('schema version')
+    })
+
+    it('deserializes Maps and Sets correctly', () => {
+      const gameState = GameInitializationService.createNewGame()
+      const json = service.exportGameState(gameState)
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(true)
+      expect(result.state?.roster).toBeInstanceOf(Map)
+    })
+
+    it('round-trips a game state correctly', () => {
+      const gameState = GameInitializationService.createNewGame()
+      const json = service.exportGameState(gameState)
+
+      const result = service.importGameState(json)
+
+      expect(result.success).toBe(true)
+      expect(result.state).toEqual(gameState)
+    })
+  })
+
   describe('combat state serialization', () => {
     it('should serialize and deserialize combat state Maps correctly', async () => {
       const gameState = GameInitializationService.createNewGame()

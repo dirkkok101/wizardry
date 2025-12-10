@@ -83,7 +83,8 @@ export class CastleMenuComponent implements OnInit {
       { id: 'shop', label: 'Shop', shortcut: 'S', enabled: true },
       { id: 'inn', label: 'Inn', shortcut: 'I', enabled: true },
       { id: 'training', label: 'Training Grounds', shortcut: 'G', enabled: true },
-      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: canEnterMaze }
+      { id: 'maze', label: 'Maze', shortcut: 'M', enabled: canEnterMaze },
+      { id: 'system', label: 'System', shortcut: 'Y', enabled: true }
     ];
   });
 
@@ -123,6 +124,9 @@ export class CastleMenuComponent implements OnInit {
         break;
       case 'maze':
         this.navigateToMaze();
+        break;
+      case 'system':
+        this.navigation.goToSystem();
         break;
     }
   }

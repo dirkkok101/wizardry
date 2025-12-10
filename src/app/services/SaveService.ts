@@ -21,6 +21,15 @@ const SAVE_VERSION = '1.0.0'
 const SAVE_SCHEMA_VERSION = 2
 
 /**
+ * Result of importing a game state from JSON
+ */
+export interface ImportResult {
+  success: boolean
+  error?: string
+  state?: GameState
+}
+
+/**
  * Metadata about a save slot without loading the full game state
  */
 export interface SaveSlotMetadata {
@@ -361,6 +370,70 @@ export class SaveService {
     } catch (error) {
       // If parsing fails, treat as empty slot
       return null
+    }
+  }
+
+  /**
+   * Export current game state as JSON string for backup/download
+   */
+  exportGameState(gameState: GameState): string {
+    const saveData = {
+      version: SAVE_VERSION,
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      timestamp: Date.now(),
+      state: this.serializeGameState(gameState)
+    }
+
+    return JSON.stringify(saveData, null, 2)
+  }
+
+  /**
+   * Import and validate game state from JSON string
+   * Returns the deserialized state if valid, or an error message if invalid
+   */
+  importGameState(json: string): ImportResult {
+    // 1. Parse JSON
+    let data: any
+    try {
+      data = JSON.parse(json)
+    } catch {
+      return { success: false, error: 'Invalid JSON format' }
+    }
+
+    // 2. Validate required wrapper fields
+    if (!data.state) {
+      return { success: false, error: 'Missing required field: state' }
+    }
+
+    // 3. Validate schema version
+    if (data.schemaVersion !== SAVE_SCHEMA_VERSION) {
+      return {
+        success: false,
+        error: `Incompatible schema version (expected ${SAVE_SCHEMA_VERSION}, got ${data.schemaVersion})`
+      }
+    }
+
+    // 4. Validate required state fields
+    const state = data.state
+    if (!state.roster) {
+      return { success: false, error: 'Missing required field: roster' }
+    }
+    if (!state.party) {
+      return { success: false, error: 'Missing required field: party' }
+    }
+    if (!state.currentScene) {
+      return { success: false, error: 'Missing required field: currentScene' }
+    }
+
+    // 5. Deserialize and return
+    try {
+      const deserializedState = this.deserializeGameState(state)
+      return { success: true, state: deserializedState }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to deserialize state: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }
     }
   }
 }

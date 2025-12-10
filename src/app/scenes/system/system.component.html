@@ -1,0 +1,59 @@
+<div class="system-scene">
+  <app-scene-title title="SYSTEM" [showPartyGold]="true" />
+
+  <!-- 3-Column Layout: Left | Center | Right -->
+  <div class="system-content">
+    <!-- Left Column: Positions 1, 3, 5 -->
+    <div class="left-panel">
+      <app-character-panel
+        [characters]="leftColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['inspect']"
+        [showSprites]="true"
+        (actionClick)="handleActionClick($event)"
+      />
+    </div>
+
+    <!-- Center Column: System Scene Sprite -->
+    <div class="center-panel">
+      <div class="scene-viewport">
+        <img src="assets/sprites/scenes/system_scene.png" alt="System" class="scene-image" />
+      </div>
+    </div>
+
+    <!-- Right Column: Positions 2, 4, 6 -->
+    <div class="right-panel">
+      <app-character-panel
+        [characters]="rightColumnCharacters()"
+        [actions]="getActionsForCharacter"
+        [visibleActionTypes]="['inspect']"
+        [showSprites]="true"
+        (actionClick)="handleActionClick($event)"
+      />
+    </div>
+  </div>
+
+  <app-scene-footer
+    [menuItems]="footerMenuItems()"
+    (itemSelected)="handleFooterAction($event)"
+  />
+
+  <!-- Hidden file input for restore -->
+  <input
+    type="file"
+    #fileInput
+    accept=".json"
+    (change)="onFileSelected($event)"
+    hidden
+  />
+
+  <!-- Confirmation dialog for restore -->
+  <app-confirmation-dialog
+    [visible]="showConfirmDialog()"
+    [message]="confirmMessage()"
+    yesLabel="(Enter) Restore"
+    noLabel="(Esc) Cancel"
+    (confirmed)="onConfirmRestore()"
+    (cancelled)="onCancelRestore()"
+  />
+</div>
