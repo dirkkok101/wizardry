@@ -23,8 +23,8 @@ const VIEW_DISTANCE = {
 
 // Duration constants (in steps/movements)
 const SPELL_DURATION = {
-  MILWA_MIN: 15,
-  MILWA_MAX: 29,
+  MILWA_MIN: 45,
+  MILWA_MAX: 87,
   LOMILWA: 32000  // Effectively permanent for one dungeon expedition
 }
 

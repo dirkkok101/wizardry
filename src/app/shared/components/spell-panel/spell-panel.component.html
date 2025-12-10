@@ -52,26 +52,67 @@
         </div>
       </div>
 
-      <!-- Spell List -->
-      <div class="spell-list" [class.two-columns]="spellsAtActiveLevel().length > 4">
+      <!-- Spell List - Enhanced Tactical Grid -->
+      <div class="spell-list">
         @for (spell of spellsAtActiveLevel(); track spell.id) {
           <div
             class="spell-card"
             [class.clickable]="mode() === 'casting'"
+            [class.castable]="canCast(spell)"
             (click)="onSpellClick(spell)"
           >
-            <div class="spell-header">
+            <!-- Card Header: Category badge, Name, Level, Caster -->
+            <div class="spell-card-header">
+              <span class="category-badge" [class]="getCategoryClass(spell)">
+                {{ getCategoryLabel(spell) }}
+              </span>
               <span class="spell-name">{{ spell.name }}</span>
-              @if (mode() === 'casting') {
+              <div class="spell-meta">
+                <span class="spell-level-badge">L{{ spell.level }}</span>
+                <span class="caster-type-badge" [class.mage]="spell.casterType === 'mage'" [class.priest]="spell.casterType === 'priest'">
+                  {{ getCasterBadge(spell) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p class="spell-description">{{ spell.description }}</p>
+
+            <!-- Footer: Stats + Context + Effects + Cast button -->
+            <div class="spell-card-footer">
+              <div class="footer-left">
+                <!-- Damage/Healing -->
+                @if (getDamageDisplay(spell); as damage) {
+                  <span class="damage-display">{{ damage }}</span>
+                }
+                @if (getHealingDisplay(spell); as healing) {
+                  <span class="healing-display">{{ healing }}</span>
+                }
+                <!-- Target -->
+                <span class="target-display">
+                  <span class="target-icon">{{ getTargetDisplay(spell).icon }}</span>
+                  <span class="target-label">{{ getTargetDisplay(spell).label }}</span>
+                </span>
+                <!-- Context icons -->
+                <span class="context-icons">
+                  @for (icon of getContextIcons(spell); track icon) {
+                    <span class="context-icon">{{ icon }}</span>
+                  }
+                </span>
+                <!-- Effect badges -->
+                @for (effect of getSpecialEffects(spell); track effect) {
+                  <span class="effect-badge">{{ effect }}</span>
+                }
+              </div>
+              @if (mode() === 'casting' && canCast(spell)) {
                 <button
                   class="cast-button"
                   (click)="onSpellClick(spell); $event.stopPropagation()"
                 >
-                  [Cast]
+                  CAST
                 </button>
               }
             </div>
-            <span class="spell-effect">{{ getSpellEffect(spell) }}</span>
           </div>
         } @empty {
           <div class="no-spells">No spells at this level</div>

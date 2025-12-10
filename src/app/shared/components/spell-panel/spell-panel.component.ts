@@ -336,6 +336,168 @@ export class SpellPanelComponent {
     return descriptions[utility] || utility
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Enhanced Display Helpers for Tactical Grid UI
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Get damage display string with type icon
+   * Returns null if spell has no damage
+   */
+  getDamageDisplay(spell: SpellData): string | null {
+    if (!spell.damage?.dice) return null
+
+    const typeIcons: Record<string, string> = {
+      'fire': '🔥',
+      'cold': '❄️',
+      'lightning': '⚡',
+      'holy': '✨',
+      'air': '💨',
+      'magic': '🔮',
+      'physical': '⚔️'
+    }
+
+    const icon = typeIcons[spell.damage.type] || '💥'
+    const type = spell.damage.type.charAt(0).toUpperCase() + spell.damage.type.slice(1)
+    return `${icon} ${spell.damage.dice} ${type}`
+  }
+
+  /**
+   * Get healing display string with icon
+   * Returns null if spell has no healing
+   */
+  getHealingDisplay(spell: SpellData): string | null {
+    if (!spell.healing?.dice) return null
+
+    // Handle "full" healing type (MADI spell)
+    if (spell.healing.type === 'full') {
+      return '💚 Full HP'
+    }
+
+    return `💚 ${spell.healing.dice}`
+  }
+
+  /**
+   * Get target display with icon and label
+   */
+  getTargetDisplay(spell: SpellData): { icon: string; label: string } {
+    const targets: Record<string, { icon: string; label: string }> = {
+      'single': { icon: '→', label: 'Single' },
+      'group': { icon: '⟐', label: 'Group' },
+      'party': { icon: '☆', label: 'Party' },
+      'self': { icon: '◎', label: 'Self' },
+      'dead_body': { icon: '†', label: 'Body' },
+      'ashes': { icon: '⚱', label: 'Ashes' },
+      'all_enemies': { icon: '⟐⟐', label: 'All Enemies' }
+    }
+
+    return targets[spell.target] || { icon: '?', label: spell.target }
+  }
+
+  /**
+   * Get context icons (combat/camp) for where spell can be cast
+   */
+  getContextIcons(spell: SpellData): string[] {
+    const icons: string[] = []
+    if (spell.castableIn.includes('combat')) {
+      icons.push('⚔️')
+    }
+    if (spell.castableIn.includes('camp')) {
+      icons.push('🏕️')
+    }
+    return icons
+  }
+
+  /**
+   * Get special effect badges for display
+   * Returns array of badge strings like "Inflicts SLEEP", "AC -4", etc.
+   */
+  getSpecialEffects(spell: SpellData): string[] {
+    const effects: string[] = []
+
+    // Status effect infliction
+    if (spell.statusEffect) {
+      const effectStr = typeof spell.statusEffect === 'object' && spell.statusEffect !== null
+        ? spell.statusEffect.type
+        : spell.statusEffect
+      effects.push(`Inflicts ${effectStr}`)
+    }
+
+    // Status cure
+    if (spell.statusCure) {
+      const cureStr = spell.statusCure.charAt(0).toUpperCase() + spell.statusCure.slice(1)
+      effects.push(`Cures ${cureStr}`)
+    }
+
+    // AC modifier
+    if (spell.acModifier) {
+      effects.push(`AC ${spell.acModifier > 0 ? '+' : ''}${spell.acModifier}`)
+    }
+
+    // Instant death
+    if (spell.instantDeath) {
+      effects.push('☠️ Instant Death')
+    }
+
+    // Resurrection
+    if (spell.resurrection) {
+      const rate = spell.resurrectionSuccessRate
+        ? `${Math.round(spell.resurrectionSuccessRate * 100)}%`
+        : '?'
+      effects.push(`✟ Resurrect ${rate}`)
+    }
+
+    // Utility effects
+    if (spell.utility) {
+      effects.push(this.getUtilityDescription(spell.utility))
+    }
+
+    return effects
+  }
+
+  /**
+   * Get CSS class for spell category badge
+   */
+  getCategoryClass(spell: SpellData): string {
+    // Map category to CSS class
+    const categoryClasses: Record<string, string> = {
+      'offensive': 'cat-offensive',
+      'healing': 'cat-healing',
+      'utility': 'cat-utility',
+      'buff': 'cat-buff',
+      'debuff': 'cat-debuff',
+      'resurrection': 'cat-resurrection',
+      'support': 'cat-support',
+      'transformation': 'cat-transformation'
+    }
+
+    return categoryClasses[spell.category] || 'cat-utility'
+  }
+
+  /**
+   * Get display label for spell category
+   */
+  getCategoryLabel(spell: SpellData): string {
+    const labels: Record<string, string> = {
+      'offensive': 'OFFENSIVE',
+      'healing': 'HEALING',
+      'utility': 'UTILITY',
+      'buff': 'BUFF',
+      'debuff': 'DEBUFF',
+      'resurrection': 'RESURRECT',
+      'support': 'SUPPORT',
+      'transformation': 'TRANSFORM'
+    }
+    return labels[spell.category] || spell.category.toUpperCase()
+  }
+
+  /**
+   * Get caster type badge text
+   */
+  getCasterBadge(spell: SpellData): string {
+    return spell.casterType === 'mage' ? 'M' : 'P'
+  }
+
   /**
    * Handle keyboard events
    */
