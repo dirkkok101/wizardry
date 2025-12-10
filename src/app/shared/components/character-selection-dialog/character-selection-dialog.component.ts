@@ -27,12 +27,13 @@ export interface CharacterSelectableOption extends CharacterOption {
 /**
  * CharacterSelectionDialogComponent - Card-based character picker with sprites.
  *
- * Uses CharacterPanelComponent for consistent card rendering across the app.
+ * Uses CharacterPanelComponent for consistent card rendering (same as castle/maze).
  *
  * Features:
  * - Scrollable card grid (supports 20+ characters)
  * - Consistent 72×72 character sprites
  * - Full card info (name, class+level, alignment, HP, spell points)
+ * - Responsive sizing matching castle scene panels (350px / 525px at 4K)
  * - [Select] button for enabled characters
  * - ESC to cancel, backdrop click to cancel
  *

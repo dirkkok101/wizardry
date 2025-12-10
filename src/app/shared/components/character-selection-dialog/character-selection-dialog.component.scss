@@ -1,5 +1,5 @@
-// Character Selection Dialog - Uses CharacterPanel for card display
-// Only dialog chrome (overlay, panel, header, footer) is styled here
+// Character Selection Dialog - Uses CharacterPanelComponent (same as castle/maze)
+// Dialog chrome (overlay, panel, header, footer) and responsive grid sizing
 
 .dialog-overlay {
   position: fixed;
@@ -13,7 +13,7 @@
 
 .dialog-panel {
   width: 90vw;
-  max-width: 900px;
+  max-width: 1100px;  // Fits 3 cards at 350px + gaps
   max-height: 85vh;
   background: var(--color-bg-darkest);
   border: 2px solid var(--color-border);
@@ -21,6 +21,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  // 4K screens: larger panel for larger cards
+  @media (min-width: 2000px) {
+    max-width: 1650px;  // Fits 3 cards at 525px + gaps
+  }
 }
 
 .panel-header {
@@ -38,7 +43,7 @@
   }
 }
 
-// Scrollable grid container
+// Scrollable container for CharacterPanelComponent
 .character-grid {
   flex: 1;
   padding: var(--space-3);
@@ -55,6 +60,24 @@
   &::-webkit-scrollbar-thumb {
     background: var(--color-border);
     border-radius: 3px;
+  }
+
+  // Override CharacterPanelComponent's grid mode to match castle panel sizing
+  // The panel's grid mode uses repeat(2, 1fr) by default - we override with fixed-width columns
+  ::ng-deep app-character-panel {
+    width: 100%;
+
+    .character-stack {
+      // Use auto-fill grid with castle scene panel widths
+      grid-template-columns: repeat(auto-fill, minmax(280px, var(--scene-panel-max-width)));
+      justify-content: center;
+      gap: var(--space-3);
+
+      // 4K screens: larger cards matching castle scene
+      @media (min-width: 2000px) {
+        grid-template-columns: repeat(auto-fill, minmax(400px, var(--scene-panel-max-width-4k)));
+      }
+    }
   }
 }
 
