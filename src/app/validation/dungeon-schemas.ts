@@ -57,6 +57,37 @@ export const DestinationSchema = z.object({
   y: z.number().int().min(0).max(19).optional(),
 });
 
+// ============================================================================
+// Conditional Tile Schemas
+// ============================================================================
+
+export const TileConditionTypeSchema = z.enum(['has_item', 'has_spell', 'flag_set']);
+
+export const TileConditionSchema = z.object({
+  type: TileConditionTypeSchema,
+  itemId: z.string().optional(),    // For 'has_item'
+  spellId: z.string().optional(),   // For 'has_spell' (future)
+  flagName: z.string().optional(),  // For 'flag_set' (future)
+});
+
+export const ConditionFailActionSchema = z.enum(['retreat', 'block', 'teleport']);
+
+export const MessageStyleSchema = z.enum(['letterbox', 'log']);
+
+export const OnConditionFailSchema = z.object({
+  message: z.string(),
+  messageStyle: MessageStyleSchema.optional(),
+  autoDismiss: z.boolean().optional(),
+  autoDismissDelay: z.number().int().min(0).optional(),
+  action: ConditionFailActionSchema,
+  destination: DestinationSchema.optional(),
+});
+
+export const OnConditionSuccessSchema = z.object({
+  message: z.string().optional(),
+  messageStyle: MessageStyleSchema.optional(),
+});
+
 export const TileDataSchema = z.object({
   x: z.number().int().min(0).max(19),
   y: z.number().int().min(0).max(19),
@@ -72,6 +103,11 @@ export const TileDataSchema = z.object({
   isOneWay: z.boolean().optional(),
   destinations: z.array(DestinationSchema).optional(),
   locked: z.boolean().optional(),
+  pitDamage: z.string().regex(/^\d+d\d+$/).optional(),  // Dice notation: "1d6", "1d8", "2d4"
+  // Conditional tile properties
+  condition: TileConditionSchema.optional(),
+  onConditionFail: OnConditionFailSchema.optional(),
+  onConditionSuccess: OnConditionSuccessSchema.optional(),
 });
 
 export const StartPositionSchema = z.object({

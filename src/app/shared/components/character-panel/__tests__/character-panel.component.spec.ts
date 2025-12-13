@@ -278,6 +278,57 @@ describe('CharacterPanelComponent', () => {
       })
       expect(component.getSpellPointsDisplay(char)).toBe('M:2/1 P:3/2')
     })
+
+    it('shows zeros for depleted levels between non-zero levels', () => {
+      const char = createTestCharacter({
+        spellPoints: {
+          mage: {
+            level1: { current: 3, max: 5 },
+            level2: { current: 0, max: 3 },  // Depleted but has slots
+            level3: { current: 2, max: 4 },
+            level4: { current: 1, max: 2 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+      expect(component.getSpellPointsDisplay(char)).toBe('3/0/2/1')
+    })
+
+    it('shows zeros when all spell slots are depleted but max > 0', () => {
+      const char = createTestCharacter({
+        spellPoints: {
+          mage: {
+            level1: { current: 0, max: 5 },
+            level2: { current: 0, max: 3 },
+            level3: { current: 0, max: 0 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+      expect(component.getSpellPointsDisplay(char)).toBe('0/0')
+    })
+
+    it('shows zero for depleted first level', () => {
+      const char = createTestCharacter({
+        spellPoints: {
+          mage: {
+            level1: { current: 0, max: 3 },  // Depleted first level
+            level2: { current: 2, max: 4 },
+            level3: { current: 1, max: 2 },
+            level4: { current: 0, max: 0 },
+            level5: { current: 0, max: 0 },
+            level6: { current: 0, max: 0 },
+            level7: { current: 0, max: 0 }
+          }
+        }
+      })
+      expect(component.getSpellPointsDisplay(char)).toBe('0/2/1')
+    })
   })
 
   describe('isCaster', () => {

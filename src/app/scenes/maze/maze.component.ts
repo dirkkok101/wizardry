@@ -15,7 +15,7 @@ import { CinematicArenaComponent } from '@shared/components/cinematic-arena/cine
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
-import { DungeonMovementService } from '@services/DungeonMovementService';
+import { DungeonMovementService, MovementResult } from '@services/DungeonMovementService';
 import { DungeonService } from '@services/DungeonService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { EncounterService } from '@services/EncounterService';
@@ -25,6 +25,7 @@ import { CombatService } from '@services/CombatService';
 import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
 import { ItemDataLoader } from '@services/ItemDataLoader';
+import { SpellDataLoader } from '@services/SpellDataLoader';
 import { SpellCastingService, SpellData } from '@services/SpellCastingService';
 import { SpellLearningService } from '@services/SpellLearningService';
 import { LightService } from '@services/LightService';
@@ -37,7 +38,7 @@ import { GameState } from '@models/GameState';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
-import { DungeonState } from '@models/Dungeon';
+import { DungeonState, ConditionResult, MessageStyle, Position } from '@models/Dungeon';
 import { TextureAtlas } from '@models/texture.types';
 import { ViewportConfig } from '@models/rendering.types';
 import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant, CombatRoundEvent, CombatRoundAudit } from '@models/Combat';
@@ -49,6 +50,7 @@ import { Chest } from '@models/Chest';
 import { ScrambledTrapState, TrapId } from '@models/Trap';
 import { Item } from '@models/Item';
 import { canAct } from '@utils/CharacterStatusHelpers';
+import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils';
 import * as TextureAtlasService from '@services/TextureAtlasService';
 
 @Component({
@@ -198,6 +200,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly tileMessageItem = signal<TileMessageItem | null>(null);
   readonly tileMessageAutoDismiss = signal<boolean>(false);
   readonly pendingFixedEncounter = signal<FixedEncounterConfig | null>(null);
+  readonly pendingConditionCallback = signal<(() => void) | null>(null);
+  private readonly retreatCooldownActive = signal(false);
+  private readonly elevatorDismissed = signal(false);
 
   // Computed tile message state
   readonly showTileMessageOverlay = computed(() => this.tileMessagePhase() !== 'idle');
@@ -363,6 +368,39 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
   });
 
+  /**
+   * Targeting footer menu items: [A] Monster Group, [B] Monster Group, [ESC] Cancel
+   * Shown when player is selecting a target for attack or spell
+   */
+  readonly targetingFooterMenuItems = computed((): MenuItem[] => {
+    const groups = this.monsterGroups();
+    if (!this.isTargetingMode() || groups.length === 0) return [];
+
+    const items: MenuItem[] = groups
+      .filter(g => g.monsters.some(m => m.hp > 0)) // Only groups with alive monsters
+      .map(group => {
+        const aliveCount = group.monsters.filter(m => m.hp > 0).length;
+        const firstMonster = group.monsters[0];
+        const displayName = getIdentifiedGroupDisplayText(aliveCount, firstMonster, group.identified);
+        return {
+          id: `target-${group.id}`,
+          label: displayName,
+          shortcut: group.id, // 'A', 'B', 'C', 'D'
+          enabled: true
+        };
+      });
+
+    // Add Cancel option
+    items.push({
+      id: 'cancel-targeting',
+      label: 'Cancel',
+      shortcut: 'ESC',
+      enabled: true
+    });
+
+    return items;
+  });
+
   // Targeting state for attack/spell target selection
   readonly isTargetingCharacterId = signal<string | null>(null);
 
@@ -446,14 +484,30 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    // Expedition AC buff spells (MAPORFIC, etc.) - persists for entire expedition
+    for (const spellId of dungeon?.activeExpeditionSpells ?? []) {
+      const spellData = SpellDataLoader.getSpell(spellId);
+      if (spellData?.acModifier) {
+        spells.push({
+          name: spellData.name,
+          icon: '🛡️',
+          description: `Party AC ${spellData.acModifier}`,
+          variant: 'protection'
+        });
+      }
+    }
+
     return spells;
   });
 
 
   /**
-   * Show elevator dialog when on elevator tile
+   * Show elevator dialog when on elevator tile (unless explicitly dismissed)
    */
   readonly showElevatorDialog = computed(() => {
+    // If explicitly dismissed, don't show until party moves
+    if (this.elevatorDismissed()) return false;
+
     const dungeon = this.dungeonState();
     if (!dungeon) return false;
 
@@ -921,7 +975,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   private async initiateCampEncounter(dungeonLevel: number): Promise<void> {
     try {
       const partyChars = this.partyCharacters();
-      const latumapicActive = this.dungeonState()?.latumapicActive ?? false;
+      const dungeon = this.dungeonState();
+      const latumapicActive = dungeon?.latumapicActive ?? false;
+      const expeditionAcBuff = dungeon?.expeditionAcBuff ?? 0;
 
       // Force ambush - party caught off guard during healing
       const combatState = CombatService.initiateCombat(
@@ -932,7 +988,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         false,      // not friendly
         'random',   // treated as random encounter
         latumapicActive,
-        true        // forceAmbush - party is surprised
+        true,       // forceAmbush - party is surprised
+        expeditionAcBuff  // Expedition AC buff from MAPORFIC
       );
 
       // Update game state with combat
@@ -1012,7 +1069,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeFightMap(level: number): void {
     // Check if already initialized for this level
     if (FightMapService.getLevelState(level)) {
-      console.log(`[Maze] FIGHTMAP already initialized for level ${level}`);
+      console.log(`[Maze] FIGHTMAP already initialized for level ${level}, resetting repeatable encounters`);
+      // Reset repeatable encounters for level re-entry (e.g., Murphy's Ghost)
+      FightMapService.resetRepeatableEncounters(level);
       return;
     }
 
@@ -1236,11 +1295,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:keydown.arrowup')
   handleArrowUp(): void {
+    console.log(`[MazeComponent] ArrowUp pressed, movementLocked=${this.isMovementLocked()}`)
     if (!this.isMovementLocked()) this.moveForward();
   }
 
   @HostListener('window:keydown.arrowdown')
   handleArrowDown(): void {
+    console.log(`[MazeComponent] ArrowDown pressed, movementLocked=${this.isMovementLocked()}`)
     if (!this.isMovementLocked()) this.moveBackward();
   }
 
@@ -1262,10 +1323,14 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Check if movement should be locked (during combat, dialogs, or chest overlay)
+   * Check if movement should be locked (during combat, dialogs, overlays, or retreat cooldown)
    */
   private isMovementLocked(): boolean {
-    return this.inCombat() || this.isDialogOpen() || this.showChestOverlay() || this.showTileMessageOverlay();
+    return this.inCombat() ||
+           this.isDialogOpen() ||
+           this.showChestOverlay() ||
+           this.showTileMessageOverlay() ||
+           this.retreatCooldownActive();
   }
 
   /**
@@ -1274,9 +1339,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent): void {
-    // Handle tile message overlay first (any key dismisses, except modifiers)
-    if (this.showTileMessageOverlay() && !this.tileMessageAutoDismiss()) {
-      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+    // Handle tile message overlay (Enter key dismisses)
+    if (this.showTileMessageOverlay()) {
+      if (event.key === 'Enter') {
         event.preventDefault();
         this.handleTileMessageDismiss();
       }
@@ -1433,15 +1498,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const level = DungeonService.loadLevel(this.currentLevel());
     const position = state.dungeon.position;
 
-    // Check if tile has a message (even if no searchable content)
-    const tileMessage = TileInspectionService.getTileMessage(level, position);
+    // Check if tile has searchable content (not yet looted)
     const hasSearchableContent = TileInspectionService.hasSearchableContent(level, position, state.dungeon);
-
-    // If no message and no searchable content, show nothing found
-    if (!tileMessage && !hasSearchableContent) {
-      this.addMessage('Nothing to search here.');
-      return;
-    }
 
     // If there's searchable content, process the inspection
     if (hasSearchableContent) {
@@ -1450,29 +1508,42 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       if (result.found && result.state) {
         this.gameState.updateState(() => result.state!);
 
-        // If tile has a message, show overlay with message then item
-        if (result.tileMessage) {
-          let item: TileMessageItem | null = null;
-          if (result.itemId) {
-            const itemData = ItemDataLoader.getItem(result.itemId);
-            item = {
-              name: itemData?.name ?? result.itemId,
-              unidentifiedName: itemData?.unidentifiedName,
-              identified: false
-            };
-          }
-          this.showTileMessage(result.tileMessage, true, item);
+        // Message was already shown on entry, skip directly to item reward
+        if (result.itemId) {
+          const itemData = ItemDataLoader.getItem(result.itemId);
+          const item: TileMessageItem = {
+            name: itemData?.name ?? result.itemId,
+            unidentifiedName: itemData?.unidentifiedName,
+            identified: false
+          };
+          // Go directly to item_reward phase (skip message phase - already shown on entry)
+          this.tileMessageItem.set(item);
+          this.tileMessagePhase.set('item_reward');
         } else {
-          // No message, just add to log
-          this.addMessage(result.message || `You found ${result.itemId}!`);
+          // No item, just add to log
+          this.addMessage(result.message || 'You found something!');
         }
       } else if (result.message) {
         // Already looted or other message
         this.addMessage(result.message);
       }
-    } else if (tileMessage) {
-      // Tile has message but no item (message-only tile)
-      this.showTileMessage(tileMessage, true, null);
+      return;
+    }
+
+    // Check if this is a searchable tile that was already looted
+    const tile = DungeonService.getTile(level, position.x, position.y);
+    const isLootedSearchable = tile.types?.includes('searchable') && tile.item;
+    if (isLootedSearchable) {
+      this.addMessage('You have already searched this area.');
+      return;
+    }
+
+    // Check for message-only tiles (not searchable)
+    const tileMessage = TileInspectionService.getTileMessage(level, position);
+    if (tileMessage) {
+      this.showTileMessage(tileMessage, false, null);
+    } else {
+      this.addMessage('Nothing to search here.');
     }
   }
 
@@ -1510,10 +1581,25 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Fully dismiss the tile message overlay and check for pending encounters
    */
   private dismissTileMessageOverlay(): void {
+    console.log(`[MazeComponent] dismissTileMessageOverlay called`)
     this.tileMessagePhase.set('idle');
     this.tileMessageText.set('');
     this.tileMessageItem.set(null);
     this.tileMessageAutoDismiss.set(false);
+
+    // Activate brief input cooldown to prevent keyboard repeat from causing
+    // unwanted movement immediately after overlay dismisses
+    this.activateRetreatCooldown();
+
+    // Check for pending condition callback first (from conditional tiles)
+    const conditionCallback = this.pendingConditionCallback();
+    console.log(`[MazeComponent] Pending condition callback: ${conditionCallback ? 'EXISTS' : 'NULL'}`)
+    if (conditionCallback) {
+      this.pendingConditionCallback.set(null);
+      console.log(`[MazeComponent] Executing pending condition callback`)
+      conditionCallback();
+      return;
+    }
 
     // Check for pending fixed encounter (will be implemented in encounter flow update)
     const pending = this.pendingFixedEncounter();
@@ -1532,17 +1618,108 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initiateEncounter(this.currentLevel(), !config.cannotFlee, config, 'fixed');
   }
 
+  /**
+   * Show a condition message (letterbox style) with a callback for when dismissed
+   */
+  private showConditionMessage(message: string, style: MessageStyle, onDismiss: () => void): void {
+    console.log(`[MazeComponent] showConditionMessage called, style=${style}, callbackName=${onDismiss.name || 'anonymous'}`)
+    if (style === 'letterbox') {
+      this.pendingConditionCallback.set(onDismiss);
+      this.tileMessageText.set(message);
+      this.tileMessageAutoDismiss.set(false);
+      this.tileMessagePhase.set('message');
+    } else {
+      // 'log' style - just add to message log and call callback immediately
+      this.addMessage(message);
+      onDismiss();
+    }
+  }
+
+  /**
+   * Execute fail action from a conditional tile (retreat or teleport)
+   */
+  private executeConditionFailAction(conditionResult: ConditionResult, previousPosition: Position): void {
+    if (conditionResult.failAction === 'retreat') {
+      // Move back to previous position
+      const targetPosition = conditionResult.previousPosition || previousPosition;
+      this.updateDungeonPosition(targetPosition);
+      this.render();
+      this.activateRetreatCooldown();
+    } else if (conditionResult.failAction === 'teleport' && conditionResult.failDestination) {
+      // Teleport to specified destination
+      const dest = conditionResult.failDestination;
+      if (dest.x !== undefined && dest.y !== undefined) {
+        const state = this.gameState.state();
+        const facing = state.dungeon?.position.facing ?? 'NORTH';
+        this.updateDungeonPosition({ x: dest.x, y: dest.y, facing });
+        this.render();
+        this.activateRetreatCooldown();
+      }
+    }
+    // 'block' action - nothing to do, party stays in current position
+  }
+
+  /**
+   * Activate brief movement cooldown to prevent keyboard repeat from causing re-entry
+   * after retreat/teleport fail actions
+   */
+  private activateRetreatCooldown(): void {
+    this.retreatCooldownActive.set(true);
+    setTimeout(() => this.retreatCooldownActive.set(false), 150);
+  }
+
+  /**
+   * Update dungeon position directly
+   */
+  private updateDungeonPosition(newPosition: Position): void {
+    this.gameState.updateState(state => ({
+      ...state,
+      dungeon: state.dungeon ? {
+        ...state.dungeon,
+        position: newPosition
+      } : undefined
+    }));
+  }
+
+  /**
+   * Trigger a fixed encounter by encounter ID
+   */
+  private triggerFixedEncounterById(encounterId: string): void {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return;
+
+    console.log(`[triggerFixedEncounterById] encounterId=${encounterId}, level=${dungeon.currentLevel}, pos=(${dungeon.position.x},${dungeon.position.y})`);
+
+    // Get the fixed encounter config from FIGHTMAP service
+    const config = FightMapService.getFixedEncounterConfig(
+      dungeon.currentLevel,
+      dungeon.position.x,
+      dungeon.position.y
+    );
+
+    console.log(`[triggerFixedEncounterById] config=`, config);
+
+    if (config) {
+      // Encounter will be marked as triggered at victory (not before combat)
+      // This allows re-triggering if player flees (when fleeing is allowed)
+      this.initiateEncounter(this.currentLevel(), !config.cannotFlee, config, 'fixed');
+    } else {
+      console.log(`[triggerFixedEncounterById] NO CONFIG - encounter already triggered or not found`);
+    }
+    // If no config, encounter has already been triggered (non-repeatable) - do nothing
+  }
+
   selectElevatorLevel(level: number): void {
     const state = this.gameState.state();
     const newState = DungeonMovementService.enterLevel(state, level, 'ELEVATOR');
     this.gameState.updateState(() => newState);
     this.addMessage(`Elevator descends to Level ${level}...`);
+    this.elevatorDismissed.set(true);  // Close dialog after travel
   }
 
   cancelElevator(): void {
     this.addMessage('You step away from the elevator.');
-    // Move back one tile (reverse last movement)
-    this.moveBackward();
+    this.elevatorDismissed.set(true);  // Close dialog (party stays on tile)
   }
 
   handleMenuAction(action: string): void {
@@ -1596,6 +1773,23 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Handle targeting footer menu actions
+   * Called when player selects a monster group or cancels targeting
+   */
+  handleTargetingFooterAction(itemId: string): void {
+    if (itemId === 'cancel-targeting') {
+      this.cancelCombatTargeting();
+      return;
+    }
+
+    // Extract group ID from 'target-A', 'target-B', etc.
+    if (itemId.startsWith('target-')) {
+      const groupId = itemId.replace('target-', '') as 'A' | 'B' | 'C' | 'D';
+      this.onCombatTargetSelected(groupId);
+    }
+  }
+
+  /**
    * Set flee action for all characters and start round immediately
    */
   private selectFleeForAll(): void {
@@ -1635,7 +1829,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private executeMovement(
     moveType: 'FORWARD' | 'BACKWARD' | 'STRAFE_LEFT' | 'STRAFE_RIGHT',
-    serviceFn: (state: GameState) => GameState
+    serviceFn: (state: GameState) => MovementResult
   ): void {
     const state = this.gameState.state();
     const level = DungeonService.loadLevel(this.currentLevel());
@@ -1662,9 +1856,100 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const wasInDarkness = oldDungeon?.inDarknessZone;
     const oldDuration = oldDungeon?.lightDurationRemaining;
 
-    // Execute movement
-    const newState = serviceFn(state);
+    // Execute movement - now returns MovementResult
+    const movementResult = serviceFn(state);
+    const newState = movementResult.state;
     this.gameState.updateState(() => newState);
+
+    // Reset elevator dismissed state so dialog shows again if party returns to elevator
+    this.elevatorDismissed.set(false);
+
+    // Handle condition result if present (from conditional tiles)
+    if (movementResult.specialTileResult?.conditionResult) {
+      const conditionResult = movementResult.specialTileResult.conditionResult;
+
+      if (conditionResult.status === 'fail') {
+        console.log(`[MazeComponent] Condition FAIL - executing fail path, previousPosition=(${position.x}, ${position.y})`)
+        // Render new position before showing letterbox message
+        this.render();
+        // Chain: entry message → fail message → retreat/teleport
+        const executeFailAction = () => {
+          console.log(`[MazeComponent] executeFailAction callback called`)
+          this.executeConditionFailAction(conditionResult, position);
+        };
+
+        const showFailMessage = () => {
+          if (conditionResult.message) {
+            this.showConditionMessage(conditionResult.message, conditionResult.messageStyle ?? 'letterbox', executeFailAction);
+          } else {
+            executeFailAction();
+          }
+        };
+
+        // Show entry message first if present, then fail message
+        if (conditionResult.entryMessage) {
+          this.showConditionMessage(conditionResult.entryMessage, conditionResult.entryMessageStyle ?? 'letterbox', showFailMessage);
+        } else {
+          showFailMessage();
+        }
+        return; // Don't continue with normal movement handling
+      }
+
+      if (conditionResult.status === 'success') {
+        console.log(`[MazeComponent] Condition SUCCESS - entryMessage=${!!conditionResult.entryMessage}, message=${!!conditionResult.message}, encounterId=${conditionResult.encounterId}`)
+        // If all fields are suppressed (encounter already completed), skip entirely
+        if (!conditionResult.entryMessage && !conditionResult.message && !conditionResult.encounterId) {
+          console.log(`[MazeComponent] All fields suppressed, falling through to normal tile behavior`)
+          // Encounter already done, nothing to do - just continue with normal tile behavior
+          // (fall through to normal movement handling below)
+        } else {
+          // Render new position before showing letterbox message
+          this.render();
+          // Chain: entry message → success message → trigger encounter
+          const triggerEncounter = () => {
+            console.log(`[MazeComponent] triggerEncounter callback called, encounterId=${conditionResult.encounterId}`)
+            if (conditionResult.encounterId) {
+              this.triggerFixedEncounterById(conditionResult.encounterId);
+            }
+          };
+
+          const showSuccessMessage = () => {
+            console.log(`[MazeComponent] showSuccessMessage callback called`)
+            if (conditionResult.message) {
+              this.showConditionMessage(conditionResult.message, conditionResult.messageStyle ?? 'letterbox', triggerEncounter);
+            } else {
+              triggerEncounter();
+            }
+          };
+
+          // Show entry message first if present, then success message
+          if (conditionResult.entryMessage) {
+            console.log(`[MazeComponent] Showing entry message letterbox for SUCCESS`)
+            this.showConditionMessage(conditionResult.entryMessage, conditionResult.entryMessageStyle ?? 'letterbox', showSuccessMessage);
+          } else {
+            showSuccessMessage();
+          }
+          return; // Don't continue with normal movement handling - encounter will handle it
+        }
+      }
+
+      // 'already_completed' status or suppressed - continue with normal tile behavior
+    }
+
+    // Show entry message from non-conditional tiles in letterbox overlay
+    // This shows on every entry (not just once) for tiles with message property
+    if (movementResult.specialTileResult?.entryMessage && !movementResult.specialTileResult?.conditionResult) {
+      this.render();  // Render new position before showing letterbox
+      this.showTileMessage(movementResult.specialTileResult.entryMessage, false, null);
+      return; // Don't continue with random encounter check until dismissed
+    }
+
+    // Display any messages from special tile effects (pit traps, etc.)
+    if (movementResult.specialTileResult?.messages) {
+      for (const msg of movementResult.specialTileResult.messages) {
+        this.addMessage(msg);
+      }
+    }
 
     // Check if stairs transition to castle occurred (dungeon becomes undefined)
     if (newState.dungeon === undefined) {
@@ -1794,11 +2079,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       FightMapService.markCleared(dungeon.currentLevel, pos.x, pos.y);
     }
 
-    // Mark fixed encounter as triggered
-    // For repeatable encounters, this resets when re-entering the level
-    if (result.reason === 'fixed' && result.fixedEncounterConfig) {
-      FightMapService.markFixedEncounterTriggered(dungeon.currentLevel, pos.x, pos.y);
-    }
+    // Note: Fixed encounters are marked as triggered at VICTORY, not here
+    // This allows re-triggering if player flees (when fleeing is allowed)
 
     // For fixed encounters, check if tile has a message to show first
     if (result.reason === 'fixed' && result.fixedEncounterConfig) {
@@ -1806,8 +2088,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       if (tileMessage) {
         // Store the encounter config to trigger after message dismissal
         this.pendingFixedEncounter.set(result.fixedEncounterConfig);
-        // Show message with auto-dismiss
-        this.showTileMessage(tileMessage, true, null);
+        // Show message - requires Enter to dismiss
+        this.showTileMessage(tileMessage, false, null);
         return; // Don't initiate encounter yet - will trigger on message dismiss
       }
     }
@@ -1838,9 +2120,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Pass fixedEncounterConfig for AUX-based monster selection
       // Pass encounterReason for treasure mechanics (treasure_room = guaranteed chest)
       // Pass latumapicActive so monsters are pre-identified if spell is active
+      // Pass expeditionAcBuff for MAPORFIC party protection
       // Note: Optional chaining is defensive - dungeonState should exist here but may be
       // undefined during edge cases like combat triggered during scene transitions
-      const latumapicActive = this.dungeonState()?.latumapicActive ?? false;
+      const dungeon = this.dungeonState();
+      const latumapicActive = dungeon?.latumapicActive ?? false;
+      const expeditionAcBuff = dungeon?.expeditionAcBuff ?? 0;
       const combatState = CombatService.initiateCombat(
         dungeonLevel,
         partyChars,
@@ -1848,7 +2133,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         fixedEncounterConfig,
         false,  // isFriendlyEncounter - default to false for monster encounters
         encounterReason,
-        latumapicActive
+        latumapicActive,
+        false,  // forceAmbush - normal encounter
+        expeditionAcBuff  // Expedition AC buff from MAPORFIC
       );
 
       // Update game state with combat
@@ -2252,6 +2539,21 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private applyVictoryRewards(rewards: VictoryRewards, finalState: CombatState): void {
     console.log('[applyVictoryRewards] Applying rewards');
+
+    // Mark fixed encounter as triggered at VICTORY (not before combat)
+    // This allows re-triggering if player flees, but prevents repeats after victory
+    if (finalState.encounterReason === 'fixed') {
+      const dungeon = this.dungeonState();
+      if (dungeon) {
+        console.log(`[applyVictoryRewards] Marking fixed encounter as triggered at (${dungeon.position.x},${dungeon.position.y})`);
+        FightMapService.markFixedEncounterTriggered(
+          dungeon.currentLevel,
+          dungeon.position.x,
+          dungeon.position.y
+        );
+      }
+    }
+
     this.gameState.updateState(state => {
       // Use VictoryService to distribute XP (handles dead character exclusion)
       const rosterWithXP = VictoryService.distributeRewards(
@@ -2969,6 +3271,27 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         };
       }
+    }
+
+    // Handle expedition AC buff spells (MAPORFIC - lasts entire expedition)
+    if (spell.acModifier && spell.buffDuration === 'expedition') {
+      const dungeon = this.dungeonState();
+      if (!dungeon) {
+        return { message: `${spell.name} can only be cast in the dungeon.` };
+      }
+
+      // Already active? (use ?? [] for save files that predate this field)
+      if ((dungeon.activeExpeditionSpells ?? []).includes(spell.id)) {
+        return { message: `${caster.name} casts ${spell.name}... but its protection is already active.` };
+      }
+
+      return {
+        message: `${caster.name} casts ${spell.name}! Party defenses strengthened for the expedition.`,
+        dungeonUpdate: {
+          expeditionAcBuff: (dungeon.expeditionAcBuff ?? 0) + spell.acModifier,
+          activeExpeditionSpells: [...(dungeon.activeExpeditionSpells ?? []), spell.id]
+        }
+      };
     }
 
     // Default case

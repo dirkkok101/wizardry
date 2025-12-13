@@ -156,6 +156,12 @@ export class CampComponent implements OnInit {
     this.promptAbandonParty()
   }
 
+  @HostListener('window:keydown.escape')
+  handleEscape(): void {
+    if (this.isHealing() || this.showAbandonConfirmation()) return
+    this.returnToMaze()
+  }
+
   /**
    * Return to maze scene
    */

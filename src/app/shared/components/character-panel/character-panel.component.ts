@@ -313,8 +313,9 @@ export class CharacterPanelComponent {
   }
 
   /**
-   * Get spell points display string (e.g., "3/2/1" for levels with points)
-   * Returns null if character has no spell points
+   * Get spell points display string (e.g., "3/0/2/1" for levels with slots)
+   * Shows zeros for depleted levels up to the highest unlocked level (max > 0)
+   * Returns null if character has no spell slots
    */
   getSpellPointsDisplay(char: Character): string | null {
     if (!char.spellPoints) return null;
@@ -322,36 +323,58 @@ export class CharacterPanelComponent {
     const magePool = char.spellPoints.mage;
     const priestPool = char.spellPoints.priest;
 
-    // Extract current points from pool (level1-level7)
-    const extractPoints = (pool: typeof magePool): number[] => {
-      if (!pool) return [];
-      return [
-        pool.level1?.current ?? 0,
-        pool.level2?.current ?? 0,
-        pool.level3?.current ?? 0,
-        pool.level4?.current ?? 0,
-        pool.level5?.current ?? 0,
-        pool.level6?.current ?? 0,
-        pool.level7?.current ?? 0
-      ];
+    // Extract current and max points from pool (level1-level7)
+    const extractCurrentAndMax = (pool: typeof magePool): { current: number[], max: number[] } => {
+      if (!pool) return { current: [], max: [] };
+      return {
+        current: [
+          pool.level1?.current ?? 0,
+          pool.level2?.current ?? 0,
+          pool.level3?.current ?? 0,
+          pool.level4?.current ?? 0,
+          pool.level5?.current ?? 0,
+          pool.level6?.current ?? 0,
+          pool.level7?.current ?? 0
+        ],
+        max: [
+          pool.level1?.max ?? 0,
+          pool.level2?.max ?? 0,
+          pool.level3?.max ?? 0,
+          pool.level4?.max ?? 0,
+          pool.level5?.max ?? 0,
+          pool.level6?.max ?? 0,
+          pool.level7?.max ?? 0
+        ]
+      };
     };
 
-    const magePoints = extractPoints(magePool);
-    const priestPoints = extractPoints(priestPool);
+    const mage = extractCurrentAndMax(magePool);
+    const priest = extractCurrentAndMax(priestPool);
 
-    const hasMagePoints = magePoints.some(p => p > 0);
-    const hasPriestPoints = priestPoints.some(p => p > 0);
+    // Check if character has any spell slots (max > 0 at any level)
+    const hasMageSlots = mage.max.some(m => m > 0);
+    const hasPriestSlots = priest.max.some(m => m > 0);
 
-    if (!hasMagePoints && !hasPriestPoints) return null;
+    if (!hasMageSlots && !hasPriestSlots) return null;
 
-    // Format: show non-zero levels, separated by /
-    const formatPoints = (points: number[]): string => {
-      const nonZero = points.filter(p => p > 0);
-      return nonZero.length > 0 ? nonZero.join('/') : '';
+    // Format: show current values up to highest unlocked level (max > 0)
+    const formatPoints = (current: number[], max: number[]): string => {
+      // Find highest level with max > 0
+      let highestUnlocked = -1;
+      for (let i = max.length - 1; i >= 0; i--) {
+        if (max[i] > 0) {
+          highestUnlocked = i;
+          break;
+        }
+      }
+      if (highestUnlocked < 0) return '';
+
+      // Return current values for levels 0 through highestUnlocked
+      return current.slice(0, highestUnlocked + 1).join('/');
     };
 
-    const mageStr = formatPoints(magePoints);
-    const priestStr = formatPoints(priestPoints);
+    const mageStr = formatPoints(mage.current, mage.max);
+    const priestStr = formatPoints(priest.current, priest.max);
 
     if (mageStr && priestStr) {
       return `M:${mageStr} P:${priestStr}`;

@@ -93,7 +93,7 @@
           [message]="tileMessageText()"
           [itemFound]="tileMessageItem()"
           [autoDismiss]="tileMessageAutoDismiss()"
-          [autoDismissDelay]="1000"
+          [autoDismissDelay]="3000"
           (dismissed)="handleTileMessageDismiss()"
         />
       </div>
@@ -133,12 +133,20 @@
       [menuItems]="mazeMenuItems()"
       (itemSelected)="handleMenuAction($event)"
     />
-  } @else if (inCombat() && !combatIntroActive() && !isExecutingRound() && !showSpellDialog() && !showTargetDialog() && !isTargetingMode()) {
-    <!-- Combat mode footer: [Start Round], [Flee], [Reset Actions] -->
-    <app-scene-footer
-      [menuItems]="combatFooterMenuItems()"
-      (itemSelected)="handleCombatFooterAction($event)"
-    />
+  } @else if (inCombat() && !combatIntroActive() && !isExecutingRound() && !showSpellDialog() && !showTargetDialog()) {
+    @if (isTargetingMode()) {
+      <!-- Targeting mode footer: [A] Group, [B] Group, [ESC] Cancel -->
+      <app-scene-footer
+        [menuItems]="targetingFooterMenuItems()"
+        (itemSelected)="handleTargetingFooterAction($event)"
+      />
+    } @else {
+      <!-- Combat mode footer: [Start Round], [Flee], [Reset Actions] -->
+      <app-scene-footer
+        [menuItems]="combatFooterMenuItems()"
+        (itemSelected)="handleCombatFooterAction($event)"
+      />
+    }
   }
 
   <!-- Elevator Dialog (if active) -->

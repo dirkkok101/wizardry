@@ -95,14 +95,14 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
 
       // Should teleport based on destination
       if (tile.destination) {
-        expect(result.dungeon.position.x).toBe(tile.destination.x);
-        expect(result.dungeon.position.y).toBe(tile.destination.y);
-        expect(result.dungeon.teleportCount).toBe(1);
+        expect(result.state.dungeon!.position.x).toBe(tile.destination.x);
+        expect(result.state.dungeon!.position.y).toBe(tile.destination.y);
+        expect(result.state.dungeon!.teleportCount).toBe(1);
       }
 
       // Test loop prevention: teleport count should reset on non-teleporter tiles
       // or stop after 3 consecutive teleports
-      let consecutiveTeleports = result.dungeon.teleportCount;
+      let consecutiveTeleports = result.state.dungeon!.teleportCount;
       expect(consecutiveTeleports).toBeLessThanOrEqual(3);
     });
   });
@@ -146,15 +146,16 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
         types: ['chute']
       };
 
-      const result = DungeonMovementService.handleSpecialTile(state, chuteTile);
+      const prevPos = { ...state.dungeon!.position };
+      const result = DungeonMovementService.handleSpecialTile(state, chuteTile, prevPos);
 
       // Verify level change (chute goes down 1-3 levels)
-      expect(result.dungeon.currentLevel).toBeGreaterThan(5);
-      expect(result.dungeon.currentLevel).toBeLessThanOrEqual(10);
+      expect(result.newState.dungeon!.currentLevel).toBeGreaterThan(5);
+      expect(result.newState.dungeon!.currentLevel).toBeLessThanOrEqual(10);
 
       // Verify damage was applied to party members
-      const char1After = result.roster.get('char1')!;
-      const char2After = result.roster.get('char2')!;
+      const char1After = result.newState.roster.get('char1')!;
+      const char2After = result.newState.roster.get('char2')!;
 
       // Characters should have taken some damage (1d10 per level fallen)
       // With high probability, at least one character took damage
@@ -447,10 +448,11 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       // Run multiple times to test avoidance probability
       let avoidanceOccurred = false;
       let damageOccurred = false;
+      const prevPos = { ...state.dungeon!.position };
 
       for (let i = 0; i < 30; i++) {
-        const result = DungeonMovementService.handleSpecialTile(state, pitTile);
-        const charAfter = result.roster.get('char1')!;
+        const result = DungeonMovementService.handleSpecialTile(state, pitTile, prevPos);
+        const charAfter = result.newState.roster.get('char1')!;
 
         if (charAfter.hp === 50) {
           avoidanceOccurred = true;
@@ -509,10 +511,11 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       // Run multiple times
       let damageCount = 0;
       const trials = 20;
+      const prevPos = { ...state.dungeon!.position };
 
       for (let i = 0; i < trials; i++) {
-        const result = DungeonMovementService.handleSpecialTile(state, pitTile);
-        const charAfter = result.roster.get('char1')!;
+        const result = DungeonMovementService.handleSpecialTile(state, pitTile, prevPos);
+        const charAfter = result.newState.roster.get('char1')!;
 
         if (charAfter.hp < 50) {
           damageCount++;
@@ -630,10 +633,11 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
 
       // Test spinner multiple times to verify randomization
       const facings = new Set<string>();
+      const prevPos = { ...state.dungeon!.position };
 
       for (let i = 0; i < 20; i++) {
-        const result = DungeonMovementService.handleSpecialTile(state, spinnerTile);
-        facings.add(result.dungeon.position.facing);
+        const result = DungeonMovementService.handleSpecialTile(state, spinnerTile, prevPos);
+        facings.add(result.newState.dungeon!.position.facing);
       }
 
       // Should produce multiple different facings (at least 2)
@@ -669,20 +673,21 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
       };
 
       // Test basic movement
-      const movedState = DungeonMovementService.moveForward(state);
+      const moveResult = DungeonMovementService.moveForward(state);
+      const movedState = moveResult.state;
 
       // Position should have changed
       expect(movedState.dungeon!.position.x !== state.dungeon!.position.x ||
              movedState.dungeon!.position.y !== state.dungeon!.position.y).toBe(true);
 
-      // Test turning
+      // Test turning (turnLeft returns GameState directly)
       const turnedState = DungeonMovementService.turnLeft(movedState);
       expect(turnedState.dungeon!.position.facing).not.toBe(movedState.dungeon!.position.facing);
 
       // Test strafing
-      const strafedState = DungeonMovementService.strafeRight(turnedState);
-      expect(strafedState.dungeon!.position.x !== turnedState.dungeon!.position.x ||
-             strafedState.dungeon!.position.y !== turnedState.dungeon!.position.y).toBe(true);
+      const strafeResult = DungeonMovementService.strafeRight(turnedState);
+      expect(strafeResult.state.dungeon!.position.x !== turnedState.dungeon!.position.x ||
+             strafeResult.state.dungeon!.position.y !== turnedState.dungeon!.position.y).toBe(true);
     });
   });
 
@@ -724,9 +729,10 @@ describe('Phase 5: Special Tiles - E2E Integration', () => {
         types: ['chute']
       };
 
+      const prevPos = { ...state.dungeon!.position };
       const start = performance.now();
       for (let i = 0; i < 100; i++) {
-        DungeonMovementService.handleSpecialTile(state, chuteTile);
+        DungeonMovementService.handleSpecialTile(state, chuteTile, prevPos);
       }
       const end = performance.now();
 

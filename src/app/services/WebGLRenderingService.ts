@@ -386,9 +386,24 @@ export class WebGLRenderingService {
 
     // Render floor and ceiling for all visible tiles with per-tile darkness
     for (const tile of visibleTiles) {
+      // Unwrap coordinates for proper world-space positioning when edge wrapping is active
+      // Same logic as createWallSegment - if distance > mapSize/2, coordinate is wrapped
+      let worldX = tile.x;
+      let worldY = tile.y;
+
+      const deltaX = tile.x - position.x;
+      const deltaY = tile.y - position.y;
+
+      if (Math.abs(deltaX) > level.size.width / 2) {
+        worldX = deltaX > 0 ? tile.x - level.size.width : tile.x + level.size.width;
+      }
+      if (Math.abs(deltaY) > level.size.height / 2) {
+        worldY = deltaY > 0 ? tile.y - level.size.height : tile.y + level.size.height;
+      }
+
       const darknessFactor = LightService.getDarknessFactorForDepth(tile.darknessDepth);
-      this.renderFloor(tile.x, tile.y, darknessFactor);
-      this.renderCeiling(tile.x, tile.y, darknessFactor);
+      this.renderFloor(worldX, worldY, darknessFactor);
+      this.renderCeiling(worldX, worldY, darknessFactor);
     }
 
     // Flush remaining quads in batch

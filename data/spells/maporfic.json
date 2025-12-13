@@ -7,5 +7,6 @@
   "target": "party",
   "description": "Big Shield - Creates a persistent protective aura that reduces the Armor Class of all party members by 2 for the entire expedition. One of the essential pre-dungeon buffs cast alongside LOMILWA and LATUMAPIC before every delve.",
   "castableIn": ["combat", "camp"],
-  "acModifier": -2
+  "acModifier": -2,
+  "buffDuration": "expedition"
 }

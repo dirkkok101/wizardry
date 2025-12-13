@@ -71,6 +71,7 @@ export class TileMessageOverlayComponent {
       const phase = this.phase();
       const autoDismiss = this.autoDismiss();
       const delay = this.autoDismissDelay();
+      const message = this.message(); // Track message changes to restart timer for chained messages
 
       // Clear any existing timeout
       if (this.autoDismissTimeout) {
@@ -79,7 +80,7 @@ export class TileMessageOverlayComponent {
       }
 
       // Start auto-dismiss timer if enabled and in message phase
-      if (visible && phase === 'message' && autoDismiss) {
+      if (visible && phase === 'message' && autoDismiss && message) {
         this.autoDismissTimeout = setTimeout(() => {
           this.dismissed.emit();
         }, delay);

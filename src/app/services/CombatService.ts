@@ -115,6 +115,7 @@ export class CombatService {
    * @param encounterReason - Why encounter triggered (for treasure mechanics)
    * @param latumapicActive - Whether LATUMAPIC spell is active (monsters pre-identified)
    * @param forceAmbush - Force monsters to surprise party (used for camp encounters)
+   * @param expeditionAcBuff - Expedition-wide AC buff from MAPORFIC, etc. (default 0)
    * @returns Initial combat state with monster groups and surprise state
    */
   static initiateCombat(
@@ -125,7 +126,8 @@ export class CombatService {
     isFriendlyEncounter: boolean = false,
     encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap',
     latumapicActive: boolean = false,
-    forceAmbush: boolean = false
+    forceAmbush: boolean = false,
+    expeditionAcBuff: number = 0
   ): CombatState {
     // Calculate party levels for encounter balancing
     // - Average level: Low-level parties (< level 4) only face single monster groups
@@ -175,7 +177,8 @@ export class CombatService {
       monstersDemoralized: false,  // Calculated during combat
       surpriseState,  // Surprise mechanics
       isFriendlyEncounter,  // Track for alignment shift mechanic
-      encounterReason  // Track for treasure mechanics (treasure_room = guaranteed chest)
+      encounterReason,  // Track for treasure mechanics (treasure_room = guaranteed chest)
+      expeditionAcBuff  // Party-wide AC buff from MAPORFIC, etc.
     }
   }
 
@@ -953,9 +956,15 @@ export class CombatService {
       }
     }
 
-    // Check if target is parrying (apply -2 AC bonus)
+    // Calculate total AC modifier for defender
+    // Includes: parrying, combat-duration buffs, and expedition buffs (party only)
     const isParrying = parryingCombatants.has(target.id)
-    const acModifier = isParrying ? -2 : 0
+    const parryBonus = isParrying ? -2 : 0
+    const combatBuff = state.acModifiers.get(target.id) || 0
+    // Expedition buff only applies to party members (characters have 'id' without 'monsterId')
+    const isPartyMember = !('monsterId' in target)
+    const expeditionBuff = isPartyMember ? (state.expeditionAcBuff || 0) : 0
+    const acModifier = parryBonus + combatBuff + expeditionBuff
 
     // Check if attacker is blind (-4 attack penalty)
     const isBlind = this.hasStatusEffect(state, command.actor.id, 'BLIND')
@@ -1517,11 +1526,16 @@ export class CombatService {
     // Determine targets based on spell type and command
     let targets: Combatant[] = []
 
-    if (spell && spell.target === 'group' && command.targetGroupId) {
-      // Group-targeting spell: get all alive monsters from the target group
-      const group = state.monsterGroups.find(g => g.id === command.targetGroupId)
-      if (group) {
-        targets = group.monsters.filter(m => m.hp > 0)
+    if (spell && spell.target === 'group') {
+      if (isMonsterCaster) {
+        // Monster group spells target the party (passed in command.target)
+        targets = Array.isArray(command.target) ? command.target : command.target ? [command.target] : []
+      } else if (command.targetGroupId) {
+        // Character group spells target a monster group
+        const group = state.monsterGroups.find(g => g.id === command.targetGroupId)
+        if (group) {
+          targets = group.monsters.filter(m => m.hp > 0)
+        }
       }
     } else if (spell && spell.target === 'all_enemies') {
       // All-enemies spell: get all alive monsters from all groups
@@ -2684,7 +2698,10 @@ export class CombatService {
         // The characterUpdates from executeCommand already contains the correct final HP.
         if (!result.characterUpdates?.has(target.id)) {
           // Normal path: apply damage to accumulated state
-          const existingChar = damagedCharacters.get(target.id) || target
+          // Look up character from party array (authoritative source) instead of command.target
+          // which may have stale HP values due to immutable state updates
+          const partyChar = party.find(c => c.id === target.id)
+          const existingChar = damagedCharacters.get(target.id) || partyChar || target
           const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
           damagedCharacters.set(target.id, updated)
         }
@@ -3119,7 +3136,10 @@ export class CombatService {
           eventCharacterUpdates.set(target.id, createCharacterUpdate(charFromUpdates, charFromUpdates.hp))
         } else {
           // Normal path: apply damage to accumulated state
-          const existingChar = accumulatedCharacterUpdates.get(target.id) || target
+          // Look up character from party array (authoritative source) instead of command.target
+          // which may have stale HP values due to immutable state updates
+          const partyChar = party.find(c => c.id === target.id)
+          const existingChar = accumulatedCharacterUpdates.get(target.id) || partyChar || target
           const updated = this.applyDamageToCharacter(existingChar, result.targetDamage.damage)
           accumulatedCharacterUpdates.set(target.id, updated)
           eventCharacterUpdates.set(target.id, createCharacterUpdate(updated, updated.hp))

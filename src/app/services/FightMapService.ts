@@ -323,15 +323,22 @@ export const FightMapService = {
    */
   getFixedEncounterConfig(level: number, x: number, y: number): FixedEncounterConfig | undefined {
     const levelState = this._state.get(level)
+    console.log(`[FightMapService.getFixedEncounterConfig] level=${level}, x=${x}, y=${y}, hasLevelState=${!!levelState}`)
     if (!levelState) return undefined
 
     const key = `${x},${y}`
     const config = levelState.fixedEncounters.get(key)
+    console.log(`[FightMapService.getFixedEncounterConfig] key=${key}, config=`, config)
 
     if (!config) return undefined
 
-    // For non-repeatable encounters, only return if not triggered
-    // For repeatable encounters, always return (triggered resets on level re-entry)
+    // For non-repeatable encounters that have been triggered, return undefined
+    if (!config.repeatable && config.triggered) {
+      console.log(`[FightMapService.getFixedEncounterConfig] BLOCKED: non-repeatable and triggered`)
+      return undefined
+    }
+
+    console.log(`[FightMapService.getFixedEncounterConfig] ALLOWED: returning config`)
     return config
   },
 
@@ -349,14 +356,22 @@ export const FightMapService = {
    * For repeatable encounters, this is reset when re-entering the level
    */
   markFixedEncounterTriggered(level: number, x: number, y: number): void {
+    console.log(`[FightMapService.markFixedEncounterTriggered] level=${level}, x=${x}, y=${y}`)
     const levelState = this._state.get(level)
-    if (!levelState) return
+    if (!levelState) {
+      console.log(`[FightMapService.markFixedEncounterTriggered] NO LEVEL STATE!`)
+      return
+    }
 
     const key = `${x},${y}`
     const config = levelState.fixedEncounters.get(key)
+    console.log(`[FightMapService.markFixedEncounterTriggered] key=${key}, config before=`, config)
 
     if (config) {
       config.triggered = true
+      console.log(`[FightMapService.markFixedEncounterTriggered] config after=`, config)
+    } else {
+      console.log(`[FightMapService.markFixedEncounterTriggered] NO CONFIG FOUND!`)
     }
   },
 

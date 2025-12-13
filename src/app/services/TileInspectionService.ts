@@ -134,14 +134,16 @@ export class TileInspectionService {
       return { found: false, state, message: 'Item data not found' };
     }
 
-    // For special items, check if party already has one
+    // For special items, check if party already has one OR if it was consumed at a condition tile
     if (baseItem.category === 'special') {
       const alreadyOwned = InventoryService.partyHasItem(
         state.roster,
         state.party.members,
         itemId
       );
-      if (alreadyOwned) {
+      const wasConsumed = state.dungeon.consumedConditionItems?.has(itemId) ?? false;
+
+      if (alreadyOwned || wasConsumed) {
         // Mark tile as looted but don't give duplicate
         const newLootedTiles = new Set(state.dungeon.lootedTiles);
         newLootedTiles.add(lootKey);

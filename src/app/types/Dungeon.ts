@@ -48,6 +48,56 @@ export interface Destination {
   y?: number
 }
 
+// ============================================================================
+// Conditional Tile Types
+// ============================================================================
+
+/**
+ * Types of conditions that can gate tile entry/effects
+ */
+export type TileConditionType = 'has_item' | 'has_spell' | 'flag_set'
+
+/**
+ * Condition that must be met for tile effects to trigger
+ */
+export interface TileCondition {
+  type: TileConditionType
+  itemId?: string      // For 'has_item' - item the party must possess
+  spellId?: string     // For 'has_spell' - spell party must know (future)
+  flagName?: string    // For 'flag_set' - dungeon flag that must be set (future)
+}
+
+/**
+ * What happens when a condition fails
+ */
+export type ConditionFailAction = 'retreat' | 'block' | 'teleport'
+
+/**
+ * How messages are displayed
+ */
+export type MessageStyle = 'letterbox' | 'log'
+
+/**
+ * Configuration for when tile condition fails
+ */
+export interface OnConditionFail {
+  message: string                 // Message to display (e.g., "In terror, you flee!")
+  messageStyle?: MessageStyle     // Default: 'letterbox' (cinematic overlay)
+  autoDismiss?: boolean           // Auto-dismiss after delay (default: false)
+  autoDismissDelay?: number       // Milliseconds before auto-dismiss (default: 2500)
+  action: ConditionFailAction     // What happens after message: retreat, block, or teleport
+  destination?: Destination       // For 'teleport' action (explicit coordinates)
+}
+
+/**
+ * Configuration for when tile condition succeeds
+ */
+export interface OnConditionSuccess {
+  message?: string                // Optional success message (uses tile.message if not set)
+  messageStyle?: MessageStyle     // Default: 'letterbox'
+  // After success message, encounter triggers via existing tile.encounterId
+}
+
 export interface TileData {
   x: number
   y: number
@@ -63,6 +113,11 @@ export interface TileData {
   isOneWay?: boolean
   destinations?: Destination[]  // For elevator
   locked?: boolean  // For door tiles (test compatibility)
+  pitDamage?: string  // Dice notation for pit damage: "1d6", "1d8", "2d4" (default: "1d6")
+  // Conditional tile properties
+  condition?: TileCondition           // Condition that must be met
+  onConditionFail?: OnConditionFail   // What happens when condition fails
+  onConditionSuccess?: OnConditionSuccess  // What happens when condition succeeds (optional)
 }
 
 export interface LevelData {
@@ -99,8 +154,12 @@ export interface DungeonState {
   unlockedDoors: Set<string>        // "level_y_x" - doors unlocked by kicking
   openDoors: Set<string>            // "level_y_x" - doors currently open
   lootedTiles: Set<string>          // "level_x_y" - searchable tiles already looted
+  completedConditionTiles: Set<string>  // "level_x_y" - conditional tiles where condition succeeded
+  consumedConditionItems: Set<string>   // item IDs that were consumed at condition tiles
   latumapicActive: boolean          // LATUMAPIC active - monsters identified for expedition
   pendingCampEncounter?: boolean    // Random encounter triggered during camp healing
+  expeditionAcBuff: number          // Total AC modifier from expedition spells (e.g., MAPORFIC: -2)
+  activeExpeditionSpells: string[]  // Spell IDs active for expedition (for display)
 }
 
 export interface EncounterTable {
@@ -126,9 +185,26 @@ export interface MovementValidation {
   destination?: Destination  // NEW
 }
 
+/**
+ * Result of condition check on a tile
+ */
+export interface ConditionResult {
+  status: 'success' | 'fail' | 'already_completed'
+  message?: string              // Message to show (letterbox or log)
+  messageStyle?: MessageStyle   // How to display message
+  entryMessage?: string         // tile.message - always shown before condition check
+  entryMessageStyle?: MessageStyle  // Style for entry message (default: letterbox)
+  failAction?: ConditionFailAction  // For 'fail' status: what to do
+  failDestination?: Destination     // For 'teleport' action
+  previousPosition?: Position       // For 'retreat' action
+  encounterId?: string              // For 'success' status: encounter to trigger
+}
+
 export interface SpecialTileResult {
   newState: any  // GameState (avoid circular import)
   messages: string[]
+  conditionResult?: ConditionResult  // Result of condition check (if tile has condition)
+  entryMessage?: string  // tile.message for non-conditional tiles (shown in letterbox)
 }
 
 // Simplified dungeon representation for testing

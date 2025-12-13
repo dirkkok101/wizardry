@@ -113,6 +113,16 @@ export class SaveService {
       ? Array.from((state.dungeon as any).lootedTiles)
       : []
 
+    // Handle completedConditionTiles Set (convert to array for JSON serialization)
+    const completedConditionTilesArray = (state.dungeon as any).completedConditionTiles
+      ? Array.from((state.dungeon as any).completedConditionTiles)
+      : []
+
+    // Handle consumedConditionItems Set (convert to array for JSON serialization)
+    const consumedConditionItemsArray = (state.dungeon as any).consumedConditionItems
+      ? Array.from((state.dungeon as any).consumedConditionItems)
+      : []
+
     return {
       ...state,
       roster: Array.from(state.roster.entries()),
@@ -123,7 +133,9 @@ export class SaveService {
         visitedTiles: visitedTilesArray,
         unlockedDoors: unlockedDoorsArray,
         openDoors: openDoorsArray,
-        lootedTiles: lootedTilesArray
+        lootedTiles: lootedTilesArray,
+        completedConditionTiles: completedConditionTilesArray,
+        consumedConditionItems: consumedConditionItemsArray
       }
     }
   }
@@ -212,6 +224,20 @@ export class SaveService {
     const lootedTilesData = data.dungeon?.lootedTiles
     const lootedTiles = Array.isArray(lootedTilesData) ? new Set(lootedTilesData) : new Set()
 
+    // Deserialize completedConditionTiles Set (from array)
+    // Handle old saves that don't have completedConditionTiles
+    const completedConditionTilesData = data.dungeon?.completedConditionTiles
+    const completedConditionTiles = Array.isArray(completedConditionTilesData)
+      ? new Set(completedConditionTilesData)
+      : new Set()
+
+    // Deserialize consumedConditionItems Set (from array)
+    // Handle old saves that don't have consumedConditionItems
+    const consumedConditionItemsData = data.dungeon?.consumedConditionItems
+    const consumedConditionItems = Array.isArray(consumedConditionItemsData)
+      ? new Set(consumedConditionItemsData)
+      : new Set()
+
     return {
       ...data,
       roster: new Map(data.roster || []),
@@ -225,6 +251,8 @@ export class SaveService {
         unlockedDoors,
         openDoors,
         lootedTiles,
+        completedConditionTiles,
+        consumedConditionItems,
         // Light system defaults for old saves
         inDarknessZone: data.dungeon.inDarknessZone ?? false,
         lightSpellType: data.dungeon.lightSpellType,

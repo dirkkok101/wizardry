@@ -191,9 +191,23 @@ export class InventoryService {
    * Checks by item ID regardless of identified status.
    */
   static partyHasItem(roster: Map<string, Character>, memberIds: string[], itemId: string): boolean {
-    return memberIds.some(id => {
+    console.log(`[Inventory] Checking partyHasItem: "${itemId}"`)
+
+    // Log each character's inventory for debugging
+    for (const id of memberIds) {
+      const char = roster.get(id)
+      if (char) {
+        const itemIds = char.inventory.map(i => i.id)
+        console.log(`[Inventory]   ${char.name}: [${itemIds.join(', ')}]`)
+      }
+    }
+
+    const result = memberIds.some(id => {
       const char = roster.get(id)
       return char && this.hasItem(char, itemId)
     })
+
+    console.log(`[Inventory] Result: ${result}`)
+    return result
   }
 }

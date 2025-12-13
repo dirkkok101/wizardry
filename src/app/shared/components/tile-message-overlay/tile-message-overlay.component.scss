@@ -16,13 +16,7 @@
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
-    animation: backdrop-fade-in 0.3s ease-out;
   }
-}
-
-@keyframes backdrop-fade-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
 }
 
 // ============================================
@@ -38,32 +32,14 @@
   pointer-events: none;
 }
 
-// Sliding bars (top and bottom)
+// Letterbox bars (top and bottom) - no animation, show final state
 .letterbox-bar {
   flex: 0 0 auto;
-  height: 0;
+  height: 80px;
   background: transparent;
-
-  &.top {
-    animation: bar-slide-down 0.4s ease-out forwards;
-  }
-
-  &.bottom {
-    animation: bar-slide-up 0.4s ease-out forwards;
-  }
 }
 
-@keyframes bar-slide-down {
-  0% { height: 0; }
-  100% { height: 100px; }
-}
-
-@keyframes bar-slide-up {
-  0% { height: 0; }
-  100% { height: 100px; }
-}
-
-// Center content area
+// Center content area - no animation, show final state
 .letterbox-content {
   flex: 1;
   display: flex;
@@ -72,13 +48,6 @@
   padding: 2rem;
   width: 100%;
   background: rgba(0, 0, 0, 0.95);
-  opacity: 0;
-  animation: text-fade-in 0.5s ease-out 0.3s forwards;
-}
-
-@keyframes text-fade-in {
-  0% { opacity: 0; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
 }
 
 // Message text styling
@@ -120,28 +89,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: overlay-fade-in 0.4s ease-out;
-}
-
-@keyframes overlay-fade-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
 }
 
 .reward-content {
   text-align: center;
-  animation: content-slide-up 0.4s ease-out;
-}
-
-@keyframes content-slide-up {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .reward-title {
@@ -186,40 +137,7 @@
   font-family: var(--font-body);
   font-size: 0.85rem;
   letter-spacing: 0.05em;
-  animation: hint-pulse 2s ease-in-out infinite;
   z-index: 30;
-}
-
-@keyframes hint-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-
-// ============================================
-// REDUCED MOTION SUPPORT
-// ============================================
-
-@media (prefers-reduced-motion: reduce) {
-  .tile-message-overlay::before,
-  .letterbox-bar,
-  .letterbox-content,
-  .item-reward-overlay,
-  .reward-content,
-  .dismiss-hint {
-    animation: none;
-  }
-
-  .letterbox-bar {
-    height: 80px;
-  }
-
-  .letterbox-content {
-    opacity: 1;
-  }
-
-  .tile-message-overlay::before {
-    opacity: 1;
-  }
 }
 
 // ============================================

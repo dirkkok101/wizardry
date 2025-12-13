@@ -112,7 +112,11 @@ export function createTestGameState(overrides?: Partial<GameState>): GameState {
       unlockedDoors: new Set(),
       openDoors: new Set(),
       lootedTiles: new Set(),
-      latumapicActive: false
+      completedConditionTiles: new Set(),
+      consumedConditionItems: new Set(),
+      latumapicActive: false,
+      expeditionAcBuff: 0,
+      activeExpeditionSpells: []
     },
     settings: {
       difficulty: 'NORMAL',

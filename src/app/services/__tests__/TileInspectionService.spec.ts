@@ -562,6 +562,71 @@ describe('TileInspectionService', () => {
       expect(result.message).toBe('You search but find nothing new.');
     });
 
+    it('does not give special item if it was consumed at a condition tile', () => {
+      // Mock to return a special item
+      jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {
+        return createItem(itemId, 'Bronze Key', { category: 'special' })
+      })
+
+      const level: LevelData = {
+        level: 1,
+        name: 'Test Level',
+        size: { width: 20, height: 20 },
+        startPosition: { x: 0, y: 0, facing: 'north' },
+        edgeWrapping: false,
+        tiles: [
+          { x: 0, y: 0, walls: { north: 'wall', south: 'wall', east: 'wall', west: 'wall' }, types: ['searchable'], item: 'bronze_key' },
+        ],
+        encounterRate: 0.1,
+        encounterTable: 'level_1',
+      };
+
+      // Party does NOT have the item (it was consumed at a condition tile)
+      const character = createTestCharacter({ id: 'char1', inventory: [] });
+      const state: GameState = {
+        ...createTestGameState(),
+        party: {
+          members: ['char1'],
+          formation: { frontRow: ['char1'], backRow: [] },
+          position: { level: 1, x: 0, y: 0, facing: 'NORTH' },
+          light: false,
+          gold: 0,
+        },
+        roster: new Map([['char1', character]]),
+        dungeon: {
+          currentLevel: 1,
+          position: { x: 0, y: 0, facing: 'NORTH' },
+          lightActive: false,
+          lightRadius: 0,
+          teleportCount: 0,
+          defeatedEncounters: [],
+          unlockedDoors: new Set(),
+          openDoors: new Set(),
+          visitedTiles: new Set(),
+          lootedTiles: new Set(),
+          completedConditionTiles: new Set(),
+          consumedConditionItems: new Set(['bronze_key']), // Item was consumed at a condition tile
+          inDarknessZone: false,
+          latumapicActive: false,
+          expeditionAcBuff: 0,
+          activeExpeditionSpells: [],
+        },
+      };
+
+      const result = TileInspectionService.inspectTileWithState(state, level);
+
+      // Should not give the item - it was consumed at a condition tile
+      expect(result.found).toBe(false);
+      expect(result.message).toBe('You search but find nothing new.');
+
+      // Character should still have no items
+      const charAfter = result.state!.roster.get('char1')!;
+      expect(charAfter.inventory).toHaveLength(0);
+
+      // Tile should still be marked as looted
+      expect(result.state!.dungeon!.lootedTiles.has('1_0_0')).toBe(true);
+    });
+
     it('still gives non-special items even if party has one', () => {
       // Mock to return a NON-special item (normal weapon)
       jest.spyOn(ItemDataLoader, 'getItem').mockImplementation((itemId: string) => {

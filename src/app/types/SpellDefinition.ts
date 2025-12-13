@@ -108,6 +108,8 @@ export interface SpellDefinition {
   // AC Modification (PORFIC, MATU, etc.)
   acModifier?: number  // Negative = better defense
   acBonus?: number     // Legacy field, deprecated
+  /** Duration of buff effects: 'combat' (single battle) or 'expedition' (until leaving dungeon) */
+  buffDuration?: 'combat' | 'expedition'
 
   // Status Effects
   statusEffect?: 'ASLEEP' | 'BLIND' | 'SILENCED' | 'INVISIBLE' | 'PARALYZED' | 'POISONED' |

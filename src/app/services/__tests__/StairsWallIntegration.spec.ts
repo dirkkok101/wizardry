@@ -74,7 +74,7 @@ describe('Stairs Wall Integration', () => {
       const resultState = DungeonMovementService.moveForward(state);
 
       // Assert 2: Should transition to castle (dungeon becomes undefined)
-      expect(resultState.dungeon).toBeUndefined();
+      expect(resultState.state.dungeon).toBeUndefined();
     });
 
     it('preserves all game state during stairs_up transition', () => {
@@ -100,10 +100,10 @@ describe('Stairs Wall Integration', () => {
       const resultState = DungeonMovementService.moveForward(state);
 
       // Assert: All non-dungeon state should be preserved
-      expect(resultState.roster).toEqual(state.roster);
-      expect(resultState.party.gold).toBe(500);
-      expect(resultState.party.members).toEqual(['char1']);
-      expect(resultState.settings).toEqual(state.settings);
+      expect(resultState.state.roster).toEqual(state.roster);
+      expect(resultState.state.party.gold).toBe(500);
+      expect(resultState.state.party.members).toEqual(['char1']);
+      expect(resultState.state.settings).toEqual(state.settings);
     });
   });
 
@@ -215,10 +215,10 @@ describe('Stairs Wall Integration', () => {
         const resultState = DungeonMovementService.moveForward(state);
 
         // Assert 2: Should transition to level 3 at specified coordinates
-        expect(resultState.dungeon!.currentLevel).toBe(3);
-        expect(resultState.dungeon!.position.x).toBe(10);
-        expect(resultState.dungeon!.position.y).toBe(15);
-        expect(resultState.dungeon!.position.facing).toBe('NORTH'); // Preserves facing
+        expect(resultState.state.dungeon!.currentLevel).toBe(3);
+        expect(resultState.state.dungeon!.position.x).toBe(10);
+        expect(resultState.state.dungeon!.position.y).toBe(15);
+        expect(resultState.state.dungeon!.position.facing).toBe('NORTH'); // Preserves facing
       } finally {
         // Restore original methods
         jest.restoreAllMocks();
@@ -246,9 +246,9 @@ describe('Stairs Wall Integration', () => {
       const result = DungeonMovementService.moveForward(state);
 
       // Should move to (0, 1) - normal movement
-      expect(result.dungeon?.position.y).toBe(1);
-      expect(result.dungeon?.position.x).toBe(0);
-      expect(result.dungeon?.currentLevel).toBe(1);
+      expect(result.state.dungeon?.position.y).toBe(1);
+      expect(result.state.dungeon?.position.x).toBe(0);
+      expect(result.state.dungeon?.currentLevel).toBe(1);
     });
 
     it('allows strafe movement without triggering stairs', () => {
@@ -270,9 +270,9 @@ describe('Stairs Wall Integration', () => {
       const result = DungeonMovementService.strafeLeft(state);
 
       // Should move without triggering stairs
-      expect(result.dungeon).toBeDefined();
-      expect(result.dungeon!.currentLevel).toBe(1);
-      expect(result.dungeon!.position.facing).toBe('WEST'); // Facing unchanged
+      expect(result.state.dungeon).toBeDefined();
+      expect(result.state.dungeon!.currentLevel).toBe(1);
+      expect(result.state.dungeon!.position.facing).toBe('WEST'); // Facing unchanged
     });
 
     it('allows backward movement without triggering stairs', () => {
@@ -294,8 +294,8 @@ describe('Stairs Wall Integration', () => {
       const result = DungeonMovementService.moveBackward(state);
 
       // Should move without triggering stairs
-      expect(result.dungeon).toBeDefined();
-      expect(result.dungeon!.currentLevel).toBe(1);
+      expect(result.state.dungeon).toBeDefined();
+      expect(result.state.dungeon!.currentLevel).toBe(1);
     });
   });
 
@@ -363,12 +363,12 @@ describe('Stairs Wall Integration', () => {
       const state: GameState = { ...baseState, dungeon };
 
       // Test rotation doesn't trigger
-      let result = DungeonMovementService.turnLeft(state);
-      expect(result.dungeon).toBeDefined();
+      let turnResult = DungeonMovementService.turnLeft(state);
+      expect(turnResult.dungeon).toBeDefined();
 
       // Test forward movement DOES trigger
-      result = DungeonMovementService.moveForward(state);
-      expect(result.dungeon).toBeUndefined(); // Castle transition
+      const moveResult = DungeonMovementService.moveForward(state);
+      expect(moveResult.state.dungeon).toBeUndefined(); // Castle transition
     });
 
     it('handles moving to stairs tile then stepping on it', () => {
@@ -391,10 +391,10 @@ describe('Stairs Wall Integration', () => {
       const result = DungeonMovementService.moveForward(state);
 
       // Should be at (0,0) now, facing south
-      expect(result.dungeon?.position.x).toBe(0);
-      expect(result.dungeon?.position.y).toBe(0);
-      expect(result.dungeon?.position.facing).toBe('SOUTH');
-      expect(result.dungeon?.currentLevel).toBe(1);
+      expect(result.state.dungeon?.position.x).toBe(0);
+      expect(result.state.dungeon?.position.y).toBe(0);
+      expect(result.state.dungeon?.position.facing).toBe('SOUTH');
+      expect(result.state.dungeon?.currentLevel).toBe(1);
     });
 
     it('handles stairs transition with missing destination coordinates', () => {
@@ -447,9 +447,9 @@ describe('Stairs Wall Integration', () => {
         const result = DungeonMovementService.moveForward(state);
 
         // Should use default coordinates (0, 0)
-        expect(result.dungeon!.currentLevel).toBe(2);
-        expect(result.dungeon!.position.x).toBe(0);
-        expect(result.dungeon!.position.y).toBe(0);
+        expect(result.state.dungeon!.currentLevel).toBe(2);
+        expect(result.state.dungeon!.position.x).toBe(0);
+        expect(result.state.dungeon!.position.y).toBe(0);
       } finally {
         jest.restoreAllMocks();
       }
@@ -485,7 +485,7 @@ describe('Stairs Wall Integration', () => {
       const result = DungeonMovementService.moveForward(state);
 
       // Step 4: Verify handleStairsTransition was called and worked
-      expect(result.dungeon).toBeUndefined(); // Castle transition completed
+      expect(result.state.dungeon).toBeUndefined(); // Castle transition completed
     });
 
     it('verifies immutable state updates throughout stairs transition', () => {
@@ -516,8 +516,8 @@ describe('Stairs Wall Integration', () => {
       expect(state.dungeon!.position.y).toBe(0);
 
       // Verify new state is different
-      expect(result).not.toBe(state);
-      expect(result.dungeon).toBeUndefined();
+      expect(result.state).not.toBe(state);
+      expect(result.state.dungeon).toBeUndefined();
     });
   });
 });

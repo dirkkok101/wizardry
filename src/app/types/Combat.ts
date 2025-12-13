@@ -119,6 +119,11 @@ export interface CombatState {
    * Treasure room encounters guarantee a chest on victory
    */
   encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
+  /**
+   * Expedition-wide AC buff (from MAPORFIC, etc.)
+   * Applied to all party members in addition to combat-duration buffs
+   */
+  expeditionAcBuff?: number
 }
 
 export interface AttackResult {

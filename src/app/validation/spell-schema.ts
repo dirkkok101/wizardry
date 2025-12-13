@@ -242,6 +242,8 @@ export const SpellDefinitionSchema = z.object({
 
   acModifier: z.number().optional(),
   acBonus: z.number().optional(),
+  /** Duration of buff effects: 'combat' (single battle) or 'expedition' (until leaving dungeon) */
+  buffDuration: z.enum(['combat', 'expedition']).optional(),
   statusEffect: StatusEffectSchema,
 
   instantDeath: InstantDeathSchema.optional(),

@@ -256,4 +256,132 @@ describe('FightMapService', () => {
       expect(FightMapService.getLevelState(99)).toBeUndefined()
     })
   })
+
+  describe('fixed encounters', () => {
+    describe('initializeFixedEncounter', () => {
+      it('should initialize fixed encounter with triggered=false', () => {
+        FightMapService.initializeLevel(1, [{ x: 13, y: 5, isRoom: true, hasDoor: true }])
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true,
+          cannotFlee: true
+        })
+
+        const config = FightMapService.getFixedEncounterConfig(1, 13, 5)
+
+        expect(config).toBeDefined()
+        expect(config!.encounterId).toBe('murphy_ghost')
+        expect(config!.repeatable).toBe(true)
+        expect(config!.cannotFlee).toBe(true)
+        expect(config!.triggered).toBe(false)
+      })
+    })
+
+    describe('markFixedEncounterTriggered', () => {
+      it('should set triggered=true after encounter', () => {
+        FightMapService.initializeLevel(1, [{ x: 13, y: 5, isRoom: true, hasDoor: true }])
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true
+        })
+
+        FightMapService.markFixedEncounterTriggered(1, 13, 5)
+
+        const config = FightMapService.getFixedEncounterConfig(1, 13, 5)
+        expect(config!.triggered).toBe(true)
+      })
+    })
+
+    describe('getFixedEncounterConfig', () => {
+      it('should return config for repeatable encounter even when triggered', () => {
+        FightMapService.initializeLevel(1, [{ x: 13, y: 5, isRoom: true, hasDoor: true }])
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true
+        })
+        FightMapService.markFixedEncounterTriggered(1, 13, 5)
+
+        // Repeatable encounter should still return config even when triggered
+        const config = FightMapService.getFixedEncounterConfig(1, 13, 5)
+        expect(config).toBeDefined()
+        expect(config!.triggered).toBe(true)
+      })
+
+      it('should return undefined for non-repeatable encounter when triggered', () => {
+        FightMapService.initializeLevel(1, [{ x: 5, y: 5, isRoom: true, hasDoor: true }])
+        FightMapService.initializeFixedEncounter(1, 5, 5, {
+          encounterId: 'one_time_boss',
+          repeatable: false
+        })
+        FightMapService.markFixedEncounterTriggered(1, 5, 5)
+
+        // Non-repeatable encounter should return undefined when triggered
+        const config = FightMapService.getFixedEncounterConfig(1, 5, 5)
+        expect(config).toBeUndefined()
+      })
+    })
+
+    describe('resetRepeatableEncounters', () => {
+      it('should reset triggered flag on repeatable encounters only', () => {
+        FightMapService.initializeLevel(1, [
+          { x: 13, y: 5, isRoom: true, hasDoor: true },
+          { x: 5, y: 5, isRoom: true, hasDoor: true }
+        ])
+        // Murphy's Ghost - repeatable
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true
+        })
+        // One-time boss - not repeatable
+        FightMapService.initializeFixedEncounter(1, 5, 5, {
+          encounterId: 'one_time_boss',
+          repeatable: false
+        })
+
+        // Trigger both encounters
+        FightMapService.markFixedEncounterTriggered(1, 13, 5)
+        FightMapService.markFixedEncounterTriggered(1, 5, 5)
+
+        // Reset repeatable encounters (simulates level re-entry)
+        FightMapService.resetRepeatableEncounters(1)
+
+        // Murphy's Ghost should have triggered reset to false
+        const murphyConfig = FightMapService.getFixedEncounterConfig(1, 13, 5)
+        expect(murphyConfig).toBeDefined()
+        expect(murphyConfig!.triggered).toBe(false)
+
+        // One-time boss should still be undefined (triggered and non-repeatable)
+        const bossConfig = FightMapService.getFixedEncounterConfig(1, 5, 5)
+        expect(bossConfig).toBeUndefined()
+      })
+
+      it('should not affect other levels', () => {
+        FightMapService.initializeLevel(1, [{ x: 13, y: 5, isRoom: true, hasDoor: true }])
+        FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true, hasDoor: true }])
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true
+        })
+        FightMapService.initializeFixedEncounter(2, 10, 10, {
+          encounterId: 'level2_repeatable',
+          repeatable: true
+        })
+
+        // Trigger both
+        FightMapService.markFixedEncounterTriggered(1, 13, 5)
+        FightMapService.markFixedEncounterTriggered(2, 10, 10)
+
+        // Reset only level 1
+        FightMapService.resetRepeatableEncounters(1)
+
+        // Level 1 should be reset
+        const level1Config = FightMapService.getFixedEncounterConfig(1, 13, 5)
+        expect(level1Config!.triggered).toBe(false)
+
+        // Level 2 should still be triggered
+        const level2Config = FightMapService.getFixedEncounterConfig(2, 10, 10)
+        expect(level2Config!.triggered).toBe(true)
+      })
+    })
+  })
 })

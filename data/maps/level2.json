@@ -18,10 +18,10 @@
           "x": 0,
           "y": 0,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
-            "west": "stairs_up"
+            "west": "wall"
           },
           "destination": {
             "type": "castle"
@@ -32,19 +32,19 @@
           "y": 0,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 2,
           "y": 0,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "open",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -91,7 +91,7 @@
           "x": 7,
           "y": 0,
           "walls": {
-            "north": "door",
+            "north": "wall",
             "east": "open",
             "south": "wall",
             "west": "open"
@@ -102,7 +102,7 @@
           "y": 0,
           "walls": {
             "north": "wall",
-            "east": "wall",
+            "east": "open",
             "south": "wall",
             "west": "open"
           }
@@ -111,23 +111,21 @@
           "x": 9,
           "y": 0,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "wall"
-          },
-          "types": ["darkness"]
+            "west": "open"
+          }
         },
         {
           "x": 10,
           "y": 0,
           "walls": {
-            "north": "open",
-            "east": "door",
-            "south": "open",
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
             "west": "open"
-          },
-          "types": ["darkness"]
+          }
         },
         {
           "x": 11,
@@ -136,9 +134,8 @@
             "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "door"
-          },
-          "types": ["darkness"]
+            "west": "open"
+          }
         },
         {
           "x": 12,
@@ -148,74 +145,71 @@
             "east": "open",
             "south": "wall",
             "west": "open"
-          },
-          "types": ["darkness"]
+          }
         },
         {
           "x": 13,
           "y": 0,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "door",
             "south": "wall",
             "west": "open"
-          },
-          "types": ["darkness"]
+          }
         },
         {
           "x": 14,
           "y": 0,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "open",
             "south": "wall",
-            "west": "open"
+            "west": "door"
           },
-          "types": ["darkness"]
+          "types": ["room"]
         },
         {
           "x": 15,
           "y": 0,
           "walls": {
-            "north": "wall",
-            "east": "open",
+            "north": "open",
+            "east": "wall",
             "south": "wall",
             "west": "open"
           },
-          "types": ["darkness"]
+          "types": ["room"]
         },
         {
           "x": 16,
           "y": 0,
           "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["darkness"]
+            "north": "open",
+            "east": "door",
+            "south": "door",
+            "west": "wall"
+          }
         },
         {
           "x": 17,
           "y": 0,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "open",
             "south": "wall",
-            "west": "open"
+            "west": "door"
           },
-          "types": ["darkness"]
+          "types": ["room"]
         },
         {
           "x": 18,
           "y": 0,
           "walls": {
-            "north": "wall",
-            "east": "open",
+            "north": "open",
+            "east": "wall",
             "south": "wall",
             "west": "open"
           },
-          "types": ["darkness"]
+          "types": ["room"]
         },
         {
           "x": 19,
@@ -224,17 +218,16 @@
             "north": "open",
             "east": "wall",
             "south": "wall",
-            "west": "open"
-          },
-          "types": ["darkness"]
+            "west": "wall"
+          }
         },
         {
           "x": 0,
           "y": 1,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -252,9 +245,9 @@
           "x": 2,
           "y": 1,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -292,6 +285,36 @@
           "x": 6,
           "y": 1,
           "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 9,
+          "y": 1,
+          "walls": {
             "north": "open",
             "east": "open",
             "south": "wall",
@@ -300,82 +323,461 @@
           "types": ["room"]
         },
         {
-          "x": 7,
+          "x": 10,
           "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 11,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 12,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 14,
+          "y": 1,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 15,
+          "y": 1,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 16,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 1,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 18,
+          "y": 1,
+          "walls": {
+            "north": "wall",
+            "east": "door",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 19,
+          "y": 1,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "door"
+          }
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 4,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 5,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 6,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 10,
+          "y": 2,
+          "walls": {
+            "north": "door",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 11,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 12,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 14,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 2,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 18,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 19,
+          "y": 2,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 4,
+          "y": 3,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 5,
+          "y": 3,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 6,
+          "y": 3,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 3,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 3,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 9,
+          "y": 3,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 10,
+          "y": 3,
           "walls": {
             "north": "open",
             "east": "open",
             "south": "door",
             "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 8,
-          "y": 1,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 9,
-          "y": 1,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 1,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
+          }
         },
         {
           "x": 11,
-          "y": 1,
+          "y": 3,
           "walls": {
-            "north": "wall",
-            "east": "wall",
+            "north": "open",
+            "east": "open",
             "south": "wall",
-            "west": "wall"
+            "west": "open"
           }
         },
         {
           "x": 12,
-          "y": 1,
+          "y": 3,
           "walls": {
             "north": "wall",
-            "east": "wall",
+            "east": "open",
             "south": "wall",
-            "west": "wall"
+            "west": "open"
           }
         },
         {
           "x": 13,
-          "y": 1,
+          "y": 3,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
-            "west": "wall"
+            "south": "open",
+            "west": "open"
           }
         },
         {
           "x": 14,
-          "y": 1,
+          "y": 3,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -385,7 +787,7 @@
         },
         {
           "x": 15,
-          "y": 1,
+          "y": 3,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -395,312 +797,79 @@
         },
         {
           "x": 16,
-          "y": 1,
+          "y": 3,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
         {
           "x": 17,
-          "y": 1,
+          "y": 3,
           "walls": {
             "north": "wall",
-            "east": "wall",
-            "south": "wall",
+            "east": "open",
+            "south": "open",
             "west": "wall"
-          }
+          },
+          "types": ["room"]
         },
         {
           "x": 18,
-          "y": 1,
+          "y": 3,
           "walls": {
             "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 19,
-          "y": 1,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 0,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 1,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 2,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 3,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 4,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 5,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 6,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 8,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 9,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 2,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 13,
-          "y": 2,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 14,
-          "y": 2,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 15,
-          "y": 2,
-          "walls": {
-            "north": "door",
             "east": "door",
-            "south": "wall",
-            "west": "door"
+            "south": "open",
+            "west": "open"
           },
           "types": ["room"]
         },
         {
-          "x": 16,
-          "y": 2,
+          "x": 19,
+          "y": 3,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "open",
-            "south": "wall",
+            "south": "open",
             "west": "door"
           }
         },
         {
-          "x": 17,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 18,
-          "y": 2,
+          "x": 0,
+          "y": 4,
           "walls": {
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 19,
-          "y": 2,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 0,
-          "y": 3,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
             "west": "wall"
           }
         },
         {
           "x": 1,
-          "y": 3,
+          "y": 4,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "door",
             "west": "wall"
           }
         },
         {
           "x": 2,
-          "y": 3,
+          "y": 4,
           "walls": {
-            "north": "wall",
-            "east": "open",
+            "north": "open",
+            "east": "wall",
             "south": "open",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 3,
-          "y": 3,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 4,
-          "y": 3,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 5,
-          "y": 3,
+          "y": 4,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -709,8 +878,30 @@
           }
         },
         {
+          "x": 4,
+          "y": 4,
+          "walls": {
+            "north": "door",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 5,
+          "y": 4,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
           "x": 6,
-          "y": 3,
+          "y": 4,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -720,19 +911,19 @@
         },
         {
           "x": 7,
-          "y": 3,
+          "y": 4,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
         {
           "x": 8,
-          "y": 3,
+          "y": 4,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "wall",
             "west": "wall"
@@ -740,96 +931,51 @@
         },
         {
           "x": 9,
-          "y": 3,
+          "y": 4,
           "walls": {
             "north": "open",
             "east": "open",
             "south": "open",
             "west": "wall"
-          },
-          "types": ["darkness"]
+          }
         },
         {
           "x": 10,
-          "y": 3,
+          "y": 4,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 11,
+          "y": 4,
           "walls": {
             "north": "open",
             "east": "wall",
             "south": "open",
             "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 3,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
           }
         },
         {
           "x": 12,
-          "y": 3,
+          "y": 4,
           "walls": {
-            "north": "door",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 13,
-          "y": 3,
-          "walls": {
-            "north": "wall",
-            "east": "door",
             "south": "wall",
             "west": "wall"
           },
           "types": ["searchable", "room"],
-          "message": "A STATUE OF A MONSTER WITH THE BODY OF A CHICKEN AND THE HEAD OF A CAT. THE STATUE IS MADE OF BRONZE",
+          "message": "ON A SILVERY DISK STANDS A STATUE OF A FROG WEARING A RED AND BLUE CAPE.\nTHE STATUE ANIMATES AND SHAKES ITS LEGS WHILE IT YELLS \"YEAH .. YEAH ..\"",
           "promptSearch": true,
-          "item": "bronze_key"
+          "item": "statuette_frog"
         },
         {
-          "x": 14,
-          "y": 3,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "door",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 15,
-          "y": 3,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 16,
-          "y": 3,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 17,
-          "y": 3,
+          "x": 13,
+          "y": 4,
           "walls": {
             "north": "open",
             "east": "wall",
@@ -838,8 +984,8 @@
           }
         },
         {
-          "x": 18,
-          "y": 3,
+          "x": 14,
+          "y": 4,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -848,8 +994,50 @@
           }
         },
         {
+          "x": 15,
+          "y": 4,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 4,
+          "walls": {
+            "north": "open",
+            "east": "door",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 4,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "door"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 18,
+          "y": 4,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
           "x": 19,
-          "y": 3,
+          "y": 4,
           "walls": {
             "north": "open",
             "east": "wall",
@@ -859,7 +1047,17 @@
         },
         {
           "x": 0,
-          "y": 4,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 5,
           "walls": {
             "north": "open",
             "east": "wall",
@@ -868,48 +1066,38 @@
           }
         },
         {
-          "x": 1,
-          "y": 4,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
           "x": 2,
-          "y": 4,
+          "y": 5,
           "walls": {
             "north": "wall",
-            "east": "wall",
-            "south": "wall",
+            "east": "open",
+            "south": "open",
             "west": "wall"
           }
         },
         {
           "x": 3,
-          "y": 4,
+          "y": 5,
           "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
+            "north": "wall",
+            "east": "door",
+            "south": "open",
+            "west": "open"
           }
         },
         {
           "x": 4,
-          "y": 4,
+          "y": 5,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
-            "west": "wall"
+            "south": "door",
+            "west": "door"
           }
         },
         {
           "x": 5,
-          "y": 4,
+          "y": 5,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -919,7 +1107,7 @@
         },
         {
           "x": 6,
-          "y": 4,
+          "y": 5,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -929,7 +1117,209 @@
         },
         {
           "x": 7,
-          "y": 4,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 9,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 10,
+          "y": 5,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 11,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 12,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 14,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 5,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 18,
+          "y": 5,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 19,
+          "y": 5,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 3,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 4,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 5,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 6,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 6,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -939,7 +1329,7 @@
         },
         {
           "x": 8,
-          "y": 4,
+          "y": 6,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -949,29 +1339,27 @@
         },
         {
           "x": 9,
-          "y": 4,
+          "y": 6,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["darkness"]
+          }
         },
         {
           "x": 10,
-          "y": 4,
+          "y": 6,
           "walls": {
-            "north": "open",
+            "north": "door",
             "east": "wall",
             "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
+            "west": "wall"
+          }
         },
         {
           "x": 11,
-          "y": 4,
+          "y": 6,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -981,647 +1369,230 @@
         },
         {
           "x": 12,
-          "y": 4,
+          "y": 6,
           "walls": {
-            "north": "door",
+            "north": "wall",
             "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 14,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 6,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "open",
             "south": "wall",
             "west": "wall"
           },
           "types": ["room"]
         },
         {
-          "x": 13,
-          "y": 4,
+          "x": 18,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 19,
+          "y": 6,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 7,
           "walls": {
             "north": "wall",
-            "east": "door",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 7,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 7,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 3,
+          "y": 7,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 4,
+          "y": 7,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 5,
+          "y": 7,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 6,
+          "y": 7,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 7,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 7,
+          "walls": {
+            "north": "door",
+            "east": "open",
             "south": "wall",
             "west": "wall"
           },
-          "types": ["teleporter"],
+          "condition": {
+            "type": "has_item",
+            "itemId": "bronze_key"
+          },
+          "onConditionFail": {
+            "message": "You feel compelled to leave",
+            "action": "retreat"
+          },
+          "types": ["room"],
+          "message": "As you enter this room, a bronze smoke fills it."
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 10,
+          "y": 7,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "door",
+            "west": "open"
+          }
+        },
+        {
+          "x": 11,
+          "y": 7,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 7,
+          "walls": {
+            "north": "open",
+            "east": "stairs_up",
+            "south": "wall",
+            "west": "open"
+          },
           "destination": {
             "level": 1,
-            "x": 15,
-            "y": 4
+            "x": 0,
+            "y": 10
           }
-        },
-        {
-          "x": 14,
-          "y": 4,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 15,
-          "y": 4,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 16,
-          "y": 4,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 17,
-          "y": 4,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 18,
-          "y": 4,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 19,
-          "y": 4,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 0,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 1,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 2,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 3,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 4,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 5,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 8,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 5,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 13,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["fixed_encounter"],
-          "encounterId": "murphy_ghost",
-          "repeatable": true,
-          "cannotFlee": true,
-          "message": "A gem-encrusted statue glows with a golden light"
-        },
-        {
-          "x": 14,
-          "y": 5,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 15,
-          "y": 5,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 16,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 17,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 18,
-          "y": 5,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 19,
-          "y": 5,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 0,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 1,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 2,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 3,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 4,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 5,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 6,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 8,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 6,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 13,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 14,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 15,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 16,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 17,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 18,
-          "y": 6,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 19,
-          "y": 6,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 0,
-          "y": 7,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 1,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 2,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 3,
-          "y": 7,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 4,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 5,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 6,
-          "y": 7,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 7,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 8,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 7,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 7,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
         },
         {
           "x": 13,
@@ -1629,21 +1600,19 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "door",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 14,
           "y": 7,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
+            "west": "wall"
+          }
         },
         {
           "x": 15,
@@ -1651,18 +1620,17 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 16,
           "y": 7,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -1674,26 +1642,28 @@
             "east": "open",
             "south": "open",
             "west": "wall"
-          }
+          },
+          "types": ["room"]
         },
         {
           "x": 18,
           "y": 7,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "wall",
+            "east": "door",
+            "south": "open",
             "west": "open"
-          }
+          },
+          "types": ["room"]
         },
         {
           "x": 19,
           "y": 7,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "open"
+            "west": "door"
           }
         },
         {
@@ -1701,8 +1671,8 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -1711,39 +1681,41 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
+            "east": "door",
+            "south": "open",
+            "west": "wall"
           }
         },
         {
           "x": 2,
           "y": 8,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "open",
             "south": "wall",
-            "west": "open"
-          }
+            "west": "door"
+          },
+          "types": ["room"]
         },
         {
           "x": 3,
           "y": 8,
           "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
+            "north": "open",
+            "east": "wall",
+            "south": "door",
             "west": "open"
-          }
+          },
+          "types": ["room"]
         },
         {
           "x": 4,
           "y": 8,
           "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
           }
         },
         {
@@ -1751,9 +1723,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -1761,9 +1733,9 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
           }
         },
         {
@@ -1771,38 +1743,38 @@
           "y": 8,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 8,
           "y": 8,
           "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "wall",
-            "west": "open"
+            "north": "open",
+            "east": "open",
+            "south": "door",
+            "west": "wall"
           }
         },
         {
           "x": 9,
           "y": 8,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "door"
+            "west": "open"
           }
         },
         {
           "x": 10,
           "y": 8,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "open",
+            "south": "wall",
             "west": "wall"
           },
           "types": ["elevator"],
@@ -1833,9 +1805,9 @@
           "x": 11,
           "y": 8,
           "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
+            "north": "open",
+            "east": "open",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -1845,8 +1817,8 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "wall",
-            "west": "wall"
+            "south": "open",
+            "west": "open"
           }
         },
         {
@@ -1883,9 +1855,9 @@
           "x": 16,
           "y": 8,
           "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
+            "north": "open",
+            "east": "door",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -1893,29 +1865,31 @@
           "x": 17,
           "y": 8,
           "walls": {
-            "north": "wall",
-            "east": "wall",
+            "north": "open",
+            "east": "open",
             "south": "wall",
-            "west": "wall"
-          }
+            "west": "door"
+          },
+          "types": ["room"]
         },
         {
           "x": 18,
           "y": 8,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "wall",
-            "west": "wall"
-          }
+            "west": "open"
+          },
+          "types": ["room"]
         },
         {
           "x": 19,
           "y": 8,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -1924,7 +1898,7 @@
           "y": 9,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
           }
@@ -1934,6 +1908,211 @@
           "y": 9,
           "walls": {
             "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 3,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 4,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 5,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 6,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "door",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 10,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "door"
+          }
+        },
+        {
+          "x": 11,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 14,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 18,
+          "y": 9,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 19,
+          "y": 9,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 1,
+          "y": 10,
+          "walls": {
+            "north": "wall",
             "east": "open",
             "south": "wall",
             "west": "open"
@@ -1941,7 +2120,7 @@
         },
         {
           "x": 2,
-          "y": 9,
+          "y": 10,
           "walls": {
             "north": "wall",
             "east": "open",
@@ -1951,7 +2130,7 @@
         },
         {
           "x": 3,
-          "y": 9,
+          "y": 10,
           "walls": {
             "north": "wall",
             "east": "open",
@@ -1961,7 +2140,17 @@
         },
         {
           "x": 4,
-          "y": 9,
+          "y": 10,
+          "walls": {
+            "north": "door",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 5,
+          "y": 10,
           "walls": {
             "north": "wall",
             "east": "open",
@@ -1970,547 +2159,1180 @@
           }
         },
         {
+          "x": 6,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 7,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "door",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 8,
+          "y": 10,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "door"
+          }
+        },
+        {
+          "x": 9,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "door",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 10,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "door"
+          }
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 10,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 18,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 19,
+          "y": 10,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 3,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 4,
+          "y": 11,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          },
+          "types": ["room"],
+          "message": "You stand before an ancient shrine. The scent of old incense lingers, and a stone pedestal awaits an offering shaped like a bear.",
+          "condition": {
+            "type": "has_item",
+            "itemId": "statuette_bear"
+          },
+          "onConditionFail": {
+            "message": "A force pushes against you - the shrine rejects those who come empty-handed.",
+            "action": "retreat"
+          }
+        },
+        {
           "x": 5,
-          "y": 9,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 6,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 11,
+          "walls": {
+            "north": "door",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 10,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 11,
+          "y": 11,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 12,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["pit"],
+          "pitDamage": "1d8",
+          "message": "The floor gives way beneath you!"
+        },
+        {
+          "x": 13,
+          "y": 11,
           "walls": {
             "north": "wall",
             "east": "open",
             "south": "wall",
             "west": "open"
           },
-          "types": ["teleporter"],
+          "message": "A PLACARD NEAR THE GROUND READ: \"WATCH OUT. OR YOU'LL ..\""
+        },
+        {
+          "x": 14,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "message": "A PLACARD NEAR THE GROUND READ: \"WHEN IT'S NOT LIT ...\""
+        },
+        {
+          "x": 15,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "message": "A PLACARD NEAR THE GROUND READ: \"A DUNGEON'S DARK ...\""
+        },
+        {
+          "x": 16,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 17,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 18,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 19,
+          "y": 11,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 0,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 3,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 4,
+          "y": 12,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          },
+          "types": ["room"],
+          "message": "A shallow pool of still water fills this chamber. At its center, a moss-covered altar awaits a sacred offering.",
+          "condition": {
+            "type": "has_item",
+            "itemId": "statuette_frog"
+          },
+          "onConditionFail": {
+            "message": "The waters begin to churn violently. Without the proper tribute, you dare not stay.",
+            "action": "retreat"
+          }
+        },
+        {
+          "x": 5,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 6,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 7,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "door",
+            "west": "wall"
+          },
+          "condition": {
+            "type": "has_item",
+            "itemId": "silver_key"
+          },
+          "onConditionFail": {
+            "message": "In terror, you flee from the room!",
+            "action": "retreat"
+          },
+          "types": ["fixed_encounter"],
+          "encounterId": "creeping_coin",
+          "repeatable": false,
+          "cannotFlee": true,
+          "message": "As you enter this room, a silvery fog envelops you.\nTerrible demons form all around you."
+        },
+        {
+          "x": 9,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 10,
+          "y": 12,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 11,
+          "y": 12,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 14,
+          "y": 12,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 16,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 17,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 18,
+          "y": 12,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 19,
+          "y": 12,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          }
+        },
+        {
+          "x": 0,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 3,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 4,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "door",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 5,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 6,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 7,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 10,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 11,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 14,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 17,
+          "y": 13,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 18,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 19,
+          "y": 13,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 3,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 4,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 5,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 6,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 7,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 10,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 11,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 14,
+          "walls": {
+            "north": "wall",
+            "east": "door",
+            "south": "wall",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 14,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 14,
+          "walls": {
+            "north": "door",
+            "east": "open",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 17,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 18,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 19,
+          "y": 14,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 0,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 1,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 2,
+          "y": 15,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 3,
+          "y": 15,
+          "walls": {
+            "north": "open",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 4,
+          "y": 15,
+          "walls": {
+            "north": "door",
+            "east": "open",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 5,
+          "y": 15,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 6,
+          "y": 15,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 7,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 8,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 9,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 10,
+          "y": 15,
+          "walls": {
+            "north": "door",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 11,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 12,
+          "y": 15,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 13,
+          "y": 15,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "wall",
+            "west": "open"
+          }
+        },
+        {
+          "x": 14,
+          "y": 15,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 15,
+          "y": 15,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 16,
+          "y": 15,
+          "walls": {
+            "north": "stairs_down",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          },
+          "types": ["room"],
           "destination": {
-            "level": 1,
+            "level": 3,
             "x": 15,
-            "y": 4
-          }
-        },
-        {
-          "x": 6,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 7,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 8,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 9,
-          "y": 9,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 10,
-          "y": 9,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 11,
-          "y": 9,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 12,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 13,
-          "y": 9,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 14,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 15,
-          "y": 9,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 16,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
+            "y": 11
           }
         },
         {
           "x": 17,
-          "y": 9,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 18,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 19,
-          "y": 9,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 0,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "stairs_down"
-          },
-          "destination": {
-            "level": 2,
-            "x": 12,
-            "y": 7
-          }
-        },
-        {
-          "x": 1,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 2,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 3,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 4,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 5,
-          "y": 10,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 6,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 7,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 8,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 9,
-          "y": 10,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          }
-        },
-        {
-          "x": 10,
-          "y": 10,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          }
-        },
-        {
-          "x": 11,
-          "y": 10,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 13,
-          "y": 10,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 14,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 15,
-          "y": 10,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 16,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 17,
-          "y": 10,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 18,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 19,
-          "y": 10,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 0,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 1,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 2,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 3,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 4,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 5,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 8,
-          "y": 11,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 9,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 10,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          }
-        },
-        {
-          "x": 11,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 11,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 13,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 14,
-          "y": 11,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 15,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 16,
-          "y": 11,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 17,
-          "y": 11,
+          "y": 15,
           "walls": {
             "north": "open",
             "east": "wall",
@@ -2520,239 +3342,27 @@
         },
         {
           "x": 18,
-          "y": 11,
+          "y": 15,
           "walls": {
-            "north": "door",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 19,
-          "y": 11,
+          "y": 15,
           "walls": {
-            "north": "door",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 0,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 1,
-          "y": 12,
-          "walls": {
-            "north": "door",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 2,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 3,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 4,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "open",
-            "west": "open"
-          }
-        },
-        {
-          "x": 5,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "door",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 8,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "message": "AREA OUT OF BOUNDS! Cloaked in eternal darkness"
-        },
-        {
-          "x": 10,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          }
-        },
-        {
-          "x": 11,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 13,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 14,
-          "y": 12,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 15,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 16,
-          "y": 12,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 17,
-          "y": 12,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 18,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 19,
-          "y": 12,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 0,
-          "y": 13,
+          "y": 16,
           "walls": {
             "north": "wall",
             "east": "wall",
@@ -2762,656 +3372,24 @@
         },
         {
           "x": 1,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "door",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 2,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          }
-        },
-        {
-          "x": 3,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          }
-        },
-        {
-          "x": 4,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 5,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 7,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 8,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 13,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 14,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 15,
-          "y": 13,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 16,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 17,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 18,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 19,
-          "y": 13,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 0,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 1,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 2,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 3,
-          "y": 14,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 4,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 5,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 14,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 8,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 14,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 13,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 14,
-          "y": 14,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 15,
-          "y": 14,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 16,
-          "y": 14,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 17,
-          "y": 14,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 18,
-          "y": 14,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 19,
-          "y": 14,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 0,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 1,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 2,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "door",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 3,
-          "y": 15,
-          "walls": {
-            "north": "door",
-            "east": "door",
-            "south": "door",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 4,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 5,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 6,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 15,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 8,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 9,
-          "y": 15,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 15,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 13,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 14,
-          "y": 15,
-          "walls": {
-            "north": "wall",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 15,
-          "y": 15,
-          "walls": {
-            "north": "wall",
-            "east": "door",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 16,
-          "y": 15,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 17,
-          "y": 15,
-          "walls": {
-            "north": "door",
-            "east": "door",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 18,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "door",
-            "west": "door"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 19,
-          "y": 15,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 0,
           "y": 16,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 1,
-          "y": 16,
-          "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 2,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "open"
+            "west": "wall"
           },
-          "types": ["room"]
+          "types": ["darkness"]
         },
         {
           "x": 3,
@@ -3419,42 +3397,46 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "door",
+            "south": "open",
             "west": "wall"
-          }
+          },
+          "types": ["darkness"]
         },
         {
           "x": 4,
           "y": 16,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "door",
             "west": "wall"
           },
-          "types": ["room"]
+          "types": ["darkness", "searchable", "room"],
+          "message": "IN THIS ROOM IS A STATUE OF A MONSTER WITH THE BODY OF A CHICKEN AND THE HEAD OF A CAT.\nTHE STATUE IS MADE OF BRONZE, AND LIES ON AN ONYX PEDESTAL.\nTHERE ARE UNUSUAL RUNES ON A PLAQUE THEREON.",
+          "promptSearch": true,
+          "item": "gold_key"
         },
         {
           "x": 5,
           "y": 16,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
           },
-          "types": ["room"]
+          "types": ["darkness","room"]
         },
         {
           "x": 6,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "open"
+            "west": "wall"
           },
-          "types": ["room"]
+          "types": ["darkness"]
         },
         {
           "x": 7,
@@ -3471,8 +3453,8 @@
           "y": 16,
           "walls": {
             "north": "door",
-            "east": "wall",
-            "south": "open",
+            "east": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3481,41 +3463,39 @@
           "y": 16,
           "walls": {
             "north": "wall",
-            "east": "door",
+            "east": "open",
             "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
+            "west": "open"
+          }
         },
         {
           "x": 10,
           "y": 16,
           "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["darkness"]
+            "north": "door",
+            "east": "open",
+            "south": "door",
+            "west": "open"
+          }
         },
         {
           "x": 11,
           "y": 16,
           "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
           }
         },
         {
           "x": 12,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "door",
             "east": "wall",
             "south": "wall",
-            "west": "wall"
+            "west": "open"
           }
         },
         {
@@ -3532,9 +3512,9 @@
           "x": 14,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -3542,9 +3522,9 @@
           "x": 15,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "wall",
+            "south": "open",
             "west": "wall"
           }
         },
@@ -3553,55 +3533,50 @@
           "y": 16,
           "walls": {
             "north": "wall",
-            "east": "open",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 17,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 18,
           "y": 16,
           "walls": {
-            "north": "wall",
-            "east": "open",
+            "north": "open",
+            "east": "wall",
             "south": "open",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 19,
           "y": 16,
           "walls": {
-            "north": "wall",
+            "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "west": "wall"
+          }
         },
         {
           "x": 0,
           "y": 17,
           "walls": {
-            "north": "door",
+            "north": "wall",
             "east": "wall",
             "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 1,
@@ -3617,35 +3592,59 @@
           "x": 2,
           "y": 17,
           "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
+            "north": "wall",
+            "east": "open",
+            "south": "open",
             "west": "wall"
           },
-          "types": ["room"]
+          "types": ["darkness"]
         },
         {
           "x": 3,
           "y": 17,
           "walls": {
-            "north": "open",
-            "east": "wall",
+            "north": "wall",
+            "east": "open",
             "south": "open",
-            "west": "wall"
-          }
+            "west": "open"
+          },
+          "types": ["darkness"]
         },
         {
           "x": 4,
           "y": 17,
           "walls": {
             "north": "wall",
-            "east": "wall",
+            "east": "open",
             "south": "wall",
-            "west": "wall"
-          }
+            "west": "open"
+          },
+          "types": ["darkness"]
         },
         {
           "x": 5,
+          "y": 17,
+          "walls": {
+            "north": "wall",
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 6,
+          "y": 17,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "open",
+            "west": "open"
+          },
+          "types": ["darkness"]
+        },
+        {
+          "x": 7,
           "y": 17,
           "walls": {
             "north": "wall",
@@ -3655,67 +3654,42 @@
           }
         },
         {
-          "x": 6,
-          "y": 17,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 7,
-          "y": 17,
-          "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
-        },
-        {
           "x": 8,
           "y": 17,
           "walls": {
-            "north": "open",
-            "east": "wall",
+            "north": "wall",
+            "east": "open",
             "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
+            "west": "wall"
+          }
         },
         {
           "x": 9,
           "y": 17,
           "walls": {
-            "north": "open",
-            "east": "open",
+            "north": "door",
+            "east": "wall",
             "south": "wall",
-            "west": "wall"
-          },
-          "types": ["darkness"]
+            "west": "open"
+          }
         },
         {
           "x": 10,
           "y": 17,
           "walls": {
-            "north": "open",
+            "north": "door",
             "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
+            "south": "door",
+            "west": "wall"
+          }
         },
         {
           "x": 11,
           "y": 17,
           "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
+            "north": "door",
+            "east": "open",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3725,16 +3699,16 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "wall",
-            "west": "wall"
+            "south": "door",
+            "west": "open"
           }
         },
         {
           "x": 13,
           "y": 17,
           "walls": {
-            "north": "wall",
-            "east": "door",
+            "north": "open",
+            "east": "wall",
             "south": "open",
             "west": "wall"
           }
@@ -3743,23 +3717,21 @@
           "x": 14,
           "y": 17,
           "walls": {
-            "north": "wall",
-            "east": "open",
-            "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 15,
           "y": 17,
           "walls": {
-            "north": "door",
-            "east": "door",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
+            "north": "wall",
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 16,
@@ -3768,31 +3740,28 @@
             "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
+            "west": "open"
+          }
         },
         {
           "x": 17,
           "y": 17,
           "walls": {
             "north": "wall",
-            "east": "door",
-            "south": "wall",
+            "east": "wall",
+            "south": "open",
             "west": "open"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 18,
           "y": 17,
           "walls": {
             "north": "open",
-            "east": "open",
-            "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 19,
@@ -3800,21 +3769,19 @@
           "walls": {
             "north": "open",
             "east": "wall",
-            "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 0,
           "y": 18,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "door",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 1,
@@ -3823,28 +3790,26 @@
             "north": "wall",
             "east": "wall",
             "south": "wall",
-            "west": "open"
-          },
-          "types": ["room"]
+            "west": "wall"
+          }
         },
         {
           "x": 2,
           "y": 18,
           "walls": {
-            "north": "door",
+            "north": "wall",
             "east": "wall",
-            "south": "door",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 3,
           "y": 18,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -3852,10 +3817,10 @@
           "x": 4,
           "y": 18,
           "walls": {
-            "north": "door",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
@@ -3863,100 +3828,96 @@
           "y": 18,
           "walls": {
             "north": "wall",
-            "east": "door",
+            "east": "wall",
             "south": "wall",
-            "west": "open"
+            "west": "wall"
           }
         },
         {
           "x": 6,
           "y": 18,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 7,
           "y": 18,
           "walls": {
-            "north": "open",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "north": "wall",
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 8,
           "y": 18,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 9,
           "y": 18,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "wall"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 10,
-          "y": 18,
-          "walls": {
-            "north": "open",
             "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["darkness"]
-        },
-        {
-          "x": 11,
-          "y": 18,
-          "walls": {
-            "north": "open",
-            "east": "wall",
-            "south": "open",
-            "west": "wall"
-          }
-        },
-        {
-          "x": 12,
-          "y": 18,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
-        },
-        {
-          "x": 13,
-          "y": 18,
-          "walls": {
-            "north": "door",
-            "east": "wall",
-            "south": "wall",
+            "south": "door",
             "west": "wall"
           },
           "types": ["searchable", "room"],
-          "message": "A SILVER STATUE OF A BOAR. WITH HORNS AND LONG FANGS",
+          "message": "You see a statue of a bear in a pedestal.\nOn a wall is a sign reading \"I've got a million of them.\"",
           "promptSearch": true,
-          "item": "silver_key"
+          "item": "statuette_bear"
+        },
+        {
+          "x": 10,
+          "y": 18,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 11,
+          "y": 18,
+          "walls": {
+            "north": "wall",
+            "east": "wall",
+            "south": "door",
+            "west": "wall"
+          },
+          "types": ["room"]
+        },
+        {
+          "x": 12,
+          "y": 18,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
+        },
+        {
+          "x": 13,
+          "y": 18,
+          "walls": {
+            "north": "open",
+            "east": "wall",
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 14,
@@ -3965,64 +3926,58 @@
             "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
+            "west": "open"
+          }
         },
         {
           "x": 15,
           "y": 18,
           "walls": {
             "north": "wall",
-            "east": "wall",
-            "south": "door",
+            "east": "open",
+            "south": "wall",
             "west": "open"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 16,
           "y": 18,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "wall"
-          },
-          "types": ["room"]
+            "west": "open"
+          }
         },
         {
           "x": 17,
           "y": 18,
           "walls": {
-            "north": "open",
-            "east": "wall",
+            "north": "wall",
+            "east": "open",
             "south": "wall",
             "west": "open"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 18,
           "y": 18,
           "walls": {
-            "north": "door",
-            "east": "open",
+            "north": "wall",
+            "east": "wall",
             "south": "open",
-            "west": "wall"
-          },
-          "types": ["room"]
+            "west": "open"
+          }
         },
         {
           "x": 19,
           "y": 18,
           "walls": {
-            "north": "door",
+            "north": "open",
             "east": "wall",
             "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "west": "wall"
+          }
         },
         {
           "x": 0,
@@ -4050,10 +4005,9 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "door",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 3,
@@ -4071,10 +4025,9 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "door",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 5,
@@ -4091,22 +4044,20 @@
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 7,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 8,
@@ -4114,46 +4065,37 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "open"
-          },
-          "types": ["room"]
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 9,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "door",
+            "east": "wall",
             "south": "wall",
             "west": "wall"
-          },
-          "types": ["teleporter"],
-          "destination": {
-            "level": 1,
-            "x": 0,
-            "y": 0
-          },
-          "message": "MAPIRO MAHAMA DIROMAT!!\nA STRANGE GLOW SEEMS TO EMANATE FROM THIS ROOM.\nIN THE CENTER, A SMALLISH MAN IN A LONG ROBE TURNS TOWARDS THE PARTY AND SHOUTS\nBEGONE, STRANGERS! HE SLOWLY WAVES HIS HANDS, AND CHANTS\nMAPIRO MAHAMA DIROMAT!!"
+          }
         },
         {
           "x": 10,
           "y": 19,
           "walls": {
-            "north": "open",
+            "north": "wall",
             "east": "wall",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["darkness"]
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 11,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "door",
-            "south": "open",
+            "east": "wall",
+            "south": "wall",
             "west": "wall"
           }
         },
@@ -4162,22 +4104,20 @@
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "open",
-            "south": "door",
-            "west": "door"
-          },
-          "types": ["room"]
+            "east": "wall",
+            "south": "wall",
+            "west": "wall"
+          }
         },
         {
           "x": 13,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "door",
-            "south": "door",
-            "west": "open"
-          },
-          "types": ["room"]
+            "east": "open",
+            "south": "open",
+            "west": "wall"
+          }
         },
         {
           "x": 14,
@@ -4186,20 +4126,18 @@
             "north": "wall",
             "east": "open",
             "south": "wall",
-            "west": "door"
-          },
-          "types": ["room"]
+            "west": "open"
+          }
         },
         {
           "x": 15,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "door",
+            "east": "open",
             "south": "wall",
             "west": "open"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 16,
@@ -4207,32 +4145,29 @@
           "walls": {
             "north": "wall",
             "east": "open",
-            "south": "open",
-            "west": "door"
-          },
-          "types": ["room"]
+            "south": "wall",
+            "west": "open"
+          }
         },
         {
           "x": 17,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "wall",
-            "south": "open",
+            "east": "open",
+            "south": "wall",
             "west": "open"
-          },
-          "types": ["room"]
+          }
         },
         {
           "x": 18,
           "y": 19,
           "walls": {
             "north": "wall",
-            "east": "wall",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
+            "east": "open",
+            "south": "wall",
+            "west": "open"
+          }
         },
         {
           "x": 19,
@@ -4240,14 +4175,13 @@
           "walls": {
             "north": "wall",
             "east": "wall",
-            "south": "door",
-            "west": "wall"
-          },
-          "types": ["room"]
+            "south": "open",
+            "west": "open"
+          }
         }
       ],
       "encounterRate": 0.01,
-      "encounterTable": "level_1_monsters"
+      "encounterTable": "level_2_monsters"
     }
   ]
 }

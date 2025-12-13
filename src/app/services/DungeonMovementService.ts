@@ -1,8 +1,18 @@
 import { GameState } from '@models/GameState'
-import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination } from '@models/Dungeon'
+import { Position, Direction, DungeonState, TileData, TileType, LevelData, Destination, SpecialTileResult, ConditionResult } from '@models/Dungeon'
 import { DungeonService } from './DungeonService'
 import { RandomService } from './RandomService'
 import { LightService } from './LightService'
+import { TileConditionService } from './TileConditionService'
+import { FightMapService } from './FightMapService'
+
+/**
+ * Result from movement operations, includes state and any special tile effects
+ */
+export interface MovementResult {
+  state: GameState
+  specialTileResult?: SpecialTileResult
+}
 
 /**
  * DungeonMovementService - Pure function service for dungeon navigation logic
@@ -64,7 +74,11 @@ export const DungeonMovementService = {
         unlockedDoors: new Set<string>(),
         openDoors: new Set<string>(),
         lootedTiles: new Set<string>(),
-        latumapicActive: false  // LATUMAPIC not active at expedition start
+        completedConditionTiles: new Set<string>(),  // Conditional tiles where condition passed
+        consumedConditionItems: new Set<string>(),   // Item IDs consumed at condition tiles
+        latumapicActive: false,  // LATUMAPIC not active at expedition start
+        expeditionAcBuff: 0,     // No expedition AC buffs at start
+        activeExpeditionSpells: []  // No expedition spells active at start
       }
     };
 
@@ -73,26 +87,27 @@ export const DungeonMovementService = {
 
   /**
    * Move party forward one tile (immutable state update)
+   * @returns MovementResult with new state and any special tile effects
    */
-  moveForward(state: GameState): GameState {
+  moveForward(state: GameState): MovementResult {
     if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
       throw new Error('Dungeon state not initialized or not in maze')
     }
 
-    const currentPos = state.dungeon.position
+    const previousPos = state.dungeon.position
     const level = DungeonService.loadLevel(state.dungeon.currentLevel)
 
     // Check for special action triggers BEFORE updating position
     // This only checks for stairs walls, not general movement validation
-    const validation = DungeonService.canMove(level, currentPos, 'FORWARD', state.dungeon.openDoors, state.dungeon.currentLevel)
+    const validation = DungeonService.canMove(level, previousPos, 'FORWARD', state.dungeon.openDoors, state.dungeon.currentLevel)
 
     if (validation.triggersSpecialAction === 'stairs') {
-      return this.handleStairsTransition(state, validation.destination)
+      return { state: this.handleStairsTransition(state, validation.destination) }
     }
 
     // Normal movement: calculate new position
     // Note: Wall validation is done by MazeComponent before calling this method
-    const nextPos = this.getNextPosition(currentPos, currentPos.facing, false)
+    const nextPos = this.getNextPosition(previousPos, previousPos.facing, false)
 
     let newState: GameState = {
       ...state,
@@ -102,11 +117,14 @@ export const DungeonMovementService = {
       }
     }
 
-    // Trigger special tile effects
+    // Trigger special tile effects (passing previous position for retreat)
     const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
-    newState = this.handleSpecialTile(newState, tile)
+    const tileResult = this.handleSpecialTile(newState, tile, previousPos)
 
-    return newState
+    return {
+      state: tileResult.newState,
+      specialTileResult: tileResult
+    }
   },
 
   /**
@@ -224,15 +242,16 @@ export const DungeonMovementService = {
 
   /**
    * Move party left without changing facing
+   * @returns MovementResult with new state and any special tile effects
    */
-  strafeLeft(state: GameState): GameState {
+  strafeLeft(state: GameState): MovementResult {
     if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
       throw new Error('Dungeon state not initialized or not in maze')
     }
 
-    const currentPos = state.dungeon.position
-    const leftDirection = this.rotateDirection(currentPos.facing, 'LEFT')
-    const nextPos = this.getNextPosition(currentPos, leftDirection, false)
+    const previousPos = state.dungeon.position
+    const leftDirection = this.rotateDirection(previousPos.facing, 'LEFT')
+    const nextPos = this.getNextPosition(previousPos, leftDirection, false)
 
     let newState: GameState = {
       ...state,
@@ -240,7 +259,7 @@ export const DungeonMovementService = {
         ...state.dungeon,
         position: {
           ...nextPos,
-          facing: currentPos.facing // Preserve original facing
+          facing: previousPos.facing // Preserve original facing
         }
       }
     }
@@ -248,22 +267,26 @@ export const DungeonMovementService = {
     // Trigger special tile effects
     const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
     const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
-    newState = this.handleSpecialTile(newState, tile)
+    const tileResult = this.handleSpecialTile(newState, tile, previousPos)
 
-    return newState
+    return {
+      state: tileResult.newState,
+      specialTileResult: tileResult
+    }
   },
 
   /**
    * Move party right without changing facing
+   * @returns MovementResult with new state and any special tile effects
    */
-  strafeRight(state: GameState): GameState {
+  strafeRight(state: GameState): MovementResult {
     if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
       throw new Error('Dungeon state not initialized or not in maze')
     }
 
-    const currentPos = state.dungeon.position
-    const rightDirection = this.rotateDirection(currentPos.facing, 'RIGHT')
-    const nextPos = this.getNextPosition(currentPos, rightDirection, false)
+    const previousPos = state.dungeon.position
+    const rightDirection = this.rotateDirection(previousPos.facing, 'RIGHT')
+    const nextPos = this.getNextPosition(previousPos, rightDirection, false)
 
     let newState: GameState = {
       ...state,
@@ -271,7 +294,7 @@ export const DungeonMovementService = {
         ...state.dungeon,
         position: {
           ...nextPos,
-          facing: currentPos.facing // Preserve original facing
+          facing: previousPos.facing // Preserve original facing
         }
       }
     }
@@ -279,21 +302,25 @@ export const DungeonMovementService = {
     // Trigger special tile effects
     const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
     const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
-    newState = this.handleSpecialTile(newState, tile)
+    const tileResult = this.handleSpecialTile(newState, tile, previousPos)
 
-    return newState
+    return {
+      state: tileResult.newState,
+      specialTileResult: tileResult
+    }
   },
 
   /**
    * Move party backward one tile
+   * @returns MovementResult with new state and any special tile effects
    */
-  moveBackward(state: GameState): GameState {
+  moveBackward(state: GameState): MovementResult {
     if (!state.dungeon || !this.isDungeonState(state.dungeon)) {
       throw new Error('Dungeon state not initialized or not in maze')
     }
 
-    const currentPos = state.dungeon.position
-    const nextPos = this.getNextPosition(currentPos, currentPos.facing, true)
+    const previousPos = state.dungeon.position
+    const nextPos = this.getNextPosition(previousPos, previousPos.facing, true)
 
     let newState: GameState = {
       ...state,
@@ -306,9 +333,12 @@ export const DungeonMovementService = {
     // Trigger special tile effects
     const level = DungeonService.loadLevel(newState.dungeon!.currentLevel)
     const tile = DungeonService.getTile(level, nextPos.x, nextPos.y)
-    newState = this.handleSpecialTile(newState, tile)
+    const tileResult = this.handleSpecialTile(newState, tile, previousPos)
 
-    return newState
+    return {
+      state: tileResult.newState,
+      specialTileResult: tileResult
+    }
   },
 
   /**
@@ -350,12 +380,25 @@ export const DungeonMovementService = {
     // Maintain facing direction
     entryPosition.facing = dungeon.position.facing
 
+    // Get destination tile to check for darkness
+    const destTile = DungeonService.getTile(level, entryPosition.x, entryPosition.y)
+    const isDestDarkness = LightService.isDarknessTile(destTile.types)
+
+    // Update dungeon state with new level, position, and correct darkness state
     return {
       ...state,
       dungeon: {
         ...dungeon,
         currentLevel: newLevel,
         position: entryPosition,
+        // Reset darkness state based on destination tile (not carry over from previous)
+        inDarknessZone: isDestDarkness,
+        // If entering darkness, extinguish light
+        ...(isDestDarkness && dungeon.lightActive ? {
+          lightActive: false,
+          lightSpellType: undefined,
+          lightDurationRemaining: undefined,
+        } : {})
       }
     }
   },
@@ -380,11 +423,19 @@ export const DungeonMovementService = {
   },
 
   /**
-   * Handle special tile effects (teleporters, spinners, chutes, etc.)
+   * Handle special tile effects (teleporters, spinners, chutes, conditions, etc.)
    * Called after every movement
+   *
+   * @param state - Current game state (position already updated to new tile)
+   * @param tile - The tile data for the new position
+   * @param previousPosition - Position before movement (for retreat action)
+   * @returns SpecialTileResult with new state, messages, and condition result
    */
-  handleSpecialTile(state: GameState, tile: TileData): GameState {
+  handleSpecialTile(state: GameState, tile: TileData, previousPosition: Position): SpecialTileResult {
     const dungeon = this.requireDungeon(state)
+    const messages: string[] = []
+
+    console.log(`[Movement] Entering tile (${tile.x}, ${tile.y}), types=[${tile.types?.join(', ') ?? 'none'}], hasCondition=${!!tile.condition}`)
 
     // Reset teleport count for non-teleporter tiles
     if (!this.tileHasType(tile, 'teleporter') && dungeon.teleportCount > 0) {
@@ -394,45 +445,150 @@ export const DungeonMovementService = {
       }
     }
 
+    // =========================================================================
+    // CONDITION CHECKING - Must happen before other tile effects
+    // =========================================================================
+    if (tile.condition) {
+      console.log(`[Movement] Tile has condition: ${JSON.stringify(tile.condition)}`)
+
+      // Create tile key for completion tracking
+      const tileKey = `${dungeon.currentLevel}_${tile.x}_${tile.y}`
+
+      // First check if this conditional tile was already completed
+      if (dungeon.completedConditionTiles?.has(tileKey)) {
+        console.log(`[Movement] Conditional tile ${tileKey} already completed, skipping condition`)
+        const conditionResult: ConditionResult = { status: 'already_completed' }
+        const lightState = this.processLightState(state, tile.types)
+        return { newState: lightState, messages, conditionResult }
+      }
+
+      // Also check if encounter was already defeated (for tiles with encounterId)
+      if (tile.encounterId && dungeon.defeatedEncounters.includes(tile.encounterId)) {
+        // Already completed - no condition check needed, continue normally
+        console.log(`[Movement] Encounter ${tile.encounterId} already completed, skipping condition`)
+        const conditionResult: ConditionResult = { status: 'already_completed' }
+        const lightState = this.processLightState(state, tile.types)
+        return { newState: lightState, messages, conditionResult }
+      }
+
+      // Check the condition
+      const conditionMet = TileConditionService.checkCondition(tile.condition, state)
+      console.log(`[Movement] Condition result: ${conditionMet ? 'PASS' : 'FAIL'}`)
+
+      if (!conditionMet && tile.onConditionFail) {
+        // Condition FAILED - return failure result
+        console.log(`[Movement] Executing fail action: ${tile.onConditionFail.action}`)
+        const fail = tile.onConditionFail
+        const conditionResult: ConditionResult = {
+          status: 'fail',
+          message: fail.message,
+          messageStyle: fail.messageStyle ?? 'letterbox',
+          entryMessage: tile.message,  // Always shown before condition message
+          failAction: fail.action,
+          failDestination: fail.destination,
+          previousPosition
+        }
+        // Note: Position is NOT reverted here - MazeComponent handles retreat after showing message
+        return { newState: state, messages, conditionResult }
+      }
+
+      if (conditionMet) {
+        // Condition PASSED - consume item and mark tile as completed
+        console.log(`[Movement] Condition passed, consuming item and marking tile complete`)
+
+        // Consume the required item (for has_item conditions)
+        let updatedState = TileConditionService.consumeConditionItem(tile.condition, state)
+
+        // Mark this conditional tile as completed
+        const updatedDungeon = updatedState.dungeon!
+        const newCompletedTiles = new Set(updatedDungeon.completedConditionTiles ?? [])
+        newCompletedTiles.add(tileKey)
+
+        // Track consumed item ID (prevents re-awarding from searchable tiles)
+        const newConsumedItems = new Set(updatedDungeon.consumedConditionItems ?? [])
+        if (tile.condition.type === 'has_item' && tile.condition.itemId) {
+          newConsumedItems.add(tile.condition.itemId)
+          console.log(`[Movement] Tracking consumed item: "${tile.condition.itemId}"`)
+        }
+
+        updatedState = {
+          ...updatedState,
+          dungeon: {
+            ...updatedDungeon,
+            completedConditionTiles: newCompletedTiles,
+            consumedConditionItems: newConsumedItems
+          }
+        }
+
+        // Return success result
+        const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y);
+        const success = tile.onConditionSuccess
+        const conditionResult: ConditionResult = {
+          status: 'success',
+          message: suppressMessage ? undefined : success?.message,
+          messageStyle: success?.messageStyle ?? 'letterbox',
+          entryMessage: suppressMessage ? undefined : tile.message,
+          encounterId: suppressMessage ? undefined : tile.encounterId  // Also skip encounter trigger
+        }
+        const lightState = this.processLightState(updatedState, tile.types)
+        return { newState: lightState, messages, conditionResult }
+      }
+    }
+
+    // =========================================================================
+    // STANDARD SPECIAL TILE HANDLING
+    // =========================================================================
+
     // Handle special tile types (using includes() since tiles can have multiple types)
     if (this.tileHasType(tile, 'teleporter')) {
-      return this.handleTeleporter(state, tile)
+      return { newState: this.handleTeleporter(state, tile), messages }
     }
 
     if (this.tileHasType(tile, 'spinner')) {
-      return this.handleSpinner(state)
+      return { newState: this.handleSpinner(state), messages }
     }
 
     if (this.tileHasType(tile, 'chute')) {
-      return this.handleChute(state)
+      return { newState: this.handleChute(state), messages }
     }
 
     if (this.tileHasType(tile, 'pit')) {
-      return this.handlePit(state)
+      if (tile.message) {
+        messages.push(tile.message)
+      }
+      return { newState: this.handlePit(state, tile), messages }
     }
 
     if (this.tileHasType(tile, 'stairs_up')) {
       if (dungeon.currentLevel > 1) {
-        return this.enterLevel(state, dungeon.currentLevel - 1, 'STAIRS_UP')
+        return { newState: this.enterLevel(state, dungeon.currentLevel - 1, 'STAIRS_UP'), messages }
       }
-      return state
+      return { newState: state, messages }
     }
 
     if (this.tileHasType(tile, 'stairs_down')) {
       if (dungeon.currentLevel < 10) {
-        return this.enterLevel(state, dungeon.currentLevel + 1, 'STAIRS_DOWN')
+        return { newState: this.enterLevel(state, dungeon.currentLevel + 1, 'STAIRS_DOWN'), messages }
       }
-      return state
+      return { newState: state, messages }
     }
 
     if (this.tileHasType(tile, 'elevator')) {
-      // UI handles level selection, MazeComponent calls enterLevel
-      return state
+      // Process light state (handles leaving darkness zone) then UI handles level selection
+      return { newState: this.processLightState(state, tile.types), messages }
     }
 
     // Process light state for all other tiles (handles darkness zones, duration decrement)
     // Includes: darkness, darkness_zone_start, anti_magic, message, searchable, fixed_encounter
-    return this.processLightState(state, tile.types)
+
+    // Suppress entry message for completed non-repeatable fixed encounters
+    const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y);
+
+    return {
+      newState: this.processLightState(state, tile.types),
+      messages,
+      entryMessage: suppressMessage ? undefined : tile.message
+    }
   },
 
   /**
@@ -574,11 +730,17 @@ export const DungeonMovementService = {
   /**
    * Handle pit tile - AGI-based damage trap (no level change)
    * Avoidance: (AGI - Level) × 4%
-   * Failure: 1d6 damage
+   * Failure: pitDamage (default 1d6)
    */
-  handlePit(state: GameState): GameState {
+  handlePit(state: GameState, tile?: TileData): GameState {
     const dungeon = this.requireDungeon(state)
     const newRoster = new Map(state.roster);
+
+    // Parse pitDamage (default "1d6")
+    const damageNotation = tile?.pitDamage ?? '1d6';
+    const [countStr, sidesStr] = damageNotation.split('d');
+    const count = parseInt(countStr, 10) || 1;
+    const sides = parseInt(sidesStr, 10) || 6;
 
     for (const memberId of state.party.members) {
       const character = newRoster.get(memberId)!;
@@ -587,9 +749,9 @@ export const DungeonMovementService = {
       const avoidanceChance = (character.agility - dungeon.currentLevel) * 4;
       const avoided = RandomService.chance(avoidanceChance);
 
-      // Failed avoidance - take 1d6 damage
+      // Failed avoidance - take damage based on pitDamage
       if (!avoided) {
-        const damage = RandomService.rollDie(6);
+        const damage = RandomService.rollDice(count, sides);
         newRoster.set(memberId, {
           ...character,
           hp: Math.max(0, character.hp - damage),
@@ -649,4 +811,16 @@ export const DungeonMovementService = {
     // Fallback - no valid destination
     return state;
   },
+
+  /**
+   * Check if a tile's non-repeatable fixed encounter has been completed
+   * Used to suppress entry messages after victory
+   */
+  isEncounterComplete(tile: TileData, level: number, x: number, y: number): boolean {
+    if (!tile.types?.includes('fixed_encounter')) return false;
+    if (tile.repeatable !== false) return false;  // repeatable=true or undefined means always show
+
+    // Check if encounter has been triggered (getFixedEncounterConfig returns undefined when triggered)
+    return FightMapService.getFixedEncounterConfig(level, x, y) === undefined;
+  }
 }

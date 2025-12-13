@@ -119,12 +119,15 @@ export const VisibilityService = {
     // Iterate through depth levels (0 = player tile, 1 = one ahead, etc.)
     for (let depth = 0; depth < maxDepth; depth++) {
       // Calculate center column position at this depth
-      const centerX = position.x + forwardX * depth
-      const centerY = position.y + forwardY * depth
+      const rawCenterX = position.x + forwardX * depth
+      const rawCenterY = position.y + forwardY * depth
 
-      // Skip if center is out of bounds
-      if (centerX < 0 || centerX >= level.size.width ||
-          centerY < 0 || centerY >= level.size.height) {
+      // Apply edge wrapping if enabled
+      const { x: centerX, y: centerY } = wrapCoords(rawCenterX, rawCenterY)
+
+      // Skip if out of bounds (only applies when wrapping is disabled)
+      if (!level.edgeWrapping && (rawCenterX < 0 || rawCenterX >= level.size.width ||
+          rawCenterY < 0 || rawCenterY >= level.size.height)) {
         break
       }
 
@@ -159,20 +162,24 @@ export const VisibilityService = {
 
           for (let offset = 1; offset <= halfWidth && canSeeNext; offset++) {
             const actualOffset = direction * offset
-            const tileX = centerX + perpX * actualOffset
-            const tileY = centerY + perpY * actualOffset
+            const rawTileX = centerX + perpX * actualOffset
+            const rawTileY = centerY + perpY * actualOffset
+
+            // Apply edge wrapping if enabled
+            const { x: tileX, y: tileY } = wrapCoords(rawTileX, rawTileY)
             const tileKey = `${tileX},${tileY}`
 
-            // Check bounds
-            if (tileX < 0 || tileX >= level.size.width ||
-                tileY < 0 || tileY >= level.size.height) {
+            // Check bounds (only applies when wrapping is disabled)
+            if (!level.edgeWrapping && (rawTileX < 0 || rawTileX >= level.size.width ||
+                rawTileY < 0 || rawTileY >= level.size.height)) {
               canSeeNext = false
               continue
             }
 
             // Get the previous tile (one step closer to center) and check wall direction
-            const prevTileX = centerX + perpX * (actualOffset - direction)
-            const prevTileY = centerY + perpY * (actualOffset - direction)
+            const rawPrevTileX = centerX + perpX * (actualOffset - direction)
+            const rawPrevTileY = centerY + perpY * (actualOffset - direction)
+            const { x: prevTileX, y: prevTileY } = wrapCoords(rawPrevTileX, rawPrevTileY)
             const prevTile = DungeonService.getTile(level, prevTileX, prevTileY)
             const wallDir = getPerpendicularWall(direction)
             const wallOpen = prevTile.walls[wallDir] === 'open'

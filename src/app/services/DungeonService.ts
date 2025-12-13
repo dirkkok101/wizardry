@@ -5,10 +5,12 @@ import { ZodError } from 'zod'
 
 // Import JSON data
 import level1Data from '@data/maps/level1.json'
+import level2Data from '@data/maps/level2.json'
 
 const LEVEL_DATA_MAP: Record<number, any> = {
   1: level1Data,
-  // Levels 2-10 to be added when JSON files created
+  2: level2Data,
+  // Levels 3-10 to be added when JSON files created
 }
 
 export const DungeonService = {

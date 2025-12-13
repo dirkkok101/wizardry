@@ -53,45 +53,45 @@ describe('DungeonMovementService', () => {
   describe('moveForward', () => {
     it('increments y when facing north', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
-      const newState = DungeonMovementService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
-      expect(newState.dungeon!.position.y).toBe(11)
-      expect(newState.dungeon!.position.x).toBe(10)
+      expect(result.state.dungeon!.position.y).toBe(11)
+      expect(result.state.dungeon!.position.x).toBe(10)
     })
 
     it('decrements y when facing south', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'SOUTH' })
-      const newState = DungeonMovementService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
-      expect(newState.dungeon!.position.y).toBe(9)
+      expect(result.state.dungeon!.position.y).toBe(9)
     })
 
     it('increments x when facing east', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'EAST' })
-      const newState = DungeonMovementService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
-      expect(newState.dungeon!.position.x).toBe(11)
+      expect(result.state.dungeon!.position.x).toBe(11)
     })
 
     it('decrements x when facing west', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'WEST' })
-      const newState = DungeonMovementService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
-      expect(newState.dungeon!.position.x).toBe(9)
+      expect(result.state.dungeon!.position.x).toBe(9)
     })
 
     it('wraps x from 19 to 0 when moving east', () => {
       const state = createTestGameState({ x: 19, y: 10, facing: 'EAST' })
-      const newState = DungeonMovementService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
-      expect(newState.dungeon!.position.x).toBe(0)
+      expect(result.state.dungeon!.position.x).toBe(0)
     })
 
     it('wraps x from 0 to 19 when moving west', () => {
       const state = createTestGameState({ x: 0, y: 10, facing: 'WEST' })
-      const newState = DungeonMovementService.moveForward(state)
+      const result = DungeonMovementService.moveForward(state)
 
-      expect(newState.dungeon!.position.x).toBe(19)
+      expect(result.state.dungeon!.position.x).toBe(19)
     })
   })
 
@@ -130,11 +130,11 @@ describe('DungeonMovementService', () => {
   describe('strafeLeft', () => {
     it('moves west when facing north', () => {
       const state = createTestGameState({ x: 10, y: 10, facing: 'NORTH' })
-      const newState = DungeonMovementService.strafeLeft(state)
+      const result = DungeonMovementService.strafeLeft(state)
 
-      expect(newState.dungeon!.position.x).toBe(9)
-      expect(newState.dungeon!.position.y).toBe(10)
-      expect(newState.dungeon!.position.facing).toBe('NORTH')
+      expect(result.state.dungeon!.position.x).toBe(9)
+      expect(result.state.dungeon!.position.y).toBe(10)
+      expect(result.state.dungeon!.position.facing).toBe('NORTH')
     })
   })
 
@@ -324,11 +324,12 @@ describe('DungeonMovementService', () => {
           }
         }
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile)
+        const prevPos = { x: 0, y: 0, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
 
-        expect(result.dungeon!.position.x).toBe(5)
-        expect(result.dungeon!.position.y).toBe(5)
-        expect(result.dungeon!.teleportCount).toBe(1)
+        expect(result.newState.dungeon!.position.x).toBe(5)
+        expect(result.newState.dungeon!.position.y).toBe(5)
+        expect(result.newState.dungeon!.teleportCount).toBe(1)
       })
 
       it('prevents infinite teleport loops after 3 consecutive', () => {
@@ -353,12 +354,13 @@ describe('DungeonMovementService', () => {
           }
         }
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile)
+        const prevPos = { x: 0, y: 0, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
 
         // Should NOT teleport
-        expect(result.dungeon!.position.x).toBe(1)
-        expect(result.dungeon!.position.y).toBe(0)
-        expect(result.dungeon!.teleportCount).toBe(3)
+        expect(result.newState.dungeon!.position.x).toBe(1)
+        expect(result.newState.dungeon!.position.y).toBe(0)
+        expect(result.newState.dungeon!.teleportCount).toBe(3)
       })
 
       it('resets teleport count on non-teleporter tile', () => {
@@ -381,9 +383,10 @@ describe('DungeonMovementService', () => {
           }
         }
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile)
+        const prevPos = { x: 0, y: 0, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
 
-        expect(result.dungeon!.teleportCount).toBe(0)
+        expect(result.newState.dungeon!.teleportCount).toBe(0)
       })
     })
 
@@ -409,10 +412,11 @@ describe('DungeonMovementService', () => {
           }
         }
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile)
+        const prevPos = { x: 5, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
 
         // Facing should be one of the four directions
-        expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.dungeon!.position.facing)
+        expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.newState.dungeon!.position.facing)
       })
 
       it('can change facing to different direction', () => {
@@ -437,10 +441,11 @@ describe('DungeonMovementService', () => {
         }
 
         // Run spinner 10 times, at least one should change facing
+        const prevPos = { x: 5, y: 4, facing: 'NORTH' as const }
         let facingChanged = false
         for (let i = 0; i < 10; i++) {
-          const result = DungeonMovementService.handleSpecialTile(state, tile)
-          if (result.dungeon!.position.facing !== 'NORTH') {
+          const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+          if (result.newState.dungeon!.position.facing !== 'NORTH') {
             facingChanged = true
             break
           }
@@ -465,11 +470,12 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // Should fall 1-3 levels
-        expect(result.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
-        expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(8);
+        expect(result.newState.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
+        expect(result.newState.dungeon!.currentLevel).toBeLessThanOrEqual(8);
       });
 
       it('deals 1d6 damage per level fallen to all party members', () => {
@@ -498,10 +504,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        const char1After = result.roster.get('char1')!;
-        const char2After = result.roster.get('char2')!;
+        const char1After = result.newState.roster.get('char1')!;
+        const char2After = result.newState.roster.get('char2')!;
 
         // Both characters should take damage
         expect(char1After.hp).toBeLessThan(50);
@@ -526,9 +533,10 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(10);
+        expect(result.newState.dungeon!.currentLevel).toBeLessThanOrEqual(10);
       });
     });
 
@@ -561,10 +569,11 @@ describe('DungeonMovementService', () => {
         };
 
         // Run multiple times to ensure damage occurs
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
         let damageOccurred = false;
         for (let i = 0; i < 10; i++) {
-          const result = DungeonMovementService.handleSpecialTile(state, tile);
-          const charAfter = result.roster.get('char1')!;
+          const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
+          const charAfter = result.newState.roster.get('char1')!;
           if (charAfter.hp < 50) {
             damageOccurred = true;
             // Damage should be 1-6
@@ -604,10 +613,11 @@ describe('DungeonMovementService', () => {
         };
 
         // Run multiple times to ensure avoidance occurs
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
         let avoidanceOccurred = false;
         for (let i = 0; i < 10; i++) {
-          const result = DungeonMovementService.handleSpecialTile(state, tile);
-          const charAfter = result.roster.get('char1')!;
+          const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
+          const charAfter = result.newState.roster.get('char1')!;
           if (charAfter.hp === 50) {
             avoidanceOccurred = true;
             break;
@@ -630,9 +640,180 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result.dungeon!.currentLevel).toBe(5);
+        expect(result.newState.dungeon!.currentLevel).toBe(5);
+      });
+
+      it('uses custom pitDamage when specified (1d8)', () => {
+        const tile = { types: ['pit'], pitDamage: '1d8' } as TileData;
+
+        const lowAgiChar = createTestCharacter({
+          id: 'char1',
+          hp: 50,
+          maxHp: 50,
+          agility: 3, // Guaranteed fail
+        });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1'],
+            formation: { front: ['char1'], back: [] },
+            gold: 0,
+          },
+          roster: new Map([['char1', lowAgiChar]]),
+          dungeon: {
+            currentLevel: 5,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        let damageOccurred = false;
+        for (let i = 0; i < 10; i++) {
+          const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
+          const charAfter = result.newState.roster.get('char1')!;
+          if (charAfter.hp < 50) {
+            damageOccurred = true;
+            // Damage should be 1-8 (1d8)
+            expect(charAfter.hp).toBeGreaterThanOrEqual(50 - 8);
+            expect(charAfter.hp).toBeLessThan(50);
+            break;
+          }
+        }
+        expect(damageOccurred).toBe(true);
+      });
+
+      it('defaults to 1d6 when pitDamage not specified', () => {
+        const tile = { types: ['pit'] } as TileData;  // No pitDamage
+
+        const lowAgiChar = createTestCharacter({
+          id: 'char1',
+          hp: 50,
+          maxHp: 50,
+          agility: 3,
+        });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1'],
+            formation: { front: ['char1'], back: [] },
+            gold: 0,
+          },
+          roster: new Map([['char1', lowAgiChar]]),
+          dungeon: {
+            currentLevel: 5,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+          },
+        };
+
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        let damageOccurred = false;
+        for (let i = 0; i < 10; i++) {
+          const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
+          const charAfter = result.newState.roster.get('char1')!;
+          if (charAfter.hp < 50) {
+            damageOccurred = true;
+            // Default damage should be 1-6 (1d6)
+            expect(charAfter.hp).toBeGreaterThanOrEqual(50 - 6);
+            break;
+          }
+        }
+        expect(damageOccurred).toBe(true);
+      });
+
+      it('includes tile.message in messages array when pit has message', () => {
+        const tile = {
+          types: ['pit'],
+          message: 'The floor gives way beneath you!'
+        } as TileData;
+
+        const lowAgiChar = createTestCharacter({
+          id: 'char1',
+          hp: 50,
+          maxHp: 50,
+          agility: 3,
+        });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1'],
+            formation: { front: ['char1'], back: [] },
+            gold: 0,
+          },
+          roster: new Map([['char1', lowAgiChar]]),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 3,
+            inDarknessZone: false,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: [],
+            unlockedDoors: new Set(),
+            openDoors: new Set(),
+            lootedTiles: new Set(),
+            latumapicActive: false,
+          },
+        };
+
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const };
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
+
+        // Message should be in the messages array
+        expect(result.messages).toContain('The floor gives way beneath you!');
+      });
+
+      it('returns empty messages array when pit has no message', () => {
+        const tile = { types: ['pit'] } as TileData;
+
+        const lowAgiChar = createTestCharacter({
+          id: 'char1',
+          hp: 50,
+          maxHp: 50,
+          agility: 3,
+        });
+
+        const state: GameState = {
+          ...createTestGameStateHelper(),
+          party: {
+            members: ['char1'],
+            formation: { front: ['char1'], back: [] },
+            gold: 0,
+          },
+          roster: new Map([['char1', lowAgiChar]]),
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 10, y: 10, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 3,
+            inDarknessZone: false,
+            teleportCount: 0,
+            visitedTiles: new Set(),
+            defeatedEncounters: [],
+            unlockedDoors: new Set(),
+            openDoors: new Set(),
+            lootedTiles: new Set(),
+            latumapicActive: false,
+          },
+        };
+
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const };
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
+
+        // No message configured, messages should be empty
+        expect(result.messages).toHaveLength(0);
       });
     });
 
@@ -658,14 +839,15 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 5, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // Darkness zones extinguish active light spells (original Wizardry behavior)
-        expect(result.dungeon!.lightActive).toBe(false);
-        expect(result.dungeon!.inDarknessZone).toBe(true);
-        expect(result.dungeon!.lightSpellType).toBeUndefined();
-        expect(result.dungeon!.lightDurationRemaining).toBeUndefined();
-        expect(result.dungeon!.lightRadius).toBe(1); // Minimum visibility in darkness
+        expect(result.newState.dungeon!.lightActive).toBe(false);
+        expect(result.newState.dungeon!.inDarknessZone).toBe(true);
+        expect(result.newState.dungeon!.lightSpellType).toBeUndefined();
+        expect(result.newState.dungeon!.lightDurationRemaining).toBeUndefined();
+        expect(result.newState.dungeon!.lightRadius).toBe(1); // Minimum visibility in darkness
       });
 
       it('handles darkness_zone_start the same as darkness', () => {
@@ -681,10 +863,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 0, y: 0, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result.dungeon!.lightActive).toBe(false);
-        expect(result.dungeon!.inDarknessZone).toBe(true);
+        expect(result.newState.dungeon!.lightActive).toBe(false);
+        expect(result.newState.dungeon!.inDarknessZone).toBe(true);
       });
     });
 
@@ -703,9 +886,10 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result.dungeon!.currentLevel).toBe(2);
+        expect(result.newState.dungeon!.currentLevel).toBe(2);
       });
 
       it('stairs_up auto-ascends to previous level', () => {
@@ -722,9 +906,10 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result.dungeon!.currentLevel).toBe(2);
+        expect(result.newState.dungeon!.currentLevel).toBe(2);
       });
 
       it('stairs_up on level 1 does nothing', () => {
@@ -741,9 +926,10 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 9, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result.dungeon!.currentLevel).toBe(1);
+        expect(result.newState.dungeon!.currentLevel).toBe(1);
       });
     });
 
@@ -846,10 +1032,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 10, y: 7, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // Elevator UI handled by MazeComponent
-        expect(result).toEqual(state);
+        expect(result.newState).toEqual(state);
       });
     });
 
@@ -868,10 +1055,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 5, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // Anti-magic doesn't modify state directly - MazeComponent checks tile type
-        expect(result).toEqual(state);
+        expect(result.newState).toEqual(state);
       });
     });
 
@@ -893,10 +1081,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 5, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // Message display handled by MazeComponent, state unchanged
-        expect(result).toEqual(state);
+        expect(result.newState).toEqual(state);
       });
     });
 
@@ -918,10 +1107,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 13, y: 2, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // State unchanged - requires explicit inspect action
-        expect(result).toEqual(state);
+        expect(result.newState).toEqual(state);
       });
     });
 
@@ -944,10 +1134,11 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 13, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
         // MazeComponent will check and trigger combat
-        expect(result).toEqual(state);
+        expect(result.newState).toEqual(state);
       });
 
       it('returns state unchanged if encounter already defeated', () => {
@@ -968,10 +1159,342 @@ describe('DungeonMovementService', () => {
           },
         };
 
-        const result = DungeonMovementService.handleSpecialTile(state, tile);
+        const prevPos = { x: 13, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos);
 
-        expect(result).toEqual(state);
+        expect(result.newState).toEqual(state);
       });
+    });
+
+    describe('conditional tiles with entryMessage', () => {
+      it('includes tile.message as entryMessage when condition fails', () => {
+        const tile: TileData = {
+          x: 8,
+          y: 7,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          types: ['room'],
+          message: 'As you enter, smoke fills the room.',
+          condition: {
+            type: 'has_item',
+            itemId: 'bronze_key'
+          },
+          onConditionFail: {
+            message: 'You feel compelled to leave!',
+            action: 'retreat'
+          }
+        }
+
+        // Party has no bronze_key
+        const char = createTestCharacter({ id: 'hero-1', inventory: [] })
+        const state: GameState = {
+          ...createTestGameState(),
+          roster: new Map([['hero-1', char]]),
+          party: {
+            members: ['hero-1'],
+            formation: { front: ['hero-1'], back: [] },
+            gold: 0
+          },
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 8, y: 7, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+          },
+        }
+
+        const prevPos = { x: 8, y: 6, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+
+        expect(result.conditionResult).toBeDefined()
+        expect(result.conditionResult!.status).toBe('fail')
+        expect(result.conditionResult!.entryMessage).toBe('As you enter, smoke fills the room.')
+        expect(result.conditionResult!.message).toBe('You feel compelled to leave!')
+      })
+
+      it('includes tile.message as entryMessage when condition succeeds', () => {
+        const tile: TileData = {
+          x: 8,
+          y: 7,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          types: ['fixed_encounter'],
+          message: 'As you enter, smoke fills the room.',
+          condition: {
+            type: 'has_item',
+            itemId: 'bronze_key'
+          },
+          onConditionFail: {
+            message: 'You feel compelled to leave!',
+            action: 'retreat'
+          },
+          encounterId: 'bronze_golem'
+        }
+
+        // Party HAS the bronze_key
+        const bronzeKey = {
+          id: 'bronze_key',
+          name: 'Bronze Key',
+          type: 'MISC' as any,
+          slot: 'NONE' as any,
+          price: 0,
+          cursed: false,
+          identified: true,
+          equipped: false
+        }
+        const char = createTestCharacter({ id: 'hero-1', inventory: [bronzeKey] })
+        const state: GameState = {
+          ...createTestGameState(),
+          roster: new Map([['hero-1', char]]),
+          party: {
+            members: ['hero-1'],
+            formation: { front: ['hero-1'], back: [] },
+            gold: 0
+          },
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 8, y: 7, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+          },
+        }
+
+        const prevPos = { x: 8, y: 6, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+
+        expect(result.conditionResult).toBeDefined()
+        expect(result.conditionResult!.status).toBe('success')
+        expect(result.conditionResult!.entryMessage).toBe('As you enter, smoke fills the room.')
+        expect(result.conditionResult!.encounterId).toBe('bronze_golem')
+      })
+
+      it('does not include entryMessage when tile has no message', () => {
+        const tile: TileData = {
+          x: 8,
+          y: 7,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          types: ['room'],
+          // No message property
+          condition: {
+            type: 'has_item',
+            itemId: 'bronze_key'
+          },
+          onConditionFail: {
+            message: 'You feel compelled to leave!',
+            action: 'retreat'
+          }
+        }
+
+        const char = createTestCharacter({ id: 'hero-1', inventory: [] })
+        const state: GameState = {
+          ...createTestGameState(),
+          roster: new Map([['hero-1', char]]),
+          party: {
+            members: ['hero-1'],
+            formation: { front: ['hero-1'], back: [] },
+            gold: 0
+          },
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 8, y: 7, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+          },
+        }
+
+        const prevPos = { x: 8, y: 6, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+
+        expect(result.conditionResult).toBeDefined()
+        expect(result.conditionResult!.entryMessage).toBeUndefined()
+      })
+    });
+
+    describe('conditional tile completion tracking', () => {
+      it('skips condition check for already completed tiles', () => {
+        const tile: TileData = {
+          x: 8,
+          y: 7,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          types: ['room'],
+          message: 'A mysterious room.',
+          condition: {
+            type: 'has_item',
+            itemId: 'silver_key'
+          },
+          onConditionFail: {
+            message: 'You cannot enter!',
+            action: 'retreat'
+          }
+        }
+
+        // Party has NO silver_key but tile is already completed
+        const char = createTestCharacter({ id: 'hero-1', inventory: [] })
+        const state: GameState = {
+          ...createTestGameState(),
+          roster: new Map([['hero-1', char]]),
+          party: {
+            members: ['hero-1'],
+            formation: { front: ['hero-1'], back: [] },
+            gold: 0
+          },
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 8, y: 7, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+            completedConditionTiles: new Set(['1_8_7']),  // Already completed
+            visitedTiles: new Set(),
+            unlockedDoors: new Set(),
+            openDoors: new Set(),
+            lootedTiles: new Set(),
+            inDarknessZone: false,
+            latumapicActive: false,
+            expeditionAcBuff: 0,
+            activeExpeditionSpells: []
+          },
+        }
+
+        const prevPos = { x: 8, y: 6, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+
+        // Should return already_completed, NOT fail (even though party lacks item)
+        expect(result.conditionResult).toBeDefined()
+        expect(result.conditionResult!.status).toBe('already_completed')
+      })
+
+      it('consumes item and marks tile complete on condition success', () => {
+        const tile: TileData = {
+          x: 4,
+          y: 12,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          types: ['room'],
+          message: 'A pool awaits an offering.',
+          condition: {
+            type: 'has_item',
+            itemId: 'statuette_frog'
+          },
+          onConditionFail: {
+            message: 'You are rejected!',
+            action: 'retreat'
+          }
+        }
+
+        // Party HAS the statuette_frog
+        const statuetteFrog = {
+          id: 'statuette_frog',
+          name: 'Statuette of Frog',
+          type: 'MISC' as any,
+          slot: 'NONE' as any,
+          price: 0,
+          cursed: false,
+          identified: true,
+          equipped: false
+        }
+        const char = createTestCharacter({ id: 'hero-1', inventory: [statuetteFrog] })
+        const state: GameState = {
+          ...createTestGameState(),
+          roster: new Map([['hero-1', char]]),
+          party: {
+            members: ['hero-1'],
+            formation: { front: ['hero-1'], back: [] },
+            gold: 0
+          },
+          dungeon: {
+            currentLevel: 2,
+            position: { x: 4, y: 12, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+            completedConditionTiles: new Set(),  // Empty - tile not yet completed
+            visitedTiles: new Set(),
+            unlockedDoors: new Set(),
+            openDoors: new Set(),
+            lootedTiles: new Set(),
+            inDarknessZone: false,
+            latumapicActive: false,
+            expeditionAcBuff: 0,
+            activeExpeditionSpells: []
+          },
+        }
+
+        const prevPos = { x: 4, y: 11, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+
+        // Condition should succeed
+        expect(result.conditionResult).toBeDefined()
+        expect(result.conditionResult!.status).toBe('success')
+        expect(result.conditionResult!.entryMessage).toBe('A pool awaits an offering.')
+
+        // Item should be consumed from inventory
+        const updatedChar = result.newState.roster.get('hero-1')!
+        expect(updatedChar.inventory).toHaveLength(0)
+
+        // Tile should be marked as completed
+        expect(result.newState.dungeon!.completedConditionTiles.has('2_4_12')).toBe(true)
+      })
+
+      it('does not consume item for non-has_item conditions', () => {
+        const tile: TileData = {
+          x: 5,
+          y: 5,
+          walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          types: ['room'],
+          condition: {
+            type: 'has_spell',  // Not has_item
+            spellId: 'malor'
+          },
+          onConditionFail: {
+            message: 'You need the spell!',
+            action: 'retreat'
+          }
+        }
+
+        const char = createTestCharacter({ id: 'hero-1', inventory: [] })
+        const state: GameState = {
+          ...createTestGameState(),
+          roster: new Map([['hero-1', char]]),
+          party: {
+            members: ['hero-1'],
+            formation: { front: ['hero-1'], back: [] },
+            gold: 0
+          },
+          dungeon: {
+            currentLevel: 1,
+            position: { x: 5, y: 5, facing: 'NORTH' },
+            lightActive: false,
+            lightRadius: 0,
+            teleportCount: 0,
+            defeatedEncounters: [],
+            completedConditionTiles: new Set(),
+            visitedTiles: new Set(),
+            unlockedDoors: new Set(),
+            openDoors: new Set(),
+            lootedTiles: new Set(),
+            inDarknessZone: false,
+            latumapicActive: false,
+            expeditionAcBuff: 0,
+            activeExpeditionSpells: []
+          },
+        }
+
+        const prevPos = { x: 5, y: 4, facing: 'NORTH' as const }
+        const result = DungeonMovementService.handleSpecialTile(state, tile, prevPos)
+
+        // has_spell currently returns true (not implemented)
+        expect(result.conditionResult).toBeDefined()
+        expect(result.conditionResult!.status).toBe('success')
+
+        // Tile should still be marked as completed
+        expect(result.newState.dungeon!.completedConditionTiles.has('1_5_5')).toBe(true)
+      })
     });
   })
 
@@ -1014,9 +1537,9 @@ describe('DungeonMovementService', () => {
       const result = DungeonMovementService.moveForward(state);
 
       // Should move to (1, 0) then teleport to (10, 10)
-      expect(result.dungeon!.position.x).toBe(10);
-      expect(result.dungeon!.position.y).toBe(10);
-      expect(result.dungeon!.teleportCount).toBe(1);
+      expect(result.state.dungeon!.position.x).toBe(10);
+      expect(result.state.dungeon!.position.y).toBe(10);
+      expect(result.state.dungeon!.teleportCount).toBe(1);
 
       // Restore mocks
       jest.restoreAllMocks();
@@ -1059,8 +1582,8 @@ describe('DungeonMovementService', () => {
       const result = DungeonMovementService.strafeLeft(state);
 
       // Should move to (0, 0) then spin
-      expect(result.dungeon!.position.x).toBe(0);
-      expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.dungeon!.position.facing);
+      expect(result.state.dungeon!.position.x).toBe(0);
+      expect(['NORTH', 'SOUTH', 'EAST', 'WEST']).toContain(result.state.dungeon!.position.facing);
 
       jest.restoreAllMocks();
     });
@@ -1110,13 +1633,13 @@ describe('DungeonMovementService', () => {
       const result = DungeonMovementService.moveBackward(state);
 
       // Should move to (10, 9) then fall down levels
-      expect(result.dungeon!.position.x).toBe(10);
-      expect(result.dungeon!.position.y).toBe(9);
-      expect(result.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
-      expect(result.dungeon!.currentLevel).toBeLessThanOrEqual(8);
+      expect(result.state.dungeon!.position.x).toBe(10);
+      expect(result.state.dungeon!.position.y).toBe(9);
+      expect(result.state.dungeon!.currentLevel).toBeGreaterThanOrEqual(6);
+      expect(result.state.dungeon!.currentLevel).toBeLessThanOrEqual(8);
 
       // Character should take damage
-      const charAfter = result.roster.get('char1')!;
+      const charAfter = result.state.roster.get('char1')!;
       expect(charAfter.hp).toBeLessThan(50);
 
       jest.restoreAllMocks();
@@ -1167,12 +1690,12 @@ describe('DungeonMovementService', () => {
       const result = DungeonMovementService.strafeRight(state);
 
       // Should move to (1, 0)
-      expect(result.dungeon!.position.x).toBe(1);
-      expect(result.dungeon!.position.y).toBe(0);
+      expect(result.state.dungeon!.position.x).toBe(1);
+      expect(result.state.dungeon!.position.y).toBe(0);
 
       // Low AGI character should likely take damage (may not happen every time due to RNG)
       // We just verify position changed and level stayed same
-      expect(result.dungeon!.currentLevel).toBe(5);
+      expect(result.state.dungeon!.currentLevel).toBe(5);
 
       jest.restoreAllMocks();
     });
@@ -1219,7 +1742,7 @@ describe('DungeonMovementService', () => {
       const result = DungeonMovementService.moveForward(state)
 
       // Should trigger castle transition (dungeon becomes undefined)
-      expect(result.dungeon).toBeUndefined()
+      expect(result.state.dungeon).toBeUndefined()
     })
 
     it('updates position normally when no special action triggered', () => {
@@ -1261,8 +1784,8 @@ describe('DungeonMovementService', () => {
       const result = DungeonMovementService.moveForward(state)
 
       // Should update position normally
-      expect(result.dungeon?.position.y).toBe(1)
-      expect(result.dungeon?.position.x).toBe(0)
+      expect(result.state.dungeon?.position.y).toBe(1)
+      expect(result.state.dungeon?.position.x).toBe(0)
     })
 
     it('handles stairs_down transition to next level', () => {

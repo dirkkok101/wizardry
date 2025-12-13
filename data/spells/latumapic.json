@@ -7,5 +7,6 @@
   "target": "all_enemies",
   "description": "Identify - Reveals the true names and natures of all monsters encountered, replacing unknown descriptors with actual creature names. Effect persists until leaving the dungeon. Cast at the start of each expedition alongside LOMILWA and MAPORFIC.",
   "castableIn": ["combat", "camp"],
-  "utility": "identify_foe"
+  "utility": "identify_foe",
+  "buffDuration": "expedition"
 }
