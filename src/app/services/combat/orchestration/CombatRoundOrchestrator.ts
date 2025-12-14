@@ -23,6 +23,8 @@ import {
   ActionSkipReason,
   CommandExecutionResult,
   MonsterGroup,
+  CombatActionType,
+  CombatEventType,
 } from '@models/Combat'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { RandomService } from '@services/RandomService'
@@ -41,6 +43,20 @@ import { processMonsterRegeneration } from '../support/RegenerationService'
 import { processCharacterStatusRecovery } from '../support/CharacterRecoveryService'
 import { repositionPartyAfterCasualties } from '../support/PartyFormationService'
 import { processMonsterStatusRecovery, tickStatusDurations } from '../core/StatusEffectService'
+
+/**
+ * Map combat action types to event types for cinematic arena playback.
+ * Actions are grouped into categories: most actions are 'action', flee attempts are 'flee'.
+ */
+function actionTypeToEventType(actionType: CombatActionType): CombatEventType {
+  switch (actionType) {
+    case 'RUN':
+    case 'MONSTER_FLEE':
+      return 'flee'
+    default:
+      return 'action'
+  }
+}
 
 // Re-export for convenience
 export { CombatRoundOrchestrator }
@@ -607,10 +623,14 @@ class CombatRoundOrchestrator {
 
       // Create event for cinematic arena playback
       const event: CombatRoundEvent = {
-        type: command.type as unknown as CombatRoundEvent['type'],
+        type: actionTypeToEventType(command.type),
         messages: result.messages,
         // Snapshot monster state after this action for live count updates
-        monsterGroupsSnapshot: structuredClone(result.newState.monsterGroups),
+        // Shallow copy is safe: state is immutable, snapshots are only read for counting
+        monsterGroupsSnapshot: result.newState.monsterGroups.map(group => ({
+          ...group,
+          monsters: [...group.monsters]
+        })),
         characterUpdates: result.characterUpdates,
         damageResults: result.damageResults,
         statusEffects: result.statusEffects,
