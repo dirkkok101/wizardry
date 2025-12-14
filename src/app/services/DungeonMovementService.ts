@@ -5,6 +5,7 @@ import { RandomService } from './RandomService'
 import { LightService } from './LightService'
 import { TileConditionService } from './TileConditionService'
 import { FightMapService } from './FightMapService'
+import { tileHandlerRegistry } from './tile-handlers/TileHandlerRegistry'
 
 /**
  * Result from movement operations, includes state and any special tile effects
@@ -433,7 +434,6 @@ export const DungeonMovementService = {
    */
   handleSpecialTile(state: GameState, tile: TileData, previousPosition: Position): SpecialTileResult {
     const dungeon = this.requireDungeon(state)
-    const messages: string[] = []
 
     console.log(`[Movement] Entering tile (${tile.x}, ${tile.y}), types=[${tile.types?.join(', ') ?? 'none'}], hasCondition=${!!tile.condition}`)
 
@@ -445,149 +445,62 @@ export const DungeonMovementService = {
       }
     }
 
-    // =========================================================================
-    // CONDITION CHECKING - Must happen before other tile effects
-    // =========================================================================
-    if (tile.condition) {
-      console.log(`[Movement] Tile has condition: ${JSON.stringify(tile.condition)}`)
+    // Delegate to TileHandlerRegistry (Strategy pattern)
+    // This replaces the previous 160-line if-else chain with registry-based dispatch
+    const result = tileHandlerRegistry.handleTile(state, tile, previousPosition)
 
-      // Create tile key for completion tracking
+    // Handle condition-based tiles that need item consumption
+    if (result.conditionResult?.status === 'success' && tile.condition) {
+      // Consume the required item (for has_item conditions)
+      let updatedState = TileConditionService.consumeConditionItem(tile.condition, result.state)
+
+      // Mark this conditional tile as completed
+      const updatedDungeon = updatedState.dungeon!
       const tileKey = `${dungeon.currentLevel}_${tile.x}_${tile.y}`
+      const newCompletedTiles = new Set(updatedDungeon.completedConditionTiles ?? [])
+      newCompletedTiles.add(tileKey)
 
-      // First check if this conditional tile was already completed
-      if (dungeon.completedConditionTiles?.has(tileKey)) {
-        console.log(`[Movement] Conditional tile ${tileKey} already completed, skipping condition`)
-        const conditionResult: ConditionResult = { status: 'already_completed' }
-        const lightState = this.processLightState(state, tile.types)
-        return { newState: lightState, messages, conditionResult }
+      // Track consumed item ID (prevents re-awarding from searchable tiles)
+      const newConsumedItems = new Set(updatedDungeon.consumedConditionItems ?? [])
+      if (tile.condition.type === 'has_item' && tile.condition.itemId) {
+        newConsumedItems.add(tile.condition.itemId)
+        console.log(`[Movement] Tracking consumed item: "${tile.condition.itemId}"`)
       }
 
-      // Also check if encounter was already defeated (for tiles with encounterId)
-      if (tile.encounterId && dungeon.defeatedEncounters.includes(tile.encounterId)) {
-        // Already completed - no condition check needed, continue normally
-        console.log(`[Movement] Encounter ${tile.encounterId} already completed, skipping condition`)
-        const conditionResult: ConditionResult = { status: 'already_completed' }
-        const lightState = this.processLightState(state, tile.types)
-        return { newState: lightState, messages, conditionResult }
-      }
-
-      // Check the condition
-      const conditionMet = TileConditionService.checkCondition(tile.condition, state)
-      console.log(`[Movement] Condition result: ${conditionMet ? 'PASS' : 'FAIL'}`)
-
-      if (!conditionMet && tile.onConditionFail) {
-        // Condition FAILED - return failure result
-        console.log(`[Movement] Executing fail action: ${tile.onConditionFail.action}`)
-        const fail = tile.onConditionFail
-        const conditionResult: ConditionResult = {
-          status: 'fail',
-          message: fail.message,
-          messageStyle: fail.messageStyle ?? 'letterbox',
-          entryMessage: tile.message,  // Always shown before condition message
-          failAction: fail.action,
-          failDestination: fail.destination,
-          previousPosition
+      updatedState = {
+        ...updatedState,
+        dungeon: {
+          ...updatedDungeon,
+          completedConditionTiles: newCompletedTiles,
+          consumedConditionItems: newConsumedItems
         }
-        // Note: Position is NOT reverted here - MazeComponent handles retreat after showing message
-        return { newState: state, messages, conditionResult }
       }
 
-      if (conditionMet) {
-        // Condition PASSED - consume item and mark tile as completed
-        console.log(`[Movement] Condition passed, consuming item and marking tile complete`)
+      // Suppress entry message for completed non-repeatable fixed encounters
+      const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y)
 
-        // Consume the required item (for has_item conditions)
-        let updatedState = TileConditionService.consumeConditionItem(tile.condition, state)
-
-        // Mark this conditional tile as completed
-        const updatedDungeon = updatedState.dungeon!
-        const newCompletedTiles = new Set(updatedDungeon.completedConditionTiles ?? [])
-        newCompletedTiles.add(tileKey)
-
-        // Track consumed item ID (prevents re-awarding from searchable tiles)
-        const newConsumedItems = new Set(updatedDungeon.consumedConditionItems ?? [])
-        if (tile.condition.type === 'has_item' && tile.condition.itemId) {
-          newConsumedItems.add(tile.condition.itemId)
-          console.log(`[Movement] Tracking consumed item: "${tile.condition.itemId}"`)
-        }
-
-        updatedState = {
-          ...updatedState,
-          dungeon: {
-            ...updatedDungeon,
-            completedConditionTiles: newCompletedTiles,
-            consumedConditionItems: newConsumedItems
-          }
-        }
-
-        // Return success result
-        const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y);
-        const success = tile.onConditionSuccess
-        const conditionResult: ConditionResult = {
-          status: 'success',
-          message: suppressMessage ? undefined : success?.message,
-          messageStyle: success?.messageStyle ?? 'letterbox',
-          entryMessage: suppressMessage ? undefined : tile.message,
-          encounterId: suppressMessage ? undefined : tile.encounterId  // Also skip encounter trigger
-        }
-        const lightState = this.processLightState(updatedState, tile.types)
-        return { newState: lightState, messages, conditionResult }
+      return {
+        newState: updatedState,
+        messages: result.messages,
+        conditionResult: {
+          ...result.conditionResult,
+          message: suppressMessage ? undefined : result.conditionResult.message,
+          entryMessage: suppressMessage ? undefined : result.entryMessage,
+          encounterId: suppressMessage ? undefined : tile.encounterId
+        },
+        entryMessage: suppressMessage ? undefined : result.entryMessage
       }
     }
-
-    // =========================================================================
-    // STANDARD SPECIAL TILE HANDLING
-    // =========================================================================
-
-    // Handle special tile types (using includes() since tiles can have multiple types)
-    if (this.tileHasType(tile, 'teleporter')) {
-      return { newState: this.handleTeleporter(state, tile), messages }
-    }
-
-    if (this.tileHasType(tile, 'spinner')) {
-      return { newState: this.handleSpinner(state), messages }
-    }
-
-    if (this.tileHasType(tile, 'chute')) {
-      return { newState: this.handleChute(state), messages }
-    }
-
-    if (this.tileHasType(tile, 'pit')) {
-      if (tile.message) {
-        messages.push(tile.message)
-      }
-      return { newState: this.handlePit(state, tile), messages }
-    }
-
-    if (this.tileHasType(tile, 'stairs_up')) {
-      if (dungeon.currentLevel > 1) {
-        return { newState: this.enterLevel(state, dungeon.currentLevel - 1, 'STAIRS_UP'), messages }
-      }
-      return { newState: state, messages }
-    }
-
-    if (this.tileHasType(tile, 'stairs_down')) {
-      if (dungeon.currentLevel < 10) {
-        return { newState: this.enterLevel(state, dungeon.currentLevel + 1, 'STAIRS_DOWN'), messages }
-      }
-      return { newState: state, messages }
-    }
-
-    if (this.tileHasType(tile, 'elevator')) {
-      // Process light state (handles leaving darkness zone) then UI handles level selection
-      return { newState: this.processLightState(state, tile.types), messages }
-    }
-
-    // Process light state for all other tiles (handles darkness zones, duration decrement)
-    // Includes: darkness, darkness_zone_start, anti_magic, message, searchable, fixed_encounter
 
     // Suppress entry message for completed non-repeatable fixed encounters
-    const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y);
+    const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y)
 
+    // Convert TileProcessingResult to SpecialTileResult
     return {
-      newState: this.processLightState(state, tile.types),
-      messages,
-      entryMessage: suppressMessage ? undefined : tile.message
+      newState: result.state,
+      messages: result.messages,
+      conditionResult: result.conditionResult,
+      entryMessage: suppressMessage ? undefined : result.entryMessage
     }
   },
 
