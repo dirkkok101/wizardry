@@ -2,7 +2,7 @@
 
 ## Implementation Progress
 
-**Status: ~60% Complete**
+**Status: ~70% Complete**
 
 ### Completed Integration Work
 
@@ -11,11 +11,30 @@
 | Phase 1 | TileHandlerRegistry integration into DungeonMovementService | ✅ Complete |
 | Phase 2+5 | CombatOrchestrationService integration (initiateEncounter, onExecuteRound) | ✅ Complete |
 | Phase 3+6 | ChestOrchestrationService integration (computed signals) | ✅ Complete |
-| Phase 4 | Tile message and spell signal migration | ⏳ Pending |
+| Phase 4.1 | Tile message signal migration to MazeStateMachine | ✅ Complete |
+| Phase 4.2 | Spell casting signal migration | ⏳ Deferred (current signals work) |
+| Phase 4.3 | Deprecated signal removal | ⏳ Deferred |
 | Phase 7 | Component decomposition | ⏳ Pending |
 | Phase 8 | Async/await pattern verification | ✅ Already in place |
 
-### Key Changes Made
+### Key Changes Made (Latest Session)
+
+1. **Phase 4.1 - Tile Message Migration:**
+   - `showTileMessage()` now delegates to `MazeStateMachine.showTileMessage()`
+   - `dismissTileMessageOverlay()` now uses `MazeStateMachine.dismissTileMessage()`
+   - Local signals maintained during migration for backward compatibility
+
+2. **Orchestration Service Fixes:**
+   - ChestOrchestrationService: Fixed CharacterClass enum comparison, removed unused methods
+   - CombatOrchestrationService: Fixed `createCommand()` signature, removed unused `processVictory()`
+   - MovementOrchestrationService: Fixed `encounterReason` type, corrected `applyPoisonDamage()` API
+
+3. **Build Fixes:**
+   - Fixed VictoryRewards import in MazeStateMachine
+   - Fixed type exports in tile-handlers/index.ts (isolatedModules compliance)
+   - Created missing version.ts config (gitignored, auto-generated)
+
+### Previous Session Changes
 
 1. **DungeonMovementService.handleSpecialTile()**: Reduced from 160 lines to 70 lines using TileHandlerRegistry
 2. **MazeComponent.initiateEncounter()**: Now uses CombatOrchestrationService
