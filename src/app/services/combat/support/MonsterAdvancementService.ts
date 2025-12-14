@@ -11,7 +11,7 @@
 import { CombatState, MonsterGroup, MonsterInstance } from '@models/Combat'
 import { MonsterDataLoader } from '@services/MonsterDataLoader'
 import { MonsterService } from '@services/MonsterService'
-import { getMonsterDisplayName } from '@utils/MonsterDisplayHelpers'
+import { getMonsterDisplayName } from '@utils/MonsterNameUtils'
 
 // Re-export for convenience
 export { MonsterAdvancementService }
