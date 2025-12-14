@@ -687,10 +687,11 @@ class CombatRoundOrchestrator {
 }
 
 // Standalone function exports
+// Note: Methods that use `this` internally need .bind() to work as standalone functions
 export const createRoundContext = CombatRoundOrchestrator.createRoundContext
-export const createAuditContext = CombatRoundOrchestrator.createAuditContext
+export const createAuditContext = CombatRoundOrchestrator.createAuditContext.bind(CombatRoundOrchestrator)
 export const sortCommandsByInitiative = CombatRoundOrchestrator.sortCommandsByInitiative
-export const applySurpriseFilter = CombatRoundOrchestrator.applySurpriseFilter
+export const applySurpriseFilter = CombatRoundOrchestrator.applySurpriseFilter.bind(CombatRoundOrchestrator)
 export const canActorAct = CombatRoundOrchestrator.canActorAct
 export const getSkipReason = CombatRoundOrchestrator.getSkipReason
 export const checkCombatEnd = CombatRoundOrchestrator.checkCombatEnd

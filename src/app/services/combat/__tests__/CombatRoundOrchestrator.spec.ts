@@ -87,6 +87,13 @@ describe('CombatRoundOrchestrator', () => {
       expect(ctx.skipReasonCounts.SURPRISED).toBe(0)
       expect(ctx.skipReasonCounts.NONE).toBe(0)
     })
+
+    it('works as standalone export (binding test)', () => {
+      // Verify the standalone export works without `this` binding issues
+      const ctx = createAuditContext()
+      expect(ctx.enabled).toBe(true)
+      expect(ctx.skipReasonCounts.DEAD).toBe(0)
+    })
   })
 
   describe('sortCommandsByInitiative', () => {
@@ -196,12 +203,29 @@ describe('CombatRoundOrchestrator', () => {
       ]
       const auditCtx = CombatRoundOrchestrator.createAuditContext(true)
 
-      // Use class method directly to avoid `this` binding issues
       CombatRoundOrchestrator.applySurpriseFilter(commands, 'party', auditCtx)
 
       expect(auditCtx.entries).toHaveLength(1)
       expect(auditCtx.entries[0].skipReason).toBe('SURPRISED')
       expect(auditCtx.skipReasonCounts.SURPRISED).toBe(1)
+    })
+
+    it('works as standalone export (binding test)', () => {
+      // Verify the standalone export works without `this` binding issues
+      const char = createTestCharacter()
+      const monster = createTestMonster()
+      const commands: CombatCommand[] = [
+        { id: 'cmd1', actor: char, type: 'ATTACK', initiative: 5 },
+        { id: 'cmd2', actor: monster, type: 'ATTACK', initiative: 8 },
+      ]
+      const auditCtx = createAuditContext(true)
+
+      // This should work with the binding fix
+      const filtered = applySurpriseFilter(commands, 'party', auditCtx)
+
+      expect(filtered).toHaveLength(1)
+      expect(filtered[0].id).toBe('cmd1')
+      expect(auditCtx.entries).toHaveLength(1)
     })
   })
 

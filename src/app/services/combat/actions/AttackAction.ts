@@ -26,6 +26,7 @@ import {
 import {
   resolveAttack,
   AttackResolutionOptions,
+  isHelplessTarget,
 } from '../core/AttackResolutionService'
 import {
   hasStatusEffect,
@@ -277,7 +278,7 @@ export class AttackAction extends BaseCombatAction {
     const { state, command } = ctx
 
     // Check if target is helpless for 2x damage
-    const isHelpless = this.isTargetHelpless(target)
+    const isHelpless = isHelplessTarget(target)
     const finalDamage = isHelpless ? damage * 2 : damage
 
     // Calculate new HP
@@ -356,23 +357,6 @@ export class AttackAction extends BaseCombatAction {
       },
       characterUpdates,
     }
-  }
-
-  /**
-   * Check if target is helpless (sleeping/paralyzed/stoned)
-   */
-  private isTargetHelpless(combatant: Combatant): boolean {
-    if ('status' in combatant) {
-      const status = combatant.status
-      if (typeof status === 'string') {
-        const statusStr = status.toUpperCase()
-        return statusStr === 'ASLEEP' || statusStr === 'PARALYZED' || statusStr === 'STONED'
-      }
-      return status === CharacterStatus.ASLEEP ||
-             status === CharacterStatus.PARALYZED ||
-             status === CharacterStatus.STONED
-    }
-    return false
   }
 
   /**
