@@ -171,7 +171,16 @@ export class CinematicArenaComponent implements OnDestroy {
     // Start playback when component becomes visible with events
     effect(() => {
       if (this.visible() && this.events().length > 0 && !this.isPlaying()) {
+        console.log('[CinematicArena] Starting playback with', this.events().length, 'events')
         this.startPlayback()
+      }
+    })
+
+    // Safety check: If visible but no events, complete immediately
+    effect(() => {
+      if (this.visible() && this.events().length === 0 && !this.isPlaying()) {
+        console.warn('[CinematicArena] No events to play - completing immediately')
+        this.playbackComplete.emit()
       }
     })
   }

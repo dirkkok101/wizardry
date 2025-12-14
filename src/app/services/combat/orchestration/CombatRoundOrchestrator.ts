@@ -540,6 +540,13 @@ class CombatRoundOrchestrator {
   ): CombatRoundResult {
     const { debug = false, enableAudit = true } = options
 
+    console.log('[CombatOrchestrator] executeRound starting', {
+      roundNumber: state.roundNumber,
+      commandCount: state.commandQueue.length,
+      partySize: party.length,
+      monsterGroupCount: state.monsterGroups.length
+    })
+
     // Initialize contexts
     const roundCtx = this.createRoundContext(state)
     const auditCtx = this.createAuditContext(enableAudit)
@@ -597,6 +604,32 @@ class CombatRoundOrchestrator {
 
       // Merge result into round context
       this.mergeCommandResult(roundCtx, result, command, party)
+
+      // Create event for cinematic arena playback
+      const event: CombatRoundEvent = {
+        type: command.type as unknown as CombatRoundEvent['type'],
+        messages: result.messages,
+        // Snapshot monster state after this action for live count updates
+        monsterGroupsSnapshot: structuredClone(result.newState.monsterGroups),
+        characterUpdates: result.characterUpdates,
+        damageResults: result.damageResults,
+        statusEffects: result.statusEffects,
+        acBuffs: result.acBuffs,
+        spellCast: command.type === 'CAST_SPELL' && command.data?.spellId
+          ? { characterId: command.actor.id, spellId: command.data.spellId }
+          : undefined
+      }
+      roundCtx.events.push(event)
+
+      if (debug) {
+        console.log('[CombatOrchestrator] Created event', {
+          type: command.type,
+          actor: command.actor.name,
+          messageCount: result.messages.length,
+          hasMonsterSnapshot: !!event.monsterGroupsSnapshot,
+          hasDamageResults: !!event.damageResults
+        })
+      }
 
       // Track PARRY commands
       if (command.type === 'PARRY') {
@@ -677,12 +710,22 @@ class CombatRoundOrchestrator {
 
     // Build final result
     const finalEndCheck: CombatEndCheck = { ended: false, victory: false, defeat: false, fled: false }
-    return this.buildRoundResult(
+    const result = this.buildRoundResult(
       roundCtx,
       finalEndCheck,
       repositionResult.changedPositions ? repositionResult.newFormation : undefined,
       this.buildAudit(auditCtx, state.roundNumber)
     )
+
+    console.log('[CombatOrchestrator] executeRound complete', {
+      eventsCount: result.events.length,
+      victory: result.victory,
+      defeat: result.defeat,
+      fled: result.fled,
+      messagesCount: roundCtx.messages.length
+    })
+
+    return result
   }
 }
 

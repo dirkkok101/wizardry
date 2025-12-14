@@ -2323,6 +2323,15 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Execute round (pre-calculates everything)
       const result = executeRound(stateWithCommands, chars, frontRow);
 
+      console.log('[Maze] Combat round executed', {
+        eventsCount: result.events.length,
+        victory: result.victory,
+        defeat: result.defeat,
+        fled: result.fled,
+        damagedCharacters: result.damagedCharacters.size,
+        spellCasters: result.spellCasters.size
+      });
+
       // Store result for use after arena playback completes
       this.pendingCombatResult = {
         finalState: result.newState,
@@ -2336,6 +2345,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.arenaEvents.set(result.events);
       this.arenaAudit.set(result.audit ?? null);
       this.showCinematicArena.set(true);
+
+      console.log('[Maze] Cinematic arena activated', {
+        arenaEventsSet: this.arenaEvents().length,
+        showCinematicArena: this.showCinematicArena()
+      });
 
       // Arena will call onArenaComplete() and onArenaEventPlayed() during playback
       // Final state application happens in onArenaComplete()

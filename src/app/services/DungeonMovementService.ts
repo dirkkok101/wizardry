@@ -581,8 +581,14 @@ export const DungeonMovementService = {
     // Process light state for all other tiles (handles darkness zones, duration decrement)
     // Includes: darkness, darkness_zone_start, anti_magic, message, searchable, fixed_encounter
 
-    // Suppress entry message for completed non-repeatable fixed encounters
-    const suppressMessage = this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y);
+    // Suppress entry message for:
+    // 1. Active fixed_encounter tiles (checkForEncounter handles message + encounter together)
+    // 2. Completed non-repeatable fixed encounters (already handled by isEncounterComplete)
+    const fixedConfig = this.tileHasType(tile, 'fixed_encounter')
+      ? FightMapService.getFixedEncounterConfig(dungeon.currentLevel, tile.x, tile.y)
+      : undefined;
+    const isActiveFixedEncounter = fixedConfig && fixedConfig.encounterId && !fixedConfig.triggered;
+    const suppressMessage = isActiveFixedEncounter || this.isEncounterComplete(tile, dungeon.currentLevel, tile.x, tile.y);
 
     return {
       newState: this.processLightState(state, tile.types),
