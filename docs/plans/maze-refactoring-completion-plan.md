@@ -1,8 +1,33 @@
 # Maze Services Refactoring: Completion Plan
 
+## Implementation Progress
+
+**Status: ~60% Complete**
+
+### Completed Integration Work
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | TileHandlerRegistry integration into DungeonMovementService | ✅ Complete |
+| Phase 2+5 | CombatOrchestrationService integration (initiateEncounter, onExecuteRound) | ✅ Complete |
+| Phase 3+6 | ChestOrchestrationService integration (computed signals) | ✅ Complete |
+| Phase 4 | Tile message and spell signal migration | ⏳ Pending |
+| Phase 7 | Component decomposition | ⏳ Pending |
+| Phase 8 | Async/await pattern verification | ✅ Already in place |
+
+### Key Changes Made
+
+1. **DungeonMovementService.handleSpecialTile()**: Reduced from 160 lines to 70 lines using TileHandlerRegistry
+2. **MazeComponent.initiateEncounter()**: Now uses CombatOrchestrationService
+3. **MazeComponent.onExecuteRound()**: Now uses CombatOrchestrationService
+4. **MazeComponent chest computed signals**: Now delegate to ChestOrchestrationService
+5. **handleConditionFailUI/Success**: Already using async/await patterns
+
+---
+
 ## Executive Summary
 
-The maze services refactoring is approximately **40% complete**. The foundational services have been created, but deeper integration into MazeComponent remains. The current MazeComponent has grown to **4,301 lines** with approximately **48 individual signals** that need to be migrated to the centralized `MazeStateMachine`.
+The maze services refactoring is approximately **60% complete**. Core service integrations are done, but full signal migration and component decomposition remain. The current MazeComponent has grown to **4,301 lines** with approximately **48 individual signals** that need to be migrated to the centralized `MazeStateMachine`.
 
 ## Current State Analysis
 
