@@ -1577,10 +1577,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Show a message and return a Promise that resolves when dismissed
-   * Replaces callback-based showConditionMessage pattern
+   * Uses the existing tile message overlay mechanism with Promise wrapper
    */
   private showMessageAsync(message: string, style: MessageStyle): Promise<void> {
     return new Promise(resolve => {
+      // Use existing tile message overlay, resolve when dismissed
       this.showTileMessage(message, false, resolve);
     });
   }
