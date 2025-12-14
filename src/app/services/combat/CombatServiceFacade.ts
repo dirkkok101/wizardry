@@ -98,9 +98,18 @@ import {
   // Command Executor
   executeCommand as execCmd,
   hasHandler as hasActionHandler,
+  expandAttackCommands as expandAtks,
 
   // Round Orchestrator
   executeRound as execRound,
+
+  // Combat Initialization
+  initiateCombat as initCombat,
+  type InitiateCombatOptions,
+
+  // Monster Advancement
+  checkAndAdvanceMonsters as checkAdvance,
+  getCurrentMonsterState as getMonsterState,
 
   // Constants
   RESULT_MARKER,
@@ -461,6 +470,59 @@ export class CombatServiceFacade {
     options?: { debug?: boolean; enableAudit?: boolean }
   ): CombatRoundResult {
     return execRound(state, party, frontRow ?? [], options)
+  }
+
+  // ============================================================================
+  // Combat Initialization (delegates to CombatInitializationService)
+  // ============================================================================
+
+  /**
+   * Create initial combat state
+   *
+   * @param dungeonLevel - Current dungeon level
+   * @param party - Party characters
+   * @param options - Combat initialization options
+   * @returns Initial combat state
+   */
+  static initiateCombat(
+    dungeonLevel: number,
+    party: Character[],
+    options: InitiateCombatOptions
+  ): CombatState {
+    return initCombat(dungeonLevel, party, options)
+  }
+
+  // ============================================================================
+  // Monster Advancement (delegates to MonsterAdvancementService)
+  // ============================================================================
+
+  /**
+   * Check and advance monsters if front row is cleared
+   */
+  static checkAndAdvanceMonsters(state: CombatState): { newState: CombatState; message?: string } {
+    const result = checkAdvance(state)
+    return { newState: result.newState, message: result.message }
+  }
+
+  /**
+   * Get current state of a specific monster
+   */
+  static getCurrentMonsterState(
+    state: CombatState,
+    monsterId: string
+  ): MonsterInstance | undefined {
+    return getMonsterState(state, monsterId)
+  }
+
+  // ============================================================================
+  // Command Utilities (delegates to CommandExecutor)
+  // ============================================================================
+
+  /**
+   * Expand attack commands for multi-attack combatants
+   */
+  static expandAttackCommands(commands: CombatCommand[]): CombatCommand[] {
+    return expandAtks(commands)
   }
 
   // ============================================================================

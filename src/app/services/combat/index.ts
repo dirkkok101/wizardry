@@ -138,6 +138,24 @@ export {
   type CharacterRecoveryResult,
 } from './support/CharacterRecoveryService'
 
+export {
+  CombatInitializationService,
+  initiateCombat,
+  calculateAveragePartyLevel,
+  calculateMinPartyLevel,
+  initializeGroupMageLevels,
+  type InitiateCombatOptions,
+} from './support/CombatInitializationService'
+
+export {
+  MonsterAdvancementService,
+  checkAndAdvanceMonsters,
+  getCurrentMonsterState,
+  getMonsterGroup,
+  hasAliveMonsters,
+  type MonsterAdvancementResult,
+} from './support/MonsterAdvancementService'
+
 // Orchestration
 export {
   CombatRoundOrchestrator,
@@ -163,6 +181,7 @@ export {
   CommandExecutor,
   executeCommand,
   hasHandler,
+  expandAttackCommands,
   type ExecuteCommandOptions,
 } from './orchestration/CommandExecutor'
 

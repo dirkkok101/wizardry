@@ -22,6 +22,7 @@ import {
   combatActionRegistry,
   ActionExecutionContext,
 } from '../actions/CombatAction'
+import { getAttacksPerRound } from '../core/AttackResolutionService'
 
 // Re-export for convenience
 export { CommandExecutor }
@@ -104,6 +105,35 @@ class CommandExecutor {
   }
 
   /**
+   * Expand attack commands for multi-attack combatants
+   *
+   * Some combatants (high-level fighters, certain monsters) can make
+   * multiple attacks per round. This method expands a single ATTACK
+   * command into multiple commands, one for each attack.
+   *
+   * @param commands - Array of combat commands
+   * @returns Expanded command array with multi-attacks split into individual commands
+   */
+  static expandAttackCommands(commands: CombatCommand[]): CombatCommand[] {
+    return commands.flatMap(cmd => {
+      // Only expand ATTACK commands
+      if (cmd.type !== 'ATTACK') return [cmd]
+
+      const attacks = getAttacksPerRound(cmd.actor)
+
+      // If only 1 attack, return original command unchanged
+      if (attacks <= 1) return [cmd]
+
+      // Create multiple attack commands with unique IDs and attack index
+      return Array.from({ length: attacks }, (_, i) => ({
+        ...cmd,
+        id: `${cmd.id}_${i}`,
+        attackIndex: i
+      }))
+    })
+  }
+
+  /**
    * Log command execution for debugging
    */
   private static logCommand(command: CombatCommand, state: CombatState): void {
@@ -152,6 +182,7 @@ class CommandExecutor {
   }
 }
 
-// Standalone function export
+// Standalone function exports
 export const executeCommand = CommandExecutor.executeCommand.bind(CommandExecutor)
 export const hasHandler = CommandExecutor.hasHandler.bind(CommandExecutor)
+export const expandAttackCommands = CommandExecutor.expandAttackCommands
