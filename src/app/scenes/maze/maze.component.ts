@@ -2248,56 +2248,41 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     fixedEncounterConfig?: FixedEncounterConfig,
     encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
   ): Promise<void> {
-    this.addMessage(`You encounter monsters!`);
-
     try {
-      // Get party characters for combat
-      const partyChars = this.partyCharacters();
-
-      // Initialize combat state with encounter generation
-      // Pass fixedEncounterConfig for AUX-based monster selection
-      // Pass encounterReason for treasure mechanics (treasure_room = guaranteed chest)
-      // Pass latumapicActive so monsters are pre-identified if spell is active
-      // Pass expeditionAcBuff for MAPORFIC party protection
-      // Note: Optional chaining is defensive - dungeonState should exist here but may be
-      // undefined during edge cases like combat triggered during scene transitions
+      // Use CombatOrchestrationService for combat initialization
       const dungeon = this.dungeonState();
-      const latumapicActive = dungeon?.latumapicActive ?? false;
-      const expeditionAcBuff = dungeon?.expeditionAcBuff ?? 0;
-      const combatState = CombatService.initiateCombat(
+      const result = this.combatOrchestration.initiateCombat({
         dungeonLevel,
-        partyChars,
         canFlee,
         fixedEncounterConfig,
-        false,  // isFriendlyEncounter - default to false for monster encounters
         encounterReason,
-        latumapicActive,
-        false,  // forceAmbush - normal encounter
-        expeditionAcBuff  // Expedition AC buff from MAPORFIC
-      );
+        partyCharacters: this.partyCharacters(),
+        latumapicActive: dungeon?.latumapicActive ?? false,
+        expeditionAcBuff: dungeon?.expeditionAcBuff ?? 0
+      });
+
+      // Display messages from orchestration service
+      for (const msg of result.messages) {
+        this.addMessage(msg);
+      }
 
       // Update game state with combat
       this.gameState.updateState(state => ({
         ...state,
-        combat: combatState
+        combat: result.combatState
       }));
-
-      // ============================================================
-      // INTEGRATED COMBAT: Stay in maze view (Theater Stage Design)
-      // Instead of navigating to /combat, trigger in-maze combat UI
-      // ============================================================
 
       // Log monster groups for debugging
       console.log('[MazeComponent] Combat initiated in maze:', {
-        groups: combatState.monsterGroups.map(g => `${g.id}: ${g.monsters.length}x ${g.monsters[0]?.name}`),
+        groups: result.combatState.monsterGroups.map(g => `${g.id}: ${g.monsters.length}x ${g.monsters[0]?.name}`),
         canFlee,
         reason: encounterReason,
-        surprise: combatState.surpriseState
+        surprise: result.surpriseState
       });
 
       // Show letterbox cinematic banners
       this.combatPhase.set('encounter');
-      await this.showCombatIntro(combatState);
+      await this.showCombatIntro(result.combatState);
 
     } catch (error) {
       console.error('[MazeComponent] Failed to initiate encounter:', error);
@@ -2424,6 +2409,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Execute the combat round
+   * Uses CombatOrchestrationService to coordinate round execution
    */
   async onExecuteRound(): Promise<void> {
     if (!this.allActionsSelected() || this.isExecutingRound()) return;
@@ -2439,28 +2425,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     const frontRow = party.formation.frontRow;
     const chars = this.partyCharacters();
 
-    // Collect party commands from selected actions
-    const partyCommands = Array.from(this.selectedActions().values());
-
-    // Generate monster commands - get all alive monsters
-    const aliveMonsters = combat.monsterGroups
-      .flatMap(g => g.monsters)
-      .filter(m => m.hp > 0);
-
-    const monsterCommands = aliveMonsters.map(m =>
-      CombatService.selectMonsterAction(m, chars, frontRow)
-    );
-
-    // Create state with all commands in queue
-    const stateWithCommands: CombatState = {
-      ...combat,
-      commandQueue: [...partyCommands, ...monsterCommands]
-    };
-
     try {
-      // Execute round using CombatService (pre-calculates everything)
-      const result = CombatService.executeRoundWithEvents(
-        stateWithCommands,
+      // Use CombatOrchestrationService for round execution
+      const result = this.combatOrchestration.executeRound(
+        combat,
+        this.selectedActions(),
         chars,
         frontRow
       );
@@ -2468,7 +2437,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Store result for use after arena playback completes
       this.pendingCombatResult = {
         finalState: result.finalState,
-        finalCharacterUpdates: result.finalCharacterUpdates,
+        finalCharacterUpdates: result.characterUpdates,
         spellCasters: result.spellCasters,
         victory: result.victory,
         defeat: result.defeat
@@ -2476,7 +2445,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Activate cinematic arena for playback
       this.arenaEvents.set(result.events);
-      this.arenaAudit.set(result.audit ?? null);
+      this.arenaAudit.set(result.audit);
       this.showCinematicArena.set(true);
 
       // Arena will call onArenaComplete() and onArenaEventPlayed() during playback
