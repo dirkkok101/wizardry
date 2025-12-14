@@ -2329,8 +2329,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Store result for use after arena playback completes
       this.pendingCombatResult = {
-        finalState: result.finalState,
-        finalCharacterUpdates: result.finalCharacterUpdates,
+        finalState: result.newState,
+        finalCharacterUpdates: result.damagedCharacters,
         spellCasters: result.spellCasters,
         victory: result.victory,
         defeat: result.defeat
@@ -2735,8 +2735,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Store result for use after arena playback completes
     this.pendingCombatResult = {
-      finalState: result.finalState,
-      finalCharacterUpdates: result.finalCharacterUpdates,
+      finalState: result.newState,
+      finalCharacterUpdates: result.damagedCharacters,
       spellCasters: result.spellCasters,
       victory: result.victory,
       defeat: result.defeat

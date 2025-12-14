@@ -46,7 +46,7 @@ export interface CommandOptions {
   spellId?: string
   groupId?: string
   spellType?: 'mage' | 'priest'
-  monsterId?: number
+  monsterId?: string
   monsterLevel?: number
   breathType?: string
   damage?: number
@@ -79,7 +79,7 @@ class MonsterAIService {
     target?: Combatant | Combatant[],
     data?: CommandOptions
   ): CombatCommand {
-    const targetGroupId = data?.groupId
+    const targetGroupId = data?.groupId as 'A' | 'B' | 'C' | 'D' | undefined
 
     return {
       id: uuidv4(),

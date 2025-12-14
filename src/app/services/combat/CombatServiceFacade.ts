@@ -514,16 +514,52 @@ export class CombatServiceFacade {
   /**
    * Create initial combat state
    *
+   * Supports both old positional arguments and new options object for backward compatibility.
+   *
+   * Old signature (positional):
+   * initiateCombat(dungeonLevel, party, canFlee, fixedEncounter, isFriendly, encounterReason, latumapicActive, forceAmbush, expeditionAcBuff)
+   *
+   * New signature (options object):
+   * initiateCombat(dungeonLevel, party, options: InitiateCombatOptions)
+   *
    * @param dungeonLevel - Current dungeon level
    * @param party - Party characters
-   * @param options - Combat initialization options
+   * @param optionsOrCanFlee - Either an options object or canFlee boolean (old API)
+   * @param fixedEncounter - (old API) Fixed encounter config
+   * @param isFriendly - (old API) Whether friendly encounter
+   * @param encounterReason - (old API) Encounter reason
+   * @param latumapicActive - (old API) LATUMAPIC spell active
+   * @param forceAmbush - (old API) Force ambush
+   * @param expeditionAcBuff - (old API) AC buff from MAPORFIC
    * @returns Initial combat state
    */
   static initiateCombat(
     dungeonLevel: number,
     party: Character[],
-    options: InitiateCombatOptions
+    optionsOrCanFlee: InitiateCombatOptions | boolean,
+    fixedEncounter?: any,
+    isFriendly?: boolean,
+    encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap',
+    latumapicActive?: boolean,
+    forceAmbush?: boolean,
+    expeditionAcBuff?: number
   ): CombatState {
+    // Check if using new options object or old positional arguments
+    if (typeof optionsOrCanFlee === 'object') {
+      // New API: options object
+      return initCombat(dungeonLevel, party, optionsOrCanFlee)
+    }
+
+    // Old API: positional arguments - convert to options object
+    const options: InitiateCombatOptions = {
+      canFlee: optionsOrCanFlee,
+      fixedEncounterConfig: fixedEncounter,
+      isFriendlyEncounter: isFriendly,
+      encounterReason,
+      latumapicActive,
+      forceAmbush,
+      expeditionAcBuff
+    }
     return initCombat(dungeonLevel, party, options)
   }
 

@@ -371,11 +371,11 @@ export interface CombatRoundResult {
   /** Sequence of events to animate in order */
   events: CombatRoundEvent[]
 
-  /** Final combat state after all events (monster groups, round number, etc.) */
-  finalState: CombatState
+  /** Updated combat state after all events (monster groups, round number, etc.) */
+  newState: CombatState
 
-  /** Final accumulated character updates (for committing to roster after animation) */
-  finalCharacterUpdates: Map<string, Character>
+  /** Characters who took damage this round (for committing to roster after animation) */
+  damagedCharacters: Map<string, Character>
 
   /** Characters who cast spells this round (for spell point deduction) */
   spellCasters: Map<string, { character: Character; spellId: string }>
@@ -403,14 +403,12 @@ export interface CombatRoundResult {
  * Skip reasons for combat actions
  */
 export type ActionSkipReason =
-  | 'DIED_BEFORE_TURN'      // Actor died earlier in this round
-  | 'ALREADY_DEAD'          // Actor was dead at round start
+  | 'DEAD'                  // Actor is dead
   | 'ASLEEP'                // Actor is asleep
   | 'PARALYZED'             // Actor is paralyzed
   | 'STONED'                // Actor is petrified
-  | 'SILENCED'              // Actor is silenced (spell only)
   | 'SURPRISED'             // Actor surprised (round 1 only)
-  | 'NO_LONGER_EXISTS'      // Monster removed from combat
+  | 'FLED'                  // Actor has fled combat
   | 'TARGET_DEAD'           // Target died before this action
 
 /**
@@ -426,14 +424,11 @@ export interface ActionAuditEntry {
   /** Actor ID for correlation */
   actorId: string
 
-  /** Whether this is a monster or character */
-  actorType: 'character' | 'monster'
-
   /** The action type queued */
   actionType: CombatActionType
 
-  /** Target name(s) if applicable */
-  targetName?: string
+  /** Target ID if applicable */
+  targetId?: string
 
   /** Initiative value (higher = acts first) */
   initiative: number
@@ -443,9 +438,6 @@ export interface ActionAuditEntry {
 
   /** Reason if skipped */
   skipReason?: ActionSkipReason
-
-  /** Optional additional details (spell name, etc.) */
-  details?: string
 }
 
 /**
@@ -455,17 +447,18 @@ export interface CombatRoundAudit {
   /** Round number */
   roundNumber: number
 
-  /** Surprise state for this round (round 1 only) */
-  surpriseState?: 'party' | 'monsters' | 'none'
+  /** Total commands in this round */
+  totalCommands: number
+
+  /** Number of commands executed */
+  executedCount: number
+
+  /** Number of commands skipped */
+  skippedCount: number
+
+  /** Count of each skip reason */
+  skipReasonCounts: Record<ActionSkipReason | 'NONE', number>
 
   /** All queued actions in initiative order */
   actions: ActionAuditEntry[]
-
-  /** Summary statistics */
-  summary: {
-    totalActions: number
-    executed: number
-    skipped: number
-    skipReasons: Record<ActionSkipReason, number>
-  }
 }

@@ -11,7 +11,7 @@
 
 import { Character } from '@models/Character'
 import { CombatState, MonsterGroup } from '@models/Combat'
-import { FixedEncounterConfig } from '@models/Encounter'
+import { FixedEncounterConfig } from '@services/EncounterTriggerService'
 import { EncounterService } from '@services/EncounterService'
 import { rollSurprise } from '../support/SurpriseService'
 
