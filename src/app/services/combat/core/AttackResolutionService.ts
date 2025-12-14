@@ -9,7 +9,7 @@
 
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { Combatant, MonsterInstance, AttackResult, CombatantStatus } from '@models/Combat'
+import { Combatant, MonsterInstance, AttackResult, AttackRollDetails, CombatantStatus } from '@models/Combat'
 import { RandomService } from '@services/RandomService'
 import { StatModifierService } from '@services/StatModifierService'
 import { ItemProtectionService } from '@services/ItemProtectionService'
@@ -226,14 +226,28 @@ export function calculateCriticalChance(attackerLevel: number): number {
 }
 
 /**
+ * Result of monster critical resistance check
+ */
+export interface MonsterCritResistResult {
+  resisted: boolean
+  roll: number
+  threshold: number
+}
+
+/**
  * Check if monster resists a critical hit (decapitation)
  *
- * Formula: (MonsterLevel + 10) must be < random(0, 34)
- * Level 24+ always resists
+ * Formula: (MonsterLevel + 10) must be >= random(0, 34) to resist
+ * Level 24+ always resists (threshold 34 >= any roll 0-34)
  */
-export function monsterResistsCritical(monsterLevel: number): boolean {
-  const resistRoll = RandomService.random(0, CRITICAL_HIT.RESISTANCE_ROLL_MAX)
-  return (monsterLevel + CRITICAL_HIT.RESISTANCE_LEVEL_OFFSET) >= resistRoll
+export function monsterResistsCritical(monsterLevel: number): MonsterCritResistResult {
+  const roll = RandomService.random(0, CRITICAL_HIT.RESISTANCE_ROLL_MAX)
+  const threshold = monsterLevel + CRITICAL_HIT.RESISTANCE_LEVEL_OFFSET
+  return {
+    resisted: threshold >= roll,
+    roll,
+    threshold,
+  }
 }
 
 // ============================================================================
@@ -302,7 +316,7 @@ export interface AttackResolutionOptions {
 /**
  * Resolve a physical attack
  *
- * @returns AttackResult with hit, damage, critical, instantKill, and message
+ * @returns AttackResult with hit, damage, critical, instantKill, message, and rollDetails
  */
 export function resolveAttack(
   attacker: Combatant,
@@ -319,6 +333,19 @@ export function resolveAttack(
 
   const hitChance = calculateHitChance(attacker, defender, defenderAcModifier, attackerPenalty, victimPosition)
   const hitRoll = RandomService.randomFloat(0, 100)
+  const attackerLevel = attacker.level || 1
+  const critChance = calculateCriticalChance(attackerLevel)
+
+  // Build base rollDetails (populated even on miss for debugging)
+  const rollDetails: AttackRollDetails = {
+    hitChance,
+    hitRoll,
+    damageBase: 0,
+    damageStrMod: 0,
+    damagePurposedMult: false,
+    damageHelplessMult: false,
+    critChance,
+  }
 
   if (hitRoll >= hitChance) {
     return {
@@ -327,37 +354,46 @@ export function resolveAttack(
       critical: false,
       instantKill: false,
       message: 'Miss!',
+      rollDetails,
     }
   }
 
   // Roll damage
   const baseDamage = rollDamage(attacker, attackIndex)
+  rollDetails.damageBase = baseDamage
 
   // Apply STR damage modifier for characters
   let strDamageMod = 0
   if ('strength' in attacker) {
     strDamageMod = StatModifierService.getStrengthDamageModifier((attacker as Character).strength)
   }
+  rollDetails.damageStrMod = strDamageMod
   let damage = Math.max(DAMAGE.MINIMUM_DAMAGE, baseDamage + strDamageMod)
 
   // Purposed weapon double damage (Dragon Slayer, Were Slayer, Mage Masher)
+  let purposedApplied = false
   if ('equippedWeapon' in attacker && defenderMonsterClass) {
     const weapon = (attacker as Character).equippedWeapon
     if (ItemProtectionService.isPurposedAgainst(weapon, defenderMonsterClass)) {
       damage *= DAMAGE.PURPOSED_WEAPON_MULTIPLIER
+      purposedApplied = true
     }
   }
+  rollDetails.damagePurposedMult = purposedApplied
 
-  // Critical hit check
-  const attackerLevel = attacker.level || 1
-  const critChance = calculateCriticalChance(attackerLevel)
-  let critical = RandomService.chance(critChance)
+  // Critical hit check - use randomFloat so we can capture the roll value
+  const critRoll = RandomService.randomFloat(0, 100)
+  rollDetails.critRoll = critRoll
+  let critical = critRoll < critChance
   let instantKill = false
 
   // Monster resistance to critical hits
   if (critical && 'monsterId' in defender) {
     const monsterLevel = defender.level || 1
-    if (monsterResistsCritical(monsterLevel)) {
+    const resistResult = monsterResistsCritical(monsterLevel)
+    rollDetails.monsterResistRoll = resistResult.roll
+    rollDetails.monsterResistThreshold = resistResult.threshold
+    if (resistResult.resisted) {
       critical = false // Monster resists decapitation
     } else {
       instantKill = true // Critical = instant kill
@@ -373,6 +409,7 @@ export function resolveAttack(
   const isHelpless = isHelplessTarget(defender)
   if (isHelpless) {
     damage *= DAMAGE.HELPLESS_MULTIPLIER
+    rollDetails.damageHelplessMult = true
   }
 
   const finalDamage = damage
@@ -391,6 +428,7 @@ export function resolveAttack(
     critical,
     instantKill,
     message,
+    rollDetails,
   }
 }
 

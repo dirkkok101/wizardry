@@ -13,6 +13,7 @@ import {
   Combatant,
   MonsterInstance,
   CombatantStatus,
+  AttackRollDetails,
 } from '@models/Combat'
 import { MonsterDataLoader } from '@services/MonsterDataLoader'
 import { ItemProtectionService } from '@services/ItemProtectionService'
@@ -96,20 +97,21 @@ export class AttackAction extends BaseCombatAction {
 
     // Handle miss
     if (!attackResult.hit) {
+      const rollInfo = this.formatHitRoll(attackResult.rollDetails)
       return {
         newState: state,
-        messages: [actionMessage, this.resultMessage(`${actorName} misses!`)],
+        messages: [actionMessage, this.resultMessage(`${actorName} misses! ${rollInfo}`)],
       }
     }
 
     // Handle instant kill on monster
     if (attackResult.instantKill && 'monsterId' in target) {
-      return this.handleMonsterInstantKill(ctx, target, actionMessage, attackResult.message)
+      return this.handleMonsterInstantKill(ctx, target, actionMessage, attackResult.rollDetails)
     }
 
     // Handle character critical hit resistance
     if (attackResult.instantKill && 'class' in target) {
-      const critResult = this.handleCharacterCritical(ctx, target as Character, actorName, actionMessage)
+      const critResult = this.handleCharacterCritical(ctx, target as Character, actorName, actionMessage, attackResult.rollDetails)
       if (critResult) {
         return critResult
       }
@@ -117,7 +119,7 @@ export class AttackAction extends BaseCombatAction {
     }
 
     // Apply normal damage
-    return this.applyDamage(ctx, target, attackResult.damage, attackResult.critical, actorName, targetName, actionMessage)
+    return this.applyDamage(ctx, target, attackResult.damage, attackResult.critical, actorName, targetName, actionMessage, attackResult.rollDetails)
   }
 
   /**
@@ -203,7 +205,7 @@ export class AttackAction extends BaseCombatAction {
     ctx: ActionExecutionContext,
     target: MonsterInstance,
     actionMessage: string,
-    critMessage: string
+    rollDetails: AttackRollDetails
   ): CommandExecutionResult {
     const { state } = ctx
 
@@ -215,9 +217,15 @@ export class AttackAction extends BaseCombatAction {
       }),
     }))
 
+    // Format verbose message with roll details
+    const hitInfo = this.formatHitRoll(rollDetails)
+    const critInfo = this.formatCritRoll(rollDetails)
+    const resistInfo = this.formatMonsterResist(rollDetails, false)
+    const message = `Critical hit! ${target.name} is decapitated! ${hitInfo}, ${critInfo}, ${resistInfo}`
+
     return {
       newState: { ...state, monsterGroups: newMonsterGroups },
-      messages: [actionMessage, this.resultMessage(critMessage)],
+      messages: [actionMessage, this.resultMessage(message)],
       targetDamage: {
         targetId: target.id,
         damage: target.hp,
@@ -235,27 +243,36 @@ export class AttackAction extends BaseCombatAction {
     ctx: ActionExecutionContext,
     character: Character,
     actorName: string,
-    actionMessage: string
+    actionMessage: string,
+    rollDetails: AttackRollDetails
   ): CommandExecutionResult | null {
     const { state } = ctx
+    const hitInfo = this.formatHitRoll(rollDetails)
+    const critInfo = this.formatCritRoll(rollDetails)
 
     // Physical protection grants immunity to critical hits
     if (ItemProtectionService.hasPhysicalProtection(character)) {
-      return null // Critical resisted
+      return null // Critical resisted - physical protection (no message needed, continues to normal damage)
     }
 
-    // Normal resistance check
-    const resistResult = CharacterResistanceService.checkResistance(character, 'critical')
-    if (resistResult.resisted) {
-      return null // Critical resisted
+    // Calculate resistance chance, then roll manually to capture the value
+    const resistCalc = CharacterResistanceService.calculateResistance(character, 'critical')
+    const resistRoll = RandomService.randomFloat(0, 100)
+    const resisted = resistRoll < resistCalc.resistChance
+
+    if (resisted) {
+      return null // Critical resisted - continues to normal damage with crit resist info
     }
 
-    // Critical hit kills character
+    // Critical hit kills character - format verbose message
+    const resistInfo = `resist ${resistRoll.toFixed(1)}/${resistCalc.resistChance}% FAILED`
+    const message = `${actorName} decapitates ${character.name}! ${hitInfo}, ${critInfo}, ${resistInfo}`
+
     return {
       newState: state,
       messages: [
         actionMessage,
-        this.resultMessage(`${actorName} decapitates ${character.name}!`),
+        this.resultMessage(message),
       ],
       characterUpdates: new Map([
         [character.id, { ...character, hp: 0, status: CharacterStatus.DEAD }],
@@ -273,7 +290,8 @@ export class AttackAction extends BaseCombatAction {
     wasCritical: boolean,
     actorName: string,
     targetName: string,
-    actionMessage: string
+    actionMessage: string,
+    rollDetails: AttackRollDetails
   ): CommandExecutionResult {
     const { state, command } = ctx
 
@@ -294,16 +312,24 @@ export class AttackAction extends BaseCombatAction {
     // Check for status infliction (monster → character)
     const statusResult = this.checkStatusInfliction(ctx, target, newHp)
 
-    // Build result message
+    // Build verbose result message with roll details
+    const hitInfo = this.formatHitRoll(rollDetails)
+    const dmgInfo = this.formatDamageRoll(rollDetails, finalDamage)
+
     let resultText: string
     if (wasCritical) {
-      resultText = `${actorName} scores a critical hit, but ${targetName} resists! ${finalDamage} damage!`
+      // Critical was triggered but monster/character resisted (still does normal damage)
+      const critInfo = this.formatCritRoll(rollDetails)
+      const resistInfo = rollDetails.monsterResistRoll !== undefined
+        ? this.formatMonsterResist(rollDetails, true)
+        : 'RESISTED'
+      resultText = `${actorName} hits for ${finalDamage} damage! ${hitInfo}, ${dmgInfo}, ${critInfo} ${resistInfo}`
     } else {
-      resultText = `${actorName} hits for ${finalDamage} damage!`
+      resultText = `${actorName} hits for ${finalDamage} damage! ${hitInfo}, ${dmgInfo}`
     }
 
     if (isHelpless) {
-      resultText += ' (HELPLESS: 2x damage!)'
+      resultText += ' (HELPLESS 2x!)'
     }
 
     if (statusResult.inflictedStatus) {
@@ -419,6 +445,78 @@ export class AttackAction extends BaseCombatAction {
     }
 
     return result
+  }
+
+  // ============================================================================
+  // Roll Detail Formatting Helpers
+  // ============================================================================
+
+  /**
+   * Format hit roll details: "hit: 23.4/45%"
+   * Shows roll/threshold where roll < threshold means hit
+   */
+  private formatHitRoll(rollDetails: AttackRollDetails): string {
+    return `hit: ${rollDetails.hitRoll.toFixed(1)}/${rollDetails.hitChance.toFixed(0)}%`
+  }
+
+  /**
+   * Format damage breakdown: "dmg: 6+2=8" or "dmg: 2"
+   * Shows base damage + STR modifier if modifier exists
+   */
+  private formatDamageRoll(rollDetails: AttackRollDetails, finalDamage: number): string {
+    const { damageBase, damageStrMod, damagePurposedMult, damageHelplessMult } = rollDetails
+    let parts: string[] = []
+
+    if (damageStrMod !== 0) {
+      const sign = damageStrMod > 0 ? '+' : ''
+      parts.push(`${damageBase}${sign}${damageStrMod}`)
+    } else {
+      parts.push(`${damageBase}`)
+    }
+
+    // Note multipliers
+    const mults: string[] = []
+    if (damagePurposedMult) mults.push('2x purposed')
+    if (damageHelplessMult) mults.push('2x helpless')
+
+    if (mults.length > 0) {
+      return `dmg: ${parts.join('')}×${mults.join('×')}=${finalDamage}`
+    }
+
+    // If damage differs from base+str (due to minimum damage), show final
+    const basePlusMod = Math.max(1, damageBase + damageStrMod)
+    if (basePlusMod !== finalDamage && !damagePurposedMult && !damageHelplessMult) {
+      return `dmg: ${parts.join('')}=${finalDamage}`
+    }
+
+    return `dmg: ${parts.join('')}`
+  }
+
+  /**
+   * Format critical roll details: "CRIT 15.2/20%"
+   * Shows roll/threshold where roll < threshold means crit triggered
+   */
+  private formatCritRoll(rollDetails: AttackRollDetails): string {
+    if (rollDetails.critRoll === undefined) {
+      return 'CRIT'
+    }
+    return `CRIT ${rollDetails.critRoll.toFixed(1)}/${rollDetails.critChance}%`
+  }
+
+  /**
+   * Format monster critical resistance: "resist d35: 18≤20 SAVED" or "resist d35: 22>11 FAILED"
+   * Monster resists if threshold >= roll (threshold = level + 10)
+   */
+  private formatMonsterResist(rollDetails: AttackRollDetails, resisted: boolean): string {
+    if (rollDetails.monsterResistRoll === undefined || rollDetails.monsterResistThreshold === undefined) {
+      return resisted ? 'RESISTED' : 'FAILED'
+    }
+    const roll = rollDetails.monsterResistRoll
+    const threshold = rollDetails.monsterResistThreshold
+    if (resisted) {
+      return `resist d35: ${roll}≤${threshold} SAVED`
+    }
+    return `resist d35: ${roll}>${threshold} FAILED`
   }
 }
 

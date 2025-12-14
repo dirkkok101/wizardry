@@ -126,12 +126,41 @@ export interface CombatState {
   expeditionAcBuff?: number
 }
 
+/**
+ * Detailed roll information for verbose combat logging
+ * All percentage rolls use d100 (0-100), monster resist uses d35 (0-34)
+ */
+export interface AttackRollDetails {
+  /** Hit chance threshold (percentage) */
+  hitChance: number
+  /** Actual hit roll (0-100), hit if < hitChance */
+  hitRoll: number
+  /** Base damage before modifiers */
+  damageBase: number
+  /** Strength damage modifier */
+  damageStrMod: number
+  /** True if purposed weapon 2x multiplier applied */
+  damagePurposedMult: boolean
+  /** True if helpless target 2x multiplier applied */
+  damageHelplessMult: boolean
+  /** Critical hit chance threshold (percentage) */
+  critChance: number
+  /** Critical roll (0-100), only present if hit succeeded */
+  critRoll?: number
+  /** Monster resist roll (d35: 0-34), only present for monster crits */
+  monsterResistRoll?: number
+  /** Monster resist threshold (level+10), only present for monster crits */
+  monsterResistThreshold?: number
+}
+
 export interface AttackResult {
   hit: boolean
   damage: number
   critical: boolean
   instantKill?: boolean
   message: string
+  /** Detailed roll information for verbose combat logging */
+  rollDetails: AttackRollDetails
 }
 
 /**
