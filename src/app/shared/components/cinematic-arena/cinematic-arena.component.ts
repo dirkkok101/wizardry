@@ -43,7 +43,7 @@ import {
   getArenaAnimation,
   getActionVerbDisplay
 } from './cinematic-arena.types'
-import { CombatService } from '@services/CombatService'
+import { CombatServiceFacade as CombatService } from '@services/combat'
 
 @Component({
   selector: 'app-cinematic-arena',

@@ -340,8 +340,29 @@ export class CombatServiceFacade {
   // Monster AI (delegates to MonsterAIService)
   // ============================================================================
 
-  static selectMonsterAction(ctx: MonsterAIContext): CombatCommand {
-    return selMonsterAction(ctx)
+  /**
+   * Select action for a monster during combat
+   *
+   * @param monster - The monster selecting an action
+   * @param party - The party characters
+   * @param frontRow - Array of character IDs in the front row
+   * @param monsterGroup - The group this monster belongs to (optional)
+   * @param allGroups - All monster groups in combat (optional)
+   */
+  static selectMonsterAction(
+    monster: MonsterInstance,
+    party: Character[],
+    frontRow: string[],
+    monsterGroup?: MonsterGroup,
+    allGroups?: MonsterGroup[]
+  ): CombatCommand {
+    return selMonsterAction({
+      monster,
+      party,
+      frontRow,
+      monsterGroup,
+      allGroups
+    })
   }
 
   static selectMonsterTarget(monster: MonsterInstance, targets: Character[]): Character {
@@ -470,6 +491,20 @@ export class CombatServiceFacade {
     options?: { debug?: boolean; enableAudit?: boolean }
   ): CombatRoundResult {
     return execRound(state, party, frontRow ?? [], options)
+  }
+
+  /**
+   * Execute a complete combat round with events
+   *
+   * @deprecated Use executeRound instead
+   * Alias for executeRound for backward compatibility with existing code.
+   */
+  static executeRoundWithEvents(
+    state: CombatState,
+    party: Character[],
+    frontRow: string[] = []
+  ): CombatRoundResult {
+    return execRound(state, party, frontRow, { enableAudit: true })
   }
 
   // ============================================================================

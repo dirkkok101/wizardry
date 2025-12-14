@@ -6,7 +6,7 @@ import { DungeonService } from '@services/DungeonService';
 import { DungeonMovementService } from '@services/DungeonMovementService';
 import { EncounterService } from '@services/EncounterService';
 import { EncounterTriggerService } from '@services/EncounterTriggerService';
-import { CombatService } from '@services/CombatService';
+import { CombatServiceFacade as CombatService } from '@services/combat';
 import { MonsterService } from '@services/MonsterService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { ItemDataLoader } from '@services/ItemDataLoader';

@@ -21,7 +21,7 @@ import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { EncounterService } from '@services/EncounterService';
 import { EncounterTriggerService, EncounterContext, EncounterCheckResult, FixedEncounterConfig } from '@services/EncounterTriggerService';
 import { FightMapService } from '@services/FightMapService';
-import { CombatService } from '@services/CombatService';
+import { CombatServiceFacade as CombatService } from '@services/combat';
 import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
 import { ItemDataLoader } from '@services/ItemDataLoader';
