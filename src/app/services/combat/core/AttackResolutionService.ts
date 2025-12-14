@@ -370,16 +370,26 @@ export function resolveAttack(
   rollDetails.damageStrMod = strDamageMod
   let damage = Math.max(DAMAGE.MINIMUM_DAMAGE, baseDamage + strDamageMod)
 
-  // Purposed weapon double damage (Dragon Slayer, Were Slayer, Mage Masher)
+  // Check for double damage conditions
+  // Per authentic Wizardry 1: these do NOT stack multiplicatively
+  // Sleep + Purposed weapon = 2× (not 4×)
+  // See docs/research/combat-formulas.md
   let purposedApplied = false
   if ('equippedWeapon' in attacker && defenderMonsterClass) {
     const weapon = (attacker as Character).equippedWeapon
     if (ItemProtectionService.isPurposedAgainst(weapon, defenderMonsterClass)) {
-      damage *= DAMAGE.PURPOSED_WEAPON_MULTIPLIER
       purposedApplied = true
     }
   }
   rollDetails.damagePurposedMult = purposedApplied
+
+  const isHelpless = isHelplessTarget(defender)
+  rollDetails.damageHelplessMult = isHelpless
+
+  // Apply double damage if EITHER condition is true (but only 2x, not 4x)
+  if (purposedApplied || isHelpless) {
+    damage *= DAMAGE.PURPOSED_WEAPON_MULTIPLIER // Both use same 2x multiplier
+  }
 
   // Critical hit check - use randomFloat so we can capture the roll value
   const critRoll = RandomService.randomFloat(0, 100)
@@ -403,13 +413,6 @@ export function resolveAttack(
   // Character critical (checked elsewhere via CharacterResistanceService)
   if (critical && !('monsterId' in defender)) {
     instantKill = true
-  }
-
-  // Helpless target multiplier (sleeping/paralyzed)
-  const isHelpless = isHelplessTarget(defender)
-  if (isHelpless) {
-    damage *= DAMAGE.HELPLESS_MULTIPLIER
-    rollDetails.damageHelplessMult = true
   }
 
   const finalDamage = damage

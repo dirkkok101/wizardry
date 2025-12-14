@@ -159,4 +159,127 @@ describe('AttackResolutionService', () => {
       expect(calculateCriticalChance(50)).toBe(50)
     })
   })
+
+  describe('damage multiplier stacking', () => {
+    /**
+     * Per docs/research/combat-formulas.md:
+     * "Double damage conditions do NOT stack multiplicatively:
+     *  Sleep + Purposed weapon = 2× (not 4×)"
+     *
+     * This tests the authentic Wizardry 1 behavior.
+     */
+    it('purposed + helpless should NOT stack to 4x (authentic Wizardry 1)', () => {
+      // Create character with Dragon Slayer equipped
+      const dragonSlayer = {
+        id: 'dragon_slayer',
+        name: 'Dragon Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        damageRoll: { min: 1, max: 4 }, // 1d4 - use damageRoll format
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: true,
+        effectiveAgainst: ['dragon']
+      }
+
+      const attacker = createTestCharacter({
+        level: 5,
+        strength: 10, // No STR bonus (modifier = 0)
+        equippedWeapon: dragonSlayer
+      })
+
+      // Create sleeping dragon (both purposed + helpless conditions)
+      const sleepingDragon = createTestMonster({
+        id: 'dragon-1',
+        name: 'Dragon',
+        ac: 10,
+        level: 3,
+        hp: 100,
+        maxHp: 100,
+        status: 'ASLEEP',
+        monsterClass: 'dragon'
+      })
+
+      // Queue: hit roll (5% = hit), damage die (0.5 = middle), crit roll (90% = no crit)
+      // With 1d4 damage, middle roll = 2-3 damage
+      RandomService.queueNextValues([0.05, 0.5, 0.90])
+
+      const result = resolveAttack(attacker, sleepingDragon, { defenderMonsterClass: 'dragon' })
+
+      expect(result.hit).toBe(true)
+      expect(result.critical).toBe(false)
+
+      // Base damage ~3 (middle 1d4 roll + 0 STR)
+      // If correctly 2x: damage = 6
+      // If buggy 4x: damage = 12
+      //
+      // The key assertion: damage should be 2x, NOT 4x
+      expect(result.rollDetails.damagePurposedMult).toBe(true)
+      expect(result.rollDetails.damageHelplessMult).toBe(true)
+
+      // With 2x max multiplier, damage should be ~6 (not ~12)
+      expect(result.damage).toBeLessThanOrEqual(8) // 2x of max base (4) = 8
+      expect(result.damage).toBeGreaterThan(1)     // Must do damage
+    })
+
+    it('only helpless (no purposed) applies 2x', () => {
+      const attacker = createTestCharacter({
+        level: 5,
+        strength: 10 // No STR bonus
+      })
+
+      const sleepingOrc = createTestMonster({
+        status: 'ASLEEP',
+        ac: 10,
+        level: 1
+      })
+
+      // Queue: hit, damage (middle roll), crit (no)
+      RandomService.queueNextValues([0.05, 0.5, 0.90])
+
+      const result = resolveAttack(attacker, sleepingOrc)
+
+      expect(result.hit).toBe(true)
+      expect(result.rollDetails.damageHelplessMult).toBe(true)
+      expect(result.rollDetails.damagePurposedMult).toBe(false)
+    })
+
+    it('only purposed (no helpless) applies 2x', () => {
+      const dragonSlayer = {
+        id: 'dragon_slayer',
+        name: 'Dragon Slayer',
+        type: 'WEAPON',
+        slot: 'WEAPON',
+        damageRoll: { min: 1, max: 4 }, // 1d4 - use damageRoll format
+        price: 10000,
+        cursed: false,
+        identified: true,
+        equipped: true,
+        effectiveAgainst: ['dragon']
+      }
+
+      const attacker = createTestCharacter({
+        level: 5,
+        strength: 10,
+        equippedWeapon: dragonSlayer
+      })
+
+      const aliveDragon = createTestMonster({
+        status: 'ALIVE',
+        monsterClass: 'dragon',
+        ac: 10,
+        level: 1
+      })
+
+      // Queue: hit, damage (middle roll), crit (no)
+      RandomService.queueNextValues([0.05, 0.5, 0.90])
+
+      const result = resolveAttack(attacker, aliveDragon, { defenderMonsterClass: 'dragon' })
+
+      expect(result.hit).toBe(true)
+      expect(result.rollDetails.damagePurposedMult).toBe(true)
+      expect(result.rollDetails.damageHelplessMult).toBe(false)
+    })
+  })
 })

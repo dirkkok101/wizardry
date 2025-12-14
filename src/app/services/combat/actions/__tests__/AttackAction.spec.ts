@@ -13,7 +13,9 @@ import { AttackAction } from '../AttackAction'
 import { CombatContext } from '../../CombatContext'
 import { ActionExecutionContext } from '../CombatAction'
 import { createTestCharacter, createTestMonster, createTestCombatState } from '@testing/test-factories'
-import { CombatCommand, MonsterGroup } from '@models/Combat'
+import { CombatCommand, MonsterGroup, MonsterInstance } from '@models/Combat'
+import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
 
 describe('AttackAction', () => {
   let attackAction: AttackAction
@@ -411,6 +413,131 @@ describe('AttackAction', () => {
       const damageDealt = 50 - updatedMonster.hp
       // With 2x multiplier, damage should be meaningful (not just base)
       expect(damageDealt).toBeGreaterThan(2)
+    })
+  })
+
+  describe('character critical hit death', () => {
+    /**
+     * Create context for testing monster attacks on characters with critical hits.
+     * This tests the bug where a character killed by critical hit mid-round
+     * could be "resurrected" by subsequent attacks using stale character data.
+     */
+    function createMonsterAttackContext(
+      existingCharacterUpdates?: Map<string, Character>
+    ): { ctx: ActionExecutionContext; character: Character; monster: MonsterInstance } {
+      const character = createTestCharacter({
+        id: 'char-1',
+        name: 'Lance',
+        level: 5,
+        hp: 52,
+        maxHp: 52,
+        vitality: 10  // Low vitality = low crit resistance
+      })
+
+      const monster = createTestMonster({
+        id: 'monster-1',
+        monsterId: 'bubbly-slime',
+        name: 'Bubbly Slime',
+        level: 1,  // Low level = higher crit success
+        hp: 20,
+        maxHp: 20,
+        ac: 8
+      })
+
+      const monsterGroups: MonsterGroup[] = [{
+        id: 'A',
+        monsters: [monster],
+        formation: 'front',
+        identified: true
+      }]
+
+      const combatState = createTestCombatState({ monsterGroups })
+      const party = [character]
+      const frontRow = ['char-1']
+
+      const context = CombatContext.create(
+        combatState,
+        party,
+        frontRow,
+        new Set(),
+        existingCharacterUpdates ?? new Map()
+      )
+
+      const command: CombatCommand = {
+        type: 'ATTACK',
+        actor: monster,
+        target: character,
+        initiative: 5
+      }
+
+      return {
+        ctx: {
+          state: combatState,
+          command,
+          parryingCombatants: new Set(),
+          existingCharacterUpdates,
+          context
+        },
+        character,
+        monster
+      }
+    }
+
+    it('should use fresh character state when target was killed earlier in round', () => {
+      // Setup: Lance was killed by a critical hit earlier in the round
+      // His current state in existingCharacterUpdates is HP=0, DEAD
+      const deadLance = createTestCharacter({
+        id: 'char-1',
+        name: 'Lance',
+        level: 5,
+        hp: 0,
+        maxHp: 52,
+        status: CharacterStatus.DEAD
+      })
+
+      const existingCharacterUpdates = new Map<string, Character>([
+        ['char-1', deadLance]
+      ])
+
+      const { ctx } = createMonsterAttackContext(existingCharacterUpdates)
+
+      // Queue: hit roll (5% = hit), damage, no crit
+      RandomService.queueNextValues([0.05, 0.5, 0.90])
+
+      const result = attackAction.execute(ctx)
+
+      // The character should still be dead after the second attack
+      const updatedChar = result.characterUpdates?.get('char-1')
+      expect(updatedChar).toBeDefined()
+      expect(updatedChar!.hp).toBe(0)
+      expect(updatedChar!.status).toBe(CharacterStatus.DEAD)
+    })
+
+    it('should not allow dead character to take more damage', () => {
+      // Setup: Lance was killed earlier in the round (HP=0, DEAD)
+      const deadLance = createTestCharacter({
+        id: 'char-1',
+        name: 'Lance',
+        level: 5,
+        hp: 0,
+        maxHp: 52,
+        status: CharacterStatus.DEAD
+      })
+
+      const existingCharacterUpdates = new Map<string, Character>([
+        ['char-1', deadLance]
+      ])
+
+      const { ctx } = createMonsterAttackContext(existingCharacterUpdates)
+
+      // Queue: hit roll (5% = hit), damage (full roll), no crit
+      RandomService.queueNextValues([0.05, 1.0, 0.90])
+
+      const result = attackAction.execute(ctx)
+
+      // Messages should indicate the target is already dead
+      const messages = result.messages.join(' ')
+      expect(messages).toContain('already dead')
     })
   })
 })

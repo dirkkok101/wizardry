@@ -57,9 +57,17 @@ export class AttackAction extends BaseCombatAction {
    *
    * Commands store a snapshot of the target at round start. When spells like KATINO
    * update monster status mid-round, `command.target` still has the old status.
-   * This method looks up the current state from `state.monsterGroups`.
+   * Similarly, when a character is killed earlier in the round, subsequent attacks
+   * must use the fresh character state to avoid overwriting death with stale data.
+   *
+   * This method looks up the current state from `state.monsterGroups` for monsters
+   * and from `existingCharacterUpdates` for characters.
    */
-  private getFreshTarget(state: CombatState, staleTarget: Combatant): Combatant {
+  private getFreshTarget(
+    state: CombatState,
+    staleTarget: Combatant,
+    existingCharacterUpdates?: Map<string, Character>
+  ): Combatant {
     // For monsters, look up current state from monsterGroups
     if ('monsterId' in staleTarget) {
       for (const group of state.monsterGroups) {
@@ -67,15 +75,22 @@ export class AttackAction extends BaseCombatAction {
         if (freshMonster) return freshMonster
       }
     }
-    // For characters, return as-is (character updates handled separately)
+
+    // For characters, look up from existingCharacterUpdates (if killed earlier in round)
+    if (existingCharacterUpdates) {
+      const freshChar = existingCharacterUpdates.get(staleTarget.id)
+      if (freshChar) return freshChar
+    }
+
     return staleTarget
   }
 
   execute(ctx: ActionExecutionContext): CommandExecutionResult {
-    const { state, command, parryingCombatants } = ctx
-    // Use fresh target state to see mid-round status changes (e.g., ASLEEP from KATINO)
+    const { state, command, parryingCombatants, existingCharacterUpdates } = ctx
+    // Use fresh target state to see mid-round status changes (e.g., ASLEEP from KATINO,
+    // or character killed by critical hit earlier in round)
     const staleTarget = command.target as Combatant
-    const target = this.getFreshTarget(state, staleTarget)
+    const target = this.getFreshTarget(state, staleTarget, existingCharacterUpdates)
 
     if (!target) {
       return this.createMessageResult(state, ['No target specified'])
@@ -314,6 +329,19 @@ export class AttackAction extends BaseCombatAction {
     rollDetails: AttackRollDetails
   ): CommandExecutionResult {
     const { state, command } = ctx
+
+    // Defensive check: If character target is already dead (killed earlier in round),
+    // skip damage application and return early with a message
+    if ('class' in target) {
+      const character = target as Character
+      if (character.hp <= 0 || character.status === CharacterStatus.DEAD) {
+        return {
+          newState: state,
+          messages: [actionMessage, this.resultMessage(`${targetName} is already dead!`)],
+          characterUpdates: new Map([[character.id, character]]),  // Preserve dead state
+        }
+      }
+    }
 
     // Helpless multiplier already applied in resolveAttack() - use rollDetails flag for message
     const isHelpless = rollDetails.damageHelplessMult
