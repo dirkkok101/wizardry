@@ -94,6 +94,10 @@ import {
   type RegenerationResult,
   type CharacterRecoveryResult,
 
+  // Command Executor
+  executeCommand as execCmd,
+  hasHandler as hasActionHandler,
+
   // Constants
   RESULT_MARKER,
 } from './index'
@@ -338,6 +342,43 @@ export class CombatServiceFacade {
     data?: any
   ): CombatCommand {
     return createCmd(actor, actionType, target, data)
+  }
+
+  // ============================================================================
+  // Command Execution (delegates to CommandExecutor)
+  // ============================================================================
+
+  /**
+   * Execute a combat command using the Command Pattern registry
+   *
+   * This is the new polymorphic execution path that replaces the switch-on-type
+   * pattern in CombatService.executeCommand().
+   *
+   * @param state - Current combat state
+   * @param command - The command to execute
+   * @param parryingCombatants - Set of combatant IDs that are parrying
+   * @param party - Party characters
+   * @param frontRow - Front row character IDs
+   * @param existingCharacterUpdates - Updates from previous commands
+   * @param debug - Enable debug logging
+   */
+  static executeCommand(
+    state: CombatState,
+    command: CombatCommand,
+    parryingCombatants: Set<string>,
+    party: Character[],
+    frontRow: string[],
+    existingCharacterUpdates?: Map<string, Character>,
+    debug?: boolean
+  ): CommandExecutionResult {
+    return execCmd(state, command, parryingCombatants, party, frontRow, existingCharacterUpdates, { debug })
+  }
+
+  /**
+   * Check if an action type has a registered handler
+   */
+  static hasActionHandler(actionType: string): boolean {
+    return hasActionHandler(actionType)
   }
 
   // ============================================================================

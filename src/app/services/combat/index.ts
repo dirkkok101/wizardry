@@ -158,6 +158,13 @@ export {
   type CombatEndCheck,
 } from './orchestration/CombatRoundOrchestrator'
 
+export {
+  CommandExecutor,
+  executeCommand,
+  hasHandler,
+  type ExecuteCommandOptions,
+} from './orchestration/CommandExecutor'
+
 // Actions (Command Pattern)
 export {
   type ICombatAction,
