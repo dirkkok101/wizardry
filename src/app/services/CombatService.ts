@@ -1,4 +1,29 @@
 // src/services/CombatService.ts
+/**
+ * @deprecated This monolithic CombatService is deprecated.
+ *
+ * Use the refactored services from '@services/combat' instead:
+ *
+ * ```typescript
+ * // For backward compatibility (drop-in replacement):
+ * import { CombatServiceFacade as CombatService } from '@services/combat'
+ *
+ * // For direct service imports (preferred):
+ * import {
+ *   InitiativeService,
+ *   AttackResolutionService,
+ *   StatusEffectService,
+ *   DamageApplicationService,
+ *   FleeService,
+ *   MonsterAIService,
+ *   CombatRoundOrchestrator,
+ *   // ... and more
+ * } from '@services/combat'
+ * ```
+ *
+ * The new architecture follows SOLID principles with focused, single-responsibility services.
+ * See docs/services/ for detailed documentation on each service.
+ */
 import { Combatant, CombatState, CombatCommand, CombatActionType, AttackResult, MonsterInstance, MonsterGroup, ENCOUNTER_CONFIG, CombatRoundEvent, CombatRoundResult, CharacterUpdate, CommandExecutionResult, CombatantStatus, ActionSkipReason, ActionAuditEntry, CombatRoundAudit } from '@models/Combat'
 import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
@@ -35,6 +60,10 @@ function getAgilityModifier(agility: number): number {
   return -5  // 18+ = Fastest
 }
 
+/**
+ * @deprecated Use CombatServiceFacade from '@services/combat' instead.
+ * This class will be removed in a future release.
+ */
 export class CombatService {
   /**
    * Debug flag to toggle verbose combat logging.
