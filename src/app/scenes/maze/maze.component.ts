@@ -52,6 +52,14 @@ import { Item } from '@models/Item';
 import { canAct } from '@utils/CharacterStatusHelpers';
 import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils';
 import * as TextureAtlasService from '@services/TextureAtlasService';
+// New refactored services
+import { MazeStateMachine } from '@services/MazeStateMachine';
+import { MovementOrchestrationService, MovementDirection } from '@services/MovementOrchestrationService';
+import { CombatOrchestrationService } from '@services/CombatOrchestrationService';
+import { ChestOrchestrationService } from '@services/ChestOrchestrationService';
+import { MessageSequencer } from '@services/MessageSequencer';
+import { LightMessageService } from '@services/LightMessageService';
+import { CharacterQueries } from '@utils/CharacterQueries';
 
 @Component({
   selector: 'app-maze',
@@ -221,21 +229,18 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Check if a character is incapacitated (cannot take combat actions)
+   * Delegates to CharacterQueries utility for DRY compliance
    */
   private isCharacterIncapacitated(char: Character): boolean {
-    return char.status === CharacterStatus.DEAD ||
-           char.status === CharacterStatus.ASHES ||
-           char.status === CharacterStatus.LOST ||
-           char.status === CharacterStatus.PARALYZED ||
-           char.status === CharacterStatus.ASLEEP ||
-           char.hp <= 0;
+    return CharacterQueries.isIncapacitated(char);
   }
 
   /**
    * Check if a character has spells available for combat
+   * Delegates to CharacterQueries utility for DRY compliance
    */
   private characterHasSpells(char: Character): boolean {
-    return SpellCastingService.hasSpellsInContext(char, 'combat');
+    return CharacterQueries.canCastSpells(char, 'combat');
   }
 
   /**
@@ -915,7 +920,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     private gameState: GameStateService,
     private router: Router,
     private navigation: SceneNavigationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    // New refactored services
+    private mazeStateMachine: MazeStateMachine,
+    private movementOrchestration: MovementOrchestrationService,
+    private combatOrchestration: CombatOrchestrationService,
+    private chestOrchestration: ChestOrchestrationService,
+    private messageSequencer: MessageSequencer
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -1415,35 +1426,162 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   moveForward(): void {
-    this.executeMovement('FORWARD', (state: GameState) => DungeonMovementService.moveForward(state));
+    this.executeMovementWithOrchestration('FORWARD');
   }
 
   moveBackward(): void {
-    this.executeMovement('BACKWARD', (state: GameState) => DungeonMovementService.moveBackward(state));
+    this.executeMovementWithOrchestration('BACKWARD');
   }
 
   turnLeft(): void {
-    const state = this.gameState.state();
-    const newState = DungeonMovementService.turnLeft(state);
-    this.gameState.updateState(() => newState);
+    this.executeMovementWithOrchestration('TURN_LEFT');
     this.addMessage('You turn left.');
-    this.render();
   }
 
   turnRight(): void {
-    const state = this.gameState.state();
-    const newState = DungeonMovementService.turnRight(state);
-    this.gameState.updateState(() => newState);
+    this.executeMovementWithOrchestration('TURN_RIGHT');
     this.addMessage('You turn right.');
-    this.render();
   }
 
   strafeLeft(): void {
-    this.executeMovement('STRAFE_LEFT', (state: GameState) => DungeonMovementService.strafeLeft(state));
+    this.executeMovementWithOrchestration('STRAFE_LEFT');
   }
 
   strafeRight(): void {
-    this.executeMovement('STRAFE_RIGHT', (state: GameState) => DungeonMovementService.strafeRight(state));
+    this.executeMovementWithOrchestration('STRAFE_RIGHT');
+  }
+
+  /**
+   * Execute movement using the MovementOrchestrationService
+   * Handles all movement logic including tile effects, encounters, etc.
+   */
+  private executeMovementWithOrchestration(direction: MovementDirection): void {
+    const state = this.gameState.state();
+    const encountersEnabled = state.settings?.encountersEnabled ?? true;
+
+    // Use the orchestration service
+    const result = this.movementOrchestration.executeMovement(direction, state, {
+      encountersEnabled
+    });
+
+    // Update game state
+    if (result.success) {
+      this.gameState.updateState(() => result.state);
+
+      // Reset elevator dismissed state so dialog shows again
+      if (direction !== 'TURN_LEFT' && direction !== 'TURN_RIGHT') {
+        this.elevatorDismissed.set(false);
+      }
+    }
+
+    // Display messages
+    for (const msg of result.messages) {
+      this.addMessage(msg);
+    }
+
+    // Handle UI actions
+    this.handleMovementUIAction(result.uiAction);
+
+    // Render if needed
+    if (result.shouldRender) {
+      this.render();
+    }
+  }
+
+  /**
+   * Handle UI actions from movement orchestration
+   */
+  private handleMovementUIAction(action: import('@services/MovementOrchestrationService').MovementUIAction): void {
+    switch (action.type) {
+      case 'show_tile_message':
+        if (action.message) {
+          this.showTileMessage(action.message, action.autoDismiss ?? false, null);
+        }
+        break;
+
+      case 'show_condition_fail':
+        if (action.conditionResult && action.previousPosition) {
+          this.handleConditionFailUI(action.conditionResult, action.previousPosition);
+        }
+        break;
+
+      case 'show_condition_success':
+        if (action.conditionResult) {
+          this.handleConditionSuccessUI(action.conditionResult);
+        }
+        break;
+
+      case 'trigger_encounter':
+        this.initiateEncounter(
+          this.currentLevel(),
+          action.canFlee ?? true,
+          action.encounterConfig,
+          action.encounterReason
+        );
+        break;
+
+      case 'show_elevator':
+        // Elevator dialog is handled by computed signal
+        break;
+
+      case 'return_to_castle':
+        this.navigation.goToCastle();
+        break;
+
+      case 'none':
+      default:
+        // Check for random encounter after movement
+        this.checkForEncounter(false);
+        break;
+    }
+  }
+
+  /**
+   * Handle condition fail UI - show messages then execute fail action
+   */
+  private async handleConditionFailUI(result: ConditionResult, previousPosition: Position): Promise<void> {
+    // Show entry message first if present
+    if (result.entryMessage) {
+      await this.showMessageAsync(result.entryMessage, result.messageStyle ?? 'letterbox');
+    }
+
+    // Show fail message if present
+    if (result.message) {
+      await this.showMessageAsync(result.message, result.messageStyle ?? 'letterbox');
+    }
+
+    // Execute fail action
+    this.executeConditionFailAction(result, previousPosition);
+  }
+
+  /**
+   * Handle condition success UI - show messages then trigger encounter if any
+   */
+  private async handleConditionSuccessUI(result: ConditionResult): Promise<void> {
+    // Show entry message first if present
+    if (result.entryMessage) {
+      await this.showMessageAsync(result.entryMessage, result.messageStyle ?? 'letterbox');
+    }
+
+    // Show success message if present
+    if (result.message) {
+      await this.showMessageAsync(result.message, result.messageStyle ?? 'letterbox');
+    }
+
+    // Trigger encounter if specified
+    if (result.encounterId) {
+      this.triggerFixedEncounterById(result.encounterId);
+    }
+  }
+
+  /**
+   * Show a message and return a Promise that resolves when dismissed
+   * Replaces callback-based showConditionMessage pattern
+   */
+  private showMessageAsync(message: string, style: MessageStyle): Promise<void> {
+    return new Promise(resolve => {
+      this.showTileMessage(message, false, resolve);
+    });
   }
 
   // Note: openDoor() removed - walking through doors is now automatic (original Wizardry behavior)
