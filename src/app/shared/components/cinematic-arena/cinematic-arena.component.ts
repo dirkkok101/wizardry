@@ -566,6 +566,7 @@ export class CinematicArenaComponent implements OnDestroy {
 
   /**
    * Build arena state from combat event
+   * Uses structured actor/target data when available, falls back to message parsing
    */
   private buildArenaState(event: CombatRoundEvent): ArenaState | null {
     const messages = event.messages
@@ -574,12 +575,17 @@ export class CinematicArenaComponent implements OnDestroy {
     const actionMsg = messages[0]
     const resultMsg = messages.find(m => m.startsWith(RESULT_MARKER))
 
-    // Parse actor from message
-    const attacker = this.parseAttackerFromMessage(actionMsg)
+    // Use structured data when available, otherwise fall back to message parsing
+    const attacker = event.actorId && event.actorType
+      ? this.getCombatantById(event.actorId, event.actorType)
+      : this.parseAttackerFromMessage(actionMsg)
+
     if (!attacker) return null
 
-    // Parse targets from message (returns array)
-    const targets = this.parseTargetsFromMessage(actionMsg)
+    // Use structured target IDs when available
+    const targets = event.targetIds && event.targetIds.length > 0 && event.targetType
+      ? this.getCombatantsById(event.targetIds, event.targetType)
+      : this.parseTargetsFromMessage(actionMsg)
 
     // Parse spell name if this is a spell cast
     const spellName = this.parseSpellName(actionMsg)
@@ -589,8 +595,8 @@ export class CinematicArenaComponent implements OnDestroy {
       ? parseCombatMessage(resultMsg.substring(RESULT_MARKER.length))
       : null
 
-    // Determine action type from audit or message
-    const actionType = this.inferActionType(actionMsg)
+    // Use structured action type when available, otherwise infer from message
+    const actionType = event.actionType ?? this.inferActionType(actionMsg)
 
     return {
       attacker,
@@ -604,6 +610,58 @@ export class CinematicArenaComponent implements OnDestroy {
         type: damageResult.type
       } : undefined
     }
+  }
+
+  /**
+   * Get a single combatant by ID and type
+   */
+  private getCombatantById(id: string, type: 'character' | 'monster'): ArenaCombatant | null {
+    if (type === 'character') {
+      const char = this.partyCharacters().find(c => c.id === id)
+      if (char) {
+        const liveHp = this.liveCharacterHp().get(char.id) ?? char.hp
+        return {
+          id: char.id,
+          name: char.name,
+          spriteUrl: SpriteService.getSpriteUrl(char),
+          type: 'character',
+          className: char.class,
+          currentHp: liveHp,
+          maxHp: char.maxHp
+        }
+      }
+    } else {
+      // For monsters, the ID could be the monster instance ID - find it in groups
+      for (const group of this.monsterGroups()) {
+        const monster = group.monsters.find(m => m.id === id)
+        if (monster) {
+          const liveCount = this.liveMonsterCounts().get(group.id) ??
+            group.monsters.filter(m => m.hp > 0).length
+          const liveActiveCount = this.liveMonsterActiveCounts().get(group.id) ??
+            group.monsters.filter(m => m.hp > 0 && m.status !== 'ASLEEP' && m.status !== 'PARALYZED').length
+          return {
+            id: group.id,
+            name: monster.name,
+            spriteUrl: `/assets/sprites/monsters/${monster.monsterId}.png`,
+            type: 'monster',
+            groupId: group.id,
+            aliveCount: liveCount,
+            activeCount: liveActiveCount,
+            totalCount: group.monsters.length
+          }
+        }
+      }
+    }
+    return null
+  }
+
+  /**
+   * Get multiple combatants by their IDs
+   */
+  private getCombatantsById(ids: string[], type: 'character' | 'monster'): ArenaCombatant[] {
+    return ids
+      .map(id => this.getCombatantById(id, type))
+      .filter((c): c is ArenaCombatant => c !== null)
   }
 
   /**
@@ -978,11 +1036,13 @@ export class CinematicArenaComponent implements OnDestroy {
       // Position damage numbers staggered horizontally for stacked cards
       // Single target: centered at 75%
       // Multiple targets: offset based on stack position
+      // Large stacks (5+ cards like breath attacks): tighter spacing
+      const isLargeStack = damageResults.length > 4
       const xOffset = damageResults.length > 1
-        ? 60 + (i * 12)  // Stagger right for stacked cards
+        ? 60 + (i * (isLargeStack ? 8 : 12))  // Tighter spacing for 6-card breath attacks
         : 75              // Center for single target
       const yOffset = damageResults.length > 1
-        ? 35 + (i * 6)   // Stagger down slightly
+        ? 35 + (i * (isLargeStack ? 4 : 6))   // Tighter vertical spacing for large stacks
         : 40              // Default position
 
       // Convert DamageResult type to DamageType for floating damage

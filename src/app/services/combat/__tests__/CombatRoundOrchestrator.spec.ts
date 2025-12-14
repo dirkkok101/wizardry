@@ -17,6 +17,7 @@ import {
   applySurpriseFilter,
   canActorAct,
   getSkipReason,
+  isTargetValid,
   checkCombatEnd,
   buildAudit,
   type AuditContext,
@@ -307,6 +308,159 @@ describe('CombatRoundOrchestrator', () => {
       const cmd: CombatCommand = { id: 'cmd1', actor: char, type: 'ATTACK', initiative: 5 }
 
       expect(getSkipReason(cmd, state, new Map())).toBe('STONED')
+    })
+  })
+
+  describe('isTargetValid', () => {
+    it('returns false when target monster is dead', () => {
+      const deadMonster = createTestMonster({ id: 'm1', hp: 0, status: 'DEAD' })
+      const state = createTestCombatState({
+        monsterGroups: [
+          { id: 'A', monsters: [deadMonster], formation: 'front', identified: true },
+        ],
+      })
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: createTestCharacter(),
+        target: deadMonster,
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, state)).toBe(false)
+    })
+
+    it('returns false when all monsters in target group are dead', () => {
+      const state = createTestCombatState({
+        monsterGroups: [
+          {
+            id: 'A',
+            monsters: [
+              createTestMonster({ id: 'm1', hp: 0, status: 'DEAD' }),
+              createTestMonster({ id: 'm2', hp: 0, status: 'DEAD' }),
+            ],
+            formation: 'front',
+            identified: true,
+          },
+        ],
+      })
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: createTestCharacter(),
+        targetGroupId: 'A',
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, state)).toBe(false)
+    })
+
+    it('returns true when target group has alive monsters', () => {
+      const state = createTestCombatState({
+        monsterGroups: [
+          {
+            id: 'A',
+            monsters: [
+              createTestMonster({ id: 'm1', hp: 0, status: 'DEAD' }),
+              createTestMonster({ id: 'm2', hp: 10, status: 'ALIVE' }),
+            ],
+            formation: 'front',
+            identified: true,
+          },
+        ],
+      })
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: createTestCharacter(),
+        targetGroupId: 'A',
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, state)).toBe(true)
+    })
+
+    it('returns true when specific target monster is alive', () => {
+      const aliveMonster = createTestMonster({ id: 'm1', hp: 10, status: 'ALIVE' })
+      const state = createTestCombatState({
+        monsterGroups: [
+          { id: 'A', monsters: [aliveMonster], formation: 'front', identified: true },
+        ],
+      })
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: createTestCharacter(),
+        target: aliveMonster,
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, state)).toBe(true)
+    })
+
+    it('returns true for non-ATTACK commands', () => {
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'PARRY',
+        actor: createTestCharacter(),
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, {} as CombatState)).toBe(true)
+    })
+
+    it('returns false when target group does not exist', () => {
+      const state = createTestCombatState({
+        monsterGroups: [], // No groups
+      })
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: createTestCharacter(),
+        targetGroupId: 'A', // Group A doesn't exist
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, state)).toBe(false)
+    })
+
+    it('returns false when target monster not found in any group', () => {
+      const missingMonster = createTestMonster({ id: 'missing', hp: 10, status: 'ALIVE' })
+      const state = createTestCombatState({
+        monsterGroups: [
+          {
+            id: 'A',
+            monsters: [createTestMonster({ id: 'm1', hp: 10, status: 'ALIVE' })],
+            formation: 'front',
+            identified: true,
+          },
+        ],
+      })
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: createTestCharacter(),
+        target: missingMonster, // This monster isn't in any group
+        initiative: 5,
+      }
+
+      expect(isTargetValid(cmd, state)).toBe(false)
+    })
+
+    it('returns true for ATTACK targeting character (monster attacking party)', () => {
+      const char = createTestCharacter({ id: 'c1', hp: 10 })
+      const monster = createTestMonster({ id: 'm1' })
+      const state = createTestCombatState()
+      const cmd: CombatCommand = {
+        id: 'cmd1',
+        type: 'ATTACK',
+        actor: monster,
+        target: char,
+        initiative: 5,
+      }
+
+      // Character targets are assumed valid (handled elsewhere)
+      expect(isTargetValid(cmd, state)).toBe(true)
     })
   })
 

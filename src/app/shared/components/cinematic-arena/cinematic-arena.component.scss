@@ -466,28 +466,31 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
 }
 
 // Override for stacked cards - each subsequent card offset
+// Supports up to 6 cards (party breath attacks) with compact 10px/5px offsets
 .combatant-panel.stacked {
   .target-stack {
-    // Expand width to accommodate stacked cards
-    width: calc(#{$portrait-width} + 45px);
+    // Expand width to accommodate 6 stacked cards (tighter spacing)
+    width: calc(#{$portrait-width} + 60px);
 
     .portrait-card {
       position: absolute;
       transition: transform 0.2s ease;
 
-      // Z-index and positioning based on stack order
-      // Last card (highest index) should be on top visually
-      &:nth-child(1) { z-index: 4; transform: translate(0, 0); }
-      &:nth-child(2) { z-index: 3; transform: translate(15px, 8px); }
-      &:nth-child(3) { z-index: 2; transform: translate(30px, 16px); }
-      &:nth-child(4) { z-index: 1; transform: translate(45px, 24px); }
+      // 6-card compact fan with 10px/5px offsets
+      // First card (index 0) is frontmost with highest z-index
+      &:nth-child(1) { z-index: 6; transform: translate(0, 0); }
+      &:nth-child(2) { z-index: 5; transform: translate(10px, 5px); }
+      &:nth-child(3) { z-index: 4; transform: translate(20px, 10px); }
+      &:nth-child(4) { z-index: 3; transform: translate(30px, 15px); }
+      &:nth-child(5) { z-index: 2; transform: translate(40px, 20px); }
+      &:nth-child(6) { z-index: 1; transform: translate(50px, 25px); }
     }
   }
 
-  // Scale down cards slightly when stacked for better fit
+  // Scale down cards slightly more when stacked for better fit (5+ cards)
   &.stacked .portrait-card {
-    width: calc(#{$portrait-width} * 0.9);
-    height: calc(#{$portrait-height} * 0.9);
+    width: calc(#{$portrait-width} * 0.85);
+    height: calc(#{$portrait-height} * 0.85);
   }
 }
 
@@ -950,21 +953,25 @@ $letterbox-height: 40px;  // Reduced from 60px for more arena space
     height: 360px;
   }
 
-  // Expand stacked card width
+  // Expand stacked card width - 6-card compact fan for 2K+ displays
   .combatant-panel.stacked {
     .target-stack {
-      width: calc(360px + 90px);
+      width: calc(360px + 120px);  // 2x the base stack expansion
 
       .portrait-card {
-        &:nth-child(2) { transform: translate(30px, 16px); }
-        &:nth-child(3) { transform: translate(60px, 32px); }
-        &:nth-child(4) { transform: translate(90px, 48px); }
+        // 6-card compact fan with 20px/10px offsets (2x scale)
+        &:nth-child(1) { z-index: 6; transform: translate(0, 0); }
+        &:nth-child(2) { z-index: 5; transform: translate(20px, 10px); }
+        &:nth-child(3) { z-index: 4; transform: translate(40px, 20px); }
+        &:nth-child(4) { z-index: 3; transform: translate(60px, 30px); }
+        &:nth-child(5) { z-index: 2; transform: translate(80px, 40px); }
+        &:nth-child(6) { z-index: 1; transform: translate(100px, 50px); }
       }
     }
 
     &.stacked .portrait-card {
-      width: calc(360px * 0.9);
-      height: calc(360px * 0.9);
+      width: calc(360px * 0.85);
+      height: calc(360px * 0.85);
     }
   }
 

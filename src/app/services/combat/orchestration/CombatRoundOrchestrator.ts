@@ -314,6 +314,42 @@ class CombatRoundOrchestrator {
   }
 
   /**
+   * Check if the target of a command is still valid (alive and present)
+   *
+   * For ATTACK commands targeting monsters, verifies the target monster
+   * or target group still has alive monsters. Prevents attacking dead groups
+   * after spells like MAHALITO kill all monsters mid-round.
+   */
+  static isTargetValid(command: CombatCommand, state: CombatState): boolean {
+    // Only validate ATTACK commands targeting monsters
+    if (command.type !== 'ATTACK') return true
+
+    // Check for targetGroupId (group-based targeting)
+    if (command.targetGroupId) {
+      const group = state.monsterGroups.find(g => g.id === command.targetGroupId)
+      if (!group) return false
+      // Check if any monster in group is alive
+      return group.monsters.some(m => m.status !== 'DEAD' && m.hp > 0)
+    }
+
+    // Check for specific monster target
+    if (command.target && 'monsterId' in command.target) {
+      const targetId = command.target.id
+      // Look up fresh state from monsterGroups
+      for (const group of state.monsterGroups) {
+        const monster = group.monsters.find(m => m.id === targetId)
+        if (monster) {
+          return monster.status !== 'DEAD' && monster.hp > 0
+        }
+      }
+      return false // Monster not found in any group
+    }
+
+    // Character targets or other cases - assume valid
+    return true
+  }
+
+  /**
    * Check if combat should end (victory, defeat, or flee)
    */
   static checkCombatEnd(
@@ -495,6 +531,43 @@ class CombatRoundOrchestrator {
   }
 
   /**
+   * Extract target IDs from a combat command
+   */
+  private static extractTargetIds(command: CombatCommand): string[] {
+    // For array targets (breath attacks targeting party, group spells)
+    if (Array.isArray(command.target)) {
+      return command.target.map(t => t.id)
+    }
+    // For single target
+    if (command.target) {
+      return [command.target.id]
+    }
+    // For group-targeted actions (spells targeting a monster group)
+    if (command.targetGroupId) {
+      return [command.targetGroupId]
+    }
+    return []
+  }
+
+  /**
+   * Infer target type from a combat command
+   */
+  private static inferTargetType(command: CombatCommand): 'character' | 'monster' | undefined {
+    // Check target directly if available
+    if (Array.isArray(command.target) && command.target.length > 0) {
+      return 'monsterId' in command.target[0] ? 'monster' : 'character'
+    }
+    if (command.target) {
+      return 'monsterId' in command.target ? 'monster' : 'character'
+    }
+    // Group targets are always monsters
+    if (command.targetGroupId) {
+      return 'monster'
+    }
+    return undefined
+  }
+
+  /**
    * Check if monster groups have changed (for event generation)
    */
   static monsterGroupsChanged(
@@ -601,6 +674,15 @@ class CombatRoundOrchestrator {
         continue
       }
 
+      // Skip if target is no longer valid (all monsters dead in target group)
+      if (!this.isTargetValid(command, roundCtx.state)) {
+        if (auditCtx.enabled) {
+          auditCtx.entries.push(this.createSkippedAuditEntry(command, 'TARGET_DEAD'))
+          auditCtx.skipReasonCounts['TARGET_DEAD']++
+        }
+        continue
+      }
+
       // Execute command using CommandExecutor
       const result = executeCommand(
         roundCtx.state,
@@ -637,7 +719,13 @@ class CombatRoundOrchestrator {
         acBuffs: result.acBuffs,
         spellCast: command.type === 'CAST_SPELL' && command.data?.spellId
           ? { characterId: command.actor.id, spellId: command.data.spellId }
-          : undefined
+          : undefined,
+        // Structured actor/target data for cinematic arena (no message parsing needed)
+        actorId: command.actor.id,
+        actorType: 'monsterId' in command.actor ? 'monster' : 'character',
+        actionType: command.type,
+        targetIds: this.extractTargetIds(command),
+        targetType: this.inferTargetType(command),
       }
       roundCtx.events.push(event)
 
@@ -762,6 +850,7 @@ export const sortCommandsByInitiative = CombatRoundOrchestrator.sortCommandsByIn
 export const applySurpriseFilter = CombatRoundOrchestrator.applySurpriseFilter.bind(CombatRoundOrchestrator)
 export const canActorAct = CombatRoundOrchestrator.canActorAct
 export const getSkipReason = CombatRoundOrchestrator.getSkipReason
+export const isTargetValid = CombatRoundOrchestrator.isTargetValid
 export const checkCombatEnd = CombatRoundOrchestrator.checkCombatEnd
 export const processFleeAttempt = CombatRoundOrchestrator.processFleeAttempt
 export const mergeCommandResult = CombatRoundOrchestrator.mergeCommandResult

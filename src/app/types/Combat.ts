@@ -381,6 +381,23 @@ export interface CombatRoundEvent {
    * Used for cinematic arena floating shield indicators
    */
   acBuffs?: { target: string; acModifier: number }[]
+
+  // Structured actor/target information (no message parsing needed)
+
+  /** Actor who performed this action (character or monster instance ID) */
+  actorId?: string
+
+  /** Type of the actor */
+  actorType?: 'character' | 'monster'
+
+  /** The action type performed */
+  actionType?: CombatActionType
+
+  /** Target IDs - character IDs for party targets, monster instance IDs for monster targets */
+  targetIds?: string[]
+
+  /** Type of targets */
+  targetType?: 'character' | 'monster'
 }
 
 /**
