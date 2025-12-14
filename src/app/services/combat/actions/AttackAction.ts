@@ -27,7 +27,6 @@ import {
 import {
   resolveAttack,
   AttackResolutionOptions,
-  isHelplessTarget,
 } from '../core/AttackResolutionService'
 import {
   hasStatusEffect,
@@ -53,9 +52,30 @@ import { HIT_CHANCE, ITEM_PROTECTION } from '../CombatConstants'
 export class AttackAction extends BaseCombatAction {
   readonly actionType = 'ATTACK' as const
 
+  /**
+   * Get fresh target state from combat state (avoids stale command snapshot)
+   *
+   * Commands store a snapshot of the target at round start. When spells like KATINO
+   * update monster status mid-round, `command.target` still has the old status.
+   * This method looks up the current state from `state.monsterGroups`.
+   */
+  private getFreshTarget(state: CombatState, staleTarget: Combatant): Combatant {
+    // For monsters, look up current state from monsterGroups
+    if ('monsterId' in staleTarget) {
+      for (const group of state.monsterGroups) {
+        const freshMonster = group.monsters.find(m => m.id === staleTarget.id)
+        if (freshMonster) return freshMonster
+      }
+    }
+    // For characters, return as-is (character updates handled separately)
+    return staleTarget
+  }
+
   execute(ctx: ActionExecutionContext): CommandExecutionResult {
     const { state, command, parryingCombatants } = ctx
-    const target = command.target as Combatant
+    // Use fresh target state to see mid-round status changes (e.g., ASLEEP from KATINO)
+    const staleTarget = command.target as Combatant
+    const target = this.getFreshTarget(state, staleTarget)
 
     if (!target) {
       return this.createMessageResult(state, ['No target specified'])
@@ -295,9 +315,9 @@ export class AttackAction extends BaseCombatAction {
   ): CommandExecutionResult {
     const { state, command } = ctx
 
-    // Check if target is helpless for 2x damage
-    const isHelpless = isHelplessTarget(target)
-    const finalDamage = isHelpless ? damage * 2 : damage
+    // Helpless multiplier already applied in resolveAttack() - use rollDetails flag for message
+    const isHelpless = rollDetails.damageHelplessMult
+    const finalDamage = damage
 
     // Calculate new HP
     const newHp = Math.max(0, target.hp - finalDamage)

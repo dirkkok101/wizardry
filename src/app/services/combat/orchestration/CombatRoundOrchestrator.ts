@@ -641,6 +641,11 @@ class CombatRoundOrchestrator {
       }
       roundCtx.events.push(event)
 
+      // Log detailed combat messages
+      for (const msg of result.messages) {
+        console.log('[Combat]', msg)
+      }
+
       if (debug) {
         console.log('[CombatOrchestrator] Created event', {
           type: command.type,
