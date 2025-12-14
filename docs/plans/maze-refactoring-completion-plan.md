@@ -2,7 +2,7 @@
 
 ## Implementation Progress
 
-**Status: ~85% Complete (Core refactoring done)**
+**Status: ~90% Complete (Core refactoring done, Phase 7.1 complete)**
 
 ### Completed Integration Work
 
@@ -14,10 +14,24 @@
 | Phase 4.1 | Tile message signal migration to MazeStateMachine | ✅ Complete |
 | Phase 4.2 | Spell casting signal migration | ⏳ Deferred (current signals work) |
 | Phase 4.3 | Deprecated signal removal | ⏳ Deferred |
-| Phase 7 | Component decomposition | ⏳ Future (optional optimization) |
+| Phase 7.1 | MazeCanvasComponent extraction | ✅ Complete |
+| Phase 7.2 | MazeCombatComponent extraction | ⏳ Future (optional) |
+| Phase 7.3 | MazeChestComponent extraction | ⏳ Future (optional) |
 | Phase 8 | Async/await pattern verification | ✅ Already in place |
 
 ### Key Changes Made (Latest Session)
+
+1. **Phase 7.1 - MazeCanvasComponent Extraction:**
+   - Created `src/app/scenes/maze/maze-canvas/maze-canvas.component.ts` (~262 lines)
+   - Extracted WebGL renderer initialization and cleanup
+   - Extracted canvas resize observer logic
+   - Extracted texture loading and GPU upload
+   - Extracted `render()` method with view distance calculation
+   - MazeComponent now delegates rendering to child component via `this.mazeCanvas?.render()`
+   - Removed ~180 lines from MazeComponent
+   - Removed unused imports (WebGLRenderingService, TextureAtlas, ViewportConfig, TextureAtlasService)
+
+### Previous Session Changes
 
 1. **Phase 4.1 - Tile Message Migration:**
    - `showTileMessage()` now delegates to `MazeStateMachine.showTileMessage()`
@@ -34,7 +48,7 @@
    - Fixed type exports in tile-handlers/index.ts (isolatedModules compliance)
    - Created missing version.ts config (gitignored, auto-generated)
 
-### Previous Session Changes
+### Earlier Session Changes
 
 1. **DungeonMovementService.handleSpecialTile()**: Reduced from 160 lines to 70 lines using TileHandlerRegistry
 2. **MazeComponent.initiateEncounter()**: Now uses CombatOrchestrationService
@@ -50,9 +64,12 @@ The core refactoring goals have been achieved:
 - ✅ **State Machine**: MazeStateMachine provides centralized discriminated union state
 - ✅ **Compilation**: All TypeScript compiles without errors
 - ✅ **DRY Utilities**: CharacterQueries, LightMessageService, MessageSequencer available
+- ✅ **Component Extraction**: MazeCanvasComponent extracted (~180 lines removed from MazeComponent)
 
-**Future Optimizations (Phase 7):**
-Component decomposition (MazeCanvasComponent, MazeCombatComponent, MazeChestComponent) would further improve maintainability but is not blocking. The current 4,300-line MazeComponent works correctly with the refactored services. Decomposition can be done incrementally in future iterations.
+**Future Optimizations (Phase 7.2-7.3):**
+Additional component decomposition (MazeCombatComponent, MazeChestComponent) would further improve maintainability but is optional. The current ~4,100-line MazeComponent works correctly with the refactored services. These extractions can be done incrementally in future iterations:
+- MazeCombatComponent: ~700 lines of combat action/targeting logic
+- MazeChestComponent: ~850 lines of chest interaction logic
 
 **Test Status:**
 - MazeStateMachine tests: All passing
