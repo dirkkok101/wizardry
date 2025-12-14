@@ -26,6 +26,7 @@ import {
   CombatState,
   CombatCommand,
   CommandExecutionResult,
+  CombatRoundResult,
   Combatant,
   AttackResult,
   MonsterInstance,
@@ -97,6 +98,9 @@ import {
   // Command Executor
   executeCommand as execCmd,
   hasHandler as hasActionHandler,
+
+  // Round Orchestrator
+  executeRound as execRound,
 
   // Constants
   RESULT_MARKER,
@@ -425,6 +429,38 @@ export class CombatServiceFacade {
     state: CombatState
   ): CharacterRecoveryResult {
     return procCharRecovery(party, state)
+  }
+
+  // ============================================================================
+  // Round Orchestration (delegates to CombatRoundOrchestrator)
+  // ============================================================================
+
+  /**
+   * Execute a complete combat round
+   *
+   * This method orchestrates the full round execution using all the extracted services:
+   * 1. Apply poison damage at start of round
+   * 2. Sort commands by initiative
+   * 3. Apply surprise filtering (round 1 only)
+   * 4. Execute each command sequentially
+   * 5. Check victory/defeat after each command
+   * 6. Process flee attempts
+   * 7. Process end-of-round effects (regeneration, status recovery)
+   * 8. Reposition party after casualties
+   *
+   * @param state - Current combat state
+   * @param party - Party characters
+   * @param frontRow - Front row character IDs
+   * @param options - Execution options
+   * @returns Complete round result with events and state updates
+   */
+  static executeRound(
+    state: CombatState,
+    party: Character[],
+    frontRow?: string[],
+    options?: { debug?: boolean; enableAudit?: boolean }
+  ): CombatRoundResult {
+    return execRound(state, party, frontRow ?? [], options)
   }
 
   // ============================================================================

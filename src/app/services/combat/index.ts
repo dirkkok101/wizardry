@@ -153,6 +153,7 @@ export {
   buildRoundResult,
   buildAudit,
   monsterGroupsChanged,
+  executeRound,
   type RoundContext,
   type AuditContext,
   type CombatEndCheck,

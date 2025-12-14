@@ -35,6 +35,12 @@ import {
   calculateFleeChance,
   executeFleeFailurePenalty,
 } from '../core/FleeService'
+import { executeCommand } from './CommandExecutor'
+import { applyPoisonDamage } from '../support/PoisonService'
+import { processMonsterRegeneration } from '../support/RegenerationService'
+import { processCharacterStatusRecovery } from '../support/CharacterRecoveryService'
+import { repositionPartyAfterCasualties } from '../support/PartyFormationService'
+import { processMonsterStatusRecovery, tickStatusDurations } from '../core/StatusEffectService'
 
 // Re-export for convenience
 export { CombatRoundOrchestrator }
@@ -502,6 +508,182 @@ class CombatRoundOrchestrator {
 
     return false
   }
+
+  // ============================================================================
+  // Main Round Execution
+  // ============================================================================
+
+  /**
+   * Execute a complete combat round
+   *
+   * This method orchestrates the full round execution using all the extracted services:
+   * 1. Apply poison damage at start of round
+   * 2. Sort commands by initiative
+   * 3. Apply surprise filtering (round 1 only)
+   * 4. Execute each command sequentially
+   * 5. Check victory/defeat after each command
+   * 6. Process flee attempts
+   * 7. Process end-of-round effects (regeneration, status recovery)
+   * 8. Reposition party after casualties
+   *
+   * @param state - Current combat state
+   * @param party - Party characters
+   * @param frontRow - Front row character IDs
+   * @param options - Execution options
+   * @returns Complete round result with events and state updates
+   */
+  static executeRound(
+    state: CombatState,
+    party: Character[],
+    frontRow: string[] = [],
+    options: { debug?: boolean; enableAudit?: boolean } = {}
+  ): CombatRoundResult {
+    const { debug = false, enableAudit = true } = options
+
+    // Initialize contexts
+    const roundCtx = this.createRoundContext(state)
+    const auditCtx = this.createAuditContext(enableAudit)
+
+    // 1. Apply poison damage at start of round
+    const poisonResult = applyPoisonDamage(roundCtx.state, party)
+    roundCtx.state = poisonResult.newState
+    roundCtx.messages.push(...poisonResult.messages)
+    for (const [charId, char] of poisonResult.damagedCharacters.entries()) {
+      roundCtx.damagedCharacters.set(charId, char)
+    }
+
+    // Check for defeat from poison damage
+    let endCheck = this.checkCombatEnd(roundCtx.state, party, roundCtx.damagedCharacters)
+    if (endCheck.defeat) {
+      return this.buildRoundResult(roundCtx, endCheck, undefined, this.buildAudit(auditCtx, state.roundNumber))
+    }
+
+    // 2. Sort commands by initiative
+    let sortedQueue = this.sortCommandsByInitiative(state.commandQueue)
+
+    // 3. Apply surprise filtering (round 1 only)
+    if (state.roundNumber === 1 && state.surpriseState) {
+      sortedQueue = this.applySurpriseFilter(sortedQueue, state.surpriseState, auditCtx)
+    }
+
+    // 4. Execute each command sequentially
+    for (const command of sortedQueue) {
+      // Skip if actor cannot act
+      if (!this.canActorAct(command, roundCtx.state, roundCtx.damagedCharacters)) {
+        if (auditCtx.enabled) {
+          const reason = this.getSkipReason(command, roundCtx.state, roundCtx.damagedCharacters)
+          auditCtx.entries.push(this.createSkippedAuditEntry(command, reason))
+          auditCtx.skipReasonCounts[reason]++
+        }
+        continue
+      }
+
+      // Execute command using CommandExecutor
+      const result = executeCommand(
+        roundCtx.state,
+        command,
+        roundCtx.parryingCombatants,
+        party,
+        frontRow,
+        roundCtx.damagedCharacters,
+        { debug }
+      )
+
+      // Track audit
+      if (auditCtx.enabled) {
+        auditCtx.entries.push(this.createExecutedAuditEntry(command))
+        auditCtx.skipReasonCounts['NONE']++
+      }
+
+      // Merge result into round context
+      this.mergeCommandResult(roundCtx, result, command, party)
+
+      // Track PARRY commands
+      if (command.type === 'PARRY') {
+        roundCtx.parryingCombatants.add(command.actor.id)
+      }
+
+      // 5. Check victory after each command
+      endCheck = this.checkCombatEnd(roundCtx.state, party, roundCtx.damagedCharacters)
+      if (endCheck.victory) {
+        return this.buildRoundResult(roundCtx, endCheck, undefined, this.buildAudit(auditCtx, state.roundNumber))
+      }
+
+      // Check defeat after each command
+      if (endCheck.defeat) {
+        return this.buildRoundResult(roundCtx, endCheck, undefined, this.buildAudit(auditCtx, state.roundNumber))
+      }
+    }
+
+    // 6. Process flee attempts
+    const fleeResult = this.processFleeAttempt(roundCtx, party, frontRow)
+    if (fleeResult.success) {
+      const fledCheck: CombatEndCheck = { ended: true, victory: false, defeat: false, fled: true }
+      return this.buildRoundResult(fleeResult.roundCtx, fledCheck, undefined, this.buildAudit(auditCtx, state.roundNumber))
+    }
+
+    // Check defeat after flee failure penalty
+    endCheck = this.checkCombatEnd(roundCtx.state, party, roundCtx.damagedCharacters)
+    if (endCheck.defeat) {
+      return this.buildRoundResult(roundCtx, endCheck, undefined, this.buildAudit(auditCtx, state.roundNumber))
+    }
+
+    // 7. Process end-of-round effects
+
+    // Monster status recovery (wake from sleep, etc.)
+    const monsterRecoveryResult = processMonsterStatusRecovery(roundCtx.state)
+    roundCtx.state = monsterRecoveryResult.newState
+    // Add recovery messages if any monsters recovered
+    if (monsterRecoveryResult.recoveredIds.length > 0) {
+      for (const monsterId of monsterRecoveryResult.recoveredIds) {
+        // Find monster name for message
+        for (const group of roundCtx.state.monsterGroups) {
+          const monster = group.monsters.find(m => m.id === monsterId)
+          if (monster) {
+            const displayName = group.identified ? monster.name : monster.unidentifiedName
+            roundCtx.messages.push(`${displayName} wakes up!`)
+            break
+          }
+        }
+      }
+    }
+
+    // Monster regeneration
+    const regenResult = processMonsterRegeneration(roundCtx.state)
+    roundCtx.state = regenResult.newState
+    roundCtx.messages.push(...regenResult.messages)
+
+    // Character status recovery
+    const charRecoveryResult = processCharacterStatusRecovery(party, roundCtx.state)
+    roundCtx.messages.push(...charRecoveryResult.messages)
+    for (const [id, curedChar] of charRecoveryResult.curedCharacters) {
+      roundCtx.curedCharacters.set(id, curedChar)
+    }
+
+    // Tick status effect durations
+    const durationResult = tickStatusDurations(roundCtx.state)
+    roundCtx.state = durationResult
+
+    // 8. Reposition party after casualties
+    const backRow = party.map(c => c.id).filter(id => !frontRow.includes(id))
+    const repositionResult = repositionPartyAfterCasualties(
+      party,
+      roundCtx.damagedCharacters,
+      { frontRow, backRow }
+    )
+    if (repositionResult.changedPositions) {
+      roundCtx.messages.push(...repositionResult.messages)
+    }
+
+    // Build final result
+    const finalEndCheck: CombatEndCheck = { ended: false, victory: false, defeat: false, fled: false }
+    return this.buildRoundResult(
+      roundCtx,
+      finalEndCheck,
+      repositionResult.changedPositions ? repositionResult.newFormation : undefined,
+      this.buildAudit(auditCtx, state.roundNumber)
+    )
+  }
 }
 
 // Standalone function exports
@@ -517,3 +699,4 @@ export const mergeCommandResult = CombatRoundOrchestrator.mergeCommandResult
 export const buildRoundResult = CombatRoundOrchestrator.buildRoundResult
 export const buildAudit = CombatRoundOrchestrator.buildAudit
 export const monsterGroupsChanged = CombatRoundOrchestrator.monsterGroupsChanged
+export const executeRound = CombatRoundOrchestrator.executeRound.bind(CombatRoundOrchestrator)
