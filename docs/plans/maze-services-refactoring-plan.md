@@ -772,15 +772,27 @@ Too many individual signals create:
 - `src/app/utils/CharacterQueries.ts` - Common character state checks
 - `src/app/utils/__tests__/CharacterQueries.spec.ts` - Comprehensive tests
 
-### Next Steps
+### Integration Status
+
+The following integration work has been completed in MazeComponent:
+
+| Integration | Status | Notes |
+|-------------|--------|-------|
+| Service Injection | ✅ Complete | All new services injected in constructor |
+| CharacterQueries | ✅ Complete | `isCharacterIncapacitated` and `characterHasSpells` delegate to CharacterQueries |
+| MovementOrchestrationService | ✅ Complete | Movement methods delegate to orchestration service |
+| CombatOrchestrationService | ⏳ Partial | Service fixed and ready; deeper integration requires more UI decoupling |
+| ChestOrchestrationService | ⏳ Partial | Service created; deeper integration requires more UI decoupling |
+| MessageSequencer | ✅ Available | Service available for use; async patterns can be migrated incrementally |
+| MazeStateMachine | ⏳ Pending | Full signal migration requires component decomposition (Phase 4) |
+| TileHandlerRegistry | ⏳ Pending | DungeonMovementService needs refactoring to use registry |
+
+### Remaining Work
 
 To complete the refactoring, MazeComponent should be incrementally updated to:
 
-1. **Inject new services** instead of direct service calls
-2. **Delegate to orchestration services** instead of inline orchestration
-3. **Use MazeStateMachine** instead of individual signals
-4. **Use CharacterQueries** instead of duplicated status checks
-5. **Use MessageSequencer** for sequential message display
-6. **Use tile handlers** via TileHandlerRegistry
+1. **Use MazeStateMachine** instead of individual signals (requires Phase 4 component decomposition)
+2. **Use tile handlers** via TileHandlerRegistry (requires DungeonMovementService refactoring)
+3. **Decompose into child components** (MazeCombatComponent, MazeChestComponent, etc.)
 
 This can be done incrementally, one concern at a time, while maintaining existing functionality.

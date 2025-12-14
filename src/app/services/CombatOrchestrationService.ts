@@ -12,20 +12,16 @@
  */
 
 import { Injectable } from '@angular/core'
-import { GameState } from '@models/GameState'
 import { Character } from '@models/Character'
-import { CharacterStatus } from '@models/CharacterStatus'
 import {
   CombatState,
   CombatCommand,
   CombatActionType,
   MonsterGroup,
-  CombatRoundResult,
   CombatRoundEvent,
   CombatRoundAudit
 } from '@models/Combat'
 import { CombatService } from '@services/CombatService'
-import { EncounterService } from '@services/EncounterService'
 import { VictoryService, VictoryRewards } from '@services/VictoryService'
 import { CharacterQueries } from '@utils/CharacterQueries'
 import { FixedEncounterConfig } from '@services/EncounterTriggerService'
@@ -87,13 +83,17 @@ export class CombatOrchestrationService {
     const messages: string[] = ['You encounter monsters!']
 
     // Generate combat state
+    // CombatService.initiateCombat signature:
+    // (dungeonLevel, party, canFlee, fixedEncounterConfig?, isFriendlyEncounter?, encounterReason?, latumapicActive?, forceAmbush?, expeditionAcBuff?)
     const combatState = CombatService.initiateCombat(
       config.dungeonLevel,
+      config.partyCharacters,
       config.canFlee,
       config.fixedEncounterConfig,
+      false, // isFriendlyEncounter
       config.encounterReason,
-      config.partyCharacters,
       config.latumapicActive,
+      false, // forceAmbush
       config.expeditionAcBuff
     )
 
@@ -204,9 +204,12 @@ export class CombatOrchestrationService {
     frontRow: string[]
   ): RoundExecutionResult {
     // Generate monster commands
-    const monsterCommands = CombatService.generateMonsterCommands(
-      combatState,
-      partyCharacters
+    const aliveMonsters = combatState.monsterGroups
+      .flatMap(g => g.monsters)
+      .filter(m => m.hp > 0)
+
+    const monsterCommands = aliveMonsters.map(m =>
+      CombatService.selectMonsterAction(m, partyCharacters, frontRow)
     )
 
     // Build command queue
