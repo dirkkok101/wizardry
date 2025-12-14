@@ -261,6 +261,50 @@ describe('DungeonMovementService', () => {
       expect(result.party).toEqual(state.party)
       expect(result.settings).toEqual(state.settings)
     })
+
+    it('preserves expedition-wide state when re-entering dungeon at different level', () => {
+      // Setup: existing dungeon state at level 2 with completed condition tile
+      // This simulates: player was on level 2, used silver_key at (8,12), then returned to castle
+      const existingState: GameState = {
+        ...createTestGameStateHelper(),
+        dungeon: {
+          currentLevel: 2,  // Player was on level 2
+          position: { x: 8, y: 12, facing: 'NORTH' },
+          lightRadius: 3,
+          lightActive: true,
+          teleportCount: 0,
+          visitedTiles: new Set(['8,12']),
+          defeatedEncounters: ['murphy_ghost'],  // Expedition-wide
+          unlockedDoors: new Set(['2_5_3']),     // Expedition-wide (uses level_y_x format)
+          openDoors: new Set(['2_5_3']),
+          lootedTiles: new Set(['2_4_5']),       // Expedition-wide (uses level_x_y format)
+          completedConditionTiles: new Set(['2_8_12']),  // Expedition-wide (uses level_x_y format)
+          consumedConditionItems: new Set(['silver_key']),  // Expedition-wide
+          inDarknessZone: false,
+          latumapicActive: true,                 // Expedition-wide
+          expeditionAcBuff: -2,                  // Expedition-wide
+          activeExpeditionSpells: ['MAPORFIC'], // Expedition-wide
+        }
+      }
+
+      // Act: enter dungeon at level 1 (simulating return from castle)
+      const result = DungeonMovementService.enterDungeon(existingState, 1)
+
+      // Assert: position and per-level state reset
+      expect(result.dungeon!.currentLevel).toBe(1)
+      expect(result.dungeon!.position).toEqual({ x: 0, y: 0, facing: 'NORTH' })
+      expect(result.dungeon!.visitedTiles.size).toBe(0)  // Per-level, resets
+
+      // Assert: expedition-wide state preserved (these use level_x_y or are truly global)
+      expect(result.dungeon!.completedConditionTiles.has('2_8_12')).toBe(true)
+      expect(result.dungeon!.consumedConditionItems.has('silver_key')).toBe(true)
+      expect(result.dungeon!.defeatedEncounters).toContain('murphy_ghost')
+      expect(result.dungeon!.lootedTiles.has('2_4_5')).toBe(true)
+      expect(result.dungeon!.unlockedDoors.has('2_5_3')).toBe(true)
+      expect(result.dungeon!.latumapicActive).toBe(true)
+      expect(result.dungeon!.expeditionAcBuff).toBe(-2)
+      expect(result.dungeon!.activeExpeditionSpells).toContain('MAPORFIC')
+    })
   })
 
   describe('enterLevel', () => {

@@ -47,20 +47,47 @@ export const DungeonMovementService = {
   /**
    * Initialize dungeon state when entering from camp
    * Sets default position and enables torch light
-   * Preserves existing position and progress when re-entering the same level
+   * Preserves existing position when re-entering the same level
+   * Preserves expedition-wide state (completed tiles, looted tiles, etc.) across level changes
    */
   enterDungeon(state: GameState, level: number): GameState {
     const existingDungeon = state.dungeon;
-    const isReEntry = existingDungeon && existingDungeon.currentLevel === level;
+    const hasExistingState = existingDungeon !== undefined && existingDungeon !== null;
+    const isSameLevelReEntry = hasExistingState && existingDungeon.currentLevel === level;
+
+    // Expedition-wide state persists across level changes within the same dungeon visit
+    // This allows conditions like "used silver_key at level 2" to be remembered
+    // even when re-entering the dungeon at level 1
+    // Note: visitedTiles uses "x,y" format (per-level), so it resets with level change
+    // Fields using "level_x_y" format persist across levels
+    const expeditionState = hasExistingState ? {
+      completedConditionTiles: existingDungeon.completedConditionTiles ?? new Set<string>(),
+      consumedConditionItems: existingDungeon.consumedConditionItems ?? new Set<string>(),
+      defeatedEncounters: existingDungeon.defeatedEncounters ?? [],
+      lootedTiles: existingDungeon.lootedTiles ?? new Set<string>(),
+      unlockedDoors: existingDungeon.unlockedDoors ?? new Set<string>(),
+      latumapicActive: existingDungeon.latumapicActive ?? false,
+      expeditionAcBuff: existingDungeon.expeditionAcBuff ?? 0,
+      activeExpeditionSpells: existingDungeon.activeExpeditionSpells ?? [],
+    } : {
+      completedConditionTiles: new Set<string>(),
+      consumedConditionItems: new Set<string>(),
+      defeatedEncounters: [],
+      lootedTiles: new Set<string>(),
+      unlockedDoors: new Set<string>(),
+      latumapicActive: false,
+      expeditionAcBuff: 0,
+      activeExpeditionSpells: [],
+    };
 
     const newState: GameState = {
       ...state,
-      dungeon: isReEntry ? {
-        // Re-entry to same level: preserve position and progress
+      dungeon: isSameLevelReEntry ? {
+        // Same level re-entry: preserve position and all progress
         ...existingDungeon,
         currentLevel: level
       } : {
-        // First entry or level change: initialize fresh
+        // Different level or first entry: reset position but preserve expedition state
         currentLevel: level,
         position: { x: 0, y: 0, facing: 'NORTH' },  // Default start position
         lightRadius: 3,  // Default view distance (no spell active)
@@ -69,16 +96,10 @@ export const DungeonMovementService = {
         lightDurationRemaining: undefined,
         inDarknessZone: false,
         teleportCount: 0,
-        visitedTiles: new Set<string>(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set<string>(),
-        openDoors: new Set<string>(),
-        lootedTiles: new Set<string>(),
-        completedConditionTiles: new Set<string>(),  // Conditional tiles where condition passed
-        consumedConditionItems: new Set<string>(),   // Item IDs consumed at condition tiles
-        latumapicActive: false,  // LATUMAPIC not active at expedition start
-        expeditionAcBuff: 0,     // No expedition AC buffs at start
-        activeExpeditionSpells: []  // No expedition spells active at start
+        visitedTiles: new Set<string>(),  // Reset per level (uses "x,y" format)
+        openDoors: new Set<string>(),  // Open doors reset per level visit
+        pendingCampEncounter: undefined,
+        ...expeditionState,
       }
     };
 
