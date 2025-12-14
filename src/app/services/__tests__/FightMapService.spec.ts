@@ -383,5 +383,70 @@ describe('FightMapService', () => {
         expect(level2Config!.triggered).toBe(true)
       })
     })
+
+    describe('expedition reset behavior', () => {
+      it('should reset triggered state when resetAll followed by fresh init (new expedition)', () => {
+        const roomTiles = [{ x: 13, y: 5, isRoom: true, hasDoor: true }]
+
+        // Expedition 1: Initialize and trigger Murphy's Ghost
+        FightMapService.initializeLevel(1, roomTiles)
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true,
+          cannotFlee: true
+        })
+        FightMapService.markFixedEncounterTriggered(1, 13, 5)
+
+        // Verify triggered in expedition 1
+        const configExp1 = FightMapService.getFixedEncounterConfig(1, 13, 5)
+        expect(configExp1?.triggered).toBe(true)
+
+        // Return to castle (simulated) - this clears all state
+        FightMapService.resetAll()
+
+        // Verify state is completely cleared
+        expect(FightMapService.getLevelState(1)).toBeUndefined()
+
+        // Expedition 2: Fresh initialization (simulates entering maze from castle)
+        FightMapService.initializeLevel(1, roomTiles)
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true,
+          cannotFlee: true
+        })
+
+        // Verify triggered is reset to false in new expedition
+        const configExp2 = FightMapService.getFixedEncounterConfig(1, 13, 5)
+        expect(configExp2?.triggered).toBe(false)
+
+        // Verify encounter would trigger (hasActiveFixedEncounter returns true)
+        expect(FightMapService.hasActiveFixedEncounter(1, 13, 5)).toBe(true)
+      })
+
+      it('should clear state for all levels on resetAll', () => {
+        // Initialize multiple levels
+        FightMapService.initializeLevel(1, [{ x: 13, y: 5, isRoom: true, hasDoor: true }])
+        FightMapService.initializeLevel(2, [{ x: 10, y: 10, isRoom: true, hasDoor: true }])
+        FightMapService.initializeFixedEncounter(1, 13, 5, {
+          encounterId: 'murphy_ghost',
+          repeatable: true
+        })
+        FightMapService.initializeFixedEncounter(2, 10, 10, {
+          encounterId: 'level2_encounter',
+          repeatable: true
+        })
+
+        // Trigger both
+        FightMapService.markFixedEncounterTriggered(1, 13, 5)
+        FightMapService.markFixedEncounterTriggered(2, 10, 10)
+
+        // Return to castle - should clear ALL levels
+        FightMapService.resetAll()
+
+        // Verify both levels are cleared
+        expect(FightMapService.getLevelState(1)).toBeUndefined()
+        expect(FightMapService.getLevelState(2)).toBeUndefined()
+      })
+    })
   })
 })

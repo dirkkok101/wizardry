@@ -89,9 +89,14 @@ export class CastleMenuComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Debug: trace FightMapService state before/after reset
+    console.log('[CastleMenu] ngOnInit - before resetAll, level1 state:', FightMapService.getLevelState(1));
+
     // Reset FIGHTMAP state when returning to castle
     // (covers both stair exit from level 1 and LOKTOFEIT spell recall)
     FightMapService.resetAll();
+
+    console.log('[CastleMenu] ngOnInit - after resetAll, level1 state:', FightMapService.getLevelState(1));
 
     this.gameState.updateState(state => ({
       ...state,
@@ -136,6 +141,16 @@ export class CastleMenuComponent implements OnInit {
       this.messages.showError('Some party members are dead - visit Temple first');
       return;
     }
+
+    // Debug: check state before entering
+    console.log('[CastleMenu] navigateToMaze - level1 state before resetAll:', FightMapService.getLevelState(1));
+
+    // Ensure clean FightMapService state before new expedition
+    // This is a preventive fix - resetAll() should have been called in ngOnInit,
+    // but we call it again here to guarantee a fresh start
+    FightMapService.resetAll();
+
+    console.log('[CastleMenu] navigateToMaze - level1 state after resetAll:', FightMapService.getLevelState(1));
 
     // Initialize dungeon state before entering
     const state = this.gameState.state();

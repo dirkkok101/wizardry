@@ -1071,15 +1071,19 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    * Sets up encounter state tracking, seeds treasure rooms, and initializes fixed encounters
    */
   private initializeFightMap(level: number): void {
+    // Debug: trace state at start of initialization
+    const existingState = FightMapService.getLevelState(level);
+    console.log(`[Maze] initializeFightMap(${level}) called - existing state:`, existingState);
+
     // Check if already initialized for this level
-    if (FightMapService.getLevelState(level)) {
+    if (existingState) {
       console.log(`[Maze] FIGHTMAP already initialized for level ${level}, resetting repeatable encounters`);
       // Reset repeatable encounters for level re-entry (e.g., Murphy's Ghost)
       FightMapService.resetRepeatableEncounters(level);
       return;
     }
 
-    console.log(`[Maze] Initializing FIGHTMAP for level ${level}...`);
+    console.log(`[Maze] No existing state - initializing FIGHTMAP fresh for level ${level}...`);
 
     try {
       const levelData = DungeonService.loadLevel(level);
