@@ -92,6 +92,72 @@ export {
   type FleeFailurePenaltyResult,
 } from './core/FleeService'
 
+export {
+  MonsterAIService,
+  selectMonsterAction,
+  selectMonsterTarget,
+  createCommand,
+  type CommandOptions,
+  type MonsterAIContext,
+} from './core/MonsterAIService'
+
+// Support Services
+export {
+  SurpriseService,
+  rollSurprise,
+  toSurpriseState,
+  determineSurpriseState,
+  type SurpriseResult,
+  type SurpriseState,
+} from './support/SurpriseService'
+
+export {
+  PartyFormationService,
+  isIncapacitated,
+  repositionPartyAfterCasualties,
+  getBackRow,
+  type PartyFormation,
+  type RepositionResult,
+} from './support/PartyFormationService'
+
+export {
+  PoisonService,
+  applyPoisonDamage,
+  type PoisonDamageResult,
+} from './support/PoisonService'
+
+export {
+  RegenerationService,
+  processMonsterRegeneration,
+  type RegenerationResult,
+} from './support/RegenerationService'
+
+export {
+  CharacterRecoveryService,
+  processCharacterStatusRecovery,
+  type CharacterRecoveryResult,
+} from './support/CharacterRecoveryService'
+
+// Orchestration
+export {
+  CombatRoundOrchestrator,
+  createRoundContext,
+  createAuditContext,
+  sortCommandsByInitiative,
+  applySurpriseFilter,
+  canActorAct,
+  getSkipReason,
+  checkCombatEnd,
+  processFleeAttempt,
+  mergeCommandResult,
+  buildRoundResult,
+  buildAudit,
+  monsterGroupsChanged,
+  type RoundContext,
+  type AuditContext,
+  type CombatEndCheck,
+} from './orchestration/CombatRoundOrchestrator'
+
 // Actions (Command Pattern)
 export {
   type ICombatAction,
@@ -105,6 +171,12 @@ export {
 import './actions/AttackAction'
 import './actions/ParryAction'
 import './actions/FleeAction'
+import './actions/AdvanceAction'
+import './actions/CallForHelpAction'
+import './actions/MonsterFleeAction'
+import './actions/BreathAction'
+import './actions/DispelAction'
+import './actions/CastSpellAction'
 
 // Facade for backward compatibility
 export { CombatServiceFacade } from './CombatServiceFacade'

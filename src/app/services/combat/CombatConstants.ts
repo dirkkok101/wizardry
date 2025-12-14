@@ -149,21 +149,27 @@ export const FLEE = {
 // ============================================================================
 
 export const MONSTER_AI = {
-  /** Spell casting chance (mage/priest) */
-  SPELL_CAST_CHANCE: 75,
+  /** Mage spell casting chance */
+  MAGE_SPELL_CHANCE: 75,
+  /** Priest spell casting chance */
+  PRIEST_SPELL_CHANCE: 75,
   /** Breath weapon chance */
   BREATH_CHANCE: 60,
   /** Flee chance when demoralized */
-  FLEE_WHEN_DEMORALIZED_CHANCE: 65,
+  FLEE_CHANCE: 65,
   /** Call for help threshold (group size < this) */
-  CALL_FOR_HELP_THRESHOLD: 5,
+  CALL_HELP_THRESHOLD: 5,
   /** Call for help chance */
-  CALL_FOR_HELP_CHANCE: 75,
+  CALL_HELP_CHANCE: 75,
   /** Help arrival formula: (MonsterLevel × 5)% */
   HELP_ARRIVAL_LEVEL_MULTIPLIER: 5,
   /** Reinforcement count range */
   REINFORCEMENT_MIN: 1,
   REINFORCEMENT_MAX: 4,
+  /** Target selection: Level 1-2 use random targeting */
+  RANDOM_TARGET_MAX_LEVEL: 2,
+  /** Target selection: Level 3-5 use smart focus fire */
+  SMART_TARGET_MAX_LEVEL: 5,
 } as const
 
 // ============================================================================

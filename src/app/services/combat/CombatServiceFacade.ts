@@ -76,12 +76,27 @@ import {
   calculateFleeChance as calcFlee,
   executeFleeFailurePenalty as execFleePenalty,
 
+  // Monster AI
+  selectMonsterAction as selMonsterAction,
+  selectMonsterTarget as selMonsterTarget,
+  createCommand as createCmd,
+  type MonsterAIContext,
+
+  // Support Services
+  rollSurprise as rollSurp,
+  determineSurpriseState as detSurpriseState,
+  repositionPartyAfterCasualties as reposParty,
+  applyPoisonDamage as applyPoison,
+  processMonsterRegeneration as procMonsterRegen,
+  processCharacterStatusRecovery as procCharRecovery,
+  type PartyFormation,
+  type PoisonDamageResult,
+  type RegenerationResult,
+  type CharacterRecoveryResult,
+
   // Constants
   RESULT_MARKER,
-  SURPRISE,
 } from './index'
-
-import { RandomService } from '@services/RandomService'
 
 /**
  * Combat Service Facade
@@ -100,13 +115,15 @@ export class CombatServiceFacade {
   }
 
   // ============================================================================
-  // Surprise (uses constants from CombatConstants)
+  // Surprise (delegates to SurpriseService)
   // ============================================================================
 
   static rollSurprise(): { partySurprises: boolean; monstersSurprise: boolean } {
-    const partySurprises = RandomService.chance(SURPRISE.PARTY_SURPRISE_CHANCE)
-    const monstersSurprise = !partySurprises && RandomService.chance(SURPRISE.MONSTER_SURPRISE_CHANCE)
-    return { partySurprises, monstersSurprise }
+    return rollSurp()
+  }
+
+  static determineSurpriseState(forceAmbush: boolean = false): 'party' | 'monsters' | 'none' {
+    return detSurpriseState(forceAmbush)
   }
 
   // ============================================================================
@@ -300,6 +317,73 @@ export class CombatServiceFacade {
     damagedCharacters: Map<string, Character>
   } {
     return execFleePenalty(state, party, frontRow)
+  }
+
+  // ============================================================================
+  // Monster AI (delegates to MonsterAIService)
+  // ============================================================================
+
+  static selectMonsterAction(ctx: MonsterAIContext): CombatCommand {
+    return selMonsterAction(ctx)
+  }
+
+  static selectMonsterTarget(monster: MonsterInstance, targets: Character[]): Character {
+    return selMonsterTarget(monster, targets)
+  }
+
+  static createCommand(
+    actor: Combatant,
+    actionType: 'ATTACK' | 'PARRY' | 'RUN' | 'CAST_SPELL' | 'DISPEL' | 'USE_ITEM' | 'BREATH' | 'ADVANCE' | 'CALL_FOR_HELP' | 'MONSTER_FLEE',
+    target?: Combatant | Combatant[],
+    data?: any
+  ): CombatCommand {
+    return createCmd(actor, actionType, target, data)
+  }
+
+  // ============================================================================
+  // Party Formation (delegates to PartyFormationService)
+  // ============================================================================
+
+  static repositionPartyAfterCasualties(
+    party: Character[],
+    damagedCharacters: Map<string, Character>,
+    formation: PartyFormation
+  ): {
+    newFormation: PartyFormation
+    messages: string[]
+    changedPositions: boolean
+  } {
+    return reposParty(party, damagedCharacters, formation)
+  }
+
+  // ============================================================================
+  // Poison (delegates to PoisonService)
+  // ============================================================================
+
+  static applyPoisonDamage(
+    state: CombatState,
+    party: Character[]
+  ): PoisonDamageResult {
+    return applyPoison(state, party)
+  }
+
+  // ============================================================================
+  // Regeneration (delegates to RegenerationService)
+  // ============================================================================
+
+  static processMonsterRegeneration(state: CombatState): RegenerationResult {
+    return procMonsterRegen(state)
+  }
+
+  // ============================================================================
+  // Character Recovery (delegates to CharacterRecoveryService)
+  // ============================================================================
+
+  static processCharacterStatusRecovery(
+    party: Character[],
+    state: CombatState
+  ): CharacterRecoveryResult {
+    return procCharRecovery(party, state)
   }
 
   // ============================================================================
