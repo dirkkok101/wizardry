@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, HostListener, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, signal, computed, HostListener, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
@@ -12,12 +12,12 @@ import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat
 import { ChestOverlayComponent, ChestPhase, ChestLetterboxType, ChestSummary, RecommendedHandler } from '@shared/components/chest-overlay/chest-overlay.component';
 import { TileMessageOverlayComponent, TileMessagePhase, TileMessageItem } from '@shared/components/tile-message-overlay/tile-message-overlay.component';
 import { CinematicArenaComponent } from '@shared/components/cinematic-arena/cinematic-arena.component';
+import { MazeCanvasComponent } from './maze-canvas/maze-canvas.component';
 import { GameStateService } from '@services/GameStateService';
 import { RandomService } from '@services/RandomService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { DungeonMovementService, MovementResult } from '@services/DungeonMovementService';
 import { DungeonService } from '@services/DungeonService';
-import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { EncounterService } from '@services/EncounterService';
 import { EncounterTriggerService, EncounterContext, EncounterCheckResult, FixedEncounterConfig } from '@services/EncounterTriggerService';
 import { FightMapService } from '@services/FightMapService';
@@ -39,8 +39,6 @@ import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { DungeonState, ConditionResult, MessageStyle, Position } from '@models/Dungeon';
-import { TextureAtlas } from '@models/texture.types';
-import { ViewportConfig } from '@models/rendering.types';
 import { CombatState, MonsterGroup, CombatCommand, CombatActionType, Combatant, CombatRoundEvent, CombatRoundAudit } from '@models/Combat';
 import { VictoryService, VictoryRewards } from '@services/VictoryService';
 import { ChestService } from '@services/ChestService';
@@ -51,7 +49,6 @@ import { ScrambledTrapState, TrapId } from '@models/Trap';
 import { Item } from '@models/Item';
 import { canAct } from '@utils/CharacterStatusHelpers';
 import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils';
-import * as TextureAtlasService from '@services/TextureAtlasService';
 // New refactored services
 import { MazeStateMachine } from '@services/MazeStateMachine';
 import { MovementOrchestrationService, MovementDirection } from '@services/MovementOrchestrationService';
@@ -75,7 +72,8 @@ import { CharacterQueries } from '@utils/CharacterQueries';
     CombatOverlayComponent,
     ChestOverlayComponent,
     TileMessageOverlayComponent,
-    CinematicArenaComponent
+    CinematicArenaComponent,
+    MazeCanvasComponent
   ],
   templateUrl: './maze.component.html',
   styleUrls: ['./maze.component.scss']
@@ -84,9 +82,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Debug flag for chest/trap logging. Set to true to enable verbose console output. */
   static DEBUG_CHEST = true;
 
-  // Canvas reference for WebGL rendering
+  // Canvas component reference for WebGL rendering
   @ViewChild('mazeCanvas', { static: false })
-  canvasRef?: ElementRef<HTMLCanvasElement>;
+  mazeCanvas?: MazeCanvasComponent;
 
   // Local signals
   readonly messages = signal<string[]>([]);
@@ -416,12 +414,6 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   readonly shouldDimLeftPanel = computed(() => this.isTargetingCharacterId() !== null);
   readonly shouldDimRightPanel = computed(() => this.isTargetingCharacterId() !== null);
-
-  // WebGL Renderer
-  private webglRenderer: WebGLRenderingService | null = null;
-
-  // Canvas resize observer for responsive rendering
-  private resizeObserver: ResizeObserver | null = null;
 
   // Computed signals from GameStateService
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
@@ -1122,181 +1114,11 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    const canvas = this.canvasRef?.nativeElement;
-    if (!canvas) {
-      console.error('[MazeComponent] Canvas element not found');
-      return;
-    }
-
-    // Initialize WebGL renderer
-    this.webglRenderer = new WebGLRenderingService();
-    const success = this.webglRenderer.initialize(canvas);
-
-    if (!success) {
-      console.error('[MazeComponent] Failed to initialize WebGL renderer');
-      this.webglRenderer = null;
-      return;
-    }
-
-    console.log('[MazeComponent] WebGL renderer initialized successfully');
-
-    // Setup responsive canvas resizing
-    this.setupCanvasResizing();
-
-    // Load textures and render
-    this.loadTextures();
+    // Canvas initialization is handled by MazeCanvasComponent
   }
 
   ngOnDestroy(): void {
-    // Clean up resize observer
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
-    }
-
-    // Clean up WebGL renderer
-    if (this.webglRenderer) {
-      this.webglRenderer.dispose();
-      this.webglRenderer = null;
-    }
-  }
-
-  /**
-   * Setup ResizeObserver for dynamic canvas resolution scaling.
-   * Updates canvas pixel dimensions when viewport size changes,
-   * ensuring sharp rendering at all screen sizes.
-   */
-  private setupCanvasResizing(): void {
-    const viewport = document.querySelector('.maze-viewport');
-    if (!viewport) {
-      console.warn('[MazeComponent] Viewport element not found for resize observer');
-      return;
-    }
-
-    this.resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-
-      const canvas = this.canvasRef?.nativeElement;
-      if (!canvas) return;
-
-      // Get container size
-      const { width, height } = entry.contentRect;
-      if (width === 0 || height === 0) return;
-
-      // Update canvas resolution (respecting device pixel ratio for sharpness)
-      // Cap at 2x to avoid excessive GPU load on 4K+ displays
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const newWidth = Math.floor(width * dpr);
-      const newHeight = Math.floor(height * dpr);
-
-      // Only update if dimensions actually changed
-      if (canvas.width !== newWidth || canvas.height !== newHeight) {
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-        console.log(`[MazeComponent] Canvas resized to ${newWidth}x${newHeight} (viewport: ${Math.floor(width)}x${Math.floor(height)}, dpr: ${dpr})`);
-
-        // Re-render with new dimensions
-        this.render();
-      }
-    });
-
-    this.resizeObserver.observe(viewport);
-  }
-
-  /**
-   * Load texture atlas and upload to GPU
-   */
-  private async loadTextures(): Promise<void> {
-    try {
-      console.log('[MazeComponent] Loading texture atlas...');
-
-      // Load compressed texture atlas metadata (11MB vs 35MB original)
-      const response = await fetch('/assets/textures/eob-dungeon-highres-compressed.json');
-      if (!response.ok) {
-        throw new Error(`Failed to load texture atlas: ${response.statusText}`);
-      }
-      const atlas: TextureAtlas = await response.json();
-
-      // Load texture image
-      console.log('[MazeComponent] Loading texture image from:', atlas.imagePath);
-      const image = await TextureAtlasService.loadTextureAtlas(atlas);
-
-      console.log('[MazeComponent] Texture atlas loaded:', {
-        dimensions: `${image.naturalWidth}x${image.naturalHeight}`,
-        textures: atlas.textures.length
-      });
-
-      // Upload texture to GPU
-      if (this.webglRenderer) {
-        const texture = this.webglRenderer.uploadTexture(image);
-        if (texture) {
-          console.log('[MazeComponent] Texture uploaded to GPU');
-          // Set atlas metadata for texture lookups
-          this.webglRenderer.setAtlas(atlas);
-          console.log('[MazeComponent] Atlas metadata set');
-        } else {
-          console.error('[MazeComponent] Failed to upload texture to GPU');
-        }
-      }
-
-      // Trigger initial render
-      this.render();
-    } catch (error) {
-      console.error('[MazeComponent] Failed to load textures:', error);
-      console.error('[MazeComponent] Stack trace:', (error as Error).stack);
-    }
-  }
-
-  /**
-   * Render the dungeon view using WebGL
-   */
-  private render(): void {
-    if (!this.webglRenderer) {
-      console.warn('[MazeComponent] WebGL renderer not initialized');
-      return;
-    }
-
-    const gameState = this.gameState.state();
-    if (!gameState) {
-      console.warn('[MazeComponent] No game state available');
-      return;
-    }
-
-    const level = DungeonService.loadLevel(this.currentLevel());
-    if (!level) {
-      console.warn('[MazeComponent] No current level');
-      return;
-    }
-
-    const position = this.position();
-    if (!position) {
-      console.warn('[MazeComponent] No party position');
-      return;
-    }
-
-    const canvas = this.canvasRef?.nativeElement;
-    if (!canvas) {
-      console.warn('[MazeComponent] Canvas not available');
-      return;
-    }
-
-    // Get effective view distance based on light state
-    const dungeon = this.dungeonState();
-    const viewDistance = dungeon
-      ? LightService.getEffectiveViewDistance(dungeon)
-      : 5;  // Default to full visibility if no dungeon state
-
-    // Viewport configuration - tileDepth controlled by light state
-    const config: ViewportConfig = {
-      width: canvas.width,
-      height: canvas.height,
-      tileDepth: viewDistance,
-      peripheralColumns: Math.min(viewDistance + 2, 7)  // Peripheral scales with view
-    };
-
-    // Render the dungeon with dungeon state for door rendering
-    this.webglRenderer.render(level, position, config, dungeon);
+    // Canvas cleanup is handled by MazeCanvasComponent
   }
 
   // ============================================================
@@ -1485,7 +1307,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Render if needed
     if (result.shouldRender) {
-      this.render();
+      this.mazeCanvas?.render();
     }
   }
 
@@ -1808,7 +1630,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Move back to previous position
       const targetPosition = conditionResult.previousPosition || previousPosition;
       this.updateDungeonPosition(targetPosition);
-      this.render();
+      this.mazeCanvas?.render();
       this.activateRetreatCooldown();
     } else if (conditionResult.failAction === 'teleport' && conditionResult.failDestination) {
       // Teleport to specified destination
@@ -1817,7 +1639,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         const state = this.gameState.state();
         const facing = state.dungeon?.position.facing ?? 'NORTH';
         this.updateDungeonPosition({ x: dest.x, y: dest.y, facing });
-        this.render();
+        this.mazeCanvas?.render();
         this.activateRetreatCooldown();
       }
     }
@@ -2036,7 +1858,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       if (conditionResult.status === 'fail') {
         console.log(`[MazeComponent] Condition FAIL - executing fail path, previousPosition=(${position.x}, ${position.y})`)
         // Render new position before showing letterbox message
-        this.render();
+        this.mazeCanvas?.render();
         // Chain: entry message → fail message → retreat/teleport
         const executeFailAction = () => {
           console.log(`[MazeComponent] executeFailAction callback called`)
@@ -2069,7 +1891,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
           // (fall through to normal movement handling below)
         } else {
           // Render new position before showing letterbox message
-          this.render();
+          this.mazeCanvas?.render();
           // Chain: entry message → success message → trigger encounter
           const triggerEncounter = () => {
             console.log(`[MazeComponent] triggerEncounter callback called, encounterId=${conditionResult.encounterId}`)
@@ -2104,7 +1926,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Show entry message from non-conditional tiles in letterbox overlay
     // This shows on every entry (not just once) for tiles with message property
     if (movementResult.specialTileResult?.entryMessage && !movementResult.specialTileResult?.conditionResult) {
-      this.render();  // Render new position before showing letterbox
+      this.mazeCanvas?.render();  // Render new position before showing letterbox
       this.showTileMessage(movementResult.specialTileResult.entryMessage, false, null, null);
       return; // Don't continue with random encounter check until dismissed
     }
@@ -2189,7 +2011,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Re-render after movement
-    this.render();
+    this.mazeCanvas?.render();
 
     // Check for encounter after successful movement
     // Pass isDoorKick flag for 12.5% door-kick encounter mechanic
@@ -3165,7 +2987,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Re-render if dungeon state changed (e.g., light spell)
     if (result.dungeonUpdate) {
-      this.render();
+      this.mazeCanvas?.render();
     }
 
     // Display result message
@@ -3859,7 +3681,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeChestOverlay();
 
     // Force maze view to refresh at new position
-    this.render();
+    this.mazeCanvas?.render();
   }
 
   /**

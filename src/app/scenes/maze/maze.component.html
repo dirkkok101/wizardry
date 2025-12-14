@@ -32,7 +32,11 @@
     <!-- Center Column: Renderer + Message Log -->
     <div class="center-panel">
       <div class="maze-viewport">
-        <canvas #mazeCanvas></canvas>
+        <app-maze-canvas
+          #mazeCanvas
+          [dungeonState]="dungeonState()"
+          [currentLevel]="currentLevel()"
+        />
 
         <!-- Combat Overlay (Theater Stage) -->
         <app-combat-overlay
