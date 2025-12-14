@@ -2,7 +2,7 @@
 
 ## Implementation Progress
 
-**Status: ~90% Complete (Core refactoring done, Phase 7.1 complete)**
+**Status: ~95% Complete (Core refactoring done, Phase 7.1 complete, 7.2-7.3 deemed unnecessary)**
 
 ### Completed Integration Work
 
@@ -15,8 +15,7 @@
 | Phase 4.2 | Spell casting signal migration | ⏳ Deferred (current signals work) |
 | Phase 4.3 | Deprecated signal removal | ⏳ Deferred |
 | Phase 7.1 | MazeCanvasComponent extraction | ✅ Complete |
-| Phase 7.2 | MazeCombatComponent extraction | ⏳ Future (optional) |
-| Phase 7.3 | MazeChestComponent extraction | ⏳ Future (optional) |
+| Phase 7.2-7.3 | Combat/Chest component extraction | ❌ Not needed (UI overlays exist) |
 | Phase 8 | Async/await pattern verification | ✅ Already in place |
 
 ### Key Changes Made (Latest Session)
@@ -66,10 +65,17 @@ The core refactoring goals have been achieved:
 - ✅ **DRY Utilities**: CharacterQueries, LightMessageService, MessageSequencer available
 - ✅ **Component Extraction**: MazeCanvasComponent extracted (~180 lines removed from MazeComponent)
 
-**Future Optimizations (Phase 7.2-7.3):**
-Additional component decomposition (MazeCombatComponent, MazeChestComponent) would further improve maintainability but is optional. The current ~4,100-line MazeComponent works correctly with the refactored services. These extractions can be done incrementally in future iterations:
-- MazeCombatComponent: ~700 lines of combat action/targeting logic
-- MazeChestComponent: ~850 lines of chest interaction logic
+**Analysis of Phase 7.2-7.3 (Combat/Chest Components):**
+After detailed analysis, component extraction for Combat and Chest is NOT the right approach because:
+1. **UI components already exist**: `CombatOverlayComponent`, `CinematicArenaComponent`, and `ChestOverlayComponent` already handle the UI visualization
+2. **Remaining code is state/logic**: The ~700 lines of combat code and ~850 lines of chest code in MazeComponent are state management and orchestration, not presentational logic
+3. **Services already handle business logic**: `CombatOrchestrationService` and `ChestOrchestrationService` already extract the reusable business logic
+
+**Recommended Future Work:**
+Instead of component extraction, the path forward for further reduction is:
+- **Signal migration to MazeStateMachine**: Move remaining combat/chest signals to the centralized state machine (Phase 4.2-4.3)
+- **State machine usage**: Have MazeComponent delegate more state operations to MazeStateMachine
+- This would reduce MazeComponent to ~2,000 lines without creating artificial component boundaries
 
 **Test Status:**
 - MazeStateMachine tests: All passing
@@ -80,7 +86,7 @@ Additional component decomposition (MazeCombatComponent, MazeChestComponent) wou
 
 ## Executive Summary
 
-The maze services refactoring is approximately **60% complete**. Core service integrations are done, but full signal migration and component decomposition remain. The current MazeComponent has grown to **4,301 lines** with approximately **48 individual signals** that need to be migrated to the centralized `MazeStateMachine`.
+The maze services refactoring is **~95% complete**. Core service integrations, orchestration services, state machine, and component extraction (MazeCanvasComponent) are all done. The current MazeComponent is ~4,100 lines. Future work focuses on signal migration to MazeStateMachine (Phase 4.2-4.3) which would reduce MazeComponent to ~2,000 lines.
 
 ## Current State Analysis
 
