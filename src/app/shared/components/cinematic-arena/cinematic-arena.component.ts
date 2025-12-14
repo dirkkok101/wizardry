@@ -43,7 +43,7 @@ import {
   getArenaAnimation,
   getActionVerbDisplay
 } from './cinematic-arena.types'
-import { CombatService } from '@services/CombatService'
+import { RESULT_MARKER } from '@services/combat'
 
 @Component({
   selector: 'app-cinematic-arena',
@@ -563,7 +563,7 @@ export class CinematicArenaComponent implements OnDestroy {
     if (!messages.length) return null
 
     const actionMsg = messages[0]
-    const resultMsg = messages.find(m => CombatService.isResultMessage(m))
+    const resultMsg = messages.find(m => m.startsWith(RESULT_MARKER))
 
     // Parse actor from message
     const attacker = this.parseAttackerFromMessage(actionMsg)
@@ -577,7 +577,7 @@ export class CinematicArenaComponent implements OnDestroy {
 
     // Parse damage from result
     const damageResult = resultMsg
-      ? parseCombatMessage(CombatService.stripResultMarker(resultMsg))
+      ? parseCombatMessage(resultMsg.substring(RESULT_MARKER.length))
       : null
 
     // Determine action type from audit or message
@@ -588,7 +588,7 @@ export class CinematicArenaComponent implements OnDestroy {
       targets,
       actionText: this.formatActionText(actionMsg),
       spellName,
-      resultText: resultMsg ? CombatService.stripResultMarker(resultMsg) : undefined,
+      resultText: resultMsg ? resultMsg.substring(RESULT_MARKER.length) : undefined,
       actionAnimation: getArenaAnimation(actionType),
       damageResult: damageResult ? {
         value: damageResult.value,
@@ -814,7 +814,7 @@ export class CinematicArenaComponent implements OnDestroy {
    */
   private formatActionText(message: string): string {
     // Remove result marker if present
-    return CombatService.stripResultMarker(message)
+    return message.startsWith(RESULT_MARKER) ? message.substring(RESULT_MARKER.length) : message
   }
 
   // ============================================================================

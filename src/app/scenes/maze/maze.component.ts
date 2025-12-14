@@ -21,7 +21,15 @@ import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { EncounterService } from '@services/EncounterService';
 import { EncounterTriggerService, EncounterContext, EncounterCheckResult, FixedEncounterConfig } from '@services/EncounterTriggerService';
 import { FightMapService } from '@services/FightMapService';
-import { CombatService } from '@services/CombatService';
+import {
+  initiateCombat,
+  createCommand,
+  selectMonsterAction,
+  executeRound,
+  getAllMonsters,
+  RESULT_MARKER,
+  type InitiateCombatOptions
+} from '@services/combat';
 import { DoorService } from '@services/DoorService';
 import { TileInspectionService } from '@services/TileInspectionService';
 import { ItemDataLoader } from '@services/ItemDataLoader';
@@ -422,7 +430,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly position = computed(() => this.dungeonState()?.position);
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly party = computed(() => this.gameState.state().party);
-  // Note: partyCharacters is used for combat initialization (CombatService.initiateCombat),
+  // Note: partyCharacters is used for combat initialization (initiateCombat),
   // not for template rendering (which uses CharacterPanelComponent)
   readonly partyCharacters = computed(() => {
     const roster = this.gameState.state().roster;
@@ -889,7 +897,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!char || this.isExecutingRound()) return;
 
     // Create parry command
-    const command = CombatService.createCommand(char, 'PARRY', undefined);
+    const command = createCommand(char, 'PARRY', undefined);
 
     // Store in selected actions
     this.selectedActions.update(actions => {
@@ -980,17 +988,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       const expeditionAcBuff = dungeon?.expeditionAcBuff ?? 0;
 
       // Force ambush - party caught off guard during healing
-      const combatState = CombatService.initiateCombat(
-        dungeonLevel,
-        partyChars,
-        true,       // canFlee - party can try to flee
-        undefined,  // no fixed encounter
-        false,      // not friendly
-        'random',   // treated as random encounter
+      const combatState = initiateCombat(dungeonLevel, partyChars, {
+        canFlee: true,
+        encounterReason: 'random',
         latumapicActive,
-        true,       // forceAmbush - party is surprised
-        expeditionAcBuff  // Expedition AC buff from MAPORFIC
-      );
+        forceAmbush: true,
+        expeditionAcBuff
+      });
 
       // Update game state with combat
       this.gameState.updateState(state => ({
@@ -1800,7 +1804,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     for (const char of party) {
       if (!this.isCharacterIncapacitated(char)) {
-        const command = CombatService.createCommand(char, 'RUN', undefined);
+        const command = createCommand(char, 'RUN', undefined);
         newActions.set(char.id, command);
       }
     }
@@ -2126,17 +2130,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       const dungeon = this.dungeonState();
       const latumapicActive = dungeon?.latumapicActive ?? false;
       const expeditionAcBuff = dungeon?.expeditionAcBuff ?? 0;
-      const combatState = CombatService.initiateCombat(
-        dungeonLevel,
-        partyChars,
+      const combatState = initiateCombat(dungeonLevel, partyChars, {
         canFlee,
         fixedEncounterConfig,
-        false,  // isFriendlyEncounter - default to false for monster encounters
         encounterReason,
         latumapicActive,
-        false,  // forceAmbush - normal encounter
-        expeditionAcBuff  // Expedition AC buff from MAPORFIC
-      );
+        expeditionAcBuff
+      });
 
       // Update game state with combat
       this.gameState.updateState(state => ({
@@ -2213,7 +2213,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Default: attack targeting - create command for this character
-    const command = CombatService.createCommand(char, 'ATTACK', target, { groupId });
+    const command = createCommand(char, 'ATTACK', target, { groupId });
 
     this.selectedActions.update(actions => {
       const newActions = new Map(actions);
@@ -2234,7 +2234,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     groupId: 'A' | 'B' | 'C' | 'D'
   ): void {
     // Create combat command with spell and target
-    const command = CombatService.createCommand(char, 'CAST_SPELL', target, {
+    const command = createCommand(char, 'CAST_SPELL', target, {
       spellId: spell.id,
       groupId: groupId
     });
@@ -2262,7 +2262,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!caster) return;
 
     // Create combat command with spell and ally target
-    const command = CombatService.createCommand(caster, 'CAST_SPELL', target, {
+    const command = createCommand(caster, 'CAST_SPELL', target, {
       spellId: spell.id,
       targetCharacterId: target.id
     });
@@ -2310,7 +2310,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       .filter(m => m.hp > 0);
 
     const monsterCommands = aliveMonsters.map(m =>
-      CombatService.selectMonsterAction(m, chars, frontRow)
+      selectMonsterAction({ monster: m, party: chars, frontRow })
     );
 
     // Create state with all commands in queue
@@ -2320,17 +2320,13 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     try {
-      // Execute round using CombatService (pre-calculates everything)
-      const result = CombatService.executeRoundWithEvents(
-        stateWithCommands,
-        chars,
-        frontRow
-      );
+      // Execute round (pre-calculates everything)
+      const result = executeRound(stateWithCommands, chars, frontRow);
 
       // Store result for use after arena playback completes
       this.pendingCombatResult = {
-        finalState: result.finalState,
-        finalCharacterUpdates: result.finalCharacterUpdates,
+        finalState: result.newState,
+        finalCharacterUpdates: result.damagedCharacters,
         spellCasters: result.spellCasters,
         victory: result.victory,
         defeat: result.defeat
@@ -2495,7 +2491,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
   onArenaEventPlayed(event: CombatRoundEvent): void {
     // Add event messages to combat log
     for (const msg of event.messages) {
-      this.addMessage(CombatService.stripResultMarker(msg));
+      this.addMessage(msg.startsWith(RESULT_MARKER) ? msg.substring(RESULT_MARKER.length) : msg);
     }
   }
 
@@ -2722,7 +2718,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       .filter(m => m.hp > 0);
 
     const monsterCommands = aliveMonsters.map(m =>
-      CombatService.selectMonsterAction(m, chars, frontRow)
+      selectMonsterAction({ monster: m, party: chars, frontRow })
     );
 
     // Execute monster-only round
@@ -2731,12 +2727,12 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       commandQueue: monsterCommands
     };
 
-    const result = CombatService.executeRoundWithEvents(stateWithCommands, chars, frontRow);
+    const result = executeRound(stateWithCommands, chars, frontRow);
 
     // Store result for use after arena playback completes
     this.pendingCombatResult = {
-      finalState: result.finalState,
-      finalCharacterUpdates: result.finalCharacterUpdates,
+      finalState: result.newState,
+      finalCharacterUpdates: result.damagedCharacters,
       spellCasters: result.spellCasters,
       victory: result.victory,
       defeat: result.defeat
@@ -2857,7 +2853,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // For party-wide/self/all-enemy spells, record action immediately - no targeting needed
-    const command = CombatService.createCommand(caster, 'CAST_SPELL', undefined, {
+    const command = createCommand(caster, 'CAST_SPELL', undefined, {
       spellId: spell.id
     });
 
