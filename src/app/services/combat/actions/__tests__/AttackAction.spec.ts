@@ -9,6 +9,8 @@
 import { RandomService } from '@services/RandomService'
 import { StatModifierService } from '@services/StatModifierService'
 import { MonsterDataLoader } from '@services/MonsterDataLoader'
+import { ClassDataLoader } from '@services/ClassDataLoader'
+import { RaceService } from '@services/RaceService'
 import { AttackAction } from '../AttackAction'
 import { CombatContext } from '../../CombatContext'
 import { ActionExecutionContext } from '../CombatAction'
@@ -23,7 +25,9 @@ describe('AttackAction', () => {
   beforeAll(async () => {
     await Promise.all([
       StatModifierService.initialize(),
-      MonsterDataLoader.loadAllMonsters()
+      MonsterDataLoader.loadAllMonsters(),
+      ClassDataLoader.loadAllClasses(),
+      RaceService.initialize()
     ])
   })
 
@@ -538,6 +542,157 @@ describe('AttackAction', () => {
       // Messages should indicate the target is already dead
       const messages = result.messages.join(' ')
       expect(messages).toContain('already dead')
+    })
+  })
+
+  describe('statusEffects for cinematic display', () => {
+    /**
+     * Create context for testing monster status infliction on characters.
+     * Uses giant_spider which has 'poison' special ability.
+     */
+    function createPoisonMonsterContext(): ActionExecutionContext {
+      const character = createTestCharacter({
+        id: 'char-1',
+        name: 'Warrior',
+        level: 3,
+        hp: 30,
+        maxHp: 30,
+        vitality: 8  // Lower vitality = less resistance
+      })
+
+      // Giant spider has 'poison' special ability
+      const poisonMonster = createTestMonster({
+        id: 'spider-1',
+        monsterId: 'giant_spider',
+        name: 'Giant Spider',
+        ac: 8,
+        level: 3,
+        hp: 15,
+        maxHp: 15
+      })
+
+      const monsterGroups: MonsterGroup[] = [{
+        id: 'A',
+        monsters: [poisonMonster],
+        formation: 'front',
+        identified: true
+      }]
+
+      const combatState = createTestCombatState({ monsterGroups })
+      const party = [character]
+      const frontRow = ['char-1']
+
+      const context = CombatContext.create(combatState, party, frontRow)
+
+      const command: CombatCommand = {
+        type: 'ATTACK',
+        actor: poisonMonster,
+        target: character,
+        initiative: 5
+      }
+
+      return {
+        state: combatState,
+        command,
+        parryingCombatants: new Set(),
+        context
+      }
+    }
+
+    it('populates statusEffects when monster inflicts poison on character', () => {
+      const ctx = createPoisonMonsterContext()
+
+      // Queue: hit roll (5% = hit), damage (0.5), no crit (90%), poison resist FAIL (95%)
+      // High resist roll = character fails to resist poison
+      RandomService.queueNextValues([0.05, 0.5, 0.90, 0.95])
+
+      const result = attackAction.execute(ctx)
+
+      // Should have statusEffects array with poison
+      expect(result.statusEffects).toBeDefined()
+      expect(result.statusEffects).toHaveLength(1)
+      expect(result.statusEffects![0]).toMatchObject({
+        target: 'char-1',
+        effect: 'POISONED'
+      })
+    })
+
+    it('does not populate statusEffects when character resists poison', () => {
+      const ctx = createPoisonMonsterContext()
+
+      // Queue: hit roll (5% = hit), damage (0.5), no crit (90%), poison resist SUCCESS (5%)
+      // Low resist roll = character resists poison
+      RandomService.queueNextValues([0.05, 0.5, 0.90, 0.05])
+
+      const result = attackAction.execute(ctx)
+
+      // statusEffects should be undefined when no status inflicted
+      expect(result.statusEffects).toBeUndefined()
+    })
+
+    it('does not populate statusEffects when attack misses', () => {
+      const ctx = createPoisonMonsterContext()
+
+      // Queue: high hit roll (95% = miss)
+      RandomService.queueNextValues([0.95])
+
+      const result = attackAction.execute(ctx)
+
+      // No status effects on miss
+      expect(result.statusEffects).toBeUndefined()
+    })
+
+    it('does not populate statusEffects when target is killed', () => {
+      // Create context with low HP character that will die from attack
+      const character = createTestCharacter({
+        id: 'char-1',
+        name: 'Warrior',
+        level: 3,
+        hp: 1,  // Will die from any damage
+        maxHp: 30
+      })
+
+      const poisonMonster = createTestMonster({
+        id: 'spider-1',
+        monsterId: 'giant_spider',
+        name: 'Giant Spider',
+        ac: 8,
+        level: 3,
+        hp: 15,
+        maxHp: 15
+      })
+
+      const monsterGroups: MonsterGroup[] = [{
+        id: 'A',
+        monsters: [poisonMonster],
+        formation: 'front',
+        identified: true
+      }]
+
+      const combatState = createTestCombatState({ monsterGroups })
+      const context = CombatContext.create(combatState, [character], ['char-1'])
+
+      const command: CombatCommand = {
+        type: 'ATTACK',
+        actor: poisonMonster,
+        target: character,
+        initiative: 5
+      }
+
+      const ctx: ActionExecutionContext = {
+        state: combatState,
+        command,
+        parryingCombatants: new Set(),
+        context
+      }
+
+      // Queue: hit (5%), high damage (0.9), no crit (90%)
+      RandomService.queueNextValues([0.05, 0.9, 0.90])
+
+      const result = attackAction.execute(ctx)
+
+      // Dead characters don't get poisoned - statusEffects should be undefined
+      expect(result.statusEffects).toBeUndefined()
     })
   })
 })

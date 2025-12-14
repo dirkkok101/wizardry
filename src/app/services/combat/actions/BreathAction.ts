@@ -10,7 +10,7 @@
 
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
-import { CommandExecutionResult, MonsterInstance } from '@models/Combat'
+import { CommandExecutionResult, DamageResult, MonsterInstance } from '@models/Combat'
 import { CharacterResistanceService } from '@services/CharacterResistanceService'
 import { ItemProtectionService } from '@services/ItemProtectionService'
 import { RandomService } from '@services/RandomService'
@@ -40,6 +40,7 @@ export class BreathAction extends BaseCombatAction {
     const targets = Array.isArray(command.target) ? command.target : [command.target]
     const messages: string[] = []
     const characterUpdates = new Map<string, Character>(existingCharacterUpdates)
+    const damageResults: DamageResult[] = []
 
     messages.push(`${this.getCombatantName(monster, ctx)} breathes ${breathType}!`)
 
@@ -75,6 +76,15 @@ export class BreathAction extends BaseCombatAction {
       }
       characterUpdates.set(char.id, updatedChar)
 
+      // Add damage result for cinematic display
+      damageResults.push({
+        targetId: char.id,
+        targetName: char.name,
+        value: finalDamage,
+        type: 'damage',
+        category: hasResistance || madeSave ? 'resisted' : 'normal',
+      })
+
       // Build result message
       let resultMsg = `${char.name} takes ${finalDamage} damage`
       if (hasResistance) resultMsg += ' (resisted)'
@@ -83,7 +93,7 @@ export class BreathAction extends BaseCombatAction {
       messages.push(this.resultMessage(resultMsg))
     }
 
-    return { newState: state, messages, characterUpdates }
+    return { newState: state, messages, characterUpdates, damageResults }
   }
 }
 

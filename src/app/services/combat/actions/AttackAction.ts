@@ -420,6 +420,16 @@ export class AttackAction extends BaseCombatAction {
       characterUpdates = new Map([[character.id, updatedChar]])
     }
 
+    // Build status effects array for cinematic display
+    let statusEffects: { target: string; effect: string }[] | undefined
+    if (statusResult.inflictedStatus && 'class' in target) {
+      const character = target as Character
+      statusEffects = [{
+        target: character.id,
+        effect: statusResult.inflictedStatus,
+      }]
+    }
+
     return {
       newState,
       messages: [actionMessage, this.resultMessage(resultText)],
@@ -430,6 +440,7 @@ export class AttackAction extends BaseCombatAction {
         newStatus,
       },
       characterUpdates,
+      statusEffects,
     }
   }
 
