@@ -204,6 +204,3 @@ import './actions/MonsterFleeAction'
 import './actions/BreathAction'
 import './actions/DispelAction'
 import './actions/CastSpellAction'
-
-// Facade for backward compatibility
-export { CombatServiceFacade } from './CombatServiceFacade'

@@ -50,6 +50,7 @@ export interface CommandOptions {
   monsterLevel?: number
   breathType?: string
   damage?: number
+  targetCharacterId?: string
 }
 
 /**

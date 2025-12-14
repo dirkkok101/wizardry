@@ -6,7 +6,7 @@ import { DungeonService } from '@services/DungeonService';
 import { DungeonMovementService } from '@services/DungeonMovementService';
 import { EncounterService } from '@services/EncounterService';
 import { EncounterTriggerService } from '@services/EncounterTriggerService';
-import { CombatServiceFacade as CombatService } from '@services/combat';
+import { getAllMonsters } from '@services/combat';
 import { MonsterService } from '@services/MonsterService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { ItemDataLoader } from '@services/ItemDataLoader';
@@ -1039,7 +1039,7 @@ describe('MazeComponent - Combat Integration', () => {
 
     const combat = gameState.state().combat;
     expect(combat).toBeDefined();
-    const monsters = combat ? CombatService.getAllMonsters(combat) : [];
+    const monsters = combat ? getAllMonsters(combat) : [];
     expect(monsters.length).toBeGreaterThan(0);
     expect(combat?.roundNumber).toBe(1);
     expect(combat?.canFlee).toBe(true);
