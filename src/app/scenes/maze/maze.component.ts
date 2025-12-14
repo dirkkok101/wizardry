@@ -176,27 +176,28 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Computed chest state
   readonly showChestOverlay = computed(() => this.chestPhase() !== 'idle');
+  // Use ChestOrchestrationService for chest-related computed values
   readonly availableChestCharacters = computed(() =>
-    this.partyCharacters().filter(canAct)
+    this.chestOrchestration.getAvailableCharacters(this.partyCharacters())
   );
   readonly calfoEligibleCasters = computed(() =>
-    this.partyCharacters().filter(c => TrapService.canCastCalfo(c))
+    this.chestOrchestration.getCalfoEligibleCasters(this.partyCharacters())
   );
   readonly recommendedChestHandler = computed((): RecommendedHandler | null => {
     const chest = this.pendingChest();
     if (!chest) return null;
-    return TrapService.getRecommendedHandler(this.partyCharacters(), chest.mazeLevel);
+    return this.chestOrchestration.getRecommendedHandler(this.partyCharacters(), chest.mazeLevel);
   });
   readonly chestInspectChance = computed(() => {
     const opener = this.chestOpener();
     if (!opener) return 0;
-    return TrapService.calculateInspectChance(opener);
+    return this.chestOrchestration.calculateInspectChance(opener);
   });
   readonly chestDisarmChance = computed(() => {
     const opener = this.chestOpener();
     const chest = this.pendingChest();
     if (!opener || !chest) return 0;
-    return Math.round(TrapService.calculateDisarmChance(opener, chest.mazeLevel));
+    return this.chestOrchestration.calculateDisarmChance(opener, chest.mazeLevel);
   });
 
   // ============================================================
