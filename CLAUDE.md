@@ -547,3 +547,4 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
   - Chest scene (loot and traps)
   - Encounter system (monster spawning, initiative)
   - Spell casting (combat and utility spells)
+- our complete unit test suite runs for too long and times out. please always run focused unit tests to validate your work
