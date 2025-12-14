@@ -16,6 +16,7 @@
 
 import { Injectable } from '@angular/core'
 import { GameState } from '@models/GameState'
+import { Character } from '@models/Character'
 import { DungeonState, Position, Direction, TileData, ConditionResult, Destination, MessageStyle } from '@models/Dungeon'
 import { DungeonService } from '@services/DungeonService'
 import { DungeonMovementService, MovementResult } from '@services/DungeonMovementService'
@@ -55,7 +56,7 @@ export interface MovementUIAction {
   previousPosition?: Position
   // Encounter data
   encounterConfig?: FixedEncounterConfig
-  encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed'
+  encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
   canFlee?: boolean
   // Elevator data
   destinations?: Destination[]
@@ -392,25 +393,30 @@ export class MovementOrchestrationService {
     messages: string[]
     damageApplied: boolean
   } {
-    const result = PoisonService.applyPoisonDamage(state)
+    // Get party characters
+    const party = state.party.members
+      .map(id => state.roster.get(id))
+      .filter((c): c is Character => c !== undefined)
 
-    if (result.damageTaken.size > 0) {
-      const messages: string[] = []
-      for (const [charId, damage] of result.damageTaken) {
-        const char = result.state.roster.get(charId)
-        if (char) {
-          messages.push(`${char.name} takes ${damage} poison damage!`)
-        }
+    // Apply maze poison using PoisonService
+    const result = PoisonService.applyMazePoison(party)
+
+    if (result.anyDamaged) {
+      // Update roster with damaged characters
+      const newRoster = new Map(state.roster)
+      for (const [charId, char] of result.updatedCharacters) {
+        newRoster.set(charId, char)
       }
+
       return {
-        state: result.state,
-        messages,
+        state: { ...state, roster: newRoster },
+        messages: result.messages,
         damageApplied: true
       }
     }
 
     return {
-      state: result.state,
+      state,
       messages: [],
       damageApplied: false
     }

@@ -6,19 +6,25 @@
  */
 
 // Core types and interfaces
-export {
+export type {
   TileHandler,
   TileHandlerContext,
-  TileHandlerResult,
+  TileHandlerResult
+} from './TileHandler'
+
+export {
   TILE_HANDLER_PRIORITY,
   createNoEffectResult,
   createStateUpdateResult
 } from './TileHandler'
 
 // Registry
+export type {
+  TileProcessingResult
+} from './TileHandlerRegistry'
+
 export {
   TileHandlerRegistry,
-  TileProcessingResult,
   tileHandlerRegistry
 } from './TileHandlerRegistry'
 

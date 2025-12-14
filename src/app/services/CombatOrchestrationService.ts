@@ -22,7 +22,6 @@ import {
   CombatRoundAudit
 } from '@models/Combat'
 import { CombatService } from '@services/CombatService'
-import { VictoryService, VictoryRewards } from '@services/VictoryService'
 import { CharacterQueries } from '@utils/CharacterQueries'
 import { FixedEncounterConfig } from '@services/EncounterTriggerService'
 
@@ -172,9 +171,12 @@ export class CombatOrchestrationService {
     targetGroupId?: 'A' | 'B' | 'C' | 'D',
     spellId?: string
   ): CombatCommand {
+    // CombatService.createCommand(actor, actionType, target?, data?)
+    // For spells/group targets, pass undefined for target, and { groupId, spellId } as data
     return CombatService.createCommand(
       character,
       actionType,
+      undefined, // No specific combatant target
       targetGroupId ? { groupId: targetGroupId, spellId } : undefined
     )
   }
@@ -243,20 +245,8 @@ export class CombatOrchestrationService {
     }
   }
 
-  /**
-   * Process victory rewards
-   */
-  processVictory(
-    combatState: CombatState,
-    partyCharacters: Character[],
-    dungeonLevel: number
-  ): VictoryRewards {
-    return VictoryService.calculateRewards(
-      combatState.monsterGroups,
-      partyCharacters,
-      dungeonLevel
-    )
-  }
+  // TODO: processVictory method can be added when victory flow is fully integrated
+  // Currently MazeComponent handles victory via VictoryService.calculateVictoryRewards directly
 
   /**
    * Check if combat should end in victory

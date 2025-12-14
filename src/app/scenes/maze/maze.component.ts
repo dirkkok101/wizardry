@@ -1496,7 +1496,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     switch (action.type) {
       case 'show_tile_message':
         if (action.message) {
-          this.showTileMessage(action.message, action.autoDismiss ?? false, null);
+          this.showTileMessage(action.message, action.autoDismiss ?? false, null, null);
         }
         break;
 
@@ -1526,7 +1526,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         break;
 
       case 'return_to_castle':
-        this.navigation.goToCastle();
+        this.navigation.returnToCastle();
         break;
 
       case 'none':
@@ -1681,7 +1681,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Check for message-only tiles (not searchable)
     const tileMessage = TileInspectionService.getTileMessage(level, position);
     if (tileMessage) {
-      this.showTileMessage(tileMessage, false, null);
+      this.showTileMessage(tileMessage, false, null, null);
     } else {
       this.addMessage('Nothing to search here.');
     }
@@ -1689,16 +1689,32 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Show tile message overlay with optional item reward
+   * Delegates to MazeStateMachine for state management
    */
   private showTileMessage(
     message: string,
     autoDismiss: boolean,
-    item: TileMessageItem | null
+    onDismiss: (() => void) | null,
+    item?: TileMessageItem | null
   ): void {
-    this.tileMessageText.set(message);
-    this.tileMessageAutoDismiss.set(autoDismiss);
-    this.tileMessageItem.set(item);
+    // Update state machine (source of truth)
+    this.mazeStateMachine.showTileMessage(message, 'letterbox', {
+      autoDismiss,
+      item: item ?? undefined,
+      onDismiss: onDismiss ?? undefined
+    });
+
+    // Also update local signals during migration (Phase 4.1)
+    // These will be removed in Phase 4.3 once template is updated
     this.tileMessagePhase.set('message');
+    this.tileMessageText.set(message);
+    this.tileMessageItem.set(item ?? null);
+    this.tileMessageAutoDismiss.set(autoDismiss);
+
+    // Store onDismiss callback if provided
+    if (onDismiss) {
+      this.pendingConditionCallback.set(onDismiss);
+    }
   }
 
   /**
@@ -1719,9 +1735,16 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Fully dismiss the tile message overlay and check for pending encounters
+   * Delegates to MazeStateMachine for state transition
    */
   private dismissTileMessageOverlay(): void {
     console.log(`[MazeComponent] dismissTileMessageOverlay called`)
+
+    // Use state machine for state transition - returns pending data
+    const { pendingEncounter, callback } = this.mazeStateMachine.dismissTileMessage();
+
+    // Also clear local signals during migration (Phase 4.1)
+    // These will be removed in Phase 4.3 once template is updated
     this.tileMessagePhase.set('idle');
     this.tileMessageText.set('');
     this.tileMessageItem.set(null);
@@ -1732,7 +1755,8 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activateRetreatCooldown();
 
     // Check for pending condition callback first (from conditional tiles)
-    const conditionCallback = this.pendingConditionCallback();
+    // State machine returns onDismiss as callback
+    const conditionCallback = callback ?? this.pendingConditionCallback();
     console.log(`[MazeComponent] Pending condition callback: ${conditionCallback ? 'EXISTS' : 'NULL'}`)
     if (conditionCallback) {
       this.pendingConditionCallback.set(null);
@@ -1741,8 +1765,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Check for pending fixed encounter (will be implemented in encounter flow update)
-    const pending = this.pendingFixedEncounter();
+    // Check for pending fixed encounter
+    // State machine returns pendingEncounter, also check local signal during migration
+    const pending = pendingEncounter ?? this.pendingFixedEncounter();
     if (pending) {
       this.pendingFixedEncounter.set(null);
       // Trigger the encounter now that message is dismissed
@@ -2080,7 +2105,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     // This shows on every entry (not just once) for tiles with message property
     if (movementResult.specialTileResult?.entryMessage && !movementResult.specialTileResult?.conditionResult) {
       this.render();  // Render new position before showing letterbox
-      this.showTileMessage(movementResult.specialTileResult.entryMessage, false, null);
+      this.showTileMessage(movementResult.specialTileResult.entryMessage, false, null, null);
       return; // Don't continue with random encounter check until dismissed
     }
 
@@ -2229,7 +2254,7 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
         // Store the encounter config to trigger after message dismissal
         this.pendingFixedEncounter.set(result.fixedEncounterConfig);
         // Show message - requires Enter to dismiss
-        this.showTileMessage(tileMessage, false, null);
+        this.showTileMessage(tileMessage, false, null, null);
         return; // Don't initiate encounter yet - will trigger on message dismiss
       }
     }

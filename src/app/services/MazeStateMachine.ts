@@ -16,7 +16,8 @@ import { Character } from '@models/Character'
 import { Chest } from '@models/Chest'
 import { Item } from '@models/Item'
 import { MessageStyle, Position, ConditionResult, Destination } from '@models/Dungeon'
-import { CombatState, MonsterGroup, CombatCommand, CombatRoundEvent, CombatRoundAudit, VictoryRewards } from '@models/Combat'
+import { CombatState, MonsterGroup, CombatCommand, CombatRoundEvent, CombatRoundAudit } from '@models/Combat'
+import { VictoryRewards } from '@services/VictoryService'
 import { ScrambledTrapState, TrapId } from '@models/Trap'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { FixedEncounterConfig } from '@services/EncounterTriggerService'
@@ -850,4 +851,4 @@ export class MazeStateMachine {
 // ============================================================================
 // Re-export VictoryRewards for convenience
 // ============================================================================
-export { VictoryRewards } from '@services/VictoryService'
+export type { VictoryRewards } from '@services/VictoryService'
