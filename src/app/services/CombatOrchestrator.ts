@@ -318,6 +318,113 @@ export class CombatOrchestrator {
   }
 
   // ============================================================
+  // TARGET SELECTION
+  // ============================================================
+
+  /**
+   * Handle monster group click during targeting
+   */
+  onCombatGroupClicked(groupId: 'A' | 'B' | 'C' | 'D'): void {
+    if (!this.stateStore.isTargetingMode()) return
+    this.onCombatTargetSelected(groupId)
+  }
+
+  /**
+   * Handle target selection for attack or spell
+   */
+  onCombatTargetSelected(groupId: 'A' | 'B' | 'C' | 'D'): void {
+    const charId = this.stateStore.targetingCharacterId()
+    const party = this.getPartyCharacters()
+    const char = charId ? party.find(c => c.id === charId) : null
+    if (!char) return
+
+    const combat = this.gameState.state().combat
+    if (!combat) return
+
+    const group = combat.monsterGroups.find(g => g.id === groupId)
+    if (!group || !group.monsters.some(m => m.hp > 0)) return
+
+    // Check if targeting for a spell
+    const pendingSpell = this.stateStore.pendingCombatSpell()
+    if (pendingSpell) {
+      // Create spell command targeting the group
+      const command = createCommand(char, 'CAST', undefined, {
+        spellId: pendingSpell.id,
+        targetGroupId: groupId
+      })
+      this.stateStore.selectAction(char.id, command)
+      this.stateStore.addMessage(`${char.name}: CAST ${pendingSpell.name} -> Group ${groupId}`)
+      this.stateStore.setPendingCombatSpell(null)
+      this.clearTargetingState()
+      return
+    }
+
+    // Attack targeting - pick random alive monster from group
+    const aliveMonsters = group.monsters.filter(m => m.hp > 0)
+    const targetIndex = Math.floor(Math.random() * aliveMonsters.length)
+    const target = aliveMonsters[targetIndex]
+
+    // Clear targeting state
+    this.clearTargetingState()
+
+    // Create attack command
+    const command = createCommand(char, 'ATTACK', target, { groupId })
+    this.stateStore.selectAction(char.id, command)
+
+    this.stateStore.addMessage(`${char.name}: ATTACK -> Group ${groupId}`)
+  }
+
+  /**
+   * Start attack targeting for a character
+   */
+  startAttackTargeting(characterId: string): void {
+    const party = this.getPartyCharacters()
+    const char = party.find(c => c.id === characterId)
+    if (!char || this.stateStore.isExecutingRound()) return
+
+    this.stateStore.startTargeting(characterId)
+    this.stateStore.addMessage(`${char.name} prepares to attack... Select a target.`)
+  }
+
+  /**
+   * Cancel targeting mode
+   */
+  cancelTargeting(): void {
+    this.clearTargetingState()
+    this.stateStore.resetSpellState()
+  }
+
+  /**
+   * Clear targeting state
+   */
+  private clearTargetingState(): void {
+    this.stateStore.cancelTargeting()
+  }
+
+  /**
+   * Select parry action for a character
+   */
+  selectParryAction(characterId: string): void {
+    const party = this.getPartyCharacters()
+    const char = party.find(c => c.id === characterId)
+    if (!char || this.stateStore.isExecutingRound()) return
+
+    const command = createCommand(char, 'PARRY', undefined)
+    this.stateStore.selectAction(char.id, command)
+
+    this.stateStore.addMessage(`${char.name} will PARRY.`)
+  }
+
+  /**
+   * Reset all selected actions
+   */
+  resetAllActions(): void {
+    this.stateStore.resetActions()
+    this.stateStore.resetSpellState()
+    this.stateStore.addMessage('Actions reset. Select new actions for all characters.')
+  }
+
+  // ============================================================
   // FLEE HANDLING
   // ============================================================
 

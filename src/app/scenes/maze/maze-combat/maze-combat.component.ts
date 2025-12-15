@@ -14,7 +14,8 @@ import { CinematicArenaComponent } from '@shared/components/cinematic-arena/cine
 import { Character } from '@models/Character'
 import { MonsterGroup, CombatRoundEvent } from '@models/Combat'
 import { GameStateService } from '@services/GameStateService'
-import { CombatFlowController } from '@services/CombatFlowController'
+import { MazeStateStore } from '@services/MazeStateStore'
+import { CombatOrchestrator } from '@services/CombatOrchestrator'
 
 @Component({
   selector: 'app-maze-combat',
@@ -58,7 +59,8 @@ import { CombatFlowController } from '@services/CombatFlowController'
 export class MazeCombatComponent {
   // Injected services for state access
   private gameState = inject(GameStateService)
-  private combatFlow = inject(CombatFlowController)
+  private stateStore = inject(MazeStateStore)
+  private combatOrch = inject(CombatOrchestrator)
 
   // Inputs
   partyCharacters = input.required<Character[]>()
@@ -72,16 +74,16 @@ export class MazeCombatComponent {
   arenaEventPlayed = output<CombatRoundEvent>()
   groupClicked = output<'A' | 'B' | 'C' | 'D'>()
 
-  // Combat state from CombatFlowController (computed proxies)
-  readonly combatPhase = computed(() => this.combatFlow.combatPhase())
-  readonly letterboxType = computed(() => this.combatFlow.letterboxType())
-  readonly selectedTargetGroupId = computed(() => this.combatFlow.selectedTargetGroupId())
-  readonly isTargetingMode = computed(() => this.combatFlow.isTargetingMode())
-  readonly victoryRewards = computed(() => this.combatFlow.victoryRewards())
-  readonly combatIntroActive = computed(() => this.combatFlow.combatIntroActive())
-  readonly showCinematicArena = computed(() => this.combatFlow.showCinematicArena())
-  readonly arenaEvents = computed(() => this.combatFlow.arenaEvents())
-  readonly arenaAudit = computed(() => this.combatFlow.arenaAudit())
+  // Combat state from MazeStateStore (computed proxies)
+  readonly combatPhase = computed(() => this.stateStore.combatPhase())
+  readonly letterboxType = computed(() => this.stateStore.combatLetterboxType())
+  readonly selectedTargetGroupId = computed(() => this.stateStore.selectedTargetGroupId())
+  readonly isTargetingMode = computed(() => this.stateStore.isTargetingMode())
+  readonly victoryRewards = computed(() => this.stateStore.victoryRewards())
+  readonly combatIntroActive = computed(() => this.stateStore.combatIntroActive())
+  readonly showCinematicArena = computed(() => this.stateStore.showCinematicArena())
+  readonly arenaEvents = computed(() => this.stateStore.arenaEvents())
+  readonly arenaAudit = computed(() => this.stateStore.arenaAudit())
 
   // Combat state from GameStateService
   readonly combatState = computed(() => this.gameState.state().combat)
@@ -94,9 +96,9 @@ export class MazeCombatComponent {
     this.inCombat() && !this.combatIntroActive() && !this.showCinematicArena()
   )
 
-  // Event handler - delegates to shared CombatFlowController
+  // Event handler - delegates to CombatOrchestrator
   onGroupClicked(groupId: 'A' | 'B' | 'C' | 'D'): void {
-    this.combatFlow.onCombatGroupClicked(groupId)
+    this.combatOrch.onCombatGroupClicked(groupId)
     this.groupClicked.emit(groupId)
   }
 }
