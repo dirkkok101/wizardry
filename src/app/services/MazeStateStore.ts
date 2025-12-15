@@ -749,6 +749,50 @@ export class MazeStateStore {
     return { pendingEncounter, callback }
   }
 
+  /**
+   * Handle tile message dismissal (Enter key press)
+   * Returns pending data if overlay was fully dismissed
+   */
+  handleTileMessageDismiss(): { pendingEncounter: FixedEncounterConfig | null; callback: (() => void) | null } | null {
+    const phase = this.tileMessagePhase()
+    const item = this.tileMessageItem()
+
+    if (phase === 'message' && item) {
+      // Transition to item reward phase
+      this.tileMessagePhase.set('item_reward')
+      return null
+    }
+
+    // Dismiss overlay completely
+    return this.dismissTileMessage()
+  }
+
+  /**
+   * Show condition message (letterbox or log style)
+   * Letterbox shows overlay, log just adds to message list
+   */
+  showConditionMessage(message: string, style: MessageStyle, onDismiss: () => void): void {
+    if (style === 'letterbox') {
+      this.pendingConditionCallback.set(onDismiss)
+      this.tileMessageText.set(message)
+      this.tileMessageAutoDismiss.set(false)
+      this.tileMessagePhase.set('message')
+    } else {
+      // 'log' style - just add to message log and call callback immediately
+      this.addMessage(message)
+      onDismiss()
+    }
+  }
+
+  /**
+   * Show a message and return a Promise that resolves when dismissed
+   */
+  showMessageAsync(message: string): Promise<void> {
+    return new Promise(resolve => {
+      this.showTileMessage(message, false, null, resolve)
+    })
+  }
+
   // ============================================================
   // ACTIONS - Elevator
   // ============================================================
