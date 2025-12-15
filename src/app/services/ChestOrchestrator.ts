@@ -99,6 +99,41 @@ export class ChestOrchestrator {
     this.castCalfo(caster)
   }
 
+  /**
+   * Handle character selection by index (from UI)
+   */
+  onCharacterSelected(index: number): void {
+    const party = this.getPartyCharacters()
+    const available = this.getAvailableCharacters()
+    if (index >= 0 && index < available.length) {
+      this.selectOpener(available[index])
+    }
+  }
+
+  /**
+   * Handle caster selection by index (from UI)
+   */
+  onCasterSelected(index: number): void {
+    const casters = this.getCalfoEligibleCasters()
+    if (index >= 0 && index < casters.length) {
+      this.selectCaster(casters[index])
+    }
+  }
+
+  /**
+   * Get inspect chance for a character
+   */
+  getInspectChance(character: Character): number {
+    return this.chestOrchestration.calculateInspectChance(character)
+  }
+
+  /**
+   * Get disarm chance for a character at a given maze level
+   */
+  getDisarmChance(character: Character, mazeLevel: number): number {
+    return this.chestOrchestration.calculateDisarmChance(character, mazeLevel)
+  }
+
   // ============================================================
   // ACTIONS
   // ============================================================

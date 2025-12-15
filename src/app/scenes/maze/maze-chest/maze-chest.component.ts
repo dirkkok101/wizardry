@@ -1,12 +1,12 @@
 /**
- * MazeChestComponent - Handles chest interaction rendering
+ * MazeChestComponent - Pure presenter for chest interaction rendering
  *
  * Extracted from MazeComponent to handle:
  * - Chest overlay rendering
  * - Chest action coordination (open, inspect, calfo, disarm)
  * - Trap visualization
  *
- * Uses ChestFlowController for state management.
+ * Uses MazeStateStore for state and ChestOrchestrator for actions.
  */
 
 import { Component, computed, inject, input, output } from '@angular/core'
@@ -15,7 +15,8 @@ import { CommonModule } from '@angular/common'
 import { ChestOverlayComponent } from '@shared/components/chest-overlay/chest-overlay.component'
 
 import { Character } from '@models/Character'
-import { ChestFlowController } from '@services/ChestFlowController'
+import { MazeStateStore } from '@services/MazeStateStore'
+import { ChestOrchestrator } from '@services/ChestOrchestrator'
 
 @Component({
   selector: 'app-maze-chest',
@@ -50,8 +51,9 @@ import { ChestFlowController } from '@services/ChestFlowController'
   `
 })
 export class MazeChestComponent {
-  // Injected services
-  private chestFlow = inject(ChestFlowController)
+  // Injected services - MazeStateStore for state, ChestOrchestrator for actions
+  private stateStore = inject(MazeStateStore)
+  private chestOrch = inject(ChestOrchestrator)
 
   // Inputs
   partyCharacters = input.required<Character[]>()
@@ -60,44 +62,53 @@ export class MazeChestComponent {
   characterSelected = output<number>()
   casterSelected = output<number>()
 
-  // Chest state from ChestFlowController (computed proxies)
-  readonly chestPhase = computed(() => this.chestFlow.chestPhase())
-  readonly chestLetterboxType = computed(() => this.chestFlow.chestLetterboxType())
-  readonly pendingChest = computed(() => this.chestFlow.pendingChest())
-  readonly chestSprite = computed(() => this.chestFlow.chestSprite())
-  readonly chestOpener = computed(() => this.chestFlow.chestOpener())
-  readonly chestCaster = computed(() => this.chestFlow.chestCaster())
-  readonly scrambledTrapState = computed(() => this.chestFlow.scrambledTrapState())
-  readonly chestTrapInput = computed(() => this.chestFlow.chestTrapInput())
-  readonly chestSummary = computed(() => this.chestFlow.chestSummary())
-  readonly chestLastMessage = computed(() => this.chestFlow.chestLastMessage())
-  readonly chestInventoryWarning = computed(() => this.chestFlow.chestInventoryWarning())
-  readonly preSelectedRecipient = computed(() => this.chestFlow.preSelectedRecipient())
-  readonly pendingTrapInfo = computed(() => this.chestFlow.pendingTrapInfo())
+  // Chest state from MazeStateStore (computed proxies)
+  readonly chestPhase = computed(() => this.stateStore.chestPhase())
+  readonly chestLetterboxType = computed(() => this.stateStore.chestLetterboxType())
+  readonly pendingChest = computed(() => this.stateStore.pendingChest())
+  readonly chestSprite = computed(() => this.stateStore.chestSprite())
+  readonly chestOpener = computed(() => this.stateStore.chestOpener())
+  readonly chestCaster = computed(() => this.stateStore.chestCaster())
+  readonly scrambledTrapState = computed(() => this.stateStore.scrambledTrapState())
+  readonly chestTrapInput = computed(() => this.stateStore.chestTrapInput())
+  readonly chestSummary = computed(() => this.stateStore.chestSummary())
+  readonly chestLastMessage = computed(() => this.stateStore.chestLastMessage())
+  readonly chestInventoryWarning = computed(() => this.stateStore.chestInventoryWarning())
+  readonly preSelectedRecipient = computed(() => this.stateStore.preSelectedRecipient())
+  readonly pendingTrapInfo = computed(() => this.stateStore.pendingTrapInfo())
 
   // Trap effect visualization state
-  readonly trapLetterboxName = computed(() => this.chestFlow.trapLetterboxName())
-  readonly hitCharacterIds = computed(() => this.chestFlow.hitCharacterIds())
-  readonly currentDamageIndicator = computed(() => this.chestFlow.currentDamageIndicator())
+  readonly trapLetterboxName = computed(() => this.stateStore.trapLetterboxName())
+  readonly hitCharacterIds = computed(() => this.stateStore.hitCharacterIds())
+  readonly currentDamageIndicator = computed(() => this.stateStore.currentDamageIndicator())
 
   // Computed chest state
-  readonly showChestOverlay = computed(() => this.chestFlow.showChestOverlay())
-  readonly calfoEligibleCasters = computed(() => this.chestFlow.getCalfoEligibleCasters())
-  readonly recommendedChestHandler = computed(() => this.chestFlow.getRecommendedHandler())
-  readonly chestInspectChance = computed(() => this.chestFlow.chestInspectChance())
-  readonly chestDisarmChance = computed(() => this.chestFlow.chestDisarmChance())
+  readonly showChestOverlay = computed(() => this.stateStore.showChestOverlay())
+  readonly calfoEligibleCasters = computed(() => this.chestOrch.getCalfoEligibleCasters())
+  readonly recommendedChestHandler = computed(() => this.chestOrch.getRecommendedHandler())
+  readonly chestInspectChance = computed(() => {
+    const opener = this.stateStore.chestOpener()
+    if (!opener) return 0
+    return this.chestOrch.getInspectChance(opener)
+  })
+  readonly chestDisarmChance = computed(() => {
+    const opener = this.stateStore.chestOpener()
+    const chest = this.stateStore.pendingChest()
+    if (!opener || !chest) return 0
+    return this.chestOrch.getDisarmChance(opener, chest.mazeLevel)
+  })
 
   // ============================================================
-  // CHEST ACTIONS
+  // CHEST ACTIONS - delegate to ChestOrchestrator
   // ============================================================
 
   onChestCharacterSelected(index: number): void {
-    this.chestFlow.onCharacterSelected(index)
+    this.chestOrch.onCharacterSelected(index)
     this.characterSelected.emit(index)
   }
 
   onChestCasterSelected(index: number): void {
-    this.chestFlow.onCasterSelected(index)
+    this.chestOrch.onCasterSelected(index)
     this.casterSelected.emit(index)
   }
 }
