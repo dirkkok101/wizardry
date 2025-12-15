@@ -42,8 +42,8 @@ export class CombatOrchestrator {
   private readonly gameState = inject(GameStateService)
   private readonly combatOrchestration = inject(CombatOrchestrationService)
 
-  /** Pending result stored during arena playback */
-  private pendingResult: PendingCombatResult | null = null
+  // NOTE: pendingResult is now stored in MazeStateStore, not here
+  // This makes the orchestrator stateless as documented
 
   // ============================================================
   // COMBAT INITIATION
@@ -144,15 +144,15 @@ export class CombatOrchestrator {
 
     const result = executeRound(stateWithCommands, chars, frontRow)
 
-    // Create pending result
-    this.pendingResult = {
+    // Store pending result in state store
+    this.stateStore.setPendingCombatResult({
       finalState: result.newState,
       finalCharacterUpdates: result.damagedCharacters,
       spellCasters: result.spellCasters,
       victory: result.victory,
       defeat: result.defeat,
       fled: result.fled
-    }
+    })
 
     // Start arena playback
     this.stateStore.startArenaPlayback(result.events, result.audit ?? null)
@@ -193,15 +193,15 @@ export class CombatOrchestrator {
         frontRow
       )
 
-      // Create pending result for use after arena playback
-      this.pendingResult = {
+      // Store pending result in state store for use after arena playback
+      this.stateStore.setPendingCombatResult({
         finalState: result.finalState,
         finalCharacterUpdates: result.characterUpdates,
         spellCasters: result.spellCasters,
         victory: result.victory,
         defeat: result.defeat,
         fled: result.fled
-      }
+      })
 
       // Update state store for arena playback
       this.stateStore.setCombatPhase('executing')
@@ -221,7 +221,7 @@ export class CombatOrchestrator {
    * Get pending combat result (for arena completion handling)
    */
   getPendingResult(): PendingCombatResult | null {
-    return this.pendingResult
+    return this.stateStore.getPendingCombatResult()
   }
 
   /**
@@ -232,7 +232,7 @@ export class CombatOrchestrator {
     // Hide arena
     this.stateStore.stopArenaPlayback()
 
-    const result = this.pendingResult
+    const result = this.stateStore.getPendingCombatResult()
     if (!result) {
       console.error('[CombatOrchestrator] No pending combat result!')
       this.resetForNextRound()
@@ -243,7 +243,7 @@ export class CombatOrchestrator {
     this.applyResultToGameState(result)
 
     // Clear pending result
-    this.pendingResult = null
+    this.stateStore.clearPendingCombatResult()
 
     // Return status for caller to handle victory/defeat/fled
     return {
@@ -314,7 +314,7 @@ export class CombatOrchestrator {
    */
   endCombat(): void {
     this.stateStore.endCombat()
-    this.pendingResult = null
+    // pendingResult is cleared by stateStore.endCombat()
   }
 
   // ============================================================
@@ -508,7 +508,7 @@ export class CombatOrchestrator {
    * Reset all state (e.g., when leaving maze)
    */
   reset(): void {
-    this.pendingResult = null
     // State store reset is handled by MazeStateStore.reset()
+    // pendingResult is cleared there
   }
 }
