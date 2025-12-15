@@ -97,7 +97,7 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly errorMessage = signal<string | null>(null);
 
   // Computed from GameState
-  readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
+  readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState | undefined);
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly position = computed(() => this.dungeonState()?.position);
   readonly facing = computed(() => this.dungeonState()?.position?.facing ?? 'N');
@@ -224,7 +224,10 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       this.updateCanvasSize();
     });
 
-    this.resizeObserver.observe(canvas.parentElement!);
+    const parent = canvas.parentElement;
+    if (parent) {
+      this.resizeObserver.observe(parent);
+    }
     this.updateCanvasSize();
   }
 
@@ -349,20 +352,5 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Render the dungeon with dungeon state for door rendering
     this.webglRenderer.render(level, position, config, dungeon);
-  }
-
-  /**
-   * Public method to trigger a re-render.
-   * Child routes can call this when the dungeon state changes.
-   */
-  triggerRender(): void {
-    this.render();
-  }
-
-  /**
-   * Get the WebGL renderer for child routes that need direct access.
-   */
-  getRenderer(): WebGLRenderingService | null {
-    return this.webglRenderer;
   }
 }

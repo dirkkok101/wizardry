@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CinematicArenaComponent } from '@shared/components/cinematic-arena/cinematic-arena.component';
 import { GameStateService } from '@services/GameStateService';
+import { LoggerService } from '@services/LoggerService';
 import { SpellCastingService } from '@services/SpellCastingService';
 import { CharacterService } from '@services/CharacterService';
 import {
@@ -126,7 +127,8 @@ export class CombatPlaybackComponent implements OnInit {
 
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -140,7 +142,7 @@ export class CombatPlaybackComponent implements OnInit {
   private executeRound(): void {
     const combat = this.combatState();
     if (!combat) {
-      console.error('[CombatPlayback] No combat state!');
+      this.logger.error('[CombatPlayback] No combat state!');
       this.router.navigate(['/maze']);
       return;
     }
@@ -172,7 +174,7 @@ export class CombatPlaybackComponent implements OnInit {
       // Execute round (pre-calculates everything)
       const result = executeRound(stateWithCommands, chars, frontRow);
 
-      console.log('[CombatPlayback] Round executed', {
+      this.logger.log('[CombatPlayback] Round executed', {
         eventsCount: result.events.length,
         victory: result.victory,
         defeat: result.defeat,
@@ -192,7 +194,7 @@ export class CombatPlaybackComponent implements OnInit {
 
       // Check if party fled successfully - skip arena and go straight to exploration
       if (result.fled) {
-        console.log('[CombatPlayback] Party fled successfully');
+        this.logger.log('[CombatPlayback] Party fled successfully');
         this.handleFleeSuccess();
         return;
       }
@@ -202,12 +204,12 @@ export class CombatPlaybackComponent implements OnInit {
       this.arenaAudit.set(result.audit ?? null);
       this.showArena.set(true);
 
-      console.log('[CombatPlayback] Arena activated', {
+      this.logger.log('[CombatPlayback] Arena activated', {
         arenaEventsSet: this.arenaEvents().length,
         showArena: this.showArena()
       });
     } catch (error) {
-      console.error('[CombatPlayback] Execution error:', error);
+      this.logger.error('[CombatPlayback] Execution error:', error);
       // Return to planning on error
       this.router.navigate(['/maze/combat/planning']);
     }
@@ -231,7 +233,7 @@ export class CombatPlaybackComponent implements OnInit {
    * Handle arena playback completion
    */
   onArenaComplete(): void {
-    console.log('[CombatPlayback] Arena playback complete');
+    this.logger.log('[CombatPlayback] Arena playback complete');
 
     // Hide the arena
     this.showArena.set(false);
@@ -241,7 +243,7 @@ export class CombatPlaybackComponent implements OnInit {
     // Apply the stored combat result
     const result = this.pendingCombatResult;
     if (!result) {
-      console.error('[CombatPlayback] No pending combat result!');
+      this.logger.error('[CombatPlayback] No pending combat result!');
       this.router.navigate(['/maze/combat/planning']);
       return;
     }
@@ -277,18 +279,18 @@ export class CombatPlaybackComponent implements OnInit {
 
     // Navigate based on result
     if (result.victory) {
-      console.log('[CombatPlayback] Victory - navigating to victory screen');
+      this.logger.log('[CombatPlayback] Victory - navigating to victory screen');
       queueMicrotask(() => {
         this.router.navigate(['/maze/combat/victory']);
       });
     } else if (result.defeat) {
-      console.log('[CombatPlayback] Defeat - navigating to defeat screen');
+      this.logger.log('[CombatPlayback] Defeat - navigating to defeat screen');
       queueMicrotask(() => {
         this.router.navigate(['/maze/combat/defeat']);
       });
     } else {
       // Continue to next round
-      console.log('[CombatPlayback] Combat continues - returning to planning');
+      this.logger.log('[CombatPlayback] Combat continues - returning to planning');
       queueMicrotask(() => {
         this.router.navigate(['/maze/combat/planning']);
       });
@@ -300,7 +302,7 @@ export class CombatPlaybackComponent implements OnInit {
    */
   onArenaEventPlayed(event: CombatRoundEvent): void {
     // Could be used to sync combat log display
-    console.log('[CombatPlayback] Event played:', event.actorId);
+    this.logger.log('[CombatPlayback] Event played:', event.actorId);
   }
 
   /**
@@ -310,11 +312,11 @@ export class CombatPlaybackComponent implements OnInit {
     roster: Map<string, Character>,
     updates: Map<string, Character>
   ): Map<string, Character> {
-    console.log('[CombatPlayback] Processing', updates.size, 'character updates');
+    this.logger.log('[CombatPlayback] Processing', updates.size, 'character updates');
     const newRoster = new Map(roster);
     for (const [charId, updatedChar] of updates.entries()) {
       const oldChar = roster.get(charId);
-      console.log(`[CombatPlayback] ${updatedChar.name}: HP ${oldChar?.hp} → ${updatedChar.hp}, Status ${oldChar?.status} → ${updatedChar.status}`);
+      this.logger.log(`[CombatPlayback] ${updatedChar.name}: HP ${oldChar?.hp} → ${updatedChar.hp}, Status ${oldChar?.status} → ${updatedChar.status}`);
       newRoster.set(charId, updatedChar);
     }
     return newRoster;

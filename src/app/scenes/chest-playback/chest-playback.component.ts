@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
   computed
 } from '@angular/core';
@@ -14,6 +15,7 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { PendingTrapResult } from '@models/GameState';
+import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 
 /**
  * ChestPlaybackComponent - Trap animation playback.
@@ -222,12 +224,15 @@ import { PendingTrapResult } from '@models/GameState';
     }
   `]
 })
-export class ChestPlaybackComponent implements OnInit {
+export class ChestPlaybackComponent implements OnInit, OnDestroy {
   // Animation state
   readonly showLetterbox = signal(false);
   readonly showEffects = signal(false);
   readonly showStatus = signal(false);
   readonly statusMessage = signal('');
+
+  // Timeout cleanup for memory leak prevention
+  private pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
 
   // Trap info from GameState
   readonly pendingTrap = computed(() => this.gameState.state().pendingTrapResult);
@@ -306,6 +311,14 @@ export class ChestPlaybackComponent implements OnInit {
     this.playTrapSequence(trap);
   }
 
+  ngOnDestroy(): void {
+    // Clear all pending timeouts to prevent memory leaks
+    for (const timeout of this.pendingTimeouts) {
+      clearTimeout(timeout);
+    }
+    this.pendingTimeouts = [];
+  }
+
   /**
    * Format status for display
    */
@@ -324,29 +337,29 @@ export class ChestPlaybackComponent implements OnInit {
    * Play the trap animation sequence
    */
   private async playTrapSequence(trap: PendingTrapResult): Promise<void> {
-    // Phase 1: Show letterbox (0.5s delay, then visible)
-    await this.delay(300);
+    // Phase 1: Show letterbox
+    await this.delay(ANIMATION_TIMINGS.TRAP_LETTERBOX_DELAY);
     this.showLetterbox.set(true);
 
-    // Phase 2: Show effects panel (after 1s)
-    await this.delay(1000);
+    // Phase 2: Show effects panel
+    await this.delay(ANIMATION_TIMINGS.TRAP_EFFECTS_PANEL_DELAY);
     this.showEffects.set(true);
 
-    // Phase 3: Apply effects to game state (after 1s)
-    await this.delay(1000);
+    // Phase 3: Apply effects to game state
+    await this.delay(ANIMATION_TIMINGS.TRAP_APPLICATION_DELAY);
     this.applyTrapEffects(trap);
 
     // Phase 4: Show status message and prepare transition
-    await this.delay(500);
+    await this.delay(ANIMATION_TIMINGS.TRAP_STATUS_DELAY);
     this.showStatus.set(true);
 
     if (trap.specialEffect === 'combat') {
       this.statusMessage.set('Monsters are coming!');
-      await this.delay(1500);
+      await this.delay(ANIMATION_TIMINGS.TRAP_COMBAT_TRANSITION);
       this.navigateToCombat(trap);
     } else {
       this.statusMessage.set('Opening chest...');
-      await this.delay(1000);
+      await this.delay(ANIMATION_TIMINGS.TRAP_REWARDS_TRANSITION);
       this.navigateToRewards();
     }
   }
@@ -409,9 +422,12 @@ export class ChestPlaybackComponent implements OnInit {
   }
 
   /**
-   * Helper delay function
+   * Helper delay function with cleanup tracking
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      const timeout = setTimeout(resolve, ms);
+      this.pendingTimeouts.push(timeout);
+    });
   }
 }

@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
   computed
 } from '@angular/core';
@@ -11,6 +12,7 @@ import { CharacterService } from '@services/CharacterService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
+import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 
 /**
  * CombatDefeatComponent - Defeat handling phase of combat.
@@ -138,8 +140,11 @@ import { CharacterStatus } from '@models/CharacterStatus';
     }
   `]
 })
-export class CombatDefeatComponent implements OnInit {
+export class CombatDefeatComponent implements OnInit, OnDestroy {
   readonly statusMessage = signal<string>('');
+
+  // Timeout cleanup for memory leak prevention
+  private pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
 
   // Party characters
   readonly partyCharacters = computed(() => {
@@ -159,6 +164,14 @@ export class CombatDefeatComponent implements OnInit {
 
   ngOnInit(): void {
     this.processDefeat();
+  }
+
+  ngOnDestroy(): void {
+    // Clear all pending timeouts to prevent memory leaks
+    for (const timeout of this.pendingTimeouts) {
+      clearTimeout(timeout);
+    }
+    this.pendingTimeouts = [];
   }
 
   /**
@@ -184,7 +197,7 @@ export class CombatDefeatComponent implements OnInit {
     this.statusMessage.set('The party retreats from the dungeon...');
 
     // Wait for player to acknowledge defeat
-    await this.delay(2000);
+    await this.delay(ANIMATION_TIMINGS.DEFEAT_ACKNOWLEDGEMENT);
 
     // Clear combat and dungeon state - party is ejected
     this.gameState.updateState(state => ({
@@ -197,16 +210,19 @@ export class CombatDefeatComponent implements OnInit {
     this.statusMessage.set('Returning to the castle...');
 
     // Brief pause before navigation
-    await this.delay(500);
+    await this.delay(ANIMATION_TIMINGS.DEFEAT_TRANSITION_DELAY);
 
     // Navigate to castle menu
     this.router.navigate(['/castle-menu']);
   }
 
   /**
-   * Helper delay function
+   * Helper delay function with cleanup tracking
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      const timeout = setTimeout(resolve, ms);
+      this.pendingTimeouts.push(timeout);
+    });
   }
 }

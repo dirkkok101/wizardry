@@ -151,7 +151,7 @@ describe('ServiceName', () => {
 })
 ```
 
-**Factory Functions**: Use test factories from `tests/helpers/test-factories.ts` (create when needed):
+**Factory Functions**: Use test factories from `src/app/testing/test-factories.ts`:
 - `createTestCharacter()` - Create test character with defaults
 - `createEmptyParty()` - Create empty party
 - `createFullParty()` - Create party with 6 members
@@ -245,7 +245,7 @@ src/
     │   │   └── ...
     │   └── directives/       # Custom directives (keystroke-input)
     │
-    ├── scenes/               # Feature/page components (12 scenes)
+    ├── scenes/               # Feature/page components (21 scenes)
     │   ├── title-screen/
     │   ├── castle-menu/
     │   ├── tavern/
@@ -256,8 +256,17 @@ src/
     │   ├── character-creation/
     │   ├── character-inspection/
     │   ├── spell-casting/
-    │   ├── maze/
-    │   └── combat-scene/
+    │   ├── camp/
+    │   ├── system/
+    │   ├── maze-layout/            # Maze container/layout
+    │   ├── maze-exploration/       # 3D dungeon navigation
+    │   ├── combat-planning/        # Action selection phase
+    │   ├── combat-playback/        # Combat round resolution
+    │   ├── combat-victory/         # Victory screen
+    │   ├── combat-defeat/          # Defeat screen
+    │   ├── maze-chest/             # Chest encounter
+    │   ├── chest-playback/         # Trap/unlock resolution
+    │   └── chest-rewards/          # Loot distribution
     │
     ├── services/             # Pure function services (business logic)
     │   ├── __tests__/        # Service tests
@@ -421,6 +430,13 @@ All scenes should use these shared components for consistency:
 
 ## TypeScript Configuration
 
+### Code Style Preferences
+
+- **No underscore-prefixed private fields**: Use standard naming, not `_fieldName`
+- **Prefer primary constructors**: Use Angular's constructor injection pattern
+
+### Compiler Settings
+
 - **Strict mode enabled**: All code must satisfy strict TypeScript checks
 - **No unused locals/parameters**: Compiler enforces clean code
 - **ES2022 target**: Modern JavaScript features available
@@ -537,14 +553,24 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
   - **Service Integration**: Auto-selects character when only one needs service, uses party gold pool
   - **Testing**: 14 component tests, 1 integration test for full service flow
   - **Documentation**: Updated ASCII mockups, navigation tables, and state diagrams
-  - **791 total tests passing** in **20 seconds**
   - See `docs/plans/2025-11-05-temple-scene-modernization.md` for implementation plan
 
+- **Maze Scene Decomposition** (Complete)
+  - **Scene-Based Architecture**: Decomposed monolithic maze into 8 specialized scenes
+  - **Maze Scenes**: maze-layout (container), maze-exploration (3D navigation)
+  - **Combat Scenes**: combat-planning, combat-playback, combat-victory, combat-defeat
+  - **Chest Scenes**: maze-chest, chest-playback, chest-rewards
+  - **Supporting Scenes**: camp, system
+
 **Next Steps**:
-- **Phase 7**: Dungeon navigation and combat system
-  - Maze scene (3D Canvas rendering, movement) - Complete with inspect and spell casting
-  - Combat scene (turn-based battles)
+- **Phase 7**: Combat and encounter completion
+  - Combat scene polish (turn-based battles)
   - Chest scene (loot and traps)
   - Encounter system (monster spawning, initiative)
   - Spell casting (combat and utility spells)
-- our complete unit test suite runs for too long and times out. please always run focused unit tests to validate your work
+
+**Testing Note**: The complete unit test suite may timeout. Always run focused unit tests to validate your work:
+```bash
+npm test -- ServiceName        # Run tests for specific service
+npm test -- --testNamePattern="specific test"  # Run matching tests
+```

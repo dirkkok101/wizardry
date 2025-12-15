@@ -151,7 +151,7 @@ export class MazeExplorationComponent implements OnInit {
   readonly isMovementLocked = signal(false);
 
   // Computed from GameState
-  readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState);
+  readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState | undefined);
   readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
   readonly position = computed(() => this.dungeonState()?.position);
 
@@ -250,6 +250,27 @@ export class MazeExplorationComponent implements OnInit {
 
   ngOnInit(): void {
     this.addMessage('You are exploring the maze...');
+    this.displayPendingSpellMessage();
+  }
+
+  /**
+   * Display any pending spell message from spell casting scene.
+   * Clears the message from dungeon state after displaying.
+   */
+  private displayPendingSpellMessage(): void {
+    const dungeon = this.dungeonState();
+    if (dungeon?.pendingSpellMessage) {
+      this.addMessage(dungeon.pendingSpellMessage);
+
+      // Clear the message from state
+      this.gameState.updateState(state => ({
+        ...state,
+        dungeon: state.dungeon ? {
+          ...state.dungeon,
+          pendingSpellMessage: undefined
+        } : undefined
+      }));
+    }
   }
 
   /**
@@ -297,8 +318,7 @@ export class MazeExplorationComponent implements OnInit {
         this.navigation.inspectCharacter(event.characterId, 'maze');
         break;
       case 'cast-spell':
-        // TODO: Open spell dialog
-        this.addMessage('Spell casting not yet implemented in new architecture.');
+        this.navigation.castSpell(event.characterId, 'maze');
         break;
       case 'moveUp':
         this.onMoveUp(event.characterId);

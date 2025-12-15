@@ -1,6 +1,23 @@
-<div class="spell-casting-stub">
-  <h1>Spell Casting</h1>
-  <p>Coming in Phase 7: Dungeon Navigation and Combat System</p>
-  <p class="character-id">Character ID: {{ characterId() }}</p>
-  <button (click)="returnToPrevious()">Return (ESC)</button>
+<div class="spell-casting-container">
+  <!-- Phase 1: Spell Selection -->
+  @if (caster(); as char) {
+    <app-spell-panel
+      [visible]="phase() === 'selecting-spell'"
+      [character]="char"
+      [mode]="'casting'"
+      [context]="'dungeon'"
+      [title]="'SELECT SPELL'"
+      (spellSelected)="onSpellSelected($event)"
+      (closed)="returnToPrevious()"
+    />
+  }
+
+  <!-- Phase 2: Target Selection (when needed) -->
+  <app-character-selection-dialog
+    [visible]="phase() === 'selecting-target'"
+    [characters]="targetOptions()"
+    [prompt]="targetPrompt()"
+    (characterSelected)="onTargetSelected($event)"
+    (cancelled)="cancelTargetSelection()">
+  </app-character-selection-dialog>
 </div>

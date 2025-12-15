@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
   computed,
   HostListener
@@ -14,6 +15,7 @@ import { getItemDisplayName } from '@utils/ItemDisplayHelpers';
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
 import { Chest, TreasureDistributionResult } from '@models/Chest';
+import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 
 /**
  * ChestRewardsComponent - Loot distribution screen.
@@ -284,12 +286,18 @@ import { Chest, TreasureDistributionResult } from '@models/Chest';
     }
   `]
 })
-export class ChestRewardsComponent implements OnInit {
+export class ChestRewardsComponent implements OnInit, OnDestroy {
   // Animation state
   readonly showBanner = signal(false);
   readonly showRewards = signal(false);
   readonly showContinue = signal(false);
-  private canContinue = false;
+  readonly canContinue = signal(false);
+
+  // Navigation guard to prevent double-click
+  private isNavigating = false;
+
+  // Timeout cleanup for memory leak prevention
+  private pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
 
   // Distribution result
   readonly distributionResult = signal<TreasureDistributionResult | null>(null);
@@ -330,6 +338,14 @@ export class ChestRewardsComponent implements OnInit {
     this.distributeTreasure(chest);
   }
 
+  ngOnDestroy(): void {
+    // Clear all pending timeouts to prevent memory leaks
+    for (const timeout of this.pendingTimeouts) {
+      clearTimeout(timeout);
+    }
+    this.pendingTimeouts = [];
+  }
+
   /**
    * Get display name for an item
    */
@@ -368,17 +384,17 @@ export class ChestRewardsComponent implements OnInit {
    */
   private async playRewardsSequence(): Promise<void> {
     // Phase 1: Show treasure banner
-    await this.delay(200);
+    await this.delay(ANIMATION_TIMINGS.CHEST_BANNER_DELAY);
     this.showBanner.set(true);
 
     // Phase 2: Show rewards panel
-    await this.delay(800);
+    await this.delay(ANIMATION_TIMINGS.CHEST_REWARDS_PANEL_DELAY);
     this.showRewards.set(true);
 
     // Phase 3: Enable continue prompt
-    await this.delay(1500);
+    await this.delay(ANIMATION_TIMINGS.CHEST_CONTINUE_PROMPT_DELAY);
     this.showContinue.set(true);
-    this.canContinue = true;
+    this.canContinue.set(true);
   }
 
   /**
@@ -386,7 +402,7 @@ export class ChestRewardsComponent implements OnInit {
    */
   @HostListener('window:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
-    if (this.canContinue) {
+    if (this.canContinue() && !this.isNavigating) {
       event.preventDefault();
       this.returnToExploration();
     }
@@ -397,7 +413,7 @@ export class ChestRewardsComponent implements OnInit {
    */
   @HostListener('click')
   handleClick(): void {
-    if (this.canContinue) {
+    if (this.canContinue() && !this.isNavigating) {
       this.returnToExploration();
     }
   }
@@ -406,14 +422,19 @@ export class ChestRewardsComponent implements OnInit {
    * Return to maze exploration
    */
   private returnToExploration(): void {
+    // Prevent double navigation
+    this.isNavigating = true;
     console.log('[ChestRewards] Returning to exploration');
     this.router.navigate(['/maze']);
   }
 
   /**
-   * Helper delay function
+   * Helper delay function with cleanup tracking
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      const timeout = setTimeout(resolve, ms);
+      this.pendingTimeouts.push(timeout);
+    });
   }
 }

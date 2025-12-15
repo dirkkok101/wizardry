@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
   computed
 } from '@angular/core';
@@ -15,6 +16,7 @@ import { Character } from '@models/Character';
 import { CombatState } from '@models/Combat';
 import { DungeonState } from '@models/Dungeon';
 import { Chest } from '@models/Chest';
+import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 
 /**
  * CombatVictoryComponent - Victory rewards phase of combat.
@@ -188,10 +190,13 @@ import { Chest } from '@models/Chest';
     }
   `]
 })
-export class CombatVictoryComponent implements OnInit {
+export class CombatVictoryComponent implements OnInit, OnDestroy {
   // Rewards calculated from defeated monsters
   readonly rewards = signal<VictoryRewards | null>(null);
   readonly statusMessage = signal<string>('Calculating rewards...');
+
+  // Timeout cleanup for memory leak prevention
+  private pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
 
   // Computed from GameState
   readonly combatState = computed(() => this.gameState.state().combat as CombatState | undefined);
@@ -210,6 +215,14 @@ export class CombatVictoryComponent implements OnInit {
 
   ngOnInit(): void {
     this.processVictory();
+  }
+
+  ngOnDestroy(): void {
+    // Clear all pending timeouts to prevent memory leaks
+    for (const timeout of this.pendingTimeouts) {
+      clearTimeout(timeout);
+    }
+    this.pendingTimeouts = [];
   }
 
   /**
@@ -245,8 +258,8 @@ export class CombatVictoryComponent implements OnInit {
       items: rewards.items.length
     });
 
-    // Wait for player to see rewards (2.5 seconds for visual impact)
-    await this.delay(2500);
+    // Wait for player to see rewards
+    await this.delay(ANIMATION_TIMINGS.VICTORY_REWARD_DISPLAY);
 
     // Apply rewards and determine next destination
     await this.applyVictoryRewards(rewards, combat);
@@ -337,21 +350,24 @@ export class CombatVictoryComponent implements OnInit {
     // Navigate based on result
     if (pendingChest) {
       this.statusMessage.set('A treasure chest appears!');
-      await this.delay(500);
+      await this.delay(ANIMATION_TIMINGS.VICTORY_TRANSITION_DELAY);
       console.log('[CombatVictory] Navigating to chest');
       this.router.navigate(['/maze/chest']);
     } else {
       this.statusMessage.set('Returning to exploration...');
-      await this.delay(500);
+      await this.delay(ANIMATION_TIMINGS.VICTORY_TRANSITION_DELAY);
       console.log('[CombatVictory] Returning to exploration');
       this.router.navigate(['/maze']);
     }
   }
 
   /**
-   * Helper delay function
+   * Helper delay function with cleanup tracking
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      const timeout = setTimeout(resolve, ms);
+      this.pendingTimeouts.push(timeout);
+    });
   }
 }
