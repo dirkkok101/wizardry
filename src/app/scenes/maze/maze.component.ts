@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, signal, computed, HostListener, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, signal, computed, effect, HostListener, NgZone, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
@@ -51,6 +51,7 @@ import { canAct } from '@utils/CharacterStatusHelpers';
 import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils';
 // New refactored services
 import { MazeStateMachine } from '@services/MazeStateMachine';
+import { MazeStateStore } from '@services/MazeStateStore';
 import { MovementOrchestrationService, MovementDirection } from '@services/MovementOrchestrationService';
 import { CombatOrchestrationService } from '@services/CombatOrchestrationService';
 import { ChestOrchestrationService } from '@services/ChestOrchestrationService';
@@ -909,6 +910,9 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.gameState.updateState(() => newState);
   }
 
+  // Injected via inject() for signal effects
+  private readonly mazeStateStore = inject(MazeStateStore)
+
   constructor(
     private gameState: GameStateService,
     private router: Router,
@@ -920,7 +924,29 @@ export class MazeComponent implements OnInit, AfterViewInit, OnDestroy {
     private combatOrchestration: CombatOrchestrationService,
     private chestOrchestration: ChestOrchestrationService,
     private messageSequencer: MessageSequencer
-  ) {}
+  ) {
+    // Watch for alarm encounter requests from ChestOrchestrator
+    effect(() => {
+      const alarmEncounter = this.mazeStateStore.pendingAlarmEncounter()
+      if (alarmEncounter) {
+        // Clear the signal first to prevent re-triggering
+        this.mazeStateStore.clearAlarmEncounter()
+        // Initiate the encounter
+        this.initiateEncounter(alarmEncounter.level, alarmEncounter.canFlee)
+      }
+    })
+
+    // Watch for render requests from ChestOrchestrator (teleport trap)
+    effect(() => {
+      const renderRequested = this.mazeStateStore.renderRequested()
+      if (renderRequested) {
+        // Clear the signal first to prevent re-triggering
+        this.mazeStateStore.clearRenderRequest()
+        // Re-render the maze view
+        this.mazeCanvas?.render()
+      }
+    })
+  }
 
   async ngOnInit(): Promise<void> {
     // Set scene type

@@ -225,6 +225,12 @@ export class MazeStateStore {
   /** Current damage indicator */
   readonly currentDamageIndicator = signal<DamageIndicator | null>(null)
 
+  /** Pending alarm encounter (from chest trap) */
+  readonly pendingAlarmEncounter = signal<{ level: number; canFlee: boolean } | null>(null)
+
+  /** Render request flag (for teleport trap) */
+  readonly renderRequested = signal<boolean>(false)
+
   // ============================================================
   // SPELL STATE (from SpellFlowController)
   // ============================================================
@@ -652,6 +658,26 @@ export class MazeStateStore {
     this.hitCharacterIds.set([])
     this.currentDamageIndicator.set(null)
     this.chestSprite.set('closed')
+  }
+
+  /** Request alarm encounter (from chest trap) */
+  requestAlarmEncounter(level: number, canFlee: boolean): void {
+    this.pendingAlarmEncounter.set({ level, canFlee })
+  }
+
+  /** Clear pending alarm encounter */
+  clearAlarmEncounter(): void {
+    this.pendingAlarmEncounter.set(null)
+  }
+
+  /** Request render (from teleport trap) */
+  requestRender(): void {
+    this.renderRequested.set(true)
+  }
+
+  /** Clear render request */
+  clearRenderRequest(): void {
+    this.renderRequested.set(false)
   }
 
   // ============================================================

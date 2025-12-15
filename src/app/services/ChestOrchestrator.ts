@@ -24,14 +24,6 @@ import { TrapService } from '@services/TrapService'
 import { TrapDataLoader } from '@services/TrapDataLoader'
 import { RandomService } from '@services/RandomService'
 
-/**
- * Callback for encounter initiation (alarm trap)
- */
-export interface ChestOrchestratorCallbacks {
-  initiateEncounter: (level: number, canFlee: boolean) => void
-  render: () => void
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -39,21 +31,6 @@ export class ChestOrchestrator {
   private readonly stateStore = inject(MazeStateStore)
   private readonly gameState = inject(GameStateService)
   private readonly chestOrchestration = inject(ChestOrchestrationService)
-
-  /** Callbacks for special trap effects */
-  private callbacks: ChestOrchestratorCallbacks | null = null
-
-  // ============================================================
-  // INITIALIZATION
-  // ============================================================
-
-  /**
-   * Set callbacks for special trap effects
-   * Must be called before using the orchestrator
-   */
-  setCallbacks(callbacks: ChestOrchestratorCallbacks): void {
-    this.callbacks = callbacks
-  }
 
   // ============================================================
   // CHEST INITIALIZATION
@@ -572,7 +549,8 @@ export class ChestOrchestrator {
 
     this.stateStore.addMessage(`Teleported to (${newX}, ${newY})!`)
     this.closeOverlay()
-    this.callbacks?.render()
+    // Signal MazeComponent to re-render (it watches this signal)
+    this.stateStore.requestRender()
   }
 
   /**
@@ -590,8 +568,9 @@ export class ChestOrchestrator {
 
     this.stateStore.addMessage('An alarm sounds! Monsters rush to attack!')
 
+    // Signal MazeComponent to initiate encounter (it watches this signal)
     const level = this.getCurrentLevel()
-    this.callbacks?.initiateEncounter(level, false)
+    this.stateStore.requestAlarmEncounter(level, false)
   }
 
   // ============================================================
