@@ -120,11 +120,7 @@ export {
   type RepositionResult,
 } from './support/PartyFormationService'
 
-export {
-  PoisonService,
-  applyPoisonDamage,
-  type PoisonDamageResult,
-} from './support/PoisonService'
+// PoisonService moved to root services - import from '@services/PoisonService'
 
 export {
   RegenerationService,

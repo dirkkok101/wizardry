@@ -157,10 +157,10 @@ describe('SceneNavigationService', () => {
   });
 
   describe('enterCombat()', () => {
-    it('should navigate to combat', async () => {
+    it('should navigate to combat planning', async () => {
       await service.enterCombat();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/combat']);
+      expect(router.navigate).toHaveBeenCalledWith(['/maze/combat/planning']);
     });
   });
 

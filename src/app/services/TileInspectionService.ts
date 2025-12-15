@@ -16,9 +16,10 @@ export interface InspectionResult {
 
 /**
  * Generate unique key for looted tile tracking
+ * Delegates to DungeonService.createTileKey for consistency
  */
 function getLootedTileKey(level: number, x: number, y: number): string {
-  return `${level}_${x}_${y}`;
+  return DungeonService.createTileKey(level, x, y);
 }
 
 export class TileInspectionService {

@@ -12,6 +12,7 @@ import { CombatState, MonsterGroup, MonsterInstance } from '@models/Combat'
 import { MonsterDataLoader } from '@services/MonsterDataLoader'
 import { MonsterService } from '@services/MonsterService'
 import { getMonsterDisplayName } from '@utils/MonsterNameUtils'
+import { CombatHelpers } from '../CombatHelpers'
 
 // Re-export for convenience
 export { MonsterAdvancementService }
@@ -39,7 +40,7 @@ class MonsterAdvancementService {
    * Check if a monster group has any alive monsters
    */
   static hasAliveMonsters(group: MonsterGroup): boolean {
-    return group.monsters.some(m => m.hp > 0)
+    return CombatHelpers.hasAliveMonsters(group.monsters)
   }
 
   /**
@@ -65,14 +66,14 @@ class MonsterAdvancementService {
    * Get the first alive monster in a group for display purposes
    */
   static getFirstAliveMonster(group: MonsterGroup): MonsterInstance | undefined {
-    return group.monsters.find(m => m.hp > 0)
+    return CombatHelpers.getFirstAliveMonster(group.monsters)
   }
 
   /**
    * Count alive monsters in a group
    */
   static countAliveMonsters(group: MonsterGroup): number {
-    return group.monsters.filter(m => m.hp > 0).length
+    return CombatHelpers.countAliveMonsters(group.monsters)
   }
 
   /**

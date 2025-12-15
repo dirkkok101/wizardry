@@ -15,6 +15,42 @@ const LEVEL_DATA_MAP: Record<number, any> = {
 
 export const DungeonService = {
   /**
+   * Wrap a coordinate value to stay within map bounds (0 to max-1)
+   * Handles both positive and negative values correctly
+   *
+   * @param value - The coordinate value to wrap
+   * @param max - The maximum size (default 20 for standard Wizardry maps)
+   * @returns Wrapped coordinate in range [0, max-1]
+   */
+  wrapCoordinate(value: number, max: number = 20): number {
+    return ((value % max) + max) % max
+  },
+
+  /**
+   * Create a unique tile key for tracking tile state (doors, loot, conditions)
+   * Format: "level_x_y" (e.g., "1_5_10" for level 1, x=5, y=10)
+   *
+   * @param level - Dungeon level number
+   * @param x - X coordinate
+   * @param y - Y coordinate
+   * @returns Tile key string
+   */
+  createTileKey(level: number, x: number, y: number): string {
+    return `${level}_${x}_${y}`
+  },
+
+  /**
+   * Parse a tile key back into its components
+   *
+   * @param key - Tile key string (format: "level_x_y")
+   * @returns Object with level, x, and y coordinates
+   */
+  parseTileKey(key: string): { level: number; x: number; y: number } {
+    const [level, x, y] = key.split('_').map(Number)
+    return { level, x, y }
+  },
+
+  /**
    * Load dungeon level data from JSON with Zod validation
    * @throws {Error} If level is invalid or data structure is incorrect
    */
@@ -268,8 +304,8 @@ export const DungeonService = {
     }
 
     // Handle edge wrapping (maps are 20×20 with wrapping enabled)
-    worldX = ((worldX % 20) + 20) % 20;
-    worldY = ((worldY % 20) + 20) % 20;
+    worldX = this.wrapCoordinate(worldX);
+    worldY = this.wrapCoordinate(worldY);
 
     return { x: worldX, y: worldY };
   },

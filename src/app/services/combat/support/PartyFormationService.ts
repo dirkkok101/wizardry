@@ -7,7 +7,7 @@
  */
 
 import { Character } from '@models/Character'
-import { CharacterStatus } from '@models/CharacterStatus'
+import { CharacterService } from '@services/CharacterService'
 
 // Re-export for convenience
 export { PartyFormationService }
@@ -37,14 +37,10 @@ export interface RepositionResult {
 class PartyFormationService {
   /**
    * Check if a character is incapacitated (should be in back row)
+   * Delegates to CharacterService for consistent status checking
    */
   static isIncapacitated(char: Character): boolean {
-    return (
-      char.hp <= 0 ||
-      char.status === CharacterStatus.DEAD ||
-      char.status === CharacterStatus.STONED ||
-      char.status === CharacterStatus.PARALYZED
-    )
+    return CharacterService.isIncapacitated(char)
   }
 
   /**

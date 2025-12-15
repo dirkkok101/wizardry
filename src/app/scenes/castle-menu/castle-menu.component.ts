@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { SaveService } from '@services/SaveService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
-import { DungeonMovementService } from '@services/DungeonMovementService';
+import { DungeonLevelService } from '@services/dungeon';
 import { MessageService } from '@services/MessageService';
 import { FightMapService } from '@services/FightMapService';
 import { GameStateQueries } from '@utils/GameStateQueries';
@@ -154,7 +154,7 @@ export class CastleMenuComponent implements OnInit {
 
     // Initialize dungeon state before entering
     const state = this.gameState.state();
-    const newState = DungeonMovementService.enterDungeon(state, 1);
+    const newState = DungeonLevelService.enterDungeon(state, 1);
     this.gameState.updateState(() => newState);
 
     // Trigger auto-save before entering dungeon

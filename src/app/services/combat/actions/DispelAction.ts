@@ -20,6 +20,7 @@ import {
   combatActionRegistry,
 } from './CombatAction'
 import { DISPEL } from '../CombatConstants'
+import { CombatHelpers } from '../CombatHelpers'
 
 /**
  * Dispel Action Handler
@@ -58,7 +59,7 @@ export class DispelAction extends BaseCombatAction {
     }
 
     // Get alive monsters
-    const aliveMonsters = group.monsters.filter(m => m.hp > 0)
+    const aliveMonsters = CombatHelpers.getAliveMonsters(group.monsters)
     if (aliveMonsters.length === 0) {
       return {
         newState: state,

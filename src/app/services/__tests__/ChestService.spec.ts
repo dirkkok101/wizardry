@@ -9,12 +9,13 @@
 
 import { ChestService } from '../ChestService'
 import { RandomService } from '../RandomService'
-import { createTestCharacter } from '@testing/test-factories'
+import { createTestCharacter, createTestGameState } from '@testing/test-factories'
 import { loadChestDataForTests } from '@testing/test-data-loader'
 import { TrapId } from '@models/Trap'
-import { RewardTier } from '@models/Chest'
+import { RewardTier, TreasureDistributionResult } from '@models/Chest'
 import { Position } from '@models/Dungeon'
 import { CharacterStatus } from '@models/CharacterStatus'
+import { Item } from '@models/Item'
 
 // Helper to create test position
 function createTestPosition(): Position {
@@ -663,6 +664,155 @@ describe('ChestService', () => {
       // Should have variety
       const uniqueTraps = new Set(traps)
       expect(uniqueTraps.size).toBeGreaterThan(3)  // At least 4 different trap types
+    })
+  })
+
+  describe('applyDistributionToState', () => {
+    it('should add gold to party', () => {
+      const char = createTestCharacter({ id: 'char1', inventory: [] })
+      const state = createTestGameState({
+        roster: new Map([['char1', char]]),
+        party: { members: ['char1'], formation: { frontRow: ['char1'], backRow: [] }, gold: 100 }
+      })
+
+      const result: TreasureDistributionResult = {
+        goldAdded: 500,
+        itemsReceived: [],
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Test Character'
+      }
+
+      const newState = ChestService.applyDistributionToState(state, result)
+
+      expect(newState.party.gold).toBe(600)  // 100 + 500
+    })
+
+    it('should add items to recipient inventory', () => {
+      const char = createTestCharacter({ id: 'char1', inventory: [] })
+      const state = createTestGameState({
+        roster: new Map([['char1', char]]),
+        party: { members: ['char1'], formation: { frontRow: ['char1'], backRow: [] }, gold: 0 }
+      })
+
+      const item1: Item = { id: 'sword', name: 'Sword +1', identified: true } as Item
+      const item2: Item = { id: 'shield', name: 'Shield', identified: true } as Item
+
+      const result: TreasureDistributionResult = {
+        goldAdded: 0,
+        itemsReceived: [item1, item2],
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Test Character'
+      }
+
+      const newState = ChestService.applyDistributionToState(state, result)
+
+      const updatedChar = newState.roster.get('char1')
+      expect(updatedChar?.inventory).toHaveLength(2)
+      expect(updatedChar?.inventory).toContain(item1)
+      expect(updatedChar?.inventory).toContain(item2)
+    })
+
+    it('should clear pendingChest', () => {
+      const char = createTestCharacter({ id: 'char1', inventory: [] })
+      const chest = ChestService.createEmptyChest(1, createTestPosition())
+      const state = createTestGameState({
+        roster: new Map([['char1', char]]),
+        party: { members: ['char1'], formation: { frontRow: ['char1'], backRow: [] }, gold: 0 },
+        pendingChest: chest
+      })
+
+      const result: TreasureDistributionResult = {
+        goldAdded: 100,
+        itemsReceived: [],
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Test Character'
+      }
+
+      const newState = ChestService.applyDistributionToState(state, result)
+
+      expect(newState.pendingChest).toBeUndefined()
+    })
+
+    it('should not modify roster when no items received', () => {
+      const existingItem: Item = { id: 'existing', name: 'Old Item', identified: true } as Item
+      const char = createTestCharacter({ id: 'char1', inventory: [existingItem] })
+      const state = createTestGameState({
+        roster: new Map([['char1', char]]),
+        party: { members: ['char1'], formation: { frontRow: ['char1'], backRow: [] }, gold: 0 }
+      })
+
+      const result: TreasureDistributionResult = {
+        goldAdded: 100,
+        itemsReceived: [],  // No items received
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Test Character'
+      }
+
+      const newState = ChestService.applyDistributionToState(state, result)
+
+      // Inventory should be unchanged
+      const updatedChar = newState.roster.get('char1')
+      expect(updatedChar?.inventory).toHaveLength(1)
+      expect(updatedChar?.inventory).toContain(existingItem)
+    })
+
+    it('should handle empty recipientId gracefully', () => {
+      const char = createTestCharacter({ id: 'char1', inventory: [] })
+      const state = createTestGameState({
+        roster: new Map([['char1', char]]),
+        party: { members: ['char1'], formation: { frontRow: ['char1'], backRow: [] }, gold: 50 }
+      })
+
+      // When all party dead, recipientId is empty
+      const result: TreasureDistributionResult = {
+        goldAdded: 200,
+        itemsReceived: [],  // All items lost
+        itemsLost: [{ id: 'lost', name: 'Lost Item', identified: true } as Item],
+        recipientId: '',
+        recipientName: 'No one'
+      }
+
+      const newState = ChestService.applyDistributionToState(state, result)
+
+      // Gold should still be added
+      expect(newState.party.gold).toBe(250)
+      // Roster unchanged
+      expect(newState.roster.get('char1')?.inventory).toHaveLength(0)
+    })
+
+    it('should return immutable state (not mutate original)', () => {
+      const char = createTestCharacter({ id: 'char1', inventory: [] })
+      const originalState = createTestGameState({
+        roster: new Map([['char1', char]]),
+        party: { members: ['char1'], formation: { frontRow: ['char1'], backRow: [] }, gold: 100 }
+      })
+
+      const result: TreasureDistributionResult = {
+        goldAdded: 500,
+        itemsReceived: [{ id: 'new', name: 'New Item', identified: true } as Item],
+        itemsLost: [],
+        recipientId: 'char1',
+        recipientName: 'Test Character'
+      }
+
+      const newState = ChestService.applyDistributionToState(originalState, result)
+
+      // Original state unchanged
+      expect(originalState.party.gold).toBe(100)
+      expect(originalState.roster.get('char1')?.inventory).toHaveLength(0)
+
+      // New state has updates
+      expect(newState.party.gold).toBe(600)
+      expect(newState.roster.get('char1')?.inventory).toHaveLength(1)
+
+      // Different references
+      expect(newState).not.toBe(originalState)
+      expect(newState.roster).not.toBe(originalState.roster)
+      expect(newState.party).not.toBe(originalState.party)
     })
   })
 

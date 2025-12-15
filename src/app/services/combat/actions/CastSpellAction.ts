@@ -32,6 +32,7 @@ import {
   setStatusDuration,
   hasStatusEffect,
 } from '../core/StatusEffectService'
+import { CombatHelpers } from '../CombatHelpers'
 import {
   applyDamage,
   applyHealingToCharacter,
@@ -228,7 +229,7 @@ export class CastSpellAction extends BaseCombatAction {
         return Array.isArray(command.target) ? command.target : command.target ? [command.target] : []
       } else if (command.targetGroupId) {
         const group = state.monsterGroups.find(g => g.id === command.targetGroupId)
-        return group ? group.monsters.filter(m => m.hp > 0) : []
+        return group ? CombatHelpers.getAliveMonsters(group.monsters) : []
       }
     } else if (spell && spell.target === 'all_enemies') {
       return getAllAliveMonsters(state)
@@ -446,7 +447,7 @@ export class CastSpellAction extends BaseCombatAction {
 
         for (const group of affectedGroups) {
           for (const monster of group.monsters) {
-            if (monster.hp > 0 && monster.status !== 'DEAD') {
+            if (CombatHelpers.isMonsterAlive(monster)) {
               newState = applyStatusEffect(newState, monster.id, 'SILENCED')
               newState = setStatusDuration(newState, monster.id, 'SILENCED', duration)
             }
@@ -474,7 +475,7 @@ export class CastSpellAction extends BaseCombatAction {
       return state
     }
 
-    const aliveInGroup = group.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD').length
+    const aliveInGroup = CombatHelpers.countAliveMonsters(group.monsters)
     const degradeChance = SPELL_DEGRADATION.PERCENTAGE_MULTIPLIER / (aliveInGroup + SPELL_DEGRADATION.DIVISOR_OFFSET)
 
     if (RandomService.chance(degradeChance)) {

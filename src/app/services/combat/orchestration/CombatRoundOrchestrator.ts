@@ -38,7 +38,8 @@ import {
   executeFleeFailurePenalty,
 } from '../core/FleeService'
 import { executeCommand } from './CommandExecutor'
-import { applyPoisonDamage } from '../support/PoisonService'
+import { PoisonService } from '@services/PoisonService'
+import { CombatHelpers } from '../CombatHelpers'
 import { processMonsterRegeneration } from '../support/RegenerationService'
 import { processCharacterStatusRecovery } from '../support/CharacterRecoveryService'
 import { repositionPartyAfterCasualties } from '../support/PartyFormationService'
@@ -303,7 +304,7 @@ class CombatRoundOrchestrator {
       for (const group of state.monsterGroups) {
         const monster = group.monsters.find(m => m.id === actor.id)
         if (monster) {
-          if (monster.hp <= 0 || monster.status === 'DEAD') return 'DEAD'
+          if (CombatHelpers.isMonsterDead(monster)) return 'DEAD'
           if (monster.status === 'ASLEEP') return 'ASLEEP'
           if (monster.status === 'PARALYZED') return 'PARALYZED'
         }
@@ -329,7 +330,7 @@ class CombatRoundOrchestrator {
       const group = state.monsterGroups.find(g => g.id === command.targetGroupId)
       if (!group) return false
       // Check if any monster in group is alive
-      return group.monsters.some(m => m.status !== 'DEAD' && m.hp > 0)
+      return CombatHelpers.hasAliveMonsters(group.monsters)
     }
 
     // Check for specific monster target
@@ -339,7 +340,7 @@ class CombatRoundOrchestrator {
       for (const group of state.monsterGroups) {
         const monster = group.monsters.find(m => m.id === targetId)
         if (monster) {
-          return monster.status !== 'DEAD' && monster.hp > 0
+          return CombatHelpers.isMonsterAlive(monster)
         }
       }
       return false // Monster not found in any group
@@ -641,7 +642,7 @@ class CombatRoundOrchestrator {
     const auditCtx = this.createAuditContext(enableAudit)
 
     // 1. Apply poison damage at start of round
-    const poisonResult = applyPoisonDamage(roundCtx.state, party)
+    const poisonResult = PoisonService.applyPoisonDamage(roundCtx.state, party)
     roundCtx.state = poisonResult.newState
     roundCtx.messages.push(...poisonResult.messages)
     for (const [charId, char] of poisonResult.damagedCharacters.entries()) {

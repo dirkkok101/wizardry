@@ -11,6 +11,7 @@
 import { Character } from '@models/Character'
 import { Item } from '@models/Item'
 import { Position } from '@models/Dungeon'
+import { GameState } from '@models/GameState'
 import {
   Chest,
   ChestSource,
@@ -352,6 +353,46 @@ function getDistributionMessage(result: TreasureDistributionResult): string {
 }
 
 /**
+ * Apply treasure distribution result to game state
+ *
+ * Updates:
+ * - Recipient's inventory (adds received items)
+ * - Party gold (adds gold from chest)
+ * - Clears pendingChest
+ *
+ * @param state Current game state
+ * @param result Distribution result from distributeTreasure()
+ * @returns New game state with distribution applied
+ */
+function applyDistributionToState(
+  state: GameState,
+  result: TreasureDistributionResult
+): GameState {
+  let newRoster = new Map(state.roster)
+
+  // Add items to recipient's inventory
+  if (result.recipientId && result.itemsReceived.length > 0) {
+    const recipient = newRoster.get(result.recipientId)
+    if (recipient) {
+      newRoster.set(result.recipientId, {
+        ...recipient,
+        inventory: [...recipient.inventory, ...result.itemsReceived]
+      })
+    }
+  }
+
+  return {
+    ...state,
+    roster: newRoster,
+    party: {
+      ...state.party,
+      gold: state.party.gold + result.goldAdded
+    },
+    pendingChest: undefined
+  }
+}
+
+/**
  * Create an empty (safe) chest for testing or special cases
  */
 function createEmptyChest(mazeLevel: number, position: Position): Chest {
@@ -407,5 +448,8 @@ export const ChestService = {
   selectRecipient,
   checkInventorySpace,
   distributeTreasure,
-  getDistributionMessage
+  getDistributionMessage,
+
+  // State application
+  applyDistributionToState
 }

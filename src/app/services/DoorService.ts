@@ -1,6 +1,6 @@
 import { GameState } from '@models/GameState';
 import { LevelData, Position } from '@models/Dungeon';
-import { DungeonMovementService } from './DungeonMovementService';
+import { DungeonCoreMovementService } from './dungeon';
 import { DungeonService } from './DungeonService';
 import { RandomService } from './RandomService';
 
@@ -24,7 +24,7 @@ export class DoorService {
    */
   static canKickDoor(level: LevelData, position: Position): boolean {
     // Get tile in front of party
-    const delta = DungeonMovementService.getFacingDelta(position.facing);
+    const delta = DungeonCoreMovementService.getFacingDelta(position.facing);
     const targetX = position.x + delta.x;
     const targetY = position.y + delta.y;
 
@@ -52,16 +52,16 @@ export class DoorService {
     const newOpenDoors = new Set(state.dungeon.openDoors);
 
     // Add current tile door
-    const currentDoorKey = `${currentLevel}_${position.y}_${position.x}`;
+    const currentDoorKey = DungeonService.createTileKey(currentLevel, position.x, position.y);
     newOpenDoors.add(currentDoorKey);
 
     // Calculate adjacent tile position based on facing direction
-    const delta = DungeonMovementService.getFacingDelta(position.facing);
+    const delta = DungeonCoreMovementService.getFacingDelta(position.facing);
     const adjX = position.x + delta.x;
     const adjY = position.y + delta.y;
 
     // Add adjacent tile door (the other side of the same wall)
-    const adjacentDoorKey = `${currentLevel}_${adjY}_${adjX}`;
+    const adjacentDoorKey = DungeonService.createTileKey(currentLevel, adjX, adjY);
     newOpenDoors.add(adjacentDoorKey);
 
     console.log('[DoorService] Opening door at:', {
@@ -99,7 +99,7 @@ export class DoorService {
     const position = state.dungeon.position;
 
     // Get door location
-    const delta = DungeonMovementService.getFacingDelta(position.facing);
+    const delta = DungeonCoreMovementService.getFacingDelta(position.facing);
     const doorX = position.x + delta.x;
     const doorY = position.y + delta.y;
 
@@ -109,7 +109,7 @@ export class DoorService {
 
     if (success) {
       // Success - unlock door
-      const doorKey = `${state.dungeon.currentLevel}_${doorY}_${doorX}`;
+      const doorKey = DungeonService.createTileKey(state.dungeon.currentLevel, doorX, doorY);
       const newUnlockedDoors = new Set(state.dungeon.unlockedDoors);
       newUnlockedDoors.add(doorKey);
 
