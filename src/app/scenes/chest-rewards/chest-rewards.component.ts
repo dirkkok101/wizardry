@@ -482,7 +482,7 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
     }
 
     /* ============================================
-       COMPACT HEIGHT RESPONSIVE
+       COMPACT HEIGHT RESPONSIVE - matches maze-chest
        ============================================ */
     @media (max-height: 767px) {
       .chest-rewards {
@@ -490,17 +490,20 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
       }
 
       .maze-content {
-        gap: 0.25rem;
-      }
-
-      .center-panel {
-        padding: 0.25rem 2px;
-        gap: 0.25rem;
+        gap: 0.35rem;
       }
 
       .message-log-section {
-        height: 90px;
-        min-height: 60px;
+        height: 80px;
+        min-height: 70px;
+        padding: 0.25rem;
+      }
+    }
+
+    /* Very compact height */
+    @media (max-height: 599px) {
+      .message-log-section {
+        height: 65px;
       }
     }
   `]

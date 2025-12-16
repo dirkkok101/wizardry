@@ -4,6 +4,11 @@
 // Main container for combat visuals. Monster sprites are rendered
 // by MonsterSpriteOverlayComponent which has its own styles.
 
+// Host element must be block for proper positioning
+:host {
+  display: block;
+}
+
 .combat-overlay {
   position: absolute;
   inset: 0;

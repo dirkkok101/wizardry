@@ -32,6 +32,7 @@ import { CharacterStatus } from '@models/CharacterStatus';
 import { ActiveSpell } from '@models/active-spell.types';
 import { PendingTrapResult } from '@models/GameState';
 import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
+import { ARENA_TIMING } from '@shared/components/cinematic-arena/cinematic-arena.types';
 
 /** Trap effect for sequential display */
 interface TrapEffect {
@@ -93,10 +94,7 @@ interface TrapEffect {
               <!-- Vignette Effect -->
               <div class="trap-vignette"></div>
 
-              <!-- Letterbox Top Bar -->
-              <div class="letterbox-bar top" [class.expanded]="showLetterbox()"></div>
-
-              <!-- Arena Content (dark background between letterboxes) -->
+              <!-- Arena Content -->
               <div class="arena-content" [class.visible]="showArena()">
                 <!-- Arena Stage - Grid layout -->
                 <div class="arena-stage">
@@ -176,9 +174,6 @@ interface TrapEffect {
                   {{ statusMessage() }}
                 </div>
               </div>
-
-              <!-- Letterbox Bottom Bar -->
-              <div class="letterbox-bar bottom" [class.expanded]="showLetterbox()"></div>
 
               <!-- Floating Damage Layer -->
               <app-floating-damage
@@ -356,29 +351,7 @@ interface TrapEffect {
     }
 
     /* ============================================
-       LETTERBOX BARS - Match cinematic-arena
-       ============================================ */
-    .letterbox-bar {
-      background: #000;
-      flex-shrink: 0;
-      height: 0;
-      transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &.top {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-      }
-
-      &.bottom {
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
-      }
-
-      &.expanded {
-        height: 40px;
-      }
-    }
-
-    /* ============================================
-       ARENA CONTENT - Dark background between letterboxes
+       ARENA CONTENT - Dark background
        ============================================ */
     .arena-content {
       flex: 1;
@@ -748,28 +721,28 @@ interface TrapEffect {
     @media (min-width: 2000px) {
       .trap-card,
       .portrait-card {
-        width: 220px;
-        height: 220px;
+        width: 360px;
+        height: 360px;
       }
 
       .trap-sprite-placeholder {
-        font-size: 6rem;
+        font-size: 8rem;
       }
 
       .trap-label {
-        font-size: 1.75rem;
+        font-size: 2rem;
       }
 
       .action-verb {
-        font-size: 1.25rem;
-      }
-
-      .outcome-label {
         font-size: 1.5rem;
       }
 
+      .outcome-label {
+        font-size: 1.75rem;
+      }
+
       .action-center {
-        min-width: 260px;
+        min-width: 320px;
       }
     }
 
@@ -789,10 +762,6 @@ interface TrapEffect {
         height: 80px;
         min-height: 70px;
         padding: 0.25rem;
-      }
-
-      .letterbox-bar.expanded {
-        height: 30px;
       }
 
       .trap-card,
@@ -833,7 +802,6 @@ interface TrapEffect {
 })
 export class ChestPlaybackComponent implements OnInit, OnDestroy {
   // Animation state
-  readonly showLetterbox = signal(false);
   readonly showArena = signal(false);
   readonly showTrapLabel = signal(false);
   readonly showActionVerb = signal(false);
@@ -1103,8 +1071,8 @@ export class ChestPlaybackComponent implements OnInit, OnDestroy {
     this.showTrapLabel.set(true);
     this.showActionVerb.set(true);
 
-    // Brief pause before cycling through effects
-    await this.delay(300);
+    // Brief pause before cycling through effects (matches portrait entrance timing)
+    await this.delay(ARENA_TIMING.PORTRAIT_ENTER);
 
     // Cycle through each affected character
     if (effects.length > 0) {
@@ -1113,26 +1081,26 @@ export class ChestPlaybackComponent implements OnInit, OnDestroy {
       }
     } else {
       // No one was affected
-      await this.delay(400);
+      await this.delay(ARENA_TIMING.PORTRAIT_ENTER);
       this.outcomeText.set('No one was harmed!');
       this.showOutcome.set(true);
-      await this.delay(800);
+      await this.delay(ARENA_TIMING.RESULT_DELAY);
     }
 
     // Apply all effects to game state
     this.applyTrapEffects(trap);
 
     // Show status message and navigate
-    await this.delay(400);
+    await this.delay(ARENA_TIMING.PORTRAIT_ENTER);
     this.showStatus.set(true);
 
     if (trap.specialEffect === 'combat') {
       this.statusMessage.set('Monsters are coming!');
-      await this.delay(1200);
+      await this.delay(ARENA_TIMING.DAMAGE_FLOAT);
       this.navigateToCombat(trap);
     } else {
       this.statusMessage.set('Opening chest...');
-      await this.delay(800);
+      await this.delay(ARENA_TIMING.RESULT_DELAY);
       this.navigateToRewards();
     }
   }
@@ -1145,9 +1113,9 @@ export class ChestPlaybackComponent implements OnInit, OnDestroy {
     this.showOutcome.set(false);
     this.spriteError.set(false);
 
-    // Show character card
+    // Show character card (matches portrait entrance timing)
     this.currentEffect.set(effect);
-    await this.delay(400);
+    await this.delay(ARENA_TIMING.PORTRAIT_ENTER);
 
     // Build outcome text
     const parts: string[] = [];
@@ -1182,8 +1150,10 @@ export class ChestPlaybackComponent implements OnInit, OnDestroy {
       // Log to message log
       this.messageLog.addMessage(`${effect.characterName} takes ${effect.damage} damage!`);
 
-      await this.delay(600);
+      // Wait for shake animation, then let floating damage continue
+      await this.delay(ARENA_TIMING.TARGET_HIT_SHAKE);
       this.isShaking.set(false);
+      await this.delay(ARENA_TIMING.DAMAGE_FLOAT - ARENA_TIMING.TARGET_HIT_SHAKE);
     }
 
     // Status effect
@@ -1199,11 +1169,12 @@ export class ChestPlaybackComponent implements OnInit, OnDestroy {
 
       this.messageLog.addMessage(`${effect.characterName} is ${this.formatStatus(effect.status).toLowerCase()}!`);
 
-      await this.delay(600);
+      // Wait for status to float up
+      await this.delay(ARENA_TIMING.DAMAGE_FLOAT / 2);
     }
 
-    // Pause before next character
-    await this.delay(400);
+    // Pause before next character (matches combat action spacing)
+    await this.delay(ARENA_TIMING.NEXT_ACTION_DELAY);
   }
 
   /**
