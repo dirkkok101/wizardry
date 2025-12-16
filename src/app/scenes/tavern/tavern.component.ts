@@ -8,6 +8,7 @@ import { CharacterPanelComponent } from '@shared/components/character-panel/char
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { PartyService, moveCharacterUp, moveCharacterDown } from '@services/PartyService';
 import { Character } from '@models/Character';
@@ -16,7 +17,7 @@ import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/comp
 @Component({
   selector: 'app-tavern',
   standalone: true,
-  imports: [CommonModule, CharacterPanelComponent, SceneTitleComponent, SceneFooterComponent, CharacterSelectionDialogComponent],
+  imports: [CommonModule, CharacterPanelComponent, SceneTitleComponent, SceneFooterComponent, CharacterSelectionDialogComponent, CachedImageDirective],
   templateUrl: './tavern.component.html',
   styleUrl: './tavern.component.scss'
 })

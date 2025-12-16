@@ -10,6 +10,7 @@ import { ConfirmationDialogComponent } from '@shared/components/confirmation-dia
 import { RosterManagementDialogComponent, RosterActionEvent } from '@shared/components/roster-management-dialog/roster-management-dialog.component'
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component'
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import { MenuItem } from '@shared/components/menu/menu.component'
 import { Character } from '@models/Character'
 import { CharacterClass } from '@models/CharacterClass'
@@ -41,7 +42,8 @@ interface ClassBreakdownEntry {
     ConfirmationDialogComponent,
     RosterManagementDialogComponent,
     SceneTitleComponent,
-    SceneFooterComponent
+    SceneFooterComponent,
+    CachedImageDirective
   ],
   templateUrl: './training-grounds.component.html',
   styleUrls: ['./training-grounds.component.scss']

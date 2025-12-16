@@ -13,6 +13,7 @@ import { CharacterPanelComponent } from '@shared/components/character-panel/char
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { GameStateService } from '@services/GameStateService';
 import { ChestService } from '@services/ChestService';
 import { MessageLogService } from '@services/MessageLogService';
@@ -46,7 +47,8 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
     SceneTitleComponent,
     CharacterPanelComponent,
     MessageLogComponent,
-    SceneFooterComponent
+    SceneFooterComponent,
+    CachedImageDirective
   ],
   template: `
     <div class="chest-rewards">
@@ -72,7 +74,7 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
               <div class="chest-sprite-layer">
                 @if (!spriteError()) {
                   <img
-                    [src]="spriteUrl()"
+                    [appCachedSrc]="spriteUrl()"
                     alt="Open treasure chest"
                     class="chest-sprite"
                     (error)="onSpriteError()"

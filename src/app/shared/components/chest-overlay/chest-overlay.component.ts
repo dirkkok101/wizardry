@@ -1,5 +1,6 @@
 import { Component, input, output, computed, signal } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import { ScrambledLettersComponent } from '../scrambled-letters/scrambled-letters.component'
 import { Character } from '@models/Character'
 import { Chest } from '@models/Chest'
@@ -67,7 +68,7 @@ export interface RecommendedHandler {
 @Component({
   selector: 'app-chest-overlay',
   standalone: true,
-  imports: [CommonModule, ScrambledLettersComponent],
+  imports: [CommonModule, CachedImageDirective, ScrambledLettersComponent],
   templateUrl: './chest-overlay.component.html',
   styleUrls: ['./chest-overlay.component.scss']
 })

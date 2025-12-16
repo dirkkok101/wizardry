@@ -32,7 +32,7 @@
             >
               @if (!hasSpriteError(state.attacker.spriteUrl)) {
                 <img
-                  [src]="state.attacker.spriteUrl"
+                  [appCachedSrc]="state.attacker.spriteUrl"
                   [alt]="state.attacker.name"
                   class="portrait-image"
                   (error)="onSpriteError(state.attacker.spriteUrl)"
@@ -114,7 +114,7 @@
                   >
                     @if (!hasSpriteError(target.spriteUrl)) {
                       <img
-                        [src]="target.spriteUrl"
+                        [appCachedSrc]="target.spriteUrl"
                         [alt]="target.name"
                         class="portrait-image"
                         (error)="onSpriteError(target.spriteUrl)"

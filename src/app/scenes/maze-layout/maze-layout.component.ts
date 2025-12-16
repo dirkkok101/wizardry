@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { GameStateService } from '@services/GameStateService';
 import { MessageLogService } from '@services/MessageLogService';
+import { SpritePreloadService } from '@services/SpritePreloadService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { DungeonService } from '@services/DungeonService';
 import { FightMapService } from '@services/FightMapService';
@@ -299,29 +300,41 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Load texture atlas and upload to GPU.
+   * Uses SpritePreloadService cache to avoid re-fetching on subsequent visits.
    */
   private async loadTextures(): Promise<void> {
     try {
-      console.log('[MazeLayout] Loading texture atlas...');
+      let atlas: TextureAtlas;
+      let image: HTMLImageElement;
 
-      // Load compressed texture atlas metadata
-      const response = await fetch('/assets/textures/eob-dungeon-highres-compressed.json');
-      if (!response.ok) {
-        throw new Error(`Failed to load texture atlas: ${response.statusText}`);
+      // Check SpritePreloadService cache first (populated during game init)
+      const cached = SpritePreloadService.getDungeonAtlasCache();
+      if (cached) {
+        console.log('[MazeLayout] Using cached textures (skipping network fetch + decode)');
+        atlas = cached.atlas;
+        image = cached.image;
+      } else {
+        // Fallback: load directly if preload didn't complete (shouldn't happen normally)
+        console.log('[MazeLayout] Cache miss - loading texture atlas from network...');
+
+        const response = await fetch('/assets/textures/eob-dungeon-highres-compressed.json');
+        if (!response.ok) {
+          throw new Error(`Failed to load texture atlas: ${response.statusText}`);
+        }
+        atlas = await response.json();
+
+        console.log('[MazeLayout] Loading texture image from:', atlas.imagePath);
+        image = await TextureAtlasService.loadTextureAtlas(atlas);
+
+        console.log('[MazeLayout] Texture atlas loaded:', {
+          dimensions: `${image.naturalWidth}x${image.naturalHeight}`,
+          textures: atlas.textures.length
+        });
       }
-      const atlas: TextureAtlas = await response.json();
+
       this.textureAtlas = atlas;
 
-      // Load texture image
-      console.log('[MazeLayout] Loading texture image from:', atlas.imagePath);
-      const image = await TextureAtlasService.loadTextureAtlas(atlas);
-
-      console.log('[MazeLayout] Texture atlas loaded:', {
-        dimensions: `${image.naturalWidth}x${image.naturalHeight}`,
-        textures: atlas.textures.length
-      });
-
-      // Upload texture to GPU
+      // Upload texture to GPU (always needed - GPU resources can't be cached)
       if (this.webglRenderer) {
         const texture = this.webglRenderer.uploadTexture(image);
         if (texture) {

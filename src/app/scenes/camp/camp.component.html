@@ -17,7 +17,7 @@
     <!-- Center Column: Camp Scene Sprite + Healing Log -->
     <div class="center-panel">
       <div class="scene-viewport">
-        <img src="assets/sprites/scenes/camp_scene.png" alt="Camp" class="scene-image" />
+        <img [appCachedSrc]="'assets/sprites/scenes/camp_scene.png'" alt="Camp" class="scene-image" />
       </div>
 
       @if (healingLog().length > 0) {

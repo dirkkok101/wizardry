@@ -82,7 +82,7 @@
         <!-- Full-bleed sprite background -->
         @if (!victorySpriteError()) {
           <img
-            [src]="victorySpriteUrl()"
+            [appCachedSrc]="victorySpriteUrl()"
             [alt]="isPyrrhicVictory() ? 'A costly victory' : 'Triumphant victory'"
             class="victory-sprite-bg"
             (error)="onVictorySpriteError()"

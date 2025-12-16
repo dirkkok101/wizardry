@@ -11,6 +11,7 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { Character } from '@models/Character';
@@ -39,7 +40,8 @@ type ShopView = 'character-select' | 'buy';
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterPanelComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    CachedImageDirective
   ],
   templateUrl: './shop.component.html',
   styleUrls: ['./shop.component.scss']

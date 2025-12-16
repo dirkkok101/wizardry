@@ -8,6 +8,7 @@ import { GameStateQueries } from '@utils/GameStateQueries';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { Character } from '@models/Character';
@@ -31,7 +32,8 @@ import { ServiceType } from '@models/ServiceType';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterPanelComponent
+    CharacterPanelComponent,
+    CachedImageDirective
   ],
   templateUrl: './temple.component.html',
   styleUrls: ['./temple.component.scss']

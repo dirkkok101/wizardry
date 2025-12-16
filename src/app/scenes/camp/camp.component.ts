@@ -14,6 +14,7 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component'
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component'
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes'
 import { SceneType } from '@models/SceneType'
 import { Character } from '@models/Character'
@@ -36,7 +37,8 @@ import { Character } from '@models/Character'
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterPanelComponent,
-    MessageLogComponent
+    MessageLogComponent,
+    CachedImageDirective
   ],
   templateUrl: './camp.component.html',
   styleUrls: ['./camp.component.scss']

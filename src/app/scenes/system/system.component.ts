@@ -10,6 +10,7 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
@@ -32,7 +33,8 @@ import { GameState } from '@models/GameState';
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterPanelComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
+    CachedImageDirective
   ],
   templateUrl: './system.component.html',
   styleUrls: ['./system.component.scss']

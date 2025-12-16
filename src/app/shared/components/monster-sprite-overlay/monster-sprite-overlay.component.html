@@ -28,7 +28,7 @@
         <!-- Full-bleed sprite -->
         @if (!hasSpriteError(getFirstMonster(group)?.monsterId)) {
           <img
-            [src]="getSpriteUrl(getFirstMonster(group))"
+            [appCachedSrc]="getSpriteUrl(getFirstMonster(group))"
             [alt]="getSpriteAltText(group)"
             class="monster-sprite"
             (error)="onSpriteError(getFirstMonster(group)?.monsterId ?? 'unknown')"

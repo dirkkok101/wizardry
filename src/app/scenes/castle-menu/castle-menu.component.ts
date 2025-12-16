@@ -11,6 +11,7 @@ import { MenuItem } from '@shared/components/menu/menu.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
@@ -33,7 +34,8 @@ import { Character } from '@models/Character';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterPanelComponent
+    CharacterPanelComponent,
+    CachedImageDirective
   ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']

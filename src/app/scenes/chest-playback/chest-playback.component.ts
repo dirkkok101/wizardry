@@ -18,6 +18,7 @@ import {
   DamageType
 } from '@shared/components/floating-damage/floating-damage.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { GameStateService } from '@services/GameStateService';
 import { MessageLogService } from '@services/MessageLogService';
 import { LightService } from '@services/LightService';
@@ -66,7 +67,8 @@ interface TrapEffect {
     SceneFooterComponent,
     CharacterPanelComponent,
     MessageLogComponent,
-    FloatingDamageComponent
+    FloatingDamageComponent,
+    CachedImageDirective
   ],
   template: `
     <div class="chest-playback">
@@ -103,7 +105,7 @@ interface TrapEffect {
                     <div class="trap-card">
                       @if (!trapSpriteError()) {
                         <img
-                          [src]="trapSpriteUrl()"
+                          [appCachedSrc]="trapSpriteUrl()"
                           [alt]="trapName()"
                           class="trap-sprite-image"
                           (error)="onTrapSpriteError()"
@@ -136,7 +138,7 @@ interface TrapEffect {
                       <div class="portrait-card character">
                         @if (!spriteError()) {
                           <img
-                            [src]="effect.spriteUrl"
+                            [appCachedSrc]="effect.spriteUrl"
                             [alt]="effect.characterName"
                             class="portrait-image"
                             (error)="onSpriteError()"

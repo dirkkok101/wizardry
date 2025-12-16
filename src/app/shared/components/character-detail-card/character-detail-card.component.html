@@ -4,7 +4,7 @@
     <div class="portrait-frame">
       @if (!spriteError) {
         <img
-          [src]="spriteUrl"
+          [appCachedSrc]="spriteUrl"
           [alt]="character.name + ' portrait'"
           class="portrait-image"
           (error)="onSpriteError()"

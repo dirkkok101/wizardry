@@ -17,7 +17,7 @@
     <div class="center-panel">
       @if (currentView() === 'character-select') {
         <div class="scene-viewport">
-          <img src="assets/sprites/scenes/trading_post_scene.png" alt="Trading Post" class="scene-image" />
+          <img [appCachedSrc]="'assets/sprites/scenes/trading_post_scene.png'" alt="Trading Post" class="scene-image" />
         </div>
       } @else {
         <!-- Buy View -->

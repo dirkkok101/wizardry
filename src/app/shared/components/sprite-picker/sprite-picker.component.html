@@ -16,7 +16,7 @@
     <div class="sprite-display">
       @if (currentSprite && !imageError) {
         <img
-          [src]="currentSprite.url"
+          [appCachedSrc]="currentSprite.url"
           [alt]="currentSprite.displayName"
           class="sprite-image"
           (error)="onImageError()"

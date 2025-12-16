@@ -21,6 +21,7 @@ import {
   createFloatingDamage,
   DamageType
 } from '../floating-damage/floating-damage.component'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 
 /**
  * CombatOverlayComponent - Container for combat visuals overlaid on the maze canvas.
@@ -52,7 +53,7 @@ import {
 @Component({
   selector: 'app-combat-overlay',
   standalone: true,
-  imports: [CommonModule, MonsterSpriteOverlayComponent, FloatingDamageComponent],
+  imports: [CommonModule, MonsterSpriteOverlayComponent, FloatingDamageComponent, CachedImageDirective],
   templateUrl: './combat-overlay.component.html',
   styleUrls: ['./combat-overlay.component.scss']
 })

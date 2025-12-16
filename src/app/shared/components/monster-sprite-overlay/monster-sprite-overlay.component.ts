@@ -8,6 +8,7 @@ import {
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { MonsterGroup, MonsterInstance } from '@models/Combat'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import { getIdentifiedGroupDisplayText, getMonsterDisplayName } from '@utils/MonsterNameUtils'
 
 export type SpriteAnimationType = 'damage-flash' | 'dying'
@@ -45,7 +46,7 @@ export interface SpriteAnimationState {
 @Component({
   selector: 'app-monster-sprite-overlay',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CachedImageDirective],
   templateUrl: './monster-sprite-overlay.component.html',
   styleUrls: ['./monster-sprite-overlay.component.scss']
 })

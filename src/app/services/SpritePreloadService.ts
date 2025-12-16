@@ -2,22 +2,40 @@
  * SpritePreloadService - Preloads game sprites during initialization
  *
  * Follows the same caching/deduplication pattern as other data loaders.
- * Sprites are preloaded into browser cache so they're instant when displayed.
+ * Sprites are preloaded and cached in memory for instant access.
  *
  * Why preload?
  * - Sprites load on-demand by default, causing visual delays
  * - Victory/defeat sprites would flash or appear late without preloading
  * - Monster sprites in combat should be instant for responsive UX
+ * - Dungeon textures would cause delays when entering/re-entering maze
  */
 
 import { MonsterDataLoader } from './MonsterDataLoader'
 import { SpriteService } from './SpriteService'
+import { TextureAtlas } from '@models/texture.types'
+import * as TextureAtlasService from './TextureAtlasService'
+
+/** Cached dungeon atlas with both JSON metadata and decoded image */
+export interface DungeonAtlasCache {
+  atlas: TextureAtlas
+  image: HTMLImageElement
+}
 
 export class SpritePreloadService {
   private static loadPromise: Promise<void> | null = null
   private static loaded = false
   private static preloadedUrls: Set<string> = new Set()
   private static failedUrls: Set<string> = new Set()
+
+  /** In-memory cache of loaded images (skips both network AND decode on reuse) */
+  private static cachedImages: Map<string, HTMLImageElement> = new Map()
+
+  /** Dungeon texture atlas cache (JSON + image) */
+  private static dungeonAtlasCache: DungeonAtlasCache | null = null
+
+  /** Path to dungeon texture atlas metadata */
+  private static readonly DUNGEON_ATLAS_PATH = '/assets/textures/eob-dungeon-highres-compressed.json'
 
   /**
    * UI sprite paths (hardcoded - small, known set)
@@ -80,14 +98,17 @@ export class SpritePreloadService {
   private static async performPreload(): Promise<void> {
     const spriteUrls = this.gatherAllSpriteUrls()
 
-    // Preload in parallel with Promise.allSettled (don't fail on missing sprites)
-    const results = await Promise.allSettled(
-      spriteUrls.map(url => this.preloadImage(url))
-    )
+    // Preload sprites and dungeon atlas in parallel
+    const [spriteResults] = await Promise.all([
+      // Sprite preloading (don't fail on missing sprites)
+      Promise.allSettled(spriteUrls.map(url => this.preloadImage(url))),
+      // Dungeon atlas preloading (critical for maze performance)
+      this.preloadDungeonAtlas()
+    ])
 
-    // Track results
-    const succeeded = results.filter(r => r.status === 'fulfilled').length
-    const failed = results.filter(r => r.status === 'rejected').length
+    // Track sprite results
+    const succeeded = spriteResults.filter(r => r.status === 'fulfilled').length
+    const failed = spriteResults.filter(r => r.status === 'rejected').length
 
     // Log stats (useful for debugging missing sprites)
     console.log(`[SpritePreloadService] Preloaded ${succeeded} sprites, ${failed} failed`)
@@ -131,14 +152,22 @@ export class SpritePreloadService {
   }
 
   /**
-   * Preload a single image into browser cache
+   * Preload a single image and store in memory cache.
+   * Stores the HTMLImageElement so we skip both network AND decode on reuse.
    */
   private static preloadImage(url: string): Promise<void> {
+    // Return cached image immediately if already loaded
+    if (this.cachedImages.has(url)) {
+      this.preloadedUrls.add(url)
+      return Promise.resolve()
+    }
+
     return new Promise((resolve, reject) => {
       const img = new Image()
 
       img.onload = () => {
         this.preloadedUrls.add(url)
+        this.cachedImages.set(url, img)  // Store in memory cache
         resolve()
       }
 
@@ -149,6 +178,57 @@ export class SpritePreloadService {
 
       img.src = url
     })
+  }
+
+  /**
+   * Preload dungeon texture atlas (JSON metadata + image).
+   * Called during game initialization to avoid delays when entering maze.
+   */
+  private static async preloadDungeonAtlas(): Promise<void> {
+    if (this.dungeonAtlasCache) {
+      console.log('[SpritePreloadService] Dungeon atlas already cached')
+      return
+    }
+
+    try {
+      console.log('[SpritePreloadService] Loading dungeon texture atlas...')
+
+      // Fetch atlas JSON metadata
+      const response = await fetch(this.DUNGEON_ATLAS_PATH)
+      if (!response.ok) {
+        throw new Error(`Failed to load atlas JSON: ${response.statusText}`)
+      }
+      const atlas: TextureAtlas = await response.json()
+
+      // Load and decode the texture image
+      const image = await TextureAtlasService.loadTextureAtlas(atlas)
+
+      // Store in cache
+      this.dungeonAtlasCache = { atlas, image }
+
+      console.log('[SpritePreloadService] Dungeon atlas cached:', {
+        dimensions: `${image.naturalWidth}x${image.naturalHeight}`,
+        textures: atlas.textures.length
+      })
+    } catch (error) {
+      console.error('[SpritePreloadService] Failed to load dungeon atlas:', error)
+      // Don't throw - dungeon atlas will be loaded on-demand if preload fails
+    }
+  }
+
+  /**
+   * Get cached dungeon atlas. Returns null if not cached.
+   * MazeLayoutComponent uses this to skip network fetch + decode.
+   */
+  static getDungeonAtlasCache(): DungeonAtlasCache | null {
+    return this.dungeonAtlasCache
+  }
+
+  /**
+   * Get a cached image by URL. Returns null if not cached.
+   */
+  static getCachedImage(url: string): HTMLImageElement | null {
+    return this.cachedImages.get(url) ?? null
   }
 
   /**
@@ -187,5 +267,7 @@ export class SpritePreloadService {
     this.loaded = false
     this.preloadedUrls.clear()
     this.failedUrls.clear()
+    this.cachedImages.clear()
+    this.dungeonAtlasCache = null
   }
 }
