@@ -112,6 +112,12 @@
                   <span class="reward-value">{{ rewards.totalXP | number }}</span>
                   <span class="reward-label">XP</span>
                 </div>
+                @if (rewards.totalGold > 0) {
+                  <div class="reward-badge gold">
+                    <span class="reward-value">{{ rewards.totalGold | number }}</span>
+                    <span class="reward-label">GP</span>
+                  </div>
+                }
               </div>
 
               @if (rewards.items.length > 0) {

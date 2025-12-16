@@ -15,11 +15,16 @@ import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
+import { MessageLogService } from '@services/MessageLogService';
 import { SpellLearningService } from '@services/SpellLearningService';
 import { SpellCastingService } from '@services/SpellCastingService';
 import { CharacterService } from '@services/CharacterService';
+import { LightService } from '@services/LightService';
 import { createCommand } from '@services/combat';
 import { GameStateQueries } from '@utils/GameStateQueries';
+import { getIdentifiedGroupDisplayText } from '@utils/MonsterNameUtils';
+import { getCombatActionDisplayText } from '@utils/CombatDisplayUtils';
+import { ActiveSpell } from '@models/active-spell.types';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
@@ -52,73 +57,65 @@ import { DungeonState } from '@models/Dungeon';
   ],
   template: `
     <div class="combat-planning">
-      <!-- Combat Overlay (monster sprites) -->
-      <app-combat-overlay
-        [visible]="true"
-        [monsterGroups]="monsterGroups()"
-        [roundNumber]="roundNumber()"
-        [selectedGroupId]="selectedTargetGroup()"
-        [isTargetingMode]="isTargetingMode()"
-        [letterboxType]="letterboxType()"
-        [showVictoryOverlay]="false"
-        [showDefeatOverlay]="false"
-        [showMonsterCards]="true"
-        [partyCharacters]="partyCharacters()"
-        (groupClicked)="onGroupClicked($event)"
-      />
-
-      <!-- Title -->
-      <app-scene-title [title]="sceneTitle()"></app-scene-title>
+      <!-- Title with Active Spells -->
+      <app-scene-title [title]="sceneTitle()" [activeSpells]="activeSpells()"></app-scene-title>
 
       <!-- 3-Column Layout -->
-      <div class="combat-content">
+      <div class="maze-content">
         <!-- Left Column: Positions 1, 3, 5 -->
-        <div class="left-panel">
+        <div class="left-panel" [class.dimmed]="shouldDimPanels()">
           <app-character-panel
             [characters]="leftColumnCharacters()"
             [actions]="getActionsForCharacter"
-            [visibleActionTypes]="['fight', 'cast-spell', 'parry', 'run']"
+            [visibleActionTypes]="['fight', 'cast-spell', 'parry']"
+            [statusTexts]="combatActionTexts()"
             [showSprites]="true"
             (actionClick)="handleCharacterAction($event)"
           />
         </div>
 
-        <!-- Center Column: Message Log and Instructions -->
+        <!-- Center Column: Viewport + Message Log -->
         <div class="center-panel">
-          <!-- Targeting Instructions -->
-          @if (isTargetingMode()) {
-            <div class="targeting-instructions">
-              <p class="instruction-text">
-                @if (selectingTargetForCharacter()) {
-                  Select a monster group for {{ getCharacterName(selectingTargetForCharacter()!) }} to attack.
-                } @else {
-                  Select a target group (click or press 1-4).
-                }
-              </p>
-              <button class="cancel-btn" (click)="cancelTargeting()">Cancel (ESC)</button>
-            </div>
-          }
+          <!-- Viewport frame for canvas alignment -->
+          <div class="maze-viewport">
+            <!-- Combat Overlay (monster sprites) - positioned inside viewport -->
+            <app-combat-overlay
+              [visible]="true"
+              [monsterGroups]="monsterGroups()"
+              [roundNumber]="roundNumber()"
+              [selectedGroupId]="selectedTargetGroup()"
+              [isTargetingMode]="isTargetingMode()"
+              [letterboxType]="letterboxType()"
+              [showVictoryOverlay]="false"
+              [showDefeatOverlay]="false"
+              [showMonsterCards]="true"
+              [partyCharacters]="partyCharacters()"
+              (groupClicked)="onGroupClicked($event)"
+            />
+          </div>
 
+          <!-- Message log below viewport -->
           <div class="message-log-section">
             <app-message-log [messages]="messages()" />
           </div>
         </div>
 
         <!-- Right Column: Positions 2, 4, 6 -->
-        <div class="right-panel">
+        <div class="right-panel" [class.dimmed]="shouldDimPanels()">
           <app-character-panel
             [characters]="rightColumnCharacters()"
             [actions]="getActionsForCharacter"
-            [visibleActionTypes]="['fight', 'cast-spell', 'parry', 'run']"
+            [visibleActionTypes]="['fight', 'cast-spell', 'parry']"
+            [statusTexts]="combatActionTexts()"
             [showSprites]="true"
             (actionClick)="handleCharacterAction($event)"
           />
         </div>
       </div>
 
-      <!-- Footer Menu -->
+      <!-- Footer Menu - switches between normal and targeting menus -->
       <app-scene-footer
-        [menuItems]="combatMenuItems()"
+        [menuItems]="isTargetingMode() ? targetingMenuItems() : combatMenuItems()"
         (itemSelected)="handleMenuAction($event)"
       />
     </div>
@@ -132,71 +129,145 @@ import { DungeonState } from '@models/Dungeon';
       background: transparent;
       color: var(--color-text-primary);
       font-family: var(--font-body);
+      padding: 0.5rem;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .combat-content {
-      flex: 1;
+    :host ::ng-deep app-scene-title,
+    :host ::ng-deep app-scene-footer {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* 3-COLUMN LAYOUT - matches original maze.component.scss */
+    .maze-content {
       display: grid;
-      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
       gap: 0.5rem;
-      padding: 0.5rem;
+      flex: 1;
       min-height: 0;
     }
 
+    /* 4K screens: 50% larger cards */
+    @media (min-width: 2000px) {
+      .maze-content {
+        grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+      }
+    }
+
+    /* Side panels (character columns) */
     .left-panel,
     .right-panel {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
-      overflow-y: auto;
-    }
+      min-height: 0;
+      width: 100%;
+      max-width: var(--scene-panel-max-width);
+      align-self: start;
+      transition: opacity 0.2s ease;
 
-    .center-panel {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
-
-    .targeting-instructions {
-      background: rgba(0, 0, 0, 0.85);
-      border: 2px solid var(--color-gold-primary);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 0.5rem;
-      text-align: center;
-    }
-
-    .instruction-text {
-      color: var(--color-gold-primary);
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .cancel-btn {
-      background: transparent;
-      border: 1px solid var(--color-text-secondary);
-      color: var(--color-text-secondary);
-      padding: 0.25rem 0.75rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
-
-      &:hover {
-        border-color: var(--color-gold-primary);
-        color: var(--color-gold-primary);
+      &.dimmed {
+        opacity: 0.4;
+        pointer-events: none;
       }
     }
 
+    @media (min-width: 2000px) {
+      .left-panel,
+      .right-panel {
+        max-width: var(--scene-panel-max-width-4k);
+      }
+    }
+
+    /* Make character panel fill the entire side column */
+    :host ::ng-deep .left-panel app-character-panel,
+    :host ::ng-deep .right-panel app-character-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    /* Center column: Viewport + Message Log */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 0;
+      min-width: 0;
+      align-items: center;
+      overflow: visible;
+      padding: 0.5rem 2px;
+    }
+
+    /* Viewport container - shows canvas through transparent background */
+    .maze-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      aspect-ratio: var(--scene-viewport-aspect) / 1;
+      max-width: 100%;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    /* Combat overlay fills the viewport */
+    :host ::ng-deep .maze-viewport app-combat-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+    }
+
     .message-log-section {
-      margin-top: auto;
-      max-height: 200px;
-      overflow-y: auto;
+      width: 100%;
+      height: 120px;
+      min-height: 90px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.1rem 0.25rem;
+      background: var(--color-bg-card);
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    :host ::ng-deep .message-log-section app-message-log {
+      display: block;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Compact height responsive adjustments */
+    @media (max-height: 767px) {
+      .combat-planning {
+        padding: 0.25rem;
+      }
+
+      .maze-content {
+        gap: 0.35rem;
+      }
+
+      .message-log-section {
+        height: 80px;
+        min-height: 70px;
+        padding: 0.25rem;
+      }
+    }
+
+    /* Very compact height */
+    @media (max-height: 599px) {
+      .message-log-section {
+        height: 65px;
+      }
     }
   `]
 })
 export class CombatPlanningComponent implements OnInit {
   // Local signals
-  readonly messages = signal<string[]>([]);
   readonly selectedActions = signal<Map<string, CombatCommand>>(new Map());
   readonly selectingTargetForCharacter = signal<string | null>(null);
   readonly selectedTargetGroup = signal<'A' | 'B' | 'C' | 'D' | null>(null);
@@ -225,6 +296,50 @@ export class CombatPlanningComponent implements OnInit {
     return party.filter((_, i) => i % 2 === 1); // Positions 1, 3, 5
   });
 
+  // Active spells (MILWA, LOMILWA, LATUMAPIC, MAPORFIC)
+  readonly activeSpells = computed((): ActiveSpell[] => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return [];
+
+    const spells: ActiveSpell[] = [];
+
+    // Light spells
+    if (dungeon.lightActive && dungeon.lightSpellType) {
+      const viewDistance = LightService.getEffectiveViewDistance(dungeon);
+      const durationText = dungeon.lightDurationRemaining !== undefined
+        ? ` (${dungeon.lightDurationRemaining} steps)`
+        : '';
+      spells.push({
+        name: dungeon.lightSpellType,
+        icon: '💡',
+        description: `Light (Radius: ${viewDistance})${durationText}`,
+        variant: 'light'
+      });
+    }
+
+    // LATUMAPIC (monster identification)
+    if (dungeon.latumapicActive) {
+      spells.push({
+        name: 'LATUMAPIC',
+        icon: '👁️',
+        description: 'Monsters Identified',
+        variant: 'identification'
+      });
+    }
+
+    // MAPORFIC (party AC buff)
+    if (dungeon.expeditionAcBuff && dungeon.expeditionAcBuff !== 0) {
+      spells.push({
+        name: 'MAPORFIC',
+        icon: '🛡️',
+        description: `Party AC ${dungeon.expeditionAcBuff > 0 ? '+' : ''}${dungeon.expeditionAcBuff}`,
+        variant: 'protection'
+      });
+    }
+
+    return spells;
+  });
+
   // Is in targeting mode?
   readonly isTargetingMode = computed(() => this.selectingTargetForCharacter() !== null);
 
@@ -239,7 +354,7 @@ export class CombatPlanningComponent implements OnInit {
     return `COMBAT - ROUND ${round}`;
   });
 
-  // Footer menu items
+  // Footer menu items for normal combat
   readonly combatMenuItems = computed((): MenuItem[] => {
     const allSelected = this.allCharactersHaveActions();
     const anySelected = this.selectedActions().size > 0;
@@ -249,7 +364,7 @@ export class CombatPlanningComponent implements OnInit {
     return [
       {
         id: 'start_round',
-        label: 'Start Round',
+        label: `Start Round ${this.roundNumber()}`,
         shortcut: 'Enter',
         enabled: allSelected && !inTargeting
       },
@@ -268,9 +383,71 @@ export class CombatPlanningComponent implements OnInit {
     ];
   });
 
+  // Footer menu items for targeting mode
+  readonly targetingMenuItems = computed((): MenuItem[] => {
+    const groups = this.monsterGroups();
+    if (!this.isTargetingMode() || groups.length === 0) return [];
+
+    const items: MenuItem[] = groups
+      .filter(g => g.monsters.some(m => m.hp > 0))
+      .map(group => {
+        const aliveCount = group.monsters.filter(m => m.hp > 0).length;
+        const firstMonster = group.monsters[0];
+        const displayName = getIdentifiedGroupDisplayText(aliveCount, firstMonster, group.identified);
+        return {
+          id: `target-${group.id}`,
+          label: displayName,
+          shortcut: group.id,
+          enabled: true
+        };
+      });
+
+    items.push({
+      id: 'cancel-targeting',
+      label: 'Cancel',
+      shortcut: 'ESC',
+      enabled: true
+    });
+
+    return items;
+  });
+
+  // Panel dimming during targeting
+  readonly shouldDimPanels = computed(() => this.isTargetingMode());
+
+  /**
+   * Status texts for characters - shows incapacitated status or selected action
+   * Maps character ID to status text for CharacterPanel [statusTexts] input
+   */
+  readonly combatActionTexts = computed((): Map<string, string> => {
+    const statusTexts = new Map<string, string>();
+    const party = this.partyCharacters();
+    const groups = this.monsterGroups();
+
+    for (const char of party) {
+      // 1. Incapacitated characters show their status
+      if (!CharacterService.canAct(char)) {
+        statusTexts.set(char.id, char.status);
+        continue;
+      }
+
+      // 2. Characters with selected actions show action text
+      const command = this.selectedActions().get(char.id);
+      if (command) {
+        statusTexts.set(char.id, getCombatActionDisplayText(command, groups));
+      }
+    }
+
+    return statusTexts;
+  });
+
+  // Expose message log messages for template
+  readonly messages = computed(() => this.messageLog.messages());
+
   constructor(
     private gameState: GameStateService,
     private navigation: SceneNavigationService,
+    private messageLog: MessageLogService,
     private router: Router
   ) {}
 
@@ -296,16 +473,17 @@ export class CombatPlanningComponent implements OnInit {
 
   /**
    * Get available combat actions for a character
+   * Note: statusTexts handles display after action selection, so labels are simple
    */
   getActionsForCharacter = (char: Character): CharacterAction[] => {
     const actions: CharacterAction[] = [];
     const selectedAction = this.selectedActions().get(char.id);
     const canAct = CharacterService.canAct(char);
 
-    // Fight (Attack)
+    // Attack
     actions.push({
       type: 'fight',
-      label: selectedAction?.type === 'ATTACK' ? `ATK→${selectedAction.targetGroupId}` : 'Fight',
+      label: 'Attack',
       enabled: canAct && !selectedAction
     });
 
@@ -314,7 +492,7 @@ export class CombatPlanningComponent implements OnInit {
         SpellCastingService.hasSpellsInContext(char, 'combat')) {
       actions.push({
         type: 'cast-spell',
-        label: selectedAction?.type === 'CAST_SPELL' ? `CAST` : 'Cast',
+        label: 'Cast',
         enabled: canAct && !selectedAction && char.status !== CharacterStatus.ASLEEP
       });
     }
@@ -322,18 +500,9 @@ export class CombatPlanningComponent implements OnInit {
     // Parry (Defend)
     actions.push({
       type: 'parry',
-      label: selectedAction?.type === 'PARRY' ? 'PARRY' : 'Parry',
+      label: 'Parry',
       enabled: canAct && !selectedAction
     });
-
-    // Run (Flee) - only if flee is allowed
-    if (this.canFlee()) {
-      actions.push({
-        type: 'run',
-        label: selectedAction?.type === 'RUN' ? 'RUN' : 'Run',
-        enabled: canAct && !selectedAction
-      });
-    }
 
     return actions;
   };
@@ -355,9 +524,6 @@ export class CombatPlanningComponent implements OnInit {
         break;
       case 'parry':
         this.selectParry(char);
-        break;
-      case 'run':
-        this.selectRun(char);
         break;
     }
   }
@@ -488,6 +654,18 @@ export class CombatPlanningComponent implements OnInit {
    * Handle footer menu actions
    */
   handleMenuAction(action: string): void {
+    // Handle targeting menu actions
+    if (action.startsWith('target-')) {
+      const groupId = action.replace('target-', '') as 'A' | 'B' | 'C' | 'D';
+      this.selectTargetGroup(groupId);
+      return;
+    }
+    if (action === 'cancel-targeting') {
+      this.cancelTargeting();
+      return;
+    }
+
+    // Handle normal combat menu actions
     switch (action) {
       case 'start_round':
         this.startRound();
@@ -601,6 +779,37 @@ export class CombatPlanningComponent implements OnInit {
     }
   }
 
+  @HostListener('window:keydown.a')
+  handleKeyA(): void {
+    if (this.isTargetingMode()) this.selectTargetGroup('A');
+  }
+
+  @HostListener('window:keydown.b')
+  handleKeyB(): void {
+    if (this.isTargetingMode()) this.selectTargetGroup('B');
+  }
+
+  @HostListener('window:keydown.c')
+  handleKeyC(): void {
+    if (this.isTargetingMode()) this.selectTargetGroup('C');
+  }
+
+  @HostListener('window:keydown.d')
+  handleKeyD(): void {
+    if (this.isTargetingMode()) this.selectTargetGroup('D');
+  }
+
+  /**
+   * Select a monster group as target (keyboard or menu)
+   */
+  private selectTargetGroup(groupId: 'A' | 'B' | 'C' | 'D'): void {
+    const group = this.monsterGroups().find(g => g.id === groupId);
+    if (!group || group.monsters.filter(m => m.hp > 0).length === 0) {
+      return;  // Invalid or empty group
+    }
+    this.onGroupClicked(groupId);
+  }
+
   // ============================================================
   // UTILITY METHODS
   // ============================================================
@@ -611,6 +820,6 @@ export class CombatPlanningComponent implements OnInit {
   }
 
   private addMessage(message: string): void {
-    this.messages.update(msgs => [...msgs, message]);
+    this.messageLog.addMessage(message);
   }
 }

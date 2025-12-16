@@ -13,6 +13,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { GameStateService } from '@services/GameStateService';
+import { MessageLogService } from '@services/MessageLogService';
 import { WebGLRenderingService } from '@services/WebGLRenderingService';
 import { DungeonService } from '@services/DungeonService';
 import { FightMapService } from '@services/FightMapService';
@@ -100,7 +101,10 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly position = computed(() => this.dungeonState()?.position);
   readonly facing = computed(() => this.dungeonState()?.position?.facing ?? 'N');
 
-  constructor(private gameState: GameStateService) {
+  constructor(
+    private gameState: GameStateService,
+    private messageLog: MessageLogService
+  ) {
     // Effect to re-render when dungeon state changes (position, doors, light)
     effect(() => {
       // Track the position and facing to detect movement
@@ -119,6 +123,9 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Clear message log for fresh expedition
+    this.messageLog.clear();
+
     // Validate dungeon state
     const dungeon = this.dungeonState();
     if (!dungeon) {
@@ -159,6 +166,9 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clear message log when leaving maze
+    this.messageLog.clear();
+
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;

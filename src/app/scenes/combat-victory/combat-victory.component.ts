@@ -7,16 +7,26 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
+import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
+import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
+import { MenuItem } from '@shared/components/menu/menu.component';
 import { GameStateService } from '@services/GameStateService';
+import { MessageLogService } from '@services/MessageLogService';
+import { LightService } from '@services/LightService';
+import { CharacterService } from '@services/CharacterService';
 import { VictoryService, VictoryRewards } from '@services/VictoryService';
 import { FightMapService } from '@services/FightMapService';
 import { ChestService } from '@services/ChestService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { Character } from '@models/Character';
+import { CharacterAction } from '@models/CharacterCardTypes';
+import { ActiveSpell } from '@models/active-spell.types';
 import { CombatState } from '@models/Combat';
 import { DungeonState } from '@models/Dungeon';
 import { Chest } from '@models/Chest';
-import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 
 /**
  * CombatVictoryComponent - Victory rewards phase of combat.
@@ -36,54 +46,75 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 @Component({
   selector: 'app-combat-victory',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    SceneFooterComponent,
+    CharacterPanelComponent,
+    MessageLogComponent,
+    CombatOverlayComponent
+  ],
   template: `
     <div class="combat-victory">
-      <div class="victory-panel">
-        <!-- Victory Title -->
-        <h1 class="victory-title">VICTORY!</h1>
+      <!-- Title with Active Spells -->
+      <app-scene-title [title]="sceneTitle()" [activeSpells]="activeSpells()"></app-scene-title>
 
-        <!-- Rewards Display -->
-        @if (rewards()) {
-          <div class="rewards-section">
-            <div class="reward-row">
-              <span class="reward-label">Experience:</span>
-              <span class="reward-value">{{ rewards()!.totalXP }} XP</span>
-            </div>
-            <div class="reward-row">
-              <span class="reward-label">Per Character:</span>
-              <span class="reward-value">{{ rewards()!.xpPerCharacter }} XP each</span>
-            </div>
-            <div class="reward-row">
-              <span class="reward-label">Living Members:</span>
-              <span class="reward-value">{{ rewards()!.livingCharacterCount }}</span>
-            </div>
-            @if (rewards()!.totalGold > 0) {
-              <div class="reward-row gold">
-                <span class="reward-label">Gold:</span>
-                <span class="reward-value">{{ rewards()!.totalGold }} GP</span>
-              </div>
-            }
-            @if (rewards()!.items.length > 0) {
-              <div class="items-section">
-                <span class="items-label">Items Found:</span>
-                <ul class="items-list">
-                  @for (item of rewards()!.items; track item.itemId) {
-                    <li class="item-entry" [class.unidentified]="!item.identified">
-                      {{ item.identified ? item.itemName : item.unidentifiedName || 'Unknown Item' }}
-                    </li>
-                  }
-                </ul>
-              </div>
-            }
+      <!-- 3-Column Layout -->
+      <div class="maze-content">
+        <!-- Left Column: Positions 1, 3, 5 -->
+        <div class="left-panel">
+          <app-character-panel
+            [characters]="leftColumnCharacters()"
+            [actions]="getActionsForCharacter"
+            [visibleActionTypes]="[]"
+            [statusTexts]="characterStatusTexts()"
+            [showSprites]="true"
+          />
+        </div>
+
+        <!-- Center Column: Viewport + Message Log -->
+        <div class="center-panel">
+          <!-- Viewport frame for canvas alignment -->
+          <div class="maze-viewport">
+            <!-- Combat Overlay with Victory display -->
+            <app-combat-overlay
+              [visible]="true"
+              [monsterGroups]="[]"
+              [roundNumber]="0"
+              [selectedGroupId]="null"
+              [isTargetingMode]="false"
+              [letterboxType]="null"
+              [showVictoryOverlay]="true"
+              [showDefeatOverlay]="false"
+              [showMonsterCards]="false"
+              [victoryRewards]="rewards()"
+              [partyCharacters]="partyCharacters()"
+            />
           </div>
-        }
 
-        <!-- Status Message -->
-        <div class="status-message">
-          {{ statusMessage() }}
+          <!-- Message log below viewport -->
+          <div class="message-log-section">
+            <app-message-log [messages]="messages()" />
+          </div>
+        </div>
+
+        <!-- Right Column: Positions 2, 4, 6 -->
+        <div class="right-panel">
+          <app-character-panel
+            [characters]="rightColumnCharacters()"
+            [actions]="getActionsForCharacter"
+            [visibleActionTypes]="[]"
+            [statusTexts]="characterStatusTexts()"
+            [showSprites]="true"
+          />
         </div>
       </div>
+
+      <!-- Footer Menu -->
+      <app-scene-footer
+        [menuItems]="footerMenuItems()"
+        (itemSelected)="handleMenuAction($event)"
+      />
     </div>
   `,
   styles: [`
@@ -91,112 +122,150 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
       position: absolute;
       inset: 0;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 100;
+      flex-direction: column;
+      background: transparent;
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      padding: 0.5rem;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .victory-panel {
-      background: linear-gradient(135deg, rgba(20, 30, 20, 0.95), rgba(10, 20, 10, 0.98));
-      border: 2px solid var(--color-status-ok);
-      border-radius: 8px;
-      padding: 2rem 3rem;
-      text-align: center;
-      min-width: 320px;
-      max-width: 480px;
-      box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+    :host ::ng-deep app-scene-title,
+    :host ::ng-deep app-scene-footer {
+      display: block;
+      flex-shrink: 0;
     }
 
-    .victory-title {
-      font-family: var(--font-display);
-      font-size: 2.5rem;
-      color: var(--color-status-ok);
-      margin: 0 0 1.5rem 0;
-      text-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
-      letter-spacing: 0.1em;
+    /* 3-COLUMN LAYOUT - matches combat-playback */
+    .maze-content {
+      display: grid;
+      grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
+      gap: 0.5rem;
+      flex: 1;
+      min-height: 0;
     }
 
-    .rewards-section {
+    /* 4K screens: 50% larger cards */
+    @media (min-width: 2000px) {
+      .maze-content {
+        grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+      }
+    }
+
+    /* Side panels (character columns) */
+    .left-panel,
+    .right-panel {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
+      min-height: 0;
+      width: 100%;
+      max-width: var(--scene-panel-max-width);
+      align-self: start;
     }
 
-    .reward-row {
+    @media (min-width: 2000px) {
+      .left-panel,
+      .right-panel {
+        max-width: var(--scene-panel-max-width-4k);
+      }
+    }
+
+    /* Make character panel fill the entire side column */
+    :host ::ng-deep .left-panel app-character-panel,
+    :host ::ng-deep .right-panel app-character-panel {
       display: flex;
-      justify-content: space-between;
-      font-family: var(--font-body);
-      font-size: 1rem;
-      padding: 0.25rem 0;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
     }
 
-    .reward-label {
-      color: var(--color-text-secondary);
+    /* Center column: Viewport + Message Log */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 0;
+      min-width: 0;
+      align-items: center;
+      overflow: visible;
+      padding: 0.5rem 2px;
     }
 
-    .reward-value {
-      color: var(--color-text-primary);
-      font-weight: 600;
-    }
-
-    .reward-row.gold .reward-value {
-      color: var(--color-gold-primary);
-    }
-
-    .items-section {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .items-label {
-      display: block;
-      font-family: var(--font-body);
-      color: var(--color-text-secondary);
-      margin-bottom: 0.5rem;
-      text-align: left;
-    }
-
-    .items-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .item-entry {
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      color: var(--color-text-primary);
-      padding: 0.25rem 0.5rem;
-      text-align: left;
-      background: rgba(255, 255, 255, 0.05);
+    /* Viewport container - shows canvas through transparent background */
+    .maze-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      aspect-ratio: var(--scene-viewport-aspect) / 1;
+      max-width: 100%;
+      background: transparent;
+      border: 1px solid var(--color-border);
       border-radius: 4px;
-      margin-bottom: 0.25rem;
+      overflow: hidden;
     }
 
-    .item-entry.unidentified {
-      color: var(--color-text-secondary);
-      font-style: italic;
+    /* Combat overlay fills the viewport */
+    :host ::ng-deep .maze-viewport app-combat-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
     }
 
-    .status-message {
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      color: var(--color-text-secondary);
-      margin-top: 1rem;
-      font-style: italic;
+    .message-log-section {
+      width: 100%;
+      height: 120px;
+      min-height: 90px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.1rem 0.25rem;
+      background: var(--color-bg-card);
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    :host ::ng-deep .message-log-section app-message-log {
+      display: block;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Compact height responsive adjustments */
+    @media (max-height: 767px) {
+      .combat-victory {
+        padding: 0.25rem;
+      }
+
+      .maze-content {
+        gap: 0.35rem;
+      }
+
+      .message-log-section {
+        height: 80px;
+        min-height: 70px;
+        padding: 0.25rem;
+      }
+    }
+
+    /* Very compact height */
+    @media (max-height: 599px) {
+      .message-log-section {
+        height: 65px;
+      }
     }
   `]
 })
 export class CombatVictoryComponent implements OnInit, OnDestroy {
   // Rewards calculated from defeated monsters
   readonly rewards = signal<VictoryRewards | null>(null);
-  readonly statusMessage = signal<string>('Calculating rewards...');
 
-  // Timeout cleanup for memory leak prevention
-  private pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
+  // Ready for navigation (after rewards processed)
+  readonly isReady = signal(false);
+
+  // Next destination after continue
+  private nextRoute: string = '/maze';
 
   // Computed from GameState
   readonly combatState = computed(() => this.gameState.state().combat as CombatState | undefined);
@@ -208,21 +277,130 @@ export class CombatVictoryComponent implements OnInit, OnDestroy {
     return GameStateQueries.partyCharacters(state);
   });
 
+  // 3-column layout: left column gets positions 0, 2, 4
+  readonly leftColumnCharacters = computed(() => {
+    const party = this.partyCharacters();
+    return party.filter((_, i) => i % 2 === 0);
+  });
+
+  // 3-column layout: right column gets positions 1, 3, 5
+  readonly rightColumnCharacters = computed(() => {
+    const party = this.partyCharacters();
+    return party.filter((_, i) => i % 2 === 1);
+  });
+
+  // Scene title
+  readonly sceneTitle = computed(() => 'VICTORY');
+
+  // Active spells (MILWA, LOMILWA, LATUMAPIC, MAPORFIC)
+  readonly activeSpells = computed((): ActiveSpell[] => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return [];
+
+    const spells: ActiveSpell[] = [];
+
+    // Light spells
+    if (dungeon.lightActive && dungeon.lightSpellType) {
+      const viewDistance = LightService.getEffectiveViewDistance(dungeon);
+      const durationText = dungeon.lightDurationRemaining !== undefined
+        ? ` (${dungeon.lightDurationRemaining} steps)`
+        : '';
+      spells.push({
+        name: dungeon.lightSpellType,
+        icon: '💡',
+        description: `Light (Radius: ${viewDistance})${durationText}`,
+        variant: 'light'
+      });
+    }
+
+    // LATUMAPIC (monster identification)
+    if (dungeon.latumapicActive) {
+      spells.push({
+        name: 'LATUMAPIC',
+        icon: '👁️',
+        description: 'Monsters Identified',
+        variant: 'identification'
+      });
+    }
+
+    // MAPORFIC (party AC buff)
+    if (dungeon.expeditionAcBuff && dungeon.expeditionAcBuff !== 0) {
+      spells.push({
+        name: 'MAPORFIC',
+        icon: '🛡️',
+        description: `Party AC ${dungeon.expeditionAcBuff > 0 ? '+' : ''}${dungeon.expeditionAcBuff}`,
+        variant: 'protection'
+      });
+    }
+
+    return spells;
+  });
+
+  // Status texts for character cards
+  readonly characterStatusTexts = computed((): Map<string, string> => {
+    const statusTexts = new Map<string, string>();
+    const party = this.partyCharacters();
+
+    for (const char of party) {
+      if (!CharacterService.canAct(char)) {
+        statusTexts.set(char.id, char.status);
+      }
+    }
+
+    return statusTexts;
+  });
+
+  // Footer menu items
+  readonly footerMenuItems = computed((): MenuItem[] => {
+    if (!this.isReady()) {
+      return [
+        { id: 'processing', label: 'Processing...', enabled: false }
+      ];
+    }
+
+    // Show appropriate continue button
+    if (this.nextRoute === '/maze/chest') {
+      return [
+        { id: 'continue', label: 'Open Chest', enabled: true, shortcut: 'Enter' }
+      ];
+    }
+
+    return [
+      { id: 'continue', label: 'Continue', enabled: true, shortcut: 'Enter' }
+    ];
+  });
+
+  // Expose message log messages for template
+  readonly messages = computed(() => this.messageLog.messages());
+
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private messageLog: MessageLogService
   ) {}
+
+  /**
+   * Get actions for character (no actions on victory screen)
+   */
+  getActionsForCharacter = (_char: Character): CharacterAction[] => {
+    return [];
+  };
+
+  /**
+   * Handle footer menu actions
+   */
+  handleMenuAction(itemId: string): void {
+    if (itemId === 'continue' && this.isReady()) {
+      this.router.navigate([this.nextRoute]);
+    }
+  }
 
   ngOnInit(): void {
     this.processVictory();
   }
 
   ngOnDestroy(): void {
-    // Clear all pending timeouts to prevent memory leaks
-    for (const timeout of this.pendingTimeouts) {
-      clearTimeout(timeout);
-    }
-    this.pendingTimeouts = [];
+    // Clean up if needed
   }
 
   /**
@@ -249,7 +427,6 @@ export class CombatVictoryComponent implements OnInit, OnDestroy {
       state.party.members
     );
     this.rewards.set(rewards);
-    this.statusMessage.set('Distributing rewards...');
 
     console.log('[CombatVictory] Rewards calculated', {
       totalXP: rewards.totalXP,
@@ -257,9 +434,6 @@ export class CombatVictoryComponent implements OnInit, OnDestroy {
       livingMembers: rewards.livingCharacterCount,
       items: rewards.items.length
     });
-
-    // Wait for player to see rewards
-    await this.delay(ANIMATION_TIMINGS.VICTORY_REWARD_DISPLAY);
 
     // Apply rewards and determine next destination
     await this.applyVictoryRewards(rewards, combat);
@@ -347,27 +521,26 @@ export class CombatVictoryComponent implements OnInit, OnDestroy {
       console.log(`[CombatVictory]   ${char.name}: HP=${char.hp}, Status=${char.status}, XP=${char.experience}`);
     }
 
-    // Navigate based on result
-    if (pendingChest) {
-      this.statusMessage.set('A treasure chest appears!');
-      await this.delay(ANIMATION_TIMINGS.VICTORY_TRANSITION_DELAY);
-      console.log('[CombatVictory] Navigating to chest');
-      this.router.navigate(['/maze/chest']);
-    } else {
-      this.statusMessage.set('Returning to exploration...');
-      await this.delay(ANIMATION_TIMINGS.VICTORY_TRANSITION_DELAY);
-      console.log('[CombatVictory] Returning to exploration');
-      this.router.navigate(['/maze']);
+    // Add victory messages to log
+    this.messageLog.addMessage(`Gained ${rewards.totalXP} XP (${rewards.xpPerCharacter} per character)`);
+    if (rewards.totalGold > 0) {
+      this.messageLog.addMessage(`Found ${rewards.totalGold} gold`);
     }
-  }
+    if (rewards.items.length > 0) {
+      this.messageLog.addMessage(`Found ${rewards.items.length} item(s)`);
+    }
 
-  /**
-   * Helper delay function with cleanup tracking
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => {
-      const timeout = setTimeout(resolve, ms);
-      this.pendingTimeouts.push(timeout);
-    });
+    // Set next destination and enable continue button
+    if (pendingChest) {
+      this.nextRoute = '/maze/chest';
+      this.messageLog.addMessage('A treasure chest appears!');
+      console.log('[CombatVictory] Chest awaiting - ready for user input');
+    } else {
+      this.nextRoute = '/maze';
+      console.log('[CombatVictory] Ready to return to exploration');
+    }
+
+    // Enable user to continue
+    this.isReady.set(true);
   }
 }

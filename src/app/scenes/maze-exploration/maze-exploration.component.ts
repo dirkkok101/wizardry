@@ -14,6 +14,7 @@ import { CharacterPanelComponent } from '@shared/components/character-panel/char
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
+import { MessageLogService } from '@services/MessageLogService';
 import {
   DungeonMovementOps,
   DungeonRotationService,
@@ -190,7 +191,7 @@ import { DungeonState } from '@models/Dungeon';
       flex: 1;
       min-height: 0;
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: var(--scene-viewport-aspect) / 1;
       max-width: 100%;
       background: transparent;
       border: 1px solid var(--color-border);
@@ -200,8 +201,8 @@ import { DungeonState } from '@models/Dungeon';
 
     .message-log-section {
       width: 100%;
-      height: 105px;
-      min-height: 80px;
+      height: 120px;
+      min-height: 90px;
       border: 1px solid var(--color-border);
       border-radius: 4px;
       padding: 0.1rem 0.25rem;
@@ -227,8 +228,8 @@ import { DungeonState } from '@models/Dungeon';
       }
 
       .message-log-section {
-        height: 60px;
-        min-height: 50px;
+        height: 80px;
+        min-height: 70px;
         padding: 0.25rem;
       }
     }
@@ -236,14 +237,13 @@ import { DungeonState } from '@models/Dungeon';
     /* Very compact height */
     @media (max-height: 599px) {
       .message-log-section {
-        height: 50px;
+        height: 65px;
       }
     }
   `]
 })
 export class MazeExplorationComponent implements OnInit {
   // Local signals
-  readonly messages = signal<string[]>([]);
   readonly isMovementLocked = signal(false);
 
   // Computed from GameState
@@ -340,9 +340,13 @@ export class MazeExplorationComponent implements OnInit {
     ];
   });
 
+  // Expose message log messages for template
+  readonly messages = computed(() => this.messageLog.messages());
+
   constructor(
     private gameState: GameStateService,
     private navigation: SceneNavigationService,
+    private messageLog: MessageLogService,
     private router: Router
   ) {}
 
@@ -759,6 +763,6 @@ export class MazeExplorationComponent implements OnInit {
   // ============================================================
 
   private addMessage(message: string): void {
-    this.messages.update(msgs => [...msgs, message]);
+    this.messageLog.addMessage(message);
   }
 }
