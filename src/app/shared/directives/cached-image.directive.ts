@@ -37,19 +37,22 @@ export class CachedImageDirective implements OnChanges {
 
   private updateSrc(): void {
     if (!this.appCachedSrc) {
+      this.logger.warn('[CachedImage] No image source provided');
       return;
     }
 
     // Check if image is in preload cache
     const cached = SpritePreloadService.getCachedImage(this.appCachedSrc);
 
-    if (cached) {
+    if (cached && cached.src) {
       // Use the cached image's src - browser recognizes it's already loaded
       this.el.nativeElement.src = cached.src;
-    } else {
+    } else if (this.appCachedSrc) {
       // Fallback to direct URL (browser HTTP cache may still help)
       this.el.nativeElement.src = this.appCachedSrc;
       this.logger.debug(`[CachedImage] MISS: ${this.appCachedSrc}`);
+    } else {
+      this.logger.warn('[CachedImage] No valid image source available');
     }
   }
 }

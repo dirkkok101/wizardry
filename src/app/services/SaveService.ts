@@ -5,6 +5,10 @@
 import { Injectable } from '@angular/core';
 import { GameState, SaveData } from '@models/GameState'
 import { Character } from '@models/Character'
+import { CharacterStatus } from '@models/CharacterStatus'
+import { TrapResult } from '@models/Trap'
+import { CombatState, MonsterGroup, CombatCommand } from '@models/Combat'
+import { DungeonState } from '@models/Dungeon'
 
 const SAVE_KEY = 'wizardry_save'
 const SAVE_VERSION = '1.0.0'
@@ -19,6 +23,87 @@ const SAVE_VERSION = '1.0.0'
  *       added age, vim, spellPoints (Map), knownSpells (Set), equipment slots
  */
 const SAVE_SCHEMA_VERSION = 2
+
+/**
+ * Serialized save data wrapper structure
+ */
+interface SerializedSaveData {
+  version: string
+  schemaVersion: number
+  timestamp: number
+  state: SerializedGameState
+}
+
+/**
+ * Serialized game state structure (Maps/Sets converted to arrays)
+ */
+interface SerializedGameState {
+  roster: [string, Character][]
+  bodies: [string, { x: number; y: number; level: number }][]
+  party: {
+    members: string[]
+    gold: number
+  }
+  currentScene: string
+  settings: {
+    difficulty: 'EASY' | 'NORMAL' | 'HARD'
+    soundEnabled: boolean
+    musicEnabled: boolean
+    encountersEnabled: boolean
+  }
+  combat?: SerializedCombatState
+  pendingTrapResult?: SerializedTrapResult
+  dungeon?: SerializedDungeonState
+}
+
+/**
+ * Serialized combat state (nested Maps converted to arrays)
+ */
+interface SerializedCombatState {
+  monsterGroups: MonsterGroup[]
+  roundNumber: number
+  canFlee: boolean
+  surpriseState: 'none' | 'party' | 'monsters'
+  commandQueue: CombatCommand[]
+  statusDurations: [string, [CharacterStatus, number][]][]
+  statusEffects: [string, CharacterStatus[]][]
+  acModifiers: [string, number][]
+}
+
+/**
+ * Serialized trap result (Maps converted to arrays)
+ */
+interface SerializedTrapResult {
+  trapId: string
+  triggered: boolean
+  disarmAttempted: boolean
+  disarmSuccess: boolean
+  messages: string[]
+  damageDealt: [string, number][]
+  statusApplied: [string, CharacterStatus][]
+}
+
+/**
+ * Serialized dungeon state (Sets converted to arrays)
+ */
+interface SerializedDungeonState {
+  currentLevel: number
+  position: { x: number; y: number; facing: 'N' | 'S' | 'E' | 'W' }
+  visitedTiles: string[] | [string, boolean][]
+  defeatedEncounters: string[]
+  unlockedDoors: string[]
+  openDoors: string[]
+  lootedTiles: string[]
+  completedConditionTiles: string[]
+  consumedConditionItems: string[]
+  lightActive?: boolean
+  lightSpellType?: string
+  lightDurationRemaining?: number
+  inDarknessZone?: boolean
+  latumapicActive?: boolean
+  expeditionAcBuff?: number
+  pendingSpellMessage?: string
+}
 
 /**
  * Result of importing a game state from JSON
@@ -61,32 +146,48 @@ export class SaveService {
   }
 
   /**
-   * Serialize GameState to JSON-compatible format
+   * Serialize GameState to JSON-compatible format.
+   * Converts Maps and Sets to arrays for JSON serialization.
+   * Includes defensive checks for corrupted state objects.
    */
-  private serializeGameState(state: GameState): any {
+  private serializeGameState(state: GameState): SerializedGameState {
     // Serialize combat state Maps (if combat exists)
     const serializedCombat = state.combat ? {
       ...state.combat,
       // statusDurations is Map<string, Map<status, number>> - nested Map
-      statusDurations: Array.from(state.combat.statusDurations.entries()).map(
-        ([id, innerMap]) => [id, Array.from(innerMap.entries())]
-      ),
+      // Defensive: check if statusDurations is actually a Map
+      statusDurations: state.combat.statusDurations instanceof Map
+        ? Array.from(state.combat.statusDurations.entries()).map(
+            ([id, innerMap]) => [id, innerMap instanceof Map ? Array.from(innerMap.entries()) : []] as [string, [CharacterStatus, number][]]
+          )
+        : [],
       // statusEffects is Map<string, Set<status>>
-      statusEffects: Array.from(state.combat.statusEffects.entries()).map(
-        ([id, set]) => [id, Array.from(set)]
-      ),
+      // Defensive: check if statusEffects is actually a Map
+      statusEffects: state.combat.statusEffects instanceof Map
+        ? Array.from(state.combat.statusEffects.entries()).map(
+            ([id, set]) => [id, set instanceof Set ? Array.from(set) : []] as [string, CharacterStatus[]]
+          )
+        : [],
       // acModifiers is Map<string, number>
-      acModifiers: Array.from(state.combat.acModifiers.entries())
+      // Defensive: check if acModifiers is actually a Map
+      acModifiers: state.combat.acModifiers instanceof Map
+        ? Array.from(state.combat.acModifiers.entries())
+        : []
     } : undefined
 
     // Serialize bodies Map (convert to array for JSON, handle undefined and non-Map cases)
     const serializedBodies = state.bodies instanceof Map ? Array.from(state.bodies.entries()) : []
 
     // Serialize pendingTrapResult Maps (if exists)
+    // Defensive: check if damageDealt and statusApplied are actually Maps
     const serializedPendingTrapResult = state.pendingTrapResult ? {
       ...state.pendingTrapResult,
-      damageDealt: Array.from(state.pendingTrapResult.damageDealt.entries()),
-      statusApplied: Array.from(state.pendingTrapResult.statusApplied.entries())
+      damageDealt: state.pendingTrapResult.damageDealt instanceof Map
+        ? Array.from(state.pendingTrapResult.damageDealt.entries())
+        : [],
+      statusApplied: state.pendingTrapResult.statusApplied instanceof Map
+        ? Array.from(state.pendingTrapResult.statusApplied.entries())
+        : []
     } : undefined
 
     // Handle optional dungeon state
@@ -150,10 +251,11 @@ export class SaveService {
   }
 
   /**
-   * Deserialize JSON data back to GameState
-   * Handles backward compatibility with older save formats
+   * Deserialize JSON data back to GameState.
+   * Converts arrays back to Maps and Sets.
+   * Handles backward compatibility with older save formats.
    */
-  private deserializeGameState(data: any): GameState {
+  private deserializeGameState(data: SerializedGameState): GameState {
     // Ensure settings have proper defaults
     // Force encountersEnabled to always be true (override old saves that had it disabled)
     const settings = {
@@ -313,7 +415,7 @@ export class SaveService {
     }
 
     try {
-      const saveData: any = JSON.parse(saved)
+      const saveData = JSON.parse(saved) as SerializedSaveData
 
       // Validate structure
       if (!saveData.state || !saveData.version) {
@@ -369,7 +471,7 @@ export class SaveService {
     }
 
     try {
-      const saveData: any = JSON.parse(saved)
+      const saveData = JSON.parse(saved) as SerializedSaveData
 
       // Validate structure
       if (!saveData.state || !saveData.version || !saveData.timestamp) {
@@ -439,14 +541,14 @@ export class SaveService {
   }
 
   /**
-   * Import and validate game state from JSON string
-   * Returns the deserialized state if valid, or an error message if invalid
+   * Import and validate game state from JSON string.
+   * Returns the deserialized state if valid, or an error message if invalid.
    */
   importGameState(json: string): ImportResult {
     // 1. Parse JSON
-    let data: any
+    let data: SerializedSaveData
     try {
-      data = JSON.parse(json)
+      data = JSON.parse(json) as SerializedSaveData
     } catch {
       return { success: false, error: 'Invalid JSON format' }
     }

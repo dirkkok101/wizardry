@@ -469,6 +469,29 @@ export class MazeExplorationComponent implements OnInit {
   // ============================================================
   // KEYBOARD HANDLING
   // ============================================================
+  /**
+   * Keyboard Event Listener Scope Documentation
+   *
+   * These @HostListener decorators use 'window:keydown' which means they listen
+   * at the window level. Angular automatically manages these listeners:
+   *
+   * - Listeners are REGISTERED when the component is created
+   * - Listeners are UNREGISTERED when the component is destroyed (ngOnDestroy)
+   * - Angular's zone.js handles the cleanup automatically
+   *
+   * IMPORTANT: When using child routing (as in maze scenes), the component
+   * is destroyed when navigating away, so listeners are properly cleaned up.
+   * However, if this component were hidden via *ngIf while staying mounted,
+   * the listeners would remain active.
+   *
+   * Current usage is safe because:
+   * 1. MazeExplorationComponent is a routed component (/maze/exploration)
+   * 2. Navigating to combat/chest routes destroys this component
+   * 3. Angular cleans up @HostListener bindings on destroy
+   *
+   * The isMovementLocked() guard provides additional safety by preventing
+   * action during transitions or when movement should be disabled.
+   */
 
   @HostListener('window:keydown.arrowup')
   @HostListener('window:keydown.w')

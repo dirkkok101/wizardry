@@ -260,6 +260,78 @@ export class SpritePreloadService {
   }
 
   /**
+   * Clear sprite cache to free memory.
+   * Useful when transitioning from maze to town scenes.
+   *
+   * Options:
+   * - keepSceneSprites: Keep scene backgrounds cached (recommended for town navigation)
+   * - keepDungeonAtlas: Keep dungeon textures cached (recommended if returning to maze)
+   *
+   * @param options - Control what to keep in cache
+   */
+  static clearCache(options: { keepSceneSprites?: boolean; keepDungeonAtlas?: boolean } = {}): void {
+    const { keepSceneSprites = true, keepDungeonAtlas = true } = options
+
+    // Build set of URLs to keep
+    const keepUrls = new Set<string>()
+
+    if (keepSceneSprites) {
+      this.SCENE_SPRITES.forEach(url => keepUrls.add(url))
+    }
+
+    // Filter cached images
+    if (keepUrls.size > 0) {
+      const toRemove: string[] = []
+      this.cachedImages.forEach((_, url) => {
+        if (!keepUrls.has(url)) {
+          toRemove.push(url)
+        }
+      })
+      toRemove.forEach(url => {
+        this.cachedImages.delete(url)
+        this.preloadedUrls.delete(url)
+      })
+    } else {
+      this.cachedImages.clear()
+      this.preloadedUrls.clear()
+    }
+
+    // Clear dungeon atlas if requested
+    if (!keepDungeonAtlas) {
+      this.dungeonAtlasCache = null
+    }
+
+    // Clear failed URLs (allow retry on next preload)
+    this.failedUrls.clear()
+
+    console.log(`[SpritePreloadService] Cache cleared. Remaining: ${this.cachedImages.size} sprites`)
+  }
+
+  /**
+   * Get current memory usage statistics.
+   * Useful for debugging memory issues.
+   */
+  static getMemoryStats(): { spriteCount: number; estimatedSizeMB: number } {
+    let estimatedBytes = 0
+
+    // Estimate sprite memory (width * height * 4 bytes per pixel)
+    this.cachedImages.forEach(img => {
+      estimatedBytes += img.naturalWidth * img.naturalHeight * 4
+    })
+
+    // Add dungeon atlas if cached
+    if (this.dungeonAtlasCache) {
+      const { image } = this.dungeonAtlasCache
+      estimatedBytes += image.naturalWidth * image.naturalHeight * 4
+    }
+
+    return {
+      spriteCount: this.cachedImages.size + (this.dungeonAtlasCache ? 1 : 0),
+      estimatedSizeMB: Math.round(estimatedBytes / (1024 * 1024) * 100) / 100
+    }
+  }
+
+  /**
    * Reset for testing
    */
   static reset(): void {
