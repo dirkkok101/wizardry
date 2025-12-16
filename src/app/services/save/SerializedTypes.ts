@@ -42,24 +42,24 @@ export interface SerializedDungeonState {
 
 /**
  * Serialized version of CombatState
- * All Maps become [key, value][] arrays
+ * Maps become [key, value][] arrays, Sets become value[] arrays
+ * Matches the actual CombatState interface from @models/Combat
  */
 export interface SerializedCombatState {
-  round: number
-  phase: string
-  turnOrder: string[]
-  currentTurnIndex: number
-  partyActions: Array<[string, any]>        // Map entries
-  monsterGroups: any[]                      // MonsterGroup[]
-  statusDurations: Array<[string, Array<[string, number]>]>  // Nested Map
-  statusEffects: Array<[string, string[]]>  // Map<string, Set> → [string, string[]][]
-  acModifiers: Array<[string, number]>      // Map<string, number> entries
-  monstersActed: boolean
-  encounterId?: string
+  monsterGroups: any[]                      // MonsterGroup[] (complex nested type)
+  commandQueue: any[]                       // CombatCommand[] (complex nested type)
+  roundNumber: number
+  combatLog: string[]
   canFlee: boolean
-  breathUsedThisRound: Set<string> | string[]  // Accept both for backward compatibility
-  fleeAttempted?: boolean
-  fleeSucceeded?: boolean
+  dungeonLevel: number
+  statusEffects: Array<[string, string[]]>  // Map<string, Set<CombatStatusEffect>> → [string, string[]][]
+  acModifiers: Array<[string, number]>      // Map<string, number> entries
+  statusDurations: Array<[string, Array<[string, number]>]>  // Map<string, Map<status, number>> → nested arrays
+  monstersDemoralized?: boolean
+  surpriseState?: 'party' | 'monsters' | 'none'
+  isFriendlyEncounter?: boolean
+  encounterReason?: 'random' | 'door_kick' | 'treasure_room' | 'alarm' | 'fixed' | 'chest_trap'
+  expeditionAcBuff?: number
 }
 
 /**

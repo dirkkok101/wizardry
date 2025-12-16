@@ -127,11 +127,12 @@ export class SaveService {
   private serializeGameState(state: GameState): SerializedGameState {
     // Serialize combat state Maps (if combat exists)
     const serializedCombat: SerializedCombatState | undefined = state.combat ? {
-      ...state.combat,
-      // Handle potentially undefined Maps with fallbacks
-      partyActions: state.combat.partyActions
-        ? Array.from(state.combat.partyActions.entries())
-        : [],
+      monsterGroups: state.combat.monsterGroups,
+      commandQueue: state.combat.commandQueue,
+      roundNumber: state.combat.roundNumber,
+      combatLog: state.combat.combatLog,
+      canFlee: state.combat.canFlee,
+      dungeonLevel: state.combat.dungeonLevel,
       // statusDurations is Map<string, Map<status, number>> - nested Map
       statusDurations: state.combat.statusDurations
         ? Array.from(state.combat.statusDurations.entries()).map(
@@ -148,10 +149,12 @@ export class SaveService {
       acModifiers: state.combat.acModifiers
         ? Array.from(state.combat.acModifiers.entries())
         : [],
-      // breathUsedThisRound - convert Set to array (may be undefined in old saves)
-      breathUsedThisRound: state.combat.breathUsedThisRound
-        ? Array.from(state.combat.breathUsedThisRound)
-        : []
+      // Optional fields
+      monstersDemoralized: state.combat.monstersDemoralized,
+      surpriseState: state.combat.surpriseState,
+      isFriendlyEncounter: state.combat.isFriendlyEncounter,
+      encounterReason: state.combat.encounterReason,
+      expeditionAcBuff: state.combat.expeditionAcBuff
     } : undefined
 
     // Serialize bodies Map (convert to array for JSON, handle undefined and non-Map cases)
