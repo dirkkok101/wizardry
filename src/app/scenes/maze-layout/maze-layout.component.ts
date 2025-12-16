@@ -69,10 +69,8 @@ import * as TextureAtlasService from '@services/TextureAtlasService';
 
     .maze-canvas {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      /* Canvas sizing handled by WebGL viewport */
+      z-index: 0;
+      /* Position and size controlled by JavaScript to align with .maze-viewport */
     }
 
     .overlay-layer {
@@ -214,50 +212,74 @@ export class MazeLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Setup ResizeObserver for dynamic canvas resolution scaling.
+   * Setup ResizeObserver to watch .maze-viewport for size changes.
+   * Uses polling initially since viewport may not exist yet (child route loading).
    */
   private setupCanvasResizing(): void {
     const canvas = this.canvasRef?.nativeElement;
     if (!canvas) return;
 
-    this.resizeObserver = new ResizeObserver(() => {
-      this.updateCanvasSize();
-    });
+    // Polling function to wait for viewport element
+    const waitForViewport = (): void => {
+      const viewport = document.querySelector('.maze-viewport');
+      if (viewport) {
+        console.log('[MazeLayout] Viewport element found, setting up ResizeObserver');
+        this.resizeObserver = new ResizeObserver(() => {
+          this.updateCanvasSize();
+        });
+        this.resizeObserver.observe(viewport);
+        this.updateCanvasSize();
+      } else {
+        // Viewport not yet rendered, retry
+        requestAnimationFrame(waitForViewport);
+      }
+    };
 
-    const parent = canvas.parentElement;
-    if (parent) {
-      this.resizeObserver.observe(parent);
-    }
-    this.updateCanvasSize();
+    waitForViewport();
   }
 
   /**
-   * Update canvas dimensions based on container size.
+   * Update canvas dimensions and position to align with .maze-viewport element.
    */
   private updateCanvasSize(): void {
     const canvas = this.canvasRef?.nativeElement;
     if (!canvas || !this.webglRenderer) return;
 
+    const viewport = document.querySelector('.maze-viewport');
+    if (!viewport) {
+      console.warn('[MazeLayout] Viewport element not found for canvas sizing');
+      return;
+    }
+
+    // Get viewport position and size
+    const rect = viewport.getBoundingClientRect();
     const parent = canvas.parentElement;
     if (!parent) return;
 
-    // Calculate size maintaining aspect ratio
-    const maxWidth = parent.clientWidth * 0.6;
-    const maxHeight = parent.clientHeight * 0.7;
-    const aspectRatio = 4 / 3;
+    // Get parent's position for relative calculation
+    const parentRect = parent.getBoundingClientRect();
 
-    let width = maxWidth;
-    let height = width / aspectRatio;
+    // Calculate canvas position relative to parent
+    const left = rect.left - parentRect.left;
+    const top = rect.top - parentRect.top;
 
-    if (height > maxHeight) {
-      height = maxHeight;
-      width = height * aspectRatio;
+    // Set canvas position to match viewport frame
+    canvas.style.left = `${left}px`;
+    canvas.style.top = `${top}px`;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+
+    // Update canvas resolution (respecting device pixel ratio for sharpness)
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const newWidth = Math.floor(rect.width * dpr);
+    const newHeight = Math.floor(rect.height * dpr);
+
+    // Only update resolution if dimensions changed
+    if (canvas.width !== newWidth || canvas.height !== newHeight) {
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      console.log(`[MazeLayout] Canvas resized to ${newWidth}x${newHeight} (viewport: ${Math.floor(rect.width)}x${Math.floor(rect.height)}, dpr: ${dpr})`);
     }
-
-    canvas.width = Math.floor(width);
-    canvas.height = Math.floor(height);
-    canvas.style.width = `${canvas.width}px`;
-    canvas.style.height = `${canvas.height}px`;
 
     // Re-render if textures loaded
     if (this.textureAtlas) {

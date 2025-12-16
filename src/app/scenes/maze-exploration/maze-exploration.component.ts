@@ -78,8 +78,11 @@ import { DungeonState } from '@models/Dungeon';
           />
         </div>
 
-        <!-- Center Column: Message Log -->
+        <!-- Center Column: Viewport + Message Log -->
         <div class="center-panel">
+          <div class="maze-viewport">
+            <!-- Canvas renders here via parent component -->
+          </div>
           <div class="message-log-section">
             <app-message-log [messages]="messages()" />
           </div>
@@ -113,35 +116,128 @@ import { DungeonState } from '@models/Dungeon';
       background: transparent;
       color: var(--color-text-primary);
       font-family: var(--font-body);
+      padding: 0.5rem;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
+    :host ::ng-deep app-scene-title,
+    :host ::ng-deep app-scene-footer {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* 3-COLUMN LAYOUT - matches original maze.component.scss */
     .maze-content {
-      flex: 1;
       display: grid;
-      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
       gap: 0.5rem;
-      padding: 0.5rem;
+      flex: 1;
       min-height: 0;
     }
 
+    /* 4K screens: 50% larger cards */
+    @media (min-width: 2000px) {
+      .maze-content {
+        grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+      }
+    }
+
+    /* Side panels (character columns) */
     .left-panel,
     .right-panel {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
-      overflow-y: auto;
+      min-height: 0;
+      width: 100%;
+      max-width: var(--scene-panel-max-width);
+      align-self: start;
+      transition: opacity 0.2s ease;
     }
 
+    @media (min-width: 2000px) {
+      .left-panel,
+      .right-panel {
+        max-width: var(--scene-panel-max-width-4k);
+      }
+    }
+
+    /* Make character panel fill the entire side column */
+    :host ::ng-deep .left-panel app-character-panel,
+    :host ::ng-deep .right-panel app-character-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    /* Center column: Message Log at bottom */
     .center-panel {
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      gap: 0.5rem;
+      min-height: 0;
+      min-width: 0;
+      align-items: center;
+      overflow: visible;
+      padding: 0.5rem 2px;
+    }
+
+    /* Viewport container - shows canvas through transparent background */
+    .maze-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      max-width: 100%;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      overflow: hidden;
     }
 
     .message-log-section {
-      margin-top: auto;
-      max-height: 200px;
-      overflow-y: auto;
+      width: 100%;
+      height: 105px;
+      min-height: 80px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.1rem 0.25rem;
+      background: var(--color-bg-card);
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    :host ::ng-deep .message-log-section app-message-log {
+      display: block;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Compact height responsive adjustments */
+    @media (max-height: 767px) {
+      .maze-exploration {
+        padding: 0.25rem;
+      }
+
+      .maze-content {
+        gap: 0.35rem;
+      }
+
+      .message-log-section {
+        height: 60px;
+        min-height: 50px;
+        padding: 0.25rem;
+      }
+    }
+
+    /* Very compact height */
+    @media (max-height: 599px) {
+      .message-log-section {
+        height: 50px;
+      }
     }
   `]
 })
