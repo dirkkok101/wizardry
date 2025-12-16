@@ -194,9 +194,10 @@ import { DungeonState } from '@models/Dungeon';
       aspect-ratio: var(--scene-viewport-aspect) / 1;
       max-width: 100%;
       background: transparent;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-gold-primary);
       border-radius: 4px;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     .message-log-section {

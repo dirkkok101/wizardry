@@ -12,12 +12,13 @@ import { SceneFooterComponent } from '@shared/components/scene-footer/scene-foot
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
+import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageLogService } from '@services/MessageLogService';
 import { SpellLearningService } from '@services/SpellLearningService';
-import { SpellCastingService } from '@services/SpellCastingService';
+import { SpellCastingService, SpellData } from '@services/SpellCastingService';
 import { CharacterService } from '@services/CharacterService';
 import { LightService } from '@services/LightService';
 import { createCommand } from '@services/combat';
@@ -28,7 +29,7 @@ import { ActiveSpell } from '@models/active-spell.types';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
-import { CombatState, CombatCommand, MonsterGroup } from '@models/Combat';
+import { CombatState, CombatCommand, MonsterGroup, MonsterInstance } from '@models/Combat';
 import { DungeonState } from '@models/Dungeon';
 
 /**
@@ -53,7 +54,8 @@ import { DungeonState } from '@models/Dungeon';
     SceneFooterComponent,
     CharacterPanelComponent,
     MessageLogComponent,
-    CombatOverlayComponent
+    CombatOverlayComponent,
+    SpellPanelComponent
   ],
   template: `
     <div class="combat-planning">
@@ -88,7 +90,7 @@ import { DungeonState } from '@models/Dungeon';
               [letterboxType]="letterboxType()"
               [showVictoryOverlay]="false"
               [showDefeatOverlay]="false"
-              [showMonsterCards]="true"
+              [showMonsterCards]="showMonsterCards()"
               [partyCharacters]="partyCharacters()"
               (groupClicked)="onGroupClicked($event)"
             />
@@ -118,6 +120,21 @@ import { DungeonState } from '@models/Dungeon';
         [menuItems]="isTargetingMode() ? targetingMenuItems() : combatMenuItems()"
         (itemSelected)="handleMenuAction($event)"
       />
+
+      <!-- Spell Selection Panel (overlay) -->
+      @if (selectingSpellForCharacter(); as casterId) {
+        @if (getCaster(casterId); as caster) {
+          <app-spell-panel
+            [visible]="true"
+            [character]="caster"
+            [mode]="'casting'"
+            [context]="'combat'"
+            [title]="'SELECT SPELL'"
+            (spellSelected)="onSpellSelected($event)"
+            (closed)="cancelSpellSelection()"
+          />
+        }
+      }
     </div>
   `,
   styles: [`
@@ -211,7 +228,7 @@ import { DungeonState } from '@models/Dungeon';
       aspect-ratio: var(--scene-viewport-aspect) / 1;
       max-width: 100%;
       background: transparent;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-gold-primary);
       border-radius: 4px;
       overflow: hidden;
     }
@@ -272,6 +289,15 @@ export class CombatPlanningComponent implements OnInit {
   readonly selectingTargetForCharacter = signal<string | null>(null);
   readonly selectedTargetGroup = signal<'A' | 'B' | 'C' | 'D' | null>(null);
   readonly letterboxType = signal<'encounter' | 'ambush' | 'surprise' | null>(null);
+
+  // Combat intro state - hides monster cards and player actions during letterbox sequence
+  readonly combatIntroActive = signal<boolean>(false);
+  readonly showMonsterCards = computed(() => !this.combatIntroActive());
+
+  // Spell selection state
+  readonly selectingSpellForCharacter = signal<string | null>(null);
+  readonly pendingSpell = signal<SpellData | null>(null);
+  readonly targetingType = signal<'attack' | 'spell' | null>(null);
 
   // Computed from GameState
   readonly combatState = computed(() => this.gameState.state().combat as CombatState | undefined);
@@ -412,8 +438,8 @@ export class CombatPlanningComponent implements OnInit {
     return items;
   });
 
-  // Panel dimming during targeting
-  readonly shouldDimPanels = computed(() => this.isTargetingMode());
+  // Panel dimming during targeting or intro
+  readonly shouldDimPanels = computed(() => this.isTargetingMode() || this.combatIntroActive());
 
   /**
    * Status texts for characters - shows incapacitated status or selected action
@@ -452,19 +478,61 @@ export class CombatPlanningComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Check for surprise state on first round
     const combat = this.combatState();
-    if (combat && combat.roundNumber === 1 && combat.surpriseState) {
-      if (combat.surpriseState === 'party') {
-        this.letterboxType.set('surprise');
-        this.addMessage('You surprised the monsters! You get a free round.');
-      } else if (combat.surpriseState === 'monsters') {
-        this.letterboxType.set('ambush');
-        this.addMessage('The monsters ambushed you! They get a free round.');
-      }
+
+    // Only show intro sequence on first round
+    if (combat && combat.roundNumber === 1) {
+      this.showCombatIntro(combat);
+    } else {
+      // Subsequent rounds - just show action selection message
+      this.addMessage('Select actions for your party members.');
+    }
+  }
+
+  /**
+   * Show combat intro sequence with letterbox banners
+   * Handles: encounter → surprise/ambush → action selection
+   */
+  private async showCombatIntro(combat: CombatState): Promise<void> {
+    // Mark intro as active to hide monster cards and dim panels
+    this.combatIntroActive.set(true);
+
+    // 1. Always show ENCOUNTER! first
+    await this.showLetterbox('encounter', 2000);
+
+    // 2. Check for surprise state
+    if (combat.surpriseState === 'monsters') {
+      // Party is ambushed - monsters get free round
+      await this.showLetterbox('ambush', 2500);
+      this.addMessage('The monsters ambushed you! They get a free round.');
+    } else if (combat.surpriseState === 'party') {
+      // Party surprised monsters - party gets free round
+      await this.showLetterbox('surprise', 2500);
+      this.addMessage('You surprised the monsters! You get a free round.');
     }
 
+    // 3. End intro and enable action selection
+    this.combatIntroActive.set(false);
     this.addMessage('Select actions for your party members.');
+  }
+
+  /**
+   * Show a letterbox banner for a duration, then clear it
+   */
+  private async showLetterbox(
+    type: 'encounter' | 'ambush' | 'surprise',
+    durationMs: number
+  ): Promise<void> {
+    this.letterboxType.set(type);
+    await this.delay(durationMs);
+    this.letterboxType.set(null);
+  }
+
+  /**
+   * Utility delay function
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // ============================================================
@@ -519,8 +587,8 @@ export class CombatPlanningComponent implements OnInit {
         this.startTargeting(char.id);
         break;
       case 'cast-spell':
-        // Navigate to spell casting scene, return to maze (combat guards will redirect to planning)
-        this.navigation.castSpell(char.id, 'maze');
+        // Show spell panel in-component (don't navigate away - preserves selectedActions)
+        this.selectingSpellForCharacter.set(char.id);
         break;
       case 'parry':
         this.selectParry(char);
@@ -537,19 +605,111 @@ export class CombatPlanningComponent implements OnInit {
    */
   private startTargeting(characterId: string): void {
     this.selectingTargetForCharacter.set(characterId);
+    this.targetingType.set('attack');
     this.addMessage('Select a monster group to attack.');
+  }
+
+  // ============================================================
+  // SPELL SELECTION
+  // ============================================================
+
+  /**
+   * Handle spell selection from SpellPanel
+   * In combat, offensive spells targeting 'single' or 'group' need group selection
+   */
+  onSpellSelected(spell: SpellData): void {
+    const charId = this.selectingSpellForCharacter();
+    if (!charId) return;
+
+    // Close spell panel
+    this.selectingSpellForCharacter.set(null);
+
+    // In combat, 'single' = single monster in group, 'group' = all monsters in group
+    // Both require group selection
+    const needsGroupTarget = spell.target === 'single' || spell.target === 'group';
+
+    if (needsGroupTarget) {
+      // Store spell and enter targeting mode
+      this.pendingSpell.set(spell);
+      this.selectingTargetForCharacter.set(charId);
+      this.targetingType.set('spell');
+      this.addMessage(`Select target for ${spell.name}`);
+    } else {
+      // Auto-target spells (party, self, all_enemies, all_allies)
+      this.createSpellCommand(charId, spell, null);
+    }
+  }
+
+  /**
+   * Cancel spell selection
+   */
+  cancelSpellSelection(): void {
+    this.selectingSpellForCharacter.set(null);
+  }
+
+  /**
+   * Get caster character for SpellPanel (used in template)
+   */
+  getCaster(characterId: string): Character | undefined {
+    return this.partyCharacters().find(c => c.id === characterId);
+  }
+
+  /**
+   * Create a CAST_SPELL combat command
+   */
+  private createSpellCommand(
+    charId: string,
+    spell: SpellData,
+    targetGroupId: 'A' | 'B' | 'C' | 'D' | null
+  ): void {
+    const char = this.partyCharacters().find(c => c.id === charId);
+    if (!char) return;
+
+    // Get target (first alive monster in group) if targeting a group
+    let target: MonsterInstance | undefined;
+    if (targetGroupId) {
+      const group = this.monsterGroups().find(g => g.id === targetGroupId);
+      target = group?.monsters.find(m => m.hp > 0);
+    }
+
+    const command = createCommand(char, 'CAST_SPELL', target, {
+      spellId: spell.id,
+      groupId: targetGroupId ?? undefined,
+      spellType: spell.casterType
+    });
+
+    this.selectedActions.update(actions => {
+      const newActions = new Map(actions);
+      newActions.set(charId, command);
+      return newActions;
+    });
+
+    const targetText = targetGroupId ? ` → Group ${targetGroupId}` : '';
+    this.addMessage(`${char.name}: ${spell.name.toUpperCase()}${targetText}`);
+
+    // Clear targeting state
+    this.clearTargetingState();
+  }
+
+  /**
+   * Clear all targeting state
+   */
+  private clearTargetingState(): void {
+    this.selectingTargetForCharacter.set(null);
+    this.selectedTargetGroup.set(null);
+    this.pendingSpell.set(null);
+    this.targetingType.set(null);
   }
 
   /**
    * Cancel targeting mode
    */
   cancelTargeting(): void {
-    this.selectingTargetForCharacter.set(null);
-    this.selectedTargetGroup.set(null);
+    this.clearTargetingState();
   }
 
   /**
-   * Handle monster group click for targeting
+   * Handle monster group click for targeting (attack or spell)
    */
   onGroupClicked(groupId: 'A' | 'B' | 'C' | 'D'): void {
     const selectingFor = this.selectingTargetForCharacter();
@@ -558,7 +718,7 @@ export class CombatPlanningComponent implements OnInit {
     const char = this.partyCharacters().find(c => c.id === selectingFor);
     if (!char) return;
 
-    // Find a valid target in the group
+    // Validate group has alive targets
     const group = this.monsterGroups().find(g => g.id === groupId);
     if (!group) return;
 
@@ -568,26 +728,29 @@ export class CombatPlanningComponent implements OnInit {
       return;
     }
 
-    // Select first alive monster as target
-    const target = aliveMonsters[0];
+    // Handle based on targeting type
+    if (this.targetingType() === 'spell') {
+      // Spell targeting
+      const spell = this.pendingSpell();
+      if (spell) {
+        this.createSpellCommand(char.id, spell, groupId);
+      }
+    } else {
+      // Attack targeting
+      const target = aliveMonsters[0];
+      const command = createCommand(char, 'ATTACK', target, {
+        groupId: groupId
+      });
 
-    // Create attack command
-    const command = createCommand(char, 'ATTACK', target, {
-      groupId: groupId
-    });
+      this.selectedActions.update(actions => {
+        const newActions = new Map(actions);
+        newActions.set(char.id, command);
+        return newActions;
+      });
 
-    // Store the action
-    this.selectedActions.update(actions => {
-      const newActions = new Map(actions);
-      newActions.set(char.id, command);
-      return newActions;
-    });
-
-    // Clear targeting mode
-    this.selectingTargetForCharacter.set(null);
-    this.selectedTargetGroup.set(null);
-
-    this.addMessage(`${char.name}: ATTACK → Group ${groupId}`);
+      this.addMessage(`${char.name}: ATTACK → Group ${groupId}`);
+      this.clearTargetingState();
+    }
   }
 
   // ============================================================

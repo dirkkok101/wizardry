@@ -186,7 +186,7 @@ import { DungeonState } from '@models/Dungeon';
       padding: 0.5rem 2px;
     }
 
-    /* Viewport container - shows canvas through transparent background */
+    /* Viewport container - opaque background hides WebGL renderer */
     .maze-viewport {
       position: relative;
       flex: 1;
@@ -194,8 +194,8 @@ import { DungeonState } from '@models/Dungeon';
       width: 100%;
       aspect-ratio: var(--scene-viewport-aspect) / 1;
       max-width: 100%;
-      background: transparent;
-      border: 1px solid var(--color-border);
+      background: #000;
+      border: 1px solid var(--color-gold-primary);
       border-radius: 4px;
       overflow: hidden;
     }

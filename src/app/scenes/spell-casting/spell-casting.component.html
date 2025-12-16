@@ -5,7 +5,7 @@
       [visible]="phase() === 'selecting-spell'"
       [character]="char"
       [mode]="'casting'"
-      [context]="'dungeon'"
+      [context]="context()"
       [title]="'SELECT SPELL'"
       (spellSelected)="onSpellSelected($event)"
       (closed)="returnToPrevious()"

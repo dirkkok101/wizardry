@@ -44,6 +44,24 @@ export class SpritePreloadService {
   ]
 
   /**
+   * Trap sprites for chest playback
+   * All 11 trap types from authentic Wizardry 1
+   */
+  private static readonly TRAP_SPRITES = [
+    '/assets/sprites/traps/poison_needle.png',
+    '/assets/sprites/traps/gas_bomb.png',
+    '/assets/sprites/traps/crossbow_bolt.png',
+    '/assets/sprites/traps/exploding_box.png',
+    '/assets/sprites/traps/splinters.png',
+    '/assets/sprites/traps/blades.png',
+    '/assets/sprites/traps/stunner.png',
+    '/assets/sprites/traps/alarm.png',
+    '/assets/sprites/traps/teleporter.png',
+    '/assets/sprites/traps/mage_blaster.png',
+    '/assets/sprites/traps/priest_blaster.png'
+  ]
+
+  /**
    * Preload all game sprites. Safe to call multiple times.
    * Returns immediately if already loaded or in progress.
    */
@@ -91,11 +109,14 @@ export class SpritePreloadService {
     // 2. Scene Sprites (backgrounds for town scenes)
     urls.push(...this.SCENE_SPRITES)
 
-    // 3. Character Sprites (all 20 race/class combinations)
+    // 3. Trap Sprites (chest playback)
+    urls.push(...this.TRAP_SPRITES)
+
+    // 4. Character Sprites (all 20 race/class combinations)
     const characterSprites = SpriteService.getAllSprites()
     urls.push(...characterSprites.map(s => s.url))
 
-    // 4. Monster Sprites (derived from loaded monster data)
+    // 5. Monster Sprites (derived from loaded monster data)
     try {
       const monsters = MonsterDataLoader.getAllMonsters()
       for (const monster of monsters.values()) {

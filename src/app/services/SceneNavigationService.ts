@@ -64,12 +64,20 @@ export class SceneNavigationService {
   }
 
   /**
-   * Navigate to spell casting with return destination
-   * Used by: Maze (for dungeon spell casting via navigation)
+   * Navigate to spell casting with return destination and context
+   * Used by: Maze (dungeon spell casting), Combat (combat spell casting)
+   *
+   * @param characterId - The ID of the character casting
+   * @param returnTo - Where to return after casting
+   * @param context - Spell context: 'combat' for combat spells, 'dungeon'/'camp' for exploration
    */
-  castSpell(characterId: string, returnTo: ReturnDestination = 'maze'): Promise<boolean> {
+  castSpell(
+    characterId: string,
+    returnTo: ReturnDestination = 'maze',
+    context: 'combat' | 'dungeon' | 'camp' = 'dungeon'
+  ): Promise<boolean> {
     return this.router.navigate(['/spell-casting'], {
-      queryParams: { characterId, returnTo }
+      queryParams: { characterId, returnTo, context }
     });
   }
 

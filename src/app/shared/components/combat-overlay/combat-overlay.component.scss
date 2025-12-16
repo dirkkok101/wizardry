@@ -11,6 +11,11 @@
   z-index: 10;
   overflow: hidden;
 
+  // Visual framing for combat theater
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+
   &.targeting-mode {
     pointer-events: auto;
     cursor: crosshair;

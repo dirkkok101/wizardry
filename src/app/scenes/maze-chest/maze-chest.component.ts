@@ -15,9 +15,13 @@ import {
   RecommendedHandler
 } from '@shared/components/chest-overlay/chest-overlay.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { GameStateService } from '@services/GameStateService';
+import { MessageLogService } from '@services/MessageLogService';
+import { LightService } from '@services/LightService';
 import { CalfoSpellService } from '@services/trap/CalfoSpellService';
 import { TrapInspectionService } from '@services/trap/TrapInspectionService';
 import { TrapDisarmService } from '@services/trap/TrapDisarmService';
@@ -26,6 +30,8 @@ import { TrapEffectService } from '@services/trap/TrapEffectService';
 import { ChestService } from '@services/ChestService';
 import { SpellCastingService } from '@services/SpellCastingService';
 import { GameStateQueries } from '@utils/GameStateQueries';
+import { ActiveSpell } from '@models/active-spell.types';
+import { DungeonState } from '@models/Dungeon';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
@@ -48,36 +54,22 @@ import { ScrambledTrapState, TrapId } from '@models/Trap';
 @Component({
   selector: 'app-maze-chest',
   standalone: true,
-  imports: [CommonModule, ChestOverlayComponent, CharacterPanelComponent, SceneFooterComponent],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    ChestOverlayComponent,
+    CharacterPanelComponent,
+    MessageLogComponent,
+    SceneFooterComponent
+  ],
   template: `
     <div class="maze-chest">
-      <!-- Chest Overlay (sprite and phase display) -->
-      <app-chest-overlay
-        [visible]="true"
-        [phase]="chestPhase()"
-        [chest]="pendingChest() ?? null"
-        [spriteState]="chestSprite()"
-        [scrambledState]="scrambledTrapState()"
-        [trapInput]="chestTrapInput()"
-        [summary]="null"
-        [availableCharacters]="partyCharacters()"
-        [calfoEligibleCasters]="calfoEligibleCasters()"
-        [selectedOpener]="chestOpener()"
-        [lastMessage]="chestLastMessage()"
-        [recommendedHandler]="recommendedChestHandler()"
-        [inventoryWarning]="chestInventoryWarning()"
-        [letterboxType]="chestLetterboxType()"
-        [inspectChance]="chestInspectChance()"
-        [disarmChance]="chestDisarmChance()"
-        [trapLetterboxName]="trapLetterboxName()"
-        (characterSelected)="onChestCharacterSelected($event)"
-        (casterSelected)="onChestCasterSelected($event)"
-        (actionSelected)="onChestActionSelected($event)"
-        (keyPressed)="onChestKeyPressed($event)"
-      />
+      <!-- Title with Active Spells -->
+      <app-scene-title [title]="sceneTitle()" [activeSpells]="activeSpells()"></app-scene-title>
 
-      <!-- Character Panels -->
-      <div class="character-panels">
+      <!-- 3-Column Layout -->
+      <div class="maze-content">
+        <!-- Left Column: Positions 0, 2, 4 -->
         <div class="left-panel">
           <app-character-panel
             [characters]="leftPanelCharacters()"
@@ -87,6 +79,41 @@ import { ScrambledTrapState, TrapId } from '@models/Trap';
             (actionClick)="handleChestCardAction($event)"
           />
         </div>
+
+        <!-- Center Column: Viewport + Message Log -->
+        <div class="center-panel">
+          <div class="maze-viewport">
+            <!-- Chest Overlay (sprite and phase display) -->
+            <app-chest-overlay
+              [visible]="true"
+              [phase]="chestPhase()"
+              [chest]="pendingChest() ?? null"
+              [spriteState]="chestSprite()"
+              [scrambledState]="scrambledTrapState()"
+              [trapInput]="chestTrapInput()"
+              [summary]="null"
+              [availableCharacters]="partyCharacters()"
+              [calfoEligibleCasters]="calfoEligibleCasters()"
+              [selectedOpener]="chestOpener()"
+              [lastMessage]="''"
+              [recommendedHandler]="recommendedChestHandler()"
+              [inventoryWarning]="chestInventoryWarning()"
+              [letterboxType]="chestLetterboxType()"
+              [inspectChance]="chestInspectChance()"
+              [disarmChance]="chestDisarmChance()"
+              [trapLetterboxName]="trapLetterboxName()"
+              (characterSelected)="onChestCharacterSelected($event)"
+              (casterSelected)="onChestCasterSelected($event)"
+              (actionSelected)="onChestActionSelected($event)"
+              (keyPressed)="onChestKeyPressed($event)"
+            />
+          </div>
+          <div class="message-log-section">
+            <app-message-log [messages]="messages()" />
+          </div>
+        </div>
+
+        <!-- Right Column: Positions 1, 3, 5 -->
         <div class="right-panel">
           <app-character-panel
             [characters]="rightPanelCharacters()"
@@ -112,32 +139,129 @@ import { ScrambledTrapState, TrapId } from '@models/Trap';
       display: flex;
       flex-direction: column;
       background: transparent;
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      padding: 0.5rem;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .character-panels {
-      position: absolute;
-      top: 0;
-      bottom: 60px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-      z-index: 10;
+    :host ::ng-deep app-scene-title,
+    :host ::ng-deep app-scene-footer {
+      display: block;
+      flex-shrink: 0;
     }
 
-    .left-panel, .right-panel {
-      width: 200px;
-      padding: 1rem;
-      pointer-events: auto;
+    /* 3-COLUMN LAYOUT - matches maze-exploration */
+    .maze-content {
+      display: grid;
+      grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
+      gap: 0.5rem;
+      flex: 1;
+      min-height: 0;
     }
 
-    .left-panel {
-      background: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
+    /* 4K screens: 50% larger cards */
+    @media (min-width: 2000px) {
+      .maze-content {
+        grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+      }
     }
 
+    /* Side panels (character columns) */
+    .left-panel,
     .right-panel {
-      background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      width: 100%;
+      max-width: var(--scene-panel-max-width);
+      align-self: start;
+    }
+
+    @media (min-width: 2000px) {
+      .left-panel,
+      .right-panel {
+        max-width: var(--scene-panel-max-width-4k);
+      }
+    }
+
+    /* Make character panel fill the entire side column */
+    :host ::ng-deep .left-panel app-character-panel,
+    :host ::ng-deep .right-panel app-character-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    /* Center column: Viewport + Message Log */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 0;
+      min-width: 0;
+      align-items: center;
+      overflow: visible;
+      padding: 0.5rem 2px;
+    }
+
+    /* Viewport container - shows canvas through transparent background */
+    .maze-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      aspect-ratio: var(--scene-viewport-aspect) / 1;
+      max-width: 100%;
+      background: transparent;
+      border: 1px solid var(--color-gold-primary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .message-log-section {
+      width: 100%;
+      height: 120px;
+      min-height: 90px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.1rem 0.25rem;
+      background: var(--color-bg-card);
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    :host ::ng-deep .message-log-section app-message-log {
+      display: block;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Compact height responsive adjustments */
+    @media (max-height: 767px) {
+      .maze-chest {
+        padding: 0.25rem;
+      }
+
+      .maze-content {
+        gap: 0.35rem;
+      }
+
+      .message-log-section {
+        height: 80px;
+        min-height: 70px;
+        padding: 0.25rem;
+      }
+    }
+
+    /* Very compact height */
+    @media (max-height: 599px) {
+      .message-log-section {
+        height: 65px;
+      }
     }
   `]
 })
@@ -146,7 +270,6 @@ export class MazeChestComponent implements OnInit {
   readonly chestPhase = signal<ChestPhase>('action_select');
   readonly chestSprite = signal<'closed' | 'open'>('closed');
   readonly chestOpener = signal<Character | null>(null);
-  readonly chestLastMessage = signal<string>('Choose an action from a character card.');
   readonly scrambledTrapState = signal<ScrambledTrapState | null>(null);
   readonly chestTrapInput = signal<string>('');
   readonly chestInventoryWarning = signal<string | null>(null);
@@ -164,20 +287,71 @@ export class MazeChestComponent implements OnInit {
 
   // Computed from GameState
   readonly pendingChest = computed(() => this.gameState.state().pendingChest);
+  readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState | undefined);
+  readonly currentLevel = computed(() => this.dungeonState()?.currentLevel ?? 1);
+
+  // Scene title
+  readonly sceneTitle = computed(() => `CHEST - LEVEL ${this.currentLevel()}`);
+
+  // Active spells (MILWA, LOMILWA, etc.) - same pattern as maze-exploration
+  readonly activeSpells = computed((): ActiveSpell[] => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return [];
+
+    const spells: ActiveSpell[] = [];
+
+    // Light spells
+    if (dungeon.lightActive && dungeon.lightSpellType) {
+      const viewDistance = LightService.getEffectiveViewDistance(dungeon);
+      const durationText = dungeon.lightDurationRemaining !== undefined
+        ? ` (${dungeon.lightDurationRemaining} steps)`
+        : '';
+      spells.push({
+        name: dungeon.lightSpellType,
+        icon: '💡',
+        description: `Light (Radius: ${viewDistance})${durationText}`,
+        variant: 'light'
+      });
+    }
+
+    // LATUMAPIC (monster identification)
+    if (dungeon.latumapicActive) {
+      spells.push({
+        name: 'LATUMAPIC',
+        icon: '👁️',
+        description: 'Monsters Identified',
+        variant: 'identification'
+      });
+    }
+
+    // MAPORFIC (party AC buff)
+    if (dungeon.expeditionAcBuff && dungeon.expeditionAcBuff !== 0) {
+      spells.push({
+        name: 'MAPORFIC',
+        icon: '🛡️',
+        description: `Party AC ${dungeon.expeditionAcBuff > 0 ? '+' : ''}${dungeon.expeditionAcBuff}`,
+        variant: 'protection'
+      });
+    }
+
+    return spells;
+  });
+
+  // Message log messages
+  readonly messages = computed(() => this.messageLog.messages());
 
   readonly partyCharacters = computed(() => {
     const state = this.gameState.state();
     return GameStateQueries.partyCharacters(state);
   });
 
+  // Column splitting: even/odd indices (matches maze-exploration pattern)
   readonly leftPanelCharacters = computed(() => {
-    const chars = this.partyCharacters();
-    return chars.slice(0, 3);
+    return this.partyCharacters().filter((_, i) => i % 2 === 0); // Positions 0, 2, 4
   });
 
   readonly rightPanelCharacters = computed(() => {
-    const chars = this.partyCharacters();
-    return chars.slice(3, 6);
+    return this.partyCharacters().filter((_, i) => i % 2 === 1); // Positions 1, 3, 5
   });
 
   readonly calfoEligibleCasters = computed(() => {
@@ -226,7 +400,8 @@ export class MazeChestComponent implements OnInit {
 
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private messageLog: MessageLogService
   ) {}
 
   ngOnInit(): void {
@@ -275,7 +450,7 @@ export class MazeChestComponent implements OnInit {
     if (CalfoSpellService.canCastCalfo(char)) {
       actions.push({
         type: 'calfo',
-        label: 'CALFO',
+        label: 'Calfo',
         enabled: canAct
       });
     }
@@ -344,7 +519,7 @@ export class MazeChestComponent implements OnInit {
   private handleChestInspectWith(character: Character): void {
     const chest = this.pendingChest();
     if (!chest || chest.trapIdentified) {
-      this.chestLastMessage.set('The trap has already been identified.');
+      this.setChestMessage('The trap has already been identified.');
       return;
     }
 
@@ -353,7 +528,7 @@ export class MazeChestComponent implements OnInit {
     const result = TrapInspectionService.attemptInspection(character, chest);
 
     if (result.triggered) {
-      this.chestLastMessage.set(`${character.name} accidentally triggered the trap!`);
+      this.setChestMessage(`${character.name} accidentally triggered the trap!`);
       this.triggerChestTrap(chest, character);
       return;
     }
@@ -371,9 +546,9 @@ export class MazeChestComponent implements OnInit {
 
       const scrambledState = TrapPuzzleService.createScrambledState(result.trapIdentified);
       this.scrambledTrapState.set(scrambledState);
-      this.chestLastMessage.set(`${character.name} found a trap!`);
+      this.setChestMessage(`${character.name} found a trap!`);
     } else {
-      this.chestLastMessage.set(`${character.name} didn't find anything suspicious.`);
+      this.setChestMessage(`${character.name} didn't find anything suspicious.`);
     }
   }
 
@@ -382,7 +557,7 @@ export class MazeChestComponent implements OnInit {
    */
   private handleChestCalfoWith(character: Character): void {
     if (!CalfoSpellService.canCastCalfo(character)) {
-      this.chestLastMessage.set(`${character.name} cannot cast CALFO.`);
+      this.setChestMessage(`${character.name} cannot cast CALFO.`);
       return;
     }
 
@@ -414,7 +589,7 @@ export class MazeChestComponent implements OnInit {
         const scrambledState = TrapPuzzleService.createScrambledState(result.trapIdentified);
         const fullyRevealedState = TrapPuzzleService.performCalfo(character, scrambledState);
         this.scrambledTrapState.set(fullyRevealedState);
-        this.chestLastMessage.set(`${character.name} casts CALFO! A trap is revealed!`);
+        this.setChestMessage(`${character.name} casts CALFO! A trap is revealed!`);
       } else {
         this.gameState.updateState(state => ({
           ...state,
@@ -423,14 +598,14 @@ export class MazeChestComponent implements OnInit {
             trapIdentified: true
           } : undefined
         }));
-        this.chestLastMessage.set(`${character.name} casts CALFO. No trap detected.`);
+        this.setChestMessage(`${character.name} casts CALFO. No trap detected.`);
       }
     } else {
       const currentState = this.scrambledTrapState();
       if (currentState) {
         const fullyRevealedState = TrapPuzzleService.performCalfo(character, currentState);
         this.scrambledTrapState.set(fullyRevealedState);
-        this.chestLastMessage.set(`${character.name} casts CALFO! All letters revealed!`);
+        this.setChestMessage(`${character.name} casts CALFO! All letters revealed!`);
       }
     }
   }
@@ -447,7 +622,7 @@ export class MazeChestComponent implements OnInit {
     this.chestOpener.set(character);
     this.chestPhase.set('trap_input');
     this.chestTrapInput.set('');
-    this.chestLastMessage.set(`${character.name} prepares to disarm. Enter the trap name.`);
+    this.setChestMessage(`${character.name} prepares to disarm. Enter the trap name.`);
   }
 
   /**
@@ -533,7 +708,7 @@ export class MazeChestComponent implements OnInit {
     const result = TrapDisarmService.attemptDisarm(opener, chest, inputName);
 
     if (result.triggered) {
-      this.chestLastMessage.set(`${opener.name} triggered the trap while trying to disarm it!`);
+      this.setChestMessage(`${opener.name} triggered the trap while trying to disarm it!`);
       this.triggerChestTrap(chest, opener);
       return;
     }
@@ -546,11 +721,12 @@ export class MazeChestComponent implements OnInit {
           trapDisarmed: true
         } : undefined
       }));
-      this.chestLastMessage.set(`${opener.name} successfully disarmed the trap!`);
+      this.setChestMessage(`${opener.name} successfully disarmed the trap!`);
+      this.scrambledTrapState.set(null);  // Clear puzzle - show "safe to open" status
       this.chestPhase.set('action_select');
       this.chestTrapInput.set('');
     } else {
-      this.chestLastMessage.set(`${opener.name} failed to disarm. Try again?`);
+      this.setChestMessage(`${opener.name} failed to disarm. Try again?`);
       this.chestTrapInput.set('');
     }
   }
@@ -672,5 +848,12 @@ export class MazeChestComponent implements OnInit {
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Add message to the message log
+   */
+  private setChestMessage(message: string): void {
+    this.messageLog.addMessage(message);
   }
 }

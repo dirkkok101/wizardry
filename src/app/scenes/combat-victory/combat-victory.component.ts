@@ -193,7 +193,7 @@ import { Chest } from '@models/Chest';
       padding: 0.5rem 2px;
     }
 
-    /* Viewport container - shows canvas through transparent background */
+    /* Viewport container - opaque background hides WebGL renderer */
     .maze-viewport {
       position: relative;
       flex: 1;
@@ -201,8 +201,8 @@ import { Chest } from '@models/Chest';
       width: 100%;
       aspect-ratio: var(--scene-viewport-aspect) / 1;
       max-width: 100%;
-      background: transparent;
-      border: 1px solid var(--color-border);
+      background: #000;
+      border: 1px solid var(--color-gold-primary);
       border-radius: 4px;
       overflow: hidden;
     }
@@ -460,7 +460,8 @@ export class CombatVictoryComponent implements OnInit, OnDestroy {
     }
 
     // Determine if chest should appear (only for treasure_room encounters)
-    const shouldShowChest = combatState.encounterReason === 'treasure_room';
+    // TEMP: Always spawn chest for testing
+    const shouldShowChest = true; // combatState.encounterReason === 'treasure_room';
     let pendingChest: Chest | undefined;
 
     if (shouldShowChest) {

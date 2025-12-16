@@ -8,13 +8,21 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
+import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
+import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
+import { MenuItem } from '@shared/components/menu/menu.component';
 import { GameStateService } from '@services/GameStateService';
 import { ChestService } from '@services/ChestService';
+import { MessageLogService } from '@services/MessageLogService';
+import { LightService } from '@services/LightService';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { getItemDisplayName } from '@utils/ItemDisplayHelpers';
 import { Character } from '@models/Character';
 import { Item } from '@models/Item';
 import { Chest, TreasureDistributionResult } from '@models/Chest';
+import { ActiveSpell } from '@models/active-spell.types';
 import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
 
 /**
@@ -27,271 +35,484 @@ import { ANIMATION_TIMINGS } from '@config/AnimationTimings';
  * 4. Updates party gold and recipient inventory
  * 5. Clears pendingChest from GameState
  * 6. Navigates to /maze
+ *
+ * Uses same 3-column layout as other maze scenes for consistency.
  */
 @Component({
   selector: 'app-chest-rewards',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    SceneTitleComponent,
+    CharacterPanelComponent,
+    MessageLogComponent,
+    SceneFooterComponent
+  ],
   template: `
     <div class="chest-rewards">
-      <!-- Treasure Banner -->
-      <div class="treasure-banner" [class.visible]="showBanner()">
-        <div class="banner-content">TREASURE!</div>
-      </div>
+      <!-- Title with Active Spells -->
+      <app-scene-title title="Treasure" [activeSpells]="activeSpells()"></app-scene-title>
 
-      <!-- Rewards Panel -->
-      <div class="rewards-panel" [class.visible]="showRewards()">
-        <h2 class="rewards-title">Chest Contents</h2>
-
-        <!-- Gold Display -->
-        <div class="reward-section gold-section">
-          <span class="reward-label">Gold Found:</span>
-          <span class="reward-value gold">{{ goldObtained() }} GP</span>
+      <!-- 3-Column Layout -->
+      <div class="maze-content">
+        <!-- Left Column: Positions 0, 2, 4 -->
+        <div class="left-panel">
+          <app-character-panel [characters]="leftPanelCharacters()" variant="compact" />
         </div>
 
-        <!-- Items Found -->
-        @if (itemsReceived().length > 0 || itemsLost().length > 0) {
-          <div class="reward-section items-section">
-            <span class="items-header">Items:</span>
+        <!-- Center Column: Viewport + Message Log -->
+        <div class="center-panel">
+          <div class="maze-viewport">
+            <!-- Reward overlay (theater elements constrained here) -->
+            <div class="reward-overlay">
+              <!-- Vignette Effect -->
+              <div class="chest-vignette"></div>
 
-            <!-- Items received -->
-            @for (item of itemsReceived(); track item.id) {
-              <div class="item-row received">
-                <span class="item-name">{{ getItemName(item) }}</span>
-                <span class="item-status">→ {{ recipientName() }}</span>
+              <!-- Sprite Background -->
+              <div class="chest-sprite-layer">
+                @if (!spriteError()) {
+                  <img
+                    [src]="spriteUrl()"
+                    alt="Open treasure chest"
+                    class="chest-sprite"
+                    (error)="onSpriteError()"
+                  />
+                }
               </div>
-            }
 
-            <!-- Items lost (no inventory space) -->
-            @for (item of itemsLost(); track item.id) {
-              <div class="item-row lost">
-                <span class="item-name">{{ getItemName(item) }}</span>
-                <span class="item-status">Lost!</span>
-              </div>
-            }
+              <!-- Gradient Overlay -->
+              <div class="chest-gradient-overlay"></div>
 
-            <!-- No items case -->
-            @if (itemsReceived().length === 0 && itemsLost().length === 0) {
-              <div class="no-items">No items found</div>
-            }
+              <!-- Reward Content -->
+              @if (showRewards()) {
+                <div class="reward-content">
+                  <h3 class="result-title">Treasure!</h3>
+
+                  @if (goldObtained() > 0) {
+                    <div class="reward-badge gold">
+                      <span class="reward-value">{{ goldObtained() }}</span>
+                      <span class="reward-label">GOLD</span>
+                    </div>
+                  }
+
+                  @if (itemsReceived().length > 0) {
+                    <div class="items-section">
+                      <p class="items-header">Items for {{ recipientName() }}:</p>
+                      <div class="items-row">
+                        @for (item of itemsReceived(); track item.id) {
+                          <span class="item-tag">{{ getItemName(item) }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  @if (goldObtained() === 0 && itemsReceived().length === 0 && itemsLost().length === 0) {
+                    <p class="empty-chest">The chest was empty.</p>
+                  }
+
+                  @if (itemsLost().length > 0) {
+                    <div class="items-lost-section">
+                      <h4 class="warning-title">Items Lost (Inventory Full)</h4>
+                      <div class="items-row lost">
+                        @for (item of itemsLost(); track item.id) {
+                          <span class="item-tag lost">{{ getItemName(item) }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
           </div>
-        }
-
-        <!-- Recipient Info -->
-        @if (recipientName()) {
-          <div class="recipient-info">
-            Items received by: {{ recipientName() }}
+          <div class="message-log-section">
+            <app-message-log [messages]="messages()" />
           </div>
-        }
+        </div>
+
+        <!-- Right Column: Positions 1, 3, 5 -->
+        <div class="right-panel">
+          <app-character-panel [characters]="rightPanelCharacters()" variant="compact" />
+        </div>
       </div>
 
-      <!-- Continue Prompt -->
-      <div class="continue-prompt" [class.visible]="showContinue()">
-        Press any key to continue...
-      </div>
+      <!-- Footer Menu -->
+      <app-scene-footer
+        [menuItems]="footerMenuItems()"
+        (itemSelected)="onFooterSelect($event)"
+      ></app-scene-footer>
     </div>
   `,
   styles: [`
+    /* ============================================
+       MAIN CONTAINER - matches maze-chest
+       ============================================ */
     .chest-rewards {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 100;
+      background: transparent;
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      padding: 0.5rem;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .treasure-banner {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
-      background: linear-gradient(180deg, rgba(180, 130, 50, 0.95), rgba(120, 80, 30, 0.9));
+    :host ::ng-deep app-scene-title,
+    :host ::ng-deep app-scene-footer {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* ============================================
+       3-COLUMN LAYOUT - matches maze-chest
+       ============================================ */
+    .maze-content {
+      display: grid;
+      grid-template-columns: minmax(200px, var(--scene-panel-max-width)) auto minmax(200px, var(--scene-panel-max-width));
+      gap: 0.5rem;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* 4K screens: 50% larger cards */
+    @media (min-width: 2000px) {
+      .maze-content {
+        grid-template-columns: minmax(350px, var(--scene-panel-max-width-4k)) auto minmax(350px, var(--scene-panel-max-width-4k));
+      }
+    }
+
+    /* Side panels (character columns) */
+    .left-panel,
+    .right-panel {
       display: flex;
+      flex-direction: column;
+      min-height: 0;
+      width: 100%;
+      max-width: var(--scene-panel-max-width);
+      align-self: start;
+    }
+
+    @media (min-width: 2000px) {
+      .left-panel,
+      .right-panel {
+        max-width: var(--scene-panel-max-width-4k);
+      }
+    }
+
+    /* Make character panel fill the entire side column */
+    :host ::ng-deep .left-panel app-character-panel,
+    :host ::ng-deep .right-panel app-character-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    /* Center column: Viewport + Message Log */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 0;
+      min-width: 0;
+      align-items: center;
+      overflow: visible;
+      padding: 0.5rem 2px;
+    }
+
+    /* Viewport container - shows overlay content */
+    .maze-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      aspect-ratio: var(--scene-viewport-aspect) / 1;
+      max-width: 100%;
+      background: #000;
+      border: 1px solid var(--color-gold-primary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .message-log-section {
+      width: 100%;
+      height: 120px;
+      min-height: 90px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.1rem 0.25rem;
+      background: var(--color-bg-card);
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    :host ::ng-deep .message-log-section app-message-log {
+      display: block;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ============================================
+       REWARD OVERLAY - constrained to viewport
+       ============================================ */
+    .reward-overlay {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /* ============================================
+       VIGNETTE EFFECT
+       ============================================ */
+    .chest-vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 20%,
+        rgba(0, 0, 0, 0.4) 60%,
+        rgba(0, 0, 0, 0.7) 100%
+      );
+      animation: vignette-pulse 4s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes vignette-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    /* ============================================
+       SPRITE LAYER
+       ============================================ */
+    .chest-sprite-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .chest-sprite {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      animation: sprite-fade-in 0.8s ease-out;
+    }
+
+    @keyframes sprite-fade-in {
+      0% { opacity: 0; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ============================================
+       GRADIENT OVERLAY
+       ============================================ */
+    .chest-gradient-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.5) 0%,
+        rgba(0, 0, 0, 0.2) 30%,
+        rgba(0, 0, 0, 0.2) 70%,
+        rgba(0, 0, 0, 0.6) 100%
+      );
+    }
+
+    /* ============================================
+       REWARD CONTENT
+       ============================================ */
+    .reward-content {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      transform: translateY(-100%);
-      transition: transform 0.4s ease-out;
-      border-bottom: 2px solid var(--color-gold-primary);
-      box-shadow: 0 4px 20px rgba(212, 165, 116, 0.4);
-
-      &.visible {
-        transform: translateY(0);
-      }
+      padding: 1rem;
+      gap: 0.75rem;
+      animation: content-fade-in 0.6s ease-out;
     }
 
-    .banner-content {
-      font-family: var(--font-display);
-      font-size: 2.5rem;
-      color: #fff;
-      letter-spacing: 0.2em;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-      animation: glow 1s ease-in-out infinite alternate;
+    @keyframes content-fade-in {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes glow {
-      from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-      to { text-shadow: 0 0 30px rgba(255, 215, 0, 1); }
-    }
-
-    .rewards-panel {
-      background: linear-gradient(135deg, rgba(30, 25, 15, 0.95), rgba(20, 15, 10, 0.98));
-      border: 2px solid var(--color-gold-primary);
-      border-radius: 8px;
-      padding: 2rem 3rem;
-      min-width: 350px;
-      max-width: 500px;
-      box-shadow: 0 0 30px rgba(212, 165, 116, 0.3);
-      opacity: 0;
-      transform: scale(0.95);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-
-      &.visible {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .rewards-title {
+    .result-title {
       font-family: var(--font-display);
       font-size: 1.5rem;
-      color: var(--color-gold-primary);
+      color: var(--color-gold-bright, #f4c430);
       text-align: center;
-      margin: 0 0 1.5rem 0;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+      letter-spacing: 0.1em;
+      text-shadow:
+        0 0 20px var(--color-gold-glow, rgba(244, 196, 48, 0.8)),
+        0 2px 4px rgba(0, 0, 0, 0.8);
+      margin: 0;
     }
 
-    .reward-section {
-      margin-bottom: 1rem;
-    }
-
-    .gold-section {
+    /* ============================================
+       REWARD BADGE
+       ============================================ */
+    .reward-badge {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
-      padding: 0.75rem;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-    }
-
-    .reward-label {
-      font-family: var(--font-body);
-      font-size: 1rem;
-      color: var(--color-text-secondary);
-    }
-
-    .reward-value {
-      font-family: var(--font-body);
-      font-size: 1.2rem;
-      font-weight: 600;
+      padding: 0.75rem 1.25rem;
+      border-radius: 6px;
+      min-width: 80px;
+      backdrop-filter: blur(8px);
 
       &.gold {
+        background: rgba(212, 165, 116, 0.2);
+        border: 1px solid var(--color-gold-primary);
+        box-shadow: 0 0 15px rgba(212, 165, 116, 0.3);
+      }
+
+      .reward-value {
+        font-family: var(--font-body);
+        font-size: 1.5rem;
+        font-weight: bold;
         color: var(--color-gold-primary);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .reward-label {
+        font-family: var(--font-display);
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
+        color: var(--color-text-primary);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
       }
     }
 
+    /* ============================================
+       ITEMS SECTION
+       ============================================ */
     .items-section {
-      padding: 1rem;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
+      text-align: center;
     }
 
     .items-header {
-      display: block;
-      font-family: var(--font-body);
-      font-size: 0.9rem;
       color: var(--color-text-secondary);
-      margin-bottom: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      font-size: 0.8rem;
+      margin: 0 0 0.5rem 0;
     }
 
-    .item-row {
+    .items-row {
       display: flex;
-      justify-content: space-between;
-      padding: 0.5rem 0;
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      animation: slideIn 0.3s ease-out;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.35rem;
 
-      &:last-child {
-        border-bottom: none;
+      &.lost .item-tag {
+        color: var(--color-text-muted);
+        border-color: var(--color-text-muted);
+        background: rgba(102, 102, 102, 0.25);
+        text-decoration: line-through;
+        box-shadow: none;
       }
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .item-row.received .item-name {
-      color: var(--color-text-primary);
-    }
-
-    .item-row.received .item-status {
-      color: var(--color-status-ok);
-    }
-
-    .item-row.lost .item-name {
-      color: var(--color-text-secondary);
-      text-decoration: line-through;
-    }
-
-    .item-row.lost .item-status {
-      color: #ef4444;
-    }
-
-    .no-items {
+    .item-tag {
       font-family: var(--font-body);
-      font-size: 0.9rem;
-      color: var(--color-text-secondary);
-      font-style: italic;
-      text-align: center;
-    }
+      font-size: 0.75rem;
+      color: var(--color-magic, #a855f7);
+      padding: 0.2rem 0.5rem;
+      background: rgba(168, 85, 247, 0.25);
+      border: 1px solid var(--color-magic, #a855f7);
+      border-radius: 4px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 
-    .recipient-info {
-      margin-top: 1rem;
-      padding-top: 0.75rem;
-      border-top: 1px solid rgba(212, 165, 116, 0.3);
-      font-family: var(--font-body);
-      font-size: 0.85rem;
-      color: var(--color-text-secondary);
-      text-align: center;
-      font-style: italic;
-    }
-
-    .continue-prompt {
-      position: absolute;
-      bottom: 2rem;
-      font-family: var(--font-body);
-      font-size: 1rem;
-      color: var(--color-text-secondary);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      animation: pulse 1.5s ease-in-out infinite;
-
-      &.visible {
-        opacity: 1;
+      &.lost {
+        color: var(--color-text-muted);
+        border-color: var(--color-hp-warning, #f59e0b);
+        background: rgba(245, 158, 11, 0.15);
+        text-decoration: line-through;
+        box-shadow: none;
       }
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
+    .empty-chest {
+      color: var(--color-text-secondary);
+      font-style: italic;
+      text-align: center;
+      margin: 0;
+    }
+
+    /* ============================================
+       ITEMS LOST SECTION (Amber Warning)
+       ============================================ */
+    .items-lost-section {
+      padding: 0.5rem 0.75rem;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--color-hp-warning, #f59e0b);
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    .warning-title {
+      color: var(--color-hp-warning, #f59e0b);
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      margin: 0 0 0.5rem 0;
+      text-align: center;
+    }
+
+    /* ============================================
+       REDUCED MOTION
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+      .chest-vignette,
+      .chest-sprite,
+      .reward-content {
+        animation: none;
+      }
+    }
+
+    /* ============================================
+       COMPACT HEIGHT RESPONSIVE
+       ============================================ */
+    @media (max-height: 767px) {
+      .chest-rewards {
+        padding: 0.25rem;
+      }
+
+      .maze-content {
+        gap: 0.25rem;
+      }
+
+      .center-panel {
+        padding: 0.25rem 2px;
+        gap: 0.25rem;
+      }
+
+      .message-log-section {
+        height: 90px;
+        min-height: 60px;
+      }
     }
   `]
 })
 export class ChestRewardsComponent implements OnInit, OnDestroy {
   // Animation state
-  readonly showBanner = signal(false);
   readonly showRewards = signal(false);
-  readonly showContinue = signal(false);
   readonly canContinue = signal(false);
+
+  // Sprite state
+  readonly spriteUrl = signal('assets/sprites/chest/chest_open.png');
+  readonly spriteError = signal(false);
 
   // Navigation guard to prevent double-click
   private isNavigating = false;
@@ -314,12 +535,60 @@ export class ChestRewardsComponent implements OnInit, OnDestroy {
     return GameStateQueries.partyCharacters(state);
   });
 
+  // Left panel: positions 0, 2, 4
+  readonly leftPanelCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[0], chars[2], chars[4]].filter(Boolean) as Character[];
+  });
+
+  // Right panel: positions 1, 3, 5
+  readonly rightPanelCharacters = computed(() => {
+    const chars = this.partyCharacters();
+    return [chars[1], chars[3], chars[5]].filter(Boolean) as Character[];
+  });
+
+  // Message log
+  readonly messages = computed(() => this.messageLog.messages());
+
+  // Dungeon state for active spells
+  readonly dungeonState = computed(() => this.gameState.state().dungeon);
+
+  // Active spells (MILWA, LOMILWA, etc.) - same pattern as maze-chest
+  readonly activeSpells = computed((): ActiveSpell[] => {
+    const dungeon = this.dungeonState();
+    if (!dungeon) return [];
+
+    const spells: ActiveSpell[] = [];
+
+    // Light spells
+    if (dungeon.lightActive && dungeon.lightSpellType) {
+      const viewDistance = LightService.getEffectiveViewDistance(dungeon);
+      const durationText = dungeon.lightDurationRemaining !== undefined
+        ? ` (${dungeon.lightDurationRemaining} steps)`
+        : '';
+      spells.push({
+        name: dungeon.lightSpellType,
+        icon: '💡',
+        description: `Light (Radius: ${viewDistance})${durationText}`,
+        variant: 'light'
+      });
+    }
+
+    return spells;
+  });
+
+  // Footer menu items
+  readonly footerMenuItems = computed((): MenuItem[] => [
+    { id: 'continue', label: 'Continue', shortcut: 'Enter', enabled: this.canContinue() }
+  ]);
+
   // Pending chest
   readonly pendingChest = computed(() => this.gameState.state().pendingChest);
 
   constructor(
     private gameState: GameStateService,
-    private router: Router
+    private router: Router,
+    private messageLog: MessageLogService
   ) {}
 
   ngOnInit(): void {
@@ -354,6 +623,23 @@ export class ChestRewardsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle sprite loading error
+   */
+  onSpriteError(): void {
+    console.warn('[ChestRewards] Failed to load chest sprite');
+    this.spriteError.set(true);
+  }
+
+  /**
+   * Handle footer menu selection
+   */
+  onFooterSelect(itemId: string): void {
+    if (itemId === 'continue' && this.canContinue() && !this.isNavigating) {
+      this.returnToExploration();
+    }
+  }
+
+  /**
    * Distribute treasure and update game state
    */
   private async distributeTreasure(chest: Chest): Promise<void> {
@@ -370,6 +656,25 @@ export class ChestRewardsComponent implements OnInit, OnDestroy {
       recipient: result.recipientName
     });
 
+    // Log rewards to message log
+    if (result.goldAdded > 0) {
+      this.messageLog.addMessage(`Found ${result.goldAdded} gold!`);
+    }
+
+    for (const item of result.itemsReceived) {
+      const itemName = getItemDisplayName(item);
+      this.messageLog.addMessage(`${result.recipientName} received ${itemName}.`);
+    }
+
+    for (const item of result.itemsLost) {
+      const itemName = getItemDisplayName(item);
+      this.messageLog.addMessage(`Lost ${itemName} - inventory full!`);
+    }
+
+    if (result.goldAdded === 0 && result.itemsReceived.length === 0 && result.itemsLost.length === 0) {
+      this.messageLog.addMessage('The chest was empty.');
+    }
+
     // Update game state with gold, items, and clear pending chest
     this.gameState.updateState(state =>
       ChestService.applyDistributionToState(state, result)
@@ -383,17 +688,12 @@ export class ChestRewardsComponent implements OnInit, OnDestroy {
    * Play the rewards animation sequence
    */
   private async playRewardsSequence(): Promise<void> {
-    // Phase 1: Show treasure banner
-    await this.delay(ANIMATION_TIMINGS.CHEST_BANNER_DELAY);
-    this.showBanner.set(true);
-
-    // Phase 2: Show rewards panel
+    // Show rewards after brief delay
     await this.delay(ANIMATION_TIMINGS.CHEST_REWARDS_PANEL_DELAY);
     this.showRewards.set(true);
 
-    // Phase 3: Enable continue prompt
+    // Enable continue after rewards are shown
     await this.delay(ANIMATION_TIMINGS.CHEST_CONTINUE_PROMPT_DELAY);
-    this.showContinue.set(true);
     this.canContinue.set(true);
   }
 
@@ -403,18 +703,11 @@ export class ChestRewardsComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
     if (this.canContinue() && !this.isNavigating) {
-      event.preventDefault();
-      this.returnToExploration();
-    }
-  }
-
-  /**
-   * Handle click to continue
-   */
-  @HostListener('click')
-  handleClick(): void {
-    if (this.canContinue() && !this.isNavigating) {
-      this.returnToExploration();
+      // Only respond to Enter key (matches footer shortcut)
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        this.returnToExploration();
+      }
     }
   }
 

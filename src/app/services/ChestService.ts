@@ -146,7 +146,9 @@ async function generateChest(
 
   // Determine if trapped (keep existing logic for authentic trap selection)
   const trapProbability = TRAP_PROBABILITY_BY_TIER[rewardTier]
-  const trapped = RandomService.roll(trapProbability)
+  const trapRoll = RandomService.nextRandom()
+  const trapped = trapRoll < trapProbability
+  console.log(`[CHEST] Trap roll: ${(trapRoll * 100).toFixed(1)}% vs ${(trapProbability * 100).toFixed(0)}% chance → ${trapped ? 'TRAPPED' : 'safe'}`)
 
   return {
     id: generateChestId(),

@@ -82,6 +82,13 @@ export class SaveService {
     // Serialize bodies Map (convert to array for JSON, handle undefined and non-Map cases)
     const serializedBodies = state.bodies instanceof Map ? Array.from(state.bodies.entries()) : []
 
+    // Serialize pendingTrapResult Maps (if exists)
+    const serializedPendingTrapResult = state.pendingTrapResult ? {
+      ...state.pendingTrapResult,
+      damageDealt: Array.from(state.pendingTrapResult.damageDealt.entries()),
+      statusApplied: Array.from(state.pendingTrapResult.statusApplied.entries())
+    } : undefined
+
     // Handle optional dungeon state
     if (!state.dungeon) {
       return {
@@ -89,6 +96,7 @@ export class SaveService {
         roster: Array.from(state.roster.entries()),
         bodies: serializedBodies,
         combat: serializedCombat,
+        pendingTrapResult: serializedPendingTrapResult,
         dungeon: undefined
       }
     }
@@ -128,6 +136,7 @@ export class SaveService {
       roster: Array.from(state.roster.entries()),
       bodies: serializedBodies,
       combat: serializedCombat,
+      pendingTrapResult: serializedPendingTrapResult,
       dungeon: {
         ...state.dungeon,
         visitedTiles: visitedTilesArray,
@@ -185,6 +194,18 @@ export class SaveService {
     // Deserialize bodies Map (from array, handle old saves that don't have it)
     const deserializedBodies = Array.isArray(data.bodies) ? new Map(data.bodies) : new Map()
 
+    // Deserialize pendingTrapResult Maps (if exists)
+    // Handle old saves where Maps became {} (plain objects) from broken serialization
+    const deserializedPendingTrapResult = data.pendingTrapResult ? {
+      ...data.pendingTrapResult,
+      damageDealt: Array.isArray(data.pendingTrapResult.damageDealt)
+        ? new Map(data.pendingTrapResult.damageDealt)
+        : new Map(),
+      statusApplied: Array.isArray(data.pendingTrapResult.statusApplied)
+        ? new Map(data.pendingTrapResult.statusApplied)
+        : new Map()
+    } : undefined
+
     // Handle undefined/null dungeon state (castle/town)
     if (!data.dungeon) {
       return {
@@ -192,6 +213,7 @@ export class SaveService {
         roster: new Map(data.roster || []),
         bodies: deserializedBodies,
         combat: deserializedCombat,
+        pendingTrapResult: deserializedPendingTrapResult,
         dungeon: undefined,
         settings
       }
@@ -243,6 +265,7 @@ export class SaveService {
       roster: new Map(data.roster || []),
       bodies: deserializedBodies,
       combat: deserializedCombat,
+      pendingTrapResult: deserializedPendingTrapResult,
       settings,
       dungeon: {
         ...data.dungeon,

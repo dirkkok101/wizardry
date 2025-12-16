@@ -21,7 +21,8 @@ import { SpellCastingService } from '@services/SpellCastingService';
 import { CharacterService } from '@services/CharacterService';
 import {
   executeRound,
-  selectMonsterAction
+  selectMonsterAction,
+  RESULT_MARKER
 } from '@services/combat';
 import { GameStateQueries } from '@utils/GameStateQueries';
 import { ActiveSpell } from '@models/active-spell.types';
@@ -231,7 +232,7 @@ interface PendingCombatResult {
       aspect-ratio: var(--scene-viewport-aspect) / 1;
       max-width: 100%;
       background: transparent;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-gold-primary);
       border-radius: 4px;
       overflow: hidden;
     }
@@ -588,8 +589,14 @@ export class CombatPlaybackComponent implements OnInit {
    * Handle arena event played (for logging/sync purposes)
    */
   onArenaEventPlayed(event: CombatRoundEvent): void {
-    // Could be used to sync combat log display
-    this.logger.log('[CombatPlayback] Event played:', event.actorId);
+    // Add event messages to the message log
+    for (const message of event.messages) {
+      // Skip the RESULT_MARKER prefix if present (used for arena parsing)
+      const cleanMessage = message.startsWith(RESULT_MARKER)
+        ? message.substring(RESULT_MARKER.length)
+        : message;
+      this.messageLog.addMessage(cleanMessage);
+    }
   }
 
   /**

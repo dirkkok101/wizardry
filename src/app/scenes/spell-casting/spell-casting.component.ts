@@ -56,6 +56,10 @@ export class SpellCastingComponent implements OnInit {
     this.queryParams()?.['returnTo'] || 'maze'
   )
 
+  readonly context = computed((): 'combat' | 'dungeon' | 'camp' =>
+    (this.queryParams()?.['context'] as 'combat' | 'dungeon' | 'camp') || 'dungeon'
+  )
+
   // Derived state - the caster character
   readonly caster = computed(() => {
     const id = this.characterId()
