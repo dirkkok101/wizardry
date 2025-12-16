@@ -317,6 +317,8 @@ export class MazeExplorationComponent implements OnInit {
   });
 
   // Footer menu items
+  // NOTE: No shortcuts defined here - keyboard handling is done via @HostListener
+  // to prevent double-handling (MenuComponent also processes shortcuts)
   readonly mazeMenuItems = computed((): MenuItem[] => {
     const state = this.gameState.state();
     let canInspect = false;
@@ -327,14 +329,14 @@ export class MazeExplorationComponent implements OnInit {
     }
 
     return [
-      { id: 'forward', label: 'Forward', shortcut: 'W', enabled: true },
-      { id: 'back', label: 'Back', shortcut: 'S', enabled: true },
-      { id: 'left', label: 'Turn L', shortcut: 'A', enabled: true },
-      { id: 'right', label: 'Turn R', shortcut: 'D', enabled: true },
-      { id: 'strafe_left', label: 'Strafe L', shortcut: 'Q', enabled: true },
-      { id: 'strafe_right', label: 'Strafe R', shortcut: 'E', enabled: true },
-      { id: 'inspect', label: 'Inspect', shortcut: 'I', enabled: canInspect },
-      { id: 'camp', label: 'Camp', shortcut: 'C', enabled: true }
+      { id: 'forward', label: 'Forward (W)', enabled: true },
+      { id: 'back', label: 'Back (S)', enabled: true },
+      { id: 'left', label: 'Turn L (A)', enabled: true },
+      { id: 'right', label: 'Turn R (D)', enabled: true },
+      { id: 'strafe_left', label: 'Strafe L (Q)', enabled: true },
+      { id: 'strafe_right', label: 'Strafe R (E)', enabled: true },
+      { id: 'inspect', label: 'Inspect (I)', enabled: canInspect },
+      { id: 'camp', label: 'Camp (C)', enabled: true }
     ];
   });
 
@@ -500,6 +502,11 @@ export class MazeExplorationComponent implements OnInit {
   @HostListener('window:keydown.c')
   handleCampKey(): void {
     if (!this.isMovementLocked()) this.navigation.goToCamp();
+  }
+
+  @HostListener('window:keydown.i')
+  handleInspectKey(): void {
+    if (!this.isMovementLocked()) this.inspectTile();
   }
 
   @HostListener('window:keydown.escape')
