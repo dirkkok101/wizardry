@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SaveService } from '../SaveService'
 import { GameInitializationService } from '../GameInitializationService'
+import { StorageQuotaError, StorageUnavailableError, SaveVersionError } from '../save/SaveErrors'
 
 describe('SaveService', () => {
   let service: SaveService;
@@ -184,7 +185,7 @@ describe('SaveService', () => {
       expect(saveData.schemaVersion).toBe(2)
     })
 
-    it('should automatically clear save with incompatible schema version', async () => {
+    it('should migrate save with old schema version instead of clearing', async () => {
       // Create a save with old schema version (v1)
       const gameState = GameInitializationService.createNewGame()
       const oldSaveData = {
@@ -194,10 +195,11 @@ describe('SaveService', () => {
         state: {
           ...gameState,
           roster: Array.from(gameState.roster.entries()),
-          dungeon: {
+          // dungeon may be undefined when player starts in castle
+          dungeon: gameState.dungeon ? {
             ...gameState.dungeon,
-            visitedTiles: Array.from(gameState.dungeon.visitedTiles.entries())
-          }
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles)
+          } : undefined
         }
       }
       localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
@@ -207,11 +209,11 @@ describe('SaveService', () => {
 
       const loaded = await service.loadGame(1)
 
-      // Should return null and clear the save
-      expect(loaded).toBeNull()
-      expect(await service.hasSaveData(1)).toBe(false)
+      // Should migrate and load successfully (not return null)
+      expect(loaded).not.toBeNull()
+      expect(await service.hasSaveData(1)).toBe(true)
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Save file schema mismatch (expected 2, got 1), clearing incompatible save'
+        expect.stringContaining('Save migrated from v1 to v2')
       )
 
       consoleSpy.mockRestore()
@@ -227,7 +229,7 @@ describe('SaveService', () => {
       expect(await service.hasSaveData(1)).toBe(true)
     })
 
-    it('should handle missing schemaVersion field as incompatible', async () => {
+    it('should migrate save with missing schemaVersion field (treated as v1)', async () => {
       // Create a save without schemaVersion field (very old save)
       const gameState = GameInitializationService.createNewGame()
       const oldSaveData = {
@@ -236,10 +238,11 @@ describe('SaveService', () => {
         state: {
           ...gameState,
           roster: Array.from(gameState.roster.entries()),
-          dungeon: {
+          // dungeon may be undefined when player starts in castle
+          dungeon: gameState.dungeon ? {
             ...gameState.dungeon,
-            visitedTiles: Array.from(gameState.dungeon.visitedTiles.entries())
-          }
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles)
+          } : undefined
         }
       }
       localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
@@ -248,18 +251,19 @@ describe('SaveService', () => {
 
       const loaded = await service.loadGame(1)
 
-      // Should return null and clear the save
-      expect(loaded).toBeNull()
-      expect(await service.hasSaveData(1)).toBe(false)
+      // Should migrate and load successfully (not return null)
+      expect(loaded).not.toBeNull()
+      expect(await service.hasSaveData(1)).toBe(true)
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Save file schema mismatch (expected 2, got undefined), clearing incompatible save'
+        expect.stringContaining('Save migrated from v1 to v2')
       )
 
       consoleSpy.mockRestore()
     })
 
-    it('should return null metadata for saves with incompatible schema version', async () => {
+    it('should return null metadata for saves with old schema version', async () => {
       // Create a save with old schema version (v1)
+      // Note: getSlotMetadata doesn't run migrations, just checks version
       const gameState = GameInitializationService.createNewGame()
       const oldSaveData = {
         version: '1.0.0',
@@ -268,18 +272,38 @@ describe('SaveService', () => {
         state: {
           ...gameState,
           roster: Array.from(gameState.roster.entries()),
-          dungeon: {
+          // dungeon may be undefined when player starts in castle
+          dungeon: gameState.dungeon ? {
             ...gameState.dungeon,
-            visitedTiles: Array.from(gameState.dungeon.visitedTiles.entries())
-          }
+            visitedTiles: Array.from(gameState.dungeon.visitedTiles)
+          } : undefined
         }
       }
       localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
 
       const metadata = await service.getSlotMetadata(1)
 
-      // Should return null for incompatible schema
+      // Should return null for old schema (metadata doesn't run migrations)
       expect(metadata).toBeNull()
+    })
+
+    it('should throw SaveVersionError for future schema versions', async () => {
+      // Create a save with future schema version (v99)
+      const gameState = GameInitializationService.createNewGame()
+      const futureSaveData = {
+        version: '1.0.0',
+        schemaVersion: 99,
+        timestamp: Date.now(),
+        state: {
+          ...gameState,
+          roster: Array.from(gameState.roster.entries())
+        }
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(futureSaveData))
+
+      // Should throw SaveVersionError (cannot downgrade from future version)
+      await expect(service.loadGame(1)).rejects.toThrow(SaveVersionError)
+      await expect(service.loadGame(1)).rejects.toThrow('cannot downgrade')
     })
   })
 
@@ -622,6 +646,120 @@ describe('SaveService', () => {
       expect(loaded?.combat?.statusDurations).toBeInstanceOf(Map)
       expect(loaded?.combat?.statusEffects).toBeInstanceOf(Map)
       expect(loaded?.combat?.acModifiers).toBeInstanceOf(Map)
+    })
+  })
+
+  describe('storage availability and quota handling', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('should throw StorageUnavailableError when localStorage is not available', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Mock localStorage to simulate unavailable storage (fails on test key)
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('Storage unavailable')
+      })
+
+      await expect(service.saveGame(gameState, 1)).rejects.toThrow(StorageUnavailableError)
+    })
+
+    it('should throw StorageQuotaError when quota is exceeded', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Mock localStorage.setItem to throw QuotaExceededError only on actual save
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string) => {
+        // Allow the storage test key but fail on actual save
+        if (key === '__storage_test__') {
+          return
+        }
+        const error = new DOMException('Quota exceeded', 'QuotaExceededError')
+        throw error
+      })
+
+      // Mock getItem to return 'test' for storage check (setItem mock doesn't store)
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => {
+        if (key === '__storage_test__') {
+          return 'test'
+        }
+        return null
+      })
+
+      await expect(service.saveGame(gameState, 1)).rejects.toThrow(StorageQuotaError)
+    })
+
+    it('should check storage availability before saving', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Save should work when storage is available (no mocks)
+      await expect(service.saveGame(gameState, 1)).resolves.not.toThrow()
+    })
+  })
+
+  describe('checksum verification', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('should include checksum when saving', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      await service.saveGame(gameState, 1)
+
+      const saved = localStorage.getItem('wizardry_save_1')
+      const saveData = JSON.parse(saved!)
+
+      // Should have checksum field
+      expect(saveData.checksum).toBeDefined()
+      expect(typeof saveData.checksum).toBe('string')
+      expect(saveData.checksum.length).toBeGreaterThan(0)
+    })
+
+    it('should load successfully when checksum matches', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Save game (includes checksum)
+      await service.saveGame(gameState, 1)
+
+      // Load should succeed
+      const loaded = await service.loadGame(1)
+      expect(loaded).not.toBeNull()
+    })
+
+    it('should load successfully when checksum is missing (old saves)', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Manually create save without checksum (simulating old save)
+      const oldSaveData = {
+        version: '1.0.0',
+        schemaVersion: 2,
+        timestamp: Date.now(),
+        state: service.exportGameState(gameState) ? JSON.parse(service.exportGameState(gameState)).state : {}
+      }
+      localStorage.setItem('wizardry_save_1', JSON.stringify(oldSaveData))
+
+      // Load should succeed even without checksum (backward compatible)
+      const loaded = await service.loadGame(1)
+      expect(loaded).not.toBeNull()
+    })
+
+    it('should throw SaveCorruptionError when checksum does not match', async () => {
+      const gameState = GameInitializationService.createNewGame()
+
+      // Save game (includes checksum)
+      await service.saveGame(gameState, 1)
+
+      // Corrupt the saved data by modifying the state
+      const saved = localStorage.getItem('wizardry_save_1')
+      const saveData = JSON.parse(saved!)
+      saveData.state.party.gold = 999999 // Modify data after checksum was computed
+      localStorage.setItem('wizardry_save_1', JSON.stringify(saveData))
+
+      // Load should fail with SaveCorruptionError
+      const { SaveCorruptionError } = await import('../save/SaveErrors')
+      await expect(service.loadGame(1)).rejects.toThrow(SaveCorruptionError)
+      await expect(service.loadGame(1)).rejects.toThrow('checksum')
     })
   })
 })
