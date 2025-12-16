@@ -401,7 +401,7 @@ interface TrapEffect {
       animation: slide-in-right 0.4s ease-out;
 
       &.shaking {
-        animation: hit-shake 0.3s ease-out;
+        /* Screen shake disabled - kept class for potential future use */
       }
 
       &.empty {

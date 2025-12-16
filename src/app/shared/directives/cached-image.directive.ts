@@ -1,5 +1,6 @@
-import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { SpritePreloadService } from '@services/SpritePreloadService';
+import { LoggerService } from '@services/LoggerService';
 
 /**
  * CachedImageDirective - Uses preloaded images from SpritePreloadService cache.
@@ -24,6 +25,8 @@ import { SpritePreloadService } from '@services/SpritePreloadService';
 export class CachedImageDirective implements OnChanges {
   @Input() appCachedSrc = '';
 
+  private readonly logger = inject(LoggerService);
+
   constructor(private el: ElementRef<HTMLImageElement>) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -46,6 +49,7 @@ export class CachedImageDirective implements OnChanges {
     } else {
       // Fallback to direct URL (browser HTTP cache may still help)
       this.el.nativeElement.src = this.appCachedSrc;
+      this.logger.debug(`[CachedImage] MISS: ${this.appCachedSrc}`);
     }
   }
 }

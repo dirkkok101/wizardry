@@ -460,8 +460,7 @@ export class CombatVictoryComponent implements OnInit, OnDestroy {
     }
 
     // Determine if chest should appear (only for treasure_room encounters)
-    // TEMP: Always spawn chest for testing
-    const shouldShowChest = true; // combatState.encounterReason === 'treasure_room';
+    const shouldShowChest = combatState.encounterReason === 'treasure_room';
     let pendingChest: Chest | undefined;
 
     if (shouldShowChest) {
