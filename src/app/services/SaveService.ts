@@ -5,6 +5,9 @@
 import { Injectable } from '@angular/core';
 import { GameState, SaveData } from '@models/GameState'
 import { Character } from '@models/Character'
+import { StorageQuotaError, StorageUnavailableError, SaveVersionError, SaveCorruptionError } from './save/SaveErrors'
+import { runMigrations } from './save/SaveMigration'
+import { SerializedGameState, SerializedDungeonState, SerializedCombatState, SerializedPendingTrapResult } from './save/SerializedTypes'
 
 const SAVE_KEY = 'wizardry_save'
 const SAVE_VERSION = '1.0.0'
@@ -61,29 +64,106 @@ export class SaveService {
   }
 
   /**
+   * Check if localStorage is available and writable.
+   * Tests by writing, reading, and deleting a test key.
+   * @throws StorageUnavailableError if localStorage is not available
+   * @throws StorageQuotaError if storage quota is exceeded
+   */
+  checkStorageAvailable(): void {
+    const testKey = '__storage_test__'
+    try {
+      localStorage.setItem(testKey, 'test')
+      const result = localStorage.getItem(testKey)
+      localStorage.removeItem(testKey)
+      if (result !== 'test') {
+        throw new StorageUnavailableError()
+      }
+    } catch (error) {
+      // Re-throw our own error types
+      if (error instanceof StorageUnavailableError || error instanceof StorageQuotaError) {
+        throw error
+      }
+      // Check for quota exceeded error (different browsers use different error types)
+      if (error instanceof DOMException &&
+          (error.name === 'QuotaExceededError' ||
+           error.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+        throw new StorageQuotaError()
+      }
+      // Any other error means storage unavailable (SecurityError, etc.)
+      throw new StorageUnavailableError()
+    }
+  }
+
+  /**
+   * Generate a checksum for the given data string.
+   * Uses a simple hash function (djb2) that's fast and provides good distribution.
+   * This is for integrity checking (detecting corruption), not security.
+   */
+  private generateChecksum(data: string): string {
+    let hash = 5381
+    for (let i = 0; i < data.length; i++) {
+      hash = ((hash << 5) + hash) ^ data.charCodeAt(i)
+      hash = hash >>> 0 // Convert to unsigned 32-bit integer
+    }
+    return hash.toString(16).padStart(8, '0')
+  }
+
+  /**
+   * Verify that a checksum matches the data.
+   * Returns true if checksum matches or if checksum is missing (backward compatibility).
+   */
+  private verifyChecksum(data: string, checksum: string | undefined): boolean {
+    // No checksum = old save, allow it (backward compatible)
+    if (checksum === undefined) {
+      return true
+    }
+    const computed = this.generateChecksum(data)
+    return computed === checksum
+  }
+
+  /**
    * Serialize GameState to JSON-compatible format
    */
-  private serializeGameState(state: GameState): any {
+  private serializeGameState(state: GameState): SerializedGameState {
     // Serialize combat state Maps (if combat exists)
-    const serializedCombat = state.combat ? {
-      ...state.combat,
+    const serializedCombat: SerializedCombatState | undefined = state.combat ? {
+      monsterGroups: state.combat.monsterGroups,
+      commandQueue: state.combat.commandQueue,
+      roundNumber: state.combat.roundNumber,
+      combatLog: state.combat.combatLog,
+      canFlee: state.combat.canFlee,
+      dungeonLevel: state.combat.dungeonLevel,
       // statusDurations is Map<string, Map<status, number>> - nested Map
-      statusDurations: Array.from(state.combat.statusDurations.entries()).map(
-        ([id, innerMap]) => [id, Array.from(innerMap.entries())]
-      ),
+      statusDurations: state.combat.statusDurations
+        ? Array.from(state.combat.statusDurations.entries()).map(
+            ([id, innerMap]) => [id, Array.from(innerMap.entries())] as [string, [string, number][]]
+          )
+        : [],
       // statusEffects is Map<string, Set<status>>
-      statusEffects: Array.from(state.combat.statusEffects.entries()).map(
-        ([id, set]) => [id, Array.from(set)]
-      ),
+      statusEffects: state.combat.statusEffects
+        ? Array.from(state.combat.statusEffects.entries()).map(
+            ([id, set]) => [id, Array.from(set)] as [string, string[]]
+          )
+        : [],
       // acModifiers is Map<string, number>
-      acModifiers: Array.from(state.combat.acModifiers.entries())
+      acModifiers: state.combat.acModifiers
+        ? Array.from(state.combat.acModifiers.entries())
+        : [],
+      // Optional fields
+      monstersDemoralized: state.combat.monstersDemoralized,
+      surpriseState: state.combat.surpriseState,
+      isFriendlyEncounter: state.combat.isFriendlyEncounter,
+      encounterReason: state.combat.encounterReason,
+      expeditionAcBuff: state.combat.expeditionAcBuff
     } : undefined
 
     // Serialize bodies Map (convert to array for JSON, handle undefined and non-Map cases)
-    const serializedBodies = state.bodies instanceof Map ? Array.from(state.bodies.entries()) : []
+    const serializedBodies = state.bodies instanceof Map
+      ? Array.from(state.bodies.entries())
+      : []
 
     // Serialize pendingTrapResult Maps (if exists)
-    const serializedPendingTrapResult = state.pendingTrapResult ? {
+    const serializedPendingTrapResult: SerializedPendingTrapResult | undefined = state.pendingTrapResult ? {
       ...state.pendingTrapResult,
       damageDealt: Array.from(state.pendingTrapResult.damageDealt.entries()),
       statusApplied: Array.from(state.pendingTrapResult.statusApplied.entries())
@@ -101,35 +181,16 @@ export class SaveService {
       }
     }
 
-    // Handle visitedTiles as either Map or Set
-    const visitedTilesArray = state.dungeon.visitedTiles instanceof Map
-      ? Array.from(state.dungeon.visitedTiles.entries())
-      : Array.from(state.dungeon.visitedTiles)
-
-    // Handle unlockedDoors Set (convert to array for JSON serialization)
-    const unlockedDoorsArray = (state.dungeon as any).unlockedDoors
-      ? Array.from((state.dungeon as any).unlockedDoors)
-      : []
-
-    // Handle openDoors Set (convert to array for JSON serialization)
-    const openDoorsArray = (state.dungeon as any).openDoors
-      ? Array.from((state.dungeon as any).openDoors)
-      : []
-
-    // Handle lootedTiles Set (convert to array for JSON serialization)
-    const lootedTilesArray = (state.dungeon as any).lootedTiles
-      ? Array.from((state.dungeon as any).lootedTiles)
-      : []
-
-    // Handle completedConditionTiles Set (convert to array for JSON serialization)
-    const completedConditionTilesArray = (state.dungeon as any).completedConditionTiles
-      ? Array.from((state.dungeon as any).completedConditionTiles)
-      : []
-
-    // Handle consumedConditionItems Set (convert to array for JSON serialization)
-    const consumedConditionItemsArray = (state.dungeon as any).consumedConditionItems
-      ? Array.from((state.dungeon as any).consumedConditionItems)
-      : []
+    // Serialize dungeon state - convert all Sets to arrays
+    const serializedDungeon: SerializedDungeonState = {
+      ...state.dungeon,
+      visitedTiles: Array.from(state.dungeon.visitedTiles),
+      unlockedDoors: Array.from(state.dungeon.unlockedDoors),
+      openDoors: Array.from(state.dungeon.openDoors),
+      lootedTiles: Array.from(state.dungeon.lootedTiles),
+      completedConditionTiles: Array.from(state.dungeon.completedConditionTiles),
+      consumedConditionItems: Array.from(state.dungeon.consumedConditionItems)
+    }
 
     return {
       ...state,
@@ -137,15 +198,7 @@ export class SaveService {
       bodies: serializedBodies,
       combat: serializedCombat,
       pendingTrapResult: serializedPendingTrapResult,
-      dungeon: {
-        ...state.dungeon,
-        visitedTiles: visitedTilesArray,
-        unlockedDoors: unlockedDoorsArray,
-        openDoors: openDoorsArray,
-        lootedTiles: lootedTilesArray,
-        completedConditionTiles: completedConditionTilesArray,
-        consumedConditionItems: consumedConditionItemsArray
-      }
+      dungeon: serializedDungeon
     }
   }
 
@@ -286,20 +339,43 @@ export class SaveService {
 
   /**
    * Save game to localStorage
+   * @throws StorageUnavailableError if localStorage is not available
+   * @throws StorageQuotaError if storage quota is exceeded
    */
   async saveGame(gameState: GameState, saveSlot: number = 1): Promise<void> {
-    const saveData: SaveData = {
+    // Check storage availability before attempting to save
+    this.checkStorageAvailable()
+
+    // Build save data without checksum first
+    const saveDataWithoutChecksum = {
       version: SAVE_VERSION,
       schemaVersion: SAVE_SCHEMA_VERSION,
       timestamp: Date.now(),
-      state: gameState
+      state: this.serializeGameState(gameState)
     }
 
+    // Serialize to compute checksum
+    const dataToChecksum = JSON.stringify(saveDataWithoutChecksum)
+    const checksum = this.generateChecksum(dataToChecksum)
+
+    // Add checksum to final save
     const serialized = JSON.stringify({
-      ...saveData,
-      state: this.serializeGameState(gameState)
+      ...saveDataWithoutChecksum,
+      checksum
     })
-    localStorage.setItem(`${SAVE_KEY}_${saveSlot}`, serialized)
+
+    try {
+      localStorage.setItem(`${SAVE_KEY}_${saveSlot}`, serialized)
+    } catch (error) {
+      // Check for quota exceeded error (different browsers use different error types)
+      if (error instanceof DOMException &&
+          (error.name === 'QuotaExceededError' ||
+           error.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+        throw new StorageQuotaError()
+      }
+      // Re-throw other errors
+      throw error
+    }
   }
 
   /**
@@ -320,19 +396,39 @@ export class SaveService {
         throw new Error('Save data corrupted - missing required fields')
       }
 
-      // Validate schema version
-      if (saveData.schemaVersion !== SAVE_SCHEMA_VERSION) {
-        console.log(
-          `Save file schema mismatch (expected ${SAVE_SCHEMA_VERSION}, got ${saveData.schemaVersion}), clearing incompatible save`
-        )
-        await this.deleteSave(saveSlot)
-        return null
+      // Verify checksum if present (skip for old saves without checksum)
+      if (saveData.checksum !== undefined) {
+        // Rebuild data without checksum to verify
+        const { checksum, ...dataWithoutChecksum } = saveData
+        const dataToVerify = JSON.stringify(dataWithoutChecksum)
+
+        if (!this.verifyChecksum(dataToVerify, checksum)) {
+          throw new SaveCorruptionError('Save data checksum mismatch - data may be corrupted')
+        }
       }
 
-      return this.deserializeGameState(saveData.state)
+      // Run migrations if needed (throws SaveVersionError for future versions)
+      const migratedData = runMigrations(saveData, SAVE_SCHEMA_VERSION)
+
+      // If migrations were applied, save the migrated data back (with new checksum)
+      if (migratedData.schemaVersion !== saveData.schemaVersion) {
+        console.log(`Save migrated from v${saveData.schemaVersion ?? 1} to v${SAVE_SCHEMA_VERSION}`)
+        // Compute new checksum for migrated data
+        const { checksum: _oldChecksum, ...migratedWithoutChecksum } = migratedData
+        const dataForChecksum = JSON.stringify(migratedWithoutChecksum)
+        const newChecksum = this.generateChecksum(dataForChecksum)
+        const serialized = JSON.stringify({ ...migratedWithoutChecksum, checksum: newChecksum })
+        localStorage.setItem(`${SAVE_KEY}_${saveSlot}`, serialized)
+      }
+
+      return this.deserializeGameState(migratedData.state)
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new Error('Save data corrupted - invalid JSON')
+      }
+      // Re-throw SaveVersionError and SaveCorruptionError
+      if (error instanceof SaveVersionError || error instanceof SaveCorruptionError) {
+        throw error
       }
       throw error
     }
