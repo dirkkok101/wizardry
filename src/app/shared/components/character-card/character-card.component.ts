@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { Character } from '@models/Character';
 import { CharacterField, CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes';
 import { SpriteService } from '@services/SpriteService';
@@ -12,6 +13,7 @@ import { CharacterActionsComponent } from '../character-actions/character-action
   standalone: true,
   imports: [
     CommonModule,
+    CachedImageDirective,
     StatusBadgeComponent,
     CharacterStatsComponent,
     CharacterActionsComponent

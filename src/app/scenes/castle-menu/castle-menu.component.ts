@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { GameStateService } from '@services/GameStateService';
 import { SaveService } from '@services/SaveService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
-import { DungeonMovementService } from '@services/DungeonMovementService';
+import { DungeonLevelService } from '@services/dungeon';
 import { MessageService } from '@services/MessageService';
 import { FightMapService } from '@services/FightMapService';
 import { GameStateQueries } from '@utils/GameStateQueries';
@@ -11,6 +11,7 @@ import { MenuItem } from '@shared/components/menu/menu.component';
 import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.component';
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { CharacterActionEvent, CharacterAction } from '@models/CharacterCardTypes';
 import { SceneType } from '@models/SceneType';
 import { Character } from '@models/Character';
@@ -33,7 +34,8 @@ import { Character } from '@models/Character';
     CommonModule,
     SceneTitleComponent,
     SceneFooterComponent,
-    CharacterPanelComponent
+    CharacterPanelComponent,
+    CachedImageDirective
   ],
   templateUrl: './castle-menu.component.html',
   styleUrls: ['./castle-menu.component.scss']
@@ -154,7 +156,7 @@ export class CastleMenuComponent implements OnInit {
 
     // Initialize dungeon state before entering
     const state = this.gameState.state();
-    const newState = DungeonMovementService.enterDungeon(state, 1);
+    const newState = DungeonLevelService.enterDungeon(state, 1);
     this.gameState.updateState(() => newState);
 
     // Trigger auto-save before entering dungeon

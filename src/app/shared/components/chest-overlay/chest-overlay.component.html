@@ -15,7 +15,7 @@
     <div class="chest-sprite-layer">
       @if (!spriteError()) {
         <img
-          [src]="spriteUrl()"
+          [appCachedSrc]="spriteUrl()"
           [alt]="spriteState() === 'open' ? 'Open treasure chest' : 'Closed treasure chest'"
           class="chest-sprite"
           [class.opening-anim]="phase() === 'opening'"

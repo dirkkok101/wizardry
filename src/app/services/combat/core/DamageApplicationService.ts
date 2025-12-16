@@ -10,6 +10,7 @@
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { CombatState, Combatant, MonsterInstance, CombatantStatus } from '@models/Combat'
+import { CombatHelpers } from '../CombatHelpers'
 
 // ============================================================================
 // Character Damage/Healing
@@ -217,7 +218,7 @@ export function applyHealing(
  */
 export function areAllMonstersDead(state: CombatState): boolean {
   return state.monsterGroups.every(group =>
-    group.monsters.every(m => m.hp <= 0 || m.status === 'DEAD')
+    group.monsters.every(m => CombatHelpers.isMonsterDead(m))
   )
 }
 
@@ -242,7 +243,7 @@ export function areAllCharactersDead(
  */
 export function isCombatantDead(combatant: Combatant): boolean {
   if ('monsterId' in combatant) {
-    return combatant.hp <= 0 || combatant.status === 'DEAD'
+    return CombatHelpers.isMonsterDead(combatant as MonsterInstance)
   }
 
   const char = combatant as Character
@@ -295,7 +296,7 @@ export function getAllMonsters(state: CombatState): MonsterInstance[] {
  */
 export function getAllAliveMonsters(state: CombatState): MonsterInstance[] {
   return state.monsterGroups.flatMap(g =>
-    g.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD')
+    CombatHelpers.getAliveMonsters(g.monsters)
   )
 }
 
@@ -305,8 +306,7 @@ export function getAllAliveMonsters(state: CombatState): MonsterInstance[] {
 export function getAllActingMonsters(state: CombatState): MonsterInstance[] {
   return state.monsterGroups.flatMap(g =>
     g.monsters.filter(m =>
-      m.hp > 0 &&
-      m.status !== 'DEAD' &&
+      CombatHelpers.isMonsterAlive(m) &&
       m.status !== 'ASLEEP' &&
       m.status !== 'PARALYZED'
     )

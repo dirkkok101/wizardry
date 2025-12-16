@@ -57,20 +57,6 @@ const ENCOUNTER_TABLES: Record<number, EncounterTable> = {
 
 export const EncounterService = {
   /**
-   * Roll for random encounter (1% chance - authentic Wizardry 1)
-   *
-   * Original formula: (RANDOM MOD 99) === 35
-   * This gives exactly 1/99 = ~1.01% chance
-   *
-   * See: docs/research/door-kicking-encounter-mechanics.md Section 4
-   */
-  rollRandomEncounter(): boolean {
-    // Use EncounterTriggerService for authentic 1% rate
-    const roll = Math.floor(RandomService.random(0, 98)) // 0-98 (99 values)
-    return roll === 35 // Target value from original source
-  },
-
-  /**
    * Get encounter table for dungeon level
    */
   getEncounterTable(level: number): EncounterTable {

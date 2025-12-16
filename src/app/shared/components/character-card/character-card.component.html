@@ -12,7 +12,7 @@
   <div class="card-header">
     <!-- Optional sprite thumbnail -->
     <div class="sprite-thumbnail" *ngIf="showSprite" [class.small]="spriteSize === 'small'">
-      <img [src]="spriteUrl" [alt]="character.name" />
+      <img [appCachedSrc]="spriteUrl" [alt]="character.name" />
     </div>
     <div class="character-name">{{ character.name }}</div>
     <app-status-badge [status]="character.status" variant="badge"></app-status-badge>

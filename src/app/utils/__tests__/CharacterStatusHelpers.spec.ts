@@ -39,9 +39,9 @@ describe('CharacterStatusHelpers', () => {
       expect(canAct(char)).toBe(false)
     })
 
-    it('should return false for ASLEEP status', () => {
+    it('should return true for ASLEEP status (combat-only, wakes after combat)', () => {
       const char = createTestCharacter({ status: CharacterStatus.ASLEEP })
-      expect(canAct(char)).toBe(false)
+      expect(canAct(char)).toBe(true)
     })
   })
 

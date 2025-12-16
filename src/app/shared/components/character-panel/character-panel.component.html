@@ -11,7 +11,7 @@
           <!-- Sprite (shown when showSprites enabled) -->
           @if (showSprites) {
             <div class="card-sprite">
-              <img [src]="getSpriteUrl(char)" [alt]="char.name" />
+              <img [appCachedSrc]="getSpriteUrl(char)" [alt]="char.name" />
             </div>
           }
 

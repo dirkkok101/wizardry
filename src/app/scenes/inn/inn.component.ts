@@ -9,6 +9,7 @@ import { SceneTitleComponent } from '@shared/components/scene-title/scene-title.
 import { SceneFooterComponent } from '@shared/components/scene-footer/scene-footer.component';
 import { CharacterPanelComponent } from '@shared/components/character-panel/character-panel.component';
 import { RestResultsModalComponent, RestResultsData } from '@shared/components/rest-results-modal/rest-results-modal.component';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { CharacterActionEvent } from '@models/CharacterCardTypes';
 import { Character } from '@models/Character';
@@ -34,7 +35,8 @@ import { CharacterStatus } from '@models/CharacterStatus';
     SceneTitleComponent,
     SceneFooterComponent,
     CharacterPanelComponent,
-    RestResultsModalComponent
+    RestResultsModalComponent,
+    CachedImageDirective
   ],
   templateUrl: './inn.component.html',
   styleUrls: ['./inn.component.scss']

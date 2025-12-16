@@ -2,6 +2,8 @@
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { SpellEffect, Combatant, MonsterInstance, CombatState, MonsterGroup } from '@models/Combat'
+import { GameState } from '@models/GameState'
+import { DungeonState } from '@models/Dungeon'
 import { SpellDataLoader } from './SpellDataLoader'
 import { LoadedSpell } from '@models/SpellDefinition'
 import { RandomService } from './RandomService'
@@ -9,6 +11,7 @@ import { MonsterResistanceService } from './MonsterResistanceService'
 import { CharacterResistanceService } from './CharacterResistanceService'
 import { ResistanceType } from '@models/CharacterResistance'
 import { getMonsterDisplayName } from '@utils/MonsterNameUtils'
+import { spellCommandRegistry, DungeonSpellResult } from './spell-commands'
 
 // Spell targeting types
 export type SpellTarget = 'single' | 'group' | 'all_enemies' | 'all_allies' | 'self'
@@ -702,6 +705,128 @@ export class SpellCastingService {
   }
 
   /**
+   * Map UI context to spell service context.
+   * UI uses 'combat', 'dungeon', 'town' while spell data uses 'combat', 'camp'.
+   */
+  static mapUIContextToSpellContext(uiContext: 'combat' | 'dungeon' | 'town'): 'combat' | 'camp' {
+    return uiContext === 'combat' ? 'combat' : 'camp'
+  }
+
+  /**
+   * Execute a dungeon utility spell via the spell command registry.
+   * Delegates to the appropriate spell command based on spell type.
+   *
+   * @param spell The spell to cast
+   * @param caster The character casting the spell
+   * @param dungeon Current dungeon state
+   * @returns Result containing message and optional dungeon state updates
+   */
+  static applyDungeonUtilitySpell(
+    spell: SpellData,
+    caster: Character,
+    dungeon: DungeonState
+  ): DungeonSpellResult {
+    return spellCommandRegistry.execute(spell, caster, dungeon)
+  }
+
+  /**
+   * Check if a spell is a dungeon utility spell (handled by command registry).
+   * Returns true for spells that modify dungeon state or provide utility effects.
+   *
+   * @param spell The spell to check
+   * @returns True if this is a dungeon utility spell
+   */
+  static isDungeonUtilitySpell(spell: SpellData): boolean {
+    return spellCommandRegistry.isDungeonUtilitySpell(spell)
+  }
+
+  /**
+   * Apply spell effects to game state (pure function).
+   * Handles healing, full heal, status cures, and resurrection effects.
+   * Returns a new immutable GameState with effects applied.
+   */
+  static applySpellEffectToGameState(
+    effect: SpellEffect,
+    caster: Character,
+    spell: SpellData,
+    targets: Character[],
+    state: GameState
+  ): GameState {
+    const newRoster = new Map(state.roster)
+
+    // 1. Deduct spell point from caster
+    const updatedCaster = this.deductSpellPoints(
+      newRoster.get(caster.id) || caster,
+      spell.id
+    )
+    newRoster.set(caster.id, updatedCaster)
+
+    // 2. Apply healing effects
+    if (effect.healing && effect.healing.length > 0) {
+      targets.forEach((target, i) => {
+        const healAmount = effect.healing![i] || 0
+        if (healAmount > 0) {
+          const current = newRoster.get(target.id)!
+          newRoster.set(target.id, {
+            ...current,
+            hp: Math.min(current.hp + healAmount, current.maxHp)
+          })
+        }
+      })
+    }
+
+    // 3. Apply full heal effects (MADI)
+    if (effect.fullHeal && effect.fullHeal.length > 0) {
+      effect.fullHeal.forEach(targetId => {
+        const char = newRoster.get(targetId)
+        if (char) {
+          newRoster.set(targetId, {
+            ...char,
+            hp: char.maxHp,
+            status: CharacterStatus.OK
+          })
+        }
+      })
+    }
+
+    // 4. Apply status cures
+    if (effect.statusCures) {
+      effect.statusCures.targetIds.forEach(id => {
+        const char = newRoster.get(id)
+        if (char) {
+          newRoster.set(id, { ...char, status: CharacterStatus.OK })
+        }
+      })
+    }
+
+    // 5. Apply resurrection (DI, KADORTO)
+    if (effect.resurrection && effect.resurrection.length > 0) {
+      effect.resurrection.forEach(res => {
+        const char = newRoster.get(res.targetId)
+        if (char) {
+          const newHp = res.newHp === 'full' ? char.maxHp : res.newHp
+          let newStatus: CharacterStatus
+          if (res.success) {
+            newStatus = CharacterStatus.OK
+          } else if (res.resultStatus === 'ASHES') {
+            newStatus = CharacterStatus.ASHES
+          } else {
+            newStatus = CharacterStatus.LOST
+          }
+          newRoster.set(res.targetId, {
+            ...char,
+            status: newStatus,
+            hp: res.success ? newHp : 0,
+            vitality: char.vitality - res.vitalityLoss
+          })
+        }
+      })
+    }
+
+    return { ...state, roster: newRoster }
+  }
+
+  /**
    * Get spells available to cast in a specific context (combat, dungeon, town)
    * Filters by castableIn property and valid target types for the context
    */
@@ -723,7 +848,7 @@ export class SpellCastingService {
 
     // For dungeon/town context, also filter out combat-only target types
     if (context === 'dungeon' || context === 'town') {
-      const validDungeonTargets = ['single', 'party', 'self', 'all_allies', 'dead_body', 'ashes']
+      const validDungeonTargets = ['single', 'party', 'self', 'all_allies', 'dead_ally', 'dead_or_ashed_ally']
       return contextFiltered.filter(spell =>
         validDungeonTargets.includes(spell.target)
       )

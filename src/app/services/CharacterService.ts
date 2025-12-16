@@ -600,6 +600,52 @@ function createCharacterFromStats(input: CreateCharacterInput): Character {
   return character
 }
 
+/**
+ * Check if a character can act (not incapacitated)
+ *
+ * A character can act if they are:
+ * - Not dead, ashes, lost, stoned, or paralyzed
+ * - Have HP > 0
+ *
+ * Used by: Combat planning (action selection), Combat playback (round execution),
+ * Combat defeat (casualty counting), Maze exploration (poison/spell eligibility)
+ *
+ * Design note: This is the single source of truth for "can this character do anything?"
+ * All components should use this instead of duplicating the status checks.
+ */
+function canAct(character: Character): boolean {
+  return (
+    character.status !== CharacterStatus.DEAD &&
+    character.status !== CharacterStatus.ASHES &&
+    character.status !== CharacterStatus.LOST &&
+    character.status !== CharacterStatus.STONED &&
+    character.status !== CharacterStatus.PARALYZED &&
+    character.hp > 0
+  )
+}
+
+/**
+ * Check if a character is incapacitated (cannot act)
+ *
+ * Inverse of canAct() for semantic clarity in different contexts.
+ * Use this when checking for casualties or disabled characters.
+ */
+function isIncapacitated(character: Character): boolean {
+  return !canAct(character)
+}
+
+/**
+ * Check if a character is alive (not dead/ashes/lost)
+ * Used for: receiving items, resurrection eligibility, etc.
+ */
+function isAlive(character: Character): boolean {
+  return (
+    character.status !== CharacterStatus.DEAD &&
+    character.status !== CharacterStatus.ASHES &&
+    character.status !== CharacterStatus.LOST
+  )
+}
+
 export const CharacterService = {
   getAllCharacters,
   createCharacter,
@@ -610,5 +656,8 @@ export const CharacterService = {
   validatePassword,
   createCharacterFromStats,
   getVitalityBonus,
-  ageInYears
+  ageInYears,
+  canAct,
+  isIncapacitated,
+  isAlive
 }

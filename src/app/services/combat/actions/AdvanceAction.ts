@@ -12,6 +12,7 @@ import {
   ActionExecutionContext,
   combatActionRegistry,
 } from './CombatAction'
+import { CombatHelpers } from '../CombatHelpers'
 
 /**
  * Advance Action Handler
@@ -50,7 +51,7 @@ export class AdvanceAction extends BaseCombatAction {
     }
 
     // Count alive monsters in the group for the message
-    const aliveCount = group.monsters.filter(m => m.hp > 0).length
+    const aliveCount = CombatHelpers.countAliveMonsters(group.monsters)
 
     // Move the entire group to front row
     const newMonsterGroups = state.monsterGroups.map(g =>

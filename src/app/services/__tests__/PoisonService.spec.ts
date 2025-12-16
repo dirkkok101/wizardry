@@ -1,5 +1,5 @@
 import { PoisonService } from '../PoisonService'
-import { createTestCharacter } from '@testing/test-factories'
+import { createTestCharacter, createTestGameState } from '@testing/test-factories'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { RandomService } from '../RandomService'
 
@@ -174,6 +174,132 @@ describe('PoisonService', () => {
       ]
 
       expect(PoisonService.isPartyWiped(party, new Map())).toBe(false)
+    })
+  })
+
+  describe('applyMazePoisonToState', () => {
+    const createPartyState = (chars: { id: string; char: any }[], gold = 0) => {
+      const roster = new Map(chars.map(c => [c.id, c.char]))
+      const memberIds = chars.map(c => c.id)
+      return createTestGameState({
+        roster,
+        party: {
+          members: memberIds,
+          formation: { frontRow: memberIds.slice(0, 3), backRow: memberIds.slice(3) },
+          light: false,
+          gold
+        }
+      })
+    }
+
+    it('returns original state when no poison damage occurs', () => {
+      RandomService.queueNextValues([0.5]) // > 25%, no damage
+
+      const char = createTestCharacter({
+        id: 'poisoned1',
+        status: CharacterStatus.POISONED,
+        hp: 10
+      })
+      const state = createPartyState([{ id: 'poisoned1', char }])
+
+      const result = PoisonService.applyMazePoisonToState(state)
+
+      expect(result.state).toBe(state) // Same reference - no changes
+      expect(result.messages).toHaveLength(0)
+    })
+
+    it('returns updated state with damage applied', () => {
+      RandomService.queueNextValues([0.1]) // < 25%, damage triggers
+
+      const char = createTestCharacter({
+        id: 'poisoned1',
+        name: 'TestChar',
+        status: CharacterStatus.POISONED,
+        hp: 10
+      })
+      const state = createPartyState([{ id: 'poisoned1', char }])
+
+      const result = PoisonService.applyMazePoisonToState(state)
+
+      expect(result.state.roster.get('poisoned1')?.hp).toBe(9)
+      expect(result.messages).toContain('TestChar takes poison damage!')
+    })
+
+    it('handles character death from poison', () => {
+      RandomService.queueNextValues([0.1]) // < 25%, damage triggers
+
+      const char = createTestCharacter({
+        id: 'dying1',
+        name: 'DyingChar',
+        status: CharacterStatus.POISONED,
+        hp: 1
+      })
+      const state = createPartyState([{ id: 'dying1', char }])
+
+      const result = PoisonService.applyMazePoisonToState(state)
+
+      const updatedChar = result.state.roster.get('dying1')
+      expect(updatedChar?.hp).toBe(0)
+      expect(updatedChar?.status).toBe(CharacterStatus.DEAD)
+      expect(result.messages).toContain('DyingChar succumbs to poison!')
+    })
+
+    it('preserves other state fields when updating roster', () => {
+      RandomService.queueNextValues([0.1]) // < 25%, damage triggers
+
+      const char = createTestCharacter({
+        id: 'poisoned1',
+        status: CharacterStatus.POISONED,
+        hp: 10
+      })
+      const state = createPartyState([{ id: 'poisoned1', char }], 500)
+
+      const result = PoisonService.applyMazePoisonToState(state)
+
+      expect(result.state.party.gold).toBe(500) // Preserved
+      expect(result.state.roster.get('poisoned1')?.hp).toBe(9) // Updated
+    })
+
+    it('does not mutate original state', () => {
+      RandomService.queueNextValues([0.1]) // < 25%, damage triggers
+
+      const char = createTestCharacter({
+        id: 'poisoned1',
+        status: CharacterStatus.POISONED,
+        hp: 10
+      })
+      const state = createPartyState([{ id: 'poisoned1', char }])
+      const originalHp = state.roster.get('poisoned1')?.hp
+
+      PoisonService.applyMazePoisonToState(state)
+
+      // Original state unchanged
+      expect(state.roster.get('poisoned1')?.hp).toBe(originalHp)
+    })
+
+    it('handles multiple poisoned characters with mixed results', () => {
+      // First triggers, second fails
+      RandomService.queueNextValues([0.1, 0.5])
+
+      const char1 = createTestCharacter({
+        id: 'p1',
+        name: 'Char1',
+        status: CharacterStatus.POISONED,
+        hp: 10
+      })
+      const char2 = createTestCharacter({
+        id: 'p2',
+        name: 'Char2',
+        status: CharacterStatus.POISONED,
+        hp: 10
+      })
+      const state = createPartyState([{ id: 'p1', char: char1 }, { id: 'p2', char: char2 }])
+
+      const result = PoisonService.applyMazePoisonToState(state)
+
+      expect(result.state.roster.get('p1')?.hp).toBe(9) // Damaged
+      expect(result.state.roster.get('p2')?.hp).toBe(10) // Unchanged
+      expect(result.messages).toHaveLength(1)
     })
   })
 })

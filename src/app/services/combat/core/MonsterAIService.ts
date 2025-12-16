@@ -26,6 +26,7 @@ import {
 import { MonsterDataLoader } from '@services/MonsterDataLoader'
 import { MonsterService } from '@services/MonsterService'
 import { RandomService } from '@services/RandomService'
+import { CombatHelpers } from '../CombatHelpers'
 import {
   selectMonsterMageSpell,
   selectMonsterPriestSpell,
@@ -169,7 +170,7 @@ class MonsterAIService {
     if (template && !MonsterService.canAttackFromBackRow(template)) {
       // Check if front row has room
       const frontGroups = allGroups.filter(
-        g => g.formation === 'front' && g.monsters.some(m => m.hp > 0)
+        g => g.formation === 'front' && CombatHelpers.hasAliveMonsters(g.monsters)
       )
 
       // Allow advancement if front row has room
@@ -227,9 +228,7 @@ class MonsterAIService {
     monsterGroup: MonsterGroup,
     debugMode?: boolean
   ): CombatCommand | null {
-    const aliveInGroup = monsterGroup.monsters.filter(
-      m => m.hp > 0 && m.status !== 'DEAD'
-    ).length
+    const aliveInGroup = CombatHelpers.countAliveMonsters(monsterGroup.monsters)
 
     if (aliveInGroup < MONSTER_AI.CALL_HELP_THRESHOLD && RandomService.chance(MONSTER_AI.CALL_HELP_CHANCE)) {
       if (debugMode) {

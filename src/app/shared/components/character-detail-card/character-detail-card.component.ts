@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { CharacterAction, CharacterActionEvent } from '@models/CharacterCardTypes'
@@ -38,6 +39,7 @@ export type InspectionMode = 'TRAINING_GROUNDS' | 'TAVERN' | 'CAMP'
   standalone: true,
   imports: [
     CommonModule,
+    CachedImageDirective,
     StatusBadgeComponent,
     SpellPointsDisplayComponent,
     CharacterActionsComponent

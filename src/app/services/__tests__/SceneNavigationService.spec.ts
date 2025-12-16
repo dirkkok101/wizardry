@@ -115,19 +115,19 @@ describe('SceneNavigationService', () => {
   });
 
   describe('castSpell()', () => {
-    it('should navigate to spell-casting with characterId', async () => {
+    it('should navigate to spell-casting with characterId and default context', async () => {
       await service.castSpell('char-123');
 
       expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
-        queryParams: { characterId: 'char-123', returnTo: 'maze' }
+        queryParams: { characterId: 'char-123', returnTo: 'maze', context: 'dungeon' }
       });
     });
 
-    it('should use default returnTo of maze', async () => {
+    it('should use default returnTo of maze and context of dungeon', async () => {
       await service.castSpell('mage-1');
 
       expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
-        queryParams: { characterId: 'mage-1', returnTo: 'maze' }
+        queryParams: { characterId: 'mage-1', returnTo: 'maze', context: 'dungeon' }
       });
     });
 
@@ -135,7 +135,15 @@ describe('SceneNavigationService', () => {
       await service.castSpell('mage-2', 'castle-menu');
 
       expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
-        queryParams: { characterId: 'mage-2', returnTo: 'castle-menu' }
+        queryParams: { characterId: 'mage-2', returnTo: 'castle-menu', context: 'dungeon' }
+      });
+    });
+
+    it('should accept combat context for combat spell casting', async () => {
+      await service.castSpell('mage-3', 'maze', 'combat');
+
+      expect(router.navigate).toHaveBeenCalledWith(['/spell-casting'], {
+        queryParams: { characterId: 'mage-3', returnTo: 'maze', context: 'combat' }
       });
     });
   });
@@ -157,10 +165,10 @@ describe('SceneNavigationService', () => {
   });
 
   describe('enterCombat()', () => {
-    it('should navigate to combat', async () => {
+    it('should navigate to combat planning', async () => {
       await service.enterCombat();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/combat']);
+      expect(router.navigate).toHaveBeenCalledWith(['/maze/combat/planning']);
     });
   });
 

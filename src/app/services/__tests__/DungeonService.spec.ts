@@ -15,7 +15,7 @@ describe('DungeonService', () => {
 
     it('throws error for invalid level', () => {
       expect(() => DungeonService.loadLevel(0)).toThrow()
-      expect(() => DungeonService.loadLevel(2)).toThrow()  // Level 2 JSON not yet created
+      expect(() => DungeonService.loadLevel(3)).toThrow()  // Level 3 JSON not yet created
       expect(() => DungeonService.loadLevel(11)).toThrow()
     })
   })

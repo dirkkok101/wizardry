@@ -18,6 +18,7 @@ import {
   OnDestroy
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import {
   CombatRoundEvent,
   CombatRoundAudit,
@@ -48,7 +49,7 @@ import { RESULT_MARKER } from '@services/combat'
 @Component({
   selector: 'app-cinematic-arena',
   standalone: true,
-  imports: [CommonModule, FloatingDamageComponent],
+  imports: [CommonModule, FloatingDamageComponent, CachedImageDirective],
   templateUrl: './cinematic-arena.component.html',
   styleUrls: ['./cinematic-arena.component.scss']
 })

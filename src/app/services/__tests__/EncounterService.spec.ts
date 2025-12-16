@@ -9,24 +9,7 @@ beforeAll(async () => {
 })
 
 describe('EncounterService', () => {
-  describe('rollRandomEncounter', () => {
-    it('returns true approximately 1% of the time (authentic Wizardry 1)', () => {
-      const rolls = Array.from({ length: 10000 }, () =>
-        EncounterService.rollRandomEncounter()
-      )
-      const trueCount = rolls.filter(Boolean).length
-
-      // Expect ~101 true results (1/99 = 1.01%) with reasonable variance
-      // Over 10000 rolls, expect approximately 101 triggers
-      expect(trueCount).toBeGreaterThan(50)
-      expect(trueCount).toBeLessThan(200)
-    })
-
-    it('returns boolean value', () => {
-      const result = EncounterService.rollRandomEncounter()
-      expect(typeof result).toBe('boolean')
-    })
-  })
+  // Note: Random encounter checks are in EncounterTriggerService.checkRandomEncounter()
 
   describe('getEncounterTable', () => {
     it('loads level 1 encounter table', () => {

@@ -530,7 +530,7 @@ function checkRandomEncounter(steps: number): boolean {
 ### Services Used
 
 - `DungeonNavigationService.moveParty(direction)`
-- `EncounterService.rollRandomEncounter(level, steps)`
+- `EncounterTriggerService.checkForEncounter(context)`
 - `DungeonService.getTile(level, position)`
 - `LightService.calculateVisibility(lightRadius, position)`
 

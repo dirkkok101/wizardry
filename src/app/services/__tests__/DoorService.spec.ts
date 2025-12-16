@@ -103,8 +103,8 @@ describe('DoorService', () => {
         // Check if door is unlocked in dungeon state
         // (Door state should be stored in dungeon.unlockedDoors set)
         // Door is at x=1, y=0 (position 0,0 facing EAST)
-        // Door key format: "level_y_x" = "1_0_1"
-        if (result.dungeon.unlockedDoors?.has('1_0_1')) {
+        // Door key format: "level_x_y" = "1_1_0"
+        if (result.dungeon.unlockedDoors?.has('1_1_0')) {
           successOccurred = true;
           break;
         }

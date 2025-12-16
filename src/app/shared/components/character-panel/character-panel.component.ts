@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { Character } from '@models/Character';
 import { CharacterStatus } from '@models/CharacterStatus';
 import { CharacterClass } from '@models/CharacterClass';
@@ -73,7 +74,7 @@ const ALIGNMENT_CLASSES: Record<Alignment, string> = {
 @Component({
   selector: 'app-character-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CachedImageDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './character-panel.component.html',
   styleUrls: ['./character-panel.component.scss']

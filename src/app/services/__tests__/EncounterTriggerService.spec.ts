@@ -1,6 +1,7 @@
 import { EncounterTriggerService, EncounterContext, EncounterCheckResult } from '../EncounterTriggerService'
 import { FightMapService } from '../FightMapService'
 import { RandomService } from '../RandomService'
+import { MonsterGroup, MonsterInstance, CombatantStatus } from '@models/Combat'
 
 describe('EncounterTriggerService', () => {
   beforeEach(() => {
@@ -278,6 +279,92 @@ describe('EncounterTriggerService', () => {
       // Allow reasonable variance
       expect(triggers).toBeGreaterThan(1000)
       expect(triggers).toBeLessThan(1500)
+    })
+  })
+
+  describe('createAlarmCombatState', () => {
+    const createTestMonsterInstance = (id: string): MonsterInstance => ({
+      id,
+      monsterId: 'kobold',
+      name: 'Kobold',
+      unidentifiedName: 'Humanoid',
+      hp: 5,
+      maxHp: 5,
+      ac: 8,
+      damage: [{ dice: '1d4', min: 1, max: 4 }],
+      xp: 10,
+      gold: 5,
+      status: 'ALIVE' as CombatantStatus,
+      level: 1
+    })
+
+    const createTestMonsterGroup = (): MonsterGroup => ({
+      id: 'A',
+      monsters: [createTestMonsterInstance('monster-1')],
+      formation: 'front',
+      identified: false
+    })
+
+    it('should create combat state with correct dungeon level', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(5, groups)
+
+      expect(result.dungeonLevel).toBe(5)
+    })
+
+    it('should include monster groups in state', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.monsterGroups).toBe(groups)
+      expect(result.monsterGroups.length).toBe(1)
+    })
+
+    it('should initialize roundNumber to 1', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.roundNumber).toBe(1)
+    })
+
+    it('should set canFlee to true', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.canFlee).toBe(true)
+    })
+
+    it('should set encounterReason to alarm', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.encounterReason).toBe('alarm')
+    })
+
+    it('should include alarm message in combat log', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.combatLog).toContain('An alarm trap has been triggered!')
+    })
+
+    it('should initialize empty command queue', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.commandQueue).toEqual([])
+    })
+
+    it('should initialize empty status effect maps', () => {
+      const groups = [createTestMonsterGroup()]
+      const result = EncounterTriggerService.createAlarmCombatState(1, groups)
+
+      expect(result.statusEffects).toBeInstanceOf(Map)
+      expect(result.statusEffects.size).toBe(0)
+      expect(result.acModifiers).toBeInstanceOf(Map)
+      expect(result.acModifiers.size).toBe(0)
+      expect(result.statusDurations).toBeInstanceOf(Map)
+      expect(result.statusDurations.size).toBe(0)
     })
   })
 })

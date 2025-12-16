@@ -3,6 +3,12 @@ import { SpellCastingService } from '../SpellCastingService'
 import { Character } from '@models/Character'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { RandomService } from '../RandomService'
+import { loadSpellsForTests } from '@testing/test-data-loader'
+
+// Load spell data before running tests (required for SpellCastingService to access spell definitions)
+beforeAll(async () => {
+  await loadSpellsForTests()
+})
 
 /**
  * Tests for Vitality-based resurrection mechanics (DI, KADORTO)

@@ -160,6 +160,7 @@ export interface DungeonState {
   pendingCampEncounter?: boolean    // Random encounter triggered during camp healing
   expeditionAcBuff: number          // Total AC modifier from expedition spells (e.g., MAPORFIC: -2)
   activeExpeditionSpells: string[]  // Spell IDs active for expedition (for display)
+  pendingSpellMessage?: string      // Message to display in maze after spell casting
 }
 
 export interface EncounterTable {

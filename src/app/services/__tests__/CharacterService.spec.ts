@@ -975,4 +975,136 @@ describe('CharacterService', () => {
       expect(character.gold).toBeLessThanOrEqual(190)
     })
   })
+
+  describe('canAct', () => {
+    const createCharacterWithStatus = (status: CharacterStatus, hp: number = 10): Character => ({
+      id: 'test-char',
+      name: 'Test Character',
+      race: Race.HUMAN,
+      class: CharacterClass.FIGHTER,
+      alignment: Alignment.GOOD,
+      status,
+      strength: 15,
+      intelligence: 10,
+      piety: 10,
+      vitality: 14,
+      agility: 12,
+      luck: 10,
+      level: 1,
+      experience: 0,
+      age: 936,
+      hp,
+      maxHp: 10,
+      ac: 10,
+      vim: { current: 14, max: 14 },
+      knownSpells: [],
+      inventory: [],
+      password: 'test'
+    })
+
+    it('returns true for OK status with positive HP', () => {
+      const char = createCharacterWithStatus(CharacterStatus.OK, 10)
+      expect(CharacterService.canAct(char)).toBe(true)
+    })
+
+    it('returns true for POISONED status with positive HP', () => {
+      const char = createCharacterWithStatus(CharacterStatus.POISONED, 5)
+      expect(CharacterService.canAct(char)).toBe(true)
+    })
+
+    it('returns true for ASLEEP status with positive HP', () => {
+      const char = createCharacterWithStatus(CharacterStatus.ASLEEP, 8)
+      expect(CharacterService.canAct(char)).toBe(true)
+    })
+
+    it('returns false for DEAD status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.DEAD, 0)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+
+    it('returns false for ASHES status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.ASHES, 0)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+
+    it('returns false for LOST status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.LOST, 0)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+
+    it('returns false for STONED status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.STONED, 10)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+
+    it('returns false for PARALYZED status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.PARALYZED, 10)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+
+    it('returns false when HP is 0 even with OK status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.OK, 0)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+
+    it('returns false when HP is negative', () => {
+      const char = createCharacterWithStatus(CharacterStatus.OK, -5)
+      expect(CharacterService.canAct(char)).toBe(false)
+    })
+  })
+
+  describe('isIncapacitated', () => {
+    const createCharacterWithStatus = (status: CharacterStatus, hp: number = 10): Character => ({
+      id: 'test-char',
+      name: 'Test Character',
+      race: Race.HUMAN,
+      class: CharacterClass.FIGHTER,
+      alignment: Alignment.GOOD,
+      status,
+      strength: 15,
+      intelligence: 10,
+      piety: 10,
+      vitality: 14,
+      agility: 12,
+      luck: 10,
+      level: 1,
+      experience: 0,
+      age: 936,
+      hp,
+      maxHp: 10,
+      ac: 10,
+      vim: { current: 14, max: 14 },
+      knownSpells: [],
+      inventory: [],
+      password: 'test'
+    })
+
+    it('returns false for OK status with positive HP', () => {
+      const char = createCharacterWithStatus(CharacterStatus.OK, 10)
+      expect(CharacterService.isIncapacitated(char)).toBe(false)
+    })
+
+    it('returns true for DEAD status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.DEAD, 0)
+      expect(CharacterService.isIncapacitated(char)).toBe(true)
+    })
+
+    it('returns true for STONED status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.STONED, 10)
+      expect(CharacterService.isIncapacitated(char)).toBe(true)
+    })
+
+    it('returns true for PARALYZED status', () => {
+      const char = createCharacterWithStatus(CharacterStatus.PARALYZED, 10)
+      expect(CharacterService.isIncapacitated(char)).toBe(true)
+    })
+
+    it('is the inverse of canAct', () => {
+      const okChar = createCharacterWithStatus(CharacterStatus.OK, 10)
+      const deadChar = createCharacterWithStatus(CharacterStatus.DEAD, 0)
+
+      expect(CharacterService.isIncapacitated(okChar)).toBe(!CharacterService.canAct(okChar))
+      expect(CharacterService.isIncapacitated(deadChar)).toBe(!CharacterService.canAct(deadChar))
+    })
+  })
 })

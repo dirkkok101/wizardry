@@ -23,6 +23,7 @@ import {
   CombatStatusEffect,
   DurationTrackedStatus,
 } from '@models/Combat'
+import { CombatHelpers } from './CombatHelpers'
 
 export interface ICombatContext {
   readonly state: CombatState
@@ -214,7 +215,7 @@ export class CombatContext implements ICombatContext {
 
   getAllAliveMonsters(): MonsterInstance[] {
     return this.state.monsterGroups.flatMap(g =>
-      g.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD')
+      CombatHelpers.getAliveMonsters(g.monsters)
     )
   }
 
@@ -224,8 +225,7 @@ export class CombatContext implements ICombatContext {
   getAllActingMonsters(): MonsterInstance[] {
     return this.state.monsterGroups.flatMap(g =>
       g.monsters.filter(m =>
-        m.hp > 0 &&
-        m.status !== 'DEAD' &&
+        CombatHelpers.isMonsterAlive(m) &&
         m.status !== 'ASLEEP' &&
         m.status !== 'PARALYZED'
       )

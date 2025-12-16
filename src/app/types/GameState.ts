@@ -1,8 +1,10 @@
 import { Character } from './Character'
+import { CharacterStatus } from './CharacterStatus'
 import { SceneType } from './SceneType'
 import { DungeonState } from './Dungeon'
 import { CombatState } from './Combat'
 import { Chest } from './Chest'
+import { TrapId } from './Trap'
 
 /**
  * Party represents the player's adventuring party.
@@ -59,6 +61,20 @@ export interface PendingCombatRewards {
   monstersDefeated: number
 }
 
+/**
+ * Trap result pending animation in ChestPlaybackComponent.
+ * Stored in GameState to persist across scene transitions.
+ */
+export interface PendingTrapResult {
+  trapId: TrapId
+  trapName: string
+  message: string
+  damageDealt: Map<string, number>
+  statusApplied: Map<string, CharacterStatus>
+  specialEffect?: string
+  openerId: string
+}
+
 export interface GameState {
   currentScene: SceneType
   roster: Map<string, Character> // All created characters
@@ -70,6 +86,7 @@ export interface GameState {
   bodies?: Map<string, Body> // Dead character bodies left in dungeon (characterId -> body location)
   pendingChest?: Chest // Chest awaiting player interaction (from combat victory or exploration)
   pendingCombatRewards?: PendingCombatRewards // Combat rewards awaiting victory summary display
+  pendingTrapResult?: PendingTrapResult // Trap result awaiting playback animation
   /**
    * Chest alarm flag - set when an ALARM trap is triggered.
    * When player returns to maze, triggers immediate combat encounter.

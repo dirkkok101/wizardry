@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core'
 import { CommonModule } from '@angular/common'
+import { CachedImageDirective } from '@shared/directives/cached-image.directive'
 import { SpriteService, SpriteInfo } from '@services/SpriteService'
 import { Race } from '@models/Race'
 import { CharacterClass } from '@models/CharacterClass'
@@ -24,7 +25,7 @@ import { CharacterClass } from '@models/CharacterClass'
 @Component({
   selector: 'app-sprite-picker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CachedImageDirective],
   templateUrl: './sprite-picker.component.html',
   styleUrls: ['./sprite-picker.component.scss']
 })

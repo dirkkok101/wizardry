@@ -1,40 +1,26 @@
-import { Character } from '@models/Character'
-import { CharacterStatus } from '@models/CharacterStatus'
-
 /**
- * Statuses where a character cannot take actions
- * (dead, petrified, paralyzed, sleeping)
+ * CharacterStatusHelpers - Re-exports from CharacterService
+ *
+ * These helpers delegate to CharacterService as the single source of truth
+ * for character status checks. Kept for backward compatibility.
+ *
+ * @deprecated Import directly from '@services/CharacterService' instead.
  */
-const INCAPACITATED_STATUSES = new Set([
-  CharacterStatus.DEAD,
-  CharacterStatus.ASHES,
-  CharacterStatus.LOST,
-  CharacterStatus.PARALYZED,
-  CharacterStatus.STONED,
-  CharacterStatus.ASLEEP
-])
 
-/**
- * Statuses representing death (character needs resurrection)
- */
-const DEAD_STATUSES = new Set([
-  CharacterStatus.DEAD,
-  CharacterStatus.ASHES,
-  CharacterStatus.LOST
-])
+import { CharacterService } from '@services/CharacterService'
 
 /**
  * Check if a character can take actions (not incapacitated)
  * Used for: selecting chest handler, combat actions, etc.
+ *
+ * @deprecated Use CharacterService.canAct instead
  */
-export function canAct(character: Character): boolean {
-  return !INCAPACITATED_STATUSES.has(character.status)
-}
+export const canAct = CharacterService.canAct
 
 /**
  * Check if a character is alive (not dead/ashes/lost)
  * Used for: receiving items, resurrection eligibility, etc.
+ *
+ * @deprecated Use CharacterService.isAlive instead
  */
-export function isAlive(character: Character): boolean {
-  return !DEAD_STATUSES.has(character.status)
-}
+export const isAlive = CharacterService.isAlive

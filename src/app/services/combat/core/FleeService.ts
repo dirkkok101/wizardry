@@ -14,6 +14,7 @@ import { CharacterStatus } from '@models/CharacterStatus'
 import { CombatState, MonsterGroup } from '@models/Combat'
 import { RandomService } from '@services/RandomService'
 import { FLEE } from '../CombatConstants'
+import { CombatHelpers } from '../CombatHelpers'
 import {
   applyDamageToCharacter,
   getAllActingMonsters,
@@ -56,7 +57,7 @@ export function calculateDemoralization(
   // Calculate total monster morale
   // Morale = sum of (Monster Level × Alive Count) for each group
   const totalMonsterMorale = monsterGroups.reduce((sum, group) => {
-    const aliveMonsters = group.monsters.filter(m => m.hp > 0 && m.status !== 'DEAD')
+    const aliveMonsters = CombatHelpers.getAliveMonsters(group.monsters)
     if (aliveMonsters.length === 0) return sum
     // Use the first monster's level as representative for the group
     const groupLevel = aliveMonsters[0]?.level || 1

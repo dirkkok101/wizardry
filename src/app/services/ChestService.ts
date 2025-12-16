@@ -11,6 +11,7 @@
 import { Character } from '@models/Character'
 import { Item } from '@models/Item'
 import { Position } from '@models/Dungeon'
+import { GameState } from '@models/GameState'
 import {
   Chest,
   ChestSource,
@@ -145,7 +146,9 @@ async function generateChest(
 
   // Determine if trapped (keep existing logic for authentic trap selection)
   const trapProbability = TRAP_PROBABILITY_BY_TIER[rewardTier]
-  const trapped = RandomService.roll(trapProbability)
+  const trapRoll = RandomService.nextRandom()
+  const trapped = trapRoll < trapProbability
+  console.log(`[CHEST] Trap roll: ${(trapRoll * 100).toFixed(1)}% vs ${(trapProbability * 100).toFixed(0)}% chance → ${trapped ? 'TRAPPED' : 'safe'}`)
 
   return {
     id: generateChestId(),
@@ -352,6 +355,46 @@ function getDistributionMessage(result: TreasureDistributionResult): string {
 }
 
 /**
+ * Apply treasure distribution result to game state
+ *
+ * Updates:
+ * - Recipient's inventory (adds received items)
+ * - Party gold (adds gold from chest)
+ * - Clears pendingChest
+ *
+ * @param state Current game state
+ * @param result Distribution result from distributeTreasure()
+ * @returns New game state with distribution applied
+ */
+function applyDistributionToState(
+  state: GameState,
+  result: TreasureDistributionResult
+): GameState {
+  let newRoster = new Map(state.roster)
+
+  // Add items to recipient's inventory
+  if (result.recipientId && result.itemsReceived.length > 0) {
+    const recipient = newRoster.get(result.recipientId)
+    if (recipient) {
+      newRoster.set(result.recipientId, {
+        ...recipient,
+        inventory: [...recipient.inventory, ...result.itemsReceived]
+      })
+    }
+  }
+
+  return {
+    ...state,
+    roster: newRoster,
+    party: {
+      ...state.party,
+      gold: state.party.gold + result.goldAdded
+    },
+    pendingChest: undefined
+  }
+}
+
+/**
  * Create an empty (safe) chest for testing or special cases
  */
 function createEmptyChest(mazeLevel: number, position: Position): Chest {
@@ -407,5 +450,8 @@ export const ChestService = {
   selectRecipient,
   checkInventorySpace,
   distributeTreasure,
-  getDistributionMessage
+  getDistributionMessage,
+
+  // State application
+  applyDistributionToState
 }

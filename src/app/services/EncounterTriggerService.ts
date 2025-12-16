@@ -1,5 +1,6 @@
 import { FightMapService } from './FightMapService'
 import { RandomService } from './RandomService'
+import { CombatState, MonsterGroup } from '@models/Combat'
 
 /**
  * Fixed encounter configuration
@@ -185,5 +186,30 @@ export const EncounterTriggerService = {
     const triggered = roll === ENCOUNTER_CONSTANTS.DOOR_KICK_TARGET
     console.log(`[Encounter] Door kick check: rolled ${roll}, target ${ENCOUNTER_CONSTANTS.DOOR_KICK_TARGET} (1 in 8 = 12.5%). Encounter: ${triggered}`)
     return triggered
+  },
+
+  /**
+   * Create combat state for ALARM trap encounters
+   *
+   * This follows the "Components as Presenters" pattern by moving
+   * CombatState construction from chest-playback.component.ts to the service layer.
+   *
+   * @param dungeonLevel - Current dungeon level (1-10)
+   * @param monsterGroups - Monster groups for this encounter
+   * @returns Complete CombatState ready for combat planning
+   */
+  createAlarmCombatState(dungeonLevel: number, monsterGroups: MonsterGroup[]): CombatState {
+    return {
+      monsterGroups,
+      commandQueue: [],
+      roundNumber: 1,
+      combatLog: ['An alarm trap has been triggered!'],
+      canFlee: true,
+      dungeonLevel,
+      statusEffects: new Map(),
+      acModifiers: new Map(),
+      statusDurations: new Map(),
+      encounterReason: 'alarm' as const
+    }
   }
 }
