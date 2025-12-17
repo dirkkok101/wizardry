@@ -1,4 +1,4 @@
-import { SpellTargetingService, TargetingMode } from '../SpellTargetingService'
+import { SpellTargetingService, TargetingMode, CombatTargetingMode } from '../SpellTargetingService'
 import { createTestCharacter } from '@testing/test-factories'
 import { CharacterStatus } from '@models/CharacterStatus'
 import { Character } from '@models/Character'
@@ -70,6 +70,163 @@ describe('SpellTargetingService', () => {
     it('returns "none" for unknown target types', () => {
       const spell = createSpellData({ target: 'unknown' as SpellData['target'] })
       expect(SpellTargetingService.getTargetingMode(spell)).toBe('none')
+    })
+  })
+
+  describe('getCombatTargetingMode', () => {
+    describe('offensive single-target spells (monster targeting)', () => {
+      it('returns monster_group for HALITO (fire damage spell)', () => {
+        const halito = createSpellData({
+          target: 'single',
+          category: 'offensive',
+          damage: { dice: '1d8', type: 'fire' }
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(halito)).toBe('monster_group')
+      })
+
+      it('returns monster_group for BADIOS (divine damage spell)', () => {
+        const badios = createSpellData({
+          target: 'single',
+          category: 'offensive',
+          damage: { dice: '1d8', type: 'divine' }
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(badios)).toBe('monster_group')
+      })
+
+      it('returns monster_group when category is offensive even without damage property', () => {
+        const offensiveSpell = createSpellData({
+          target: 'single',
+          category: 'offensive'
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(offensiveSpell)).toBe('monster_group')
+      })
+
+      it('returns monster_group when spell has damage property even without offensive category', () => {
+        const damageSpell = createSpellData({
+          target: 'single',
+          damage: { dice: '2d6' }
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(damageSpell)).toBe('monster_group')
+      })
+    })
+
+    describe('support single-target spells (party member targeting)', () => {
+      it('returns party_member for DIOS (healing spell)', () => {
+        const dios = createSpellData({
+          target: 'single',
+          category: 'healing',
+          healing: { dice: '1d8' }
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(dios)).toBe('party_member')
+      })
+
+      it('returns party_member for DIALKO (cure paralysis)', () => {
+        const dialko = createSpellData({
+          target: 'single',
+          category: 'support',
+          statusCure: 'paralysis'
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(dialko)).toBe('party_member')
+      })
+
+      it('returns party_member for LATUMOFIS (cure poison)', () => {
+        const latumofis = createSpellData({
+          target: 'single',
+          category: 'support',
+          statusCure: 'poison'
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(latumofis)).toBe('party_member')
+      })
+
+      it('returns party_member for buff spell without damage', () => {
+        const buffSpell = createSpellData({
+          target: 'single',
+          category: 'support',
+          acModifier: -2
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(buffSpell)).toBe('party_member')
+      })
+    })
+
+    describe('group target spells (monster targeting)', () => {
+      it('returns monster_group for MAHALITO (group fire damage)', () => {
+        const mahalito = createSpellData({
+          target: 'group',
+          category: 'offensive',
+          damage: { dice: '4d6', type: 'fire' }
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(mahalito)).toBe('monster_group')
+      })
+
+      it('returns monster_group for KATINO (group sleep)', () => {
+        const katino = createSpellData({
+          target: 'group',
+          category: 'disabling'
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(katino)).toBe('monster_group')
+      })
+    })
+
+    describe('auto-resolve spells (no targeting)', () => {
+      it('returns none for self-targeting spells', () => {
+        const spell = createSpellData({ target: 'self' })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('none')
+      })
+
+      it('returns none for caster-targeting spells', () => {
+        const spell = createSpellData({ target: 'caster' })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('none')
+      })
+
+      it('returns none for party-wide spells', () => {
+        const spell = createSpellData({ target: 'party' })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('none')
+      })
+
+      it('returns none for all_allies spells', () => {
+        const spell = createSpellData({ target: 'all_allies' })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('none')
+      })
+
+      it('returns none for all_enemies spells', () => {
+        const spell = createSpellData({ target: 'all_enemies' })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('none')
+      })
+    })
+
+    describe('resurrection spells (party member targeting)', () => {
+      it('returns party_member for dead_ally resurrection', () => {
+        const di = createSpellData({
+          target: 'dead_ally',
+          resurrection: true
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(di)).toBe('party_member')
+      })
+
+      it('returns party_member for dead_or_ashed_ally resurrection', () => {
+        const kadorto = createSpellData({
+          target: 'dead_or_ashed_ally',
+          resurrection: true
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(kadorto)).toBe('party_member')
+      })
+    })
+
+    describe('edge cases', () => {
+      it('returns none for unknown target types', () => {
+        const spell = createSpellData({ target: 'unknown' as SpellData['target'] })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('none')
+      })
+
+      it('prioritizes damage property over category for single-target', () => {
+        // Even if category is not offensive, having damage means it targets monsters
+        const spell = createSpellData({
+          target: 'single',
+          category: 'healing', // Misleading category, but damage property wins
+          damage: { dice: '1d6' }
+        })
+        expect(SpellTargetingService.getCombatTargetingMode(spell)).toBe('monster_group')
+      })
     })
   })
 

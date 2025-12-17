@@ -13,12 +13,14 @@ import { CharacterPanelComponent } from '@shared/components/character-panel/char
 import { MessageLogComponent } from '@shared/components/message-log/message-log.component';
 import { CombatOverlayComponent } from '@shared/components/combat-overlay/combat-overlay.component';
 import { SpellPanelComponent } from '@shared/components/spell-panel/spell-panel.component';
+import { CharacterSelectionDialogComponent, CharacterOption } from '@shared/components/character-selection-dialog/character-selection-dialog.component';
 import { MenuItem } from '@shared/components/menu/menu.component';
 import { GameStateService } from '@services/GameStateService';
 import { SceneNavigationService } from '@services/SceneNavigationService';
 import { MessageLogService } from '@services/MessageLogService';
 import { SpellLearningService } from '@services/SpellLearningService';
 import { SpellCastingService, SpellData } from '@services/SpellCastingService';
+import { SpellTargetingService } from '@services/SpellTargetingService';
 import { CharacterService } from '@services/CharacterService';
 import { LightService } from '@services/LightService';
 import { createCommand } from '@services/combat';
@@ -55,7 +57,8 @@ import { DungeonState } from '@models/Dungeon';
     CharacterPanelComponent,
     MessageLogComponent,
     CombatOverlayComponent,
-    SpellPanelComponent
+    SpellPanelComponent,
+    CharacterSelectionDialogComponent
   ],
   template: `
     <div class="combat-planning">
@@ -117,7 +120,7 @@ import { DungeonState } from '@models/Dungeon';
 
       <!-- Footer Menu - switches between normal and targeting menus -->
       <app-scene-footer
-        [menuItems]="isTargetingMode() ? targetingMenuItems() : combatMenuItems()"
+        [menuItems]="shouldShowTargetingMenu() ? targetingMenuItems() : combatMenuItems()"
         (itemSelected)="handleMenuAction($event)"
       />
 
@@ -135,6 +138,15 @@ import { DungeonState } from '@models/Dungeon';
           />
         }
       }
+
+      <!-- Character Selection Dialog (for ally-targeting spells like DIOS, DIALKO) -->
+      <app-character-selection-dialog
+        [visible]="showCharacterTargetDialog()"
+        [characters]="characterTargetOptions()"
+        [prompt]="characterTargetPrompt()"
+        (characterSelected)="onCharacterTargetSelected($event)"
+        (cancelled)="onCharacterTargetCancelled()"
+      />
     </div>
   `,
   styles: [`
@@ -299,6 +311,9 @@ export class CombatPlanningComponent implements OnInit {
   readonly pendingSpell = signal<SpellData | null>(null);
   readonly targetingType = signal<'attack' | 'spell' | null>(null);
 
+  // Character targeting state (for ally-targeting spells like DIOS, DIALKO)
+  readonly showCharacterTargetDialog = signal<boolean>(false);
+
   // Computed from GameState
   readonly combatState = computed(() => this.gameState.state().combat as CombatState | undefined);
   readonly dungeonState = computed(() => this.gameState.state().dungeon as DungeonState | undefined);
@@ -366,8 +381,30 @@ export class CombatPlanningComponent implements OnInit {
     return spells;
   });
 
-  // Is in targeting mode?
-  readonly isTargetingMode = computed(() => this.selectingTargetForCharacter() !== null);
+  // Is in monster targeting mode? (excludes character dialog which is a modal overlay)
+  readonly isTargetingMode = computed(() =>
+    this.selectingTargetForCharacter() !== null && !this.showCharacterTargetDialog()
+  );
+
+  // Character target options for ally-targeting spells (DIOS, DIALKO, etc.)
+  readonly characterTargetOptions = computed((): CharacterOption[] => {
+    const spell = this.pendingSpell();
+    if (!spell) return [];
+
+    const party = this.partyCharacters();
+    return party.map((char, index) => ({
+      character: char,
+      index: index + 1,
+      enabled: SpellTargetingService.isValidCharacterTarget(spell, char)
+    }));
+  });
+
+  // Targeting prompt for character selection dialog (e.g., "HEAL WHO?", "CURE WHO?")
+  readonly characterTargetPrompt = computed((): string => {
+    const spell = this.pendingSpell();
+    if (!spell) return 'SELECT TARGET';
+    return SpellTargetingService.getTargetingPrompt(spell);
+  });
 
   // Scene title
   readonly sceneTitle = computed(() => {
@@ -411,6 +448,18 @@ export class CombatPlanningComponent implements OnInit {
 
   // Footer menu items for targeting mode
   readonly targetingMenuItems = computed((): MenuItem[] => {
+    // If targeting characters (ally spells), only show Cancel
+    // The character selection dialog handles the actual selection
+    if (this.showCharacterTargetDialog()) {
+      return [{
+        id: 'cancel-targeting',
+        label: 'Cancel',
+        shortcut: 'ESC',
+        enabled: true
+      }];
+    }
+
+    // Monster group targeting
     const groups = this.monsterGroups();
     if (!this.isTargetingMode() || groups.length === 0) return [];
 
@@ -439,7 +488,14 @@ export class CombatPlanningComponent implements OnInit {
   });
 
   // Panel dimming during targeting or intro
-  readonly shouldDimPanels = computed(() => this.isTargetingMode() || this.combatIntroActive());
+  readonly shouldDimPanels = computed(() =>
+    this.isTargetingMode() || this.showCharacterTargetDialog() || this.combatIntroActive()
+  );
+
+  // Should show targeting menu (monster or character targeting)
+  readonly shouldShowTargetingMenu = computed(() =>
+    this.isTargetingMode() || this.showCharacterTargetDialog()
+  );
 
   /**
    * Status texts for characters - shows incapacitated status or selected action
@@ -631,7 +687,10 @@ export class CombatPlanningComponent implements OnInit {
 
   /**
    * Handle spell selection from SpellPanel
-   * In combat, offensive spells targeting 'single' or 'group' need group selection
+   * Uses SpellTargetingService.getCombatTargetingMode() to determine:
+   * - monster_group: Offensive spells (HALITO, MAHALITO) → target monster groups
+   * - party_member: Support spells (DIOS, DIALKO) → target party members
+   * - none: Auto-resolve spells (self, party, all_enemies)
    */
   onSpellSelected(spell: SpellData): void {
     const charId = this.selectingSpellForCharacter();
@@ -640,16 +699,46 @@ export class CombatPlanningComponent implements OnInit {
     // Close spell panel
     this.selectingSpellForCharacter.set(null);
 
-    // In combat, 'single' = single monster in group, 'group' = all monsters in group
-    // Both require group selection
-    const needsGroupTarget = spell.target === 'single' || spell.target === 'group';
+    // Use combat-specific targeting mode to distinguish offensive vs support
+    const targetingMode = SpellTargetingService.getCombatTargetingMode(spell);
 
-    if (needsGroupTarget) {
-      // Store spell and enter targeting mode
+    console.debug('[Combat Planning] onSpellSelected:', {
+      spell: spell.name,
+      target: spell.target,
+      category: spell.category,
+      targetingMode
+    });
+
+    if (targetingMode === 'monster_group') {
+      // Monster group targeting (offensive spells: HALITO, MAHALITO, BADIOS, etc.)
       this.pendingSpell.set(spell);
       this.selectingTargetForCharacter.set(charId);
       this.targetingType.set('spell');
-      this.addMessage(`Select target for ${spell.name}`);
+      this.addMessage(`Select target group for ${spell.name}`);
+    } else if (targetingMode === 'party_member') {
+      // Party member targeting (support spells: DIOS, DIALKO, LATUMOFIS, etc.)
+      const party = this.partyCharacters();
+      const validTargets = SpellTargetingService.getValidCharacterTargets(spell, party);
+
+      console.debug('[Combat Planning] party_member targeting:', {
+        partySize: party.length,
+        partyHP: party.map(c => ({ name: c.name, hp: c.hp, maxHp: c.maxHp })),
+        validTargets: validTargets.map(c => c.name)
+      });
+
+      if (validTargets.length === 0) {
+        // No valid targets - show helpful message and return to action selection
+        console.debug('[Combat Planning] No valid targets for', spell.name);
+        this.addMessage(SpellTargetingService.getNoValidTargetsMessage(spell));
+        return;
+      }
+
+      console.debug('[Combat Planning] Opening character target dialog');
+      this.pendingSpell.set(spell);
+      this.selectingTargetForCharacter.set(charId);
+      this.targetingType.set('spell');
+      this.showCharacterTargetDialog.set(true);
+      this.addMessage(SpellTargetingService.getTargetingPrompt(spell));
     } else {
       // Auto-target spells (party, self, all_enemies, all_allies)
       this.createSpellCommand(charId, spell, null);
@@ -668,6 +757,58 @@ export class CombatPlanningComponent implements OnInit {
    */
   getCaster(characterId: string): Character | undefined {
     return this.partyCharacters().find(c => c.id === characterId);
+  }
+
+  // ============================================================
+  // CHARACTER TARGET SELECTION (for ally spells)
+  // ============================================================
+
+  /**
+   * Handle character selection from CharacterSelectionDialog
+   * Creates a CAST_SPELL command targeting the selected party member
+   */
+  onCharacterTargetSelected(target: Character): void {
+    const charId = this.selectingTargetForCharacter();
+    const spell = this.pendingSpell();
+    if (!charId || !spell) return;
+
+    this.createCharacterSpellCommand(charId, spell, target);
+    this.showCharacterTargetDialog.set(false);
+    this.clearTargetingState();
+  }
+
+  /**
+   * Handle character target dialog cancellation
+   */
+  onCharacterTargetCancelled(): void {
+    this.showCharacterTargetDialog.set(false);
+    this.clearTargetingState();
+  }
+
+  /**
+   * Create a CAST_SPELL command targeting a party member
+   */
+  private createCharacterSpellCommand(
+    casterId: string,
+    spell: SpellData,
+    target: Character
+  ): void {
+    const caster = this.partyCharacters().find(c => c.id === casterId);
+    if (!caster) return;
+
+    const command = createCommand(caster, 'CAST_SPELL', target, {
+      spellId: spell.id,
+      targetCharacterId: target.id,
+      spellType: spell.casterType
+    });
+
+    this.selectedActions.update(actions => {
+      const newActions = new Map(actions);
+      newActions.set(casterId, command);
+      return newActions;
+    });
+
+    this.addMessage(`${caster.name}: ${spell.name.toUpperCase()} → ${target.name}`);
   }
 
   /**

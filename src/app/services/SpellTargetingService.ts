@@ -4,8 +4,17 @@ import { SpellData } from './SpellCastingService'
 
 /**
  * Targeting mode determines which UI to show for target selection.
+ * Used for dungeon/camp context where 'single' always means ally.
  */
 export type TargetingMode = 'none' | 'character' | 'monster_group'
+
+/**
+ * Combat-specific targeting mode that distinguishes offensive vs support for 'single' target.
+ * In combat:
+ * - Offensive 'single' spells (HALITO, BADIOS) → target monster group
+ * - Support 'single' spells (DIOS, DIALKO) → target party member
+ */
+export type CombatTargetingMode = 'none' | 'party_member' | 'monster_group'
 
 /**
  * SpellTargetingService - Centralized spell targeting logic
@@ -28,6 +37,7 @@ export type TargetingMode = 'none' | 'character' | 'monster_group'
 export class SpellTargetingService {
   /**
    * Determine what targeting UI should be shown for a spell.
+   * Use this for dungeon/camp context where 'single' always means ally.
    *
    * @returns 'none' if spell auto-resolves (party, self, all enemies)
    * @returns 'character' if player must select a party member
@@ -50,6 +60,46 @@ export class SpellTargetingService {
       default:
         return 'none'
     }
+  }
+
+  /**
+   * Determine targeting mode for combat context.
+   * Unlike getTargetingMode(), this distinguishes offensive vs support for 'single' target:
+   * - Offensive 'single' spells (HALITO, BADIOS) → target monster group
+   * - Support 'single' spells (DIOS, DIALKO) → target party member
+   *
+   * @returns 'none' if spell auto-resolves (self, party, all_enemies, all_allies)
+   * @returns 'party_member' if player must select a party member
+   * @returns 'monster_group' if player must select a monster group
+   */
+  static getCombatTargetingMode(spell: SpellData): CombatTargetingMode {
+    // Auto-resolve targets (no selection needed)
+    const autoTargets = ['self', 'caster', 'party', 'all_allies', 'all_enemies']
+    if (autoTargets.includes(spell.target)) {
+      return 'none'
+    }
+
+    // Single target - depends on spell type (offensive vs support)
+    if (spell.target === 'single') {
+      // Offensive spells target monsters (check category or damage property)
+      if (spell.category === 'offensive' || spell.damage) {
+        return 'monster_group'  // Single monster in a group
+      }
+      // Support spells (healing, buffs, cures) target party members
+      return 'party_member'
+    }
+
+    // Group target - always monsters
+    if (spell.target === 'group') {
+      return 'monster_group'
+    }
+
+    // Dead ally targets - party members (resurrection spells)
+    if (spell.target === 'dead_ally' || spell.target === 'dead_or_ashed_ally') {
+      return 'party_member'
+    }
+
+    return 'none'
   }
 
   /**
