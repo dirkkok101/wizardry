@@ -334,7 +334,7 @@ export class CinematicArenaComponent implements OnDestroy {
         this.showFloatingStatusByType(effectType)
 
         // Show action result banner with purple theming
-        const message = this.formatStatusMessage(effectType, statusEffects.length)
+        const message = this.formatStatusMessage(effectType, statusEffects, currentEvent.targetType)
         this.showActionResult(message, 2500, true)
         await this.delay(800)  // Let banner display before moving on
       }
@@ -968,18 +968,66 @@ export class CinematicArenaComponent implements OnDestroy {
 
   /**
    * Format a status effect message for the action result banner
+   * Uses actual target names instead of generic "monster"
    */
-  private formatStatusMessage(effectType: string, count: number): string {
-    const effectNames: Record<string, string> = {
-      'ASLEEP': 'asleep',
-      'PARALYZED': 'paralyzed',
-      'SILENCED': 'silenced',
-      'BLIND': 'blinded',
-      'POISONED': 'poisoned',
-      'STONED': 'stoned'
+  private formatStatusMessage(
+    effectType: string,
+    statusEffects: { target: string; effect: string }[],
+    targetType?: 'character' | 'monster'
+  ): string {
+    // Guard against empty array
+    if (statusEffects.length === 0) {
+      return 'No targets affected!'
     }
-    const effectName = effectNames[effectType] || effectType.toLowerCase()
-    return `${count} monster${count > 1 ? 's' : ''} ${effectName}!`
+
+    // Use proper verb phrases for natural grammar
+    const effectVerbs: Record<string, string> = {
+      'ASLEEP': 'fell asleep',
+      'PARALYZED': 'was paralyzed',
+      'SILENCED': 'was silenced',
+      'BLIND': 'was blinded',
+      'POISONED': 'was poisoned',
+      'STONED': 'was turned to stone'
+    }
+    const effectVerb = effectVerbs[effectType] || `was ${effectType.toLowerCase()}`
+
+    // Default undefined targetType to 'monster' (spell effects on monsters are more common)
+    const resolvedTargetType = targetType ?? 'monster'
+
+    // Build monster lookup map for O(1) access instead of O(n*m) nested loops
+    const monsterMap = new Map<string, string>()
+    if (resolvedTargetType === 'monster') {
+      for (const group of this.monsterGroups()) {
+        for (const monster of group.monsters) {
+          monsterMap.set(monster.id, monster.name)
+        }
+      }
+    }
+
+    // Get target names
+    const targetNames = statusEffects.map(se => {
+      if (resolvedTargetType === 'character') {
+        return this.partyCharacters().find(c => c.id === se.target)?.name || 'Unknown'
+      } else {
+        return monsterMap.get(se.target) || 'Monster'
+      }
+    })
+
+    // For many targets, use count instead of listing all names
+    if (targetNames.length > 3) {
+      return `${targetNames.length} targets ${effectVerb}!`
+    }
+
+    // Format message with proper grammar (immutable - no array mutation)
+    if (targetNames.length === 1) {
+      return `${targetNames[0]} ${effectVerb}!`
+    } else if (targetNames.length === 2) {
+      return `${targetNames[0]} and ${targetNames[1]} ${effectVerb}!`
+    } else {
+      const lastTarget = targetNames[targetNames.length - 1]
+      const firstTargets = targetNames.slice(0, -1)
+      return `${firstTargets.join(', ')}, and ${lastTarget} ${effectVerb}!`
+    }
   }
 
   /**
