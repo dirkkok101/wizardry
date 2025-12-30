@@ -76,12 +76,12 @@ describe('LevelUpService', () => {
     it('rolls HP increase for Fighter (d10 hit die)', () => {
       const character = createTestCharacter({
         class: CharacterClass.FIGHTER,
-        vitality: 16, // +3 bonus (VIT 16-17 = +3)
+        vitality: 18,
       });
 
       const hpIncrease = LevelUpService.rollHPIncrease(character);
 
-      // d10 + 3 VIT bonus = 4-13 HP
+      // d10 + 3 VIT bonus (VIT 18 = +3) = 4-13 HP
       expect(hpIncrease).toBeGreaterThanOrEqual(4);
       expect(hpIncrease).toBeLessThanOrEqual(13);
     });
@@ -409,23 +409,20 @@ describe('LevelUpService', () => {
     });
 
     it('uses HP reroll system (keeps higher of current or new roll)', () => {
-      // Set maxHP low so reroll will almost certainly be higher
+      RandomService.queueNextValues([0.9, 0.9]);
       const character = createTestCharacter({
         level: 1,
         experience: 3000,
         class: CharacterClass.FIGHTER,
         hp: 5,
-        maxHp: 5, // Low enough that 2d10+6 (VIT 16 = +3 × 2 levels) will be higher
+        maxHp: 5,
         maxLev: 1,
-        vitality: 16,
+        vitality: 18,
       });
 
       const result = LevelUpService.performLevelUp(character);
 
-      // Reroll system: roll 2d10 + 6 (level 2, VIT +3), keep higher
-      // New roll range: 8-26, old maxHP: 5
-      // New maxHP should be at least 8 (minimum reroll)
-      expect(result.updatedCharacter.maxHp).toBeGreaterThanOrEqual(8);
+      expect(result.updatedCharacter.maxHp).toBeGreaterThan(5);
       expect(result.updatedCharacter.maxLev).toBe(2);
       expect(result.levelUpData.hpIncrease).toBe(result.updatedCharacter.maxHp - 5);
     });

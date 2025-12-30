@@ -3,11 +3,14 @@
  * @see data/spells/morlis.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MORLIS (Level 4 Mage) - Fear', () => {
   it('loads spell data from JSON', () => {

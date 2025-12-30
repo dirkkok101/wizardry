@@ -3,11 +3,14 @@
  * @see data/spells/molito.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MOLITO (Level 3 Mage) - Group Non-Elemental', () => {
   it('loads spell data from JSON', () => {

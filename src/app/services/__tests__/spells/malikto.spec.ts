@@ -3,11 +3,14 @@
  * @see data/spells/malikto.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MALIKTO (Level 7 Priest) - All Enemies', () => {
   it('loads spell data from JSON', () => {

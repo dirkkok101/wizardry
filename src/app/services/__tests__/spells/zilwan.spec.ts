@@ -3,11 +3,14 @@
  * @see data/spells/zilwan.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('ZILWAN (Level 6 Mage) - Undead Only', () => {
   it('loads spell data from JSON', () => {

@@ -3,11 +3,14 @@
  * @see data/spells/madalto.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MADALTO (Level 5 Mage) - Group Cold', () => {
   it('loads spell data from JSON', () => {

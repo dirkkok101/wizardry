@@ -3,10 +3,13 @@
  * @see data/spells/calfo.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('CALFO (Level 2 Priest) - Identify Trap', () => {
   it('loads spell data from JSON', () => {

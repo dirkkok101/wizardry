@@ -3,11 +3,14 @@
  * @see data/spells/badios.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('BADIOS (Level 1 Priest) - Single Target Divine', () => {
   it('loads spell data from JSON', () => {

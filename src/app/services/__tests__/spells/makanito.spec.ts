@@ -3,11 +3,14 @@
  * @see data/spells/makanito.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MAKANITO (Level 5 Mage) - Suffocation All', () => {
   it('loads spell data from JSON', () => {

@@ -3,10 +3,13 @@
  * @see data/spells/masopic.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MASOPIC (Level 6 Mage) - Party Invisibility', () => {
   it('loads spell data from JSON', () => {

@@ -3,10 +3,13 @@
  * @see data/spells/dial.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DIAL (Level 4 Priest) - Improved Healing', () => {
   it('loads spell data from JSON', () => {

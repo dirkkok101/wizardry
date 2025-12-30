@@ -3,11 +3,14 @@
  * @see data/spells/tiltowait.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('TILTOWAIT (Level 7 Mage) - All Enemies', () => {
   it('loads spell data from JSON', () => {

@@ -3,11 +3,14 @@
  * @see data/spells/badi.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('BADI (Level 5 Priest) - Single Target Death', () => {
   it('loads spell data from JSON', () => {

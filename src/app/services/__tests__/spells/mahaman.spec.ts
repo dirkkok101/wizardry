@@ -3,11 +3,14 @@
  * @see data/spells/mahaman.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   RandomService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MAHAMAN (Level 7 Mage) - Powerful Random Effect', () => {
   it('loads spell data from JSON', () => {

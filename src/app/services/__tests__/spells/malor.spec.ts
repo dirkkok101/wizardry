@@ -3,10 +3,13 @@
  * @see data/spells/malor.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MALOR (Level 7 Mage) - Teleport', () => {
   it('loads spell data from JSON', () => {

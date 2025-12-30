@@ -3,11 +3,14 @@
  * @see data/spells/loktofeit.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   RandomService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LOKTOFEIT (Level 6 Priest) - Recall to Town', () => {
   it('loads spell data from JSON', () => {

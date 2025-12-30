@@ -1,21 +1,21 @@
-import { CharacterService } from '../CharacterService'
-import { GameState } from '@models/GameState'
-import { Character, CreateCharacterParams } from '@models/Character'
-import { Race } from '@models/Race'
-import { CharacterClass } from '@models/CharacterClass'
-import { Alignment } from '@models/Alignment'
-import { CharacterStatus } from '@models/CharacterStatus'
-import { BaseStats } from '../CharacterCreationService'
-import { loadCharacterCreationDataForTests } from '@testing/test-data-loader'
+import { CharacterService } from '../CharacterService';
+import { GameState } from '@models/GameState';
+import { Character, CreateCharacterParams } from '@models/Character';
+import { Race } from '@models/Race';
+import { CharacterClass } from '@models/CharacterClass';
+import { Alignment } from '@models/Alignment';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { BaseStats } from '../CharacterCreationService';
+import { loadCharacterCreationDataForTests } from '@testing/test-data-loader';
 
 describe('CharacterService', () => {
-  let gameState: GameState
+  let gameState: GameState;
 
   // Load character creation data (classes, races, stat modifiers)
   // Uses global fetch mock from setup-jest.ts
   beforeAll(async () => {
-    await loadCharacterCreationDataForTests()
-  })
+    await loadCharacterCreationDataForTests();
+  });
 
   beforeEach(() => {
     // Create clean game state
@@ -26,26 +26,26 @@ describe('CharacterService', () => {
         members: [],
         formation: { frontRow: [], backRow: [] },
         position: { x: 0, y: 0, facing: 'NORTH' as any },
-        inMaze: false
+        inMaze: false,
       },
       dungeon: {
         currentLevel: 1,
         visitedTiles: new Map(),
-        encounters: []
+        encounters: [],
       },
       settings: {
         difficulty: 'NORMAL' as any,
         soundEnabled: true,
-        musicEnabled: true
-      }
-    }
-  })
+        musicEnabled: true,
+      },
+    };
+  });
 
   describe('getAllCharacters', () => {
     it('returns empty array when no characters exist', () => {
-      const characters = CharacterService.getAllCharacters(gameState)
-      expect(characters).toEqual([])
-    })
+      const characters = CharacterService.getAllCharacters(gameState);
+      expect(characters).toEqual([]);
+    });
 
     it('returns all characters from roster', () => {
       const char1: Character = {
@@ -70,25 +70,25 @@ describe('CharacterService', () => {
         vim: { current: 14, max: 14 },
         knownSpells: [],
         inventory: [],
-        password: 'test123'
-      }
+        password: 'test123',
+      };
 
       const char2: Character = {
         ...char1,
         id: 'char2',
         name: 'Mage1',
-        class: CharacterClass.MAGE
-      }
+        class: CharacterClass.MAGE,
+      };
 
-      gameState.roster.set('char1', char1)
-      gameState.roster.set('char2', char2)
+      gameState.roster.set('char1', char1);
+      gameState.roster.set('char2', char2);
 
-      const characters = CharacterService.getAllCharacters(gameState)
-      expect(characters).toHaveLength(2)
-      expect(characters[0].id).toBe('char1')
-      expect(characters[1].id).toBe('char2')
-    })
-  })
+      const characters = CharacterService.getAllCharacters(gameState);
+      expect(characters).toHaveLength(2);
+      expect(characters[0].id).toBe('char1');
+      expect(characters[1].id).toBe('char2');
+    });
+  });
 
   describe('createCharacter', () => {
     it('creates new character with rolled stats', () => {
@@ -97,29 +97,29 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         class: CharacterClass.FIGHTER,
         alignment: Alignment.GOOD,
-        password: 'secret'
-      }
+        password: 'secret',
+      };
 
-      const result = CharacterService.createCharacter(gameState, params)
+      const result = CharacterService.createCharacter(gameState, params);
 
-      expect(result.state.roster.size).toBe(1)
-      const character = Array.from(result.state.roster.values())[0]
-      expect(character.name).toBe('TestFighter')
-      expect(character.race).toBe(Race.HUMAN)
-      expect(character.class).toBe(CharacterClass.FIGHTER)
-      expect(character.alignment).toBe(Alignment.GOOD)
-      expect(character.password).toBe('secret')
-      expect(character.status).toBe(CharacterStatus.OK)
-      expect(character.level).toBe(1)
-      expect(character.experience).toBe(0)
-      expect(character.inventory).toEqual([])
+      expect(result.state.roster.size).toBe(1);
+      const character = Array.from(result.state.roster.values())[0];
+      expect(character.name).toBe('TestFighter');
+      expect(character.race).toBe(Race.HUMAN);
+      expect(character.class).toBe(CharacterClass.FIGHTER);
+      expect(character.alignment).toBe(Alignment.GOOD);
+      expect(character.password).toBe('secret');
+      expect(character.status).toBe(CharacterStatus.OK);
+      expect(character.level).toBe(1);
+      expect(character.experience).toBe(0);
+      expect(character.inventory).toEqual([]);
 
       // Stats should be in valid range (3-18 base roll + race modifier)
       // Human has str: 8, so 3+8=11 to 18+8=26
-      expect(character.strength).toBeGreaterThanOrEqual(11)
-      expect(character.strength).toBeLessThanOrEqual(26)
-      expect(character.id).toBeTruthy()
-    })
+      expect(character.strength).toBeGreaterThanOrEqual(11);
+      expect(character.strength).toBeLessThanOrEqual(26);
+      expect(character.id).toBeTruthy();
+    });
 
     it('applies race modifiers to stats', () => {
       const params: CreateCharacterParams = {
@@ -127,17 +127,17 @@ describe('CharacterService', () => {
         race: Race.ELF,
         class: CharacterClass.MAGE,
         alignment: Alignment.GOOD,
-        password: 'secret'
-      }
+        password: 'secret',
+      };
 
-      const result = CharacterService.createCharacter(gameState, params)
-      const character = Array.from(result.state.roster.values())[0]
+      const result = CharacterService.createCharacter(gameState, params);
+      const character = Array.from(result.state.roster.values())[0];
 
       // Elf modifiers: STR-1, INT+1, PIE+1, VIT-2, AGI+1
       // Stats should reflect race modifiers
-      expect(character.race).toBe(Race.ELF)
-    })
-  })
+      expect(character.race).toBe(Race.ELF);
+    });
+  });
 
   describe('deleteCharacter', () => {
     it('removes character from roster', () => {
@@ -163,40 +163,73 @@ describe('CharacterService', () => {
         vim: { current: 14, max: 14 },
         knownSpells: [],
         inventory: [],
-        password: 'test123'
-      }
+        password: 'test123',
+      };
 
-      gameState.roster.set('char1', char)
+      gameState.roster.set('char1', char);
 
-      const newState = CharacterService.deleteCharacter(gameState, 'char1')
+      const newState = CharacterService.deleteCharacter(gameState, 'char1');
 
-      expect(newState.roster.size).toBe(0)
-      expect(newState.roster.has('char1')).toBe(false)
-    })
+      expect(newState.roster.size).toBe(0);
+      expect(newState.roster.has('char1')).toBe(false);
+    });
 
     it('returns unchanged state if character not found', () => {
-      const newState = CharacterService.deleteCharacter(gameState, 'nonexistent')
-      expect(newState).toEqual(gameState)
-    })
-  })
+      const newState = CharacterService.deleteCharacter(gameState, 'nonexistent');
+      expect(newState).toEqual(gameState);
+    });
+  });
 
   describe('validateClassEligibility', () => {
-    it('allows basic classes with any stats', () => {
-      const stats = {
-        strength: 5,
+    it('allows basic classes when stat requirements are met', () => {
+      const fighterStats = {
+        strength: 11,
         intelligence: 5,
         piety: 5,
         vitality: 5,
         agility: 5,
         luck: 5,
-        alignment: Alignment.GOOD
-      }
+        alignment: Alignment.GOOD,
+      };
+      const mageStats = {
+        strength: 5,
+        intelligence: 11,
+        piety: 5,
+        vitality: 5,
+        agility: 5,
+        luck: 5,
+        alignment: Alignment.GOOD,
+      };
+      const priestStats = {
+        strength: 5,
+        intelligence: 5,
+        piety: 11,
+        vitality: 5,
+        agility: 5,
+        luck: 5,
+        alignment: Alignment.GOOD,
+      };
+      const thiefStats = {
+        strength: 5,
+        intelligence: 5,
+        piety: 5,
+        vitality: 5,
+        agility: 11,
+        luck: 5,
+        alignment: Alignment.NEUTRAL,
+      };
 
-      expect(CharacterService.validateClassEligibility(CharacterClass.FIGHTER, stats)).toBe(true)
-      expect(CharacterService.validateClassEligibility(CharacterClass.MAGE, stats)).toBe(true)
-      expect(CharacterService.validateClassEligibility(CharacterClass.PRIEST, stats)).toBe(true)
-      expect(CharacterService.validateClassEligibility(CharacterClass.THIEF, stats)).toBe(true)
-    })
+      expect(CharacterService.validateClassEligibility(CharacterClass.FIGHTER, fighterStats)).toBe(
+        true,
+      );
+      expect(CharacterService.validateClassEligibility(CharacterClass.MAGE, mageStats)).toBe(true);
+      expect(CharacterService.validateClassEligibility(CharacterClass.PRIEST, priestStats)).toBe(
+        true,
+      );
+      expect(CharacterService.validateClassEligibility(CharacterClass.THIEF, thiefStats)).toBe(
+        true,
+      );
+    });
 
     it('enforces stat requirements for advanced classes', () => {
       const goodStats = {
@@ -206,8 +239,8 @@ describe('CharacterService', () => {
         vitality: 18,
         agility: 18,
         luck: 18,
-        alignment: Alignment.GOOD
-      }
+        alignment: Alignment.GOOD,
+      };
 
       const badStats = {
         strength: 10,
@@ -216,13 +249,17 @@ describe('CharacterService', () => {
         vitality: 10,
         agility: 10,
         luck: 10,
-        alignment: Alignment.GOOD
-      }
+        alignment: Alignment.GOOD,
+      };
 
       // Samurai requires STR 15, INT 11, PIE 10, VIT 14, AGI 10, GOOD alignment
-      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(true)
-      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, badStats)).toBe(false)
-    })
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(
+        true,
+      );
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, badStats)).toBe(
+        false,
+      );
+    });
 
     it('enforces alignment requirements', () => {
       const goodStats = {
@@ -232,23 +269,29 @@ describe('CharacterService', () => {
         vitality: 18,
         agility: 18,
         luck: 18,
-        alignment: Alignment.GOOD
-      }
+        alignment: Alignment.GOOD,
+      };
 
       const evilStats = {
         ...goodStats,
-        alignment: Alignment.EVIL
-      }
+        alignment: Alignment.EVIL,
+      };
 
       // Ninja requires EVIL alignment
-      expect(CharacterService.validateClassEligibility(CharacterClass.NINJA, evilStats)).toBe(true)
-      expect(CharacterService.validateClassEligibility(CharacterClass.NINJA, goodStats)).toBe(false)
+      expect(CharacterService.validateClassEligibility(CharacterClass.NINJA, evilStats)).toBe(true);
+      expect(CharacterService.validateClassEligibility(CharacterClass.NINJA, goodStats)).toBe(
+        false,
+      );
 
       // Samurai requires GOOD alignment
-      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(true)
-      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, evilStats)).toBe(false)
-    })
-  })
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, goodStats)).toBe(
+        true,
+      );
+      expect(CharacterService.validateClassEligibility(CharacterClass.SAMURAI, evilStats)).toBe(
+        false,
+      );
+    });
+  });
 
   describe('getEligibleClasses', () => {
     it('returns Fighter when STR >= 11', () => {
@@ -258,12 +301,12 @@ describe('CharacterService', () => {
         piety: 8,
         vitality: 10,
         agility: 9,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).toContain(CharacterClass.FIGHTER)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).toContain(CharacterClass.FIGHTER);
+    });
 
     it('excludes Fighter when STR < 11', () => {
       const stats: BaseStats = {
@@ -272,12 +315,12 @@ describe('CharacterService', () => {
         piety: 8,
         vitality: 10,
         agility: 9,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).not.toContain(CharacterClass.FIGHTER)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).not.toContain(CharacterClass.FIGHTER);
+    });
 
     it('returns Mage when IQ >= 11', () => {
       const stats: BaseStats = {
@@ -286,12 +329,12 @@ describe('CharacterService', () => {
         piety: 8,
         vitality: 10,
         agility: 9,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).toContain(CharacterClass.MAGE)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).toContain(CharacterClass.MAGE);
+    });
 
     it('returns Priest when PIE >= 11', () => {
       const stats: BaseStats = {
@@ -300,12 +343,12 @@ describe('CharacterService', () => {
         piety: 11,
         vitality: 10,
         agility: 9,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).toContain(CharacterClass.PRIEST)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).toContain(CharacterClass.PRIEST);
+    });
 
     it('returns Thief when AGI >= 11', () => {
       const stats: BaseStats = {
@@ -314,12 +357,12 @@ describe('CharacterService', () => {
         piety: 8,
         vitality: 10,
         agility: 11,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
-      expect(eligible).toContain(CharacterClass.THIEF)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL);
+      expect(eligible).toContain(CharacterClass.THIEF);
+    });
 
     it('returns Bishop when IQ >= 12 and PIE >= 12', () => {
       const stats: BaseStats = {
@@ -328,12 +371,12 @@ describe('CharacterService', () => {
         piety: 12,
         vitality: 10,
         agility: 9,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).toContain(CharacterClass.BISHOP)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).toContain(CharacterClass.BISHOP);
+    });
 
     it('excludes Bishop when IQ = 12 but PIE < 12', () => {
       const stats: BaseStats = {
@@ -342,12 +385,12 @@ describe('CharacterService', () => {
         piety: 11,
         vitality: 10,
         agility: 9,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).not.toContain(CharacterClass.BISHOP)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).not.toContain(CharacterClass.BISHOP);
+    });
 
     it('returns Samurai when STR >= 15, IQ >= 11, PIE >= 10, VIT >= 14, AGI >= 10', () => {
       const stats: BaseStats = {
@@ -356,12 +399,12 @@ describe('CharacterService', () => {
         piety: 10,
         vitality: 14,
         agility: 10,
-        luck: 8
-      }
+        luck: 8,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).toContain(CharacterClass.SAMURAI)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).toContain(CharacterClass.SAMURAI);
+    });
 
     it('returns Lord when STR >= 15, IQ >= 12, PIE >= 12, VIT >= 15, AGI >= 14, LUK >= 15', () => {
       const stats: BaseStats = {
@@ -370,12 +413,12 @@ describe('CharacterService', () => {
         piety: 12,
         vitality: 15,
         agility: 14,
-        luck: 15
-      }
+        luck: 15,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).toContain(CharacterClass.LORD)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).toContain(CharacterClass.LORD);
+    });
 
     it('returns Ninja when ALL stats >= 17', () => {
       const stats: BaseStats = {
@@ -384,12 +427,12 @@ describe('CharacterService', () => {
         piety: 17,
         vitality: 17,
         agility: 17,
-        luck: 17
-      }
+        luck: 17,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
-      expect(eligible).toContain(CharacterClass.NINJA)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL);
+      expect(eligible).toContain(CharacterClass.NINJA);
+    });
 
     it('excludes Ninja when one stat is 16', () => {
       const stats: BaseStats = {
@@ -398,12 +441,12 @@ describe('CharacterService', () => {
         piety: 17,
         vitality: 17,
         agility: 17,
-        luck: 16 // One stat below 17
-      }
+        luck: 16, // One stat below 17
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
-      expect(eligible).not.toContain(CharacterClass.NINJA)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL);
+      expect(eligible).not.toContain(CharacterClass.NINJA);
+    });
 
     it('returns multiple eligible classes', () => {
       const stats: BaseStats = {
@@ -412,21 +455,21 @@ describe('CharacterService', () => {
         piety: 12,
         vitality: 14,
         agility: 11,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
 
       // Should qualify for: Fighter, Mage, Priest, Bishop, Samurai
       // NOT Thief (Good cannot be Thief)
-      expect(eligible.length).toBeGreaterThanOrEqual(5)
-      expect(eligible).toContain(CharacterClass.FIGHTER)
-      expect(eligible).toContain(CharacterClass.MAGE)
-      expect(eligible).toContain(CharacterClass.PRIEST)
-      expect(eligible).not.toContain(CharacterClass.THIEF)
-      expect(eligible).toContain(CharacterClass.BISHOP)
-      expect(eligible).toContain(CharacterClass.SAMURAI)
-    })
+      expect(eligible.length).toBeGreaterThanOrEqual(5);
+      expect(eligible).toContain(CharacterClass.FIGHTER);
+      expect(eligible).toContain(CharacterClass.MAGE);
+      expect(eligible).toContain(CharacterClass.PRIEST);
+      expect(eligible).not.toContain(CharacterClass.THIEF);
+      expect(eligible).toContain(CharacterClass.BISHOP);
+      expect(eligible).toContain(CharacterClass.SAMURAI);
+    });
 
     it('excludes Priest when alignment is Neutral', () => {
       const stats: BaseStats = {
@@ -435,12 +478,12 @@ describe('CharacterService', () => {
         piety: 11,
         vitality: 10,
         agility: 10,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
-      expect(eligible).not.toContain(CharacterClass.PRIEST)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL);
+      expect(eligible).not.toContain(CharacterClass.PRIEST);
+    });
 
     it('excludes Thief when alignment is Good', () => {
       const stats: BaseStats = {
@@ -449,12 +492,12 @@ describe('CharacterService', () => {
         piety: 10,
         vitality: 10,
         agility: 11,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligible).not.toContain(CharacterClass.THIEF)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligible).not.toContain(CharacterClass.THIEF);
+    });
 
     it('excludes Samurai when alignment is Evil', () => {
       const stats: BaseStats = {
@@ -463,12 +506,12 @@ describe('CharacterService', () => {
         piety: 10,
         vitality: 14,
         agility: 10,
-        luck: 10
-      }
+        luck: 10,
+      };
 
-      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
-      expect(eligible).not.toContain(CharacterClass.SAMURAI)
-    })
+      const eligible = CharacterService.getEligibleClasses(stats, Alignment.EVIL);
+      expect(eligible).not.toContain(CharacterClass.SAMURAI);
+    });
 
     it('requires Good alignment for Lord', () => {
       const stats: BaseStats = {
@@ -477,18 +520,18 @@ describe('CharacterService', () => {
         piety: 12,
         vitality: 15,
         agility: 14,
-        luck: 15
-      }
+        luck: 15,
+      };
 
-      const eligibleGood = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligibleGood).toContain(CharacterClass.LORD)
+      const eligibleGood = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligibleGood).toContain(CharacterClass.LORD);
 
-      const eligibleNeutral = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
-      expect(eligibleNeutral).not.toContain(CharacterClass.LORD)
+      const eligibleNeutral = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL);
+      expect(eligibleNeutral).not.toContain(CharacterClass.LORD);
 
-      const eligibleEvil = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
-      expect(eligibleEvil).not.toContain(CharacterClass.LORD)
-    })
+      const eligibleEvil = CharacterService.getEligibleClasses(stats, Alignment.EVIL);
+      expect(eligibleEvil).not.toContain(CharacterClass.LORD);
+    });
 
     it('requires Evil alignment for Ninja', () => {
       const stats: BaseStats = {
@@ -497,81 +540,81 @@ describe('CharacterService', () => {
         piety: 17,
         vitality: 17,
         agility: 17,
-        luck: 17
-      }
+        luck: 17,
+      };
 
-      const eligibleEvil = CharacterService.getEligibleClasses(stats, Alignment.EVIL)
-      expect(eligibleEvil).toContain(CharacterClass.NINJA)
+      const eligibleEvil = CharacterService.getEligibleClasses(stats, Alignment.EVIL);
+      expect(eligibleEvil).toContain(CharacterClass.NINJA);
 
-      const eligibleGood = CharacterService.getEligibleClasses(stats, Alignment.GOOD)
-      expect(eligibleGood).not.toContain(CharacterClass.NINJA)
+      const eligibleGood = CharacterService.getEligibleClasses(stats, Alignment.GOOD);
+      expect(eligibleGood).not.toContain(CharacterClass.NINJA);
 
-      const eligibleNeutral = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL)
-      expect(eligibleNeutral).not.toContain(CharacterClass.NINJA)
-    })
-  })
+      const eligibleNeutral = CharacterService.getEligibleClasses(stats, Alignment.NEUTRAL);
+      expect(eligibleNeutral).not.toContain(CharacterClass.NINJA);
+    });
+  });
 
   describe('validateCharacterName', () => {
     it('accepts valid name (alphanumeric + space)', () => {
-      expect(CharacterService.validateCharacterName('Gandalf')).toEqual({ valid: true })
-      expect(CharacterService.validateCharacterName('Sir Lancelot')).toEqual({ valid: true })
-      expect(CharacterService.validateCharacterName('Merlin 2')).toEqual({ valid: true })
-    })
+      expect(CharacterService.validateCharacterName('Gandalf')).toEqual({ valid: true });
+      expect(CharacterService.validateCharacterName('Sir Lancelot')).toEqual({ valid: true });
+      expect(CharacterService.validateCharacterName('Merlin 2')).toEqual({ valid: true });
+    });
 
     it('rejects empty name', () => {
-      const result = CharacterService.validateCharacterName('')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('required')
-    })
+      const result = CharacterService.validateCharacterName('');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('required');
+    });
 
     it('rejects name > 15 characters', () => {
-      const result = CharacterService.validateCharacterName('ThisNameIsTooLong')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('15 characters')
-    })
+      const result = CharacterService.validateCharacterName('ThisNameIsTooLong');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('15 characters');
+    });
 
     it('rejects name with special characters', () => {
-      const result = CharacterService.validateCharacterName('Gandalf!')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('letters, numbers, and spaces')
-    })
+      const result = CharacterService.validateCharacterName('Gandalf!');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('letters, numbers, and spaces');
+    });
 
     it('accepts name with exactly 15 characters', () => {
-      expect(CharacterService.validateCharacterName('FifteenCharsNow')).toEqual({ valid: true })
-    })
-  })
+      expect(CharacterService.validateCharacterName('FifteenCharsNow')).toEqual({ valid: true });
+    });
+  });
 
   describe('validatePassword', () => {
     it('accepts valid password (4-8 chars alphanumeric)', () => {
-      expect(CharacterService.validatePassword('pass')).toEqual({ valid: true })
-      expect(CharacterService.validatePassword('12345678')).toEqual({ valid: true })
-      expect(CharacterService.validatePassword('Test123')).toEqual({ valid: true })
-    })
+      expect(CharacterService.validatePassword('pass')).toEqual({ valid: true });
+      expect(CharacterService.validatePassword('12345678')).toEqual({ valid: true });
+      expect(CharacterService.validatePassword('Test123')).toEqual({ valid: true });
+    });
 
     it('rejects empty password', () => {
-      const result = CharacterService.validatePassword('')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('required')
-    })
+      const result = CharacterService.validatePassword('');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('required');
+    });
 
     it('rejects password < 4 characters', () => {
-      const result = CharacterService.validatePassword('abc')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('4-8 characters')
-    })
+      const result = CharacterService.validatePassword('abc');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('4-8 characters');
+    });
 
     it('rejects password > 8 characters', () => {
-      const result = CharacterService.validatePassword('toolongpassword')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('4-8 characters')
-    })
+      const result = CharacterService.validatePassword('toolongpassword');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('4-8 characters');
+    });
 
     it('rejects password with special characters', () => {
-      const result = CharacterService.validatePassword('pass!')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('letters and numbers')
-    })
-  })
+      const result = CharacterService.validatePassword('pass!');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('letters and numbers');
+    });
+  });
 
   describe('createCharacterFromStats', () => {
     const validStats: BaseStats = {
@@ -580,8 +623,8 @@ describe('CharacterService', () => {
       piety: 12,
       vitality: 14,
       agility: 11,
-      luck: 10
-    }
+      luck: 10,
+    };
 
     it('creates character with all required fields', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -590,17 +633,17 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.MAGE
-      })
+        selectedClass: CharacterClass.MAGE,
+      });
 
-      expect(char.name).toBe('Gandalf')
-      expect(char.password).toBe('wizard')
-      expect(char.race).toBe(Race.HUMAN)
-      expect(char.alignment).toBe(Alignment.GOOD)
-      expect(char.class).toBe(CharacterClass.MAGE)
-      expect(char.level).toBe(1)
-      expect(char.status).toBe(CharacterStatus.OK)
-    })
+      expect(char.name).toBe('Gandalf');
+      expect(char.password).toBe('wizard');
+      expect(char.race).toBe(Race.HUMAN);
+      expect(char.alignment).toBe(Alignment.GOOD);
+      expect(char.class).toBe(CharacterClass.MAGE);
+      expect(char.level).toBe(1);
+      expect(char.status).toBe(CharacterStatus.OK);
+    });
 
     it('assigns stats from input', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -609,16 +652,16 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char.strength).toBe(15)
-      expect(char.intelligence).toBe(12)
-      expect(char.piety).toBe(12)
-      expect(char.vitality).toBe(14)
-      expect(char.agility).toBe(11)
-      expect(char.luck).toBe(10)
-    })
+      expect(char.strength).toBe(15);
+      expect(char.intelligence).toBe(12);
+      expect(char.piety).toBe(12);
+      expect(char.vitality).toBe(14);
+      expect(char.agility).toBe(11);
+      expect(char.luck).toBe(10);
+    });
 
     it('generates unique character ID', () => {
       const char1 = CharacterService.createCharacterFromStats({
@@ -627,8 +670,8 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
       const char2 = CharacterService.createCharacterFromStats({
         name: 'Char2',
@@ -636,13 +679,13 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char1.id).toBeDefined()
-      expect(char2.id).toBeDefined()
-      expect(char1.id).not.toBe(char2.id)
-    })
+      expect(char1.id).toBeDefined();
+      expect(char2.id).toBeDefined();
+      expect(char1.id).not.toBe(char2.id);
+    });
 
     it('initializes character with empty inventory', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -651,11 +694,11 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char.inventory).toEqual([])
-    })
+      expect(char.inventory).toEqual([]);
+    });
 
     it('initializes character with level 1 and 0 experience', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -664,12 +707,12 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char.level).toBe(1)
-      expect(char.experience).toBe(0)
-    })
+      expect(char.level).toBe(1);
+      expect(char.experience).toBe(0);
+    });
 
     it('calculates starting HP using class hit dice + VIT bonus (authentic Wizardry)', () => {
       // Authentic Wizardry 1: VIT 6-15 gives +0 bonus (flat middle range)
@@ -679,8 +722,8 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: { ...validStats, vitality: 14 },
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
       const mageChar = CharacterService.createCharacterFromStats({
         name: 'Mage',
@@ -688,19 +731,19 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: { ...validStats, vitality: 14 },
-        selectedClass: CharacterClass.MAGE
-      })
+        selectedClass: CharacterClass.MAGE,
+      });
 
       // Fighter uses 1d10 + VIT bonus (+0 for VIT 14), so HP should be 1-10
-      expect(fighterChar.hp).toBeGreaterThanOrEqual(1)
-      expect(fighterChar.hp).toBeLessThanOrEqual(10)
-      expect(fighterChar.maxHp).toBe(fighterChar.hp)
+      expect(fighterChar.hp).toBeGreaterThanOrEqual(1);
+      expect(fighterChar.hp).toBeLessThanOrEqual(10);
+      expect(fighterChar.maxHp).toBe(fighterChar.hp);
 
       // Mage uses 1d4 + VIT bonus (+0 for VIT 14), so HP should be 1-4
-      expect(mageChar.hp).toBeGreaterThanOrEqual(1)
-      expect(mageChar.hp).toBeLessThanOrEqual(4)
-      expect(mageChar.maxHp).toBe(mageChar.hp)
-    })
+      expect(mageChar.hp).toBeGreaterThanOrEqual(1);
+      expect(mageChar.hp).toBeLessThanOrEqual(4);
+      expect(mageChar.maxHp).toBe(mageChar.hp);
+    });
 
     it('applies minimum HP of 1 even with low VIT penalty', () => {
       // Authentic Wizardry 1: VIT 4-5 gives -1 penalty
@@ -711,13 +754,13 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: { ...validStats, vitality: 3 },
-        selectedClass: CharacterClass.MAGE
-      })
+        selectedClass: CharacterClass.MAGE,
+      });
 
       // Mage 1d4 - 2 could be negative (1-2 = -1), but minimum is 1
-      expect(lowVitMage.hp).toBeGreaterThanOrEqual(1)
-      expect(lowVitMage.maxHp).toBe(lowVitMage.hp)
-    })
+      expect(lowVitMage.hp).toBeGreaterThanOrEqual(1);
+      expect(lowVitMage.maxHp).toBe(lowVitMage.hp);
+    });
 
     it('applies high VIT bonus for starting HP', () => {
       // Authentic Wizardry 1: VIT 16 = +1, VIT 17 = +2, VIT 18+ = +3
@@ -727,16 +770,16 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: { ...validStats, vitality: 18 },
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
       // Fighter uses 1d10 + VIT bonus (+3 for VIT 18)
       // Base HP: 4-13, but authentic Wizardry has 50% chance for 90% value
       // Minimum: floor(0.9 * (1 + 3)) = 3, Maximum: 10 + 3 = 13
-      expect(highVitFighter.hp).toBeGreaterThanOrEqual(3)
-      expect(highVitFighter.hp).toBeLessThanOrEqual(13)
-      expect(highVitFighter.maxHp).toBe(highVitFighter.hp)
-    })
+      expect(highVitFighter.hp).toBeGreaterThanOrEqual(3);
+      expect(highVitFighter.hp).toBeLessThanOrEqual(13);
+      expect(highVitFighter.maxHp).toBe(highVitFighter.hp);
+    });
 
     it('throws error when character does not meet class requirements', () => {
       const lowStats: BaseStats = {
@@ -745,8 +788,8 @@ describe('CharacterService', () => {
         piety: 8,
         vitality: 8,
         agility: 8,
-        luck: 8
-      }
+        luck: 8,
+      };
 
       expect(() => {
         CharacterService.createCharacterFromStats({
@@ -755,10 +798,10 @@ describe('CharacterService', () => {
           race: Race.HUMAN,
           alignment: Alignment.GOOD,
           stats: lowStats,
-          selectedClass: CharacterClass.SAMURAI // Requires high stats
-        })
-      }).toThrow('does not meet requirements for SAMURAI')
-    })
+          selectedClass: CharacterClass.SAMURAI, // Requires high stats
+        });
+      }).toThrow('does not meet requirements for SAMURAI');
+    });
 
     it('initializes vim to match vitality stat', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -767,13 +810,13 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: { ...validStats, vitality: 16 },
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char.vim).toBeDefined()
-      expect(char.vim.current).toBe(16)
-      expect(char.vim.max).toBe(16)
-    })
+      expect(char.vim).toBeDefined();
+      expect(char.vim.current).toBe(16);
+      expect(char.vim.max).toBe(16);
+    });
 
     it('initializes age in 14-16 range', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -782,14 +825,14 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
       // Age is stored in weeks: (18*52) + random(0,299) = 936-1235 weeks (18-23 years)
-      expect(char.age).toBeDefined()
-      expect(char.age).toBeGreaterThanOrEqual(936) // 18 years in weeks
-      expect(char.age).toBeLessThanOrEqual(1235) // ~23 years 39 weeks
-    })
+      expect(char.age).toBeDefined();
+      expect(char.age).toBeGreaterThanOrEqual(936); // 18 years in weeks
+      expect(char.age).toBeLessThanOrEqual(1235); // ~23 years 39 weeks
+    });
 
     it('initializes spell points for mage class', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -798,15 +841,15 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.MAGE
-      })
+        selectedClass: CharacterClass.MAGE,
+      });
 
-      expect(char.spellPoints).toBeDefined()
-      expect(char.spellPoints?.mage).toBeDefined()
-      expect(char.spellPoints?.priest).toBeUndefined()
+      expect(char.spellPoints).toBeDefined();
+      expect(char.spellPoints?.mage).toBeDefined();
+      expect(char.spellPoints?.priest).toBeUndefined();
       // Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
-      expect(char.spellPoints?.mage?.level1).toEqual({ current: 2, max: 2 })
-    })
+      expect(char.spellPoints?.mage?.level1).toEqual({ current: 2, max: 2 });
+    });
 
     it('initializes spell points for priest class', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -815,15 +858,15 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.PRIEST
-      })
+        selectedClass: CharacterClass.PRIEST,
+      });
 
-      expect(char.spellPoints).toBeDefined()
-      expect(char.spellPoints?.priest).toBeDefined()
-      expect(char.spellPoints?.mage).toBeUndefined()
+      expect(char.spellPoints).toBeDefined();
+      expect(char.spellPoints?.priest).toBeDefined();
+      expect(char.spellPoints?.mage).toBeUndefined();
       // Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
-      expect(char.spellPoints?.priest?.level1).toEqual({ current: 2, max: 2 })
-    })
+      expect(char.spellPoints?.priest?.level1).toEqual({ current: 2, max: 2 });
+    });
 
     it('initializes spell points for bishop class (both mage and priest)', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -832,16 +875,16 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.BISHOP
-      })
+        selectedClass: CharacterClass.BISHOP,
+      });
 
-      expect(char.spellPoints).toBeDefined()
-      expect(char.spellPoints?.mage).toBeDefined()
-      expect(char.spellPoints?.priest).toBeDefined()
+      expect(char.spellPoints).toBeDefined();
+      expect(char.spellPoints?.mage).toBeDefined();
+      expect(char.spellPoints?.priest).toBeDefined();
       // Level 1 casters start with 2 spell points for level 1 spells (authentic Wizardry 1981)
-      expect(char.spellPoints?.mage?.level1).toEqual({ current: 2, max: 2 })
-      expect(char.spellPoints?.priest?.level1).toEqual({ current: 2, max: 2 })
-    })
+      expect(char.spellPoints?.mage?.level1).toEqual({ current: 2, max: 2 });
+      expect(char.spellPoints?.priest?.level1).toEqual({ current: 2, max: 2 });
+    });
 
     it('does not initialize spell points for fighter class', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -850,11 +893,11 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char.spellPoints).toBeUndefined()
-    })
+      expect(char.spellPoints).toBeUndefined();
+    });
 
     it('initializes knownSpells as empty array', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -863,11 +906,11 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.MAGE
-      })
+        selectedClass: CharacterClass.MAGE,
+      });
 
-      expect(char.knownSpells).toEqual([])
-    })
+      expect(char.knownSpells).toEqual([]);
+    });
 
     it('initializes equipment slots as undefined', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -876,15 +919,15 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
-      expect(char.equippedWeapon).toBeUndefined()
-      expect(char.equippedArmor).toBeUndefined()
-      expect(char.equippedShield).toBeUndefined()
-      expect(char.equippedHelmet).toBeUndefined()
-      expect(char.equippedGauntlets).toBeUndefined()
-    })
+      expect(char.equippedWeapon).toBeUndefined();
+      expect(char.equippedArmor).toBeUndefined();
+      expect(char.equippedShield).toBeUndefined();
+      expect(char.equippedHelmet).toBeUndefined();
+      expect(char.equippedGauntlets).toBeUndefined();
+    });
 
     it('uses ClassService hit dice + VIT bonus for HP calculation', () => {
       // Authentic Wizardry 1: validStats has vitality: 14 which gives +0 bonus (VIT 6-15 = 0)
@@ -894,8 +937,8 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
       const mageChar = CharacterService.createCharacterFromStats({
         name: 'Mage',
@@ -903,16 +946,16 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.MAGE
-      })
+        selectedClass: CharacterClass.MAGE,
+      });
 
       // Fighter uses 1d10 + VIT bonus (+0 for VIT 14), so HP should be 1-10
       // Mage uses 1d4 + VIT bonus (+0 for VIT 14), so HP should be 1-4
-      expect(fighterChar.hp).toBeGreaterThanOrEqual(1)
-      expect(fighterChar.hp).toBeLessThanOrEqual(10)
-      expect(mageChar.hp).toBeGreaterThanOrEqual(1)
-      expect(mageChar.hp).toBeLessThanOrEqual(4)
-    })
+      expect(fighterChar.hp).toBeGreaterThanOrEqual(1);
+      expect(fighterChar.hp).toBeLessThanOrEqual(10);
+      expect(mageChar.hp).toBeGreaterThanOrEqual(1);
+      expect(mageChar.hp).toBeLessThanOrEqual(4);
+    });
 
     it('initializes character with starting gold in range 90-190 (authentic Wizardry 1)', () => {
       const char = CharacterService.createCharacterFromStats({
@@ -921,40 +964,42 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         alignment: Alignment.GOOD,
         stats: validStats,
-        selectedClass: CharacterClass.FIGHTER
-      })
+        selectedClass: CharacterClass.FIGHTER,
+      });
 
       // Starting gold formula: 90 + random(0-100) = 90-190 gold
-      expect(char.gold).toBeDefined()
-      expect(char.gold).toBeGreaterThanOrEqual(90)
-      expect(char.gold).toBeLessThanOrEqual(190)
-    })
+      expect(char.gold).toBeDefined();
+      expect(char.gold).toBeGreaterThanOrEqual(90);
+      expect(char.gold).toBeLessThanOrEqual(190);
+    });
 
     it('generates different starting gold for different characters (random)', () => {
       // Create multiple characters and verify gold varies
-      const characters = []
+      const characters = [];
       for (let i = 0; i < 10; i++) {
-        characters.push(CharacterService.createCharacterFromStats({
-          name: `Test${i}`,
-          password: 'test',
-          race: Race.HUMAN,
-          alignment: Alignment.GOOD,
-          stats: validStats,
-          selectedClass: CharacterClass.FIGHTER
-        }))
+        characters.push(
+          CharacterService.createCharacterFromStats({
+            name: `Test${i}`,
+            password: 'test',
+            race: Race.HUMAN,
+            alignment: Alignment.GOOD,
+            stats: validStats,
+            selectedClass: CharacterClass.FIGHTER,
+          }),
+        );
       }
 
       // All should be in valid range
-      characters.forEach(char => {
-        expect(char.gold).toBeGreaterThanOrEqual(90)
-        expect(char.gold).toBeLessThanOrEqual(190)
-      })
+      characters.forEach((char) => {
+        expect(char.gold).toBeGreaterThanOrEqual(90);
+        expect(char.gold).toBeLessThanOrEqual(190);
+      });
 
       // At least some variation should exist (not all the same)
-      const uniqueGoldValues = new Set(characters.map(c => c.gold))
-      expect(uniqueGoldValues.size).toBeGreaterThan(1)
-    })
-  })
+      const uniqueGoldValues = new Set(characters.map((c) => c.gold));
+      expect(uniqueGoldValues.size).toBeGreaterThan(1);
+    });
+  });
 
   describe('createCharacter (with gold)', () => {
     it('creates character with starting gold in range 90-190', () => {
@@ -963,18 +1008,18 @@ describe('CharacterService', () => {
         race: Race.HUMAN,
         class: CharacterClass.FIGHTER,
         alignment: Alignment.GOOD,
-        password: 'secret'
-      }
+        password: 'secret',
+      };
 
-      const result = CharacterService.createCharacter(gameState, params)
-      const character = Array.from(result.state.roster.values())[0]
+      const result = CharacterService.createCharacter(gameState, params);
+      const character = Array.from(result.state.roster.values())[0];
 
       // Starting gold formula: 90 + random(0-100) = 90-190 gold
-      expect(character.gold).toBeDefined()
-      expect(character.gold).toBeGreaterThanOrEqual(90)
-      expect(character.gold).toBeLessThanOrEqual(190)
-    })
-  })
+      expect(character.gold).toBeDefined();
+      expect(character.gold).toBeGreaterThanOrEqual(90);
+      expect(character.gold).toBeLessThanOrEqual(190);
+    });
+  });
 
   describe('canAct', () => {
     const createCharacterWithStatus = (status: CharacterStatus, hp: number = 10): Character => ({
@@ -999,59 +1044,59 @@ describe('CharacterService', () => {
       vim: { current: 14, max: 14 },
       knownSpells: [],
       inventory: [],
-      password: 'test'
-    })
+      password: 'test',
+    });
 
     it('returns true for OK status with positive HP', () => {
-      const char = createCharacterWithStatus(CharacterStatus.OK, 10)
-      expect(CharacterService.canAct(char)).toBe(true)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.OK, 10);
+      expect(CharacterService.canAct(char)).toBe(true);
+    });
 
     it('returns true for POISONED status with positive HP', () => {
-      const char = createCharacterWithStatus(CharacterStatus.POISONED, 5)
-      expect(CharacterService.canAct(char)).toBe(true)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.POISONED, 5);
+      expect(CharacterService.canAct(char)).toBe(true);
+    });
 
     it('returns true for ASLEEP status with positive HP', () => {
-      const char = createCharacterWithStatus(CharacterStatus.ASLEEP, 8)
-      expect(CharacterService.canAct(char)).toBe(true)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.ASLEEP, 8);
+      expect(CharacterService.canAct(char)).toBe(true);
+    });
 
     it('returns false for DEAD status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.DEAD, 0)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.DEAD, 0);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
 
     it('returns false for ASHES status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.ASHES, 0)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.ASHES, 0);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
 
     it('returns false for LOST status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.LOST, 0)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.LOST, 0);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
 
     it('returns false for STONED status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.STONED, 10)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.STONED, 10);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
 
     it('returns false for PARALYZED status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.PARALYZED, 10)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.PARALYZED, 10);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
 
     it('returns false when HP is 0 even with OK status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.OK, 0)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.OK, 0);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
 
     it('returns false when HP is negative', () => {
-      const char = createCharacterWithStatus(CharacterStatus.OK, -5)
-      expect(CharacterService.canAct(char)).toBe(false)
-    })
-  })
+      const char = createCharacterWithStatus(CharacterStatus.OK, -5);
+      expect(CharacterService.canAct(char)).toBe(false);
+    });
+  });
 
   describe('isIncapacitated', () => {
     const createCharacterWithStatus = (status: CharacterStatus, hp: number = 10): Character => ({
@@ -1076,35 +1121,35 @@ describe('CharacterService', () => {
       vim: { current: 14, max: 14 },
       knownSpells: [],
       inventory: [],
-      password: 'test'
-    })
+      password: 'test',
+    });
 
     it('returns false for OK status with positive HP', () => {
-      const char = createCharacterWithStatus(CharacterStatus.OK, 10)
-      expect(CharacterService.isIncapacitated(char)).toBe(false)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.OK, 10);
+      expect(CharacterService.isIncapacitated(char)).toBe(false);
+    });
 
     it('returns true for DEAD status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.DEAD, 0)
-      expect(CharacterService.isIncapacitated(char)).toBe(true)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.DEAD, 0);
+      expect(CharacterService.isIncapacitated(char)).toBe(true);
+    });
 
     it('returns true for STONED status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.STONED, 10)
-      expect(CharacterService.isIncapacitated(char)).toBe(true)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.STONED, 10);
+      expect(CharacterService.isIncapacitated(char)).toBe(true);
+    });
 
     it('returns true for PARALYZED status', () => {
-      const char = createCharacterWithStatus(CharacterStatus.PARALYZED, 10)
-      expect(CharacterService.isIncapacitated(char)).toBe(true)
-    })
+      const char = createCharacterWithStatus(CharacterStatus.PARALYZED, 10);
+      expect(CharacterService.isIncapacitated(char)).toBe(true);
+    });
 
     it('is the inverse of canAct', () => {
-      const okChar = createCharacterWithStatus(CharacterStatus.OK, 10)
-      const deadChar = createCharacterWithStatus(CharacterStatus.DEAD, 0)
+      const okChar = createCharacterWithStatus(CharacterStatus.OK, 10);
+      const deadChar = createCharacterWithStatus(CharacterStatus.DEAD, 0);
 
-      expect(CharacterService.isIncapacitated(okChar)).toBe(!CharacterService.canAct(okChar))
-      expect(CharacterService.isIncapacitated(deadChar)).toBe(!CharacterService.canAct(deadChar))
-    })
-  })
-})
+      expect(CharacterService.isIncapacitated(okChar)).toBe(!CharacterService.canAct(okChar));
+      expect(CharacterService.isIncapacitated(deadChar)).toBe(!CharacterService.canAct(deadChar));
+    });
+  });
+});

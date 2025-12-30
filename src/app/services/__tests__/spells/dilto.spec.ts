@@ -3,11 +3,14 @@
  * @see data/spells/dilto.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DILTO (Level 2 Mage) - Blind', () => {
   it('loads spell data from JSON', () => {

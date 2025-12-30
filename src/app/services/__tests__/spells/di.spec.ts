@@ -3,12 +3,15 @@
  * @see data/spells/di.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   RandomService,
   createTestCharacter,
   CharacterStatus
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DI (Level 5 Priest) - Basic Resurrection', () => {
   it('loads spell data from JSON', () => {

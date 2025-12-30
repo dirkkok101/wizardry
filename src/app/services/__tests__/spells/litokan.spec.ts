@@ -3,11 +3,14 @@
  * @see data/spells/litokan.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LITOKAN (Level 5 Priest) - Group Fire', () => {
   it('loads spell data from JSON', () => {

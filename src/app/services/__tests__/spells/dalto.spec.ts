@@ -3,11 +3,14 @@
  * @see data/spells/dalto.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DALTO (Level 4 Mage) - Group Cold', () => {
   it('loads spell data from JSON', () => {

@@ -52,26 +52,40 @@ interface DungeonLevel {
 }
 
 interface Tile {
-  type: TileType;
-  position: Position;
-  walls: WallState; // Which walls present
-  door?: Door; // If door tile
-  stairs?: Stairs; // If stairs tile
+  x: number;
+  y: number;
+  walls: WallState; // Wall types for each direction
+  destination?: TileDestination; // For stairs/teleporter transitions
+  types?: TileType[]; // Special tile effects (spinner, darkness, etc.)
+  door?: Door; // If has door
   teleporter?: Teleporter; // If teleporter tile
-  special?: SpecialEffect; // Spinner, darkness, etc.
   trap?: Trap; // Hidden trap
   treasure?: Treasure; // Hidden treasure
 }
 
-type TileType =
-  | 'floor' // Walkable
-  | 'wall' // Impassable (rendered)
-  | 'rock' // Impassable (not rendered, out of bounds)
+// Wall types include stairs - walking into stairs wall triggers transition
+type WallType =
+  | 'open' // Passable
+  | 'wall' // Impassable barrier
   | 'door' // Openable barrier
-  | 'stairs' // Level transition
-  | 'teleporter' // Instant transport
-  | 'spinner' // Rotates party
-  | 'elevator'; // Multi-level transport (rare)
+  | 'stairs_up' // Ascending stairs (to castle from L1, or previous level)
+  | 'stairs_down'; // Descending stairs (to next level)
+
+interface WallState {
+  north: WallType;
+  south: WallType;
+  east: WallType;
+  west: WallType;
+}
+
+interface TileDestination {
+  type?: 'castle'; // For stairs_up from level 1
+  level?: number; // Target dungeon level
+  x?: number; // Target x coordinate
+  y?: number; // Target y coordinate
+}
+
+type TileType = 'spinner' | 'darkness' | 'antimagic' | 'chute' | 'teleporter';
 
 interface Door {
   open: boolean;
@@ -81,17 +95,10 @@ interface Door {
   trapType?: TrapType;
 }
 
-interface Stairs {
-  direction: 'up' | 'down';
-  destination: Position; // Where stairs lead
-}
-
 interface Teleporter {
   destination: Position; // Teleport target (can change level)
   silent: boolean; // Show message or not
 }
-
-type SpecialEffect = 'spinner' | 'darkness' | 'antimagic' | 'chute';
 ```
 
 ## Dungeon Layout
@@ -181,21 +188,25 @@ Level 10 - Werdna's Lair (final boss)
 **Wall Configuration**:
 
 ```typescript
+// Each direction has a wall type
 interface WallState {
-  north: boolean
-  south: boolean
-  east: boolean
-  west: boolean
+  north: WallType;
+  south: WallType;
+  east: WallType;
+  west: WallType;
 }
 
 // Example: Corridor (walls left/right)
-{ north: false, south: false, east: true, west: true }
+{ north: 'open', south: 'open', east: 'wall', west: 'wall' }
 
 // Example: Dead end (walls on 3 sides)
-{ north: true, south: false, east: true, west: true }
+{ north: 'wall', south: 'open', east: 'wall', west: 'wall' }
 
-// Example: Room corner
-{ north: true, south: false, east: false, west: true }
+// Example: Room with door
+{ north: 'door', south: 'open', east: 'wall', west: 'wall' }
+
+// Example: Castle entrance (stairs up on west wall)
+{ north: 'wall', south: 'open', east: 'open', west: 'stairs_up' }
 ```
 
 ### Door Tiles
@@ -242,35 +253,41 @@ function openDoor(door: Door, party: Party): DoorResult {
 
 ### Stairs
 
-**Descending Stairs**:
+**Stairs are wall types**, not tile types. Walking into a stairs wall triggers immediate transition.
 
-- Go down one level (1 → 2 → 3...)
-- Cannot descend from Level 10
-- Destination: Specific tile on next level
+**Wall Types**:
 
-**Ascending Stairs**:
+- `stairs_up`: Ascending stairs (to castle from L1, or previous level)
+- `stairs_down`: Descending stairs (to next level)
 
-- Go up one level (3 → 2 → 1)
-- Level 1 → Town (exit dungeon)
-- Destination: Specific tile on previous level
+**Behavior**:
 
-**Stairs Usage**:
+- Walking into stairs wall triggers transition **before** position update
+- Tile must have `destination` field specifying where stairs lead
+- `stairs_up` from Level 1 returns to castle (auto-save triggered)
+- `stairs_down` descends to next level (no auto-save)
 
-```typescript
-function useStairs(stairs: Stairs, party: Party): Position {
-  if (stairs.direction === 'down') {
-    if (party.position.level >= 10) {
-      throw new Error('Cannot descend from Level 10');
-    }
-    return stairs.destination; // Next level
-  } else {
-    if (party.position.level <= 1) {
-      return { x: 0, y: 0, level: 0 }; // Exit to town
-    }
-    return stairs.destination; // Previous level
+**Map Data Example**:
+
+```json
+{
+  "x": 0,
+  "y": 0,
+  "walls": {
+    "north": "wall",
+    "south": "open",
+    "east": "open",
+    "west": "stairs_up"
+  },
+  "destination": {
+    "type": "castle"
   }
 }
 ```
+
+**Validation**: At map load, all tiles with `stairs_up` or `stairs_down` walls must have valid `destination` data.
+
+See [Dungeon Navigation](./dungeon-navigation.md#stairs-wall-interactions) for complete stairs mechanics.
 
 ## Traps & Chests
 

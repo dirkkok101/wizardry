@@ -3,10 +3,13 @@
  * @see data/spells/sopic.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('SOPIC (Level 2 Mage) - Self Invisibility', () => {
   it('loads spell data from JSON', () => {

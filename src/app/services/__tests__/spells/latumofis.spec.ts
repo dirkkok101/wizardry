@@ -3,10 +3,13 @@
  * @see data/spells/latumofis.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LATUMOFIS (Level 4 Priest) - Cure Poison', () => {
   it('loads spell data from JSON', () => {

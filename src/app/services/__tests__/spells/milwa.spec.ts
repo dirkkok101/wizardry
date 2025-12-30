@@ -3,10 +3,13 @@
  * @see data/spells/milwa.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MILWA (Level 1 Priest) - Light', () => {
   it('loads spell data from JSON', () => {

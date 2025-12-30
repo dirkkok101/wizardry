@@ -3,10 +3,13 @@
  * @see data/spells/dialma.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DIALMA (Level 5 Priest) - Greater Healing', () => {
   it('loads spell data from JSON', () => {

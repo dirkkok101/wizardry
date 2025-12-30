@@ -3,12 +3,15 @@
  * @see data/spells/kadorto.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   RandomService,
   createTestCharacter,
   CharacterStatus
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('KADORTO (Level 7 Priest) - Advanced Resurrection', () => {
   it('loads spell data from JSON', () => {

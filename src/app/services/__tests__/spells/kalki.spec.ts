@@ -3,10 +3,13 @@
  * @see data/spells/kalki.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('KALKI (Level 1 Priest) - Party Blessing', () => {
   it('loads spell data from JSON', () => {

@@ -3,11 +3,14 @@
  * @see data/spells/montino.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MONTINO (Level 2 Priest) - Silence', () => {
   it('loads spell data from JSON', () => {

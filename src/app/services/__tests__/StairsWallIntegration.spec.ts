@@ -22,44 +22,56 @@ describe('Stairs Wall Integration', () => {
   let testCharacter: any;
   let baseState: GameState;
 
+  function createTestDungeon(overrides: Partial<DungeonState> = {}): DungeonState {
+    return {
+      currentLevel: 1,
+      position: { x: 0, y: 0, facing: 'NORTH' },
+      lightActive: false,
+      lightRadius: 3,
+      teleportCount: 0,
+      visitedTiles: new Set(),
+      defeatedEncounters: [],
+      unlockedDoors: new Set(),
+      openDoors: new Set(),
+      inDarknessZone: false,
+      lootedTiles: new Set(),
+      completedConditionTiles: new Set(),
+      consumedConditionItems: new Set(),
+      latumapicActive: false,
+      expeditionAcBuff: 0,
+      activeExpeditionSpells: [],
+      ...overrides,
+    };
+  }
+
   beforeEach(() => {
-    // Create test character
     testCharacter = createTestCharacter({
       id: 'char1',
       name: 'Test Hero',
       hp: 20,
-      maxHp: 20
+      maxHp: 20,
     });
 
-    // Create base game state
     baseState = {
       ...createTestGameState(),
       currentScene: SceneType.MAZE,
       roster: new Map([['char1', testCharacter]]),
       party: {
         members: ['char1'],
-        formation: { front: ['char1'], back: [] },
-        gold: 100
-      }
+        formation: { frontRow: ['char1'], backRow: [] },
+        light: false,
+        gold: 100,
+      },
     };
   });
 
   describe('End-to-end stairs_up flow', () => {
     it('completes full stairs_up transition from level 1 to castle', () => {
-      // Arrange: Player at (0,0) facing WEST in level 1
-      // This is the actual stairs_up location in level1.json
       const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       // Act 1: Check movement validation
@@ -78,22 +90,18 @@ describe('Stairs Wall Integration', () => {
     });
 
     it('preserves all game state during stairs_up transition', () => {
-      // Arrange
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
         visitedTiles: new Set(['1-0-1', '1-1-1']),
         defeatedEncounters: ['encounter1'],
         unlockedDoors: new Set(['1-2-3']),
-        openDoors: new Set(['1-4-5'])
-      };
+        openDoors: new Set(['1-4-5']),
+      });
       const state: GameState = {
         ...baseState,
         dungeon,
-        party: { ...baseState.party, gold: 500 }
+        party: { ...baseState.party, gold: 500 },
       };
 
       // Act
@@ -108,43 +116,28 @@ describe('Stairs Wall Integration', () => {
   });
 
   describe('End-to-end stairs_down flow', () => {
-    // Skip: Requires level2.json which is not yet created
-    it.skip('completes full stairs_down transition from level 1 to level 2', () => {
-      // Arrange: Find stairs_down in level 1
-      // Based on grep results, stairs_down is at (0, 10) in level1.json
+    it('completes full stairs_down transition from level 1 to level 2', () => {
       const level = DungeonService.loadLevel(1);
       const stairsTile = DungeonService.getTile(level, 0, 10);
 
-      // Verify the tile has stairs_down
-      expect(stairsTile.types).toContain('stairs_down');
+      // Stairs are wall types, not tile types
+      expect(stairsTile.walls?.west).toBe('stairs_down');
       expect(stairsTile.destination).toBeDefined();
       expect(stairsTile.destination?.level).toBe(2);
 
-      // Start at (1, 10) facing WEST, then move forward to step onto stairs at (0, 10)
-      // Tile (0, 10) has east: "open" and tile (1, 10) has west: "open"
-      const dungeon: DungeonState = {
-        currentLevel: 1,
-        position: { x: 1, y: 10, facing: 'WEST' },
+      // Start at (0, 10) facing WEST to walk through stairs_down wall
+      const dungeon = createTestDungeon({
+        position: { x: 0, y: 10, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
-      // Act: Move forward (WEST) should move to (0, 10) and trigger tile-based stairs transition
+      // Act: Move forward (WEST) through stairs_down wall triggers level transition
       const resultState = DungeonMovementOps.moveForward(state);
 
-      // Assert: Should transition to level 2 via handleSpecialTile
-      // Note: Tile-based stairs_down uses enterLevel(), which finds stairs_up on target level
-      // This differs from wall-based stairs which use explicit destination coordinates
-      expect(resultState.dungeon).toBeDefined();
-      expect(resultState.dungeon!.currentLevel).toBe(2);
-      // Position will be at stairs_up tile on level 2 (found by enterLevel)
-      expect(resultState.dungeon!.position).toBeDefined();
+      expect(resultState.state.dungeon).toBeDefined();
+      expect(resultState.state.dungeon!.currentLevel).toBe(2);
+      expect(resultState.state.dungeon!.position).toBeDefined();
     });
 
     it('handles wall-based stairs_down transition to specified coordinates', () => {
@@ -165,15 +158,15 @@ describe('Stairs Wall Integration', () => {
               north: 'stairs_down',
               south: 'wall',
               east: 'wall',
-              west: 'wall'
+              west: 'wall',
             },
             destination: {
               level: 3,
               x: 10,
-              y: 15
-            }
-          }
-        ]
+              y: 15,
+            },
+          },
+        ],
       };
 
       // Mock DungeonService to return our test level
@@ -181,28 +174,27 @@ describe('Stairs Wall Integration', () => {
       const originalGetTile = DungeonService.getTile;
       jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(testLevel);
       jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
-        return testLevel.tiles.find(t => t.x === x && t.y === y) || {
-          x, y,
-          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
-        };
+        return (
+          testLevel.tiles.find((t) => t.x === x && t.y === y) || {
+            x,
+            y,
+            walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          }
+        );
       });
 
       try {
-        const dungeon: DungeonState = {
-          currentLevel: 1,
+        const dungeon = createTestDungeon({
           position: { x: 5, y: 5, facing: 'NORTH' },
           lightActive: true,
-          lightRadius: 3,
-          teleportCount: 0,
-          visitedTiles: new Set(),
-          defeatedEncounters: [],
-          unlockedDoors: new Set(),
-          openDoors: new Set()
-        };
+        });
         const state: GameState = { ...baseState, dungeon };
 
-        // Act 1: Validate movement
-        const validation = DungeonService.canMove(testLevel, { x: 5, y: 5, facing: 'NORTH' }, 'FORWARD');
+        const validation = DungeonService.canMove(
+          testLevel,
+          { x: 5, y: 5, facing: 'NORTH' },
+          'FORWARD',
+        );
 
         // Assert 1: Should trigger stairs action
         expect(validation.allowed).toBe(true);
@@ -228,72 +220,42 @@ describe('Stairs Wall Integration', () => {
 
   describe('Non-stairs movement still works', () => {
     it('allows normal forward movement when no stairs present', () => {
-      // Test that normal movement isn't broken by stairs logic
-      const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
-        position: { x: 0, y: 0, facing: 'NORTH' },  // Facing NORTH, not WEST
+      const dungeon = createTestDungeon({
+        position: { x: 0, y: 0, facing: 'NORTH' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       const result = DungeonMovementOps.moveForward(state);
 
-      // Should move to (0, 1) - normal movement
       expect(result.state.dungeon?.position.y).toBe(1);
       expect(result.state.dungeon?.position.x).toBe(0);
       expect(result.state.dungeon?.currentLevel).toBe(1);
     });
 
     it('allows strafe movement without triggering stairs', () => {
-      const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
-      // Strafe left (should move south)
       const result = DungeonMovementOps.strafeLeft(state);
 
-      // Should move without triggering stairs
       expect(result.state.dungeon).toBeDefined();
       expect(result.state.dungeon!.currentLevel).toBe(1);
-      expect(result.state.dungeon!.position.facing).toBe('WEST'); // Facing unchanged
+      expect(result.state.dungeon!.position.facing).toBe('WEST');
     });
 
     it('allows backward movement without triggering stairs', () => {
-      const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 1, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
-      // Move backward
       const result = DungeonMovementOps.moveBackward(state);
 
-      // Should move without triggering stairs
       expect(result.state.dungeon).toBeDefined();
       expect(result.state.dungeon!.currentLevel).toBe(1);
     });
@@ -302,40 +264,26 @@ describe('Stairs Wall Integration', () => {
   describe('Edge cases', () => {
     it('allows rotation while on stairs tile', () => {
       const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       const result = DungeonRotationService.turnLeft(state);
 
       // Should rotate to SOUTH without triggering stairs
       expect(result.dungeon?.position.facing).toBe('SOUTH');
-      expect(result.dungeon).toBeDefined();  // Still in dungeon
+      expect(result.dungeon).toBeDefined(); // Still in dungeon
       expect(result.dungeon!.currentLevel).toBe(1);
     });
 
     it('allows right rotation on stairs tile', () => {
       const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       const result = DungeonRotationService.turnRight(state);
@@ -349,17 +297,10 @@ describe('Stairs Wall Integration', () => {
     it('triggers stairs only when moving forward through stairs wall', () => {
       // Verify stairs only trigger on forward movement, not on other actions
       const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       // Test rotation doesn't trigger
@@ -374,17 +315,10 @@ describe('Stairs Wall Integration', () => {
     it('handles moving to stairs tile then stepping on it', () => {
       // Test the full flow: move to a tile, then step onto stairs from there
       const level = DungeonService.loadLevel(1);
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 1, facing: 'SOUTH' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       // Move south to (0,0)
@@ -414,34 +348,30 @@ describe('Stairs Wall Integration', () => {
               north: 'stairs_down',
               south: 'wall',
               east: 'wall',
-              west: 'wall'
+              west: 'wall',
             },
-            destination: { level: 2 }  // Missing x, y coordinates
-          }
-        ]
+            destination: { level: 2 }, // Missing x, y coordinates
+          },
+        ],
       };
 
       // Test that transition uses default coordinates (0, 0) when not specified
       jest.spyOn(DungeonService, 'loadLevel').mockReturnValue(testLevel);
       jest.spyOn(DungeonService, 'getTile').mockImplementation((level, x, y) => {
-        return testLevel.tiles.find(t => t.x === x && t.y === y) || {
-          x, y,
-          walls: { north: 'open', south: 'open', east: 'open', west: 'open' }
-        };
+        return (
+          testLevel.tiles.find((t) => t.x === x && t.y === y) || {
+            x,
+            y,
+            walls: { north: 'open', south: 'open', east: 'open', west: 'open' },
+          }
+        );
       });
 
       try {
-        const dungeon: DungeonState = {
-          currentLevel: 1,
+        const dungeon = createTestDungeon({
           position: { x: 5, y: 5, facing: 'NORTH' },
           lightActive: true,
-          lightRadius: 3,
-          teleportCount: 0,
-          visitedTiles: new Set(),
-          defeatedEncounters: [],
-          unlockedDoors: new Set(),
-          openDoors: new Set()
-        };
+        });
         const state: GameState = { ...baseState, dungeon };
 
         const result = DungeonMovementOps.moveForward(state);
@@ -460,7 +390,7 @@ describe('Stairs Wall Integration', () => {
     it('chains DungeonService.canMove → DungeonMovementOps.moveForward → handleStairsTransition', () => {
       // Full integration test of the complete flow
       const level = DungeonService.loadLevel(1);
-      const position = { x: 0, y: 0, facing: 'WEST' };
+      const position = { x: 0, y: 0, facing: 'WEST' as const };
 
       // Step 1: DungeonService validates movement
       const validation = DungeonService.canMove(level, position, 'FORWARD');
@@ -468,17 +398,10 @@ describe('Stairs Wall Integration', () => {
       expect(validation.triggersSpecialAction).toBe('stairs');
 
       // Step 2: Create game state
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position,
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
-        visitedTiles: new Set(),
-        defeatedEncounters: [],
-        unlockedDoors: new Set(),
-        openDoors: new Set()
-      };
+      });
       const state: GameState = { ...baseState, dungeon };
 
       // Step 3: NavigationService executes movement
@@ -489,20 +412,17 @@ describe('Stairs Wall Integration', () => {
     });
 
     it('verifies immutable state updates throughout stairs transition', () => {
-      const dungeon: DungeonState = {
-        currentLevel: 1,
+      const dungeon = createTestDungeon({
         position: { x: 0, y: 0, facing: 'WEST' },
         lightActive: true,
-        lightRadius: 3,
-        teleportCount: 0,
         visitedTiles: new Set(['1-0-1']),
         defeatedEncounters: ['enc1'],
         unlockedDoors: new Set(['door1']),
-        openDoors: new Set(['door2'])
-      };
+        openDoors: new Set(['door2']),
+      });
       const originalState: GameState = {
         ...baseState,
-        dungeon: { ...dungeon }
+        dungeon: { ...dungeon },
       };
       const state: GameState = { ...originalState };
 

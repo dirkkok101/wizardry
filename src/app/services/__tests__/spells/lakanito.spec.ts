@@ -3,11 +3,14 @@
  * @see data/spells/lakanito.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LAKANITO (Level 6 Mage) - Suffocation Group', () => {
   it('loads spell data from JSON', () => {

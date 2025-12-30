@@ -3,11 +3,14 @@
  * @see data/spells/lorto.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LORTO (Level 6 Priest) - Group Physical', () => {
   it('loads spell data from JSON', () => {

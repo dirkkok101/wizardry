@@ -5,11 +5,15 @@
  * @see data/spells/maporfic.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
-import { loadSpellsForTests } from '@testing/test-data-loader'
+
+setupSpellTests();
+import {
+  setupSpellTests, loadSpellsForTests } from '@testing/test-data-loader'
 
 describe('MAPORFIC (Level 4 Priest) - Shield All', () => {
   beforeAll(async () => {

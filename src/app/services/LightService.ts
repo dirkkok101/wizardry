@@ -8,80 +8,81 @@
  * - Ambient light levels for rendering
  */
 
-import { DungeonState, LightSpellType, TileType } from '@models/Dungeon'
-import { RandomService } from './RandomService'
+import { DungeonState, LightSpellType, TileType } from '@models/Dungeon';
+import { RandomService } from './RandomService';
 
 // View distance constants (in tiles)
 const VIEW_DISTANCE = {
-  NO_LIGHT_NORMAL: 2,      // No light spell in normal zone (current tile + 1 ahead)
-  NO_LIGHT_DARKNESS: 1,    // No light spell in darkness zone (barely see current tile)
-  MILWA_NORMAL: 3,         // MILWA in normal zone
-  MILWA_DARKNESS: 2,       // MILWA in darkness zone (reduced)
-  LOMILWA_NORMAL: 5,       // LOMILWA in normal zone (full visibility)
-  LOMILWA_DARKNESS: 3      // LOMILWA in darkness zone (reduced)
-}
+  NO_LIGHT_NORMAL: 2, // No light spell in normal zone (current tile + 1 ahead)
+  NO_LIGHT_DARKNESS: 1, // No light spell in darkness zone (barely see current tile)
+  MILWA_NORMAL: 3, // MILWA in normal zone
+  MILWA_DARKNESS: 2, // MILWA in darkness zone (reduced)
+  LOMILWA_NORMAL: 5, // LOMILWA in normal zone (full visibility)
+  LOMILWA_DARKNESS: 3, // LOMILWA in darkness zone (reduced)
+};
 
 // Duration constants (in steps/movements)
+// Source: docs/reference/spells.md - MILWA duration 15-29 turns
 const SPELL_DURATION = {
-  MILWA_MIN: 45,
-  MILWA_MAX: 87,
-  LOMILWA: 32000  // Effectively permanent for one dungeon expedition
-}
+  MILWA_MIN: 15,
+  MILWA_MAX: 29,
+  LOMILWA: 32000, // Effectively permanent for one dungeon expedition
+};
 
 // Warning threshold for expiring light
-const LIGHT_WARNING_THRESHOLD = 5
+const LIGHT_WARNING_THRESHOLD = 5;
 
 // Darkness visibility when looking INTO darkness from outside
 const DARKNESS_LOOK_IN = {
-  MAX_DEPTH: 2,           // Can only see 2 tiles into darkness
-  DEPTH_1_FACTOR: 0.3,    // First darkness tile brightness factor
-  DEPTH_2_FACTOR: 0.1     // Second darkness tile brightness factor
-}
+  MAX_DEPTH: 2, // Can only see 2 tiles into darkness
+  DEPTH_1_FACTOR: 0.3, // First darkness tile brightness factor
+  DEPTH_2_FACTOR: 0.1, // Second darkness tile brightness factor
+};
 
 /**
  * Result from processing light duration decrement
  */
 export interface LightDecrementResult {
-  state: DungeonState
-  message?: string
-  lightExpired: boolean
+  state: DungeonState;
+  message?: string;
+  lightExpired: boolean;
 }
 
 /**
  * Result from entering/exiting darkness zone
  */
 export interface DarknessZoneResult {
-  state: DungeonState
-  message?: string
-  lightExtinguished: boolean
+  state: DungeonState;
+  message?: string;
+  lightExtinguished: boolean;
 }
 
 /**
  * Result from checking if light spell can be cast
  */
 export interface CanCastLightResult {
-  canCast: boolean
-  reason?: string
+  canCast: boolean;
+  reason?: string;
 }
 
 /**
  * Get effective view distance based on light state, spell type, and darkness zone
  */
 function getEffectiveViewDistance(state: DungeonState): number {
-  const hasLight = state.lightActive
-  const inDarkness = state.inDarknessZone
-  const isLomilwa = state.lightSpellType === 'LOMILWA'
+  const hasLight = state.lightActive;
+  const inDarkness = state.inDarknessZone;
+  const isLomilwa = state.lightSpellType === 'LOMILWA';
 
   if (!hasLight) {
-    return inDarkness ? VIEW_DISTANCE.NO_LIGHT_DARKNESS : VIEW_DISTANCE.NO_LIGHT_NORMAL
+    return inDarkness ? VIEW_DISTANCE.NO_LIGHT_DARKNESS : VIEW_DISTANCE.NO_LIGHT_NORMAL;
   }
 
   // Has light - check spell type
   if (isLomilwa) {
-    return inDarkness ? VIEW_DISTANCE.LOMILWA_DARKNESS : VIEW_DISTANCE.LOMILWA_NORMAL
+    return inDarkness ? VIEW_DISTANCE.LOMILWA_DARKNESS : VIEW_DISTANCE.LOMILWA_NORMAL;
   }
   // MILWA
-  return inDarkness ? VIEW_DISTANCE.MILWA_DARKNESS : VIEW_DISTANCE.MILWA_NORMAL
+  return inDarkness ? VIEW_DISTANCE.MILWA_DARKNESS : VIEW_DISTANCE.MILWA_NORMAL;
 }
 
 /**
@@ -90,12 +91,12 @@ function getEffectiveViewDistance(state: DungeonState): number {
  */
 function getAmbientLightLevel(state: DungeonState): number {
   if (state.lightActive) {
-    return 1.0  // Fully lit when light spell active
+    return 1.0; // Fully lit when light spell active
   }
   if (state.inDarknessZone) {
-    return 0.05  // Nearly pitch black in darkness zones without light
+    return 0.05; // Nearly pitch black in darkness zones without light
   }
-  return 0.15  // Dim in normal zones without spell
+  return 0.15; // Dim in normal zones without spell
 }
 
 /**
@@ -106,31 +107,31 @@ function getAmbientLightLevel(state: DungeonState): number {
  * @returns Brightness multiplier (0.0 to 1.0)
  */
 function getDarknessFactorForDepth(darknessDepth: number): number {
-  if (darknessDepth === 0) return 1.0
-  if (darknessDepth === 1) return DARKNESS_LOOK_IN.DEPTH_1_FACTOR
-  if (darknessDepth === 2) return DARKNESS_LOOK_IN.DEPTH_2_FACTOR
-  return 0.0  // Beyond max depth
+  if (darknessDepth === 0) return 1.0;
+  if (darknessDepth === 1) return DARKNESS_LOOK_IN.DEPTH_1_FACTOR;
+  if (darknessDepth === 2) return DARKNESS_LOOK_IN.DEPTH_2_FACTOR;
+  return 0.0; // Beyond max depth
 }
 
 /**
  * Roll random duration for MILWA spell (15-29 steps)
  */
 function rollMilwaDuration(): number {
-  return RandomService.random(SPELL_DURATION.MILWA_MIN, SPELL_DURATION.MILWA_MAX)
+  return RandomService.random(SPELL_DURATION.MILWA_MIN, SPELL_DURATION.MILWA_MAX);
 }
 
 /**
  * Get LOMILWA spell duration (32000 steps - effectively permanent)
  */
 function getLomilwaDuration(): number {
-  return SPELL_DURATION.LOMILWA
+  return SPELL_DURATION.LOMILWA;
 }
 
 /**
  * Check if a tile type is a darkness zone
  */
 function isDarknessTile(tileTypes: TileType[] | undefined): boolean {
-  return tileTypes?.some(t => t === 'darkness' || t === 'darkness_zone_start') ?? false
+  return tileTypes?.some((t) => t === 'darkness' || t === 'darkness_zone_start') ?? false;
 }
 
 /**
@@ -140,32 +141,27 @@ function canCastLightSpell(state: DungeonState): CanCastLightResult {
   if (state.inDarknessZone) {
     return {
       canCast: false,
-      reason: 'Cannot cast light spells in the darkness zone!'
-    }
+      reason: 'Cannot cast light spells in the darkness zone!',
+    };
   }
-  return { canCast: true }
+  return { canCast: true };
 }
 
 /**
  * Activate a light spell with appropriate duration
  */
-function activateLightSpell(
-  state: DungeonState,
-  spellType: LightSpellType
-): DungeonState {
-  const duration = spellType === 'MILWA'
-    ? rollMilwaDuration()
-    : getLomilwaDuration()
+function activateLightSpell(state: DungeonState, spellType: LightSpellType): DungeonState {
+  const duration = spellType === 'MILWA' ? rollMilwaDuration() : getLomilwaDuration();
 
-  const lightRadius = spellType === 'LOMILWA' ? 3 : 2
+  const lightRadius = spellType === 'LOMILWA' ? 3 : 2;
 
   return {
     ...state,
     lightActive: true,
     lightRadius,
     lightSpellType: spellType,
-    lightDurationRemaining: duration
-  }
+    lightDurationRemaining: duration,
+  };
 }
 
 /**
@@ -175,15 +171,15 @@ function activateLightSpell(
 function decrementLightDuration(state: DungeonState): LightDecrementResult {
   // No active light spell to decrement
   if (!state.lightActive || state.lightDurationRemaining === undefined) {
-    return { state, lightExpired: false }
+    return { state, lightExpired: false };
   }
 
   // Don't decrement in darkness zones (light is already extinguished there)
   if (state.inDarknessZone) {
-    return { state, lightExpired: false }
+    return { state, lightExpired: false };
   }
 
-  const newDuration = state.lightDurationRemaining - 1
+  const newDuration = state.lightDurationRemaining - 1;
 
   // Light expired
   if (newDuration <= 0) {
@@ -193,11 +189,11 @@ function decrementLightDuration(state: DungeonState): LightDecrementResult {
         lightActive: false,
         lightRadius: VIEW_DISTANCE.NO_LIGHT_NORMAL,
         lightSpellType: undefined,
-        lightDurationRemaining: undefined
+        lightDurationRemaining: undefined,
       },
       message: 'Your light spell has expired! Darkness surrounds you.',
-      lightExpired: true
-    }
+      lightExpired: true,
+    };
   }
 
   // Warning at threshold
@@ -205,28 +201,28 @@ function decrementLightDuration(state: DungeonState): LightDecrementResult {
     return {
       state: {
         ...state,
-        lightDurationRemaining: newDuration
+        lightDurationRemaining: newDuration,
       },
       message: `Your ${state.lightSpellType} spell is fading... (${newDuration} steps remaining)`,
-      lightExpired: false
-    }
+      lightExpired: false,
+    };
   }
 
   // Normal decrement
   return {
     state: {
       ...state,
-      lightDurationRemaining: newDuration
+      lightDurationRemaining: newDuration,
     },
-    lightExpired: false
-  }
+    lightExpired: false,
+  };
 }
 
 /**
  * Handle entering a darkness zone - extinguishes active light
  */
 function enterDarknessZone(state: DungeonState): DarknessZoneResult {
-  const hadLight = state.lightActive
+  const hadLight = state.lightActive;
 
   const newState: DungeonState = {
     ...state,
@@ -234,22 +230,22 @@ function enterDarknessZone(state: DungeonState): DarknessZoneResult {
     lightActive: false,
     lightSpellType: undefined,
     lightDurationRemaining: undefined,
-    lightRadius: VIEW_DISTANCE.NO_LIGHT_DARKNESS
-  }
+    lightRadius: VIEW_DISTANCE.NO_LIGHT_DARKNESS,
+  };
 
   if (hadLight) {
     return {
       state: newState,
       message: 'An unnatural darkness engulfs you! Your light spell is extinguished!',
-      lightExtinguished: true
-    }
+      lightExtinguished: true,
+    };
   }
 
   return {
     state: newState,
     message: 'You enter an area of impenetrable darkness.',
-    lightExtinguished: false
-  }
+    lightExtinguished: false,
+  };
 }
 
 /**
@@ -259,8 +255,8 @@ function exitDarknessZone(state: DungeonState): DungeonState {
   return {
     ...state,
     inDarknessZone: false,
-    lightRadius: VIEW_DISTANCE.NO_LIGHT_NORMAL
-  }
+    lightRadius: VIEW_DISTANCE.NO_LIGHT_NORMAL,
+  };
 }
 
 /**
@@ -270,37 +266,37 @@ function exitDarknessZone(state: DungeonState): DungeonState {
 function processLightOnMovement(
   state: DungeonState,
   previousTileTypes: TileType[] | undefined,
-  newTileTypes: TileType[] | undefined
+  newTileTypes: TileType[] | undefined,
 ): { state: DungeonState; messages: string[] } {
-  const messages: string[] = []
-  let currentState = state
+  const messages: string[] = [];
+  let currentState = state;
 
-  const wasInDarkness = isDarknessTile(previousTileTypes) || state.inDarknessZone
-  const nowInDarkness = isDarknessTile(newTileTypes)
+  const wasInDarkness = isDarknessTile(previousTileTypes) || state.inDarknessZone;
+  const nowInDarkness = isDarknessTile(newTileTypes);
 
   // Entering darkness zone
   if (!wasInDarkness && nowInDarkness) {
-    const result = enterDarknessZone(currentState)
-    currentState = result.state
+    const result = enterDarknessZone(currentState);
+    currentState = result.state;
     if (result.message) {
-      messages.push(result.message)
+      messages.push(result.message);
     }
   }
   // Exiting darkness zone
   else if (wasInDarkness && !nowInDarkness) {
-    currentState = exitDarknessZone(currentState)
-    messages.push('You emerge from the darkness.')
+    currentState = exitDarknessZone(currentState);
+    messages.push('You emerge from the darkness.');
   }
   // Normal movement (not in darkness zone) - decrement light duration
   else if (!nowInDarkness) {
-    const result = decrementLightDuration(currentState)
-    currentState = result.state
+    const result = decrementLightDuration(currentState);
+    currentState = result.state;
     if (result.message) {
-      messages.push(result.message)
+      messages.push(result.message);
     }
   }
 
-  return { state: currentState, messages }
+  return { state: currentState, messages };
 }
 
 /**
@@ -308,15 +304,15 @@ function processLightOnMovement(
  */
 function getSpellDurationDisplay(state: DungeonState): string | undefined {
   if (!state.lightActive || state.lightDurationRemaining === undefined) {
-    return undefined
+    return undefined;
   }
 
   // For LOMILWA with very high duration, show as "permanent"
   if (state.lightDurationRemaining > 1000) {
-    return 'permanent'
+    return 'permanent';
   }
 
-  return `${state.lightDurationRemaining} steps`
+  return `${state.lightDurationRemaining} steps`;
 }
 
 export const LightService = {
@@ -351,5 +347,5 @@ export const LightService = {
   VIEW_DISTANCE,
   SPELL_DURATION,
   LIGHT_WARNING_THRESHOLD,
-  DARKNESS_LOOK_IN
-}
+  DARKNESS_LOOK_IN,
+};

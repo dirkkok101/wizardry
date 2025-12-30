@@ -3,11 +3,14 @@
  * @see data/spells/haman.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   RandomService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('HAMAN (Level 6 Mage) - Random Effect', () => {
   it('loads spell data from JSON', () => {

@@ -3,11 +3,14 @@
  * @see data/spells/mamorlis.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MAMORLIS (Level 5 Mage) - Mass Fear', () => {
   it('loads spell data from JSON', () => {

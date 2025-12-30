@@ -3,10 +3,13 @@
  * @see data/spells/dios.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DIOS (Level 1 Priest) - Basic Healing', () => {
   it('loads spell data from JSON', () => {

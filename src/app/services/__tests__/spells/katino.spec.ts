@@ -3,11 +3,14 @@
  * @see data/spells/katino.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('KATINO (Level 1 Mage) - Sleep', () => {
   it('loads spell data from JSON', () => {

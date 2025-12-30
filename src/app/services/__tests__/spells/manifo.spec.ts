@@ -3,11 +3,14 @@
  * @see data/spells/manifo.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MANIFO (Level 2 Priest) - Paralysis', () => {
   it('loads spell data from JSON', () => {

@@ -3,10 +3,13 @@
  * @see data/spells/lomilwa.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LOMILWA (Level 3 Priest) - Extended Light', () => {
   it('loads spell data from JSON', () => {

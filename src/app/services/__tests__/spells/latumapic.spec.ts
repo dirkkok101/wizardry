@@ -3,10 +3,13 @@
  * @see data/spells/latumapic.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('LATUMAPIC (Level 3 Priest) - Identify Monsters', () => {
   it('loads spell data from JSON', () => {

@@ -3,11 +3,14 @@
  * @see data/spells/badial.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('BADIAL (Level 4 Priest) - Single Target Divine', () => {
   it('loads spell data from JSON', () => {

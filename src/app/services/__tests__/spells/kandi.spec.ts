@@ -3,10 +3,13 @@
  * @see data/spells/kandi.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('KANDI (Level 5 Priest) - Locate Person', () => {
   it('loads spell data from JSON', () => {

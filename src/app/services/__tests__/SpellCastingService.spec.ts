@@ -1,10 +1,19 @@
-// src/services/__tests__/SpellCastingService.spec.ts
-import { SpellCastingService } from '../SpellCastingService'
-import { createTestCharacter, createTestMonster } from '@testing/test-factories'
-import { CharacterStatus } from '@models/CharacterStatus'
+import { SpellCastingService } from '../SpellCastingService';
+import { createTestCharacter, createTestMonster } from '@testing/test-factories';
+import { CharacterStatus } from '@models/CharacterStatus';
+import {
+  loadSpellsForTests,
+  loadMonstersForTests,
+  clearGameDataCaches,
+} from '@testing/test-data-loader';
 
-// Note: Real spell data is loaded from data/spells/ via setup-jest.ts
-// This follows the project philosophy: "No mocks for services - test with real data"
+beforeAll(async () => {
+  await Promise.all([loadSpellsForTests(), loadMonstersForTests()]);
+});
+
+afterAll(() => {
+  clearGameDataCaches();
+});
 
 describe('SpellCastingService', () => {
   describe('canCastSpell', () => {
@@ -18,15 +27,15 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const result = SpellCastingService.canCastSpell(caster, 'halito')
+      const result = SpellCastingService.canCastSpell(caster, 'halito');
 
-      expect(result.canCast).toBe(true)
-    })
+      expect(result.canCast).toBe(true);
+    });
 
     it('prevents casting with insufficient spell points', () => {
       const caster = createTestCharacter({
@@ -38,16 +47,16 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const result = SpellCastingService.canCastSpell(caster, 'halito')
+      const result = SpellCastingService.canCastSpell(caster, 'halito');
 
-      expect(result.canCast).toBe(false)
-      expect(result.reason).toBe('Insufficient spell points')
-    })
+      expect(result.canCast).toBe(false);
+      expect(result.reason).toBe('Insufficient spell points');
+    });
 
     it('prevents casting while asleep', () => {
       const caster = createTestCharacter({
@@ -60,17 +69,17 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const result = SpellCastingService.canCastSpell(caster, 'halito')
+      const result = SpellCastingService.canCastSpell(caster, 'halito');
 
-      expect(result.canCast).toBe(false)
-      expect(result.reason).toBe('Cannot cast while incapacitated')
-    })
-  })
+      expect(result.canCast).toBe(false);
+      expect(result.reason).toBe('Cannot cast while incapacitated');
+    });
+  });
 
   describe('deductSpellPoints', () => {
     it('deducts one point from correct spell level', () => {
@@ -83,16 +92,16 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const newCaster = SpellCastingService.deductSpellPoints(caster, 'halito')
+      const newCaster = SpellCastingService.deductSpellPoints(caster, 'halito');
 
-      expect(newCaster.spellPoints!.mage!.level1.current).toBe(4)
-      expect(newCaster.spellPoints!.mage!.level2.current).toBe(3)
-    })
+      expect(newCaster.spellPoints!.mage!.level1.current).toBe(4);
+      expect(newCaster.spellPoints!.mage!.level2.current).toBe(3);
+    });
 
     it('returns new character object (immutable)', () => {
       const caster = createTestCharacter({
@@ -104,36 +113,33 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const newCaster = SpellCastingService.deductSpellPoints(caster, 'halito')
+      const newCaster = SpellCastingService.deductSpellPoints(caster, 'halito');
 
-      expect(newCaster).not.toBe(caster)
-      expect(newCaster.spellPoints).not.toBe(caster.spellPoints)
-    })
-  })
+      expect(newCaster).not.toBe(caster);
+      expect(newCaster.spellPoints).not.toBe(caster.spellPoints);
+    });
+  });
 
   describe('resolveSpellEffect', () => {
     it('calculates damage for offensive spell', () => {
-      const caster = createTestCharacter({ level: 3 })
-      const targets = [
-        createTestMonster({ hp: 10 }),
-        createTestMonster({ hp: 8 })
-      ]
+      const caster = createTestCharacter({ level: 3 });
+      const targets = [createTestMonster({ hp: 10 }), createTestMonster({ hp: 8 })];
 
-      const result = SpellCastingService.resolveSpellEffect('halito', caster, targets)
+      const result = SpellCastingService.resolveSpellEffect('halito', caster, targets);
 
-      expect(result.damage).toHaveLength(2)
-      result.damage!.forEach(dmg => {
-        expect(dmg).toBeGreaterThanOrEqual(1)
-        expect(dmg).toBeLessThanOrEqual(8)
-      })
-      expect(result.message).toContain('HALITO')
-    })
-  })
+      expect(result.damage).toHaveLength(2);
+      result.damage!.forEach((dmg) => {
+        expect(dmg).toBeGreaterThanOrEqual(1);
+        expect(dmg).toBeLessThanOrEqual(8);
+      });
+      expect(result.message).toContain('HALITO');
+    });
+  });
 
   describe('getSpellsByContext', () => {
     it('returns combat spells for combat context', () => {
@@ -148,7 +154,7 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
+            level7: { current: 0, max: 0 },
           },
           priest: {
             level1: { current: 3, max: 3 },
@@ -157,22 +163,22 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const combatSpells = SpellCastingService.getSpellsByContext(mage, 'combat')
+      const combatSpells = SpellCastingService.getSpellsByContext(mage, 'combat');
 
       // Based on actual spell data:
       // halito: combat only - YES
       // dios: combat, camp - YES
       // dumapic: camp only - NO
-      const spellIds = combatSpells.map(s => s.id)
-      expect(spellIds).toContain('halito')
-      expect(spellIds).toContain('dios')
-      expect(spellIds).not.toContain('dumapic') // dumapic is camp-only
-    })
+      const spellIds = combatSpells.map((s) => s.id);
+      expect(spellIds).toContain('halito');
+      expect(spellIds).toContain('dios');
+      expect(spellIds).not.toContain('dumapic'); // dumapic is camp-only
+    });
 
     it('excludes combat-only spells from dungeon context', () => {
       const mage = createTestCharacter({
@@ -185,7 +191,7 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
+            level7: { current: 0, max: 0 },
           },
           priest: {
             level1: { current: 3, max: 3 },
@@ -194,19 +200,19 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const dungeonSpells = SpellCastingService.getSpellsByContext(mage, 'dungeon')
+      const dungeonSpells = SpellCastingService.getSpellsByContext(mage, 'dungeon');
 
       // Should exclude halito (combat-only) but include dios (heals ally) and dumapic (utility)
-      const spellIds = dungeonSpells.map(s => s.id)
-      expect(spellIds).not.toContain('halito')
-      expect(spellIds).toContain('dios')
-      expect(spellIds).toContain('dumapic')
-    })
+      const spellIds = dungeonSpells.map((s) => s.id);
+      expect(spellIds).not.toContain('halito');
+      expect(spellIds).toContain('dios');
+      expect(spellIds).toContain('dumapic');
+    });
 
     it('excludes group-target spells from dungeon context', () => {
       // Group-target spells target enemies which aren't available in dungeon context
@@ -220,18 +226,18 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const dungeonSpells = SpellCastingService.getSpellsByContext(mage, 'dungeon')
+      const dungeonSpells = SpellCastingService.getSpellsByContext(mage, 'dungeon');
 
       // Neither should appear - both are group-target combat spells
-      const spellIds = dungeonSpells.map(s => s.id)
-      expect(spellIds).not.toContain('halito')
-      expect(spellIds).not.toContain('katino')
-    })
+      const spellIds = dungeonSpells.map((s) => s.id);
+      expect(spellIds).not.toContain('halito');
+      expect(spellIds).not.toContain('katino');
+    });
 
     it('returns healing spells for town context', () => {
       const priest = createTestCharacter({
@@ -244,18 +250,18 @@ describe('SpellCastingService', () => {
             level4: { current: 3, max: 3 }, // dial is level 4
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const townSpells = SpellCastingService.getSpellsByContext(priest, 'town')
+      const townSpells = SpellCastingService.getSpellsByContext(priest, 'town');
 
       // Both are healing spells castable in town
-      const spellIds = townSpells.map(s => s.id)
-      expect(spellIds).toContain('dios')
-      expect(spellIds).toContain('dial')
-    })
+      const spellIds = townSpells.map((s) => s.id);
+      expect(spellIds).toContain('dios');
+      expect(spellIds).toContain('dial');
+    });
 
     it('returns empty array when no spells match context', () => {
       // Character only knows combat spells
@@ -269,27 +275,27 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      const dungeonSpells = SpellCastingService.getSpellsByContext(mage, 'dungeon')
+      const dungeonSpells = SpellCastingService.getSpellsByContext(mage, 'dungeon');
 
-      expect(dungeonSpells).toHaveLength(0)
-    })
+      expect(dungeonSpells).toHaveLength(0);
+    });
 
     it('returns empty array when character has no spell points', () => {
       const fighter = createTestCharacter({
-        knownSpells: ['dios']
+        knownSpells: ['dios'],
         // No spellPoints
-      })
+      });
 
-      const spells = SpellCastingService.getSpellsByContext(fighter, 'dungeon')
+      const spells = SpellCastingService.getSpellsByContext(fighter, 'dungeon');
 
-      expect(spells).toHaveLength(0)
-    })
-  })
+      expect(spells).toHaveLength(0);
+    });
+  });
 
   describe('hasSpellsInContext', () => {
     it('returns true when character has spells for context', () => {
@@ -303,15 +309,15 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      expect(SpellCastingService.hasSpellsInContext(priest, 'dungeon')).toBe(true)
-      expect(SpellCastingService.hasSpellsInContext(priest, 'combat')).toBe(true)
-      expect(SpellCastingService.hasSpellsInContext(priest, 'town')).toBe(true)
-    })
+      expect(SpellCastingService.hasSpellsInContext(priest, 'dungeon')).toBe(true);
+      expect(SpellCastingService.hasSpellsInContext(priest, 'combat')).toBe(true);
+      expect(SpellCastingService.hasSpellsInContext(priest, 'town')).toBe(true);
+    });
 
     it('returns false when character has no spells for context', () => {
       const mage = createTestCharacter({
@@ -324,23 +330,23 @@ describe('SpellCastingService', () => {
             level4: { current: 0, max: 0 },
             level5: { current: 0, max: 0 },
             level6: { current: 0, max: 0 },
-            level7: { current: 0, max: 0 }
-          }
-        }
-      })
+            level7: { current: 0, max: 0 },
+          },
+        },
+      });
 
-      expect(SpellCastingService.hasSpellsInContext(mage, 'dungeon')).toBe(false)
-      expect(SpellCastingService.hasSpellsInContext(mage, 'town')).toBe(false)
-      expect(SpellCastingService.hasSpellsInContext(mage, 'combat')).toBe(true)
-    })
+      expect(SpellCastingService.hasSpellsInContext(mage, 'dungeon')).toBe(false);
+      expect(SpellCastingService.hasSpellsInContext(mage, 'town')).toBe(false);
+      expect(SpellCastingService.hasSpellsInContext(mage, 'combat')).toBe(true);
+    });
 
     it('returns false when character has no spell points', () => {
       const fighter = createTestCharacter({
-        knownSpells: ['dios']
+        knownSpells: ['dios'],
         // No spellPoints
-      })
+      });
 
-      expect(SpellCastingService.hasSpellsInContext(fighter, 'dungeon')).toBe(false)
-    })
-  })
-})
+      expect(SpellCastingService.hasSpellsInContext(fighter, 'dungeon')).toBe(false);
+    });
+  });
+});

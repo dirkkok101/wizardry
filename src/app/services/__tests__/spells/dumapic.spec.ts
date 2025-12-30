@@ -3,10 +3,13 @@
  * @see data/spells/dumapic.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('DUMAPIC (Level 1 Mage) - Show Coordinates', () => {
   it('loads spell data from JSON', () => {

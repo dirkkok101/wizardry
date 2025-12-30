@@ -3,10 +3,13 @@
  * @see data/spells/mogref.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MOGREF (Level 1 Mage) - Self Hardening', () => {
   it('loads spell data from JSON', () => {

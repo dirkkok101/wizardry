@@ -3,11 +3,14 @@
  * @see data/spells/badialma.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('BADIALMA (Level 5 Priest) - Single Target Divine', () => {
   it('loads spell data from JSON', () => {

@@ -3,11 +3,14 @@
  * @see data/spells/mabadi.json
  */
 import {
+  setupSpellTests,
   SpellDataLoader,
   SpellCastingService,
   createTestCharacter,
   createTestMonster
 } from '../../spell-test-helpers'
+
+setupSpellTests();
 
 describe('MABADI (Level 6 Priest) - HP Reduction', () => {
   it('loads spell data from JSON', () => {
