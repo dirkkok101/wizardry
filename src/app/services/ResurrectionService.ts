@@ -1,51 +1,84 @@
-import { Character } from '@models/Character'
-import { ServiceType } from '@models/ServiceType'
-import { RandomService } from './RandomService'
+import { Character } from '@models/Character';
+import { ServiceType } from '@models/ServiceType';
+import { CharacterStatus } from '@models/CharacterStatus';
+import { RandomService } from './RandomService';
 
-/**
- * ResurrectionService - Handles resurrection and restoration success rates
- *
- * Authentic Wizardry 1 success rates based on character Vitality:
- * - Cure services: 100% (always succeed)
- * - Resurrection (DEAD → OK): 50% + (Vitality × 3%)
- * - Restoration (ASHES → OK): 40% + (Vitality × 3%)
- *
- * On failure:
- * - Resurrection failure: DEAD → ASHES
- * - Restoration failure: ASHES → LOST (permanent death)
- *
- * Source: Thomas William Ewers' reverse-engineered Apple II source
- */
+export interface ResurrectionResult {
+  success: boolean;
+  newVitality: number;
+  newStatus: CharacterStatus;
+  characterLost: boolean;
+}
+
 export class ResurrectionService {
-  /**
-   * Calculate success rate for a temple service based on character vitality.
-   * Authentic Wizardry 1 formulas using 3×VIT multiplier.
-   */
   static getSuccessRate(character: Character, service: ServiceType): number {
     switch (service) {
       case ServiceType.CURE_POISON:
       case ServiceType.CURE_PARALYSIS:
-        return 100 // Cure services always succeed
+      case ServiceType.CURE_STONED:
+        return 100;
 
       case ServiceType.RESURRECT:
-        // Authentic Wizardry 1: 50% + (Vitality × 3%)
-        return 50 + (character.vitality * 3)
-
       case ServiceType.RESTORE:
-        // Authentic Wizardry 1: 40% + (Vitality × 3%)
-        return 40 + (character.vitality * 3)
+        // Authentic Wizardry 1: (4 × Vitality)%
+        // Source: docs/reference/combat-formulas.md - Resurrection Mechanics
+        return character.vitality * 4;
 
       default:
-        return 100
+        return 100;
     }
   }
 
-  /**
-   * Attempt a temple service with success/failure based on success rate.
-   * Returns true if service succeeds, false if it fails.
-   */
+  static isResurrectionService(service: ServiceType): boolean {
+    return service === ServiceType.RESURRECT || service === ServiceType.RESTORE;
+  }
+
+  static canAttemptResurrection(character: Character): { canAttempt: boolean; reason?: string } {
+    // Character with VIT 3 will drop to VIT 2 after attempt, which causes permanent loss
+    // Authentic Wizardry 1: VIT < 3 after attempt = character lost forever
+    if (character.vitality <= 3) {
+      return {
+        canAttempt: false,
+        reason: `${character.name}'s vitality is too low (${character.vitality}). Resurrection attempt would result in permanent loss.`,
+      };
+    }
+    return { canAttempt: true };
+  }
+
+  static attemptResurrection(character: Character, service: ServiceType): ResurrectionResult {
+    const successRate = this.getSuccessRate(character, service);
+    const success = RandomService.chance(successRate);
+
+    // Authentic Wizardry 1: VIT decreases by 1 on EVERY attempt (success or failure)
+    // Source: docs/reference/combat-formulas.md
+    const newVitality = character.vitality - 1;
+
+    // Character is permanently lost if VIT drops to 2 or below
+    const characterLost = newVitality <= 2;
+
+    let newStatus: CharacterStatus;
+    if (characterLost) {
+      newStatus = CharacterStatus.LOST;
+    } else if (success) {
+      newStatus = CharacterStatus.OK;
+    } else {
+      // Failure progression: DEAD → ASHES, ASHES → LOST
+      newStatus = service === ServiceType.RESURRECT ? CharacterStatus.ASHES : CharacterStatus.LOST;
+    }
+
+    return {
+      success: success && !characterLost,
+      newVitality,
+      newStatus,
+      characterLost,
+    };
+  }
+
   static attemptService(character: Character, service: ServiceType): boolean {
-    const successRate = this.getSuccessRate(character, service)
-    return RandomService.chance(successRate)
+    if (!this.isResurrectionService(service)) {
+      return true; // Cure services always succeed
+    }
+    const result = this.attemptResurrection(character, service);
+    return result.success;
   }
 }

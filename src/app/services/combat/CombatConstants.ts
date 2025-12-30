@@ -16,15 +16,15 @@
  * Lower initiative = faster action
  */
 export const AGILITY_MODIFIERS: ReadonlyMap<number, number> = new Map([
-  [3, 2],   // AGI 1-3: +2 (slowest)
-  [5, 1],   // AGI 4-5: +1
-  [7, 0],   // AGI 6-7: +0
+  [3, 2], // AGI 1-3: +2 (slowest)
+  [5, 1], // AGI 4-5: +1
+  [7, 0], // AGI 6-7: +0
   [14, -1], // AGI 8-14: -1
   [15, -2], // AGI 15: -2
   [16, -3], // AGI 16: -3
   [17, -4], // AGI 17: -4
   [18, -5], // AGI 18+: -5 (fastest)
-])
+]);
 
 export const INITIATIVE = {
   /** Character initiative: 1d10 */
@@ -37,16 +37,16 @@ export const INITIATIVE = {
   /** Initiative clamping for characters */
   MIN_INITIATIVE: 1,
   MAX_INITIATIVE: 10,
-} as const
+} as const;
 
 // ============================================================================
 // Hit Chance Constants
 // ============================================================================
 
 export const HIT_CHANCE = {
-  /** Base formula multiplier: (attackBonus + defenderAC + 10) × 5% */
+  /** Base formula multiplier: (attackBonus + defenderAC + 29) × 5% */
   BASE_MULTIPLIER: 5,
-  BASE_OFFSET: 10,
+  BASE_OFFSET: 29,
   /** Position modifier: +3% per victim position in group */
   POSITION_MODIFIER: 3,
   /** Minimum/maximum hit chance */
@@ -56,7 +56,7 @@ export const HIT_CHANCE = {
   BLIND_PENALTY: -4,
   /** Parry AC bonus (lower AC is better) */
   PARRY_AC_BONUS: -2,
-} as const
+} as const;
 
 // ============================================================================
 // Critical Hit Constants
@@ -71,7 +71,7 @@ export const CRITICAL_HIT = {
   RESISTANCE_ROLL_MAX: 34,
   /** Level at which monsters always resist: 24 + 10 = 34, never < random(0,34) */
   ALWAYS_RESIST_LEVEL: 24,
-} as const
+} as const;
 
 // ============================================================================
 // Damage Constants
@@ -84,7 +84,7 @@ export const DAMAGE = {
   HELPLESS_MULTIPLIER: 2,
   /** Purposed weapon multiplier (Dragon Slayer, etc.) */
   PURPOSED_WEAPON_MULTIPLIER: 2,
-} as const
+} as const;
 
 // ============================================================================
 // Attack Count Constants
@@ -99,7 +99,7 @@ export const ATTACKS_PER_ROUND = {
   OTHER_BASE: 1,
   /** Maximum attacks per round */
   MAX_ATTACKS: 10,
-} as const
+} as const;
 
 // ============================================================================
 // Unarmed Combat Constants
@@ -112,7 +112,7 @@ export const UNARMED_DAMAGE = {
   NINJA_DIE: 4,
   /** Ninja level bonus divisor: floor(level/3) */
   NINJA_LEVEL_DIVISOR: 3,
-} as const
+} as const;
 
 // ============================================================================
 // Surprise Constants
@@ -123,7 +123,7 @@ export const SURPRISE = {
   PARTY_SURPRISE_CHANCE: 20,
   /** Monsters surprise party: 20% (only if party didn't surprise) */
   MONSTER_SURPRISE_CHANCE: 20,
-} as const
+} as const;
 
 // ============================================================================
 // Flee Constants
@@ -142,7 +142,7 @@ export const FLEE = {
   DEMORALIZATION_BONUS: 20,
   /** Level 10 blocks all flee attempts */
   BLOCKED_LEVEL: 10,
-} as const
+} as const;
 
 // ============================================================================
 // Monster AI Constants
@@ -170,7 +170,7 @@ export const MONSTER_AI = {
   RANDOM_TARGET_MAX_LEVEL: 2,
   /** Target selection: Level 3-5 use smart focus fire */
   SMART_TARGET_MAX_LEVEL: 5,
-} as const
+} as const;
 
 // ============================================================================
 // Dispel (Turn Undead) Constants
@@ -187,7 +187,7 @@ export const DISPEL = {
   /** Min/max chance */
   MIN_CHANCE: 5,
   MAX_CHANCE: 95,
-} as const
+} as const;
 
 // ============================================================================
 // Spell Degradation Constants
@@ -200,7 +200,7 @@ export const SPELL_DEGRADATION = {
    */
   DIVISOR_OFFSET: 2,
   PERCENTAGE_MULTIPLIER: 100,
-} as const
+} as const;
 
 // ============================================================================
 // Item Protection Constants
@@ -209,7 +209,7 @@ export const SPELL_DEGRADATION = {
 export const ITEM_PROTECTION = {
   /** Class protection nullify chance */
   CLASS_PROTECTION_CHANCE: 50,
-} as const
+} as const;
 
 // ============================================================================
 // Status Recovery Constants
@@ -220,7 +220,7 @@ export const STATUS_RECOVERY = {
   MONSTER_WAKE_CHANCE: 25,
   /** Regeneration proc chance */
   REGENERATION_CHANCE: 25,
-} as const
+} as const;
 
 // ============================================================================
 // Hit Calculation Modifier (HPCALCMD) Constants
@@ -232,18 +232,12 @@ export const HIT_CALC_MOD = {
   STRONG_CLASS_LEVEL_DIVISOR: 3,
   /** Weak combat classes (Mage, Thief, Bishop) */
   WEAK_CLASS_LEVEL_DIVISOR: 5,
-} as const
+} as const;
 
 /**
  * Classes that use the strong combat hit formula
  */
-export const STRONG_COMBAT_CLASSES = [
-  'FIGHTER',
-  'PRIEST',
-  'SAMURAI',
-  'LORD',
-  'NINJA',
-] as const
+export const STRONG_COMBAT_CLASSES = ['FIGHTER', 'PRIEST', 'SAMURAI', 'LORD', 'NINJA'] as const;
 
 // ============================================================================
 // Message Formatting
@@ -254,4 +248,4 @@ export const STRONG_COMBAT_CLASSES = [
  * Messages prefixed with this are "results" of actions and use actionResultDelay
  * The marker is stripped before display
  */
-export const RESULT_MARKER = '→ '
+export const RESULT_MARKER = '→ ';

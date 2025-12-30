@@ -9,8 +9,7 @@
   },
   "traps": ["none", "poison_needle", "gas_bomb", "teleporter", "alarm"],
   "tiers": [
-    { "chance": 100, "minItemId": 19, "maxItemId": 33 },
-    { "chance": 50, "minItemId": 35, "maxItemId": 52 },
-    { "chance": 15, "minItemId": 54, "maxItemId": 80 }
+    { "chance": 91, "minItemId": 52, "maxItemId": 79 },
+    { "chance": 45, "minItemId": 52, "maxItemId": 79 }
   ]
 }

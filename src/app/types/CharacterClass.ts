@@ -1,4 +1,4 @@
-import { Alignment } from './Alignment'
+import { Alignment } from './Alignment';
 
 /**
  * All available character classes in Wizardry 1
@@ -11,29 +11,29 @@ export enum CharacterClass {
   BISHOP = 'BISHOP',
   SAMURAI = 'SAMURAI',
   LORD = 'LORD',
-  NINJA = 'NINJA'
+  NINJA = 'NINJA',
 }
 
 /**
  * Stat requirements for a character class (JSON format)
  */
 export interface ClassRequirements {
-  str?: number
-  int?: number
-  pie?: number
-  vit?: number
-  agi?: number
-  luc?: number
+  str?: number;
+  int?: number;
+  pie?: number;
+  vit?: number;
+  agi?: number;
+  luc?: number;
 }
 
 /**
  * Equipment restrictions for a class
  */
 export interface EquipmentRestrictions {
-  weapons: string[]      // "all" or specific weapon types
-  armor: string[]        // "all", "none", or specific armor types
-  shields: string[]      // Empty array = cannot use shields
-  helmets: string[]      // Empty array = cannot use helmets
+  weapons: string[]; // "all" or specific weapon types
+  armor: string[]; // "all", "none", or specific armor types
+  shields: string[]; // Empty array = cannot use shields
+  helmets: string[]; // Empty array = cannot use helmets
 }
 
 /**
@@ -41,51 +41,51 @@ export interface EquipmentRestrictions {
  */
 export interface SpellAccess {
   mage?: {
-    minLevel: number    // Level when spells become available
-    maxLevel: number    // Max spell level (1-7, Samurai/Lord capped at 6)
-  }
+    minLevel: number; // Level when spells become available
+    maxLevel: number; // Max spell level (1-7, Samurai/Lord capped at 6)
+  };
   priest?: {
-    minLevel: number
-    maxLevel: number
-  }
+    minLevel: number;
+    maxLevel: number;
+  };
 }
 
 /**
  * Attacks per level - formula-based format
  */
 export interface AttacksPerLevelFormula {
-  formula: string   // e.g. "(level / 5) + 1"
-  max: number       // Maximum attacks per round
+  formula: string; // e.g. "(level / 5) + 1"
+  max: number; // Maximum attacks per round
 }
 
 /**
  * Attacks per level mapping (range-based)
  */
 export interface AttacksPerLevelRange {
-  [levelRange: string]: number  // e.g. "1-4": 1, "5-9": 2
+  [levelRange: string]: number; // e.g. "1-4": 1, "5-9": 2
 }
 
 /**
  * Attacks per level - supports both formula and range formats
  */
-export type AttacksPerLevel = AttacksPerLevelFormula | AttacksPerLevelRange
+export type AttacksPerLevel = AttacksPerLevelFormula | AttacksPerLevelRange;
 
 /**
  * Saving throw bonuses (negative modifiers = better saves)
  */
 export interface SavingThrowBonuses {
-  death?: number
-  wand?: number
-  breath?: number
-  petrify?: number
-  spell?: number
+  death?: number;
+  wand?: number;
+  breath?: number;
+  petrify?: number;
+  spell?: number;
 }
 
 /**
  * Resistances - percentage-based protection
  */
 export interface Resistances {
-  [key: string]: number | string  // numeric value or notes string
+  [key: string]: number | string; // numeric value or notes string
 }
 
 /**
@@ -93,89 +93,93 @@ export interface Resistances {
  * Formula: gain spell point at level (A + B*N) for spell level N
  */
 export interface SpellPointFormulaEntry {
-  A: number
-  B: number
+  A: number;
+  B: number;
 }
 
 /**
  * Spell point formula for caster classes
  */
 export interface SpellPointFormula {
-  mage?: SpellPointFormulaEntry
-  priest?: SpellPointFormulaEntry
+  mage?: SpellPointFormulaEntry;
+  priest?: SpellPointFormulaEntry;
 }
 
 /**
  * Spell level access - levels at which each spell level becomes available
  */
 export interface SpellLevelAccess {
-  mage?: number[]    // Array of 7 levels (spell levels 1-7)
-  priest?: number[]  // Array of 7 levels (spell levels 1-7)
+  mage?: number[]; // Array of 7 levels (spell levels 1-7)
+  priest?: number[]; // Array of 7 levels (spell levels 1-7)
 }
 
 /**
  * Complete class data structure (matches JSON files)
  */
 export interface ClassData {
-  id: string
-  name: string
-  description: string
-  requirements: ClassRequirements
-  alignmentRestrictions: string[]  // "good", "neutral", "evil" (empty = any)
-  equipmentRestrictions: EquipmentRestrictions
-  hitDice: string                  // "1d4", "1d6", "1d8", "1d10"
-  spellAccess: SpellAccess | null
-  attacksPerLevel: AttacksPerLevel
-  xpTable: number[]                // XP required for levels 2-13+ (11-12 entries)
-  xpPerLevelAfter13?: number       // XP per level after 13
-  savingThrowBonuses?: SavingThrowBonuses
-  resistances?: Resistances
-  spellPointFormula?: SpellPointFormula
-  spellLevelAccess?: SpellLevelAccess
-  specialAbilities: string[]
-  canIdentifyItems: boolean
-  canDispelUndead: boolean
-  dispelUndeadPenalty?: number     // Penalty to dispel undead roll (e.g., -20 for Bishop)
-  dispelUndeadMinLevel?: number    // Minimum level to dispel undead
-  canCriticalHit: boolean
+  id: string;
+  name: string;
+  description: string;
+  requirements: ClassRequirements;
+  alignmentRestrictions: string[];
+  equipmentRestrictions: EquipmentRestrictions;
+  hitDice: string;
+  hitDiceBonus?: string;
+  spellAccess: SpellAccess | null;
+  attacksPerLevel: AttacksPerLevel;
+  xpTable: number[]; // XP required for levels 2-13+ (11-12 entries)
+  xpPerLevelAfter13?: number; // XP per level after 13
+  savingThrowBonuses?: SavingThrowBonuses;
+  resistances?: Resistances;
+  spellPointFormula?: SpellPointFormula;
+  spellLevelAccess?: SpellLevelAccess;
+  specialAbilities: string[];
+  canIdentifyItems: boolean;
+  canDispelUndead: boolean;
+  dispelUndeadPenalty?: number;
+  dispelUndeadMinLevel?: number;
+  canCriticalHit: boolean;
+  trapInspectionMultiplier?: number;
 }
 
 /**
  * Map class enum to lowercase ID for JSON loading
  */
 export function getClassId(charClass: CharacterClass): string {
-  return charClass.toLowerCase()
+  return charClass.toLowerCase();
 }
 
 /**
  * Map lowercase ID to class enum
  */
 export function parseClass(id: string): CharacterClass | null {
-  const upperID = id.toUpperCase()
+  const upperID = id.toUpperCase();
   if (upperID in CharacterClass) {
-    return CharacterClass[upperID as keyof typeof CharacterClass]
+    return CharacterClass[upperID as keyof typeof CharacterClass];
   }
-  return null
+  return null;
 }
 
 /**
  * Parse alignment restrictions from JSON strings
  */
 export function parseAlignmentRestrictions(restrictions: string[]): Alignment[] {
-  return restrictions.map(r => {
-    const upper = r.toUpperCase()
+  return restrictions.map((r) => {
+    const upper = r.toUpperCase();
     if (upper in Alignment) {
-      return Alignment[upper as keyof typeof Alignment]
+      return Alignment[upper as keyof typeof Alignment];
     }
-    throw new Error(`Invalid alignment: ${r}`)
-  })
+    throw new Error(`Invalid alignment: ${r}`);
+  });
 }
 
 /**
  * Type guard to check if attacksPerLevel is formula-based
  */
-export function isFormulaBasedAttacks(attacksPerLevel: AttacksPerLevel): attacksPerLevel is AttacksPerLevelFormula {
-  return 'formula' in attacksPerLevel && 'max' in attacksPerLevel
+export function isFormulaBasedAttacks(
+  attacksPerLevel: AttacksPerLevel,
+): attacksPerLevel is AttacksPerLevelFormula {
+  return 'formula' in attacksPerLevel && 'max' in attacksPerLevel;
 }
 
 /**
@@ -186,89 +190,36 @@ export function getAttacksForLevel(attacksPerLevel: AttacksPerLevel, level: numb
   // Handle formula-based format
   if (isFormulaBasedAttacks(attacksPerLevel)) {
     // Evaluate the formula safely (only supports simple formulas)
-    const formula = attacksPerLevel.formula
+    const formula = attacksPerLevel.formula;
     // Parse "(level / N) + M" style formulas
-    const match = formula.match(/\(level\s*\/\s*(\d+)\)\s*\+\s*(\d+)/)
+    const match = formula.match(/\(level\s*\/\s*(\d+)\)\s*\+\s*(\d+)/);
     if (match) {
-      const divisor = parseInt(match[1])
-      const base = parseInt(match[2])
-      const attacks = Math.floor(level / divisor) + base
-      return Math.min(attacks, attacksPerLevel.max)
+      const divisor = parseInt(match[1]);
+      const base = parseInt(match[2]);
+      const attacks = Math.floor(level / divisor) + base;
+      return Math.min(attacks, attacksPerLevel.max);
     }
     // Fallback: just return 1 if formula not understood
-    return 1
+    return 1;
   }
 
   // Handle range-based format
   for (const [range, attacks] of Object.entries(attacksPerLevel)) {
     if (range.includes('+')) {
       // "1+" means level 1 and up
-      const minLevel = parseInt(range.replace('+', ''))
+      const minLevel = parseInt(range.replace('+', ''));
       if (level >= minLevel) {
-        return attacks
+        return attacks;
       }
     } else if (range.includes('-')) {
       // "1-4" means levels 1 through 4
-      const [min, max] = range.split('-').map(Number)
+      const [min, max] = range.split('-').map(Number);
       if (level >= min && level <= max) {
-        return attacks
+        return attacks;
       }
     }
   }
 
   // Default to 1 if no range found
-  return 1
-}
-
-// DEPRECATED: Old CLASS_REQUIREMENTS interface and mapping will be removed after migration
-// TODO: Remove after all services migrated to ClassData
-/**
- * @deprecated Use ClassData interface from JSON files instead
- */
-export interface OldClassRequirements {
-  strength?: number
-  intelligence?: number
-  piety?: number
-  vitality?: number
-  agility?: number
-  luck?: number
-  alignment?: Alignment[]
-}
-
-/**
- * @deprecated Use ClassData interface from JSON files instead
- */
-export const CLASS_REQUIREMENTS: Record<CharacterClass, OldClassRequirements> = {
-  [CharacterClass.FIGHTER]: {},
-  [CharacterClass.MAGE]: {},
-  [CharacterClass.PRIEST]: {},
-  [CharacterClass.THIEF]: {},
-  [CharacterClass.BISHOP]: {
-    intelligence: 12,
-    piety: 12
-  },
-  [CharacterClass.SAMURAI]: {
-    strength: 15,
-    intelligence: 11,
-    piety: 10,
-    vitality: 14,
-    agility: 10,
-    alignment: [Alignment.GOOD]
-  },
-  [CharacterClass.LORD]: {
-    strength: 15,
-    intelligence: 12,
-    piety: 12,
-    vitality: 15,
-    agility: 14,
-    alignment: [Alignment.GOOD]
-  },
-  [CharacterClass.NINJA]: {
-    strength: 17,
-    intelligence: 17,
-    piety: 17,
-    vitality: 17,
-    agility: 17,
-    alignment: [Alignment.EVIL]
-  }
+  return 1;
 }

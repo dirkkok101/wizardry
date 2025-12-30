@@ -66,9 +66,9 @@ function updateCharacterHP(state: GameState, charId: string, newHP: number): Gam
     ...state,
     roster: new Map(state.roster).set(charId, {
       ...state.roster.get(charId)!,
-      hp: newHP
-    })
-  }
+      hp: newHP,
+    }),
+  };
 }
 ```
 
@@ -77,6 +77,7 @@ function updateCharacterHP(state: GameState, charId: string, newHP: number): Gam
 ### Modal Game States
 
 The game uses explicit state machine transitions:
+
 - **TOWN**: Can access services, cannot move in dungeon
 - **NAVIGATION**: Can move, search; encounters trigger combat
 - **COMBAT**: Cannot move map, can attack/cast/flee
@@ -90,13 +91,14 @@ All scenes follow a consistent action placement pattern:
 
 > **Party actions go in the footer menu. Character actions go on character/item cards.**
 
-| Action Type | Location | Examples |
-|-------------|----------|----------|
-| **Party Actions** | Footer menu (SceneFooterComponent) | Return/Leave, Pool Gold, Movement (maze) |
-| **Character Actions** | Character card buttons | Inspect, Cast Spell, Class Change, Delete |
-| **Item Actions** | Item card buttons | Equip, Unequip, Trade, Drop, Use |
+| Action Type           | Location                           | Examples                                  |
+| --------------------- | ---------------------------------- | ----------------------------------------- |
+| **Party Actions**     | Footer menu (SceneFooterComponent) | Return/Leave, Pool Gold, Movement (maze)  |
+| **Character Actions** | Character card buttons             | Inspect, Cast Spell, Class Change, Delete |
+| **Item Actions**      | Item card buttons                  | Equip, Unequip, Trade, Drop, Use          |
 
 This pattern ensures:
+
 - **Consistency** across all scenes (Temple, Tavern, Shop, Maze, Inspection)
 - **Clear mental model** for users - footer = party, cards = individual
 - **Keyboard shortcuts** for party actions (ESC, P, W/A/S/D)
@@ -105,6 +107,7 @@ This pattern ensures:
 ## Service Layer Guidelines
 
 Services are **pure functions** organized by domain:
+
 - **PartyService**: Formation (front/back rows), membership (1-6 characters), party positioning/facing
 - **CombatService**: Initiative calculation, round-based combat resolution, damage calculation
 - **SpellService**: Spell point management per level (1-7 separate pools), spell casting, spell learning
@@ -128,6 +131,7 @@ Services can call other services but **no circular dependencies allowed**.
 **No Mocks for Services**: Services are pure functions - test with real data using factory functions.
 
 **Colocated Tests**: Tests are colocated with source files using `__tests__/` subdirectories:
+
 ```
 src/
 ├── services/
@@ -141,17 +145,19 @@ src/
 ```
 
 **Test Naming Convention**:
+
 ```typescript
 describe('ServiceName', () => {
   describe('methodName', () => {
     it('does something specific', () => {
       // Test implementation
-    })
-  })
-})
+    });
+  });
+});
 ```
 
 **Factory Functions**: Use test factories from `src/app/testing/test-factories.ts`:
+
 - `createTestCharacter()` - Create test character with defaults
 - `createEmptyParty()` - Create empty party
 - `createFullParty()` - Create party with 6 members
@@ -161,14 +167,16 @@ describe('ServiceName', () => {
 **Coverage Goals**: Minimum 80% for all services and commands. 100% for critical paths (combat, spells, death/resurrection, leveling).
 
 **Performance Requirements**: Test suite must run in <2.5 seconds. Use instant transitions in tests:
+
 ```typescript
 // ✅ Always use instant transitions in tests
 await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
-  direction: 'instant'
-})
+  direction: 'instant',
+});
 ```
 
 **Anti-Patterns to Avoid**:
+
 - Do NOT mock pure functions
 - Do NOT test implementation details (test behavior)
 - Do NOT share mutable state between tests (use `beforeEach`)
@@ -178,20 +186,22 @@ await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
 - Do NOT use `Math.random()` directly - always use `RandomService` for testability
 
 **Deterministic Random Testing**: Use `RandomService` for all random number generation. This enables deterministic tests:
+
 ```typescript
 // Queue specific values for precise test control (values consumed in order)
-RandomService.queueNextValues([0.1, 0.5, 0.99])  // hit roll, damage roll, crit roll
+RandomService.queueNextValues([0.1, 0.5, 0.99]); // hit roll, damage roll, crit roll
 
 // Use descriptive comments explaining what each value controls
-RandomService.queueNextValues([0.5])  // 50% < 86% success rate = success
+RandomService.queueNextValues([0.5]); // 50% < 86% success rate = success
 
 // For reproducible sequences, use seeded random
-RandomService.setSeed(12345)
+RandomService.setSeed(12345);
 
 // RandomService auto-resets before each test via setup-jest.ts
 ```
 
 **RandomService Methods**:
+
 - `queueNextValues([...])` - Queue specific values for tests (most common)
 - `setSeed(n)` - Set seed for reproducible sequences
 - `resetSeed()` - Return to true random (auto-called before each test)
@@ -321,14 +331,23 @@ data/                 # Game data (source of truth) - JSON files
 └── textures/         # Texture assets
 
 docs/
-├── architecture.md     # Technical architecture overview
-├── testing-strategy.md # Comprehensive testing guide
-├── getting-started.md  # Onboarding for new developers
-├── services/          # Service documentation (50+ files)
-├── game-design/       # Game mechanics documentation
-├── ui/               # UI/UX scene documentation (14 scenes)
-├── systems/          # System design docs (combat, spells, etc.)
-└── research/         # Source validation and research
+├── reference/         # SOURCE OF TRUTH - Game mechanics (7 files)
+│   ├── characters.md    # Races, classes, leveling, creation
+│   ├── combat-formulas.md # All combat calculations
+│   ├── spells.md        # 50 spells with effects
+│   ├── monsters.md      # 96 monsters
+│   ├── items.md         # Equipment system
+│   ├── traps.md         # Trap mechanics
+│   └── treasure.md      # Loot distribution
+├── architecture/      # Code organization (2 files)
+│   ├── overview.md      # 4-layer clean architecture
+│   └── webgl-renderer.md # 3D rendering system
+├── systems/           # System deep-dives (10 files)
+├── guides/            # How-to guides (3 files)
+│   ├── getting-started.md
+│   ├── contributing.md
+│   └── testing-strategy.md
+└── _archive/          # Historical docs (preserved for reference)
 ```
 
 ## UI Design System
@@ -341,27 +360,27 @@ All styling uses CSS custom properties defined in `src/styles/variables.scss`:
 
 ```css
 /* Colors */
---color-bg-darkest: #0a0a0a;      /* Primary background */
---color-bg-card: #1a1a1a;          /* Card backgrounds */
---color-gold-primary: #d4a574;     /* Primary gold accent */
---color-text-gold: #d4a574;        /* Gold text for emphasis */
---color-text-primary: #e0e0e0;     /* Primary text */
---color-text-secondary: #a0a0a0;   /* Secondary text */
+--color-bg-darkest: #0a0a0a; /* Primary background */
+--color-bg-card: #1a1a1a; /* Card backgrounds */
+--color-gold-primary: #d4a574; /* Primary gold accent */
+--color-text-gold: #d4a574; /* Gold text for emphasis */
+--color-text-primary: #e0e0e0; /* Primary text */
+--color-text-secondary: #a0a0a0; /* Secondary text */
 
 /* Typography */
---font-display: 'Cinzel', Georgia, serif;   /* Headings, titles */
---font-body: 'JetBrains Mono', monospace;   /* Stats, buttons */
+--font-display: 'Cinzel', Georgia, serif; /* Headings, titles */
+--font-body: 'JetBrains Mono', monospace; /* Stats, buttons */
 
 /* Status Colors */
---color-status-ok: #22c55e;        /* OK/Healthy */
---color-status-poisoned: #a855f7;  /* Poisoned */
---color-status-dead: #6b7280;      /* Dead */
+--color-status-ok: #22c55e; /* OK/Healthy */
+--color-status-poisoned: #a855f7; /* Poisoned */
+--color-status-dead: #6b7280; /* Dead */
 /* ... and more in variables.scss */
 
 /* HP Colors */
---color-hp-healthy: #22c55e;       /* >50% HP */
---color-hp-warning: #f59e0b;       /* 25-50% HP */
---color-hp-critical: #ef4444;      /* <25% HP */
+--color-hp-healthy: #22c55e; /* >50% HP */
+--color-hp-warning: #f59e0b; /* 25-50% HP */
+--color-hp-critical: #ef4444; /* <25% HP */
 ```
 
 ### Fonts (Google Fonts)
@@ -395,6 +414,7 @@ Fonts are loaded in `src/index.html`.
 ### Card Variants
 
 `CharacterCardComponent` supports two variants:
+
 - **default**: Full-height cards with all details (for dedicated character views)
 - **compact**: Minimal height, no dividers (for grids, lists, maze panels)
 
@@ -404,6 +424,7 @@ Fonts are loaded in `src/index.html`.
 ```
 
 `PartyCharacterGridComponent` passes the variant through to child cards:
+
 ```html
 <app-party-character-grid source="party" variant="compact" />
 ```
@@ -412,21 +433,21 @@ Fonts are loaded in `src/index.html`.
 
 All scenes should use these shared components for consistency:
 
-| Component | Purpose |
-|-----------|---------|
-| `SceneTitleComponent` | Scene header with gold styling, optional party gold |
-| `SceneFooterComponent` | Footer menu with gold-themed buttons |
-| `CharacterCardComponent` | Individual character display (default/compact) |
-| `CharacterPanelComponent` | Ultra-compact vertical character stack (maze sidebars) |
-| `PartyCharacterGridComponent` | Character grid with formation support |
+| Component                     | Purpose                                                |
+| ----------------------------- | ------------------------------------------------------ |
+| `SceneTitleComponent`         | Scene header with gold styling, optional party gold    |
+| `SceneFooterComponent`        | Footer menu with gold-themed buttons                   |
+| `CharacterCardComponent`      | Individual character display (default/compact)         |
+| `CharacterPanelComponent`     | Ultra-compact vertical character stack (maze sidebars) |
+| `PartyCharacterGridComponent` | Character grid with formation support                  |
 
 ### Key Style Files
 
-| File | Purpose |
-|------|---------|
-| `src/styles/variables.scss` | All CSS custom properties |
+| File                             | Purpose                                 |
+| -------------------------------- | --------------------------------------- |
+| `src/styles/variables.scss`      | All CSS custom properties               |
 | `src/styles/_design-tokens.scss` | SCSS variables mirroring CSS properties |
-| `src/styles/_card-mixins.scss` | Reusable card styling mixins |
+| `src/styles/_card-mixins.scss`   | Reusable card styling mixins            |
 
 ## TypeScript Configuration
 
@@ -456,20 +477,20 @@ import { CharacterService } from '@services/CharacterService';
 
 Available aliases (configured in `tsconfig.json` and `jest.config.js`):
 
-| Alias | Path |
-|-------|------|
-| `@app/*` | `src/app/*` |
-| `@services/*` | `src/app/services/*` |
-| `@models/*` | `src/app/types/*` |
-| `@scenes/*` | `src/app/scenes/*` |
-| `@shared/*` | `src/app/shared/*` |
-| `@utils/*` | `src/app/utils/*` |
-| `@config/*` | `src/app/config/*` |
-| `@validation/*` | `src/app/validation/*` |
-| `@testing/*` | `src/app/testing/*` |
-| `@core/*` | `src/app/core/*` |
-| `@rendering/*` | `src/app/rendering/*` |
-| `@data/*` | `data/*` (root game data) |
+| Alias           | Path                      |
+| --------------- | ------------------------- |
+| `@app/*`        | `src/app/*`               |
+| `@services/*`   | `src/app/services/*`      |
+| `@models/*`     | `src/app/types/*`         |
+| `@scenes/*`     | `src/app/scenes/*`        |
+| `@shared/*`     | `src/app/shared/*`        |
+| `@utils/*`      | `src/app/utils/*`         |
+| `@config/*`     | `src/app/config/*`        |
+| `@validation/*` | `src/app/validation/*`    |
+| `@testing/*`    | `src/app/testing/*`       |
+| `@core/*`       | `src/app/core/*`          |
+| `@rendering/*`  | `src/app/rendering/*`     |
+| `@data/*`       | `data/*` (root game data) |
 
 ## Key Constraints
 
@@ -486,12 +507,12 @@ Available aliases (configured in `tsconfig.json` and `jest.config.js`):
 
 Before implementing any feature, **read the relevant documentation first**:
 
-- **For Services**: `docs/services/<ServiceName>.md` contains detailed API, responsibilities, and examples
-- **For Game Mechanics**: `docs/game-design/` has complete rules for classes, spells, combat, etc.
-- **For UI Scenes**: `docs/ui/scenes/<scene-name>.md` has ASCII mockups, navigation, validation logic
-- **For Systems**: `docs/systems/<system-name>.md` explains complex multi-service features
+- **For Game Mechanics**: `docs/reference/` is the SOURCE OF TRUTH for combat formulas, spells, monsters, items, etc.
+- **For Systems**: `docs/systems/<system-name>.md` explains how services work together
+- **For Architecture**: `docs/architecture/overview.md` covers the 4-layer clean architecture
+- **For Development**: `docs/guides/` has getting-started, contributing, and testing guides
 
-The documentation is comprehensive (13,250+ lines) and production-ready. Always consult docs before writing code.
+The documentation follows a clear hierarchy: Code > Data > Reference > Systems > Architecture. Always consult docs before writing code.
 
 ## Development Workflow
 
@@ -508,6 +529,7 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
 **Migration Status**: Angular migration complete - project now uses Angular framework at root level.
 
 **Completed**:
+
 - **Phases 1-4**: Core architecture and Angular migration
   - Angular project structure setup with Angular CLI
   - Migration from Vite to Angular build system
@@ -563,6 +585,7 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
   - **Supporting Scenes**: camp, system
 
 **Next Steps**:
+
 - **Phase 7**: Combat and encounter completion
   - Combat scene polish (turn-based battles)
   - Chest scene (loot and traps)
@@ -570,6 +593,7 @@ The documentation is comprehensive (13,250+ lines) and production-ready. Always 
   - Spell casting (combat and utility spells)
 
 **Testing Note**: The complete unit test suite may timeout. Always run focused unit tests to validate your work:
+
 ```bash
 npm test -- ServiceName        # Run tests for specific service
 npm test -- --testNamePattern="specific test"  # Run matching tests

@@ -7,6 +7,7 @@
 The party is the **core abstraction** in Wizardry 1. Unlike single-character roguelikes, everything revolves around the party as a single entity.
 
 **Key Concepts**:
+
 - Party has position, facing, and formation (not individual characters)
 - Characters belong to roster (max 20), subset active in party (1-6)
 - Front row (max 3) and back row (max 3) formation
@@ -39,26 +40,26 @@ The party is the **core abstraction** in Wizardry 1. Unlike single-character rog
 
 ```typescript
 interface Party {
-  members: Character[]           // 1-6 active characters
-  formation: Formation          // Front/back row assignment
-  position: Position            // Current dungeon location
-  facing: Direction             // North, South, East, West
-  gold: number                  // Shared party gold
-  inventory: Item[]             // Shared party items
+  members: Character[]; // 1-6 active characters
+  formation: Formation; // Front/back row assignment
+  position: Position; // Current dungeon location
+  facing: Direction; // North, South, East, West
+  gold: number; // Shared party gold
+  inventory: Item[]; // Shared party items
 }
 
 interface Formation {
-  frontRow: Character[]         // Max 3 characters
-  backRow: Character[]          // Max 3 characters
+  frontRow: Character[]; // Max 3 characters
+  backRow: Character[]; // Max 3 characters
 }
 
 interface Position {
-  x: number                     // X coordinate (0-19)
-  y: number                     // Y coordinate (0-19)
-  level: number                 // Dungeon level (1-10)
+  x: number; // X coordinate (0-19)
+  y: number; // Y coordinate (0-19)
+  level: number; // Dungeon level (1-10)
 }
 
-type Direction = 'north' | 'south' | 'east' | 'west'
+type Direction = 'north' | 'south' | 'east' | 'west';
 ```
 
 ## Formation Mechanics
@@ -66,12 +67,14 @@ type Direction = 'north' | 'south' | 'east' | 'west'
 ### Row Assignment Rules
 
 **Front Row**:
+
 - Maximum 3 characters
 - Takes all melee attacks from enemies
 - Can perform melee attacks
 - Recommended: Fighters, Lords, Samurai (high AC, high HP)
 
 **Back Row**:
+
 - Maximum 3 characters
 - Protected from melee attacks (unless front row empty)
 - Cannot perform melee attacks (ranged/magic only)
@@ -80,18 +83,21 @@ type Direction = 'north' | 'south' | 'east' | 'west'
 ### Formation Strategies
 
 **Balanced Party (6 members)**:
+
 ```
 Front Row: Fighter, Lord, Samurai
 Back Row: Mage, Priest, Thief
 ```
 
 **Small Party (4 members)**:
+
 ```
 Front Row: Fighter, Fighter
 Back Row: Priest, Mage
 ```
 
 **Minimal Party (1 member)**:
+
 ```
 Front Row: Fighter (solo)
 Back Row: (empty)
@@ -100,11 +106,13 @@ Back Row: (empty)
 ### Formation Changes
 
 **When Allowed**:
+
 - In town (between dungeon expeditions)
 - At camp (during dungeon exploration)
 - NOT during combat
 
 **How to Change**:
+
 1. Player selects character
 2. Player selects target row (front/back)
 3. System validates row not full (max 3)
@@ -115,12 +123,14 @@ Back Row: (empty)
 ### Adding Characters
 
 **Requirements**:
+
 - Character must exist in roster
 - Party size < 6
 - Character not already in party
 - Character alive (HP > 0)
 
 **Process**:
+
 1. Select character from roster
 2. Validate requirements
 3. Add to party members
@@ -130,10 +140,12 @@ Back Row: (empty)
 ### Removing Characters
 
 **Requirements**:
+
 - Character currently in party
 - Party size > 1 (can't remove last member in dungeon)
 
 **Process**:
+
 1. Select character in party
 2. Validate requirements
 3. Remove from formation (front or back row)
@@ -144,12 +156,14 @@ Back Row: (empty)
 ### Death in Party
 
 **When Character Dies**:
+
 - Character remains in party (becomes corpse)
 - Cannot act in combat
 - Reduces party effectiveness
 - Body can be retrieved if party wipes
 
 **Options**:
+
 1. **Resurrect at temple** - Return to town, pay for resurrection
 2. **Leave body** - Remove from party, body stays at death location
 3. **Carry body** - Keep in party, retrieve later
@@ -159,6 +173,7 @@ Back Row: (empty)
 ### Party Movement
 
 **Movement Commands**:
+
 - **Forward**: Move 1 tile in facing direction
 - **Backward**: Move 1 tile opposite facing direction
 - **Strafe Left**: Move 1 tile left (no rotation)
@@ -167,31 +182,34 @@ Back Row: (empty)
 - **Turn Right**: Rotate 90° right (no movement)
 
 **Movement Validation**:
+
 ```typescript
 function canMove(party: Party, direction: Direction): boolean {
-  const targetTile = calculateTargetTile(party.position, direction)
+  const targetTile = calculateTargetTile(party.position, direction);
 
   // Check boundaries (0-19 range)
-  if (targetTile.x < 0 || targetTile.x > 19) return false
-  if (targetTile.y < 0 || targetTile.y > 19) return false
+  if (targetTile.x < 0 || targetTile.x > 19) return false;
+  if (targetTile.y < 0 || targetTile.y > 19) return false;
 
   // Check tile type
-  const tile = DungeonService.getTile(party.position.level, targetTile)
-  if (tile.type === 'rock') return false
-  if (tile.type === 'door' && !tile.open) return false
+  const tile = DungeonService.getTile(party.position.level, targetTile);
+  if (tile.type === 'rock') return false;
+  if (tile.type === 'door' && !tile.open) return false;
 
-  return true
+  return true;
 }
 ```
 
 ### Position Tracking
 
 **Coordinates**:
+
 - X: 0-19 (west to east)
 - Y: 0-19 (north to south)
 - Level: 1-10 (dungeon depth)
 
 **Facing**:
+
 - North: Y decreases
 - South: Y increases
 - East: X increases
@@ -200,21 +218,25 @@ function canMove(party: Party, direction: Direction): boolean {
 ### Special Tiles
 
 **Stairs**:
+
 - Descend: Level increases (1 → 2 → 3...)
 - Ascend: Level decreases (3 → 2 → 1)
 - Stairs at level 1 → exit to town
 
 **Teleporters**:
+
 - Instant transport to fixed location
 - May change level
 - May change facing
 
 **Spinners**:
+
 - Rotate party 90°, 180°, or 270°
 - Player loses orientation
 - DUMAPIC spell reveals location
 
 **Darkness**:
+
 - Cannot see walls/doors
 - MILWA spell provides light
 - Movement still allowed
@@ -224,11 +246,13 @@ function canMove(party: Party, direction: Direction): boolean {
 ### Valid Party Composition
 
 **Minimum Requirements**:
+
 - At least 1 character
 - At least 1 character alive (HP > 0)
 - All characters from roster
 
 **Recommended Composition**:
+
 - 6 characters (maximum)
 - 3 front row (tanks)
 - 3 back row (support)
@@ -238,11 +262,13 @@ function canMove(party: Party, direction: Direction): boolean {
 ### Invalid States
 
 **Cannot Enter Dungeon If**:
+
 - Party empty (0 members)
 - All party members dead
 - Party has equipment conflicts
 
 **Cannot Rest If**:
+
 - All party members dead
 - In combat state
 
@@ -262,18 +288,21 @@ NAVIGATION → Enter Town → TOWN
 ### State-Based Actions
 
 **In TOWN**:
+
 - Can form party
 - Can add/remove members
 - Can change formation
 - Cannot move in dungeon
 
 **In NAVIGATION**:
+
 - Can move party
 - Can search for traps
 - Can rest (camp)
 - Can cast utility spells
 
 **In COMBAT**:
+
 - Cannot move on map
 - Cannot change formation
 - Cannot rest
@@ -284,12 +313,14 @@ NAVIGATION → Enter Town → TOWN
 ### Shared Resources
 
 **Gold**:
+
 - All gold belongs to party (not individuals)
 - Earned from combat loot
 - Spent at shops (any member can buy)
 - Divided equally when party disbanded (non-canon, implementation detail)
 
 **Inventory**:
+
 - Shared item pool (20+ slots)
 - Any member can equip from inventory
 - Items stay with party when member removed
@@ -298,17 +329,20 @@ NAVIGATION → Enter Town → TOWN
 ### Individual Resources
 
 **HP (Hit Points)**:
+
 - Each character has own HP
 - Damaged in combat individually
 - Healed individually (DIOS, DIAL)
 - Death at 0 HP
 
 **Spell Points**:
+
 - Each character has own pools (7 mage + 7 priest)
 - Restored at inn (entire party rests)
 - Cannot transfer between characters
 
 **Equipment**:
+
 - Each character has own equipped items
 - Weapons, armor, shields, helmets, gauntlets
 - Equipment stays with character when removed from party
@@ -318,11 +352,13 @@ NAVIGATION → Enter Town → TOWN
 ### Front Row in Combat
 
 **Advantages**:
+
 - Can perform melee attacks
 - Protects back row from melee
 - First to receive beneficial spells (KALKI, MOGREF)
 
 **Disadvantages**:
+
 - Takes all enemy melee attacks
 - Takes first hits from breath attacks
 - More likely to be targeted
@@ -330,11 +366,13 @@ NAVIGATION → Enter Town → TOWN
 ### Back Row in Combat
 
 **Advantages**:
+
 - Protected from melee (unless front row empty)
 - Safe casting position
 - Less likely targeted
 
 **Disadvantages**:
+
 - Cannot melee attack
 - If front row dies, becomes front row
 - Vulnerable if front row falls
@@ -344,29 +382,25 @@ NAVIGATION → Enter Town → TOWN
 **Cannot Move Between Rows During Combat**
 
 **Exception**:
+
 - If front row character dies, back row character may auto-advance
 - Implementation detail: may keep back row back, or auto-advance
 - Original Wizardry: back row stays back (even if front empty)
 
 ## Related Documentation
 
-**Services**:
-- [PartyService](../services/PartyService.md) - Party management API
-- [FormationService](../services/FormationService.md) - Row management
-- [NavigationService](../services/NavigationService.md) - Movement logic
+**Reference** (SOURCE OF TRUTH):
 
-**Commands**:
-- [FormPartyCommand](../commands/FormPartyCommand.md) - Party creation
-- [MoveForwardCommand](../commands/MoveForwardCommand.md) - Movement
-- [ChangeFormationCommand](../commands/ChangeFormationCommand.md) - Row changes
+- [Characters Reference](../reference/characters.md) - Classes, races, stats
+- [Combat Formulas](../reference/combat-formulas.md) - Formation effects on combat
 
-**Game Design**:
-- [Party Formation](../game-design/03-party-formation.md) - Player guide
-- [Dungeon Navigation](../game-design/06-dungeon.md) - Movement mechanics
+**Systems**:
 
-**Research**:
-- [Combat Formulas](../research/combat-formulas.md) - Formation effects on combat
+- [Combat System](./combat-system.md) - Party in combat
+- [Dungeon Navigation](./dungeon-navigation.md) - Party movement
+- [Town System](./town-system.md) - Tavern party formation
 
-**Diagrams**:
-- [Party Structure](../diagrams/party-structure.md) - Entity relationships
-- [Game State Machine](../diagrams/game-state-machine.md) - State transitions
+**Code**:
+
+- `src/app/services/PartyService.ts` - Party management API
+- `src/app/types/Party.ts` - Party structure

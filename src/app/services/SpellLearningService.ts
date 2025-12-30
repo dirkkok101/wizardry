@@ -1,78 +1,84 @@
-import { Character } from '@models/Character'
-import { CharacterClass } from '@models/CharacterClass'
-import { SpellDataLoader } from './SpellDataLoader'
-import { RandomService } from './RandomService'
+import { Character } from '@models/Character';
+import { SpellDataLoader } from './SpellDataLoader';
+import { RandomService } from './RandomService';
+import { ClassService } from './ClassService';
 
 interface Spell {
-  id: string
-  name: string
-  level: number
-  type: 'MAGE' | 'PRIEST'
+  id: string;
+  name: string;
+  level: number;
+  type: 'MAGE' | 'PRIEST';
 }
 
 interface SpellLearningResult {
-  updatedCharacter: Character
-  newSpells: Spell[]
-}
-
-// Character levels at which spell levels unlock
-const MAGE_SPELL_LEVEL_REQUIREMENTS: Record<number, number> = {
-  1: 1,   // Level 1 = Spell Level 1
-  2: 3,   // Level 3 = Spell Level 2
-  3: 5,   // Level 5 = Spell Level 3
-  4: 7,   // Level 7 = Spell Level 4
-  5: 9,   // Level 9 = Spell Level 5
-  6: 11,  // Level 11 = Spell Level 6
-  7: 13   // Level 13 = Spell Level 7
-}
-
-const PRIEST_SPELL_LEVEL_REQUIREMENTS: Record<number, number> = {
-  1: 1,   // Level 1 = Spell Level 1
-  2: 3,   // Level 3 = Spell Level 2
-  3: 5,   // Level 5 = Spell Level 3
-  4: 7,   // Level 7 = Spell Level 4
-  5: 9,   // Level 9 = Spell Level 5
-  6: 11,  // Level 11 = Spell Level 6
-  7: 13   // Level 13 = Spell Level 7
+  updatedCharacter: Character;
+  newSpells: Spell[];
 }
 
 export class SpellLearningService {
-  /**
-   * Check if character class can cast spells
-   */
   static isCaster(character: Character): boolean {
-    return [
-      CharacterClass.MAGE,
-      CharacterClass.PRIEST,
-      CharacterClass.BISHOP,
-      CharacterClass.SAMURAI,
-      CharacterClass.LORD
-    ].includes(character.class)
+    const classData = ClassService.getClassData(character.class);
+    return classData.spellAccess !== null;
+  }
+
+  static hasMageSpells(character: Character): boolean {
+    const classData = ClassService.getClassData(character.class);
+    return classData.spellAccess?.mage !== undefined;
+  }
+
+  static hasPriestSpells(character: Character): boolean {
+    const classData = ClassService.getClassData(character.class);
+    return classData.spellAccess?.priest !== undefined;
+  }
+
+  private static getSpellLevelRequirements(
+    character: Character,
+    casterType: 'mage' | 'priest',
+  ): number[] | undefined {
+    const classData = ClassService.getClassData(character.class);
+    return classData.spellLevelAccess?.[casterType];
+  }
+
+  private static getMaxSpellLevel(character: Character, casterType: 'mage' | 'priest'): number {
+    const classData = ClassService.getClassData(character.class);
+    const access =
+      casterType === 'mage' ? classData.spellAccess?.mage : classData.spellAccess?.priest;
+    return access?.maxLevel ?? 7;
   }
 
   /**
-   * Get highest spell level available to character at current level
+   * Get highest spell level available to character at current level.
+   * Uses class data from JSON files for spell level requirements.
    */
   static getAvailableSpellLevel(character: Character): number {
     if (!this.isCaster(character)) {
-      return 0
+      return 0;
     }
 
-    const isMagic = [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(character.class)
-    const isPriestly = [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(character.class)
+    const classData = ClassService.getClassData(character.class);
+    let maxLevel = 0;
 
-    // For simplicity, use mage spell level requirements
-    // (Bishops use both mage and priest)
-    const requirements = isMagic ? MAGE_SPELL_LEVEL_REQUIREMENTS : PRIEST_SPELL_LEVEL_REQUIREMENTS
-
-    let maxLevel = 0
-    for (let spellLevel = 1; spellLevel <= 7; spellLevel++) {
-      if (character.level >= requirements[spellLevel]) {
-        maxLevel = spellLevel
+    if (classData.spellLevelAccess?.mage) {
+      const mageReqs = classData.spellLevelAccess.mage;
+      const maxMageSpellLevel = classData.spellAccess?.mage?.maxLevel ?? 7;
+      for (let i = 0; i < mageReqs.length && i < maxMageSpellLevel; i++) {
+        if (character.level >= mageReqs[i]) {
+          maxLevel = Math.max(maxLevel, i + 1);
+        }
       }
     }
 
-    return maxLevel
+    if (classData.spellLevelAccess?.priest) {
+      const priestReqs = classData.spellLevelAccess.priest;
+      const maxPriestSpellLevel = classData.spellAccess?.priest?.maxLevel ?? 7;
+      for (let i = 0; i < priestReqs.length && i < maxPriestSpellLevel; i++) {
+        if (character.level >= priestReqs[i]) {
+          maxLevel = Math.max(maxLevel, i + 1);
+        }
+      }
+    }
+
+    return maxLevel;
   }
 
   /**
@@ -83,61 +89,61 @@ export class SpellLearningService {
    */
   static learnInitialSpells(character: Character): SpellLearningResult {
     if (!this.isCaster(character)) {
-      return { updatedCharacter: character, newSpells: [] }
+      return { updatedCharacter: character, newSpells: [] };
     }
 
     // Check if spells are loaded
     if (!SpellDataLoader.isLoaded()) {
-      console.warn('SpellDataLoader not loaded, cannot learn initial spells')
-      return { updatedCharacter: character, newSpells: [] }
+      console.warn('SpellDataLoader not loaded, cannot learn initial spells');
+      return { updatedCharacter: character, newSpells: [] };
     }
 
-    const isMagic = [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(character.class)
-    const isPriestly = [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(character.class)
+    const hasMage = this.hasMageSpells(character);
+    const hasPriest = this.hasPriestSpells(character);
 
-    const allSpells = SpellDataLoader.getAllSpells()
-    const knownSpellIds = new Set(character.knownSpells || [])
-    const learnedSpells: Spell[] = []
+    const allSpells = SpellDataLoader.getAllSpells();
+    const knownSpellIds = new Set(character.knownSpells || []);
+    const learnedSpells: Spell[] = [];
 
     // Learn all level 1 mage spells if character has mage casting
-    if (isMagic) {
+    if (hasMage) {
       for (const spell of allSpells.values()) {
         if (spell.casterType === 'mage' && spell.level === 1 && !knownSpellIds.has(spell.id)) {
           learnedSpells.push({
             id: spell.id,
             name: spell.name,
             level: spell.level,
-            type: 'MAGE'
-          })
-          knownSpellIds.add(spell.id)
+            type: 'MAGE',
+          });
+          knownSpellIds.add(spell.id);
         }
       }
     }
 
     // Learn all level 1 priest spells if character has priest casting
-    if (isPriestly) {
+    if (hasPriest) {
       for (const spell of allSpells.values()) {
         if (spell.casterType === 'priest' && spell.level === 1 && !knownSpellIds.has(spell.id)) {
           learnedSpells.push({
             id: spell.id,
             name: spell.name,
             level: spell.level,
-            type: 'PRIEST'
-          })
-          knownSpellIds.add(spell.id)
+            type: 'PRIEST',
+          });
+          knownSpellIds.add(spell.id);
         }
       }
     }
 
     const updatedCharacter: Character = {
       ...character,
-      knownSpells: Array.from(knownSpellIds)
-    }
+      knownSpells: Array.from(knownSpellIds),
+    };
 
     return {
       updatedCharacter,
-      newSpells: learnedSpells
-    }
+      newSpells: learnedSpells,
+    };
   }
 
   /**
@@ -154,22 +160,27 @@ export class SpellLearningService {
    * Bishops use the lower of INT/PIE for learning (both types slower).
    */
   static getSpellLearnChance(character: Character, spellType: 'MAGE' | 'PRIEST'): number {
-    let relevantStat: number
+    let relevantStat: number;
+    const classData = ClassService.getClassData(character.class);
 
-    if (character.class === CharacterClass.BISHOP) {
+    // Check if this is a Bishop (has both mage and priest spells)
+    const isBishop =
+      classData.spellAccess?.mage !== undefined && classData.spellAccess?.priest !== undefined;
+
+    if (isBishop) {
       // Bishops learn slower - use the relevant stat but at 2/3 rate
-      relevantStat = spellType === 'MAGE' ? character.intelligence : character.piety
-      return (relevantStat / 30) * 0.67 // Bishop penalty
+      relevantStat = spellType === 'MAGE' ? character.intelligence : character.piety;
+      return (relevantStat / 30) * 0.67; // Bishop penalty
     }
 
     // Use INT for mage spells, PIE for priest spells
     if (spellType === 'MAGE') {
-      relevantStat = character.intelligence
+      relevantStat = character.intelligence;
     } else {
-      relevantStat = character.piety
+      relevantStat = character.piety;
     }
 
-    return relevantStat / 30
+    return relevantStat / 30;
   }
 
   /**
@@ -185,56 +196,62 @@ export class SpellLearningService {
   static learnNewSpells(
     character: Character,
     oldLevel: number,
-    newLevel: number
+    newLevel: number,
   ): SpellLearningResult {
     if (!this.isCaster(character)) {
-      return { updatedCharacter: character, newSpells: [] }
+      return { updatedCharacter: character, newSpells: [] };
     }
 
-    const isMagic = [CharacterClass.MAGE, CharacterClass.BISHOP, CharacterClass.SAMURAI].includes(character.class)
-    const isPriestly = [CharacterClass.PRIEST, CharacterClass.BISHOP, CharacterClass.LORD].includes(character.class)
+    const hasMage = this.hasMageSpells(character);
+    const hasPriest = this.hasPriestSpells(character);
 
-    const learnedSpells: Spell[] = []
-    const knownSpellIds = new Set(character.knownSpells || [])
-    const allSpells = SpellDataLoader.getAllSpells()
+    const learnedSpells: Spell[] = [];
+    const knownSpellIds = new Set(character.knownSpells || []);
+    const allSpells = SpellDataLoader.getAllSpells();
 
     // Learn mage spells
-    if (isMagic) {
-      const mageSpells = this.attemptLearnSpells(
-        character,
-        oldLevel,
-        newLevel,
-        MAGE_SPELL_LEVEL_REQUIREMENTS,
-        'mage',
-        allSpells,
-        knownSpellIds
-      )
-      learnedSpells.push(...mageSpells)
+    if (hasMage) {
+      const requirements = this.getSpellLevelRequirements(character, 'mage');
+      if (requirements) {
+        const mageSpells = this.attemptLearnSpells(
+          character,
+          oldLevel,
+          newLevel,
+          requirements,
+          'mage',
+          allSpells,
+          knownSpellIds,
+        );
+        learnedSpells.push(...mageSpells);
+      }
     }
 
     // Learn priest spells
-    if (isPriestly) {
-      const priestSpells = this.attemptLearnSpells(
-        character,
-        oldLevel,
-        newLevel,
-        PRIEST_SPELL_LEVEL_REQUIREMENTS,
-        'priest',
-        allSpells,
-        knownSpellIds
-      )
-      learnedSpells.push(...priestSpells)
+    if (hasPriest) {
+      const requirements = this.getSpellLevelRequirements(character, 'priest');
+      if (requirements) {
+        const priestSpells = this.attemptLearnSpells(
+          character,
+          oldLevel,
+          newLevel,
+          requirements,
+          'priest',
+          allSpells,
+          knownSpellIds,
+        );
+        learnedSpells.push(...priestSpells);
+      }
     }
 
     const updatedCharacter: Character = {
       ...character,
-      knownSpells: Array.from(knownSpellIds)
-    }
+      knownSpells: Array.from(knownSpellIds),
+    };
 
     return {
       updatedCharacter,
-      newSpells: learnedSpells
-    }
+      newSpells: learnedSpells,
+    };
   }
 
   /**
@@ -242,48 +259,52 @@ export class SpellLearningService {
    * Per authentic Wizardry mechanics:
    * - First spell of each circle is GUARANTEED when the circle is first unlocked
    * - Characters can retry failed spells on each level-up using INT/30 or PIE/30 chance
+   *
+   * Uses class data from JSON for max spell level (e.g., Samurai/Lord may have caps).
    */
   private static attemptLearnSpells(
     character: Character,
     oldLevel: number,
     newLevel: number,
-    requirements: Record<number, number>,
+    requirements: number[],
     casterType: 'mage' | 'priest',
     allSpells: Map<string, { id: string; name: string; level: number; casterType: string }>,
-    knownSpellIds: Set<string>
+    knownSpellIds: Set<string>,
   ): Spell[] {
-    const learnedSpells: Spell[] = []
+    const learnedSpells: Spell[] = [];
 
-    // Get max spell level for this class (Samurai/Lord cap at level 6)
-    const maxSpellLevel = (casterType === 'mage' && character.class === CharacterClass.SAMURAI) ||
-                          (casterType === 'priest' && character.class === CharacterClass.LORD)
-                          ? 6 : 7
+    // Get max spell level for this class from JSON data
+    const maxSpellLevel = this.getMaxSpellLevel(character, casterType);
 
     // Attempt to learn spells at ALL accessible spell levels (not just newly unlocked)
     // This allows retrying failed spells on each level-up per authentic Wizardry mechanics
     for (let spellLevel = 1; spellLevel <= maxSpellLevel; spellLevel++) {
-      const reqLevel = requirements[spellLevel]
+      // Requirements array is 0-indexed, spell levels are 1-indexed
+      const reqLevel = requirements[spellLevel - 1];
+      if (reqLevel === undefined) {
+        continue; // No requirement defined for this spell level
+      }
 
       // Check if this spell level is accessible at the new character level
       if (newLevel < reqLevel) {
-        continue // Not accessible yet
+        continue; // Not accessible yet
       }
 
       // Check if this spell circle was JUST unlocked (first spell guaranteed)
-      const isNewlyUnlockedCircle = oldLevel < reqLevel && newLevel >= reqLevel
-      let guaranteedFirstSpell = isNewlyUnlockedCircle
+      const isNewlyUnlockedCircle = oldLevel < reqLevel && newLevel >= reqLevel;
+      let guaranteedFirstSpell = isNewlyUnlockedCircle;
 
       // Get available spells at this level (sort by ID for consistent ordering)
       const circleSpells = Array.from(allSpells.values())
-        .filter(s => s.casterType === casterType && s.level === spellLevel)
-        .sort((a, b) => a.id.localeCompare(b.id))
+        .filter((s) => s.casterType === casterType && s.level === spellLevel)
+        .sort((a, b) => a.id.localeCompare(b.id));
 
       for (const spell of circleSpells) {
         if (knownSpellIds.has(spell.id)) {
-          continue // Already known
+          continue; // Already known
         }
 
-        const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST'
+        const spellType = casterType === 'mage' ? 'MAGE' : 'PRIEST';
 
         // First spell of a newly unlocked circle is guaranteed (authentic Wizardry 1)
         if (guaranteedFirstSpell) {
@@ -291,28 +312,28 @@ export class SpellLearningService {
             id: spell.id,
             name: spell.name,
             level: spell.level,
-            type: spellType
-          })
-          knownSpellIds.add(spell.id)
-          guaranteedFirstSpell = false // Only one guaranteed spell per circle
-          continue
+            type: spellType,
+          });
+          knownSpellIds.add(spell.id);
+          guaranteedFirstSpell = false; // Only one guaranteed spell per circle
+          continue;
         }
 
         // Roll for learning (authentic Wizardry formula: INT/30 or PIE/30)
-        const learnChance = this.getSpellLearnChance(character, spellType)
+        const learnChance = this.getSpellLearnChance(character, spellType);
 
         if (RandomService.roll(learnChance)) {
           learnedSpells.push({
             id: spell.id,
             name: spell.name,
             level: spell.level,
-            type: spellType
-          })
-          knownSpellIds.add(spell.id)
+            type: spellType,
+          });
+          knownSpellIds.add(spell.id);
         }
       }
     }
 
-    return learnedSpells
+    return learnedSpells;
   }
 }

@@ -9,40 +9,29 @@
  * @see docs/research/combat-formulas.md
  */
 
-import { Character } from '@models/Character'
-import { CharacterClass } from '@models/CharacterClass'
-import { Chest } from '@models/Chest'
-import {
-  TrapId,
-  TrapInspectionResult,
-} from '@models/Trap'
-import { canAct } from '@utils/CharacterStatusHelpers'
-import { RandomService } from '../RandomService'
-import { TrapDataLoader } from '../TrapDataLoader'
+import { Character } from '@models/Character';
+import { Chest } from '@models/Chest';
+import { TrapId, TrapInspectionResult } from '@models/Trap';
+import { canAct } from '@utils/CharacterStatusHelpers';
+import { RandomService } from '../RandomService';
+import { TrapDataLoader } from '../TrapDataLoader';
+import { ClassService } from '../ClassService';
 
-/**
- * Inspection chance multiplier by class
- */
-const INSPECT_MULTIPLIER: Record<CharacterClass, number> = {
-  [CharacterClass.THIEF]: 6,
-  [CharacterClass.NINJA]: 4,
-  [CharacterClass.FIGHTER]: 1,
-  [CharacterClass.MAGE]: 1,
-  [CharacterClass.PRIEST]: 1,
-  [CharacterClass.BISHOP]: 1,
-  [CharacterClass.SAMURAI]: 1,
-  [CharacterClass.LORD]: 1
+const DEFAULT_INSPECT_MULTIPLIER = 1;
+const MAX_SUCCESS_CHANCE = 95;
+
+function getInspectMultiplier(character: Character): number {
+  if (!ClassService.isInitialized()) {
+    return DEFAULT_INSPECT_MULTIPLIER;
+  }
+  const classData = ClassService.getClassData(character.class);
+  return classData.trapInspectionMultiplier ?? DEFAULT_INSPECT_MULTIPLIER;
 }
-
-/**
- * Maximum inspection chance (95%)
- */
-const MAX_SUCCESS_CHANCE = 95
 
 /**
  * Critical failure chance during inspection (1-2%)
  */
-const INSPECT_CRITICAL_FAILURE_CHANCE = 2
+const INSPECT_CRITICAL_FAILURE_CHANCE = 2;
 
 /**
  * Get a random trap ID from loaded trap data
@@ -50,26 +39,18 @@ const INSPECT_CRITICAL_FAILURE_CHANCE = 2
  */
 function getRandomTrapId(): TrapId {
   if (!TrapDataLoader.isLoaded()) {
-    throw new Error('Trap data not loaded. Call TrapDataLoader.loadAllTraps() first.')
+    throw new Error('Trap data not loaded. Call TrapDataLoader.loadAllTraps() first.');
   }
 
-  const allTraps = TrapDataLoader.getAllTrapEffects()
-  const trapIds = Array.from(allTraps.keys())
-  return RandomService.pickRandom(trapIds)
+  const allTraps = TrapDataLoader.getAllTrapEffects();
+  const trapIds = Array.from(allTraps.keys());
+  return RandomService.pickRandom(trapIds);
 }
 
-/**
- * Calculate trap inspection success chance
- *
- * Formula: AGI × class multiplier (capped at 95%)
- * - Thieves: AGI × 6 (e.g., AGI 16 = 96% → capped to 95%)
- * - Ninjas: AGI × 4 (e.g., AGI 18 = 72%)
- * - Others: AGI × 1 (e.g., AGI 12 = 12%)
- */
 export function calculateInspectChance(character: Character): number {
-  const multiplier = INSPECT_MULTIPLIER[character.class]
-  const chance = character.agility * multiplier
-  return Math.min(chance, MAX_SUCCESS_CHANCE)
+  const multiplier = getInspectMultiplier(character);
+  const chance = character.agility * multiplier;
+  return Math.min(chance, MAX_SUCCESS_CHANCE);
 }
 
 /**
@@ -86,46 +67,54 @@ export function calculateInspectChance(character: Character): number {
  * @returns InspectionResult with success status, identified trap, and trigger status
  */
 export function attemptInspection(character: Character, chest: Chest): TrapInspectionResult {
-  console.log(`[CHEST] Inspect attempt: ${character.name} (${character.class} L${character.level})`)
+  console.log(
+    `[CHEST] Inspect attempt: ${character.name} (${character.class} L${character.level})`,
+  );
 
   // Check for critical failure first (1-2% chance to trigger trap during inspection)
-  const critRoll = RandomService.nextRandom() * 100
-  const critFailed = critRoll < INSPECT_CRITICAL_FAILURE_CHANCE
-  console.log(`[CHEST]   Critical failure check: Roll ${critRoll.toFixed(1)}% vs ${INSPECT_CRITICAL_FAILURE_CHANCE}% threshold → ${critFailed ? 'CRITICAL FAIL!' : 'Pass'}`)
+  const critRoll = RandomService.nextRandom() * 100;
+  const critFailed = critRoll < INSPECT_CRITICAL_FAILURE_CHANCE;
+  console.log(
+    `[CHEST]   Critical failure check: Roll ${critRoll.toFixed(1)}% vs ${INSPECT_CRITICAL_FAILURE_CHANCE}% threshold → ${critFailed ? 'CRITICAL FAIL!' : 'Pass'}`,
+  );
 
   if (critFailed) {
     if (chest.trapped) {
-      console.log(`[CHEST]   Result: Trap triggered due to critical failure!`)
+      console.log(`[CHEST]   Result: Trap triggered due to critical failure!`);
     } else {
-      console.log(`[CHEST]   Result: Critical fail but chest not trapped - no effect`)
+      console.log(`[CHEST]   Result: Critical fail but chest not trapped - no effect`);
     }
     return {
       success: false,
       trapIdentified: null,
-      triggered: chest.trapped  // Only triggers if actually trapped
-    }
+      triggered: chest.trapped, // Only triggers if actually trapped
+    };
   }
 
   // Roll for inspection success
-  const inspectChance = calculateInspectChance(character)
-  const multiplier = INSPECT_MULTIPLIER[character.class]
-  const inspectRoll = RandomService.nextRandom() * 100
-  const success = inspectRoll < inspectChance
-  console.log(`[CHEST]   Inspect chance: AGI ${character.agility} × ${multiplier} = ${inspectChance}%`)
-  console.log(`[CHEST]   Inspect roll: ${inspectRoll.toFixed(1)}% vs ${inspectChance}% → ${success ? 'Success' : 'Fail'}`)
+  const inspectChance = calculateInspectChance(character);
+  const multiplier = getInspectMultiplier(character);
+  const inspectRoll = RandomService.nextRandom() * 100;
+  const success = inspectRoll < inspectChance;
+  console.log(
+    `[CHEST]   Inspect chance: AGI ${character.agility} × ${multiplier} = ${inspectChance}%`,
+  );
+  console.log(
+    `[CHEST]   Inspect roll: ${inspectRoll.toFixed(1)}% vs ${inspectChance}% → ${success ? 'Success' : 'Fail'}`,
+  );
 
   // SUCCESS - return real information
   if (success) {
     if (chest.trapped) {
-      console.log(`[CHEST]   Result: Trap identified - ${chest.trapId}`)
+      console.log(`[CHEST]   Result: Trap identified - ${chest.trapId}`);
     } else {
-      console.log(`[CHEST]   Result: No trap found (chest is safe)`)
+      console.log(`[CHEST]   Result: No trap found (chest is safe)`);
     }
     return {
       success: true,
       trapIdentified: chest.trapped ? chest.trapId : null,
-      triggered: false
-    }
+      triggered: false,
+    };
   }
 
   // FAILED INSPECTION - Two-stage resolution per original source code
@@ -133,29 +122,33 @@ export function attemptInspection(character: Character, chest: Chest): TrapInspe
   // Stage 1: AGI-based trigger check (only if trapped)
   // Original formula: If (RANDOM MOD 20) > AGI, trap triggers
   if (chest.trapped) {
-    const triggerRoll = RandomService.random(0, 19)
-    const triggered = triggerRoll > character.agility
-    console.log(`[CHEST]   AGI save (failed inspect): Roll ${triggerRoll} vs AGI ${character.agility} → ${triggered ? 'TRIGGERED!' : 'Saved'}`)
+    const triggerRoll = RandomService.random(0, 19);
+    const triggered = triggerRoll > character.agility;
+    console.log(
+      `[CHEST]   AGI save (failed inspect): Roll ${triggerRoll} vs AGI ${character.agility} → ${triggered ? 'TRIGGERED!' : 'Saved'}`,
+    );
 
     if (triggered) {
       return {
         success: false,
         trapIdentified: null,
-        triggered: true
-      }
+        triggered: true,
+      };
     }
   }
 
   // Stage 2: Return RANDOM trap name (misleading!)
   // This is a core deception mechanic - player cannot tell if result is real
-  const randomTrapId = getRandomTrapId()
-  console.log(`[CHEST]   Result: Failed inspection - showing random trap "${randomTrapId}" (may be misleading!)`)
+  const randomTrapId = getRandomTrapId();
+  console.log(
+    `[CHEST]   Result: Failed inspection - showing random trap "${randomTrapId}" (may be misleading!)`,
+  );
 
   return {
     success: false,
     trapIdentified: randomTrapId,
-    triggered: false
-  }
+    triggered: false,
+  };
 }
 
 /**
@@ -169,32 +162,32 @@ export function attemptInspection(character: Character, chest: Chest): TrapInspe
 export function getRecommendedHandler(
   partyMembers: Character[],
   mazeLevel: number,
-  calculateDisarmChance: (char: Character, level: number) => number
+  calculateDisarmChance: (char: Character, level: number) => number,
 ): { character: Character; inspectChance: number; disarmChance: number } | null {
-  let best: { character: Character; inspectChance: number; disarmChance: number } | null = null
+  let best: { character: Character; inspectChance: number; disarmChance: number } | null = null;
 
   for (const member of partyMembers) {
     // Skip characters who cannot act (dead, paralyzed, etc.)
     if (!canAct(member)) {
-      continue
+      continue;
     }
 
-    const inspectChance = calculateInspectChance(member)
-    const disarmChance = calculateDisarmChance(member, mazeLevel)
+    const inspectChance = calculateInspectChance(member);
+    const disarmChance = calculateDisarmChance(member, mazeLevel);
 
     // Score based on both abilities (weighted towards inspect since it comes first)
-    const score = inspectChance * 0.6 + disarmChance * 0.4
+    const score = inspectChance * 0.6 + disarmChance * 0.4;
 
-    if (!best || score > (best.inspectChance * 0.6 + best.disarmChance * 0.4)) {
-      best = { character: member, inspectChance, disarmChance }
+    if (!best || score > best.inspectChance * 0.6 + best.disarmChance * 0.4) {
+      best = { character: member, inspectChance, disarmChance };
     }
   }
 
-  return best
+  return best;
 }
 
 export const TrapInspectionService = {
   calculateInspectChance,
   attemptInspection,
   getRecommendedHandler,
-}
+};

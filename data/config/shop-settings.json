@@ -1,0 +1,9 @@
+{
+  "sellPriceMultiplier": 0.5,
+  "identifyPrice": 100,
+  "uncurse": {
+    "specialItemPriceThreshold": 100000,
+    "specialItemUncurseCost": 150000,
+    "normalItemMultiplier": 0.5
+  }
+}

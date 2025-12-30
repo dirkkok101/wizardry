@@ -1,0 +1,34 @@
+{
+  "temple": {
+    "serviceCosts": {
+      "CURE_POISON": 10,
+      "CURE_PARALYSIS": 100,
+      "CURE_STONED": 200,
+      "RESURRECT": 200,
+      "RESTORE": 500
+    },
+    "serviceAgeIncrease": {
+      "CURE_POISON": 0,
+      "CURE_PARALYSIS": 0,
+      "CURE_STONED": 0,
+      "RESURRECT": 52,
+      "RESTORE": 52
+    }
+  },
+  "inn": {
+    "roomCosts": {
+      "STABLES": 0,
+      "BARRACKS": 10,
+      "DOUBLE": 50,
+      "PRIVATE": 200,
+      "ROYAL_SUITE": 500
+    },
+    "roomHealRates": {
+      "STABLES": 0,
+      "BARRACKS": 1,
+      "DOUBLE": 3,
+      "PRIVATE": 7,
+      "ROYAL_SUITE": 10
+    }
+  }
+}

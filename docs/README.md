@@ -1,71 +1,114 @@
 # Wizardry: Proving Grounds Remake - Documentation
 
-**Welcome to the comprehensive documentation for the Wizardry 1 remake.**
+**Comprehensive documentation for the Wizardry 1 faithful remake.**
 
-## Quick Links
+> **Last Consolidated**: 2025-12-30
+> **Active Docs**: 23 files (~170 archived)
+> **Status**: Clean architecture with authoritative sources
 
-- [Architecture Overview](./architecture.md) - Technical architecture & layers
-- [Getting Started](./getting-started.md) - Quick start guide
-- [User Interface Documentation](./ui/README.md) - Complete UI flow documentation (14 scenes)
-- [Game Design](./game-design/README.md) - Game mechanics & systems
-- [Services](./services/README.md) - Service layer documentation (40+ services)
-- [Commands](./commands/README.md) - Command layer documentation (40+ commands)
-- [Systems](./systems/README.md) - System deep-dives (9 major systems)
-- [Diagrams](./diagrams/README.md) - Visual architecture diagrams
-- [Testing Strategy](./testing-strategy.md) - Testing approach & patterns
+---
 
 ## Documentation Structure
 
 ```
 docs/
-├── README.md (you are here)
-├── architecture.md
-├── ui/ (14 UI scenes + 4 guides)
-├── diagrams/ (8 Mermaid diagrams)
-├── services/ (40+ service docs)
-├── commands/ (40+ command docs)
-├── systems/ (9 system deep-dives)
-├── game-design/ (12 game design docs)
-├── data-format/ (5 JSON specs)
-└── research/ (source validation & reference)
+├── reference/           # SOURCE OF TRUTH - Game mechanics (7 files)
+│   ├── characters.md    # Races, classes, leveling, creation
+│   ├── combat-formulas.md # All combat calculations
+│   ├── spells.md        # 50 spells with effects
+│   ├── monsters.md      # 96 monsters
+│   ├── items.md         # Equipment system
+│   ├── traps.md         # Trap mechanics
+│   └── treasure.md      # Loot distribution
+│
+├── architecture/        # Code organization (2 files)
+│   ├── overview.md      # 4-layer clean architecture
+│   └── webgl-renderer.md # 3D rendering system
+│
+├── systems/             # System deep-dives (10 files)
+│   ├── combat-system.md
+│   ├── spell-system.md
+│   ├── party-system.md
+│   ├── character-creation-system.md
+│   ├── dungeon-system.md
+│   ├── dungeon-navigation.md
+│   ├── town-system.md
+│   ├── first-person-rendering.md
+│   └── event-sourcing.md
+│
+├── guides/              # How-to guides (3 files)
+│   ├── getting-started.md
+│   ├── contributing.md
+│   └── testing-strategy.md
+│
+├── decisions/           # Architecture Decision Records (ADRs)
+│   └── (future ADRs)
+│
+└── _archive/            # Historical docs (preserved for reference)
 ```
 
-## User Interface Documentation
+---
 
-Complete UI flow documentation covering all 14 scenes with navigation maps, state management, and input handling:
+## Quick Start
 
-- **Scene Coverage**: 14/14 scenes (100% complete)
-- **Documentation Lines**: 13,250+ lines
-- **Navigation Map**: Full Mermaid state diagram showing all scene transitions
-- **UI Patterns**: 7 reusable patterns documented with examples
-- **Input Reference**: Complete keyboard shortcuts and input handling guide
-- **State Management**: Application state structure and transition rules
+| I want to...               | Read this                                                      |
+| -------------------------- | -------------------------------------------------------------- |
+| Understand combat formulas | [reference/combat-formulas.md](./reference/combat-formulas.md) |
+| Learn the architecture     | [architecture/overview.md](./architecture/overview.md)         |
+| Set up development         | [guides/getting-started.md](./guides/getting-started.md)       |
+| Run tests                  | [guides/testing-strategy.md](./guides/testing-strategy.md)     |
+| Understand a system        | [systems/README.md](./systems/README.md)                       |
 
-**Key Features:**
-- ASCII mockups for every scene
-- TypeScript validation logic for all actions
-- Test scenarios for happy path and edge cases
-- Hub-and-spoke navigation design (Castle Menu as central hub)
-- Safe zone vs dungeon zone state management
+---
 
-See [User Interface Documentation](./ui/README.md) for complete UI specifications.
+## Source of Truth Hierarchy
 
-## Research & Validation
+1. **Code** (`src/`) - Ultimate authority for implementation behavior
+2. **Data** (`data/`) - JSON files for game data (monsters, spells, items)
+3. **Reference** (`docs/reference/`) - Authoritative game mechanics documentation
+4. **Systems** (`docs/systems/`) - How systems work together
+5. **Architecture** (`docs/architecture/`) - Code organization decisions
 
-All game mechanics validated against original Wizardry 1 sources:
-- **Validation Coverage**: 68% (71/105 items validated)
-- **Accuracy**: 100% (0 errors remaining)
-- **Reference Docs**: 7 comprehensive documents (3,682 lines)
+**When in conflict, higher-numbered sources override lower.**
 
-See [Research Documentation](./research/week1-research-summary.md) for full validation report.
+---
+
+## Reference Documentation
+
+All reference docs are validated against Thomas William Ewers' reverse-engineered Apple II source code:
+
+| Document                                             | Content                         | Lines |
+| ---------------------------------------------------- | ------------------------------- | ----- |
+| [characters.md](./reference/characters.md)           | Races, classes, stats, leveling | ~900  |
+| [combat-formulas.md](./reference/combat-formulas.md) | All combat calculations         | ~1700 |
+| [spells.md](./reference/spells.md)                   | 50 spells with full mechanics   | ~600  |
+| [monsters.md](./reference/monsters.md)               | 96 monsters with stats          | ~900  |
+| [items.md](./reference/items.md)                     | Equipment and shop system       | ~1200 |
+| [traps.md](./reference/traps.md)                     | Trap mechanics and disarming    | ~700  |
+| [treasure.md](./reference/treasure.md)               | Loot tables and distribution    | ~300  |
+
+---
+
+## Archived Documentation
+
+Historical docs preserved in `_archive/` for reference:
+
+- `services/` - Outdated service docs (architecture changed)
+- `ui-scenes/` - Outdated UI mockups (redesigned)
+- `game-design/` - Redundant with reference docs
+- `commands/` - Outdated command patterns
+- `research/` - Original research (promoted to reference/)
+- `plans/` - Implementation plans (historical)
+
+---
 
 ## Implementation Status
 
-- ✅ **Week 1**: Research & Validation (COMPLETE)
-- 🔄 **Weeks 2-11**: Documentation (IN PROGRESS)
-- ⬜ **Week 12**: Review & Quality Assurance
-- ⬜ **Weeks 13+**: Implementation
+| Phase                        | Status         |
+| ---------------------------- | -------------- |
+| Phase 1-4: Angular migration | ✅ Complete    |
+| Phase 5: Town services       | ✅ Complete    |
+| Phase 6: Town completion     | ✅ Complete    |
+| Phase 7: Combat & encounters | 🔄 In Progress |
 
-## Contributing
-
-See [Contributing Guide](./contributing.md) for documentation standards and patterns.
+See [CLAUDE.md](../CLAUDE.md) for full project context.

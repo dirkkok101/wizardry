@@ -4,6 +4,7 @@
   "goldDice": { "count": 2, "sides": 5, "multiplier": 10 },
   "traps": ["none", "poison_needle", "type3"],
   "tiers": [
-    { "chance": 10, "minItemId": 3, "maxItemId": 17 }
+    { "chance": 28, "minItemId": 1, "maxItemId": 16 },
+    { "chance": 14, "minItemId": 1, "maxItemId": 16 }
   ]
 }

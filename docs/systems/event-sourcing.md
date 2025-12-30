@@ -7,6 +7,7 @@
 Event sourcing is the **architectural backbone** of the Wizardry remake, enabling save/load, replay, and debugging.
 
 **Key Concepts**:
+
 - Every action creates an event
 - Game state derived from event replay
 - Save game = sequence of events
@@ -27,6 +28,7 @@ Event sourcing is the **architectural backbone** of the Wizardry remake, enablin
 ### Commands Involved
 
 All commands create events:
+
 - **MoveForwardCommand** → MoveEvent
 - **AttackCommand** → AttackEvent
 - **CastSpellCommand** → SpellCastEvent
@@ -37,12 +39,12 @@ All commands create events:
 
 ```typescript
 interface Event {
-  id: string                    // Unique event ID (UUID)
-  type: EventType               // Event type
-  timestamp: number             // Unix timestamp
-  gameTime: number              // In-game time (turns)
-  data: EventData               // Event-specific data
-  metadata: EventMetadata       // Additional context
+  id: string; // Unique event ID (UUID)
+  type: EventType; // Event type
+  timestamp: number; // Unix timestamp
+  gameTime: number; // In-game time (turns)
+  data: EventData; // Event-specific data
+  metadata: EventMetadata; // Additional context
 }
 
 type EventType =
@@ -63,23 +65,23 @@ type EventType =
   | 'shop_purchase'
   | 'shop_sale'
   | 'game_save'
-  | 'game_load'
+  | 'game_load';
 
 interface EventData {
   // Varies by event type
-  [key: string]: any
+  [key: string]: any;
 }
 
 interface EventMetadata {
-  commandId: string             // Command that created event
-  playerId?: string             // Player ID (multiplayer support)
-  version: string               // Event schema version
+  commandId: string; // Command that created event
+  playerId?: string; // Player ID (multiplayer support)
+  version: string; // Event schema version
 }
 
 interface EventLog {
-  events: Event[]               // All events
-  currentIndex: number          // Replay position
-  version: string               // Log format version
+  events: Event[]; // All events
+  currentIndex: number; // Replay position
+  version: string; // Log format version
 }
 ```
 
@@ -88,16 +90,17 @@ interface EventLog {
 ### Command → Event Flow
 
 **Standard Pattern**:
+
 ```typescript
 class MoveForwardCommand {
   execute(state: GameState): GameState {
     // 1. Validate action
     if (!canMoveForward(state.party)) {
-      throw new Error('Cannot move forward')
+      throw new Error('Cannot move forward');
     }
 
     // 2. Calculate new state
-    const newPosition = calculateForwardPosition(state.party)
+    const newPosition = calculateForwardPosition(state.party);
 
     // 3. Create event
     const event: Event = {
@@ -108,22 +111,22 @@ class MoveForwardCommand {
       data: {
         from: state.party.position,
         to: newPosition,
-        facing: state.party.facing
+        facing: state.party.facing,
       },
       metadata: {
         commandId: this.id,
-        version: '1.0'
-      }
-    }
+        version: '1.0',
+      },
+    };
 
     // 4. Apply event to state
-    const newState = applyEvent(state, event)
+    const newState = applyEvent(state, event);
 
     // 5. Append event to log
     return {
       ...newState,
-      eventLog: [...state.eventLog, event]
-    }
+      eventLog: [...state.eventLog, event],
+    };
   }
 }
 ```
@@ -131,6 +134,7 @@ class MoveForwardCommand {
 ### Event Types and Data
 
 **PartyMoveEvent**:
+
 ```typescript
 {
   type: 'party_move',
@@ -143,6 +147,7 @@ class MoveForwardCommand {
 ```
 
 **CombatAttackEvent**:
+
 ```typescript
 {
   type: 'combat_attack',
@@ -157,6 +162,7 @@ class MoveForwardCommand {
 ```
 
 **CharacterCreatedEvent**:
+
 ```typescript
 {
   type: 'character_created',
@@ -168,6 +174,7 @@ class MoveForwardCommand {
 ```
 
 **InnRestEvent**:
+
 ```typescript
 {
   type: 'inn_rest',
@@ -185,36 +192,38 @@ class MoveForwardCommand {
 ### State Reconstruction
 
 **Replay Process**:
+
 ```typescript
 function replayEvents(events: Event[]): GameState {
-  let state = createInitialGameState()
+  let state = createInitialGameState();
 
   for (const event of events) {
-    state = applyEvent(state, event)
+    state = applyEvent(state, event);
   }
 
-  return state
+  return state;
 }
 ```
 
 **Apply Event**:
+
 ```typescript
 function applyEvent(state: GameState, event: Event): GameState {
   switch (event.type) {
     case 'party_move':
-      return applyPartyMove(state, event.data)
+      return applyPartyMove(state, event.data);
 
     case 'combat_attack':
-      return applyCombatAttack(state, event.data)
+      return applyCombatAttack(state, event.data);
 
     case 'character_created':
-      return applyCharacterCreated(state, event.data)
+      return applyCharacterCreated(state, event.data);
 
     // ... handle all event types
 
     default:
-      console.warn(`Unknown event type: ${event.type}`)
-      return state
+      console.warn(`Unknown event type: ${event.type}`);
+      return state;
   }
 }
 ```
@@ -222,32 +231,31 @@ function applyEvent(state: GameState, event: Event): GameState {
 ### Partial Replay
 
 **Replay to Specific Point**:
+
 ```typescript
 function replayToIndex(events: Event[], targetIndex: number): GameState {
-  const relevantEvents = events.slice(0, targetIndex + 1)
-  return replayEvents(relevantEvents)
+  const relevantEvents = events.slice(0, targetIndex + 1);
+  return replayEvents(relevantEvents);
 }
 ```
 
 **Replay from Checkpoint**:
+
 ```typescript
 interface Checkpoint {
-  index: number
-  state: GameState
+  index: number;
+  state: GameState;
 }
 
-function replayFromCheckpoint(
-  checkpoint: Checkpoint,
-  events: Event[]
-): GameState {
-  let state = checkpoint.state
-  const remainingEvents = events.slice(checkpoint.index + 1)
+function replayFromCheckpoint(checkpoint: Checkpoint, events: Event[]): GameState {
+  let state = checkpoint.state;
+  const remainingEvents = events.slice(checkpoint.index + 1);
 
   for (const event of remainingEvents) {
-    state = applyEvent(state, event)
+    state = applyEvent(state, event);
   }
 
-  return state
+  return state;
 }
 ```
 
@@ -256,26 +264,28 @@ function replayFromCheckpoint(
 ### Save Format
 
 **IndexedDB Structure**:
+
 ```typescript
 interface SaveGame {
-  id: string                    // Save game ID
-  name: string                  // User-provided name
-  timestamp: number             // Save time
-  eventLog: EventLog            // All events
-  metadata: SaveMetadata        // Additional info
+  id: string; // Save game ID
+  name: string; // User-provided name
+  timestamp: number; // Save time
+  eventLog: EventLog; // All events
+  metadata: SaveMetadata; // Additional info
 }
 
 interface SaveMetadata {
-  version: string               // Game version
-  playTime: number              // Total play time (seconds)
-  turnCount: number             // Total turns
-  partyLevel: number            // Average party level
-  dungeonLevel: number          // Deepest level reached
-  charactersCreated: number     // Total characters created
+  version: string; // Game version
+  playTime: number; // Total play time (seconds)
+  turnCount: number; // Total turns
+  partyLevel: number; // Average party level
+  dungeonLevel: number; // Deepest level reached
+  charactersCreated: number; // Total characters created
 }
 ```
 
 **IndexedDB Schema**:
+
 ```typescript
 const dbSchema = {
   name: 'WizardryDB',
@@ -286,30 +296,28 @@ const dbSchema = {
       keyPath: 'id',
       indexes: [
         { name: 'timestamp', keyPath: 'timestamp' },
-        { name: 'name', keyPath: 'name' }
-      ]
+        { name: 'name', keyPath: 'name' },
+      ],
     },
     {
       name: 'events',
       keyPath: 'id',
       indexes: [
         { name: 'saveId', keyPath: 'saveId' },
-        { name: 'timestamp', keyPath: 'timestamp' }
-      ]
-    }
-  ]
-}
+        { name: 'timestamp', keyPath: 'timestamp' },
+      ],
+    },
+  ],
+};
 ```
 
 ### Save Process
 
 **Save Game**:
+
 ```typescript
-async function saveGame(
-  state: GameState,
-  saveName: string
-): Promise<string> {
-  const saveId = generateUUID()
+async function saveGame(state: GameState, saveName: string): Promise<string> {
+  const saveId = generateUUID();
 
   const saveGame: SaveGame = {
     id: saveId,
@@ -322,31 +330,32 @@ async function saveGame(
       turnCount: state.turnCount,
       partyLevel: calculateAverageLevel(state.party),
       dungeonLevel: state.party.position.level,
-      charactersCreated: state.roster.size
-    }
-  }
+      charactersCreated: state.roster.size,
+    },
+  };
 
-  await IndexedDBService.put('saves', saveGame)
+  await IndexedDBService.put('saves', saveGame);
 
-  return saveId
+  return saveId;
 }
 ```
 
 ### Load Process
 
 **Load Game**:
+
 ```typescript
 async function loadGame(saveId: string): Promise<GameState> {
-  const saveGame = await IndexedDBService.get('saves', saveId)
+  const saveGame = await IndexedDBService.get('saves', saveId);
 
   if (!saveGame) {
-    throw new Error(`Save game ${saveId} not found`)
+    throw new Error(`Save game ${saveId} not found`);
   }
 
   // Replay all events to reconstruct state
-  const state = replayEvents(saveGame.eventLog.events)
+  const state = replayEvents(saveGame.eventLog.events);
 
-  return state
+  return state;
 }
 ```
 
@@ -355,53 +364,56 @@ async function loadGame(saveId: string): Promise<GameState> {
 ### Playback Controls
 
 **Replay Interface**:
+
 ```typescript
 interface ReplayControls {
-  play: () => void              // Auto-advance events
-  pause: () => void             // Pause playback
-  stepForward: () => void       // Advance 1 event
-  stepBackward: () => void      // Rewind 1 event
-  jumpToEvent: (index: number) => void
-  setSpeed: (speed: number) => void  // 0.5×, 1×, 2×, 4×
+  play: () => void; // Auto-advance events
+  pause: () => void; // Pause playback
+  stepForward: () => void; // Advance 1 event
+  stepBackward: () => void; // Rewind 1 event
+  jumpToEvent: (index: number) => void;
+  setSpeed: (speed: number) => void; // 0.5×, 1×, 2×, 4×
 }
 ```
 
 **Playback State**:
+
 ```typescript
 interface ReplayState {
-  events: Event[]
-  currentIndex: number
-  playing: boolean
-  speed: number                 // Playback speed multiplier
-  gameState: GameState          // Current reconstructed state
+  events: Event[];
+  currentIndex: number;
+  playing: boolean;
+  speed: number; // Playback speed multiplier
+  gameState: GameState; // Current reconstructed state
 }
 ```
 
 ### Replay Rendering
 
 **Replay Loop**:
+
 ```typescript
 function startReplay(events: Event[]): void {
-  let currentIndex = 0
-  let state = createInitialGameState()
+  let currentIndex = 0;
+  let state = createInitialGameState();
 
   const interval = setInterval(() => {
     if (currentIndex >= events.length) {
-      clearInterval(interval)
-      return
+      clearInterval(interval);
+      return;
     }
 
-    const event = events[currentIndex]
-    state = applyEvent(state, event)
+    const event = events[currentIndex];
+    state = applyEvent(state, event);
 
     // Render current state
-    render(state)
+    render(state);
 
     // Show event details
-    displayEventInfo(event)
+    displayEventInfo(event);
 
-    currentIndex++
-  }, 1000 / replaySpeed)  // Adjust speed
+    currentIndex++;
+  }, 1000 / replaySpeed); // Adjust speed
 }
 ```
 
@@ -410,53 +422,56 @@ function startReplay(events: Event[]): void {
 ### Undo Mechanism
 
 **Undo Last Action**:
+
 ```typescript
 function undo(state: GameState): GameState {
   if (state.eventLog.length === 0) {
-    return state
+    return state;
   }
 
   // Remove last event
-  const events = state.eventLog.slice(0, -1)
+  const events = state.eventLog.slice(0, -1);
 
   // Replay from beginning (without last event)
-  return replayEvents(events)
+  return replayEvents(events);
 }
 ```
 
 **Optimized Undo** (with checkpoints):
+
 ```typescript
 function undoOptimized(state: GameState, checkpoints: Checkpoint[]): GameState {
-  const targetIndex = state.eventLog.length - 2
+  const targetIndex = state.eventLog.length - 2;
 
   // Find nearest checkpoint before target
-  const checkpoint = findNearestCheckpoint(checkpoints, targetIndex)
+  const checkpoint = findNearestCheckpoint(checkpoints, targetIndex);
 
   // Replay from checkpoint to target
-  return replayFromCheckpoint(checkpoint, state.eventLog.slice(0, targetIndex + 1))
+  return replayFromCheckpoint(checkpoint, state.eventLog.slice(0, targetIndex + 1));
 }
 ```
 
 ### Redo Mechanism
 
 **Redo Last Undone Action**:
+
 ```typescript
 interface GameStateWithHistory {
-  state: GameState
-  undoneEvents: Event[]         // Stack of undone events
+  state: GameState;
+  undoneEvents: Event[]; // Stack of undone events
 }
 
 function redo(stateWithHistory: GameStateWithHistory): GameStateWithHistory {
   if (stateWithHistory.undoneEvents.length === 0) {
-    return stateWithHistory
+    return stateWithHistory;
   }
 
-  const eventToRedo = stateWithHistory.undoneEvents[stateWithHistory.undoneEvents.length - 1]
+  const eventToRedo = stateWithHistory.undoneEvents[stateWithHistory.undoneEvents.length - 1];
 
   return {
     state: applyEvent(stateWithHistory.state, eventToRedo),
-    undoneEvents: stateWithHistory.undoneEvents.slice(0, -1)
-  }
+    undoneEvents: stateWithHistory.undoneEvents.slice(0, -1),
+  };
 }
 ```
 
@@ -465,46 +480,47 @@ function redo(stateWithHistory: GameStateWithHistory): GameStateWithHistory {
 ### Event Inspection
 
 **Event Viewer**:
+
 ```typescript
 function inspectEvent(event: Event): void {
-  console.log('Event Details:')
-  console.log(`  Type: ${event.type}`)
-  console.log(`  Time: ${new Date(event.timestamp).toISOString()}`)
-  console.log(`  Turn: ${event.gameTime}`)
-  console.log(`  Data:`, JSON.stringify(event.data, null, 2))
-  console.log(`  Metadata:`, event.metadata)
+  console.log('Event Details:');
+  console.log(`  Type: ${event.type}`);
+  console.log(`  Time: ${new Date(event.timestamp).toISOString()}`);
+  console.log(`  Turn: ${event.gameTime}`);
+  console.log(`  Data:`, JSON.stringify(event.data, null, 2));
+  console.log(`  Metadata:`, event.metadata);
 }
 ```
 
 **Event Search**:
+
 ```typescript
-function findEvents(
-  events: Event[],
-  filter: (event: Event) => boolean
-): Event[] {
-  return events.filter(filter)
+function findEvents(events: Event[], filter: (event: Event) => boolean): Event[] {
+  return events.filter(filter);
 }
 
 // Examples:
-const combatEvents = findEvents(events, e => e.type.startsWith('combat_'))
-const deathEvents = findEvents(events, e => e.type === 'character_death')
-const criticalHits = findEvents(events, e =>
-  e.type === 'combat_attack' && e.data.critical === true
-)
+const combatEvents = findEvents(events, (e) => e.type.startsWith('combat_'));
+const deathEvents = findEvents(events, (e) => e.type === 'character_death');
+const criticalHits = findEvents(
+  events,
+  (e) => e.type === 'combat_attack' && e.data.critical === true,
+);
 ```
 
 ### State Comparison
 
 **Diff States**:
+
 ```typescript
 function diffStates(before: GameState, after: GameState): StateDiff {
   return {
     partyMoved: before.party.position !== after.party.position,
     hpChanged: getHPChanges(before.party, after.party),
     itemsChanged: getInventoryChanges(before.party, after.party),
-    goldChanged: before.party.gold !== after.party.gold
+    goldChanged: before.party.gold !== after.party.gold,
     // ... etc
-  }
+  };
 }
 ```
 
@@ -513,29 +529,31 @@ function diffStates(before: GameState, after: GameState): StateDiff {
 ### Checkpointing
 
 **Create Checkpoints**:
+
 ```typescript
 function createCheckpoints(events: Event[]): Checkpoint[] {
-  const checkpointInterval = 100  // Every 100 events
+  const checkpointInterval = 100; // Every 100 events
 
-  const checkpoints: Checkpoint[] = []
-  let state = createInitialGameState()
+  const checkpoints: Checkpoint[] = [];
+  let state = createInitialGameState();
 
   for (let i = 0; i < events.length; i++) {
-    state = applyEvent(state, events[i])
+    state = applyEvent(state, events[i]);
 
     if (i % checkpointInterval === 0) {
       checkpoints.push({
         index: i,
-        state: cloneDeep(state)  // Deep copy
-      })
+        state: cloneDeep(state), // Deep copy
+      });
     }
   }
 
-  return checkpoints
+  return checkpoints;
 }
 ```
 
 **Benefits**:
+
 - Faster replay (don't replay from beginning)
 - Efficient undo/redo
 - Quick save/load
@@ -543,6 +561,7 @@ function createCheckpoints(events: Event[]): Checkpoint[] {
 ### Event Compression
 
 **Compress Event Log**:
+
 ```typescript
 function compressEvents(events: Event[]): CompressedEventLog {
   // Remove redundant data
@@ -552,34 +571,27 @@ function compressEvents(events: Event[]): CompressedEventLog {
   return {
     version: '1.0',
     compressed: true,
-    events: compressedEvents
-  }
+    events: compressedEvents,
+  };
 }
 ```
 
 ## Related Documentation
 
-**Services**:
-- [EventService](../services/EventService.md) - Event creation
-- [ReplayService](../services/ReplayService.md) - Event replay
-- [SaveService](../services/SaveService.md) - Save to IndexedDB
-- [LoadService](../services/LoadService.md) - Load from IndexedDB
+**Architecture**:
 
-**Commands**:
-- All commands create events
-- [SaveGameCommand](../commands/SaveGameCommand.md) - Trigger save
-- [LoadGameCommand](../commands/LoadGameCommand.md) - Trigger load
+- [Architecture Overview](../architecture/overview.md) - Clean architecture patterns
 
-**Game Design**:
-- No player-facing game design (implementation detail)
+**Code**:
 
-**Research**:
-- No specific research docs (modern architecture pattern)
+- `src/app/services/EventService.ts` - Event creation
+- `src/app/services/SaveService.ts` - Save to IndexedDB
+- `src/app/types/GameState.ts` - State structure
 
-**Diagrams**:
-- [Architecture Layers](../diagrams/architecture-layers.md) - Event sourcing in data layer
+**Note**: Event sourcing is an implementation detail, not a player-facing feature.
 
 **Implementation Notes**:
+
 - Event sourcing enables powerful features (replay, undo, save/load)
 - Deterministic event application critical for correctness
 - Checkpointing essential for performance

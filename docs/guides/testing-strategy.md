@@ -17,31 +17,32 @@
 **Approach**: Pure function testing, no mocks needed
 
 **Example**:
+
 ```typescript
 describe('PartyService', () => {
   describe('addMember', () => {
     it('adds character to empty party', () => {
-      const party = createEmptyParty()
-      const character = createTestCharacter()
+      const party = createEmptyParty();
+      const character = createTestCharacter();
 
-      const result = PartyService.addMember(party, character)
+      const result = PartyService.addMember(party, character);
 
-      expect(result.members).toHaveLength(1)
-      expect(result.members[0]).toBe(character)
-    })
+      expect(result.members).toHaveLength(1);
+      expect(result.members[0]).toBe(character);
+    });
 
     it('throws when party is full', () => {
-      const party = createFullParty() // 6 members
-      const character = createTestCharacter()
+      const party = createFullParty(); // 6 members
+      const character = createTestCharacter();
 
-      expect(() => PartyService.addMember(party, character))
-        .toThrow(PartyFullError)
-    })
-  })
-})
+      expect(() => PartyService.addMember(party, character)).toThrow(PartyFullError);
+    });
+  });
+});
 ```
 
 **Key Practices**:
+
 - Test happy path first
 - Test error cases second
 - Test edge cases (empty, full, boundary values)
@@ -52,29 +53,30 @@ describe('PartyService', () => {
 **Approach**: Test orchestration logic, mock only external I/O
 
 **Example**:
+
 ```typescript
 describe('RestAtInnCommand', () => {
   it('restores HP and spell points', () => {
     const state = createGameState({
-      party: createPartyWithDamagedMembers()
-    })
-    const command = new RestAtInnCommand()
+      party: createPartyWithDamagedMembers(),
+    });
+    const command = new RestAtInnCommand();
 
-    const result = command.execute(state)
+    const result = command.execute(state);
 
-    expect(result.party.members.every(m => m.hp === m.maxHP)).toBe(true)
-    expect(result.party.members.every(m => hasFullSpellPoints(m))).toBe(true)
-  })
+    expect(result.party.members.every((m) => m.hp === m.maxHP)).toBe(true);
+    expect(result.party.members.every((m) => hasFullSpellPoints(m))).toBe(true);
+  });
 
   it('ages characters', () => {
-    const state = createGameState()
-    const initialAge = state.party.members[0].age
+    const state = createGameState();
+    const initialAge = state.party.members[0].age;
 
-    const result = new RestAtInnCommand().execute(state)
+    const result = new RestAtInnCommand().execute(state);
 
-    expect(result.party.members[0].age).toBeGreaterThan(initialAge)
-  })
-})
+    expect(result.party.members[0].age).toBeGreaterThan(initialAge);
+  });
+});
 ```
 
 ### Integration Testing
@@ -82,24 +84,25 @@ describe('RestAtInnCommand', () => {
 **Approach**: Test multiple layers together
 
 **Example**:
+
 ```typescript
 describe('Combat Integration', () => {
   it('resolves complete combat round', () => {
-    const state = createCombatState()
+    const state = createCombatState();
 
     // Input phase
-    const withInput = new AttackCommand(0, 0).execute(state) // char 0 attacks group 0
+    const withInput = new AttackCommand(0, 0).execute(state); // char 0 attacks group 0
 
     // Initiative phase (automatic)
-    const initiative = CombatService.calculateInitiative(withInput)
+    const initiative = CombatService.calculateInitiative(withInput);
 
     // Resolution phase
-    const result = CombatService.resolveRound(initiative)
+    const result = CombatService.resolveRound(initiative);
 
-    expect(result.combatLog).toContainEntry('attack')
-    expect(result.enemies[0].hp).toBeLessThan(initialHP)
-  })
-})
+    expect(result.combatLog).toContainEntry('attack');
+    expect(result.enemies[0].hp).toBeLessThan(initialHP);
+  });
+});
 ```
 
 ## Test Organization
@@ -122,6 +125,76 @@ tests/
     └── test-assertions.ts # custom matchers
 ```
 
+## Loading Game Data in Tests
+
+**IMPORTANT**: Services that depend on JSON data files require initialization before testing.
+
+### Data-Driven Services
+
+Some services load their configuration from `data/` JSON files rather than using hardcoded values. These services must be initialized before tests run:
+
+| Service               | Data Source                                            | Test Helper                      |
+| --------------------- | ------------------------------------------------------ | -------------------------------- |
+| `StatModifierService` | `data/config/stat-modifiers.json`                      | `loadStatModifiersForTests()`    |
+| `TownConfigLoader`    | `data/config/town-services.json`, `shop-settings.json` | `loadTownServicesDataForTests()` |
+| `ClassService`        | `data/classes/*.json`                                  | `loadClassDataForTests()`        |
+| `RaceService`         | `data/races/*.json`                                    | `loadRaceDataForTests()`         |
+| `MonsterDataLoader`   | `data/monsters/*.json`                                 | `loadMonsterDataForTests()`      |
+| `SpellDataLoader`     | `data/spells/*.json`                                   | `loadSpellDataForTests()`        |
+| `ItemDataLoader`      | `data/items/*.json`                                    | `loadItemDataForTests()`         |
+
+### Test Setup Pattern
+
+```typescript
+import { loadTownServicesDataForTests, loadClassDataForTests } from '@testing/test-data-loader';
+
+describe('MyService', () => {
+  beforeAll(async () => {
+    // Load required game data before any tests run
+    await loadTownServicesDataForTests();
+    await loadClassDataForTests();
+  });
+
+  it('uses data from JSON files', () => {
+    // Service can now access loaded data
+    const config = TownConfigLoader.getTempleConfig();
+    expect(config).toBeDefined();
+  });
+});
+```
+
+### Why Data Loading Matters
+
+The project follows a **data-driven architecture** where game mechanics come from JSON files, not hardcoded values:
+
+1. **No Fallbacks**: Services throw errors if accessed before initialization
+2. **Single Source of Truth**: JSON files are authoritative for game data
+3. **Testability**: Loading data in `beforeAll` ensures deterministic tests
+
+### Common Errors
+
+If you see errors like:
+
+- `"TownConfigLoader not initialized. Call loadAll() first."`
+- `"StatModifierService not initialized"`
+- `"Class data not loaded"`
+
+**Solution**: Add the appropriate `load*ForTests()` call to your `beforeAll()` block.
+
+### Cache Management
+
+Test data loaders cache their data. Use `clearGameDataCaches()` in `afterAll()` if you need to reset state between test files:
+
+```typescript
+import { clearGameDataCaches } from '@testing/test-data-loader';
+
+afterAll(() => {
+  clearGameDataCaches();
+});
+```
+
+---
+
 ## Test Data Factories
 
 **Create factory functions for common test data**:
@@ -139,8 +212,8 @@ export function createTestCharacter(overrides?: Partial<Character>): Character {
     hp: 20,
     maxHP: 20,
     spellPoints: new Map(),
-    ...overrides
-  }
+    ...overrides,
+  };
 }
 
 export function createEmptyParty(): Party {
@@ -149,44 +222,50 @@ export function createEmptyParty(): Party {
     formation: { frontRow: [], backRow: [] },
     position: { x: 0, y: 0, level: 1 },
     facing: 'north',
-    gold: 0
-  }
+    gold: 0,
+  };
 }
 
 export function createFullParty(): Party {
   const members = Array.from({ length: 6 }, (_, i) =>
-    createTestCharacter({ id: `char-${i}`, name: `Member ${i}` })
-  )
+    createTestCharacter({ id: `char-${i}`, name: `Member ${i}` }),
+  );
   return {
     members,
     formation: {
       frontRow: members.slice(0, 3),
-      backRow: members.slice(3, 6)
+      backRow: members.slice(3, 6),
     },
     position: { x: 0, y: 0, level: 1 },
     facing: 'north',
-    gold: 100
-  }
+    gold: 100,
+  };
 }
 
 export function createTestMage(overrides?: Partial<Character>): Character {
   return createTestCharacter({
     class: 'Mage',
     stats: { str: 8, int: 15, pie: 10, vit: 8, agi: 10, luc: 10 },
-    mageSpellPoints: new Map([[1, 3], [2, 2]]),
+    mageSpellPoints: new Map([
+      [1, 3],
+      [2, 2],
+    ]),
     spellBook: new Set(['dumapic', 'halito', 'katino']),
-    ...overrides
-  })
+    ...overrides,
+  });
 }
 
 export function createTestPriest(overrides?: Partial<Character>): Character {
   return createTestCharacter({
     class: 'Priest',
     stats: { str: 10, int: 10, pie: 15, vit: 10, agi: 8, luc: 10 },
-    priestSpellPoints: new Map([[1, 3], [2, 2]]),
+    priestSpellPoints: new Map([
+      [1, 3],
+      [2, 2],
+    ]),
     spellBook: new Set(['dios', 'badios', 'milwa']),
-    ...overrides
-  })
+    ...overrides,
+  });
 }
 
 export function createGameState(overrides?: Partial<GameState>): GameState {
@@ -198,16 +277,13 @@ export function createGameState(overrides?: Partial<GameState>): GameState {
     position: { x: 0, y: 0, level: 1 },
     facing: 'north',
     eventLog: [],
-    ...overrides
-  }
+    ...overrides,
+  };
 }
 
 export function createCombatState(): GameState {
-  const party = createFullParty()
-  const enemies = [
-    createTestMonsterGroup('orcs', 3),
-    createTestMonsterGroup('kobolds', 5)
-  ]
+  const party = createFullParty();
+  const enemies = [createTestMonsterGroup('orcs', 3), createTestMonsterGroup('kobolds', 5)];
 
   return createGameState({
     mode: 'combat',
@@ -217,9 +293,9 @@ export function createCombatState(): GameState {
       enemies,
       round: 1,
       timeline: [],
-      combatLog: []
-    }
-  })
+      combatLog: [],
+    },
+  });
 }
 
 export function createTestMonsterGroup(type: string, count: number): MonsterGroup {
@@ -228,21 +304,21 @@ export function createTestMonsterGroup(type: string, count: number): MonsterGrou
     monsterType: type,
     count,
     hp: Array.from({ length: count }, () => 8),
-    status: Array.from({ length: count }, () => [])
-  }
+    status: Array.from({ length: count }, () => []),
+  };
 }
 
 export function createPartyWithDamagedMembers(): Party {
-  const party = createFullParty()
-  party.members.forEach(member => {
-    member.hp = Math.floor(member.maxHP / 2)
+  const party = createFullParty();
+  party.members.forEach((member) => {
+    member.hp = Math.floor(member.maxHP / 2);
     if (member.mageSpellPoints) {
       member.mageSpellPoints.forEach((_, level) => {
-        member.mageSpellPoints!.set(level, 0)
-      })
+        member.mageSpellPoints!.set(level, 0);
+      });
     }
-  })
-  return party
+  });
+  return party;
 }
 ```
 
@@ -251,6 +327,7 @@ export function createPartyWithDamagedMembers(): Party {
 **Minimum Coverage**: 80% for all services and commands
 
 **Critical Paths**: 100% coverage
+
 - Combat resolution
 - Spell casting
 - Character death/resurrection
@@ -307,12 +384,14 @@ pkill -f "npm test" && npm test -- --run
 ```
 
 **When to clean up**:
+
 - Before running the full test suite
 - When tests feel slow or unresponsive
 - After interrupting test runs with Ctrl+C
 - When you see many node processes in Activity Monitor/top
 
 **Prevention**:
+
 - Use `npm test -- --run` for single test runs (exits automatically)
 - Avoid running multiple test sessions in parallel
 - Kill watch mode with `q` key instead of Ctrl+C when possible
@@ -327,12 +406,12 @@ Scene transitions have a default 300ms fade time that slows down tests. **Always
 
 ```typescript
 // ❌ Bad: Uses default 300ms fadeTime
-await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU)
+await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU);
 
 // ✅ Good: Instant transition (no delay)
 await SceneNavigationService.transitionTo(SceneType.CASTLE_MENU, {
-  direction: 'instant'
-})
+  direction: 'instant',
+});
 ```
 
 **Impact**: Each transition saves 300ms. With 20 transitions in tests, saves 6 seconds!
@@ -343,15 +422,15 @@ Never use `setTimeout()` to wait for async operations. It makes tests slow and f
 
 ```typescript
 // ❌ Bad: Artificial delay
-await new Promise(resolve => setTimeout(resolve, 50))
-await expect(something).toBeTruthy()
+await new Promise((resolve) => setTimeout(resolve, 50));
+await expect(something).toBeTruthy();
 
 // ✅ Good: Use queueMicrotask for synchronous async
-await new Promise(resolve => queueMicrotask(resolve))
+await new Promise((resolve) => queueMicrotask(resolve));
 
 // ✅ Better: Use proper async/await without delays
-await someAsyncOperation()
-expect(something).toBeTruthy()
+await someAsyncOperation();
+expect(something).toBeTruthy();
 ```
 
 ### 3. Mock Async Operations Synchronously
@@ -362,16 +441,16 @@ Use `queueMicrotask()` instead of `setTimeout()` in mocks:
 // ❌ Bad: 10ms delay per image load
 global.Image = class MockImage {
   constructor() {
-    setTimeout(() => this.onload?.(), 10)
+    setTimeout(() => this.onload?.(), 10);
   }
-} as any
+} as any;
 
 // ✅ Good: Instant load
 global.Image = class MockImage {
   constructor() {
-    queueMicrotask(() => this.onload?.())
+    queueMicrotask(() => this.onload?.());
   }
-} as any
+} as any;
 ```
 
 ### 4. Configure Vitest to Exclude Worktrees
@@ -388,12 +467,12 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
-      '**/.worktrees/**',  // ← Prevents duplicate test runs
+      '**/.worktrees/**', // ← Prevents duplicate test runs
       '**/cypress/**',
-      '**/.{idea,git,cache,output,temp}/**'
-    ]
+      '**/.{idea,git,cache,output,temp}/**',
+    ],
   },
-})
+});
 ```
 
 **Without this**: Tests run twice (once for main directory, once for each worktree)
@@ -403,27 +482,27 @@ export default defineConfig({
 If you must test time-dependent behavior, use Vitest fake timers instead of real delays:
 
 ```typescript
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 describe('TimeDependent', () => {
   beforeEach(() => {
-    vi.useFakeTimers()
-  })
+    vi.useFakeTimers();
+  });
 
   afterEach(() => {
-    vi.useRealTimers()
-  })
+    vi.useRealTimers();
+  });
 
   it('triggers after delay', async () => {
-    const callback = vi.fn()
-    scheduleDelayedCallback(callback, 1000)
+    const callback = vi.fn();
+    scheduleDelayedCallback(callback, 1000);
 
     // Instantly advance time by 1000ms
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(1000);
 
-    expect(callback).toHaveBeenCalled()
-  })
-})
+    expect(callback).toHaveBeenCalled();
+  });
+});
 ```
 
 ### 6. Performance Metrics
@@ -442,6 +521,7 @@ npm test
 ```
 
 If tests exceed these times, investigate for:
+
 - Missing `{ direction: 'instant' }` in scene transitions
 - Accidental `setTimeout()` usage
 - Duplicate test file execution (check vite.config.ts excludes)
@@ -450,6 +530,7 @@ If tests exceed these times, investigate for:
 ## Testing Checklist
 
 Before committing:
+
 - [ ] All tests pass
 - [ ] New code has tests (TDD)
 - [ ] Coverage ≥80% for new code
@@ -462,6 +543,7 @@ Before committing:
 - [ ] Tests are isolated (no shared state between tests)
 
 **Performance checklist**:
+
 - [ ] Scene transitions use `{ direction: 'instant' }` in tests
 - [ ] No `setTimeout()` in test code (use `queueMicrotask()` or fake timers)
 - [ ] Async mocks use `queueMicrotask()` not `setTimeout()`
@@ -471,29 +553,33 @@ Before committing:
 ## Test Naming Conventions
 
 **Service Tests**:
+
 - `describe('ServiceName')` - Top level
 - `describe('methodName')` - Method grouping
 - `it('does something specific')` - Individual test
 
 **Command Tests**:
+
 - `describe('CommandName')` - Top level
 - `it('performs expected behavior')` - Individual test
 
 **Integration Tests**:
+
 - `describe('Feature Integration')` - Top level
 - `it('completes full workflow')` - Individual test
 
 **Examples**:
+
 ```typescript
 // Good: Describes behavior
-it('adds character to empty party')
-it('throws when party is full')
-it('moves character from back row to front row')
+it('adds character to empty party');
+it('throws when party is full');
+it('moves character from back row to front row');
 
 // Bad: Describes implementation
-it('calls addMember function')
-it('returns new party object')
-it('updates formation array')
+it('calls addMember function');
+it('returns new party object');
+it('updates formation array');
 ```
 
 ## Testing Anti-Patterns
@@ -501,147 +587,155 @@ it('updates formation array')
 **Avoid These**:
 
 1. **Testing Implementation Details**
+
    ```typescript
    // Bad: Tests internal method calls
    it('calls calculateDamage internally', () => {
-     const spy = jest.spyOn(service, 'calculateDamage')
-     service.resolveAttack()
-     expect(spy).toHaveBeenCalled()
-   })
+     const spy = jest.spyOn(service, 'calculateDamage');
+     service.resolveAttack();
+     expect(spy).toHaveBeenCalled();
+   });
 
    // Good: Tests behavior
    it('reduces target HP on successful attack', () => {
-     const result = service.resolveAttack(attacker, target)
-     expect(result.target.hp).toBeLessThan(target.hp)
-   })
+     const result = service.resolveAttack(attacker, target);
+     expect(result.target.hp).toBeLessThan(target.hp);
+   });
    ```
 
 2. **Mocking Pure Functions**
+
    ```typescript
    // Bad: Mocking service calls
    const mockPartyService = {
-     addMember: jest.fn()
-   }
+     addMember: jest.fn(),
+   };
 
    // Good: Use real service (it's a pure function)
-   const result = PartyService.addMember(party, character)
+   const result = PartyService.addMember(party, character);
    ```
 
 3. **Shared Test State**
+
    ```typescript
    // Bad: Shared mutable state
-   let party: Party
+   let party: Party;
    beforeAll(() => {
-     party = createEmptyParty() // Shared across all tests
-   })
+     party = createEmptyParty(); // Shared across all tests
+   });
 
    // Good: Fresh state per test
    beforeEach(() => {
-     party = createEmptyParty() // New instance per test
-   })
+     party = createEmptyParty(); // New instance per test
+   });
    ```
 
 4. **Testing Multiple Things**
+
    ```typescript
    // Bad: Multiple assertions unrelated
    it('adds member and moves to front row and updates gold', () => {
      // Too many responsibilities
-   })
+   });
 
    // Good: One behavior per test
-   it('adds member to party')
-   it('moves member to front row')
-   it('updates party gold')
+   it('adds member to party');
+   it('moves member to front row');
+   it('updates party gold');
    ```
 
 5. **Using setTimeout in Tests (Performance Anti-Pattern)**
+
    ```typescript
    // Bad: Slow and flaky
    it('transitions to new scene', async () => {
-     await SceneNavigationService.transitionTo(SceneType.CAMP)
-     await new Promise(resolve => setTimeout(resolve, 500)) // ← Adds 500ms!
-     expect(getCurrentScene()).toBe(SceneType.CAMP)
-   })
+     await SceneNavigationService.transitionTo(SceneType.CAMP);
+     await new Promise((resolve) => setTimeout(resolve, 500)); // ← Adds 500ms!
+     expect(getCurrentScene()).toBe(SceneType.CAMP);
+   });
 
    // Good: Fast and reliable
    it('transitions to new scene', async () => {
      await SceneNavigationService.transitionTo(SceneType.CAMP, {
-       direction: 'instant' // ← No delay
-     })
-     expect(getCurrentScene()).toBe(SceneType.CAMP)
-   })
+       direction: 'instant', // ← No delay
+     });
+     expect(getCurrentScene()).toBe(SceneType.CAMP);
+   });
    ```
 
 6. **Forgetting to Exclude Worktrees (Performance Anti-Pattern)**
+
    ```typescript
    // Bad: Missing exclude in vite.config.ts
    export default defineConfig({
      test: {
        // Missing exclude causes duplicate test runs
-     }
-   })
+     },
+   });
 
    // Good: Properly configured
    export default defineConfig({
      test: {
-       exclude: ['**/.worktrees/**', /* ... */]
-     }
-   })
+       exclude: ['**/.worktrees/**' /* ... */],
+     },
+   });
    ```
 
 ## Testing Complex Scenarios
 
 **Spell Casting Flow**:
+
 ```typescript
 describe('Spell Casting', () => {
   it('casts HALITO successfully', () => {
-    const mage = createTestMage()
-    const target = createTestMonsterGroup('orcs', 3)
-    const initialPoints = mage.mageSpellPoints.get(1)
+    const mage = createTestMage();
+    const target = createTestMonsterGroup('orcs', 3);
+    const initialPoints = mage.mageSpellPoints.get(1);
 
-    const result = SpellCastingService.cast(mage, 'halito', target)
+    const result = SpellCastingService.cast(mage, 'halito', target);
 
-    expect(result.caster.mageSpellPoints.get(1)).toBe(initialPoints! - 1)
-    expect(result.target.hp).toBeLessThan(target.hp)
-    expect(result.log).toContain('HALITO')
-  })
+    expect(result.caster.mageSpellPoints.get(1)).toBe(initialPoints! - 1);
+    expect(result.target.hp).toBeLessThan(target.hp);
+    expect(result.log).toContain('HALITO');
+  });
 
   it('fails when no spell points', () => {
-    const mage = createTestMage({ mageSpellPoints: new Map([[1, 0]]) })
+    const mage = createTestMage({ mageSpellPoints: new Map([[1, 0]]) });
 
-    expect(() => SpellCastingService.cast(mage, 'halito', target))
-      .toThrow(InsufficientSpellPointsError)
-  })
+    expect(() => SpellCastingService.cast(mage, 'halito', target)).toThrow(
+      InsufficientSpellPointsError,
+    );
+  });
 
   it('fails when spell not in spellbook', () => {
-    const mage = createTestMage({ spellBook: new Set() })
+    const mage = createTestMage({ spellBook: new Set() });
 
-    expect(() => SpellCastingService.cast(mage, 'halito', target))
-      .toThrow(SpellNotLearnedError)
-  })
-})
+    expect(() => SpellCastingService.cast(mage, 'halito', target)).toThrow(SpellNotLearnedError);
+  });
+});
 ```
 
 **Combat Round Flow**:
+
 ```typescript
 describe('Combat Round', () => {
   it('resolves complete round with multiple attackers', () => {
-    const state = createCombatState()
+    const state = createCombatState();
 
     // Queue actions
     state.combat.timeline = [
       { actor: state.party.members[0], action: 'attack', target: 0 },
       { actor: state.enemies[0].monsters[0], action: 'attack', target: 0 },
-      { actor: state.party.members[1], action: 'cast_spell', spell: 'halito', target: 0 }
-    ]
+      { actor: state.party.members[1], action: 'cast_spell', spell: 'halito', target: 0 },
+    ];
 
-    const result = CombatService.resolveRound(state)
+    const result = CombatService.resolveRound(state);
 
-    expect(result.combat.round).toBe(2)
-    expect(result.combat.combatLog).toHaveLength(3)
-    expect(result.combat.timeline).toHaveLength(0) // Cleared after round
-  })
-})
+    expect(result.combat.round).toBe(2);
+    expect(result.combat.combatLog).toHaveLength(3);
+    expect(result.combat.timeline).toHaveLength(0); // Cleared after round
+  });
+});
 ```
 
 ## Related

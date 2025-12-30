@@ -53,12 +53,18 @@
     "formula": "min(agility * 4, 95)",
     "notes": "Percentage chance to identify trap type (lower than Thief)"
   },
+  "trapInspectionMultiplier": 4,
   "trapDisarm": {
     "formula": "(50 + level - mazeLevel) / 70",
     "notes": "Same as Thief"
   },
   "unarmedDamage": "2d4",
-  "specialAbilities": ["Critical hits (decapitate)", "AC bonus when unarmored", "Fast attacks", "Disarm traps"],
+  "specialAbilities": [
+    "Critical hits (decapitate)",
+    "AC bonus when unarmored",
+    "Fast attacks",
+    "Disarm traps"
+  ],
   "canIdentifyItems": false,
   "canDispelUndead": false,
   "canCriticalHit": true

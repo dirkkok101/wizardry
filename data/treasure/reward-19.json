@@ -7,10 +7,18 @@
     "multiplier": 10,
     "bonusRoll": { "count": 1, "sides": 8 }
   },
-  "traps": ["none", "poison_needle", "gas_bomb", "type3", "teleporter", "anti_mage", "anti_priest", "alarm"],
+  "traps": [
+    "none",
+    "poison_needle",
+    "gas_bomb",
+    "type3",
+    "teleporter",
+    "anti_mage",
+    "anti_priest",
+    "alarm"
+  ],
   "tiers": [
-    { "chance": 100, "minItemId": 35, "maxItemId": 52 },
-    { "chance": 50, "minItemId": 54, "maxItemId": 80 },
-    { "chance": 10, "minItemId": 80, "maxItemId": 92 }
+    { "chance": 100, "minItemId": 80, "maxItemId": 101 },
+    { "chance": 50, "minItemId": 80, "maxItemId": 101 }
   ]
 }

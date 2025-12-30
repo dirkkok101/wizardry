@@ -7,6 +7,7 @@
 The dungeon is the **core gameplay area** consisting of 10 levels beneath the town.
 
 **Key Concepts**:
+
 - 10 dungeon levels (Level 1 = easiest, Level 10 = hardest)
 - 20×20 grid per level (400 tiles)
 - Tile types: Floor, wall, door, stairs, special
@@ -43,54 +44,54 @@ The dungeon is the **core gameplay area** consisting of 10 levels beneath the to
 
 ```typescript
 interface DungeonLevel {
-  level: number                 // 1-10
-  tiles: Tile[][]              // 20×20 grid
-  encounters: FixedEncounter[]  // Scripted encounters
-  boss?: BossEncounter          // Boss on this level
-  specialZones: SpecialZone[]   // Darkness, anti-magic, etc.
+  level: number; // 1-10
+  tiles: Tile[][]; // 20×20 grid
+  encounters: FixedEncounter[]; // Scripted encounters
+  boss?: BossEncounter; // Boss on this level
+  specialZones: SpecialZone[]; // Darkness, anti-magic, etc.
 }
 
 interface Tile {
-  type: TileType
-  position: Position
-  walls: WallState              // Which walls present
-  door?: Door                   // If door tile
-  stairs?: Stairs               // If stairs tile
-  teleporter?: Teleporter       // If teleporter tile
-  special?: SpecialEffect       // Spinner, darkness, etc.
-  trap?: Trap                   // Hidden trap
-  treasure?: Treasure           // Hidden treasure
+  type: TileType;
+  position: Position;
+  walls: WallState; // Which walls present
+  door?: Door; // If door tile
+  stairs?: Stairs; // If stairs tile
+  teleporter?: Teleporter; // If teleporter tile
+  special?: SpecialEffect; // Spinner, darkness, etc.
+  trap?: Trap; // Hidden trap
+  treasure?: Treasure; // Hidden treasure
 }
 
 type TileType =
-  | 'floor'                     // Walkable
-  | 'wall'                      // Impassable (rendered)
-  | 'rock'                      // Impassable (not rendered, out of bounds)
-  | 'door'                      // Openable barrier
-  | 'stairs'                    // Level transition
-  | 'teleporter'                // Instant transport
-  | 'spinner'                   // Rotates party
-  | 'elevator'                  // Multi-level transport (rare)
+  | 'floor' // Walkable
+  | 'wall' // Impassable (rendered)
+  | 'rock' // Impassable (not rendered, out of bounds)
+  | 'door' // Openable barrier
+  | 'stairs' // Level transition
+  | 'teleporter' // Instant transport
+  | 'spinner' // Rotates party
+  | 'elevator'; // Multi-level transport (rare)
 
 interface Door {
-  open: boolean
-  locked: boolean
-  lockDifficulty: number        // 1-10 (for thieves)
-  trapped: boolean
-  trapType?: TrapType
+  open: boolean;
+  locked: boolean;
+  lockDifficulty: number; // 1-10 (for thieves)
+  trapped: boolean;
+  trapType?: TrapType;
 }
 
 interface Stairs {
-  direction: 'up' | 'down'
-  destination: Position         // Where stairs lead
+  direction: 'up' | 'down';
+  destination: Position; // Where stairs lead
 }
 
 interface Teleporter {
-  destination: Position         // Teleport target (can change level)
-  silent: boolean               // Show message or not
+  destination: Position; // Teleport target (can change level)
+  silent: boolean; // Show message or not
 }
 
-type SpecialEffect = 'spinner' | 'darkness' | 'antimagic' | 'chute'
+type SpecialEffect = 'spinner' | 'darkness' | 'antimagic' | 'chute';
 ```
 
 ## Dungeon Layout
@@ -98,6 +99,7 @@ type SpecialEffect = 'spinner' | 'darkness' | 'antimagic' | 'chute'
 ### Level Structure
 
 **Standard Level**:
+
 - 20×20 grid (400 tiles)
 - Mix of corridors, rooms, dead ends
 - Multiple paths to goal
@@ -105,6 +107,7 @@ type SpecialEffect = 'spinner' | 'darkness' | 'antimagic' | 'chute'
 - Optional: Stairs back to previous level
 
 **Level Progression**:
+
 ```
 Town (Level 0)
   ↓
@@ -132,11 +135,13 @@ Level 10 - Werdna's Lair (final boss)
 ### Coordinate System
 
 **Grid Coordinates**:
+
 - X: 0-19 (west to east)
 - Y: 0-19 (south to north)
 - Level: 1-10
 
 **Example Positions**:
+
 ```
 (0,0) = Southwest corner (bottom-left)
 (19,0) = Southeast corner (bottom-right)
@@ -148,6 +153,7 @@ Level 10 - Werdna's Lair (final boss)
 ### Map Boundaries
 
 **Out of Bounds**:
+
 - X < 0 or X > 19: Rock (impassable)
 - Y < 0 or Y > 19: Rock (impassable)
 - Movement validation prevents out-of-bounds
@@ -157,6 +163,7 @@ Level 10 - Werdna's Lair (final boss)
 ### Floor Tiles
 
 **Standard Floor**:
+
 - Walkable
 - Can contain monsters (random encounters)
 - Can contain treasure
@@ -165,12 +172,14 @@ Level 10 - Werdna's Lair (final boss)
 ### Wall Tiles
 
 **Walls**:
+
 - Impassable
 - Block line of sight
 - Rendered in first-person view
 - Four directions: North, South, East, West
 
 **Wall Configuration**:
+
 ```typescript
 interface WallState {
   north: boolean
@@ -192,68 +201,73 @@ interface WallState {
 ### Door Tiles
 
 **Door States**:
+
 - **Open**: Passable, no blocking
 - **Closed**: Impassable, can be opened
 - **Locked**: Impassable, requires key or thief
 - **Trapped**: Has trap that triggers on open
 
 **Opening Doors**:
+
 ```typescript
 function openDoor(door: Door, party: Party): DoorResult {
   if (door.open) {
-    return { success: true, message: 'Door already open' }
+    return { success: true, message: 'Door already open' };
   }
 
   if (door.locked) {
-    const thief = findThief(party)
+    const thief = findThief(party);
     if (!thief) {
-      return { success: false, message: 'Door is locked, need thief' }
+      return { success: false, message: 'Door is locked, need thief' };
     }
 
-    const pickSuccess = attemptPickLock(thief, door.lockDifficulty)
+    const pickSuccess = attemptPickLock(thief, door.lockDifficulty);
     if (!pickSuccess) {
-      return { success: false, message: 'Failed to pick lock' }
+      return { success: false, message: 'Failed to pick lock' };
     }
   }
 
   if (door.trapped && !door.disarmed) {
-    const trapResult = triggerTrap(door.trapType, party)
+    const trapResult = triggerTrap(door.trapType, party);
     return {
       success: true,
       message: 'Door opened (trap triggered!)',
-      trapDamage: trapResult.damage
-    }
+      trapDamage: trapResult.damage,
+    };
   }
 
-  return { success: true, message: 'Door opened' }
+  return { success: true, message: 'Door opened' };
 }
 ```
 
 ### Stairs
 
 **Descending Stairs**:
+
 - Go down one level (1 → 2 → 3...)
 - Cannot descend from Level 10
 - Destination: Specific tile on next level
 
 **Ascending Stairs**:
+
 - Go up one level (3 → 2 → 1)
 - Level 1 → Town (exit dungeon)
 - Destination: Specific tile on previous level
 
 **Stairs Usage**:
+
 ```typescript
 function useStairs(stairs: Stairs, party: Party): Position {
   if (stairs.direction === 'down') {
     if (party.position.level >= 10) {
-      throw new Error('Cannot descend from Level 10')
+      throw new Error('Cannot descend from Level 10');
     }
-    return stairs.destination  // Next level
+    return stairs.destination; // Next level
   } else {
     if (party.position.level <= 1) {
-      return { x: 0, y: 0, level: 0 }  // Exit to town
+      return { x: 0, y: 0, level: 0 }; // Exit to town
     }
-    return stairs.destination  // Previous level
+    return stairs.destination; // Previous level
   }
 }
 ```
@@ -263,11 +277,13 @@ function useStairs(stairs: Stairs, party: Party): Position {
 ### Chest Generation
 
 **Chest Sources**:
+
 - **Combat Rewards**: Some monster encounters drop treasure chests
 - **Hidden Chests**: Discovered via Search action
 - **Fixed Locations**: Boss rooms, treasure rooms
 
 **Chest Tiers** (1-5):
+
 - Tier 1: Common (50% trapped, basic items)
 - Tier 2: Uncommon (60% trapped, +1 items)
 - Tier 3: Rare (70% trapped, +1/+2 items)
@@ -277,6 +293,7 @@ function useStairs(stairs: Stairs, party: Party): Position {
 ### Trap Types
 
 **Chest Traps** (8 types):
+
 1. **POISON_NEEDLE** - 1d6 damage + poison
 2. **GAS_BOMB** - 2d6 party damage + poison
 3. **CROSSBOW_BOLT** - 2d8 damage
@@ -288,6 +305,7 @@ function useStairs(stairs: Stairs, party: Party): Position {
 9. **ALARM** - Triggers monster encounter
 
 **Door Traps** (subset):
+
 - ALARM (most common)
 - POISON_NEEDLE
 - STUNNER
@@ -296,6 +314,7 @@ function useStairs(stairs: Stairs, party: Party): Position {
 ### Trap Inspection
 
 **Inspect Chance**:
+
 ```
 Thieves:  AGI × 6% (max 95%)
 Ninjas:   AGI × 4% (max 95%)
@@ -305,6 +324,7 @@ Others:   AGI × 1% (max 95%)
 **Recommended**: Thief with AGI 16+ for 95% success
 
 **CALFO Spell Alternative**:
+
 - Priest Level 2 spell
 - 95% trap identification
 - No trigger risk
@@ -313,6 +333,7 @@ Others:   AGI × 1% (max 95%)
 ### Trap Disarming
 
 **Disarm Chance**:
+
 ```
 Effective Level = Character Level + Bonus
 - Thieves/Ninjas: +50 bonus
@@ -325,6 +346,7 @@ Minimum: 5%, Maximum: 95%
 **Key Insight**: Level 1 Thief = Level 51 Fighter in disarm ability
 
 **Retry Strategy**:
+
 - Failed without trigger → Correct trap type, can retry
 - Failed with trigger → Wrong trap type or critical failure
 
@@ -338,6 +360,7 @@ If character opening chest has **full inventory** (8/8 items), treasure items ar
 ### Chest Opening Workflow
 
 **Recommended Sequence**:
+
 1. Thief inspects chest (or Priest casts CALFO)
 2. Thief disarms trap if detected
 3. **Check character inventory** - drop items if needed
@@ -350,28 +373,29 @@ If character opening chest has **full inventory** (8/8 items), treasure items ar
 ### Teleporters
 
 **Teleporter Effect**:
+
 - Instant transport to destination
 - Can change level
 - Can change facing
 - May be silent or show message
 
 **Teleport Process**:
+
 ```typescript
 function triggerTeleporter(teleporter: Teleporter, party: Party): Party {
-  const message = teleporter.silent
-    ? null
-    : 'You feel a strange sensation...'
+  const message = teleporter.silent ? null : 'You feel a strange sensation...';
 
   return {
     ...party,
     position: teleporter.destination,
     // Optionally: randomize facing
-    facing: randomDirection()
-  }
+    facing: randomDirection(),
+  };
 }
 ```
 
 **Strategic Teleporters**:
+
 - Shortcuts to deeper levels
 - Traps (teleport into danger)
 - Puzzle elements (must find correct teleporter)
@@ -379,99 +403,107 @@ function triggerTeleporter(teleporter: Teleporter, party: Party): Party {
 ### Spinners
 
 **Spinner Effect**:
+
 - Rotates party 90°, 180°, or 270°
 - Disorients player
 - No damage
 
 **Spinner Process**:
+
 ```typescript
 function triggerSpinner(party: Party): Party {
-  const rotations = [90, 180, 270]
-  const rotation = rotations[random(0, 2)]
+  const rotations = [90, 180, 270];
+  const rotation = rotations[random(0, 2)];
 
-  const newFacing = rotateFacing(party.facing, rotation)
+  const newFacing = rotateFacing(party.facing, rotation);
 
   return {
     ...party,
-    facing: newFacing
-  }
+    facing: newFacing,
+  };
 }
 
 function rotateFacing(facing: Direction, degrees: number): Direction {
-  const directions = ['north', 'east', 'south', 'west']
-  const currentIndex = directions.indexOf(facing)
-  const steps = degrees / 90
-  const newIndex = (currentIndex + steps) % 4
+  const directions = ['north', 'east', 'south', 'west'];
+  const currentIndex = directions.indexOf(facing);
+  const steps = degrees / 90;
+  const newIndex = (currentIndex + steps) % 4;
 
-  return directions[newIndex] as Direction
+  return directions[newIndex] as Direction;
 }
 ```
 
 ### Darkness Zones
 
 **Darkness Effect**:
+
 - Cannot see walls in first-person view
 - Movement still allowed
 - Automap shows explored tiles normally
 - MILWA spell provides light
 
 **Darkness Check**:
+
 ```typescript
 function isInDarkness(position: Position, level: DungeonLevel): boolean {
-  const tile = level.tiles[position.y][position.x]
-  return tile.special === 'darkness'
+  const tile = level.tiles[position.y][position.x];
+  return tile.special === 'darkness';
 }
 
 function canSeeWalls(party: Party, level: DungeonLevel): boolean {
-  const inDarkness = isInDarkness(party.position, level)
-  const hasMILWA = party.members.some(m => m.activeSpells.includes('MILWA'))
+  const inDarkness = isInDarkness(party.position, level);
+  const hasMILWA = party.members.some((m) => m.activeSpells.includes('MILWA'));
 
-  return !inDarkness || hasMILWA
+  return !inDarkness || hasMILWA;
 }
 ```
 
 ### Anti-Magic Zones
 
 **Anti-Magic Effect**:
+
 - Cannot cast spells
 - Active spell effects dispelled
 - MILWA disabled (darkness returns)
 - Magic items don't work
 
 **Anti-Magic Check**:
+
 ```typescript
 function canCastSpell(party: Party, level: DungeonLevel): boolean {
-  const tile = level.tiles[party.position.y][party.position.x]
-  return tile.special !== 'antimagic'
+  const tile = level.tiles[party.position.y][party.position.x];
+  return tile.special !== 'antimagic';
 }
 ```
 
 ### Chutes
 
 **Chute Effect**:
+
 - Falls down 1-3 levels
 - Takes falling damage
 - Cannot avoid (automatic)
 
 **Chute Process**:
+
 ```typescript
 function triggerChute(party: Party): Party {
-  const fallLevels = random(1, 3)
-  const newLevel = Math.min(party.position.level + fallLevels, 10)
+  const fallLevels = random(1, 3);
+  const newLevel = Math.min(party.position.level + fallLevels, 10);
 
-  const damage = fallLevels * random(1, 6)  // 1d6 per level fallen
+  const damage = fallLevels * random(1, 6); // 1d6 per level fallen
 
   return {
     ...party,
     position: {
       ...party.position,
-      level: newLevel
+      level: newLevel,
     },
-    members: party.members.map(m => ({
+    members: party.members.map((m) => ({
       ...m,
-      hp: Math.max(0, m.hp - damage)
-    }))
-  }
+      hp: Math.max(0, m.hp - damage),
+    })),
+  };
 }
 ```
 
@@ -480,71 +512,78 @@ function triggerChute(party: Party): Party {
 ### Random Encounters
 
 **Encounter Check** (per move):
+
 ```typescript
 function checkEncounter(party: Party, level: DungeonLevel): boolean {
-  const baseChance = 10  // 10% per move
-  const levelModifier = level.level * 2  // +2% per level
+  const baseChance = 10; // 10% per move
+  const levelModifier = level.level * 2; // +2% per level
 
-  const encounterChance = baseChance + levelModifier
+  const encounterChance = baseChance + levelModifier;
 
-  return random(1, 100) <= encounterChance
+  return random(1, 100) <= encounterChance;
 }
 ```
 
 **Encounter Frequency**:
+
 - Level 1: ~12% per move
 - Level 5: ~20% per move
 - Level 10: ~30% per move
 
 **Monster Selection**:
+
 ```typescript
 function generateEncounter(level: number): MonsterGroup[] {
-  const monsterPool = getMonstersByLevel(level)
-  const numGroups = random(1, 4)  // 1-4 groups
+  const monsterPool = getMonstersByLevel(level);
+  const numGroups = random(1, 4); // 1-4 groups
 
-  const groups: MonsterGroup[] = []
+  const groups: MonsterGroup[] = [];
   for (let i = 0; i < numGroups; i++) {
-    const monster = selectRandomMonster(monsterPool)
-    const count = random(monster.minCount, monster.maxCount)
+    const monster = selectRandomMonster(monsterPool);
+    const count = random(monster.minCount, monster.maxCount);
 
     groups.push({
-      id: String.fromCharCode(65 + i),  // 'A', 'B', 'C', 'D'
+      id: String.fromCharCode(65 + i), // 'A', 'B', 'C', 'D'
       monsters: Array(count).fill(monster),
-      formation: monster.prefersBack ? 'back' : 'front'
-    })
+      formation: monster.prefersBack ? 'back' : 'front',
+    });
   }
 
-  return groups
+  return groups;
 }
 ```
 
 ### Fixed Encounters
 
 **Scripted Encounters**:
+
 - Specific tile triggers specific encounter
 - One-time or repeating
 - Often guards treasure or important areas
 
 **Fixed Encounter Example**:
+
 ```typescript
 interface FixedEncounter {
-  position: Position
-  monsters: MonsterGroup[]
-  oneTime: boolean              // Triggers only once
-  triggered: boolean            // Has been triggered
-  treasureGuarded?: Treasure
+  position: Position;
+  monsters: MonsterGroup[];
+  oneTime: boolean; // Triggers only once
+  triggered: boolean; // Has been triggered
+  treasureGuarded?: Treasure;
 }
 ```
 
 ### Boss Encounters
 
 **Boss Properties**:
+
 - Much higher stats than normal monsters
 - Cannot flee from boss fights
 - Unique drops (special items)
 - Story-critical encounters
 
 **Final Boss** (Werdna, Level 10):
+
 - Highest HP in game
 - Multiple spell types
 - Summons other monsters
@@ -555,104 +594,102 @@ interface FixedEncounter {
 ### Trap Types
 
 **Damage Traps**:
+
 - Arrow trap: 1d6 damage to one character
 - Spear trap: 2d6 damage to front row
 - Poison gas: 1d4 damage + poison status to party
 
 **Status Traps**:
+
 - Sleep gas: Party falls asleep
 - Paralyze trap: One character paralyzed
 - Teleport trap: Party teleported randomly
 
 **Equipment Traps**:
+
 - Rust trap: Armor damaged (-1 AC permanently)
 - Corrosion trap: Weapon damaged (-1 damage)
 
 ### Trap Detection
 
 **Search for Traps**:
+
 ```typescript
 function searchForTraps(party: Party, tile: Tile): SearchResult {
-  const thief = findThief(party)
+  const thief = findThief(party);
   if (!thief) {
-    return { found: false, message: 'No thief to search' }
+    return { found: false, message: 'No thief to search' };
   }
 
   if (!tile.trap) {
-    return { found: false, message: 'No trap found' }
+    return { found: false, message: 'No trap found' };
   }
 
-  const detectChance = calculateDetectChance(thief, tile.trap.difficulty)
-  const detected = random(1, 100) <= detectChance
+  const detectChance = calculateDetectChance(thief, tile.trap.difficulty);
+  const detected = random(1, 100) <= detectChance;
 
   return {
     found: detected,
     message: detected ? `${tile.trap.type} trap found!` : 'No trap found',
-    trap: detected ? tile.trap : null
-  }
+    trap: detected ? tile.trap : null,
+  };
 }
 
 function calculateDetectChance(thief: Character, difficulty: number): number {
-  const baseChance = 30
-  const agilityBonus = (thief.stats.agi - 10) * 3
-  const levelBonus = thief.level * 5
-  const difficultyPenalty = difficulty * 5
+  const baseChance = 30;
+  const agilityBonus = (thief.stats.agi - 10) * 3;
+  const levelBonus = thief.level * 5;
+  const difficultyPenalty = difficulty * 5;
 
-  return baseChance + agilityBonus + levelBonus - difficultyPenalty
+  return baseChance + agilityBonus + levelBonus - difficultyPenalty;
 }
 ```
 
 ### Trap Disarming
 
 **Disarm Trap**:
+
 ```typescript
 function disarmTrap(thief: Character, trap: Trap): DisarmResult {
-  const disarmChance = calculateDisarmChance(thief, trap.difficulty)
-  const success = random(1, 100) <= disarmChance
+  const disarmChance = calculateDisarmChance(thief, trap.difficulty);
+  const success = random(1, 100) <= disarmChance;
 
   if (success) {
     return {
       success: true,
-      message: 'Trap disarmed successfully!'
-    }
+      message: 'Trap disarmed successfully!',
+    };
   } else {
     // Failure triggers trap
     return {
       success: false,
       message: 'Failed to disarm trap! Trap triggered!',
-      trapTriggered: true
-    }
+      trapTriggered: true,
+    };
   }
 }
 ```
 
 ## Related Documentation
 
-**Services**:
-- [DungeonService](../services/DungeonService.md) - Map loading, tile access
-- [EncounterService](../services/EncounterService.md) - Random encounters
-- [TileService](../services/TileService.md) - Special tile effects
-- [NavigationService](../services/NavigationService.md) - Movement validation
-- [SearchService](../services/SearchService.md) - Trap detection
+**Reference** (SOURCE OF TRUTH):
 
-**Commands**:
-- [MoveForwardCommand](../commands/MoveForwardCommand.md) - Movement
-- [DescendStairsCommand](../commands/DescendStairsCommand.md) - Stairs
-- [OpenDoorCommand](../commands/OpenDoorCommand.md) - Doors
-- [SearchCommand](../commands/SearchCommand.md) - Trap search
+- [Monsters Reference](../reference/monsters.md) - All 96 monsters
+- [Traps Reference](../reference/traps.md) - Trap mechanics and disarming
 
-**Game Design**:
-- [Dungeon Exploration](../game-design/06-dungeon.md) - Player guide
-- [Monsters](../game-design/10-monsters.md) - Encounter reference
+**Systems**:
 
-**Research**:
-- [Monster Reference](../research/monster-reference.md) - All 96 monsters
-- [Dungeon Maps Reference](../research/dungeon-maps-reference.md) - Level layouts
+- [Dungeon Navigation](./dungeon-navigation.md) - Movement and stairs
+- [Combat System](./combat-system.md) - Encounter resolution
 
-**Diagrams**:
-- [Game State Machine](../diagrams/game-state-machine.md) - Dungeon state
+**Code**:
+
+- `src/app/services/DungeonService.ts` - Map loading, tile access
+- `src/app/services/EncounterService.ts` - Random encounters
+- `data/maps/` - Level JSON files
 
 **Implementation Notes**:
+
 - 20×20 grid per level = 400 tiles (manageable size)
 - Tile-based movement (not pixel-based)
 - Special tiles add variety and challenge

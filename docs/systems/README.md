@@ -19,12 +19,14 @@
 System docs provide **comprehensive overviews** of major game systems, connecting multiple services, commands, and game mechanics.
 
 **Use system docs to**:
+
 - Understand how components work together
 - See the big picture of a game feature
 - Learn design decisions and tradeoffs
 - Find entry points for implementation
 
 **Use service/command docs to**:
+
 - Get API reference for specific functions
 - See code examples
 - Understand single-responsibility components
@@ -42,6 +44,7 @@ Each system deep-dive follows this structure:
 ## Reading Order Recommendations
 
 **For Implementers**:
+
 1. Start with [Party System](./party-system.md) - Core game abstraction
 2. Read [Character Creation System](./character-creation-system.md) - Entry point
 3. Read [Town System](./town-system.md) - Starting location
@@ -50,12 +53,14 @@ Each system deep-dive follows this structure:
 6. Read [Spell System](./spell-system.md) - Major subsystem
 
 **For Designers**:
+
 1. Start with [Event Sourcing](./event-sourcing.md) - Unique architecture
 2. Read [Combat System](./combat-system.md) - Core mechanics
 3. Read [Spell System](./spell-system.md) - Major feature
 4. Read [Party System](./party-system.md) - Core abstraction
 
 **For UI/UX Developers**:
+
 1. Start with [First-Person Rendering](./first-person-rendering.md) - Visual system
 2. Read [Automap System](./automap-system.md) - Navigation UI
 3. Read [Party System](./party-system.md) - UI layout requirements
@@ -63,8 +68,7 @@ Each system deep-dive follows this structure:
 
 ## Related Documentation
 
-- [Services Documentation](../services/README.md) - 40+ service APIs
-- [Commands Documentation](../commands/README.md) - 40+ command patterns
-- [Game Design Documentation](../game-design/README.md) - Player-facing mechanics
-- [Architecture Overview](../architecture.md) - Technical architecture
-- [Research Documentation](../research/week1-research-summary.md) - Source validation
+- [Reference Documentation](../reference/) - SOURCE OF TRUTH for game mechanics
+- [Architecture Overview](../architecture/overview.md) - 4-layer clean architecture
+- [Getting Started Guide](../guides/getting-started.md) - Development setup
+- [Testing Strategy](../guides/testing-strategy.md) - Test patterns and coverage

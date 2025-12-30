@@ -5,6 +5,7 @@
 ## Overview
 
 The dungeon navigation system handles party movement through the 10-level dungeon, including:
+
 - **Movement validation** - Checking walls, doors, obstacles
 - **Position updates** - Calculating new positions based on direction
 - **Stairs interactions** - Immediate transitions when walking into stairs walls
@@ -12,6 +13,7 @@ The dungeon navigation system handles party movement through the 10-level dungeo
 - **Encounter triggering** - Random and fixed encounters
 
 **Key Concepts**:
+
 - Grid-based movement (discrete tile positions)
 - Four-directional facing (NORTH, SOUTH, EAST, WEST)
 - Wall-based collision detection
@@ -49,6 +51,7 @@ When checking if movement is allowed, the system checks in this order:
 ### Overview
 
 Stairs are implemented as **wall types** rather than tile types, allowing:
+
 - Visual rendering of stairs textures on specific walls
 - Immediate transition when walking into stairs walls (before position update)
 - Distinct textures for stairs_up (castle) vs stairs_down (next level)
@@ -99,6 +102,7 @@ Stairs walls reference destination data stored on tiles:
 When player walks into stairs wall:
 
 1. **`DungeonService.canMove()`** returns:
+
    ```typescript
    {
      allowed: true,
@@ -115,13 +119,13 @@ When player walks into stairs wall:
 
 ### Comparison: Stairs Walls vs Tile Effects
 
-| Feature | Stairs Walls | Tile Effects (teleporter, spinner) |
-|---------|--------------|-----------------------------------|
-| **Trigger timing** | Before position update | After landing on tile |
-| **Position update** | No (transition handles it) | Yes (already at new position) |
-| **Tile effects checked** | No | Yes |
-| **Validation field** | `triggersSpecialAction: 'stairs'` | No special field |
-| **Movement allowed** | Yes (with special action) | Yes (normal movement) |
+| Feature                  | Stairs Walls                      | Tile Effects (teleporter, spinner) |
+| ------------------------ | --------------------------------- | ---------------------------------- |
+| **Trigger timing**       | Before position update            | After landing on tile              |
+| **Position update**      | No (transition handles it)        | Yes (already at new position)      |
+| **Tile effects checked** | No                                | Yes                                |
+| **Validation field**     | `triggersSpecialAction: 'stairs'` | No special field                   |
+| **Movement allowed**     | Yes (with special action)         | Yes (normal movement)              |
 
 ### Rendering
 
@@ -147,6 +151,7 @@ if (errors.length > 0) {
 ```
 
 **Validation rules**:
+
 - Any tile with `stairs_up` or `stairs_down` wall **must** have `destination` field
 - Destination must be valid (castle type or level number)
 - Normal tiles without stairs can omit destination field
@@ -165,12 +170,14 @@ if (errors.length > 0) {
 ### Coordinate System
 
 **Grid coordinates**: (x, y)
+
 - x = 0-19 (west to east)
 - y = 0-19 (south to north)
 
 **Facing directions**: NORTH, SOUTH, EAST, WEST
 
 **Direction vectors**:
+
 ```typescript
 NORTH: { dx: 0, dy: 1 }   // Increase Y
 SOUTH: { dx: 0, dy: -1 }  // Decrease Y
@@ -203,7 +210,7 @@ if (wallType === 'stairs_up' || wallType === 'stairs_down') {
   return {
     allowed: true,
     triggersSpecialAction: 'stairs',
-    destination: tile.destination
+    destination: tile.destination,
   };
 }
 
@@ -212,10 +219,10 @@ const newPos = calculatePosition(currentPos, 'FORWARD');
 
 // 7. Execute movement or transition
 if (triggersSpecialAction === 'stairs') {
-  handleStairsTransition(destination);  // No position update
+  handleStairsTransition(destination); // No position update
 } else {
-  updatePosition(newPos);  // Normal movement
-  checkTileEffects(newPos);  // Teleporter, spinner, etc.
+  updatePosition(newPos); // Normal movement
+  checkTileEffects(newPos); // Teleporter, spinner, etc.
 }
 ```
 
@@ -226,12 +233,14 @@ if (triggersSpecialAction === 'stairs') {
 **Trigger timing**: After landing on tile
 
 **Behavior**:
+
 - Instant transport to destination
 - Can change level
 - Can change facing
 - Position update happens normally, then teleport triggers
 
 **Data model**:
+
 ```json
 {
   "x": 5,
@@ -251,6 +260,7 @@ if (triggersSpecialAction === 'stairs') {
 **Trigger timing**: After landing on tile
 
 **Behavior**:
+
 - Randomizes facing direction
 - No position change
 - Disorients player
@@ -260,27 +270,31 @@ if (triggersSpecialAction === 'stairs') {
 **Trigger timing**: After landing on tile
 
 **Behavior**:
+
 - Forced descent 1-3 levels
 - Fall damage based on distance
 - Cannot avoid
 
 ## Related Documentation
 
-**Services**:
-- [NavigationService](../services/NavigationService.md) - Movement execution, stairs transitions
-- [DungeonService](../services/DungeonService.md) - Movement validation, stairs validation
-- [WebGLRenderingService](../architecture/webgl-renderer.md) - Stairs texture rendering
-- [VisibilityService](../services/VisibilityService.md) - Wall detection
+**Architecture**:
+
+- [WebGL Renderer](../architecture/webgl-renderer.md) - Stairs texture rendering
 
 **Systems**:
+
 - [Dungeon System](./dungeon-system.md) - Overall dungeon structure
 - [First-Person Rendering](./first-person-rendering.md) - Visual representation
 
-**Types**:
-- `src/types/Dungeon.ts` - Position, Direction, WallType, MovementValidation
+**Code**:
+
+- `src/app/services/NavigationService.ts` - Movement execution
+- `src/app/services/DungeonService.ts` - Movement validation
+- `src/app/types/Dungeon.ts` - Position, Direction, WallType
 - `src/types/GameState.ts` - DungeonState
 
 **Implementation Notes**:
+
 - Stairs walls introduced in Nov 2025 to replace tile-based stairs
 - Enables wall-specific texture rendering
 - Maintains backward compatibility with existing movement system

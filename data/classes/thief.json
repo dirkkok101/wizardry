@@ -30,6 +30,7 @@
     "formula": "min(agility * 6, 95)",
     "notes": "Percentage chance to identify trap type"
   },
+  "trapInspectionMultiplier": 6,
   "trapDisarm": {
     "formula": "(50 + level - mazeLevel) / 70",
     "notes": "Percentage chance to disarm trap"

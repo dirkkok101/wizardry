@@ -50,6 +50,7 @@ The WebGL quad renderer is a GPU-accelerated 3D dungeon renderer that replaces t
 **Format**: Single 448×128 PNG with 7+ textures
 
 **Textures**:
+
 - `stone_wall_01` (0, 0, 64, 64) - Regular wall variation 1
 - `stone_wall_02` (64, 0, 64, 64) - Regular wall variation 2
 - `stairs_down` (128, 0, 64, 64) - Descending stairs texture (to next level)
@@ -70,11 +71,13 @@ The WebGL quad renderer is a GPU-accelerated 3D dungeon renderer that replaces t
 ### Shaders
 
 **Vertex Shader**:
+
 - Transforms vertices using projection and view matrices
 - Calculates view-space distance for fog
 - Passes texture coordinates to fragment shader
 
 **Fragment Shader**:
+
 - Samples texture atlas
 - Applies linear distance fog (black fog from 1.0 to config.tileDepth units)
 - Outputs final color with fog blending
@@ -82,17 +85,20 @@ The WebGL quad renderer is a GPU-accelerated 3D dungeon renderer that replaces t
 ### Performance Optimizations
 
 **Batched Rendering**:
+
 - Collects all quads into single vertex buffer
 - Single buffer upload per frame
 - Single draw call per frame (vs ~50-100 without batching)
 - 50-100x reduction in CPU-GPU overhead
 
 **Texture Atlas**:
+
 - Single texture for all dungeon elements
 - No texture switching between quads
 - GPU-friendly memory access pattern
 
 **NEAREST Filtering**:
+
 - Pixel-perfect rendering for retro aesthetic
 - No texture bleeding between atlas regions
 
@@ -103,6 +109,7 @@ The WebGL quad renderer is a GPU-accelerated 3D dungeon renderer that replaces t
 The `selectWallTexture` method determines which texture to use for each wall segment based on wall type, not tile type. This enables stairs to appear on specific walls while other walls on the same tile remain normal.
 
 **Signature**:
+
 ```typescript
 private selectWallTexture(
   level: LevelData,
@@ -111,18 +118,21 @@ private selectWallTexture(
 ```
 
 **Parameters**:
+
 - `level`: Level data with tile grid
 - `wall`: Wall segment with `gridX`, `gridY`, and `side` (north/south/east/west)
 
 **Returns**: Texture atlas coordinates `[x, y, width, height]` in pixels
 
 **Selection Priority** (highest to lowest):
+
 1. **Stairs walls** - `stairs_up` or `stairs_down` (uses `getTextureById()`)
 2. **Doors** - `door` or `locked_door` (door_closed texture)
 3. **Regular walls** - `wall`, `secret`, `illusion` (checkerboard pattern)
 4. **Open spaces** - `open` (should not render, uses default wall as fallback)
 
 **Implementation**:
+
 ```typescript
 private selectWallTexture(level: LevelData, wall: WallSegment): [number, number, number, number] {
   const tile = DungeonService.getTile(level, wall.gridX, wall.gridY);
@@ -153,6 +163,7 @@ private selectWallTexture(level: LevelData, wall: WallSegment): [number, number,
 ```
 
 **Key Features**:
+
 - **Wall-side specificity**: Checks `tile.walls[wall.side]` to render correct texture per wall
 - **Dynamic lookup**: Uses `getTextureById()` for stairs textures (falls back to hardcoded if not found)
 - **Checkerboard pattern**: Alternates wall variations based on grid position for visual variety
@@ -161,6 +172,7 @@ private selectWallTexture(level: LevelData, wall: WallSegment): [number, number,
 **Example Scenarios**:
 
 **Scenario 1: Tile with stairs on one wall**
+
 ```json
 {
   "x": 0,
@@ -173,11 +185,13 @@ private selectWallTexture(level: LevelData, wall: WallSegment): [number, number,
   }
 }
 ```
+
 - West wall: Renders `stairs_up` texture (384, 0)
 - North/South walls: Render regular wall textures (checkerboard)
 - East wall: Not rendered (open)
 
 **Scenario 2: Multiple stairs on same tile**
+
 ```json
 {
   "x": 5,
@@ -190,6 +204,7 @@ private selectWallTexture(level: LevelData, wall: WallSegment): [number, number,
   }
 }
 ```
+
 - North wall: `stairs_up` texture
 - South wall: `stairs_down` texture
 - East wall: `door_closed` texture
@@ -197,16 +212,17 @@ private selectWallTexture(level: LevelData, wall: WallSegment): [number, number,
 
 **Comparison to Old System**:
 
-| Old System (Tile-based) | New System (Wall-based) |
-|------------------------|-------------------------|
-| Checked `tile.type` | Checks `tile.walls[wall.side]` |
+| Old System (Tile-based) | New System (Wall-based)         |
+| ----------------------- | ------------------------------- |
+| Checked `tile.type`     | Checks `tile.walls[wall.side]`  |
 | Single texture per tile | Different texture per wall side |
-| Stairs on entire tile | Stairs on specific walls |
-| Limited flexibility | Full wall-level control |
+| Stairs on entire tile   | Stairs on specific walls        |
+| Limited flexibility     | Full wall-level control         |
 
 **Related**:
-- See [DungeonService.validateStairsWalls](../services/DungeonService.md#validatestairswalls) for map validation
-- See [NavigationService.handleStairsTransition](../services/NavigationService.md#handlestairstransition) for stairs behavior
+
+- See `src/app/services/DungeonService.ts` for map validation
+- See `src/app/services/NavigationService.ts` for stairs behavior
 - See [Dungeon Navigation System](../systems/dungeon-navigation.md#stairs-wall-interactions) for complete stairs documentation
 
 ## API
@@ -216,22 +232,22 @@ private selectWallTexture(level: LevelData, wall: WallSegment): [number, number,
 ```typescript
 class WebGLRenderingService {
   // Initialization
-  initialize(canvas: HTMLCanvasElement): boolean
+  initialize(canvas: HTMLCanvasElement): boolean;
 
   // Texture management
-  uploadTexture(image: HTMLImageElement): WebGLTexture | null
-  getTextureById(id: string): TextureMetadata | null
+  uploadTexture(image: HTMLImageElement): WebGLTexture | null;
+  getTextureById(id: string): TextureMetadata | null;
 
   // Rendering
   render(
     level: LevelData,
     position: Position,
     config: ViewportConfig,
-    dungeonState?: DungeonState
-  ): void
+    dungeonState?: DungeonState,
+  ): void;
 
   // Cleanup
-  dispose(): void
+  dispose(): void;
 }
 ```
 
@@ -239,9 +255,9 @@ class WebGLRenderingService {
 
 ```typescript
 interface ViewportConfig {
-  width: number;           // Canvas width in pixels
-  height: number;          // Canvas height in pixels
-  tileDepth: number;       // View distance in tiles (default 5)
+  width: number; // Canvas width in pixels
+  height: number; // Canvas height in pixels
+  tileDepth: number; // View distance in tiles (default 5)
   peripheralColumns: number; // Peripheral vision width (default 3)
 }
 ```

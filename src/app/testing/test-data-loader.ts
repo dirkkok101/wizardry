@@ -25,6 +25,7 @@ import { ItemDataLoader } from '@services/ItemDataLoader';
 import { TrapDataLoader } from '@services/TrapDataLoader';
 import { RaceService } from '@services/RaceService';
 import { StatModifierService } from '@services/StatModifierService';
+import { TownConfigLoader } from '@services/TownConfigLoader';
 
 /**
  * Load all game data for tests that need it.
@@ -47,7 +48,7 @@ export async function loadGameDataForTests(): Promise<void> {
     ItemDataLoader.loadAllItems(),
     TrapDataLoader.loadAllTraps(),
     RaceService.initialize(),
-    StatModifierService.initialize()
+    StatModifierService.initialize(),
   ]);
 }
 
@@ -61,6 +62,7 @@ export function clearGameDataCaches(): void {
   MonsterDataLoader.clearCache();
   ItemDataLoader.clearCache();
   TrapDataLoader.clearCache();
+  TownConfigLoader.clearCache();
 }
 
 // =============================================================================
@@ -121,7 +123,7 @@ export async function loadCharacterCreationDataForTests(): Promise<void> {
   await Promise.all([
     ClassDataLoader.loadAllClasses(),
     RaceService.initialize(),
-    StatModifierService.initialize()
+    StatModifierService.initialize(),
   ]);
 }
 
@@ -134,10 +136,7 @@ export async function loadCharacterCreationDataForTests(): Promise<void> {
  * - Items (104 files)
  */
 export async function loadCombatDataForTests(): Promise<void> {
-  await Promise.all([
-    MonsterDataLoader.loadAllMonsters(),
-    ItemDataLoader.loadAllItems()
-  ]);
+  await Promise.all([MonsterDataLoader.loadAllMonsters(), ItemDataLoader.loadAllItems()]);
 }
 
 /**
@@ -159,7 +158,7 @@ export async function loadChestDataForTests(): Promise<void> {
   await Promise.all([
     ItemDataLoader.loadAllItems(),
     TreasureDataLoader.loadAllRewards(),
-    NumericIdMappingLoader.loadMapping()
+    NumericIdMappingLoader.loadMapping(),
   ]);
 }
 
@@ -178,7 +177,8 @@ export async function loadInnDataForTests(): Promise<void> {
     ClassDataLoader.loadAllClasses(),
     RaceService.initialize(),
     StatModifierService.initialize(),
-    SpellDataLoader.loadAllSpells()
+    SpellDataLoader.loadAllSpells(),
+    TownConfigLoader.loadAll(),
   ]);
 }
 
@@ -195,6 +195,10 @@ export async function loadTrapsWithResistanceForTests(): Promise<void> {
   await Promise.all([
     TrapDataLoader.loadAllTraps(),
     ClassDataLoader.loadAllClasses(),
-    RaceService.initialize()
+    RaceService.initialize(),
   ]);
+}
+
+export async function loadTownServicesDataForTests(): Promise<void> {
+  await TownConfigLoader.loadAll();
 }
