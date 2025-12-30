@@ -754,10 +754,11 @@ The core formula `Age in Years / 130` creates a sliding scale:
 ### 16.2 Temple Resurrection Success Rate
 
 ```
-Dead: (50 + (3 * Vitality))%
-Ashes: (40 + (3 * Vitality))%
+Success Rate: (4 × Vitality)%
 Character ages 1-52 weeks on any temple service
 ```
+
+**Note**: Temple uses the same formula as DI/KADORTO spells. A character with VIT 18 has 72% success rate.
 
 ### 16.3 DI/KADORTO Spell Success
 
